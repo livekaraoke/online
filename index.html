@@ -1,0 +1,161 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>LIVE KARAOKE</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+  <!-- HERO SECTION -->
+  <section class="hero">
+    <div class="overlay"></div>
+
+    <div class="hero-content">
+      <img src="img/banner.png" alt="Live Karaoke Banner" class="hero-banner">
+
+      <a href="#about" class="main-button" onclick="smoothScroll(event)">
+        GET STARTED
+      </a>
+    </div>
+
+  </section>
+
+  <!-- ABOUT -->
+  <section id="about" class="section">
+    <h2>WHAT IS LIVE KARAOKE?</h2>
+    <p>
+      A live music experience where YOU become the singer.
+    </p>
+    <p>
+      Choose from rock, pop, indie, classics, party anthems and sing live with real guitar, live looping, and an authentic performance atmosphere.
+    </p>
+  </section>
+
+  <!-- EVENTS -->
+  <section class="section dark-section">
+    <h2>EVENTS</h2>
+
+    <!-- WHYTE HARTE -->
+    <div class="event-card">
+      <h3>&#9679; WHYTE HARTE &#9679;</h3>
+      <h4>GANDOFFLI STREET, ST PAUL'S BAY</h4>
+
+      <p><b>EVERY WEDNESDAY</b></p>
+      <h5>&bull; 7:30PM &bull;</h5>
+      <p>Live Karaoke Night</p>
+    </div>
+
+    <!-- OTHER EVENTS -->
+    <!--
+    <div class="event-card">
+      <h3>&#9679; WHYTE HARTE &#9679;</h3>
+      <h4>GANDOFFLI STREET, ST PAUL'S BAY</h4>
+
+      <p><b>EVERY WEDNESDAY</b></p>
+      <h5>&bull; 7:30PM &bull;</h5>
+      <p>Live Karaoke Night</p>
+    </div>
+    -->
+
+  </section>
+
+  <!-- SONG ACCESS -->
+  <section class="section">
+    <h2>SONG LIST ACCESS</h2>
+    <p>
+      Song access becomes available during live sessions only.
+    </p>
+    <a href="#" class="disabled-button">
+      SONG LIST LOCKED
+    </a>
+  </section>
+
+  <!-- COMMUNITY -->
+  <section class="section dark-section">
+    <h2>JOIN THE COMMUNITY</h2>
+    <p>
+      Stay updated, request songs, and join future sessions.
+    </p>
+    <!--<a href="#" class="main-button">-->
+    <a href="#" class="disabled-button">
+      JOIN WHATSAPP
+    </a>
+
+    <h3 class="socials-title">
+      SOCIALS
+    </h3>
+
+    <div class="social-icons">
+      <a href="https://facebook.com/livekaraokemt" target="_blank">
+        <img src="img/fb-icon.png" alt="Facebook">
+      </a>
+      <a href="https://instagram.com/livekaraoke.mt" target="_blank">
+        <img src="img/insta-icon.png" alt="Instagram">
+      </a>
+      <a href="https://twitter.com/livekaraokemt" target="_blank">
+        <img src="img/x-icon.png" alt="Twitter">
+      </a>
+      <a href="#">
+        <img src="img/mail-icon.png" alt="Email">
+      </a>
+    </div>
+
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <p>
+      LIVE KARAOKE © 2025
+    </p>
+    <p class="footer-small">
+      Live Music • Real People • Real Atmosphere
+    </p>
+  </footer>
+
+<script>
+function smoothScroll(e) {
+    e.preventDefault();
+
+    const target = document.querySelector("#about");
+
+    const targetPosition = target.getBoundingClientRect().top + window.pageYOffset;
+
+    const startPosition = window.pageYOffset;
+
+    const distance = targetPosition - startPosition;
+
+    let startTime = null;
+
+    function animationScroll(currentTime){
+        if(startTime === null) startTime = currentTime;
+
+        const timeElapsed = currentTime - startTime;
+
+        const duration = 1000; // 👈 adjust speed (1000–2000 good range)
+
+        const run = ease(timeElapsed, startPosition, distance, duration);
+
+        window.scrollTo(0, run);
+
+        if(timeElapsed < duration) requestAnimationFrame(animationScroll);
+    }
+
+    function ease(t, b, c, d){
+        t /= d/2;
+        if(t < 1) return c/2*t*t + b;
+        t--;
+        return -c/2 * (t*(t-2) - 1) + b;
+    }
+
+    requestAnimationFrame(animationScroll);
+}
+</script>
+
+
+</body>
+</html>
+
