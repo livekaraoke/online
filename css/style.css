@@ -371,6 +371,11 @@ footer p{
     letter-spacing: 2.5px;
 }
 
+.countdown-venue {
+    color: #fcc001;
+    font-weight: 700;
+}
+
 @keyframes liveBlink{
 
     0%{
