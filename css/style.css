@@ -329,7 +329,7 @@ footer p{
     text-align:center;
     padding:40px 20px;
     background:#080808;
-    font-size:0.5rem;
+    font-size: 16px;
 }
 
 
@@ -343,7 +343,7 @@ footer p{
 }
 
 .live-box.countdown-line {
-    font-size: 18px !important;
+    font-size: 16px !important;
 }
 
 .live-now{
@@ -356,7 +356,7 @@ footer p{
 
 .live-now-small {
     color: #ff2b2b;
-    font-size: 0.5rem;
+    font-size: 16px;
     font-weight: bold;
     animation: liveBlink 1s infinite;
     letter-spacing: 2px;
@@ -365,12 +365,12 @@ footer p{
 .live-venue {
     margin-top: 8px;
     color: #ffffff;
-    font-size: 0.5rem;
+    font-size: 16px;
     letter-spacing: 2px;
 }
 
 .countdown-line {
-    font-size: 0.5rem;
+    font-size: 16px;
     font-weight: 700;
     color: white;
     letter-spacing: 2.5px;
