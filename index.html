@@ -67,6 +67,7 @@
       const docRef = db.collection("karaoke").doc("state");
       docRef.onSnapshot((doc) => {
         const data = doc.data();
+        console.log("Firestore data:", data);
         updateUI(data);
       });
     }
