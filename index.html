@@ -115,13 +115,17 @@
     
       if (data.songsEnabled && authorizedAccess) {
           songBtn.innerText = "SONG LIST";
-          songBtn.classList.remove("disabled-button");
-          songBtn.classList.add("main-button");
-          songBtn.href = "songs.html";
+          songBtn.href = "/snglst/songs.html";
+          songBtn.className = "main-button";
+      
       } else {
+      
           songBtn.innerText = "UNAVAILABLE";
           songBtn.href = "#";
+          songBtn.className = "disabled-button";
+      
       }
+
 
     }
 
@@ -135,11 +139,13 @@
     
       const data = doc.data();
     
-      if (venue === data.vac) {
+      if (vac === data.vac) {
     
         authorizedAccess = true;
     
         console.log("Venue access granted");
+
+        updateUI(data);
     
       } else {
     
