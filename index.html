@@ -120,6 +120,8 @@
     
     function updateUI(data) {
       const now = new Date();
+      const eventTimes = getCurrentEvent(data.nextEvent);
+      
       if (!eventTimes) {
           document.getElementById("liveStatus").innerHTML = `
               <div class="live-box">
