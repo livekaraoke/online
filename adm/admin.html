@@ -14,10 +14,19 @@
 
 <body class="admin-body">
 
+  <div class="admin-header">
+    <button onclick="goMainSite()" class="admin-btn">
+      ⬅ GO BACK TO MAIN SITE
+    </button>
+    <h2>CONTROL PANEL</h2>
+    <div id="adminConsole" class="admin-console"></div>
+  </div>
+
+
   <div class="admin-container">
 
     <h1>LIVE KARAOKE ADMIN</h1>
-
+    <!--
     <button onclick="setLive(true)" class="admin-btn live-btn">
       GO LIVE
     </button>
@@ -33,7 +42,13 @@
     <button onclick="toggleSongs(false)" class="admin-btn">
       LOCK SONGS
     </button>
+    -->
 
+    <button onclick="setLive(true)" class="admin-btn live-btn">GO LIVE</button>
+    <button onclick="setLive(false)" class="admin-btn">END LIVE</button>
+    <button onclick="toggleSongs(true)" class="admin-btn">ENABLE SONGS</button>
+    <button onclick="toggleSongs(false)" class="admin-btn">LOCK SONGS</button>
+    
   </div>
 
 
@@ -45,6 +60,35 @@
 
 
   <script>
+
+    const consoleBox = document.getElementById("adminConsole");
+    
+    let logHistory = [];
+    
+    function logAdmin(message) {
+    
+        const time = new Date().toLocaleTimeString();
+    
+        logHistory.unshift(`[${time}] ${message}`);
+    
+        if (logHistory.length > 50) logHistory.pop();
+    
+        renderConsole();
+    }
+    
+    function renderConsole() {
+    
+        consoleBox.innerHTML = "";
+    
+        const visibleLogs = logHistory.slice(0, 10);
+    
+        visibleLogs.forEach(log => {
+            const div = document.createElement("div");
+            div.className = "console-line";
+            div.innerText = log;
+            consoleBox.appendChild(div);
+        });
+    }
 
     const firebaseConfig = {
 
@@ -67,27 +111,49 @@
 
 
     function setLive(state) {
-
-      db.collection("karaoke").doc("state").update({
-
-        isLive: state,
-
-        manualOverride: true
-
-      });
-
+    
+        db.collection("karaoke").doc("state").update({
+            isLive: state,
+            manualOverride: true
+        });
+    
+        logAdmin(state ? "GO LIVE activated" : "LIVE ended");
     }
-
-
+    
     function toggleSongs(state) {
-
-      db.collection("karaoke").doc("state").update({
-
-        songsEnabled: state
-
-      });
-
+    
+        db.collection("karaoke").doc("state").update({
+            songsEnabled: state
+        });
+    
+        logAdmin(state ? "Songs ENABLED" : "Songs LOCKED");
     }
+
+    function loadCurrentState() {
+    
+        db.collection("karaoke").doc("state").get().then(doc => {
+    
+            const data = doc.data();
+    
+            logAdmin("System loaded");
+    
+            logAdmin("Live: " + data.isLive);
+    
+            logAdmin("Songs: " + data.songsEnabled);
+    
+            logAdmin("Venue: " + data.venueAccessCode);
+    
+        });
+    
+    }
+    
+    loadCurrentState();
+
+    function goMainSite() {
+        window.location.href = "../index.html";
+    }
+
+
 
   </script>
 
