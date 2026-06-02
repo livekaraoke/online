@@ -28,6 +28,8 @@
     </div>
   </div>
 
+  
+
   <!-- TOP BUTTON -->
   <!--
   <div class="admin-top">
@@ -36,45 +38,45 @@
     </button>
   </div>
   -->
-
-  <!-- CONSOLE -->
-  <div class="admin-container">
-
-
-    <h1>LIVE KARAOKE ADMIN</h1>
-
-    <button onclick="setLive(true)" class="admin-btn live-btn">
-      GO LIVE
-    </button>
-
-    <button onclick="setLive(false)" class="admin-btn">
-      END LIVE
-    </button>
-
-    <button onclick="toggleSongs(true)" class="admin-btn">
-      ENABLE SONGS
-    </button>
-
-    <button onclick="toggleSongs(false)" class="admin-btn">
-      LOCK SONGS
-    </button>
-
-    <button onclick="goMainSite()" class="admin-btn">
-      ⬅ GO BACK TO MAIN SITE
-    </button>
-
-    <button onclick="adminLogout()" class="admin-btn">
-      LOG OUT
-    </button>
-
-    <br>
-    
-    <h2>CONTROL PANEL</h2>
-
-    <div id="adminConsole" class="admin-console"></div>
-    
+  <div id="adminContent" style="display:none;">
+    <!-- CONSOLE -->
+    <div class="admin-container">
+  
+  
+      <h1>LIVE KARAOKE ADMIN</h1>
+  
+      <button onclick="setLive(true)" class="admin-btn live-btn">
+        GO LIVE
+      </button>
+  
+      <button onclick="setLive(false)" class="admin-btn">
+        END LIVE
+      </button>
+  
+      <button onclick="toggleSongs(true)" class="admin-btn">
+        ENABLE SONGS
+      </button>
+  
+      <button onclick="toggleSongs(false)" class="admin-btn">
+        LOCK SONGS
+      </button>
+  
+      <button onclick="goMainSite()" class="admin-btn">
+        ⬅ GO BACK TO MAIN SITE
+      </button>
+  
+      <button onclick="adminLogout()" class="admin-btn">
+        LOG OUT
+      </button>
+  
+      <br>
+      
+      <h2>CONTROL PANEL</h2>
+  
+      <div id="adminConsole" class="admin-console"></div>
+      
+    </div>
   </div>
-
 
   <!-- FIREBASE -->
 
@@ -237,15 +239,28 @@
       }
     
       auth.onAuthStateChanged((user) => {
+
+        const gate = document.getElementById("passwordGate");
+        const adminContent = document.getElementById("adminContent");
+    
         if (user) {
-          document.getElementById("passwordGate").style.display = "none";
-          if (typeof logAdmin === "function") {
-            logAdmin("Logged in as: " + user.email);
-          }
+    
+            gate.style.display = "none";
+    
+            adminContent.style.display = "block";
+    
+            if (typeof logAdmin === "function") {
+                logAdmin("Logged in as: " + user.email);
+            }
+    
         } else {
-          document.getElementById("passwordGate").style.display = "flex";
+    
+            gate.style.display = "flex";
+    
+            adminContent.style.display = "none";
+    
         }
-      });
+    });
     
       document.addEventListener("keydown", function(e) {
         if (e.key === "Enter" && document.getElementById("passwordGate").style.display !== "none") {
