@@ -343,7 +343,7 @@ footer p{
 
 .live-now{
     color:#ff2b2b;
-    font-size:1.15rem;
+    font-size:1rem;
     font-weight:bold;
     animation:liveBlink 1s infinite;
     letter-spacing:2px;
@@ -351,7 +351,7 @@ footer p{
 
 .live-now-small {
     color: #ff2b2b;
-    font-size: 1.15rem;
+    font-size: 1rem;
     font-weight: bold;
     animation: liveBlink 1s infinite;
     letter-spacing: 2px;
@@ -365,7 +365,7 @@ footer p{
 }
 
 .countdown-line {
-    font-size: 1.15rem;
+    font-size: 1rem;
     font-weight: 700;
     color: white;
     letter-spacing: 2.5px;
