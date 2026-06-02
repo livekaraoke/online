@@ -75,6 +75,7 @@
     listenToKaraokeState();
     */
 
+    /*
     function getCurrentEvent(event) {
         const eventTimes = getCurrentEvent(data.nextEvent);
         const start = eventTimes.start;
@@ -89,11 +90,48 @@
         }
         return { start, end };
     }
+    */
+
+    function getCurrentEvent(event) {
+        if (!event || !event.start || !event.end) {
+            console.error("Missing event start/end:", event);
+            return null;
+        }
+    
+        let start = new Date(event.start);
+        let end = new Date(event.end);
+    
+        if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+            console.error("Invalid event date format:", event.start, event.end);
+            return null;
+        }
+    
+        const now = new Date();
+    
+        if (event.repeatWeekly) {
+            while (end < now) {
+                start.setDate(start.getDate() + 7);
+                end.setDate(end.getDate() + 7);
+            }
+        }
+    
+        return { start, end };
+    }
     
     function updateUI(data) {
       const now = new Date();
-      const start = new Date(data.nextEvent.start);
-      const end = new Date(data.nextEvent.end);
+      if (!eventTimes) {
+          document.getElementById("liveStatus").innerHTML = `
+              <div class="live-box">
+                  <div>NEXT LIVE</div>
+                  <div>Event date error</div>
+              </div>
+          `;
+          return;
+      }
+      
+      const start = eventTimes.start;
+      const end = eventTimes.end;
       let isLive = false;
       
       // manual override
