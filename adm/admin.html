@@ -182,19 +182,12 @@
     function loadCurrentState() {
     
         db.collection("karaoke").doc("state").get().then(doc => {
-    
             const data = doc.data();
-    
             logAdmin("System loaded");
-    
             logAdmin("Live: " + data.isLive);
-    
             logAdmin("Songs: " + data.songsEnabled);
-    
-            logAdmin("Venue: " + data.venueAccessCode);
-    
+            logAdmin("VAC: " + data.vac);
         });
-    
     }
     
     loadCurrentState();
