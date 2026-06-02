@@ -299,6 +299,34 @@
       });
     }
 
+    function getCurrentEvent(event) {
+
+        if (!event || !event.start || !event.end) {
+            return null;
+        }
+    
+        let start = new Date(event.start);
+        let end = new Date(event.end);
+    
+        if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+            return null;
+        }
+    
+        const now = new Date();
+    
+        if (event.repeatWeekly) {
+    
+            while (end < now) {
+    
+                start.setDate(start.getDate() + 7);
+                end.setDate(end.getDate() + 7);
+    
+            }
+        }
+    
+        return { start, end };
+    }
+
     db.collection("karaoke").doc("state").onSnapshot((doc) => {
         currentState = doc.data();
     
