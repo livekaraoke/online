@@ -14,6 +14,20 @@
 
 <body class="admin-body">
 
+  <div id="passwordGate" class="password-gate">
+    <div class="gate-box">
+      <h2>Admin Login</h2>
+  
+      <input type="email" id="emailInput" placeholder="Email..." autocomplete="email" />
+  
+      <input type="password" id="passwordInput" placeholder="Password..." autocomplete="current-password" />
+  
+      <button onclick="adminLogin()">Login</button>
+  
+      <p id="passwordError" class="error"></p>
+    </div>
+  </div>
+
   <!-- TOP BUTTON -->
   <!--
   <div class="admin-top">
@@ -49,8 +63,10 @@
       ⬅ GO BACK TO MAIN SITE
     </button>
 
-    <br>
-    Test
+    <button onclick="adminLogout()" class="admin-btn">
+      LOG OUT
+    </button>
+
     <br>
     
     <h2>CONTROL PANEL</h2>
@@ -65,6 +81,8 @@
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 
 
   <script>
@@ -161,6 +179,85 @@
 
     function goMainSite() {
         window.location.href = "https://livekaraoke.github.io/online/";
+    }
+
+    const CORRECT_PASSWORD = "8765432"; // <-- change this
+  
+    function fixViewportHeight() {
+      const gate = document.getElementById("passwordGate");
+  
+      const vh = window.innerHeight * 0.01;
+      document.documentElement.style.setProperty('--vh', `${vh}px`);
+  
+      if (gate) {
+        gate.style.height = window.innerHeight + "px";
+      }  
+    }
+  
+    window.addEventListener("resize", fixViewportHeight);
+    window.addEventListener("load", fixViewportHeight);
+  
+    function checkPassword() {
+      const input = document.getElementById("passwordInput").value;
+      const error = document.getElementById("passwordError");
+  
+      if (input === CORRECT_PASSWORD) {
+        document.getElementById("passwordGate").style.display = "none";
+      } else {
+        error.textContent = "Incorrect password";
+      }
+    }
+  
+    // Optional: press Enter to submit
+    document.addEventListener("keydown", function(e) {
+      if (e.key === "Enter") {
+        checkPassword();
+      }
+    });
+
+      const auth = firebase.auth();
+    
+      function adminLogin() {
+        const email = document.getElementById("emailInput").value.trim();
+        const password = document.getElementById("passwordInput").value;
+        const error = document.getElementById("passwordError");
+    
+        error.textContent = "Checking...";
+    
+        auth.signInWithEmailAndPassword(email, password)
+          .then(() => {
+            document.getElementById("passwordGate").style.display = "none";
+            error.textContent = "";
+            logAdmin("Admin logged in");
+          })
+          .catch((err) => {
+            console.error(err);
+            error.textContent = "Incorrect email or password";
+          });
+      }
+    
+      auth.onAuthStateChanged((user) => {
+        if (user) {
+          document.getElementById("passwordGate").style.display = "none";
+          if (typeof logAdmin === "function") {
+            logAdmin("Logged in as: " + user.email);
+          }
+        } else {
+          document.getElementById("passwordGate").style.display = "flex";
+        }
+      });
+    
+      document.addEventListener("keydown", function(e) {
+        if (e.key === "Enter" && document.getElementById("passwordGate").style.display !== "none") {
+          adminLogin();
+        }
+      });
+
+
+    function adminLogout() {
+      auth.signOut().then(() => {
+        logAdmin("Logged out");
+      });
     }
 
 
