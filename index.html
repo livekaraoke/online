@@ -178,13 +178,13 @@
           songsAvailable = isLive;
       }
 
-      if (songsAvailable && authorizedAccess) {
+      if (isLive && songsAvailable && authorizedAccess) {
           songBtn.innerText = "SONG LIST";
           songBtn.href = "/online/snglst/songList.html";
           songBtn.className = "main-button";
       } else {
-          songBtn.innerText = "UNAVAILABLE";
-          songBtn.href = "#";
+          songBtn.innerText = "UNAVAILABLE!";
+          songBtn.href = "";
           songBtn.className = "disabled-button";
       }
       
