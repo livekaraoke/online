@@ -74,6 +74,21 @@
     
     listenToKaraokeState();
     */
+
+    function getCurrentEvent(event) {
+        const eventTimes = getCurrentEvent(data.nextEvent);
+        const start = eventTimes.start;
+        const end = eventTimes.end;
+        const now = new Date();
+    
+        if (event.repeatWeekly) {
+            while (end < now) {
+                start.setDate(start.getDate() + 7);
+                end.setDate(end.getDate() + 7);
+            }
+        }
+        return { start, end };
+    }
     
     function updateUI(data) {
       const now = new Date();
