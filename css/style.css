@@ -322,3 +322,144 @@ footer p{
     }
 
 }
+
+
+/* LIVE STATUS */
+
+.live-status-section{
+
+    text-align:center;
+
+    padding:40px 20px;
+
+    background:#080808;
+}
+
+
+.live-box{
+
+    display:inline-block;
+
+    padding:20px 40px;
+
+    border-radius:14px;
+
+    background:#111;
+
+    border:1px solid rgba(255,0,0,0.25);
+
+    box-shadow:
+        0 0 20px rgba(255,0,0,0.15);
+}
+
+
+.live-now{
+
+    color:#ff2b2b;
+
+    font-size:2rem;
+
+    font-weight:bold;
+
+    animation:liveBlink 1s infinite;
+
+    letter-spacing:2px;
+}
+
+
+@keyframes liveBlink{
+
+    0%{
+        opacity:1;
+        text-shadow:0 0 5px red;
+    }
+
+    50%{
+        opacity:0.4;
+        text-shadow:0 0 25px red;
+    }
+
+    100%{
+        opacity:1;
+        text-shadow:0 0 5px red;
+    }
+}
+
+
+/* ADMIN PAGE */
+
+.admin-body{
+
+    background:#050505;
+
+    color:white;
+
+    font-family:Bahnschrift, Arial, sans-serif;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    height:100vh;
+}
+
+
+.admin-container{
+
+    text-align:center;
+}
+
+
+.admin-container h1{
+
+    margin-bottom:40px;
+
+    letter-spacing:3px;
+}
+
+
+.admin-btn{
+
+    display:block;
+
+    width:260px;
+
+    margin:15px auto;
+
+    padding:18px;
+
+    background:#111;
+
+    border:1px solid rgba(255,0,0,0.25);
+
+    color:white;
+
+    font-size:1rem;
+
+    cursor:pointer;
+
+    transition:0.3s;
+
+    border-radius:8px;
+}
+
+
+.admin-btn:hover{
+
+    background:#1a1a1a;
+
+    transform:scale(1.03);
+
+    box-shadow:
+        0 0 15px rgba(255,0,0,0.4);
+}
+
+
+.live-btn{
+
+    border:1px solid rgba(255,0,0,0.5);
+}
+
+
