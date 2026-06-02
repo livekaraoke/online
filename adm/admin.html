@@ -69,7 +69,7 @@
       </button>
       
       <button id="songsToggleBtn" onclick="toggleSongsAuto()" class="admin-btn-main">
-        🟢 UNLOCK SONGS
+        🟢 UNLOCK SONG LIST
       </button>
   
       <button onclick="goMainSite()" class="admin-btn">
@@ -327,6 +327,7 @@
         return { start, end };
     }
 
+    /*
     db.collection("karaoke").doc("state").onSnapshot((doc) => {
         currentState = doc.data();
     
@@ -344,17 +345,72 @@
         }
     
         let songsAvailable;
-    
+        
         if (currentState.songsOverride) {
             songsAvailable = currentState.songsEnabled;
         } else {
             songsAvailable = isLive;
         }
+        
+        const songsBtn = document.getElementById("songsToggleBtn");
+        
+        if (!isLive) {
+            songsBtn.innerText = "🔒 SONG LIST LOCKED";
+        } else {
+            songsBtn.innerText = songsAvailable ? "🔴 LOCK SONG LIST" : "🟢 UNLOCK SONG LIST";
+        }
     
         document.getElementById("liveToggleBtn").innerText = isLive ? "🔴 END LIVE" : "🟢 GO LIVE";
-        document.getElementById("songsToggleBtn").innerText = songsAvailable ? "🔴 LOCK SONGS" : "🟢 UNLOCK SONGS";
+    });
+*/
+
+    db.collection("karaoke").doc("state").onSnapshot((doc) => {
+        currentState = doc.data();
+        updateAdminButtons(currentState);
     });
 
+    function updateAdminButtons(data) {
+        const now = new Date();
+        const eventTimes = getCurrentEvent(data.nextEvent);
+    
+        if (!eventTimes) return;
+    
+        const start = eventTimes.start;
+        const end = eventTimes.end;
+    
+        let isLive;
+    
+        if (data.manualOverride) {
+            isLive = data.isLive;
+        } else {
+            isLive = now >= start && now <= end;
+        }
+    
+        let songsAvailable;
+    
+        if (data.songsOverride) {
+            songsAvailable = data.songsEnabled;
+        } else {
+            songsAvailable = isLive;
+        }
+    
+        document.getElementById("liveToggleBtn").innerText = isLive ? "🔴 END LIVE" : "🟢 GO LIVE";
+    
+        const songsBtn = document.getElementById("songsToggleBtn");
+    
+        if (!isLive) {
+            songsBtn.innerText = "🔒 SONGS LOCKED";
+        } else {
+            songsBtn.innerText = songsAvailable ? "🔴 LOCK SONGS" : "🟢 UNLOCK SONGS";
+        }
+    }
+    
+    setInterval(() => {
+        if (currentState) {
+            updateAdminButtons(currentState);
+        }
+    }, 30000);
+    
     function toggleLive() {
         if (!currentState) return;
     
@@ -380,16 +436,32 @@
     
         const now = new Date();
         const eventTimes = getCurrentEvent(currentState.nextEvent);
+    
+        if (!eventTimes) {
+            logAdmin("Cannot change songs: event date error");
+            return;
+        }
+    
         const start = eventTimes.start;
         const end = eventTimes.end;
     
-        let isLive = currentState.manualOverride
+        const isLive = currentState.manualOverride
             ? currentState.isLive
             : now >= start && now <= end;
     
-        let songsAvailable = currentState.songsOverride
+        if (!isLive) {
+            db.collection("karaoke").doc("state").update({
+                songsOverride: true,
+                songsEnabled: false
+            });
+    
+            logAdmin("Cannot unlock songs: event is not live");
+            return;
+        }
+    
+        const songsAvailable = currentState.songsOverride
             ? currentState.songsEnabled
-            : isLive;
+            : true;
     
         if (songsAvailable) {
             db.collection("karaoke").doc("state").update({
@@ -404,7 +476,7 @@
                 songsEnabled: true
             });
     
-            logAdmin("Songs returned to AUTO / ENABLED");
+            logAdmin("Songs UNLOCKED during live event");
         }
     }
 
