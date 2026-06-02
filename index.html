@@ -24,6 +24,12 @@
 
   </section>
 
+  <!-- LIVE STATUS -->
+  <section class="live-status-section">
+    <div id="liveStatus"></div>
+  </section>
+
+
   <!-- ABOUT -->
   <section id="about" class="section">
     <h2>WHAT IS LIVE KARAOKE?</h2>
@@ -103,29 +109,42 @@
       // SONG ACCESS CONTROL
       const songBtn = document.getElementById("songListBtn");
     
-      if (data.songsEnabled) {
-        songBtn.innerText = "SONG LIST";
-        songBtn.classList.add("enabled");
+      if (data.songsEnabled && authorizedAccess) {
+          songBtn.innerText = "SONG LIST";
+          songBtn.classList.remove("disabled-button");
+          songBtn.classList.add("main-button");
+          songBtn.href = "songs.html";
       } else {
-        songBtn.innerText = "UNAVAILABLE";
-        songBtn.classList.remove("enabled");
+          songBtn.innerText = "UNAVAILABLE";
+          songBtn.href = "#";
       }
+
     }
 
     const params = new URLSearchParams(window.location.search);
+    
     const venue = params.get("vac");
     
+    let authorizedAccess = false;
+    
     db.collection("karaoke").doc("state").get().then(doc => {
-  
+    
       const data = doc.data();
     
       if (venue === data.venueAccessCode) {
-        document.body.classList.add("authorized");
+    
+        authorizedAccess = true;
+    
+        console.log("Venue access granted");
+    
       } else {
-        document.body.innerHTML = "ACCESS ONLY AT VENUE";
+    
+        console.log("Normal visitor");
+    
       }
-
+    
     });
+
 
     
   </script>
@@ -164,7 +183,7 @@
     <p>
       Song access becomes available during live sessions only.
     </p>
-    <a href="#" class="disabled-button">
+    <a href="#" class="disabled-button" id="songListBtn">
       SONG LIST LOCKED
     </a>
   </section>
