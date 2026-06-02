@@ -45,7 +45,8 @@
       <br>
   
       <h1>LIVE KARAOKE ADMIN</h1>
-  
+
+      <!--
       <button onclick="setLive(true)" class="admin-btn live-btn">
         🟢 GO LIVE
       </button>
@@ -60,6 +61,15 @@
   
       <button onclick="toggleSongs(false)" class="admin-btn">
         🔴 LOCK SONGS
+      </button>
+      -->
+
+      <button id="liveToggleBtn" onclick="toggleLive()" class="admin-btn live-btn">
+        🟢 GO LIVE
+      </button>
+      
+      <button id="songsToggleBtn" onclick="toggleSongsAuto()" class="admin-btn">
+        🟢 UNLOCK SONGS
       </button>
   
       <button onclick="goMainSite()" class="admin-btn">
@@ -91,6 +101,7 @@
     const consoleBox = document.getElementById("adminConsole");
     
     let logHistory = [];
+    let currentState = null;
     
     function logAdmin(message) {
 
@@ -288,6 +299,86 @@
       });
     }
 
+    db.collection("karaoke").doc("state").onSnapshot((doc) => {
+        currentState = doc.data();
+    
+        const now = new Date();
+        const eventTimes = getCurrentEvent(currentState.nextEvent);
+        const start = eventTimes.start;
+        const end = eventTimes.end;
+    
+        let isLive;
+    
+        if (currentState.manualOverride) {
+            isLive = currentState.isLive;
+        } else {
+            isLive = now >= start && now <= end;
+        }
+    
+        let songsAvailable;
+    
+        if (currentState.songsOverride) {
+            songsAvailable = currentState.songsEnabled;
+        } else {
+            songsAvailable = isLive;
+        }
+    
+        document.getElementById("liveToggleBtn").innerText = isLive ? "🔴 END LIVE" : "🟢 GO LIVE";
+        document.getElementById("songsToggleBtn").innerText = songsAvailable ? "🔴 LOCK SONGS" : "🟢 UNLOCK SONGS";
+    });
+
+    function toggleLive() {
+        if (!currentState) return;
+    
+        const now = new Date();
+        const eventTimes = getCurrentEvent(currentState.nextEvent);
+        const start = eventTimes.start;
+        const end = eventTimes.end;
+    
+        let isLive = currentState.manualOverride
+            ? currentState.isLive
+            : now >= start && now <= end;
+    
+        db.collection("karaoke").doc("state").update({
+            manualOverride: true,
+            isLive: !isLive
+        });
+    
+        logAdmin(!isLive ? "GO LIVE activated" : "LIVE ended manually");
+    }
+
+    function toggleSongsAuto() {
+        if (!currentState) return;
+    
+        const now = new Date();
+        const eventTimes = getCurrentEvent(currentState.nextEvent);
+        const start = eventTimes.start;
+        const end = eventTimes.end;
+    
+        let isLive = currentState.manualOverride
+            ? currentState.isLive
+            : now >= start && now <= end;
+    
+        let songsAvailable = currentState.songsOverride
+            ? currentState.songsEnabled
+            : isLive;
+    
+        if (songsAvailable) {
+            db.collection("karaoke").doc("state").update({
+                songsOverride: true,
+                songsEnabled: false
+            });
+    
+            logAdmin("Songs LOCKED manually");
+        } else {
+            db.collection("karaoke").doc("state").update({
+                songsOverride: false,
+                songsEnabled: true
+            });
+    
+            logAdmin("Songs returned to AUTO / ENABLED");
+        }
+    }
 
 
   </script>
