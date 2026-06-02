@@ -481,5 +481,16 @@ footer p{
     border-bottom: 1px solid rgba(255,255,255,0.05);
 }
 
+.admin-console::-webkit-scrollbar {
+    width: 6px;
+}
 
+.admin-console::-webkit-scrollbar-thumb {
+    background: rgba(255,0,0,0.6);
+    border-radius: 3px;
+}
+
+.admin-console::-webkit-scrollbar-track {
+    background: rgba(0,0,0,0.2);
+}
 
