@@ -130,30 +130,37 @@
     }
 
     const params = new URLSearchParams(window.location.search);
-    
-    const vac = params.get("vac");
+    const vacFromUrl = params.get("vac");
     
     let authorizedAccess = false;
     
-    db.collection("karaoke").doc("state").get().then(doc => {
+    // STEP 1 — store QR value temporarily
+    if (vacFromUrl) {
+        sessionStorage.setItem("vac", vacFromUrl);
     
-      const data = doc.data();
+        // STEP 2 — remove ?vac= from URL instantly
+        window.history.replaceState({}, document.title, window.location.pathname);
+    }
     
-      if (vac === data.vac) {
-    
-        authorizedAccess = true;
-    
-        console.log("Venue access granted");
+    // STEP 3 — always use stored value (NOT URL)
+    const vac = sessionStorage.getItem("vac");
 
-        updateUI(data);
-    
+    db.collection("karaoke").doc("state").get().then(doc => {
+
+      const data = doc.data();
+  
+      if (vac && vac === data.vac) {
+  
+          authorizedAccess = true;
+  
+          console.log("Venue access granted");
+  
       } else {
-    
-        console.log("Normal visitor");
-    
+  
+          console.log("Normal visitor");
       }
-    
-    });
+  
+  });
 
 
     
