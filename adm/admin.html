@@ -14,19 +14,22 @@
 
 <body class="admin-body">
 
-  <div class="admin-header">
+  <!-- TOP BUTTON -->
+  <div class="admin-top">
     <button onclick="goMainSite()" class="admin-btn">
       ⬅ GO BACK TO MAIN SITE
     </button>
-    <h2>CONTROL PANEL</h2>
-    <div id="adminConsole" class="admin-console"></div>
   </div>
 
-
+  <!-- CONSOLE -->
   <div class="admin-container">
 
+    <h2>CONTROL PANEL</h2>
+
+    <div id="adminConsole" class="admin-console"></div>
+
     <h1>LIVE KARAOKE ADMIN</h1>
-    <!--
+
     <button onclick="setLive(true)" class="admin-btn live-btn">
       GO LIVE
     </button>
@@ -42,13 +45,7 @@
     <button onclick="toggleSongs(false)" class="admin-btn">
       LOCK SONGS
     </button>
-    -->
 
-    <button onclick="setLive(true)" class="admin-btn live-btn">GO LIVE</button>
-    <button onclick="setLive(false)" class="admin-btn">END LIVE</button>
-    <button onclick="toggleSongs(true)" class="admin-btn">ENABLE SONGS</button>
-    <button onclick="toggleSongs(false)" class="admin-btn">LOCK SONGS</button>
-    
   </div>
 
 
@@ -66,21 +63,21 @@
     let logHistory = [];
     
     function logAdmin(message) {
-    
+
         const time = new Date().toLocaleTimeString();
     
-        logHistory.unshift(`[${time}] ${message}`);
+        logHistory.push(`[${time}] ${message}`);
     
-        if (logHistory.length > 50) logHistory.pop();
+        if (logHistory.length > 50) logHistory.shift();
     
         renderConsole();
     }
     
     function renderConsole() {
-    
+
         consoleBox.innerHTML = "";
     
-        const visibleLogs = logHistory.slice(0, 10);
+        const visibleLogs = logHistory.slice(-10); // last 10 logs
     
         visibleLogs.forEach(log => {
             const div = document.createElement("div");
@@ -88,6 +85,8 @@
             div.innerText = log;
             consoleBox.appendChild(div);
         });
+    
+        consoleBox.scrollTop = consoleBox.scrollHeight; // auto scroll down
     }
 
     const firebaseConfig = {
