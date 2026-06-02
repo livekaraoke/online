@@ -365,10 +365,10 @@ footer p{
 }
 
 .countdown-line {
-    font-size: 1.35rem;
+    font-size: 1.5rem;
     font-weight: 700;
     color: white;
-    letter-spacing: 1.5px;
+    letter-spacing: 2.5px;
 }
 
 @keyframes liveBlink{
