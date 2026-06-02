@@ -342,6 +342,10 @@ footer p{
     box-shadow: 0 0 20px rgba(255,0,0,0.15);*/
 }
 
+.live-box.countdown-line {
+    font-size: 14px !important;
+}
+
 .live-now{
     color:#ff2b2b;
     font-size:0.5rem;
