@@ -226,8 +226,6 @@ body{
     color:#cccccc;
 }
 
-.event-card h5
-
 
 /* DARK SECTION */
 .dark-section{
@@ -389,21 +387,13 @@ footer p{
 
 /* ADMIN PAGE */
 
-.admin-body{
-
-    background:#050505;
-
-    color:white;
-
-    font-family:Bahnschrift, Arial, sans-serif;
-
-    display:flex;
-
-    justify-content:center;
-
-    align-items:center;
-
-    height:100vh;
+.admin-body {
+    background: #050505;
+    color: white;
+    font-family: Bahnschrift, Arial, sans-serif;
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
 }
 
 
@@ -505,125 +495,95 @@ footer p{
 }
 
 /* LOGIN GATE */
+
 .password-gate {
-
     position: fixed;
-
-    top: 0;
-    left: 0;
-
+    inset: 0;
     width: 100vw;
     height: 100vh;
+    min-height: 100vh;
 
     display: flex;
-
     justify-content: center;
     align-items: center;
 
     background: #050505;
-
     z-index: 9999;
 }
 
 .gate-box {
-
     width: 380px;
     max-width: 90vw;
-
     padding: 40px;
 
     background: #111;
-
-    border: 1px solid rgba(255,0,0,0.25);
-
-    border-radius: 12px;
-
+    border: 1px solid rgba(255,0,0,0.35);
+    border-radius: 14px;
     text-align: center;
 
-    box-shadow:
-        0 0 25px rgba(255,0,0,0.15);
+    box-shadow: 0 0 30px rgba(255,0,0,0.22);
 }
 
 .gate-box h2 {
-
     color: white;
-
-    margin-bottom: 30px;
-
-    letter-spacing: 2px;
+    margin-bottom: 28px;
+    letter-spacing: 3px;
+    font-size: 1.6rem;
 }
 
 .gate-box input {
-
+    display: block;
     width: 100%;
+    padding: 15px 16px;
+    margin-bottom: 16px;
 
-    box-sizing: border-box;
-
-    padding: 14px 16px;
-
-    margin-bottom: 15px;
-
-    background: #0a0a0a;
-
-    border: 1px solid rgba(255,255,255,0.1);
-
+    background: #070707;
+    border: 1px solid rgba(255,255,255,0.15);
     border-radius: 8px;
 
     color: white;
-
     font-size: 16px;
-
+    font-family: Bahnschrift, Arial, sans-serif;
     outline: none;
+}
 
-    transition: 0.2s;
+.gate-box input::placeholder {
+    color: #777;
 }
 
 .gate-box input:focus {
-
-    border-color: rgba(255,0,0,0.7);
-
-    box-shadow:
-        0 0 10px rgba(255,0,0,0.3);
+    border-color: rgba(255,0,0,0.8);
+    box-shadow: 0 0 12px rgba(255,0,0,0.35);
 }
 
 .gate-box button {
-
     width: 100%;
-
     padding: 15px;
 
-    background: #111;
-
-    border: 1px solid rgba(255,0,0,0.5);
-
+    background: rgba(255,0,0,0.08);
+    border: 1px solid rgba(255,0,0,0.6);
     border-radius: 8px;
 
     color: white;
-
-    font-weight: 600;
-
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 2px;
     cursor: pointer;
 
-    transition: 0.3s;
+    transition: 0.25s ease;
 }
 
 .gate-box button:hover {
-
     background: #181818;
-
-    box-shadow:
-        0 0 15px rgba(255,0,0,0.4);
-
     transform: scale(1.02);
+    box-shadow: 0 0 18px rgba(255,0,0,0.45);
 }
 
 .error {
-
     margin-top: 15px;
-
     color: #ff5555;
-
     min-height: 20px;
-
     font-size: 14px;
 }
+
+
