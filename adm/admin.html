@@ -157,7 +157,8 @@
         });
     
     }
-    
+
+    /*
     function toggleSongs(state) {
     
         db.collection("karaoke").doc("state").update({
@@ -165,6 +166,17 @@
         });
     
         logAdmin(state ? "Songs ENABLED" : "Songs LOCKED");
+    }
+    */
+
+
+    function toggleSongs(state) {
+    
+        db.collection("karaoke").doc("state").update({
+            songsOverride: true,
+            songsEnabled: state
+        });
+    
     }
 
     function loadCurrentState() {
