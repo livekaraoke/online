@@ -214,7 +214,7 @@ body{
     color:white;
 }
 .event-card h5 {
-    font-size:1.2rem;
+    font-size:1.5rem;
     color:#fcc001;
     margin-top: 5px;
     margin-bottom: 5px;
@@ -374,6 +374,7 @@ footer p{
 .countdown-venue {
     color: #fcc001;
     font-weight: 700;
+    text-shadow: 0 0 6px rgba(252,192,1,0.4);
 }
 
 @keyframes liveBlink{
