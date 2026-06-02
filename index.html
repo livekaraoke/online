@@ -62,6 +62,7 @@
 </script>
 
   <script>
+    /*
     async function listenToKaraokeState() {
       const docRef = db.collection("karaoke").doc("state");
       docRef.onSnapshot((doc) => {
@@ -72,6 +73,7 @@
     }
     
     listenToKaraokeState();
+    */
     
     function updateUI(data) {
       const now = new Date();
@@ -112,7 +114,26 @@
     
       // SONG ACCESS CONTROL
       const songBtn = document.getElementById("songListBtn");
-    
+
+      let songsAvailable;
+
+      if (data.songsOverride) {
+          songsAvailable = data.songsEnabled;
+      } else {
+          songsAvailable = isLive;
+      }
+
+      if (songsAvailable && authorizedAccess) {
+          songBtn.innerText = "SONG LIST";
+          songBtn.href = "/online/snglst/songList.html";
+          songBtn.className = "main-button";
+      } else {
+          songBtn.innerText = "UNAVAILABLE";
+          songBtn.href = "#";
+          songBtn.className = "disabled-button";
+      }
+      
+      /*
       if (data.songsEnabled && authorizedAccess) {
           songBtn.innerText = "SONG LIST";
           songBtn.href = "/online/snglst/songList.html";
@@ -125,6 +146,7 @@
           songBtn.className = "disabled-button";
       
       }
+      */
 
 
     }
@@ -145,20 +167,19 @@
     vac = sessionStorage.getItem("vac");
     
     // STEP 3 — wait for Firebase BEFORE UI update
+    let latestData = null;
+
     db.collection("karaoke").doc("state").onSnapshot((doc) => {
-    
-        const data = doc.data();
-    
-        // ONLY NOW decide access
-        authorizedAccess = (vac && vac === data.vac);
-    
-        console.log("vac:", vac);
-        console.log("firebase vac:", data.vac);
-        console.log("authorized:", authorizedAccess);
-    
-        updateUI(data);
-    
+        latestData = doc.data();
+        authorizedAccess = (vac && vac === latestData.vac);
+        updateUI(latestData);
     });
+
+    setInterval(() => {
+        if (latestData) {
+            updateUI(latestData);
+        }
+    }, 30000);
 
 
     
