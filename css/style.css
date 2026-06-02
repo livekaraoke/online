@@ -419,38 +419,43 @@ footer p{
 
 
 .admin-btn{
-
     display:block;
-
     width:260px;
-
     margin:15px auto;
-
     padding:18px;
-
     background:#111;
-
     border:1px solid rgba(255,0,0,0.25);
-
     color:white;
-
     font-size:1rem;
-
     cursor:pointer;
-
     transition:0.3s;
-
     border-radius:8px;
 }
 
-
-
 .admin-btn:hover{
-
     background:#1a1a1a;
-
     transform:scale(1.03);
+    box-shadow:
+        0 0 15px rgba(255,0,0,0.4);
+}
 
+.admin-btn-main{
+    display:block;
+    width:260px;
+    margin:15px auto;
+    padding:18px;
+    background:#400000;
+    border:1px solid rgba(255,0,0,0.25);
+    color:white;
+    font-size:1rem;
+    cursor:pointer;
+    transition:0.3s;
+    border-radius:8px;
+}
+
+.admin-btn-main:hover{
+    background:#422222;
+    transform:scale(1.03);
     box-shadow:
         0 0 15px rgba(255,0,0,0.4);
 }
