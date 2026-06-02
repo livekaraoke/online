@@ -343,7 +343,7 @@ footer p{
 
 .live-now{
     color:#ff2b2b;
-    font-size:2rem;
+    font-size:1.3rem;
     font-weight:bold;
     animation:liveBlink 1s infinite;
     letter-spacing:2px;
