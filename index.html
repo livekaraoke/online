@@ -129,38 +129,36 @@
 
     }
 
+    let vac = null;
+    let authorizedAccess = false;
+    
+    // STEP 1 — get QR value immediately
     const params = new URLSearchParams(window.location.search);
     const vacFromUrl = params.get("vac");
     
-    let authorizedAccess = false;
-    
-    // STEP 1 — store QR value temporarily
     if (vacFromUrl) {
         sessionStorage.setItem("vac", vacFromUrl);
-    
-        // STEP 2 — remove ?vac= from URL instantly
         window.history.replaceState({}, document.title, window.location.pathname);
     }
     
-    // STEP 3 — always use stored value (NOT URL)
-    const vac = sessionStorage.getItem("vac");
-
-    db.collection("karaoke").doc("state").get().then(doc => {
-
-      const data = doc.data();
-  
-      if (vac && vac === data.vac) {
-  
-          authorizedAccess = true;
-  
-          console.log("Venue access granted");
-  
-      } else {
-  
-          console.log("Normal visitor");
-      }
-  
-  });
+    // STEP 2 — always resolve from storage
+    vac = sessionStorage.getItem("vac");
+    
+    // STEP 3 — wait for Firebase BEFORE UI update
+    db.collection("karaoke").doc("state").onSnapshot((doc) => {
+    
+        const data = doc.data();
+    
+        // ONLY NOW decide access
+        authorizedAccess = (vac && vac === data.vac);
+    
+        console.log("vac:", vac);
+        console.log("firebase vac:", data.vac);
+        console.log("authorized:", authorizedAccess);
+    
+        updateUI(data);
+    
+    });
 
 
     
