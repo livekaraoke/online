@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>LIVE KARAOKE</title>
+    <link rel="stylesheet" href="css/style.css">
+  </head>
+
+  <body>
+    <script>
+      function setLive(state) {
+        db.collection("karaoke").doc("state").update({
+          isLive: state,
+          manualOverride: true
+        });
+      }
+      
+      function toggleSongs(state) {
+        db.collection("karaoke").doc("state").update({
+          songsEnabled: state
+        });
+      }
+    </script>
+
+    
+    <button onclick="setLive(true)">GO LIVE</button>
+    <button onclick="setLive(false)">END LIVE</button>
+    <button onclick="toggleSongs(true)">ENABLE SONGS</button>
+    <button onclick="toggleSongs(false)">LOCK SONGS</button>
+  </body>
+</html>
