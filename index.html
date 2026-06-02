@@ -35,6 +35,101 @@
     </p>
   </section>
 
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
+
+  <script>
+const firebaseConfig = {
+  apiKey: "AIzaSyC4gSodXM35E2ZdYaz6mrCvTUYzW75ZCBk",
+  authDomain: "livekaraokemt.firebaseapp.com",
+  projectId: "livekaraokemt",
+  storageBucket: "livekaraokemt.firebasestorage.app",
+  messagingSenderId: "425980659562",
+  appId: "1:425980659562:web:892ddcd53fb209d1114713"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+</script>
+
+  <script>
+    async function listenToKaraokeState() {
+      const docRef = db.collection("karaoke").doc("state");
+      docRef.onSnapshot((doc) => {
+        const data = doc.data();
+        updateUI(data);
+      });
+    }
+    
+    listenToKaraokeState();
+    
+    function updateUI(data) {
+      const now = new Date();
+      const start = new Date(data.nextEvent.start);
+      const end = new Date(data.nextEvent.end);
+      let isLive = false;
+      
+      // manual override
+      if (data.manualOverride) {
+        isLive = data.isLive;
+      } else {
+        isLive = now >= start && now <= end;
+      }
+    
+      const container = document.getElementById("liveStatus");
+    
+      if (isLive) {
+        container.innerHTML = `
+          <div class="live-box">
+            <div class="live-now">🔴 NOW LIVE</div>
+            <div>${data.nextEvent.venue}</div>
+          </div>
+        `;
+      } else {
+        const diff = start - now;
+        const days = Math.floor(diff / (1000*60*60*24));
+        const hours = Math.floor((diff / (1000*60*60)) % 24);
+        const mins = Math.floor((diff / (1000*60)) % 60);
+    
+        container.innerHTML = `
+          <div class="live-box">
+            <div>NEXT LIVE</div>
+            <div>${data.nextEvent.venue}</div>
+            <div>${days}d ${hours}h ${mins}m</div>
+          </div>
+        `;
+      }
+    
+      // SONG ACCESS CONTROL
+      const songBtn = document.getElementById("songListBtn");
+    
+      if (data.songsEnabled) {
+        songBtn.innerText = "SONG LIST";
+        songBtn.classList.add("enabled");
+      } else {
+        songBtn.innerText = "UNAVAILABLE";
+        songBtn.classList.remove("enabled");
+      }
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const venue = params.get("vac");
+    
+    db.collection("karaoke").doc("state").get().then(doc => {
+  
+      const data = doc.data();
+    
+      if (venue === data.venueAccessCode) {
+        document.body.classList.add("authorized");
+      } else {
+        document.body.innerHTML = "ACCESS ONLY AT VENUE";
+      }
+
+    });
+
+    
+  </script>
+  
   <!-- EVENTS -->
   <section class="section dark-section">
     <h2>EVENTS</h2>
@@ -119,6 +214,11 @@
   </footer>
 
 <script>
+
+
+
+
+  
 function smoothScroll(e) {
     e.preventDefault();
 
