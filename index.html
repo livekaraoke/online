@@ -160,7 +160,9 @@
     
         container.innerHTML = `
           <div class="live-box countdown-line">
-            NEXT LIVE EVENT: ${data.nextEvent.venue} - ${days}d ${hours}h ${mins}m
+            NEXT LIVE EVENT:
+            <span class="countdown-venue">${data.nextEvent.venue}</span>
+            - ${days}d ${hours}h ${mins}m
           </div>
         `;
       }
