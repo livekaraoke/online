@@ -149,8 +149,7 @@
         container.innerHTML = `
           <div class="live-box">
             <div class="live-now-small">🔴 NOW LIVE at </div>
-            <span class="live-venue">${data.nextEvent.venue}</span>
-            
+            <span class="live-venue">${data.nextEvent.venue},</span><span class="live-venue-location">${data.nextEvent.venueLocation}</span>
           </div>
         `;
       } else {
@@ -162,7 +161,7 @@
         container.innerHTML = `
           <div class="live-box countdown-line">
             NEXT LIVE EVENT:
-            <span class="countdown-venue">${data.nextEvent.venue}</span>
+            <span class="countdown-venue">${data.nextEvent.venue}</span><span class="countdown-venue-location">${data.nextEvent.venueLocation}</span>
             - ${days}d ${hours}h ${mins}m
           </div>
         `;
