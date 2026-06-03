@@ -367,7 +367,7 @@ footer p{
 }
 
 .live-venue {
-    margin-top: 15px !important;
+    margin-top: 20px !important;
     font-color: #fcc001 !important;
     font-size: 18px !important;
     letter-spacing: 2px;
@@ -377,8 +377,8 @@ footer p{
 }
 
 .live-venue-location {
-    margin-top: 15px !important;
-    font-color: #888888 !important;
+    margin-top: 20px !important;
+    font-color: #aaaaaa !important;
     font-size: 17px !important;
     letter-spacing: 2px;
     font-weight: 600 !important;
