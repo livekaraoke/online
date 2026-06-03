@@ -368,9 +368,12 @@ footer p{
 
 .live-venue {
     margin-top: 0px;
-    color: #ffffff;
-    font-size: 16px;
+    color: ##fcc001;
+    font-size: 18px;
     letter-spacing: 2px;
+    font-weight: 700;
+    text-shadow: 0 0 6px rgba(252,192,1,0.4);
+    text-transform: uppercase;
 }
 
 .countdown-line {
