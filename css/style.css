@@ -119,9 +119,9 @@ body{
     letter-spacing:2px;
     transition:0.3s;
     border-radius:4px;
-    background:rgba(255,0,0,0.08);
+    background:rgba(255,0,0,0.12);
     box-shadow:
-        0 0 8px rgba(255,0,0,0.3);
+        0 0 8px rgba(255,0,0,0.5);
 
     animation: neonPulse 2.0s infinite ease-in-out;
 }
@@ -187,7 +187,7 @@ body{
     margin-top:40px;
     padding:35px;
     padding-top: 0px;
-    background:#999999;
+    background:#777777;
     border:1px solid rgba(255,0,0,0.25);
     border-radius:10px;
     max-width:500px;
