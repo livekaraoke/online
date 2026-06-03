@@ -378,7 +378,7 @@ footer p{
 
 .live-venue-location {
     margin-top: 15px;
-    color: #aaaaaa;
+    color: #888888;
     font-size: 18px;
     letter-spacing: 2px;
     font-weight: 700;
@@ -400,7 +400,7 @@ footer p{
 }
 
 .countdown-venue-location {
-    color: #aaaaaa;
+    color: #888888;
     font-weight: 700;
     text-shadow: 0 0 6px rgba(252,192,1,0.4);
 }
