@@ -32,7 +32,7 @@ body {
 .step {
   text-align: center;
   color: white;
-  font-size: 34px;
+  font-size: 36px;
   text-shadow: 0 0 12px red;
 }
 
@@ -60,16 +60,8 @@ body {
 /* FEATURED */
 
 .featured {
-  padding: 35px 24px;
+  padding: 34px 24px 26px;
   background: #f7f7f4;
-}
-
-.featured h1 {
-  margin: 0 0 28px;
-  text-align: center;
-  font-size: clamp(42px, 9vw, 76px);
-  letter-spacing: 6px;
-  font-weight: 900;
 }
 
 .featured-grid {
@@ -84,9 +76,10 @@ body {
 }
 
 .featured-box h2 {
-  margin: 0 0 10px;
+  margin: 0 0 12px;
   color: #d20d0d;
-  font-size: 26px;
+  font-size: 28px;
+  letter-spacing: 1px;
 }
 
 .featured-box ul {
@@ -96,26 +89,42 @@ body {
 }
 
 .featured-box li {
-  display: flex;
-  justify-content: space-between;
-  gap: 18px;
-  padding: 8px 0;
+  padding: 9px 0;
   border-bottom: 1px solid #ddd;
-  font-size: 21px;
+}
+
+.featured-box li strong {
+  display: block;
+  font-size: 24px;
   font-weight: 900;
 }
 
 .featured-box li span {
-  font-size: 15px;
-  font-weight: 400;
+  display: block;
+  margin-top: 3px;
+  font-size: 18px;
   color: #333;
-  text-align: right;
 }
 
-/* SONG LIST SECTIONS */
+/* SONG LIST TITLE */
+
+.song-list-title {
+  background: #f7f7f4;
+  padding: 28px 20px 18px;
+  text-align: center;
+}
+
+.song-list-title h1 {
+  margin: 0;
+  font-size: clamp(42px, 9vw, 76px);
+  letter-spacing: 5px;
+  font-weight: 900;
+}
+
+/* SONG SECTIONS */
 
 .song-section {
-  padding: 26px 24px 34px;
+  padding: 24px 24px 34px;
   background: #f7f7f4;
   border-top: 1px solid #ddd;
 }
@@ -125,7 +134,7 @@ body {
   background: linear-gradient(180deg, #e12020, #aa0000);
   color: white;
   text-align: center;
-  font-size: clamp(28px, 7vw, 52px);
+  font-size: clamp(30px, 7vw, 52px);
   letter-spacing: 5px;
   padding: 10px 16px;
   border-radius: 8px;
@@ -136,42 +145,48 @@ ol {
   margin: 0;
   padding: 0;
   list-style: none;
-}
-
-ol li {
-  counter-increment: song;
-  display: grid;
-  grid-template-columns: 48px 1fr minmax(120px, 35%);
-  gap: 12px;
-  align-items: baseline;
-  padding: 10px 0;
-  border-bottom: 1px solid #d7d7d7;
-  font-size: clamp(16px, 3.8vw, 24px);
-}
-
-ol {
   counter-reset: song;
 }
 
 ol[start="21"] { counter-reset: song 20; }
 ol[start="43"] { counter-reset: song 42; }
+ol[start="62"] { counter-reset: song 61; }
+ol[start="84"] { counter-reset: song 83; }
+ol[start="101"] { counter-reset: song 100; }
+ol[start="130"] { counter-reset: song 129; }
+
+ol li {
+  counter-increment: song;
+  display: grid;
+  grid-template-columns: 48px 1fr;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid #d7d7d7;
+}
 
 ol li::before {
   content: counter(song);
   color: #d20d0d;
   font-weight: 900;
   text-align: right;
+  font-size: 22px;
+  padding-top: 2px;
 }
 
 ol li span {
+  display: block;
+  font-size: clamp(19px, 4.5vw, 28px);
   font-weight: 900;
+  line-height: 1.1;
 }
 
 ol li em {
+  display: block;
+  margin-top: 3px;
   font-style: normal;
-  color: #333;
-  font-size: .82em;
-  text-align: right;
+  color: #444;
+  font-size: clamp(15px, 3.5vw, 20px);
+  line-height: 1.15;
 }
 
 /* THANK YOU */
@@ -180,31 +195,37 @@ ol li em {
   background: #050505;
   color: white;
   text-align: center;
-  padding: 50px 24px;
+  padding: 55px 24px;
   border: 2px solid #ff2020;
   box-shadow: 0 0 25px rgba(255, 0, 0, .5);
 }
 
-.thank-you h2 {
-  margin: 0 0 18px;
-  font-size: clamp(44px, 10vw, 90px);
-  font-family: cursive;
-  color: white;
+.thank-you h2,
+.neon-script-small {
+  font-family: "Brush Script MT", "Segoe Script", cursive;
+  color: #fff;
   text-shadow:
-    0 0 8px red,
-    0 0 18px red,
-    0 0 35px red;
+    0 0 5px #ff1a1a,
+    0 0 12px #ff0000,
+    0 0 25px #ff0000,
+    0 0 45px #990000;
+}
+
+.thank-you h2 {
+  margin: 0 0 22px;
+  font-size: clamp(52px, 12vw, 100px);
+  font-weight: 400;
 }
 
 .thank-you h3 {
-  margin: 0 0 22px;
+  margin: 0 0 26px;
   font-size: clamp(30px, 7vw, 58px);
   letter-spacing: 2px;
 }
 
-.thank-you p {
-  color: #ddd;
-  font-size: 20px;
+.neon-script-small {
+  font-size: clamp(28px, 7vw, 52px);
+  margin-bottom: 26px;
 }
 
 .request-box {
@@ -219,6 +240,11 @@ ol li em {
 .request-box h4 {
   margin: 0 0 12px;
   font-size: 26px;
+}
+
+.request-box p {
+  color: #ddd;
+  font-size: 20px;
 }
 
 /* MOBILE */
@@ -236,23 +262,24 @@ ol li em {
     width: 45%;
   }
 
+  .featured-box li strong {
+    font-size: 22px;
+  }
+
+  .featured-box li span {
+    font-size: 17px;
+  }
+
+  .song-section {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
   ol li {
     grid-template-columns: 34px 1fr;
   }
 
-  ol li em {
-    grid-column: 2;
-    text-align: left;
-    color: #555;
-    margin-top: -4px;
-  }
-
-  .featured-box li {
-    flex-direction: column;
-    gap: 2px;
-  }
-
-  .featured-box li span {
-    text-align: left;
+  ol li::before {
+    font-size: 18px;
   }
 }
