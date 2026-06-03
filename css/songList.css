@@ -139,7 +139,7 @@ body {
   padding: 24px 24px 34px 28px;
   background: #f7f7f4;
   border-top: 1px solid #ddd;
-  border-left: none; /*5px solid #d20d0d;*/
+  border-left: none;
 }
 
 .song-section-grid {
