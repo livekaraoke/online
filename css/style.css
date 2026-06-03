@@ -361,6 +361,7 @@ footer p{
 .live-now-small {
     color: #ff2b2b;
     font-size: 16px;
+    margin-bottom: 5px;
     font-weight: bold;
     animation: liveBlink 1s infinite;
     letter-spacing: 2px;
