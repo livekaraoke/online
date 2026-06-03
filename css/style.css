@@ -381,7 +381,7 @@ footer p{
 }
 
 .countdown-venue {
-    color: #fcc001;
+    color: #ffffff; /*#fcc001;*/
     font-weight: 700;
     text-shadow: 0 0 6px rgba(252,192,1,0.4);
 }
