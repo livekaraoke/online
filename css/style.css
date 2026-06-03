@@ -183,13 +183,14 @@ body{
 }
 
 /* HOW IT WORKS */
-
+/*
 .instructions-container {
     max-width: 1100px;
     margin: 60px auto;
     padding: 0 20px;
 }
 
+*/
 
 .instructions-container img {
     width: 80%;
