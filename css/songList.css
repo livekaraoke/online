@@ -184,7 +184,7 @@ ol[start="130"] { counter-reset: song 129; }
 ol li {
   counter-increment: song;
   display: grid;
-  grid-template-columns: 46px 1fr;
+  grid-template-columns: 46px minmax(0, 1fr);
   gap: 12px;
   padding: 10px 0;
   border-bottom: 1px solid #d7d7d7;
@@ -216,6 +216,31 @@ ol li em {
   font-size: clamp(15px, 3vw, 19px);
   line-height: 1.2;
   text-align: left;
+}
+
+.song-info {
+  min-width: 0;
+  width: 100%;
+}
+
+.song-info span {
+  display: block;
+  width: 100%;
+  font-size: clamp(18px, 4vw, 25px);
+  font-weight: 900;
+  line-height: 1.15;
+}
+
+.song-info em {
+  display: block;
+  width: 100%;
+  margin-top: 4px;
+  font-style: normal;
+  color: #444;
+  font-size: clamp(15px, 3vw, 19px);
+  line-height: 1.2;
+  text-align: left;
+  white-space: normal;
 }
 
 /* BOTTOM INSTRUCTIONS SPACING */
@@ -346,16 +371,3 @@ ol li em {
 
 }
 
-ol li {
-  grid-template-columns: 46px minmax(0, 1fr);
-}
-
-ol li span,
-ol li em {
-  grid-column: 2;
-  min-width: 0;
-}
-
-ol li em {
-  margin-top: -6px;
-}
