@@ -215,7 +215,8 @@ body{
     color:#cccccc;
 }
 .event-card h5 {
-    font-size:1.5rem;
+    /* EVENT TIME **/
+    font-size:20px !important;
     color:#fcc001;
     margin-top: 8px;
     margin-bottom: 0px;
@@ -378,7 +379,7 @@ footer p{
 
 .live-venue {
     display:inline-block;
-    margin-top: 20px !important;
+    margin-top: 12px !important;
     color: #fcc001 !important;
     font-size: 18px !important;
     letter-spacing: 2px;
