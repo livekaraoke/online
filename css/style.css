@@ -216,9 +216,9 @@ body{
 }
 .event-card h5 {
     /* EVENT TIME **/
-    font-size:20px !important;
+    font-size:22px !important;
     color:#fcc001;
-    margin-top: 8px;
+    margin-top: 0px;
     margin-bottom: 0px;
 }
 
