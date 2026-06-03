@@ -221,9 +221,17 @@ body{
 }
 
 .event-card p{
+    /* (EVERY WEDNESDAY) */
     margin-bottom:-8px;
     margin-top: -8px;
+    color:#ffffff !important;
+    font-size:16px !important;
+}
+
+.event-subheading {
+    /* (Live Karaoke Night) */
     color:#cccccc;
+    font-size:14px !important;
 }
 
 
