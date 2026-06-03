@@ -343,8 +343,10 @@ footer p{
 .live-status-section{
     text-align:center;
     padding:15px 15px;
-    background:#080808;
+    background:#0d0d0d;
     font-size: 17px;
+    border:1px solid rgba(255,0,0,0.25);
+    box-shadow: 0 0 20px rgba(255,0,0,0.15);
 }
 
 .live-box{
