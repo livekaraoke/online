@@ -208,8 +208,8 @@ ol li span {
 }
 
 ol li em {
-  display: block;
-  width: 100%;
+  display: block !important;
+  width: 100% !important;
   margin-top: 4px;
   font-style: normal;
   color: #444;
