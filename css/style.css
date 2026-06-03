@@ -326,9 +326,6 @@ footer p{
 /* LIVE STATUS */
 
 .live-status{
-    text-align:center;
-    padding:20px 20px;
-    background:#080808;
     font-size: 18px;
 }
 
@@ -338,9 +335,6 @@ footer p{
     background:#080808;
     font-size: 18px;
 }
-
-
-
 
 .live-box{
     display:inline-block;
@@ -352,7 +346,7 @@ footer p{
 }
 
 .live-box.countdown-line {
-    font-size: 16px !important;
+    font-size: 18px;
 }
 
 .live-now{
