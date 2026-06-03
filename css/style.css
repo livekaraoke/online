@@ -183,21 +183,25 @@ body{
 }
 
 /* HOW IT WORKS */
-/*
+
 .instructions-container {
+    width: 100%;
     max-width: 1100px;
     margin: 60px auto;
     padding: 0 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
-*/
+
 
 .instructions-container img {
-    width: 80%;
+    width: 100%;
     max-width: 1000px;
     height: auto;
     display: block;
-    margin: 0 auto;
+    /*margin: 0 auto;*/
 }
 
 /* EVENTS */
