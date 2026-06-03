@@ -187,7 +187,7 @@ body{
     margin-top:40px;
     padding:35px;
     padding-top: 0px;
-    background:#141414;
+    background:#161616;
     border:1px solid rgba(255,0,0,0.25);
     border-radius:10px;
     max-width:500px;
@@ -343,7 +343,7 @@ footer p{
 .live-status-section{
     text-align:center;
     padding:15px 15px;
-    background:#FFFFFF14;
+    background:#161616;
     font-size: 17px;
     border:1px solid rgba(255,0,0,0.25);
     box-shadow: 0 0 20px rgba(255,0,0,0.15);
@@ -653,7 +653,8 @@ footer p{
   margin-bottom: 8px;
   padding: 10px 18px;
 
-  background: rgba(255,255,255,0.08);
+  /*background: rgba(255,255,255,0.08);*/
+  background:#161616;
   border: 1px solid #ff2b2b;
   border-radius: 8px;
 
