@@ -374,14 +374,14 @@ footer p{
 }
 
 .countdown-line {
-    font-size: 18px;
+    font-size: 17px;
     font-weight: 700;
     color: white;
     letter-spacing: 2.5px;
 }
 
 .countdown-venue {
-    color: #ffffff; /*#fcc001;*/
+    color: #fcc001;
     font-weight: 700;
     text-shadow: 0 0 6px rgba(252,192,1,0.4);
 }
