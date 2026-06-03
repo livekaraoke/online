@@ -142,6 +142,12 @@ body {
   border-left: 5px solid #d20d0d;
 }
 
+.song-section-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px;
+}
+
 .song-section-box {
   border-left: 5px solid #d20d0d;
   padding: 10px 0 10px 18px;
