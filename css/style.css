@@ -361,30 +361,29 @@ footer p{
 .live-now-small {
     color: #ff2b2b;
     font-size: 16px;
-    margin-bottom: 10px;
     font-weight: bold;
     animation: liveBlink 1s infinite;
     letter-spacing: 2px;
 }
 
 .live-venue {
-    margin-top: 15px;
+    margin-top: 15px !important;
     font-color: #fcc001 !important;
-    font-size: 18px;
+    font-size: 18px !important;
     letter-spacing: 2px;
-    font-weight: 700;
+    font-weight: 700 !important;
     text-shadow: 0 0 6px rgba(252,192,1,0.4);
     text-transform: uppercase;
 }
 
 .live-venue-location {
-    margin-top: 15px;
+    margin-top: 15px !important;
     font-color: #888888 !important;
-    font-size: 17px;
+    font-size: 17px !important;
     letter-spacing: 2px;
-    font-weight: 700;
-    text-shadow: 0 0 6px rgba(252,192,1,0.4);
-    text-transform: uppercase;
+    font-weight: 600 !important;
+    /*text-shadow: 0 0 6px rgba(252,192,1,0.4);
+    text-transform: uppercase;*/
 }
 
 .countdown-line {
@@ -397,15 +396,15 @@ footer p{
 .countdown-venue {
     font-color: #fcc001 !important;
     font-weight: 700;
-    font-size: 18px;
+    font-size: 18px !important;
     text-shadow: 0 0 6px rgba(252,192,1,0.4);
 }
 
 .countdown-venue-location {
     font-color: #888888 !important;
-    font-weight: 700;
-    font-size: 17px;
-    text-shadow: 0 0 6px rgba(252,192,1,0.4);
+    font-weight: 600 !important;
+    font-size: 17px !important;
+    /*text-shadow: 0 0 6px rgba(252,192,1,0.4);*/
 }
 
 @keyframes liveBlink{
