@@ -139,7 +139,7 @@ body {
   padding: 24px 24px 34px 28px;
   background: #f7f7f4;
   border-top: 1px solid #ddd;
-  border-left: 5px solid #d20d0d;
+  border-left: none; /*5px solid #d20d0d;*/
 }
 
 .song-section-grid {
@@ -344,4 +344,18 @@ ol li em {
     font-size: 17px;
   }
 
+}
+
+ol li {
+  grid-template-columns: 46px minmax(0, 1fr);
+}
+
+ol li span,
+ol li em {
+  grid-column: 2;
+  min-width: 0;
+}
+
+ol li em {
+  margin-top: -6px;
 }
