@@ -361,7 +361,7 @@ footer p{
 .live-now-small {
     color: #ff2b2b;
     font-size: 16px;
-    margin-bottom: 5px;
+    margin-bottom: 10px;
     font-weight: bold;
     animation: liveBlink 1s infinite;
     letter-spacing: 2px;
@@ -369,7 +369,7 @@ footer p{
 
 .live-venue {
     margin-top: 15px;
-    color: #fcc001 !important;
+    font-color: #fcc001 !important;
     font-size: 18px;
     letter-spacing: 2px;
     font-weight: 700;
@@ -379,7 +379,7 @@ footer p{
 
 .live-venue-location {
     margin-top: 15px;
-    color: #888888;
+    font-color: #888888 !important;
     font-size: 17px;
     letter-spacing: 2px;
     font-weight: 700;
@@ -395,14 +395,14 @@ footer p{
 }
 
 .countdown-venue {
-    color: #fcc001 !important;
+    font-color: #fcc001 !important;
     font-weight: 700;
     font-size: 18px;
     text-shadow: 0 0 6px rgba(252,192,1,0.4);
 }
 
 .countdown-venue-location {
-    color: #888888;
+    font-color: #888888 !important;
     font-weight: 700;
     font-size: 17px;
     text-shadow: 0 0 6px rgba(252,192,1,0.4);
