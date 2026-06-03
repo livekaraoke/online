@@ -218,7 +218,7 @@ body{
     font-size:1.5rem;
     color:#fcc001;
     margin-top: 8px;
-    margin-bottom: 5px;
+    margin-bottom: 0px;
 }
 
 .event-card p{
@@ -232,7 +232,7 @@ body{
 .event-subheading {
     /* (Live Karaoke Night) */
     color:#cccccc;
-    margin-top: -8px;
+    margin-top: -8px !important;
     font-size:14px !important;
 }
 
