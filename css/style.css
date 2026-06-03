@@ -191,9 +191,10 @@ body{
 
 .instructions-container img {
     width: 100%;
-    border-radius: 16px;
-    box-shadow:
-        0 0 20px rgba(255,0,0,0.15);
+    max-width: 1200px;
+    height: auto;
+    display: block;
+    margin: 0 auto;
 }
 
 /* EVENTS */
