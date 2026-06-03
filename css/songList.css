@@ -371,3 +371,45 @@ ol li em {
 
 }
 
+.back-home-btn {
+  display: inline-block;
+  margin-top: 20px;
+  padding: 14px 28px;
+
+  background: linear-gradient(180deg, #ff2b2b, #b30000);
+  color: white;
+
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-decoration: none;
+
+  border-radius: 10px;
+  border: 2px solid rgba(255,255,255,0.15);
+
+  box-shadow:
+    0 0 8px rgba(255,0,0,0.6),
+    0 0 18px rgba(255,0,0,0.4);
+
+  transition: all 0.25s ease;
+}
+
+.back-home-btn:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 0 12px rgba(255,0,0,0.8),
+    0 0 28px rgba(255,0,0,0.5);
+}
+
+.back-home-btn:active {
+  transform: translateY(0);
+}
+
+@media (max-width: 700px) {
+  .back-home-btn {
+    width: 100%;
+    max-width: 320px;
+    font-size: 17px;
+    padding: 15px;
+  }
+}
