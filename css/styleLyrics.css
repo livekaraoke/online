@@ -1,0 +1,740 @@
+
+
+/* ==================================================================
+=====================================================================
+=====================================================================
+=====================================================================
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+LIVE KARAOKE STUDIO WEB PLAYER
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+Copyright © 2026 Billy Lee. All rights reserved.
+---------------------------------------------------------------------
+Designed and developed by Billy Lee.
+This project is proprietary software intended for karaoke lyric display,
+real-time typography control, and performance styling tools.
+---------------------------------------------------------------------
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+=====================================================================
+=====================================================================
+=====================================================================
+================================================================== */
+
+
+
+
+/*************** ====== COMMON / BASIC ====== ***************/
+
+
+:root {
+  --lyrics-size: 36px;
+}
+
+body {
+  background: black;
+  color: white;
+  font-family: Arial, sans-serif;
+  /*font-size: 36px;*/
+  font-weight: bold;
+  line-height: 1.5;
+  /*padding: 60px;*/
+  padding: 200px 40px 40px 40px;
+}
+
+a, span, strong, em, button {
+   display: inline-block;
+}
+
+/* Dividers */
+hr {
+  border: 1px solid #333;
+  margin: 70px 0;
+}
+
+.mini-gap {
+  height: 4px;
+}
+
+.chorus .mini-gap {
+  height: 8px;
+}
+
+.verse .mini-gap {
+  height: 6px;
+}
+
+
+
+/******************* ====== TOP BAR ====== *******************/
+
+/* Main top bar */
+/*.top-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100px;
+  display: flex;
+  align-items: center;  /* vertical center *//*
+  justify-content: space-between;
+  background: black;
+  border-bottom: 1px solid #333;
+  z-index: 1000;
+  padding: 0 10px;
+}*/
+
+.top-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  background: black;
+  border-bottom: 1px solid #333;
+  z-index: 1000;
+  padding: 0 14px;
+  box-sizing: border-box;
+}
+
+/* Left Controls */
+.left-controls {
+  display: flex;
+  flex-direction: column;
+  margin-left: 5px;
+  gap: 6px;
+}
+
+/* Back button (left side) */
+.back-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  height: 40px;
+  min-width: 100px;
+
+  text-decoration: none;
+  font-size: 16px;
+  font-weight: bold;
+  font-family: Verdana, Arial, sans-serif;
+
+  padding: 0 14px;
+
+  background: #222;
+  color: #AAA;
+
+  border: 1px solid #444;
+  border-radius: 5px;
+
+  box-sizing: border-box;
+}
+
+.back-button:hover {
+  background: #222;
+  transform: scale(1.05);
+}
+
+/* Fullscreen button */
+.fs-button {
+  height: 30px;
+  min-width: 100px;
+  background: #222;
+  color: #aaa;
+  border: 1px solid #444;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.fs-button:hover {
+  background: #333;
+}
+
+/* Title (centered) */
+/*.title {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-53%);
+
+  font-size: 20px;
+  font-weight: bold;
+  font-family: Arial, sans-serif;
+  color: #aaa;
+  text-transform: uppercase;
+  margin: 0;
+  padding: 0;
+  text-align: center;
+  pointer-events: none;
+  width: auto;
+  white-space: nowrap;
+  z-index: 1;
+}*/
+
+.title {
+  flex: 1;
+  text-align: center;
+  margin: 0 20px;
+  font-size: 20px;
+  font-weight: bold;
+  font-family: Arial, sans-serif;
+  color: #aaa;
+  text-transform: uppercase;
+  /*overflow: hidden;*/
+  /*text-overflow: ellipsis;*/
+  /*white-space: nowrap;*/
+  min-width: 0;
+
+ display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  text-align: center;
+
+  white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
+
+  line-height: 1.1;
+}
+/*
+.title {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  text-align: center;
+
+  white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
+
+  line-height: 1.1;
+}*/
+
+.song-main-title {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.song-artist {
+  font-size: 14px;
+  opacity: 0.8;
+  margin-top: 2px;
+}
+
+/************* ====== BUTTONS & CONTROLS ====== *************/
+
+/* Controls / buttons container */
+.controls {
+  display: flex;
+  margin-right: 5px;
+  flex-direction: column; /* 2 rows (stack vertically) */
+  align-items: flex-end; /*push to right */
+  gap: 6px;
+  position: relative;
+  z-index: 10;
+}
+
+/* Buttons */
+.controls button {
+  width: 102px;
+  height: 40px;
+  padding: 3px 7px;
+  font-size: 16px;
+  font-weight: bold;
+  background: #222;
+  color: #AAA;
+  border: 1px solid #444;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.font-buttons {
+  display: flex;
+  gap: 6px;
+}
+
+.font-buttons button {
+  width: 48px;
+  height: 30px;
+}
+
+/*********** MOBILE SLIDE ***********/
+
+.icon-btn {
+  width: 100%;
+  height: 40px;
+
+  background: #222;
+  color: #AAA;
+
+  border: 1px solid #444;
+  border-radius: 5px;
+
+  cursor: pointer;
+}
+
+
+.icon-btn:hover {
+  background: #222;
+  transform: scale(1.05);
+}
+
+.icon-btn:active {
+  transform: scale(0.95);
+}
+
+/* SIDE PANEL (mobile style menu) */
+.side-panel {
+  position: fixed;
+  right: -340px;
+  top: 0;
+  width: 200px;
+  height: 100%;
+  background: #111;
+  border-left: 1px solid #333;
+  padding: 20px;
+  transition: right 0.3s ease;
+  z-index: 2000;
+  overflow-y: auto;
+}
+
+.side-panel.open {
+  right: 0;
+}
+
+.side-panel button {
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  cursor: pointer;
+}
+
+.side-panel button.active {
+  background: #2a2a2a;
+  color: #00ffcc;
+  border: 1px solid #00ffcc;
+  border-radius: 5px;
+  box-shadow: 0 0 6px rgba(0, 255, 204, 0.25);
+  transform: scale(1.03);
+}
+
+.side-panel h2 {
+  color: #aaa;
+  margin-top: 0px;
+  font-size: 16px;
+}
+
+.side-panel h3 {
+  color: #aaa;
+  margin-top: 30px;
+  font-size: 14px;
+}
+
+.theme-group {
+  margin-bottom: 5px;
+}
+
+.close-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+
+  background: #111;
+  color: white;
+  border: 1px solid #444;
+  border-radius: 6px;
+
+  font-size: 16px;
+  padding: 6px 10px;
+
+  cursor: pointer;
+}
+
+.close-btn:hover {
+  background: #222;
+}
+
+/* active button state */
+.active {
+  background: #2a2a2a;
+  border: 1px solid #00ffcc !important;
+  color: #00ffcc !important;
+}
+
+/********** END MOBILE SLIDE ********/
+
+/* hover */
+.controls button:hover {
+  background: #222;
+  border-color: #777;
+  transform: scale(1.05);
+}
+
+/* click / pressed */
+.controls button:active {
+  background: #333;
+  transform: scale(0.95);
+}
+
+/** DROP DOWNS **/
+
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.dropbtn {
+  padding: 6px 10px;
+  font-size: 14px;
+  background: #111;
+  color: white;
+  border: 1px solid #444;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+/* hidden menu */
+.dropdown-content {
+  display: none;
+  position: absolute;
+  background: #111;
+  min-width: 140px;
+  border: 1px solid #444;
+  z-index: 999;
+}
+
+/* show on hover */
+.dropdown:hover .dropdown-content {
+  display: block;
+}
+
+.dropdown-content button {
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: none;
+  padding: 8px;
+  color: white;
+  cursor: pointer;
+}
+
+.dropdown-content button:hover {
+  background: #222;
+}
+
+
+
+/* ==================================================================
+============================= SECTIONS ==============================
+================================================================== */
+/** Section Title **/
+.section {
+  color: #666 !important;
+  font-size: 22px;
+  margin-top: 60px;
+  margin-bottom: 2px;
+  font-family: Verdana, Arial, sans-serif;
+}
+
+/** Section seperator **/
+.section-seperator {
+  display: block;
+  height: 1px !important;
+  background: linear-gradient(to right, transparent, #d1d5db, transparent);
+  /*margin: 4rem 0;*/
+  margin-top: 60px;
+  margin-bottom: 20px;
+  border: none;
+  width: 100%;
+}
+
+.lyrics-container {
+  margin-top: 150px !important;
+}
+
+/** SECTIONS: **/
+/* Verses */
+.verse {
+  color: #FFFFFF !important;
+  font-family: Verdana, Arial, sans-serif;
+  font-weight: bold;
+}
+
+/* Choruses */
+.chorus {
+  color: #FFD700;
+  font-family: Verdana, Arial, sans-serif;
+}
+
+/* Choruses, Repeats, and Endings */
+.chorusrepeat {
+  color: #FFFF00;
+  font-family: Verdana, Arial, sans-serif;
+}
+
+/* bridges */
+.bridge {
+  color: #66FF22;
+  font-family: Verdana, Arial, sans-serif;
+}
+
+.verse, .chorus, .chorusrepeat, .bridge {
+  font-size: var(--lyrics-size);
+}
+
+/* Generic Notes (wait for signal, instructions, etc) */
+.note {
+  color: #00FFAA;
+  font-size: 24px;
+  margin-top: 90px !important;
+  margin-bottom: 70px !important;
+  text-align: center;
+  font-family: Verdana, Arial, sans-serif;
+}
+
+/* Important notes / actions (End of song, etc..) */
+.action {
+  color: #FF6B6B !important;
+  font-weight: bold;
+  font-size: 24px;
+  margin-top: 120px !important;
+  margin-bottom: 90px !important;
+  text-align: center;
+  font-family: Verdana, Arial, sans-serif;
+}
+/* ==================================================================
+========================== END OF SECTIONS ==========================
+================================================================== */
+
+
+/* ==================================================================
+======================== AUTO SCROLL CONTROLS =======================
+================================================================== */
+.autoscroll-controls {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  background: rgba(20,20,20,0.45);
+  border: 1px solid rgba(255,255,255,0.15);
+
+  padding: 10px 14px;
+  border-radius: 14px;
+
+  z-index: 9999;
+
+  backdrop-filter: blur(4px);
+  transition: background 0.25s ease, border-color 0.25s ease, opacity 0.25s ease;
+}
+
+.autoscroll-controls:hover {
+  background: rgba(20,20,20,0.82);
+  border-color: rgba(255,255,255,0.38)
+}
+
+.autoscroll-controls button {
+  width: 42px;
+  height: 42px;
+
+  border: none;
+  border-radius: 10px;
+
+  background: rgba(55,55,55,0.6);
+  color: rgba(255,255,255,0.6);
+
+  font-size: 20px;
+  cursor: pointer;
+
+  transition: background 0.2s ease, color 0.2s ease, transform 0.15s ease;
+}
+
+/* brighten buttons when hovering container */
+.autoscroll-controls:hover button {
+  background: rgba(85,85,85,0.82);
+  color: rgba(255,255,255,0.9);
+}
+
+/* direct button hover */
+.autoscroll-controls button:hover {
+  background: #444;
+  transform: scale(1.06);
+  color: rgba(255,255,255,0.9);
+}
+
+/* pressed */
+.autoscroll-controls button:active {
+  transform: scale(0.94);
+}
+
+.autoscroll-controls.hidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(20px);
+}
+
+#scrollSpeedDisplay {
+  cursor: pointer;
+  user-select: none;
+
+  color: rgba(255,255,255,0.6);
+  font-size: 16px;
+  min-width: 58px;
+  text-align: center;
+  font-weight: bold;
+
+  transition: color 0.25s ease;
+}
+
+#scrollSpeedDisplay:hover {
+  color: rgba(255,255,255,0.9);
+  color: #00ffcc;
+}
+
+/* brighten text too */
+.autoscroll-controls:hover #scrollSpeedDisplay {
+  color: rgba(255,255,255,0.9);
+}
+
+/* ==================================================================
+===================== END OF AUTO SCROLL CONTROLS ===================
+================================================================== */
+
+
+
+/* ==================================================================
+======================== SYSTEM STATUS STRIP ========================
+================================================================== */
+
+.debug-bar {
+  font-size: 11px;
+  /*opacity: 0.85;*/
+  color: #aaa;
+  padding: 8px 10px;
+  background: rgba(0,0,0,0.75);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  position: fixed;
+  top: 160px;   /* just under top bar */
+  left: 10px;
+  right: 10px;
+  z-index: 999;
+  max-height: 120px;
+  overflow-y: auto;
+  display: none; /* hidden until logs arrive */
+}
+
+.dev-panel {
+  position: absolute;
+  top: 100px;            /* just under top bar */
+  left: 0;
+  width: 100%;           /* FULL WIDTH FIX */
+  box-sizing: border-box;
+
+  background: rgba(15,15,15,0.96);
+  color: #9cff9c;
+  font-size: 11px;       /* smaller logs */
+  font-family: Consolas, monospace;
+
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  z-index: 900;
+
+  transition: opacity 0.35s ease;
+}
+
+.dev-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 10px;
+  width: 100%;
+  box-sizing: border-box;
+  background: rgba(0,0,0,0.45);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  color: #ccc;
+  font-size: 11px;
+  letter-spacing: 1px;
+}
+
+.dev-header button {
+  background: none;
+  border: none;
+  color: #aaa;
+  cursor: pointer;
+}
+
+.dev-header-info {
+  padding: 0px 8px;
+  /*border-bottom: 1px solid rgba(255,255,255,0.08);*/
+  font-size: 11px;
+  color: #00aa77;
+  line-height: 1.4;
+}
+
+#debugLog {
+  font-size: 11px;
+  font-weight: 150;
+  letter-spacing: 1.5px;
+  line-height: 1.6;
+  /*border-bottom: 1px solid rgba(255,255,255,0.08);*/
+}
+
+.dev-body {
+  padding: 6px 12px;
+  font-size: 11px;
+  line-height: 1.6;
+  max-height: none;
+  overflow: visible;
+  color: #6cdd6a;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  background: rgba(0,0,0,0.45);
+}
+
+.dev-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.dev-actions button {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: #aaa;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.dev-actions button:hover {
+  background: rgba(255,255,255,0.18);
+}
+
+.dev-panel.sticky {
+  position: fixed;
+  top: 100px;
+  left: 0;
+  width: 100%;
+  background: rgba(15,15,15,0.96);
+  color: #9cff9c;
+  /*opacity: 0.90 !important; /* 👈 sticky is NEVER 100% */
+  z-index: 9999;
+}
+
+#stickyBtn.active {
+  color: #00ffcc;
+  text-shadow: 0 0 6px #00ffcc;
+}
+
+/* ==================================================================
+===================== END OF SYSTEM STATUS STRIP ====================
+================================================================== */
+
+
+
