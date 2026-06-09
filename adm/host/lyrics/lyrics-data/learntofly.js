@@ -1,0 +1,132 @@
+window.songData = {
+  "id": "learntofly",
+  "title": "Learn to Fly",
+  "artist": "Foo Fighters",
+  "lyrics": [
+    {
+      "type": "note",
+      "text": "INTRO Instrumental (wait for signal)"
+    },
+    {
+      "type": "section",
+      "text": "VERSE 1"
+    },
+    {
+      "type": "verse",
+      "lines": [
+        "Run and tell all of the angels",
+        "This could take all night",
+        "Think I need a devil to help me get things right",
+        "Hook me up a new revolution",
+        "'Cause this one is a lie",
+        "We sat around laughing and watched the last one die"
+      ]
+    },
+    {
+      "type": "section",
+      "text": "CHORUS"
+    },
+    {
+      "type": "chorus",
+      "lines": [
+        "Now I'm looking to the sky to save me",
+        "Looking for a sign of life",
+        "Looking for something to help me burn out bright",
+        "I'm looking for a complication",
+        "Looking cause I'm tired of lying",
+        "",
+        "Make my way back home when I learn to fly high"
+      ]
+    },
+    {
+      "type": "section-seperator"
+    },
+    {
+      "type": "note",
+      "text": "Instrumental (wait for signal)"
+    },
+    {
+      "type": "section",
+      "text": "VERSE 2"
+    },
+    {
+      "type": "verse",
+      "lines": [
+        "I think I'm done nursing the patience",
+        "It can wait one night",
+        "I'd give it all away if you give me one last try",
+        "We'll live happily ever trapped if you just save my life",
+        "Run and tell the angels that everything's alright"
+      ]
+    },
+    {
+      "type": "section",
+      "text": "CHORUS"
+    },
+    {
+      "type": "chorus",
+      "lines": [
+        "Now I'm looking to the sky to save me",
+        "Looking for a sign of life",
+        "Looking for something to help me burn out bright",
+        "I'm looking for a complication",
+        "Looking cause I'm tired of trying",
+        "",
+        "Make my way back home when I learn to fly high",
+        "Make my way back home when I learn to.."
+      ]
+    },
+    {
+      "type": "section",
+      "text": "BRIDGE"
+    },
+    {
+      "type": "bridge",
+      "lines": [
+        "Fly... along with me, I can't quite make it alone..",
+        "Try to make this life my own..",
+        "",
+        "Fly.. along with me, I can't quite make it alone..",
+        "Try to make this life my own.."
+      ]
+    },
+    {
+      "type": "section",
+      "text": "CHORUS"
+    },
+    {
+      "type": "chorus",
+      "lines": [
+        "I'm looking to the sky to save me",
+        "Looking for a sign of life",
+        "Looking for something to help me burn out bright",
+        "I'm looking for a complication",
+        "Looking cause I'm tired of trying",
+        "",
+        "Make my way back home when I learn to.."
+      ]
+    },
+    {
+      "type": "section",
+      "text": "CHORUS REPEAT"
+    },
+    {
+      "type": "chorusrepeat",
+      "lines": [
+        "I'm looking to the sky to save me",
+        "Looking for a sign of life",
+        "Looking for something to help me burn out bright",
+        "I'm looking for a complication",
+        "Looking cause I'm tired of trying",
+        "",
+        "Make my way back home when I learn to fly high",
+        "Make my way back home when I learn to fly",
+        "Make my way back home when I learn to..."
+      ]
+    },
+    {
+      "type": "action",
+      "text": "[ END ]"
+    }
+  ]
+};
