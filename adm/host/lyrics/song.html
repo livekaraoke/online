@@ -1,0 +1,939 @@
+
+<!DOCTYPE html>
+<html>
+
+<!-- ================================================================
+=====================================================================
+=====================================================================
+=====================================================================
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+LIVE KARAOKE STUDIO WEB PLAYER
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+Copyright © 2026 Billy Lee. All rights reserved.
+---------------------------------------------------------------------
+Designed and developed by Billy Lee.
+This project is proprietary software intended for karaoke lyric display,
+real-time typography control, and performance styling tools.
+---------------------------------------------------------------------
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+=====================================================================
+=====================================================================
+=====================================================================
+================================================================= -->
+
+<!-- HEADER ----------------------------------------------- -->
+<head>
+  <meta charset="UTF-8">
+  <title>Song Lyric Viewer</title>
+  <link rel="stylesheet" href="../css/styleLyrics.css">
+</head>
+<!-- ------------------------------------------------------- -->
+
+
+<body>
+
+<!-- BOOT DEBUGGER LABEL -------------------------------------->
+
+<!-- <div id="bootDebug" class="debug-bar" style="color:red;font-size:12px"></div> -->
+
+  <div id="devPanel" class="dev-panel">
+    <div class="dev-header">
+    <span>DEV CONSOLE</span>
+    <div class="dev-actions">
+      <button onclick="refreshDevOpacity()" id="refreshDevBtn">⏱</button>
+      <!--<button onclick="toggleStickyDev()" id="stickyBtn">📍</button>-->
+      <button onclick="toggleDevSticky()" id="stickyBtn">📌</button>
+      <button onclick="toggleDevPanel()">✖</button>
+    </div>
+  </div>
+
+  <div id="debugInfo" class="dev-body">
+    <div id="debugHeader" class="dev-header-info"></div>
+    <div id="debugLog"></div>
+  </div>
+</div>
+<!-- ------------------------------------------------------- -->
+
+<!-- ================================================================
+============================== SCRIPTS ==============================
+================================================================= -->
+<script src="../song-data.js"></script>
+<script>
+  console.log("songs loaded:", window.songs);
+</script>
+
+<script>
+  const FS_KEY = "karaoke_fullscreen";
+
+  let currentSize = 36; // default font size
+  let baseSize = 36;
+  let sizeStep = 2;
+  let currentSizeMultiplier = 1;
+  const baseSizes = {
+    section: 22,
+    note: 24,
+    action: 24,
+    verse: 36,
+    chorus: 36,
+    chorusrepeat: 36,
+    bridge: 36
+  };
+
+  let sizeOffset = 0;
+
+  //Change Font Size
+  function changeFontSize(change, e) {
+    sizeOffset += change > 0 ? 2 : -2;
+    sizeOffset = Math.max(-10, Math.min(10, sizeOffset));
+
+    applyTextSizes();
+
+    if (e) {
+      clearActive(".font-size-group button");
+      e.target.classList.add("active");
+    }
+  }
+
+// APPLY STYLES -----------------------------------------
+  function applyTextSizes() {
+    document.querySelectorAll(".section").forEach(el => {
+      el.style.fontSize = (baseSizes.section + sizeOffset) + "px";
+    });
+
+    document.querySelectorAll(".note").forEach(el => {
+      el.style.fontSize = (baseSizes.note + sizeOffset) + "px";
+    });
+
+    document.querySelectorAll(".action").forEach(el => {
+      el.style.fontSize = (baseSizes.action + sizeOffset) + "px";
+    });
+
+    document.querySelectorAll(".verse").forEach(el => {
+      el.style.fontSize = (baseSizes.verse + sizeOffset) + "px";
+    });
+
+    document.querySelectorAll(".chorus").forEach(el => {
+      el.style.fontSize = (baseSizes.chorus + sizeOffset) + "px";
+    });
+
+    document.querySelectorAll(".chorusrepeat").forEach(el => {
+      el.style.fontSize = (baseSizes.chorusrepeat + sizeOffset) + "px";
+    });
+
+    document.querySelectorAll(".bridge").forEach(el => {
+      el.style.fontSize = (baseSizes.bridge + sizeOffset) + "px";
+    });
+  }
+// ------------------------------------------------------
+
+
+// ON WINDOW LOAD ---------------------------------------
+  window.onload = () => {
+    // Theme + Font
+    document.querySelector(".theme-group button").classList.add("active");
+    document.querySelector(".font-group button").classList.add("active");
+
+    // Line spacing default
+    document.body.style.lineHeight = "1.5";
+    document.querySelector(".lspacing button").classList.add("active");
+
+    // Character spacing default
+    document.body.style.letterSpacing = "0px";
+    document.querySelector(".cspacing button").classList.add("active");
+
+    // Autoscroll controls visibility
+    const hideControls =
+      localStorage.getItem("karaoke_hide_autoscroll") === "1";
+
+    if (hideControls) {
+    document
+      .getElementById("autoScrollControls")
+      .classList.add("hidden");
+
+      const btn = document.getElementById("toggleAutoScrollUIButton");
+
+      if (btn) {
+        btn.textContent = "Show AutoScroll Controls";
+      }
+    }
+
+
+  }
+
+// ------------------------------------------------------
+
+  // <!-- ######## CHANGE FONT COLOR ######### -->
+  function setTheme(theme, e) {
+    const body = document.body;
+
+    if (theme === 'default') {
+      body.style.background = 'black';
+      document.querySelectorAll('.verse').forEach(el => el.style.color = 'white');
+    }
+
+    if (theme === 'warm') {
+      body.style.background = '#0a0a0a';
+      document.querySelectorAll('.verse').forEach(el => el.style.color = '#FFD966');
+    }
+
+    if (theme === 'highcontrast') {
+      body.style.background = 'black';
+      document.querySelectorAll('.verse').forEach(el => el.style.color = '#00FF00');
+    }
+
+    clearActive(".theme-group button");
+    e.target.classList.add("active");
+  }
+
+  function setFont(font, e) {
+    let fontFamily = "Arial";
+
+    if (font === "verdana") fontFamily = "Verdana";
+    if (font === "mono") fontFamily = "Courier New";
+
+    document.querySelectorAll(`
+      .verse,
+      .chorus,
+      .chorusrepeat,
+      .bridge,
+      .note,
+      .action,
+      .section
+    `).forEach(el => {
+      el.style.fontFamily = fontFamily;
+    });
+
+    if (e) {
+      clearActive(".font-group button");
+      e.target.classList.add("active");
+    }
+  }
+  function togglePanel() {
+    document.getElementById("controlPanel").classList.toggle("open");
+  }
+
+  function openPanel() {
+    document.getElementById("controlPanel").classList.add('open');
+  }
+
+  function closePanel() {
+    document.getElementById("controlPanel").classList.remove('open');
+  }
+
+  /** Make background click close side panel **/
+  document.addEventListener("click", function (e) {
+    const panel = document.getElementById("controlPanel");
+
+    if (!panel.classList.contains("open")) return;
+
+    const clickedInside = panel.contains(e.target);
+    const clickedToggle = e.target.closest(".icon-btn");
+
+    if (!clickedInside && !clickedToggle) {
+      panel.classList.remove("open");
+    }
+  });
+
+  /* ACTIVE STATE HELPERS */
+  function clearActive(group) {
+    document.querySelectorAll(group).forEach(btn => btn.classList.remove("active"));
+  }
+
+  /* LINE SPACING */
+  function setLineSpacing(value, e) {
+    document.querySelectorAll(`
+      .verse,
+      .chorus,
+      .chorusrepeat,
+      .bridge,
+      .note,
+      .action,
+      .section
+    `).forEach(el => {
+      el.style.lineHeight = value;
+    });
+
+    if (e) {
+      clearActive(".lspacing button");
+      e.target.classList.add("active");
+    }
+  }
+
+  /* CHARACTER SPACING */
+  function setCharSpacing(value, e) {
+    document.querySelectorAll(`
+      .verse,
+      .chorus,
+      .chorusrepeat,
+      .bridge,
+      .note,
+      .action,
+      .section
+    `).forEach(el => {
+      el.style.letterSpacing = value;
+    });
+
+    if (e) {
+      clearActive(".cspacing button");
+      e.target.classList.add("active");
+    }
+  }
+
+  // Get Song BPM --------------
+  function getSongBPM(id) {
+    try {
+      const list = window.songs;
+      if (!Array.isArray(list)) return 120;
+
+      const song = list.find(s => s.id === id);
+      return Number(song?.bpm || 120);
+
+    } catch {
+      return 120;
+    }
+  }//---------------------------
+
+</script>
+
+<!-- ================================================================
+========================== END OF SCRIPTS ===========================
+================================================================= -->
+
+
+
+<!-- ================================================================
+======================== AUTO SCROLL SYSTEM =========================
+================================================================= -->
+<script>
+
+let autoScrollActive = false;
+let autoScrollFrame = null;
+let lastTime = null;
+let scrollPosition = window.scrollY;
+
+const BASE_BPM = 120;
+const BASE_SPEED = 10; // px/sec at 120 BPM, 1.0x
+
+window.userSpeed = window.userSpeed || 1;
+window.currentBPM = window.currentBPM || 120;
+let scrollMultiplier = 1;
+
+/* START / STOP */
+function toggleAutoScroll() {
+
+  autoScrollActive = !autoScrollActive;
+
+  const btn = document.getElementById("scrollToggleBtn");
+
+  if (autoScrollActive) {
+    btn.textContent = "⏸";
+    startAutoScroll();
+  } else {
+    btn.textContent = "▶";
+    stopAutoScroll();
+  }
+}
+
+/* AUTO SCROLL LOOP */
+function startAutoScroll() {
+
+  lastTime = null;
+  let scrollY = window.scrollY;
+
+  function step(timestamp) {
+
+    if (!autoScrollActive) return;
+
+    if (lastTime === null) lastTime = timestamp;
+
+    const delta = (timestamp - lastTime) / 1000;
+    lastTime = timestamp;
+
+    // smooth deterministic movement
+    scrollY += BASE_SPEED * scrollMultiplier * delta;
+
+    window.scrollTo(0, scrollY);
+
+    autoScrollFrame = requestAnimationFrame(step);
+  }
+
+  autoScrollFrame = requestAnimationFrame(step);
+}
+
+/* STOP */
+function stopAutoScroll() {
+  autoScrollActive = false;
+  cancelAnimationFrame(autoScrollFrame);
+}
+
+/* SPEED CONTROL */
+function changeScrollSpeed(change) {
+
+  window.userSpeed = (window.userSpeed ?? 1) + change;
+
+  window.userSpeed = Math.max(0.1, Math.min(5, window.userSpeed));
+
+  recalcSpeed();
+}
+
+/* PAUSE ON MANUAL SCROLL */
+window.addEventListener("wheel", () => {
+
+  if (autoScrollActive) {
+    toggleAutoScroll();
+  }
+});
+
+/* KEYBOARD SHORTCUTS */
+document.addEventListener("keydown", (e) => {
+
+  if (e.code === "Space") {
+    e.preventDefault();
+    toggleAutoScroll();
+  }
+
+  if (e.code === "ArrowUp") {
+    changeScrollSpeed(0.034);
+  }
+
+  if (e.code === "ArrowDown") {
+    changeScrollSpeed(-0.034);
+  }
+});
+
+function resetScrollSpeed() {
+  window.userSpeed = 1;
+  recalcSpeed();
+}
+
+/* FULL SCREEN ENTER */
+function tryEnterFullscreenOnce() {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen().catch(() => {});
+  }
+}
+
+function toggleSongFullscreen(btn) {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen();
+    localStorage.setItem(FS_KEY, "1");
+    btn.textContent = "✖ Exit FS";
+  } else {
+    document.exitFullscreen();
+    localStorage.setItem(FS_KEY, "0");
+    btn.textContent = "⛶ Fullscreen";
+  }
+}
+
+function toggleAutoscrollVisibility() {
+
+  const controls = document.getElementById("autoScrollControls");
+  const btn = document.getElementById("toggleAutoscrollBtn");
+
+  const hidden = controls.style.display === "none";
+
+  if (hidden) {
+
+    controls.style.display = "flex";
+
+    btn.innerText = "Auto-scroll: ON";
+    btn.classList.add("active");
+
+  } else {
+
+    controls.style.display = "none";
+
+    btn.innerText = "Auto-scroll: OFF";
+    btn.classList.remove("active");
+  }
+}
+
+</script>
+<!-- ================================================================
+===================== END OF AUTO SCROLL SYSTEM =====================
+================================================================= -->
+
+
+
+<!-- ================================================================
+============================= TOP BAR ===============================
+================================================================= -->
+
+<!-- TOP BAR START -->
+<div class="top-bar">
+
+  <div class="left-controls">
+    <!-- BACK BUTTON -->
+    <a href="../lyricsIndex.html" class="back-button">⬅ BACK</a>
+    <!-- FULLSCREEN BUTTON -->
+    <button class="fs-button" onclick="toggleSongFullscreen(this)">
+      ⛶ Fullscreen
+    </button>
+  </div>
+
+  <!-- SONG TITLE & ARTIST -->
+  <div class="title" id="songTitle">Loading...</div>
+
+  <!-- CONTROLS -->
+  <div class="controls">
+    <div class="font-buttons">
+      <!----- Font Size ----->
+      <button onclick="changeFontSize(2)">A+</button>
+      <button onclick="changeFontSize(-2)">A-</button>
+    </div>
+    <!-- Menu Button -->
+    <button class="icon-btn" onclick="togglePanel()">⚙ Controls</button>
+  </div>
+
+  <!-- Slide Panel -->
+  <div id="controlPanel" class="side-panel">
+    <button class="close-btn" onclick="closePanel()">✖</button>
+
+    <h2>Settings</h2>
+
+    <h3>Theme</h3>
+    <div class="theme-group">
+      <button onclick="setTheme('default', event)">Default</button>
+      <button onclick="setTheme('warm', event)">Warm</button>
+      <button onclick="setTheme('highcontrast', event)">High Contrast</button>
+    </div>
+
+    <h3>Font</h3>
+    <div class="font-group">
+      <button onclick="setFont('verdana', event)">Default</button>
+      <button onclick="setFont('arial', event)">Arial</button>
+      <button onclick="setFont('mono', event)">Mono</button>
+    </div>
+
+    <h3>Line Spacing</h3>
+    <div class="lspacing">
+      <button onclick="setLineSpacing(1.5, event)">Default</button>
+      <button onclick="setLineSpacing(1.75, event)">Loose</button>
+      <button onclick="setLineSpacing(2, event)">Looser</button>
+    </div>
+
+    <h3>Character Spacing</h3>
+    <div class="cspacing">
+      <button onclick="setCharSpacing('0px', event)">Default</button>
+      <button onclick="setCharSpacing('0.5px', event)">Wide</button>
+      <button onclick="setCharSpacing('1px', event)">Wider</button>
+    </div>
+
+    <h3>Auto-scroll Interface</h3>
+
+    <div class="interface-group">
+      <button id="toggleAutoscrollBtn" class="autoscroll-toggle active"                   onclick="toggleAutoscrollVisibility()">
+        AUTO-SCROLL: ON
+      </button> 
+    </div>
+
+  </div><!-- End Side Panel -->
+</div>
+<!-- END TOP BAR -->
+<!-- ================================================================
+========================= END OF TOP BAR ============================
+================================================================= -->
+
+
+<!-- ================================================================
+======================== MAIN LYRICS CONTENT ========================
+================================================================= -->
+
+
+<!-- ==================== LYRICS CONTAINER =================== -->
+<!-- ********************************************************* -->
+<div id="lyrics-container" class="lyrics-container">
+
+
+<!-- ======================== JS CODE ======================== -->
+<!-- ********************************************************* -->
+<script>
+
+// DEBUGGING ERROR FUNCTIONS ----------------------------
+
+const debugLines = [];
+let debugTimer = null;
+let devFadeTimer = null;
+let devSticky = false;
+
+// Auto Debug Messages hide after 3secs
+function setDevOpacity(value) {
+  const panel = document.getElementById("devPanel");
+  if (!panel) return;
+  panel.style.opacity = value;
+}
+
+function applyDevOpacity() {
+  const panel = document.getElementById("devPanel");
+  if (!panel) return;
+
+  if (devSticky) {
+    panel.style.opacity = "0.40"; // sticky dim
+  } else {
+    panel.style.opacity = "0.30"; // normal dim
+  }
+}
+
+function scheduleDevFade() {
+  clearTimeout(devFadeTimer);
+
+  const panel = document.getElementById("devPanel");
+  if (!panel) return;
+
+  // 👉 STEP 1: instantly brighten on any activity
+  panel.style.opacity = "0.92";
+
+  devFadeTimer = setTimeout(() => {
+    // 👉 STEP 2: dim after 3s
+    if (devSticky) {
+      panel.style.opacity = "0.40";
+    } else {
+      panel.style.opacity = "0.30";
+    }
+  }, 3000);
+}
+
+const LOG = {
+  INFO: 30,
+  WARN: 20,
+  ERROR: 10
+};
+
+function setDebug(message, level = "INFO") {
+  const panel = document.getElementById("devPanel");
+  const logBox = document.getElementById("debugLog");
+
+  if (!panel || !logBox) return;
+
+  panel.style.display = "block";
+
+  const code = LOG[level] || 0;
+  const timestamp = new Date().toLocaleTimeString();
+
+  debugLines.push(
+    `[${timestamp}] ${level}_CODE:${code} › ${message}`
+  );
+
+  if (debugLines.length > 8) {
+    debugLines.shift();
+  }
+
+  logBox.innerHTML = debugLines.join("<br>");
+
+  // ONLY ONCE
+  scheduleDevFade();
+}
+
+function showError(msg) {
+  document.getElementById("songTitle").textContent = "&#9888; " + msg;
+  setDebug(msg, "ERROR");
+}
+
+function renderFallback() {
+  const container = document.getElementById("lyrics-container");
+
+  container.innerHTML = `
+    <div style="padding:20px; color:#ff6666; font-size:18px;" >
+      Lyrics could not be loaded.<br><br>
+      Check that the file exists in:<br>
+      <code>lyrics-data/${window.currentSongId}.js</code>
+    </div>
+  `;
+}
+
+function updateDebugHeader(songTitle, artist, bpm, speed) {
+  const header = document.getElementById("debugHeader");
+  if (!header) return;
+
+  header.innerHTML = `
+    <div><b>🎵 ${songTitle}</b> — ${artist}</div>
+    <div>BPM: ${bpm} | Speed: ${speed.toFixed(2)}x</div>
+  `;
+}
+
+
+// ------------------------------------------------------
+
+// DEV PANEL --------------------------------------------
+
+function toggleDevPanel() {
+  const panel = document.getElementById("devPanel");
+  if (!panel) return;
+
+  if (panel.style.display === "none") {
+    panel.style.display = "block";
+  } else {
+    panel.style.display = "none";
+  }
+}
+
+function refreshDevOpacity() {
+  const panel = document.getElementById("devPanel");
+  if (!panel) return;
+
+  //clearTimeout(debugTimer);
+  scheduleDevFade();
+
+
+}
+
+function toggleDevSticky() {
+  const panel = document.getElementById("devPanel");
+  const btn = document.getElementById("stickyBtn");
+
+  devSticky = !devSticky;
+
+  panel.classList.toggle("sticky", devSticky);
+
+  btn.classList.toggle("active", devSticky);
+  btn.textContent = devSticky ? "📍" : "📌";
+
+  // 🔥 force visible immediately
+  panel.style.opacity = "0.42";
+
+  scheduleDevFade();
+}
+
+// ------------------------------------------------------
+
+
+// SPEED CALCULATION & DISPLAY --------------------------
+
+function updateSpeedDisplay() {
+  const effective =
+    (window.currentBPM / BASE_BPM) * window.userSpeed;
+
+  const speedEl = document.getElementById("scrollSpeedDisplay");
+  if (speedEl) {
+    speedEl.textContent = effective.toFixed(2) + "x";
+  }
+
+  setDebug(`BPM: ${window.currentBPM} | Speed: ${effective.toFixed(2)}x`, "INFO");
+}
+
+function recalcSpeed() {
+  const bpm = window.currentBPM || 120;
+
+  scrollMultiplier = (bpm / BASE_BPM) * (window.userSpeed * 0.8);
+
+  updateSpeedDisplay();
+}
+
+// ------------------------------------------------------
+
+// LOAD SONG & LYRICS -----------------------------------
+
+function loadSong() {
+  setDebug("loadSong started", "INFO");
+
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get("id");
+
+  if (!id) {
+    showError("No song ID provided in URL");
+    return;
+  }
+
+  window.currentSongId = id;
+  setDebug("Loading ID: " + id, "INFO");
+
+  // ---------------- BPM ----------------
+
+  let bpm = 120;
+
+  if (Array.isArray(window.songs)) {
+
+    const normalize = str =>
+      String(str)
+        .toLowerCase()
+        .replace(/[\s\-_]/g, "")
+        .trim();
+
+    const song = window.songs.find(s =>
+      normalize(s.id) === normalize(id)
+    );
+
+    if (song) {
+
+      bpm = Number(song.bpm || 120);
+
+      setDebug(
+        `Detected BPM: ${bpm} for ${song.title}`,
+        "INFO"
+      );
+
+    } else {
+
+      setDebug(
+        `Song BPM not found for ID: ${id}`,
+        "WARN"
+      );
+    }
+
+  } else {
+
+    setDebug(
+      "window.songs is missing or invalid",
+      "ERROR"
+    );
+    window.songs = [];
+  }
+
+  window.currentBPM = bpm;
+  window.userSpeed = 1;
+
+  recalcSpeed();
+
+  // ---------------- LYRICS ----------------
+  const script = document.createElement("script");
+  const path = `lyrics-data/${id}.js`;
+
+  setDebug("Loading lyrics: " + path, "INFO");
+
+  script.src = path;
+
+  setDebug("Reached lyrics loader", "INFO");
+
+  script.onload = () => {
+    setDebug("Lyrics script loaded: " + path, "INFO");
+    const data = window.songData;
+
+    if (!data) {
+      showError("songData is undefined after script load");
+      return;
+    }
+
+    const titleEl = document.getElementById("songTitle");
+    if (titleEl) {
+      titleEl.innerHTML = `
+  <div class="song-main-title">${data.title}</div>
+  <div class="song-artist">${data.artist}</div>
+`;
+    }
+
+    renderLyrics(data.lyrics);
+    setDebug("Lyrics loaded successfully", "INFO");
+  };
+
+  script.onerror = () => {
+    showError("FAILED to load lyrics file");
+    renderFallback();
+  };
+
+  document.body.appendChild(script);
+
+  setTimeout(() => {
+    window.scrollTo({ top: 196, behavior: "smooth" });
+  }, 300);
+}
+
+// ------------------------------------------------------
+
+
+// RENDER LYRICS ----------------------------------------
+
+function renderLyrics(blocks) {
+  const container = document.getElementById("lyrics-container");
+  container.innerHTML = "";
+
+  blocks.forEach(block => {
+
+    if (
+      block.type === "section-seperator" ||
+      block.type === "blank-seperator"
+    ) {
+      const div = document.createElement("div");
+      div.className = block.type;
+      container.appendChild(div);
+      return;
+    }
+
+    const div = document.createElement("div");
+    div.className = block.type;
+
+    if (block.text) {
+      div.textContent = block.text;
+    }
+
+    if (block.lines) {
+      div.innerHTML = block.lines
+        .map(line =>
+          line === ""
+            ? '<div class="mini-gap"></div>'
+            : line
+        )
+        .join("<br>");
+    }
+
+    container.appendChild(div);
+  });
+}
+
+// ------------------------------------------------------
+
+// LOAD THE SONG !!! ------------------------------------
+window.addEventListener("DOMContentLoaded", loadSong);
+
+window.addEventListener("DOMContentLoaded", () => {
+  loadSong();
+
+  const fsWanted = localStorage.getItem(FS_KEY) === "1";
+
+  if (fsWanted) {
+    // Cannot auto-enter fullscreen safely.
+    // Instead we prepare UI + wait for first interaction.
+    document.addEventListener("click", tryEnterFullscreenOnce, { once: true });
+  }
+});
+
+// ------------------------------------------------------
+
+</script>
+<!-- ********************************************************* -->
+<!-- ==================== END OF JS CODE ===================== -->
+
+
+</div>
+<!-- ********************************************************* -->
+<!-- ================ END OF LYRICS CONTAINER ================ -->
+
+
+<!-- ================================================================
+===================== END OF MAIN LYRICS CONTENT ====================
+================================================================= -->
+
+
+<!-- ================================================================
+======================== AUTO SCROLL CONTROLS =======================
+================================================================= -->
+
+<div id="autoScrollControls" class="autoscroll-controls">
+
+  <button onclick="toggleAutoScroll()" id="scrollToggleBtn">
+    ▶
+  </button>
+
+  <button onclick="changeScrollSpeed(-0.05)">
+    −
+  </button>
+
+  <div id="scrollSpeedDisplay" onclick="resetScrollSpeed()" title="Reset Speed">
+    1.00x
+  </div>
+
+  <button onclick="changeScrollSpeed(0.05)">
+    +
+  </button>
+
+</div>
+
+<!-- ================================================================
+===================== END OF AUTO SCROLL CONTROLS ===================
+================================================================= -->
+
+</body>
+</html>
+
+
+
