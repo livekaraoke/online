@@ -1,0 +1,330 @@
+
+
+body {
+  font-family: Arial;
+  margin: 0;
+  background: black;
+  color: white;
+}
+
+/*
+body.searching .alphabet-nav {
+  display: none;
+}
+*/
+
+.nosongsyet {
+  text-align: center;
+  color: #666;
+  font-style: italic;
+  padding: 10px 0;
+  user-select: none;
+}
+/*
+.sticky-section {
+  border-bottom: 2px solid rgba(255,255,255,0.08);
+  margin-bottom: 15px;
+  animation: slideFade 0.3s ease;
+}
+
+@keyframes slideFade {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.sticky-section h2 {
+  color: gold;
+}
+*/
+
+.missing-song {
+  color: red !important;
+  font-weight: bold;
+}
+
+/* header scroll fix from AZ sidebar nav */
+.letter-group {
+  scroll-margin-top: 190px;
+}
+
+/* =======================
+   FULL SCREEN & MAIN MENU BUTTONS
+======================= */
+
+/* make both buttons consistent */
+.back-main-btn,
+.fullscreen-btn {
+  height: 35px;
+  min-width: 130px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  border-radius: 4px;
+  font-weight: bold;
+  margin-bottom: -5px;
+
+  /*padding: 0 14px;*/
+  background: #222;
+  color: #ccc;
+  border: 1px solid #444;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.fullscreen-btn {
+  height 40px !important;
+}
+
+.fullscreen-btn:hover,
+.back-main-btn:hover {
+  background: #333;
+  border-color: #666;
+}
+
+
+
+/* =======================
+        TOP BAR
+======================= */
+
+.top-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  margin-bottom: -5px;
+}
+
+.header-center {
+  text-align: center;
+  margin-bottom: 0px;
+}
+
+.top-bar {
+  text-align: center;
+  position: sticky;
+  top: 0;
+  background: #111;
+  padding: 10px;
+  z-index: 998;
+  margin-bottom: 0px;
+  border-bottom: 1px solid #444;
+}
+
+.top-bar h1 {
+  font-size: 32px;
+  /*margin: 0;*/
+  color: #ffffff;
+}
+
+.top-bar p {
+  color: #888;
+  margin-top: -15px;
+}
+
+.search-box {
+  position: relative;
+  width: 300px;
+  margin: 0 auto;
+}
+
+.search-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+#search {
+  width: 100%;
+  /*padding: 8px;*/
+  margin-top: -5px;
+  margin-bottom: 0px;
+  padding: 8px 30px 8px 10px; /* space for X */
+  box-sizing: border-box;
+  border: 1px solid #444;
+  border-radius: 8px;
+}
+
+/* Hide A-Z sidebar while searching */
+body.searching .alphabet-nav {
+  display: none;
+}
+
+.clear-btn {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-62%);
+
+  font-size: 18px;
+  color: #666;
+  cursor: pointer;
+  display: none; /* controlled by JS */
+  user-select: none;
+}
+
+.clear-btn:hover {
+  color: black;
+}
+
+.filters {
+  margin-top: 10px;
+  margin-bottom: 5px;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.filters button,
+.filters select {
+  display-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 34px;
+  line-height: 2;
+  padding: 0px 10px;
+  background: #222;
+  color: #ccc;
+  border: 1px solid #444;
+  border-radius: 7px;
+  cursor: pointer;
+}
+
+.filters button.active {
+  color: gold;
+  border-color: gold;
+}
+
+
+#artistFilter.active {
+  color: gold;
+  border-color: gold;
+}
+
+
+
+.highlight {
+  color: #00ffcc;
+  text-shadow: 0 0 8px #00ffcc;
+}
+
+.letter-group {
+  padding: 20px;
+  padding-right: 70px;
+}
+
+.letter-group h2 {
+  border-bottom: 1px solid #333;
+  padding-bottom: 5px;
+}
+
+.letter-group h3 {
+  color: gold;
+  border-bottom: 1px solid #333;
+  padding-bottom: 5px;
+}
+
+li {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px; /* space between star and text */
+  padding: 4px 0;
+  color: #ffffff;
+  padding-right: 20px;
+}
+
+li a {
+  transition: all 0.3s ease;
+  display: inline-block;
+  padding: 10px 10px;
+  border-radius: 4px;
+  font-weight: bold;
+  flex: 1;
+  text-align: left; /* force left alignment */
+  color: #ffffff;
+}
+
+li a:hover {
+  color: #00ffcc;
+  background: rgba(0, 255, 204, 0.08);
+  transform: translateX(0.5px);
+  text-shadow: 0 0 8px #008866;
+}
+
+a {
+  color: #ccc;
+  text-decoration: none;
+}
+
+.star {
+
+
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 28px;          /* bigger click area */
+  height: 28px;
+
+  font-size: 24px;      /* visual star size */
+  line-height: 1;
+
+  transform: translateY(-1px); /* 🔥 vertical alignment fix */
+
+  cursor: pointer;
+  color: #444;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.star.active {
+  color: gold;
+  text-shadow: 0 0 8px rgba(200, 140, 60, 0.45);
+  font-size: 20px;
+}
+
+.star:hover {
+  color: #E8D5A3;
+  transform: scale(1.2);
+  text-shadow: 0 0 10px #ffffff;
+  transform: translateY(-1px); /* 🔥 vertical alignment fix */
+}
+
+.alphabet-nav {
+  position: fixed;
+  right: 5px;
+  top: 140px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  z-index: 999;
+}
+
+.letter-btn {
+  cursor: pointer;
+  padding: 3px;
+  font-size: 14px;
+  color: #888;
+}
+
+.letter-btn.active {
+  color: white;
+  font-weight: bold;
+  font-size: 16px; /* +2px from your 14px */
+  text-shadow: 0 0 10px #ffffff;
+}
+
+.letter-btn:hover {
+  color: white;
+}
