@@ -1,9 +1,724 @@
+
+<!-- ================================================================
+LIVE KARAOKE SONG LIBRARY SYSTEM
+Copyright © 2026 Billy Lee. All rights reserved.
+
+A dynamic karaoke web application for lyric display and song management.
+
+Features:
+- Auto-grouped A–Z song library
+- Instant search filtering
+- Favourites system (localStorage)
+- Real-time typography and display controls
+- Performance-ready layout for live use
+
+Designed and developed by Billy Lee.
+This software is proprietary and intended for personal and performance use only.
+================================================================ -->
+
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    
-  </head>
-  <body>
-    
-  </body>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Live Karaoke Host Song Book Library</title>
+  <link rel="stylesheet" href="../css/styleLyricsIndex.css">
+  <script src="../files/song-data.js"></script>
+</head>
+
+<body>
+
+<!-- HEADER -->
+<header class="top-bar">
+
+  <div class="top-controls">
+    <a href="../admin.html" class="back-main-btn">Back to Admin</a>
+    <!-- Fullscreen -->
+    <button onclick="toggleFullscreen(this)" class="fullscreen-btn">
+      &#9974; Fullscreen
+    </button>
+  </div>
+
+  <div class="header-center">
+    <h1>Live Karaoke Host Song Book Library</h1>
+    <p>Select a song to begin</p>
+  </div>
+
+  <div class="search-box">
+    <input id="search" type="text" placeholder="Search songs..." />
+    <span id="clearSearch" class="clear-btn">&#10006</span>
+  </div>
+
+  <div class="filters">
+    <!-- Favourites -->
+    <button onclick="toggleFavourites(this)">&#9733; Favourites</button>
+    <button onclick="toggleStickyFaves(this)">&#128204; Sticky Favs</button>
+    <button onclick="createSetlistFromFaves()">&#128190; Save Setlist</button>
+    <!-- Artists -->
+    <select id="artistFilter" onchange="applyFilters()">
+      <option value="">All Artists</option>
+    </select>
+    <select id="setlistFilter">
+      <option value="">All Setlists</option>
+    </select>
+  </div>
+
+
+
+</header>
+
+<!-- A–Z SIDEBAR -->
+<div id="alphabetNav" class="alphabet-nav"></div>
+
+<div id="noResults" style="display:none; text-align:center; color:#777; padding:20px;">
+  0 results found
+</div>
+
+<!-- SONG LIST -->
+<div id="songContainer"></div>
+
+<script>
+
+const FS_KEY = "karaoke_fullscreen";
+
+/* =========================
+   SONG DATA (JS SOURCE)
+========================= */
+
+/**  TEMPLATE:
+
+{ title: "Song Name", artist: "Artist Name", url: "lyrics/song.html", year, bpm, gender, vibe, energy, lastUsed }
+
+**/
+
+let showFavouritesOnly = false;
+let selectedArtist = "";
+let selectedSetlist = "";
+
+
+/* =========================
+   FAVORITES
+========================= */
+
+function getFaves() {
+  return JSON.parse(localStorage.getItem("faves") || "[]");
+}
+
+function toggleFav(key) {
+  let faves = getFaves();
+
+  if (faves.includes(key)) {
+    faves = faves.filter(f => f !== key);
+  } else {
+    faves.push(key);
+  }
+
+  localStorage.setItem("faves", JSON.stringify(faves));
+  renderSongs();
+}
+
+let stickyFaves = false;
+
+function toggleStickyFaves(btn) {
+  stickyFaves = !stickyFaves;
+  btn.classList.toggle("active");
+
+  renderSongs();
+
+  const header = document.querySelector(".top-bar");
+
+  // ?? Scroll back to top smoothly
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth"
+  });
+
+  // force slight delay adjustment (works reliably)
+  setTimeout(() => {
+    window.scrollBy({
+      top: -header.offsetHeight,
+      behavior: "instant"
+    });
+  }, 300);
+}
+
+
+/* =========================
+   FILTERING
+========================= */
+
+function toggleFavourites(btn) {
+  showFavouritesOnly = !showFavouritesOnly;
+  btn.classList.toggle("active");
+  applyFilters();
+}
+
+function filterSong(song) {
+  return (
+    matchesSearch(song) &&
+    matchesFav(song) &&
+    matchesArtist(song) &&
+    matchesVibe(song)
+  );
+}
+
+function applyFilters() {
+  const search = document.getElementById("search").value.toLowerCase();
+  renderSongs(search);
+}
+
+function applyAllFilters(song) {
+  return (
+    matchSearch(song) &&
+    matchFav(song) &&
+    matchArtist(song) &&
+    matchVibe(song) &&
+    matchDecade(song)
+  );
+}
+
+function markUsed(key) {
+  let recent = JSON.parse(localStorage.getItem("recent") || "[]");
+
+  recent = recent.filter(r => r !== key);
+  recent.unshift(key);
+
+  recent = recent.slice(0, 20);
+
+  localStorage.setItem("recent", JSON.stringify(recent));
+}
+
+function getRecent() {
+  return JSON.parse(localStorage.getItem("recent") || "[]");
+}
+
+function applySongFilters(song) {
+  const recent = getRecent();
+
+  const matchesRecent =
+    !filterRecent || recent.includes(song.title + song.artist);
+
+  const matchesFav =
+    !showFavouritesOnly || getFaves().includes(song.title + song.artist);
+
+  const matchesArtist =
+    !selectedArtist || song.artist === selectedArtist;
+
+  const matchesSearch =
+    song.title.toLowerCase().includes(search.toLowerCase()) ||
+    song.artist.toLowerCase().includes(search.toLowerCase());
+
+  const matchesGender =
+    !genderFilter || song.gender === genderFilter;
+
+  const matchesVibe =
+    !vibeFilter || song.vibe === vibeFilter;
+
+  const matchesDecade =
+    !decadeFilter || getDecade(song.year) === decadeFilter;
+
+  return (
+    matchesSearch &&
+    matchesFav &&
+    matchesArtist &&
+    matchesRecent &&
+    matchesGender &&
+    matchesVibe &&
+    matchesDecade
+  );
+}
+
+function getDecade(year) {
+  return Math.floor(year / 10) * 10 + "s";
+}
+
+const state = {
+  search: "",
+  favourites: false,
+  sticky: false,
+  artist: "",
+  filters: {}
+};
+
+/* =========================
+   SETLISTS
+========================= */
+
+
+/*setlists = {
+  "Friday Night": ["WonderwallOasis", "ZombieCranberries"],
+  "Acoustic Set": ["ValerieZutons"]
+}*/
+
+function saveSetlist(name, songs) {
+  const data = JSON.parse(localStorage.getItem("setlists") || "{}");
+
+  data[name] = songs;
+
+  localStorage.setItem("setlists", JSON.stringify(data));
+}
+
+function loadSetlist(name) {
+  const data = JSON.parse(localStorage.getItem("setlists") || "{}");
+  return data[name] || [];
+}
+
+function saveFavesAsSetlist() {
+  const faves = getFaves();
+
+  if (faves.length === 0) {
+    alert("No favourites to save");
+    return;
+  }
+
+  const name = prompt("Enter setlist name:");
+  if (!name) return;
+
+  let existing = JSON.parse(localStorage.getItem("setlists") || "{}");
+
+  existing[name] = [...faves];
+
+  localStorage.setItem("setlists", JSON.stringify(existing));
+
+  // clear favourites
+  localStorage.removeItem("faves");
+
+  alert("Setlist saved!");
+
+  location.reload(); // refresh dropdown
+}
+
+function populateSetlistDropdown() {
+  const select = document.getElementById("setlistFilter");
+  select.innerHTML = `<option value="">All Setlists</option>`;
+
+  const data = getSetlists();
+
+  Object.keys(data).forEach(name => {
+    const option = document.createElement("option");
+    option.value = name;
+    option.textContent = name;
+    select.appendChild(option);
+  });
+
+  select.onchange = e => {
+    selectedSetlist = e.target.value;
+    select.classList.toggle("active", !!selectedSetlist);
+    renderSongs(document.getElementById("search").value);
+  };
+}
+
+function exportSetlists() {
+  const data = getSetlists();
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "setlists.json";
+  a.click();
+}
+
+/* =========================
+   GROUP BY LETTER
+========================= */
+
+function groupSongs(list) {
+  const grouped = {};
+
+  list.forEach(song => {
+    const letter = song.title[0].toUpperCase();
+    if (!grouped[letter]) grouped[letter] = [];
+    grouped[letter].push(song);
+  });
+
+  return grouped;
+}
+
+/* =========================
+   RENDER SONGS (A–Z ALWAYS)
+========================= */
+
+function renderSongs(searchValue = "") {
+  const container = document.getElementById("songContainer");
+  const noResults = document.getElementById("noResults");
+
+  container.innerHTML = "";
+
+  const faves = getFaves();
+  const search = (searchValue || "").toLowerCase();
+
+  const setlistData = getSetlists();
+
+  // -------------------------
+  // FILTER SONGS SAFELY
+  // -------------------------
+  const searchText = (searchValue || "").toLowerCase();
+
+const filtered = songs.filter(s => {
+  const key = s.title + s.artist;
+
+  const matchesSearch =
+    (s.title + " " + s.artist)
+      .toLowerCase()
+      .includes(searchText);
+
+  const matchesFav =
+    !showFavouritesOnly || getFaves().includes(key);
+
+  const matchesArtist =
+    !selectedArtist || s.artist === selectedArtist;
+
+  const matchesSetlist =
+    !selectedSetlist ||
+    (getSetlists()[selectedSetlist] || []).includes(key);
+
+  return matchesSearch && matchesFav && matchesArtist && matchesSetlist;
+});
+
+const isFiltering =
+  searchText.length > 0 ||
+  showFavouritesOnly ||
+  selectedArtist !== "" ||
+  selectedSetlist !== "";
+
+  const isSearching = search.trim().length > 0;
+
+
+  document.body.classList.toggle("searching", isFiltering);
+
+  let totalResults = filtered.length;
+
+  // -------------------------
+  // STICKY FAVOURITES
+  // -------------------------
+  if (stickyFaves) {
+    const favSongs = filtered.filter(s => faves.includes(s.title + s.artist));
+
+    if (favSongs.length > 0) {
+      const section = document.createElement("section");
+      section.className = "letter-group sticky-section";
+      section.id = "letter-favs";
+
+      let html = `<h2>&#9733; Favourite Songs</h2><ul>`;
+
+      favSongs.forEach(song => {
+        const key = song.title + song.artist;
+
+        html += `
+          <li>
+            <span class="star active" onclick="toggleFav('${key}')">&#9733;</span>
+            <a href="${song.url}">${song.title} - ${song.artist}</a>
+          </li>
+        `;
+      });
+
+      html += `</ul>`;
+
+      section.innerHTML = html;
+      container.appendChild(section);
+    }
+  }
+
+  // -------------------------
+  // GROUP A–Z
+  // -------------------------
+  const grouped = groupSongs(filtered);
+const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+
+alphabet.forEach(letter => {
+  const songsForLetter = grouped[letter] || [];
+
+  // KEY FIX: skip empty letters when filtering
+  if (songsForLetter.length === 0 && isFiltering) return;
+
+  const section = document.createElement("section");
+  section.className = "letter-group";
+  section.id = "letter-" + letter;
+
+  let html = `<h2>${letter}</h2>`;
+
+  if (songsForLetter.length === 0) {
+    html += `<div class="nosongsyet">No songs yet</div>`;
+  } else {
+    html += `<ul>`;
+
+    songsForLetter
+      .sort((a, b) => a.title.localeCompare(b.title))
+      .forEach(song => {
+        const key = song.title + song.artist;
+        const isFav = faves.includes(key);
+
+        const title = isSearching
+          ? song.title.replace(
+              new RegExp(search, "gi"),
+              `<span class="highlight">$&</span>`
+            )
+          : song.title;
+
+        html += `
+          <li>
+            <span class="star ${isFav ? "active" : ""}"
+                  onclick="toggleFav('${key}')">&#9733;</span>
+            <a href="${song.url}" class="${song.hasLyrics ? '' : 'missing-song'}">
+              ${song.hasLyrics ? '' : '* '}
+              ${title} - ${song.artist}
+            </a>
+          </li>
+        `;
+      });
+
+    html += `</ul>`;
+  }
+
+  section.innerHTML = html;
+  container.appendChild(section);
+});
+
+  // -------------------------
+  // NO RESULTS
+  // -------------------------
+  noResults.style.display =
+    filtered.length === 0 ? "block" : "none";
+
+  renderAlphabet(grouped);
+}
+
+/* =========================
+   RENDER ARTISTS IN DROPDOWN
+========================= */
+
+function populateArtists() {
+  const select = document.getElementById("artistFilter");
+
+  // Reset first (prevents duplicates)
+  select.innerHTML = `<option value="">All Artists</option>`;
+
+  const artists = [...new Set(songs.map(s => s.artist))].sort();
+
+  artists.forEach(artist => {
+    const option = document.createElement("option");
+    option.value = artist;
+    option.textContent = artist;
+    select.appendChild(option);
+  });
+
+  select.onchange = e => {
+    selectedArtist = e.target.value;
+    select.classList.toggle("active", !!selectedArtist);
+    renderSongs(document.getElementById("search").value);
+  };
+}
+
+
+/* =========================
+   A–Z SIDEBAR
+========================= */
+
+function renderAlphabet(grouped) {
+  const nav = document.getElementById("alphabetNav");
+  nav.innerHTML = "";
+
+  const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+
+  alphabet.forEach(letter => {
+    const btn = document.createElement("div");
+    btn.className = "letter-btn";
+    btn.innerText = letter;
+
+    btn.onclick = () => {
+      document.getElementById("letter-" + letter)
+        .scrollIntoView({ behavior: "smooth" });
+    };
+
+    nav.appendChild(btn);
+  });
+}
+
+/* =========================
+   SEARCH
+========================= */
+
+const searchInput = document.getElementById("search");
+const clearBtn = document.getElementById("clearSearch");
+
+searchInput.addEventListener("input", e => {
+  const value = e.target.value;
+
+  clearBtn.style.display = value ? "block" : "none";
+
+  renderSongs(value);
+});
+
+clearBtn.addEventListener("click", () => {
+  searchInput.value = "";
+  clearBtn.style.display = "none";
+  renderSongs("");
+});
+
+/* =========================
+   INIT / RENDER SONGS
+========================= */
+
+/*renderSongs();*/
+
+
+
+/* =========================
+   DETECT CURRENT SECTION IN NAV SIDEBAR
+========================= */
+
+window.addEventListener("scroll", () => {
+  const sections = document.querySelectorAll(".letter-group");
+  const navButtons = document.querySelectorAll(".letter-btn");
+  const header = document.querySelector(".top-bar");
+
+  const offset = header.offsetHeight + 5; // dynamic height
+
+  let current = "";
+
+  sections.forEach(section => {
+    const rect = section.getBoundingClientRect();
+
+    if (rect.top <= offset && rect.bottom >= offset) {
+      current = section.id.replace("letter-", "");
+    }
+  });
+
+  navButtons.forEach(btn => {
+    btn.classList.remove("active");
+    if (btn.innerText === current) {
+      btn.classList.add("active");
+    }
+  });
+});
+
+
+/* =========================
+   TOGGLE FULL SCREEN
+========================= */
+
+function toggleFullscreen(btn) {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen();
+    localStorage.setItem(FS_KEY, "1");
+    btn.innerHTML = "&#10006; Exit Fullscreen &#x26F6;";
+  } else {
+    document.exitFullscreen();
+    localStorage.setItem(FS_KEY, "0");
+    btn.innerHTML = "&#9974; Fullscreen";
+  }
+}
+
+/*
+function toggleFullscreen(btn) {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen();
+    btn.innerHTML = "&#10006; Exit Fullscreen &#x26F6;";
+  } else {
+    document.exitFullscreen();
+    btn.innerHTML = "&#9974; Fullscreen";
+  }
+}*/
+
+window.addEventListener("DOMContentLoaded", () => {
+  populateArtists();
+  populateSetlistDropdown();
+  renderSongs();
+});
+
+/* =========================
+   SETLISTS
+========================= */
+
+function getSetlists() {
+  return JSON.parse(localStorage.getItem("setlists") || "{}");
+}
+
+function saveSetlists(data) {
+  localStorage.setItem("setlists", JSON.stringify(data));
+}
+
+function createSetlistFromFaves() {
+  const faves = getFaves();
+
+  if (faves.length === 0) {
+    alert("No favourites to save");
+    return;
+  }
+
+  const name = prompt("Enter setlist name:");
+  if (!name) return;
+
+  const data = getSetlists();
+
+  // ?? prevent overwrite accidentally
+  if (data[name]) {
+    if (!confirm("Setlist exists. Overwrite?")) return;
+  }
+
+  data[name] = [...faves];
+
+  saveSetlists(data);
+
+  // Clear favourites after saving
+  localStorage.removeItem("faves");
+
+  alert("Setlist saved!");
+
+  populateSetlistDropdown();
+  renderSongs();
+}
+
+function createSetlist(name) {
+  const data = getSetlists();
+  if (!data[name]) data[name] = [];
+  saveSetlists(data);
+}
+
+function addToSetlist(name, key) {
+  const data = getSetlists();
+  if (!data[name]) data[name] = [];
+
+  if (!data[name].includes(key)) {
+    data[name].push(key);
+  }
+
+  saveSetlists(data);
+}
+
+function removeFromSetlist(name, key) {
+  const data = getSetlists();
+  if (!data[name]) return;
+
+  data[name] = data[name].filter(k => k !== key);
+  saveSetlists(data);
+}
+
+function renderSetlist(name) {
+  const container = document.getElementById("songContainer");
+  const data = getSetlists();
+
+  const list = data[name] || [];
+
+  container.innerHTML = `<h2>&#127908; ${name}</h2><ul>`;
+
+  list.forEach(key => {
+    const song = songs.find(s => (s.title + s.artist) === key);
+    if (!song) return;
+
+    container.innerHTML += `
+      <li>
+        <span class="star active">&#9733;</span>
+        <a href="${song.url}">
+          ${song.title} - ${song.artist}
+        </a>
+      </li>
+    `;
+  });
+
+  container.innerHTML += `</ul>`;
+}
+
+</script>
+
+</body>
 </html>
