@@ -101,8 +101,14 @@
       div.style.color = section.style?.color || "white";
 
       div.innerHTML = `
-        ${section.title ? `<h2>${isTab ? (isCollapsed ? "▶ " : "▼ ") : ""}$      {section.title}</h2>` : ""}
-        <div class="viewer-section-text">${section.html}</div>
+        ${section.title
+          ? `<h2>${isTab ? (isCollapsed ? "▶ " : "▼ ") : ""}${section.title}</h2>`
+          : ""
+        }
+
+        <div class="viewer-section-text">
+          ${section.html}
+        </div>
       `;
 
       if (isTab) {
