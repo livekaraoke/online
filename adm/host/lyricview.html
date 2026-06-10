@@ -97,13 +97,14 @@
       div.style.color = section.style?.color || "white";
 
       div.innerHTML = `
-        ${section.title ? `<h2>${section.type === "tab" ? "▶ " : ""}${section.title}</h2>` : ""}
+        ${section.title ? `<h2>${section.type === "tab" ? (section.collapsed ? "▶ " : "▼ ") : ""}${section.title}</h2>` : ""}
         <div class="viewer-section-text">${section.html}</div>
       `;
 
       if (section.type === "tab") {
         div.querySelector("h2").onclick = () => {
-          div.classList.toggle("collapsed-tab");
+          section.collapsed = !section.collapsed;
+          renderLoadedSong();
         };
       }
 
