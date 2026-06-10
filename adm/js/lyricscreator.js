@@ -25,16 +25,6 @@ let currentFormats = {
 };
 let currentAlign = "left";
 
-let songData = {
-  title: "",
-  artist: "",
-  userBpm: "",
-  originalBpm: "",
-  capo: "",
-  key: "",
-  sections: []
-};
-
 function updateMeta() {
   songData.title = document.getElementById("songTitle").value;
   songData.artist = document.getElementById("artistName").value;
@@ -96,34 +86,6 @@ function loadSectionPreset() {
     input.value = preset + " ";
     input.focus();
   }
-}
-
-function setColor(color, btn) {
-  selectedColor = color;
-
-  document.querySelectorAll(".color-btn").forEach(b => b.classList.remove("active"));
-  btn.classList.add("active");
-}
-
-function toggleFormat(type, btn) {
-  currentFormats[type] = !currentFormats[type];
-  btn.classList.toggle("active", currentFormats[type]);
-}
-
-function setAlign(align, btn) {
-  currentAlign = align;
-
-  document.querySelectorAll(".align-buttons button")
-    .forEach(b => b.classList.remove("active"));
-
-  btn.classList.add("active");
-}
-
-function getSectionTitle() {
-  const preset = document.getElementById("sectionTitlePreset").value;
-  const custom = document.getElementById("sectionTitleCustom").value;
-
-  return (preset || custom || "").toUpperCase();
 }
 
 function addSection(index = null) {
