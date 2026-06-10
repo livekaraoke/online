@@ -95,7 +95,7 @@ body {
 
 .song-header h1 {
   margin: 0;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.5px;
 }
@@ -112,25 +112,27 @@ body {
 
 #originalBpm {
   color: #ff3333;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 800;
 }
 
 #capo,
 #songKey {
   color: white;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 700;
 }
 
 .viewer-section {
-  margin-bottom: 6px;
+  margin-bottom: 0;
   font-size: 24px;
   line-height: 1.15;
 }
 
 .viewer-section h2 {
   margin: 0 0 0px;
+  margin-top: 0;
+  margin-bottom: 0;
   color: #888;
   font-size: 16px;
   font-weight: 900;
