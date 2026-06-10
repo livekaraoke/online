@@ -251,7 +251,7 @@ textarea {
 
 .format-buttons,
 .align-buttons {
-  display: normal;
+  display: flex;
   gap: 6px;
 }
 
