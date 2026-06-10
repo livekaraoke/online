@@ -1,1 +1,158 @@
+* {
+  box-sizing: border-box;
+}
 
+body {
+  margin: 0;
+  background: #050505;
+  color: white;
+  font-family: Bahnschrift, Arial, sans-serif;
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: #090909;
+  border-bottom: 1px solid rgba(255,0,0,.4);
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.topbar h1 {
+  margin: 0;
+  font-size: 22px;
+  letter-spacing: 1px;
+}
+
+.btn {
+  display: inline-block;
+  padding: 12px 18px;
+  background: #151515;
+  border: 1px solid rgba(255,0,0,.45);
+  color: white;
+  text-decoration: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.btn.red {
+  background: linear-gradient(180deg, #ff2b2b, #aa0000);
+  box-shadow: 0 0 12px rgba(255,0,0,.45);
+}
+
+.song-meta,
+.editor-panel {
+  max-width: 900px;
+  margin: 20px auto;
+  padding: 20px;
+  background: #111;
+  border: 1px solid rgba(255,0,0,.3);
+  border-radius: 12px;
+}
+
+.song-meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr 120px;
+  gap: 12px;
+}
+
+input,
+textarea,
+select {
+  width: 100%;
+  background: #050505;
+  color: white;
+  border: 1px solid #333;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 16px;
+}
+
+textarea {
+  height: 220px;
+  margin-top: 14px;
+  resize: vertical;
+  font-family: "Courier New", monospace;
+}
+
+.controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 12px;
+  margin-top: 12px;
+  align-items: center;
+}
+
+.preview-area {
+  max-width: 900px;
+  margin: 30px auto;
+  padding: 20px;
+}
+
+.song-preview {
+  background: #000;
+  border: 1px solid #222;
+  padding: 14px;
+  min-height: 500px;
+}
+
+.song-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  margin-bottom: 24px;
+}
+
+.song-header h3 {
+  margin: 0;
+  font-size: 14px;
+}
+
+#previewBpm {
+  color: #ff3333;
+  font-size: 22px;
+  font-weight: 900;
+}
+
+.lyric-section {
+  margin-bottom: 28px;
+  white-space: pre-wrap;
+  font-size: 22px;
+  line-height: 1.08;
+}
+
+.lyric-section-title {
+  color: #7CFF3A;
+  font-weight: 900;
+  margin-bottom: 8px;
+  font-size: 20px;
+}
+
+.section-actions {
+  margin-top: 8px;
+}
+
+.section-actions button {
+  margin-right: 8px;
+  padding: 6px 10px;
+  background: #111;
+  color: white;
+  border: 1px solid #333;
+  cursor: pointer;
+}
+
+@media (max-width: 700px) {
+  .song-meta,
+  .controls {
+    grid-template-columns: 1fr;
+  }
+
+  .topbar {
+    flex-direction: column;
+    gap: 10px;
+  }
+}
