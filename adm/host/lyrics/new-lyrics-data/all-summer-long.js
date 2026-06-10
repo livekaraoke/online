@@ -24,7 +24,7 @@ window.song_all_summer_long = {
       "type": "tab",
       "title": "SOLO",
       "html": "<b>    D\n<!--StartFragment-->e|-------2--------------|<br>B|-----3---3------------|<br>G|---2-------2----------|<br>D|--0-------------------|<br>A|----------------------|</b><!--EndFragment-->\n\n<!--EndFragment-->",
-      "collapsed": false,
+      "collapsed": true,
       "style": {
         "fontFamily": "Courier New",
         "color": "white"
