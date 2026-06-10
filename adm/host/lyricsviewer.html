@@ -1,3 +1,55 @@
-<html>
-  
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Lyrics Viewer</title>
+  <link rel="stylesheet" href="../css/lyricsviewer.css">
+</head>
+
+<body>
+
+<header class="viewer-topbar">
+  <a href="../admin.html" class="viewer-btn">← Admin</a>
+  <h1>Lyrics Viewer</h1>
+</header>
+
+<main class="viewer-list">
+  <input id="searchLyrics" placeholder="Search lyrics...">
+  <div id="lyricsList"></div>
+</main>
+
+<script src="lyrics/new-lyrics-data/lyrics-index.js"></script>
+
+<script>
+  const list = document.getElementById("lyricsList");
+  const search = document.getElementById("searchLyrics");
+
+  function renderLyrics(filter = "") {
+    list.innerHTML = "";
+
+    lyricsIndex
+      .filter(song =>
+        (song.title + " " + song.artist)
+          .toLowerCase()
+          .includes(filter.toLowerCase())
+      )
+      .sort((a, b) => a.title.localeCompare(b.title))
+      .forEach(song => {
+        const a = document.createElement("a");
+        a.className = "lyrics-item";
+        a.href = `lyricview.html?file=${encodeURIComponent(song.file)}`;
+        a.innerHTML = `
+          <strong>${song.title}</strong>
+          <span>${song.artist}</span>
+        `;
+        list.appendChild(a);
+      });
+  }
+
+  search.addEventListener("input", e => renderLyrics(e.target.value));
+
+  renderLyrics();
+</script>
+
+</body>
 </html>
