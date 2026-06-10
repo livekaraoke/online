@@ -78,6 +78,7 @@ function updateEditorFont() {
   document.getElementById("sectionEditor").style.fontFamily = font;
 }
 
+/*
 function loadSectionPreset() {
   const preset = document.getElementById("sectionTitlePreset").value;
   const input = document.getElementById("sectionTitleCustom");
@@ -87,6 +88,7 @@ function loadSectionPreset() {
     input.focus();
   }
 }
+*/
 
 function addSection(index = null) {
   const title = document.getElementById("sectionTitleCustom").value.toUpperCase().trim();
@@ -117,7 +119,7 @@ function addSection(index = null) {
 
   document.getElementById("sectionTitlePreset").value = "";
   document.getElementById("sectionTitleCustom").value = "";
-  editor.innerHTML = "";
+  document.getElementById("liveSectionPreview").innerHTML = "";
 
   renderPreview();
 }
@@ -272,3 +274,50 @@ function downloadJS() {
 
   URL.revokeObjectURL(a.href);
 }
+
+document.getElementById("sectionEditor")
+.addEventListener("input", updateLivePreview);
+
+document.getElementById("sectionTitleCustom")
+.addEventListener("input", updateLivePreview);
+
+document.getElementById("fontFamily")
+.addEventListener("change", updateLivePreview);
+
+function updateLivePreview() {
+
+  const title =
+    document.getElementById("sectionTitleCustom")
+    .value
+    .toUpperCase();
+
+  const html =
+    document.getElementById("sectionEditor")
+    .innerHTML;
+
+  const font =
+    document.getElementById("fontFamily")
+    .value;
+
+  const preview =
+    document.getElementById("liveSectionPreview");
+
+  preview.innerHTML = `
+    ${title ?
+      `<div class="lyric-section-title">${title}</div>`
+      : ""
+    }
+
+    <div
+      class="section-text"
+      style="
+        font-family:${font};
+        color:${selectedSectionColor};
+      ">
+      ${html}
+    </div>
+  `;
+}
+
+  
+            
