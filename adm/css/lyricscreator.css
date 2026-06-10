@@ -104,7 +104,7 @@ textarea {
   display: flex;
   justify-content: space-between;
   align-items: start;
-  margin-bottom: 10px;
+  margin-bottom: 15px;
 }
 
 .song-header h3 {
@@ -127,7 +127,7 @@ textarea {
 
 .lyric-section-title {
   color: #888;
-  font-weight: 900;
+  font-weight: 1200;
   margin-bottom: 10px;
   font-size: 15px;
   letter-spacing: 1px;
