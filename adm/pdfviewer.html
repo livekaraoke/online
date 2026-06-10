@@ -61,47 +61,66 @@
   <div class="pdf-topbar">
     <a href="host/karaokehostchordbook.html" class="pdf-btn">Back to Main</a>
     <button onclick="goTop()" class="pdf-btn">Top</button>
-    <button onclick="exitFullscreen()" class="pdf-btn">Exit Fullscreen</button>
+    <button onclick="toggleFullscreen()" id="fullscreenBtn" class="pdf-btn">Full Screen</button>
   </div>
 
   <iframe id="pdfViewer" class="pdf-frame"></iframe>
 
   <script>
     const params = new URLSearchParams(window.location.search);
-
+  
     const file = params.get("file");
     const page = params.get("page") || 1;
-
+  
     const allowedFiles = {
       karaoke: "files/livekaraokelyrics1_4.pdf",
       performance: "files/liveperformancelyrics.pdf"
     };
-
+  
     const pdfViewer = document.getElementById("pdfViewer");
-
-    if (allowedFiles[file]) {
-      pdfViewer.src = allowedFiles[file] + "#page=" + page;
-    } else {
-      document.body.innerHTML = "<h1 style='color:white;text-align:center;margin-top:40px;'>PDF not found</h1>";
+    const fullscreenBtn = document.getElementById("fullscreenBtn");
+  
+    function loadPdf(targetPage) {
+      if (!allowedFiles[file]) {
+        document.body.innerHTML =
+          "<h1 style='color:white;text-align:center;margin-top:40px;'>PDF not found</h1>";
+        return;
+      }
+  
+      pdfViewer.src = "about:blank";
+  
+      setTimeout(() => {
+        pdfViewer.src = allowedFiles[file] + "#page=" + targetPage + "&zoom=page-width";
+      }, 80);
     }
-
+  
     function goTop() {
-      if (allowedFiles[file]) {
-        pdfViewer.src = allowedFiles[file] + "#page=2";
+      loadPdf(2);
+    }
+  
+    async function toggleFullscreen() {
+      try {
+        if (!document.fullscreenElement) {
+          await document.documentElement.requestFullscreen();
+        } else {
+          await document.exitFullscreen();
+        }
+        updateFullscreenButton();
+      } catch (err) {
+        console.log("Fullscreen error:", err);
       }
     }
-
-    function exitFullscreen() {
-      if (document.fullscreenElement) {
-        document.exitFullscreen();
-      }
+  
+    function updateFullscreenButton() {
+      fullscreenBtn.innerText = document.fullscreenElement
+        ? "Exit Fullscreen"
+        : "Full Screen";
     }
-
-    window.addEventListener("load", () => {
-      document.documentElement.requestFullscreen().catch(() => {
-        console.log("Fullscreen blocked by browser until user interaction.");
-      });
-    });
+  
+    document.addEventListener("fullscreenchange", updateFullscreenButton);
+  
+    loadPdf(page);
+    updateFullscreenButton();
   </script>
 
 </body>
