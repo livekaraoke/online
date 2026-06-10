@@ -157,7 +157,7 @@ textarea {
 
 .lyric-section {
   margin-bottom: 5px;
-  white-space: pre-wrap;
+  white-space: normal;
   font-size: 22px;
   line-height: 1.08;
 }
