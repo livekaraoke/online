@@ -179,6 +179,8 @@ body {
     border-color .15s ease,
     background .15s ease,
     box-shadow .15s ease;
+  margin-top: 0;
+  margin-bottom: 0;
 }
 
 
@@ -194,6 +196,8 @@ body {
   text-align: center;
   color: #FFD400;
   cursor: pointer;
+  margin-top: 0;
+  margin-bottom: 0;
 
   font-size: 18px;
   margin: 0 0 6px;
@@ -204,10 +208,12 @@ body {
 }
 
 .viewer-tab .viewer-section-text {
-  font-size: 18px;
+  font-size: 20px;
   line-height: 1.30;
   overflow-x: auto;
   font-weight: 1200;
+  margin-top: 0;
+  margin-bottom: 0;
 }
 
 .viewer-tab.collapsed-tab .viewer-section-text {
