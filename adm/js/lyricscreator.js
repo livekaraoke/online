@@ -260,25 +260,28 @@ function renderPreview() {
       container.appendChild(sep);
       return;
     }
-  
+
     const isTab = section.type === "tab";
-  
+    const isCollapsed = isTab && section.collapsed === true;
+
     const div = document.createElement("div");
     div.className = isTab ? "lyric-section tab-section" : "lyric-section";
-  
-    div.style.fontFamily = section.style.fontFamily;
-    div.style.color = section.style.color;
-  
-    div.innerHTML = `
-        ${section.title
-          ? `<h2>${isTab ? (isCollapsed ? "▶ " : "▼ ") : ""}${section.title}</h2>`
-          : ""
-        }
 
-        <div class="viewer-section-text">
-          ${section.html}
+    div.style.fontFamily = section.style?.fontFamily || "Verdana";
+    div.style.color = section.style?.color || "white";
+
+    div.innerHTML = `
+      ${section.title ? `
+        <div class="lyric-section-title ${isTab ? "clickable-title" : ""}"
+             ${isTab ? `onclick="toggleTabSection(${index})"` : ""}>
+          ${isTab ? (isCollapsed ? "▶ " : "▼ ") : ""}${section.title}
         </div>
-      `;
+      ` : ""}
+
+      <div class="section-text ${isCollapsed ? "collapsed" : ""}">
+        ${section.html || ""}
+      </div>
+
       <div class="section-actions">
         <button onclick="editSection(${index})">Edit</button>
         <button onclick="insertBefore(${index})">Insert Above</button>
@@ -288,7 +291,7 @@ function renderPreview() {
         <button onclick="deleteSection(${index})">Delete</button>
       </div>
     `;
-  
+
     container.appendChild(div);
   });
 }
