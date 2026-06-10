@@ -139,9 +139,10 @@ textarea {
 .section-editor p,
 .section-editor div,
 .section-text p,
-.section-text div {
-  margin: 0;
-  padding: 0;
+.section-text div,
+.section-text br {
+  margin-top: 0;
+  margin-bottom: 0;
 }
 
 .section-editor:focus {
@@ -156,10 +157,10 @@ textarea {
 }
 
 .lyric-section {
-  margin-bottom: 5px;
+  margin-bottom: 8px;
   white-space: normal;
   font-size: 22px;
-  line-height: 1.25;
+  line-height: 1.08;
 }
 .lyric-section-title {
   color: #888;
@@ -172,13 +173,28 @@ textarea {
 
 .section-text {
   white-space: pre-wrap;
-  line-height: 1.25;
+  line-height: 1.08;
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.section-separator {
+  margin: 10px 0;
 }
 
 .section-separator hr {
   border: none;
-  border-top: 1px solid #555;
-  margin: 10px 0;
+  height: 3px;
+  margin: 8px 0;
+
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgba(255,255,255,0.25),
+    rgba(255,255,255,0.8),
+    rgba(255,255,255,0.25),
+    transparent
+  );
 }
 
 .preview-draft {
@@ -212,7 +228,7 @@ textarea {
 }
 
 .section-actions {
-  margin-top: 8px;
+  margin-top: 4px;
 }
 
 .section-actions button {
