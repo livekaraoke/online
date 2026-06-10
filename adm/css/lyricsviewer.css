@@ -95,7 +95,7 @@ body {
 
 .song-header h1 {
   margin: 0;
-  font-size: 16px;
+  font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.5px;
 }
@@ -132,7 +132,7 @@ body {
 .viewer-section h2 {
   margin: 0 0 2px;
   color: #888;
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 900;
   letter-spacing: 1px;
 }
