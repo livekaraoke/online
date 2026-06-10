@@ -1,4 +1,4 @@
-const song_all_summer_long = {
+window.song_all_summer_long = {
   "id": "allsummerlongkidrock",
   "title": "All Summer Long",
   "artist": "Kid Rock",
