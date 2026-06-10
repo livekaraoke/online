@@ -269,9 +269,9 @@ function renderPreview() {
     div.style.fontFamily = section.style.fontFamily;
     div.style.color = section.style.color;
   
-    div.innerHTML = "
+    div.innerHTML = `
         ${section.title
-          ? `<h2>${isTab ? (isCollapsed ? "▶ " : "▼ ") : ""}${section.title}</h2>"
+          ? `<h2>${isTab ? (isCollapsed ? "▶ " : "▼ ") : ""}${section.title}</h2>`
           : ""
         }
 
