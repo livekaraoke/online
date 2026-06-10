@@ -270,17 +270,15 @@ function renderPreview() {
     div.style.color = section.style.color;
   
     div.innerHTML = `
-      ${section.title ? `
-        <div class="lyric-section-title ${isTab ? 'clickable-title' : ''}"
-             ${isTab ? `onclick="toggleTabSection(${index})"` : ""}>
-          ${isTab ? "▶ " : ""}${section.title}
+        ${section.title
+          ? `<h2>${isTab ? (isCollapsed ? "▶ " : "▼ ") : ""}${section.title}</h2>`
+          : ""
+        }
+
+        <div class="viewer-section-text">
+          ${section.html}
         </div>
-      ` : ""}
-  
-      <div class="section-text ${isTab && section.collapsed ? 'collapsed' : ''}">
-        ${section.html}
-      </div>
-  
+      `;
       <div class="section-actions">
         <button onclick="editSection(${index})">Edit</button>
         <button onclick="insertBefore(${index})">Insert Above</button>
