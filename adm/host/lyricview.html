@@ -1,3 +1,116 @@
-<html>
-  
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Lyric View</title>
+  <link rel="stylesheet" href="../css/lyricsviewer.css">
+</head>
+
+<body>
+
+<header class="viewer-topbar">
+  <button onclick="history.back()" class="viewer-btn">← BACK</button>
+  <button id="editBtn" class="viewer-btn red">EDIT</button>
+</header>
+
+<main class="lyric-page">
+  <div class="song-header">
+    <h1 id="songTitle"></h1>
+
+    <div class="song-meta-box">
+      <div id="userBpm"></div>
+      <div id="originalBpm"></div>
+      <div id="capo"></div>
+      <div id="songKey"></div>
+    </div>
+  </div>
+
+  <div id="lyricsContent"></div>
+</main>
+
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const file = params.get("file");
+
+  if (!file) {
+    document.body.innerHTML = "<h1 style='color:white;text-align:center;'>No file selected</h1>";
+  } else {
+    const script = document.createElement("script");
+    script.src = `lyrics/new-lyrics-data/${file}`;
+    script.onload = renderLoadedSong;
+    document.body.appendChild(script);
+  }
+
+  function getSongVariableName(fileName) {
+    return "song_" + fileName
+      .replace(".js", "")
+      .replace(/-/g, "_");
+  }
+
+  function renderLoadedSong() {
+    const variableName = getSongVariableName(file);
+    const song = window[variableName];
+
+    if (!song) {
+      document.getElementById("lyricsContent").innerHTML =
+        "<p>Could not load song data.</p>";
+      return;
+    }
+
+    document.getElementById("songTitle").innerText =
+      `${song.title} - ${song.artist}`;
+
+    document.getElementById("userBpm").innerText =
+      song.userBpm ? `${song.userBpm} BPM` : "";
+
+    document.getElementById("originalBpm").innerText =
+      song.originalBpm ? `Original: ${song.originalBpm} BPM` : "";
+
+    document.getElementById("capo").innerText =
+      song.capo ? `Capo: ${song.capo}` : "";
+
+    document.getElementById("songKey").innerText =
+      song.key ? `Key: ${song.key}` : "";
+
+    document.getElementById("editBtn").onclick = () => {
+      window.location.href =
+        `lyricscreator.html?edit=${encodeURIComponent(file)}`;
+    };
+
+    const container = document.getElementById("lyricsContent");
+    container.innerHTML = "";
+
+    song.sections.forEach(section => {
+      if (section.type === "separator") {
+        const sep = document.createElement("div");
+        sep.className = "viewer-separator";
+        container.appendChild(sep);
+        return;
+      }
+
+      const div = document.createElement("section");
+      div.className = section.type === "tab"
+        ? "viewer-section viewer-tab collapsed-tab"
+        : "viewer-section";
+
+      div.style.fontFamily = section.style?.fontFamily || "Verdana";
+      div.style.color = section.style?.color || "white";
+
+      div.innerHTML = `
+        ${section.title ? `<h2>${section.type === "tab" ? "▶ " : ""}${section.title}</h2>` : ""}
+        <div class="viewer-section-text">${section.html}</div>
+      `;
+
+      if (section.type === "tab") {
+        div.querySelector("h2").onclick = () => {
+          div.classList.toggle("collapsed-tab");
+        };
+      }
+
+      container.appendChild(div);
+    });
+  }
+</script>
+
+</body>
 </html>
