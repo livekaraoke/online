@@ -102,7 +102,7 @@
       `;
 
       if (section.type === "tab") {
-        div.querySelector("h2").onclick = () => {
+        div.onclick = () => {
           section.collapsed = !section.collapsed;
           renderLoadedSong();
         };
