@@ -10,7 +10,7 @@
 
 <header class="topbar">
   <a href="../admin.html" class="btn">← Admin</a>
-  <h1>Lyrics & Chords Creator</h1>
+  <h1>● Lyrics & Chords Creator! ●</h1>
   <button onclick="downloadJS()" class="btn red">Download JS File</button>
 </header>
 
@@ -33,19 +33,26 @@
       id="sectionTitleCustom"
       list="sectionPresets"
       placeholder="SECTION TITLE">
+
     
-    <datalist id="sectionPresets">
-      <option value="INTRO">
-      <option value="VERSE">
-      <option value="CHORUS">
-      <option value="PRE-CHORUS">
-      <option value="POST-CHORUS">
-      <option value="BRIDGE">
-      <option value="SOLO">
-      <option value="INSTRUMENTAL">
-      <option value="OUTRO">
-      <option value="ENDING">
-    </datalist>
+  <datalist id="sectionPresets">
+    <option value="INTRO">
+    <option value="VERSE">
+    <option value="CHORUS">
+    <option value="PRE-CHORUS">
+    <option value="POST-CHORUS">
+    <option value="BRIDGE">
+    <option value="SOLO">
+    <option value="INSTRUMENTAL">
+    <option value="OUTRO">
+    <option value="ENDING">
+  </datalist>
+
+  
+  <select id="sectionType">
+    <option value="lyrics">Lyrics & Chords</option>
+    <option value="tab">Guitar Tab</option>
+  </select>
   </div>
   
   <div class="controls">
@@ -128,7 +135,15 @@
        data-placeholder="Enter chords and lyrics here...">
   </div>
   
-  <button onclick="addSection()" class="btn red">Add Section</button>
+  <div class="section-save-row">
+    <button id="saveSectionBtn" onclick="saveSection()" class="btn red">
+      Add Section
+    </button>
+  
+    <button id="cancelEditBtn" onclick="cancelEdit()" class="btn" style="display:none;">
+      Cancel
+    </button>
+  </div>
 
 </section>
 
