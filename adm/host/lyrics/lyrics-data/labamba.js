@@ -120,7 +120,7 @@ window.songData = {
       "lines": [
         "Bamba, bamba..",
         "Bamba, bamba..",
-        "\"",
+        "",
         "Bamba, bamba..",
         "Bamba, bamba.."
       ]
