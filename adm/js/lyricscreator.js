@@ -1,4 +1,23 @@
 let selectedColor = "white";
+let selectedSectionColor = "white";
+
+let songData = {
+  id: "",
+  title: "",
+  artist: "",
+  userBpm: "",
+  originalBpm: "",
+  capo: "",
+  key: "",
+  sections: []
+};
+
+function generateSongId(title, artist) {
+  return (title + artist)
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
+}
+
 let currentFormats = {
   bold: false,
   italic: false,
@@ -19,6 +38,8 @@ let songData = {
 function updateMeta() {
   songData.title = document.getElementById("songTitle").value;
   songData.artist = document.getElementById("artistName").value;
+  songData.id = generateSongId(songData.title, songData.artist);
+
   songData.userBpm = document.getElementById("userBpm").value;
   songData.originalBpm = document.getElementById("originalBpm").value;
   songData.capo = document.getElementById("capoNote").value;
@@ -34,16 +55,48 @@ function updateMeta() {
     songData.originalBpm ? `Original: ${songData.originalBpm} BPM` : "";
 
   document.getElementById("previewCapo").innerText =
-    songData.capo ? songData.capo : "";
+    songData.capo ? `Capo: ${songData.capo}` : "";
 
   document.getElementById("previewKey").innerText =
-    songData.key ? songData.key : "";
+    songData.key ? `Key: ${songData.key}` : "";
 }
 
 ["songTitle", "artistName", "userBpm", "originalBpm", "capoNote", "songKey"]
   .forEach(id => {
     document.getElementById(id).addEventListener("input", updateMeta);
   });
+
+function formatText(command) {
+  document.execCommand(command, false, null);
+  document.getElementById("sectionEditor").focus();
+}
+
+function formatColor(color) {
+  document.execCommand("foreColor", false, color);
+  document.getElementById("sectionEditor").focus();
+}
+
+function setSectionColor(color, btn) {
+  selectedSectionColor = color;
+
+  document.querySelectorAll(".color-btn").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+}
+
+function updateEditorFont() {
+  const font = document.getElementById("fontFamily").value;
+  document.getElementById("sectionEditor").style.fontFamily = font;
+}
+
+function loadSectionPreset() {
+  const preset = document.getElementById("sectionTitlePreset").value;
+  const input = document.getElementById("sectionTitleCustom");
+
+  if (preset) {
+    input.value = preset + " ";
+    input.focus();
+  }
+}
 
 function setColor(color, btn) {
   selectedColor = color;
@@ -74,25 +127,23 @@ function getSectionTitle() {
 }
 
 function addSection(index = null) {
-  const title = getSectionTitle();
-  const text = document.getElementById("sectionText").value;
+  const title = document.getElementById("sectionTitleCustom").value.toUpperCase().trim();
+  const editor = document.getElementById("sectionEditor");
+  const html = editor.innerHTML.trim();
   const fontFamily = document.getElementById("fontFamily").value;
 
-  if (!text.trim()) {
+  if (!html || html === "Enter chords and lyrics here...") {
     alert("Please enter lyrics/chords first.");
     return;
   }
 
   const section = {
+    type: "section",
     title,
-    text,
+    html,
     style: {
       fontFamily,
-      color: selectedColor,
-      bold: currentFormats.bold,
-      italic: currentFormats.italic,
-      underline: currentFormats.underline,
-      align: currentAlign
+      color: selectedSectionColor
     }
   };
 
@@ -104,7 +155,27 @@ function addSection(index = null) {
 
   document.getElementById("sectionTitlePreset").value = "";
   document.getElementById("sectionTitleCustom").value = "";
-  document.getElementById("sectionText").value = "";
+  editor.innerHTML = "";
+
+  renderPreview();
+}
+
+function insertSeparator(index) {
+  songData.sections.splice(index + 1, 0, {
+    type: "separator"
+  });
+
+  renderPreview();
+}
+
+function moveSection(index, direction) {
+  const newIndex = index + direction;
+
+  if (newIndex < 0 || newIndex >= songData.sections.length) return;
+
+  const temp = songData.sections[index];
+  songData.sections[index] = songData.sections[newIndex];
+  songData.sections[newIndex] = temp;
 
   renderPreview();
 }
@@ -116,27 +187,42 @@ function renderPreview() {
   container.innerHTML = "";
 
   songData.sections.forEach((section, index) => {
+
+    if (section.type === "separator") {
+      const sep = document.createElement("div");
+      sep.className = "section-separator";
+      sep.innerHTML = `
+        <hr>
+        <div class="section-actions">
+          <button onclick="moveSection(${index}, -1)">↑</button>
+          <button onclick="moveSection(${index}, 1)">↓</button>
+          <button onclick="deleteSection(${index})">Delete</button>
+        </div>
+      `;
+      container.appendChild(sep);
+      return;
+    }
+  
     const div = document.createElement("div");
     div.className = "lyric-section";
-
+  
     div.style.fontFamily = section.style.fontFamily;
     div.style.color = section.style.color;
-    div.style.fontWeight = section.style.bold ? "900" : "400";
-    div.style.fontStyle = section.style.italic ? "italic" : "normal";
-    div.style.textDecoration = section.style.underline ? "underline" : "none";
-    div.style.textAlign = section.style.align || "left";
-
+  
     div.innerHTML = `
       ${section.title ? `<div class="lyric-section-title">${section.title}</div>` : ""}
-      <div>${escapeHTML(section.text)}</div>
-
+      <div class="section-text">${section.html}</div>
+  
       <div class="section-actions">
         <button onclick="editSection(${index})">Edit</button>
         <button onclick="insertBefore(${index})">Insert Above</button>
+        <button onclick="insertSeparator(${index})">Insert Separator</button>
+        <button onclick="moveSection(${index}, -1)">↑ Move Up</button>
+        <button onclick="moveSection(${index}, 1)">↓ Move Down</button>
         <button onclick="deleteSection(${index})">Delete</button>
       </div>
     `;
-
+  
     container.appendChild(div);
   });
 }
@@ -144,30 +230,15 @@ function renderPreview() {
 function editSection(index) {
   const section = songData.sections[index];
 
+  if (section.type === "separator") return;
+
   document.getElementById("sectionTitlePreset").value = "";
   document.getElementById("sectionTitleCustom").value = section.title;
-  document.getElementById("sectionText").value = section.text;
+  document.getElementById("sectionEditor").innerHTML = section.html;
   document.getElementById("fontFamily").value = section.style.fontFamily;
+  document.getElementById("sectionEditor").style.fontFamily = section.style.fontFamily;
 
-  selectedColor = section.style.color || "white";
-
-  currentFormats.bold = !!section.style.bold;
-  currentFormats.italic = !!section.style.italic;
-  currentFormats.underline = !!section.style.underline;
-  currentAlign = section.style.align || "left";
-
-  document.querySelectorAll(".format-buttons button").forEach(btn => btn.classList.remove("active"));
-  document.getElementById("boldBtn").classList.toggle("active", currentFormats.bold);
-  document.getElementById("italicBtn").classList.toggle("active", currentFormats.italic);
-  document.getElementById("underlineBtn").classList.toggle("active", currentFormats.underline);
-
-  document.querySelectorAll(".align-buttons button").forEach(btn => {
-    btn.classList.toggle("active", btn.textContent.toLowerCase() === currentAlign[0]);
-  });
-
-  document.querySelectorAll(".color-btn").forEach(btn => {
-    btn.classList.toggle("active", btn.style.backgroundColor === selectedColor);
-  });
+  selectedSectionColor = section.style.color || "white";
 
   songData.sections.splice(index, 1);
   renderPreview();
