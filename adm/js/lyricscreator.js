@@ -185,7 +185,7 @@ function saveSection() {
     type: sectionType,
     title,
     html,
-    collapsed: sectionType !== "tab",
+    collapsed: sectionType === "tab",
     style: {
       fontFamily,
       color: selectedSectionColor,
