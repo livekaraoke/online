@@ -1,5 +1,73 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
+  <title>Lyrics Creator</title>
+  <link rel="stylesheet" href="../css/lyricscreator.css">
 </head>
+
+<body>
+
+<header class="topbar">
+  <a href="admin.html" class="btn">← Admin</a>
+  <h1>Lyrics & Chords Creator</h1>
+  <button onclick="downloadJS()" class="btn red">Download JS File</button>
+</header>
+
+<section class="song-meta">
+  <input id="songTitle" placeholder="Song title">
+  <input id="artistName" placeholder="Artist">
+  <input id="bpm" placeholder="BPM e.g. 101">
+</section>
+
+<section class="editor-panel">
+
+  <h2>Create Section</h2>
+
+  <input id="sectionTitle" placeholder="Section title e.g. VERSE 1 / CHORUS">
+
+  <div class="controls">
+    <select id="fontFamily">
+      <option value="Arial">Arial</option>
+      <option value="Verdana">Verdana</option>
+      <option value="Bahnschrift">Bahnschrift</option>
+      <option value="Courier New">Courier New</option>
+    </select>
+
+    <select id="textColor">
+      <option value="white">White</option>
+      <option value="#7CFF3A">Green</option>
+      <option value="#FFD400">Yellow</option>
+      <option value="#FF7A1A">Orange</option>
+      <option value="#ff3333">Red</option>
+    </select>
+
+    <label>
+      <input type="checkbox" id="boldText">
+      Bold
+    </label>
+  </div>
+
+  <textarea id="sectionText" placeholder="Enter chords and lyrics here..."></textarea>
+
+  <button onclick="addSection()" class="btn red">Add Section</button>
+
+</section>
+
+<section class="preview-area">
+  <div class="song-preview">
+
+    <div class="song-header">
+      <h3 id="previewTitle">Song Title - Artist</h3>
+      <div id="previewBpm">BPM</div>
+    </div>
+
+    <div id="sectionsPreview"></div>
+
+  </div>
+</section>
+
+<script src="../js/lyricscreator.js"></script>
+
+</body>
 </html>
