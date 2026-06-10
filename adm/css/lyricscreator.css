@@ -131,7 +131,7 @@ textarea {
   border: 1px solid #333;
   border-radius: 8px;
   font-size: 22px;
-  line-height: 0.5;
+  line-height: 1.05;
   white-space: pre-wrap;
   outline: none;
 }
