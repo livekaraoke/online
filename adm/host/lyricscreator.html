@@ -29,19 +29,20 @@
 
   <h2>Create Section</h2>
 
-  <div class="section-title-row">
-    <select id="sectionTitlePreset" onchange="loadSectionPreset()">
-      <option value="">SECTION TITLE</option>
-      <option value="VERSE">VERSE</option>
-      <option value="CHORUS">CHORUS</option>
-      <option value="PRE-CHORUS">PRE-CHORUS</option>
-      <option value="POST-CHORUS">POST-CHORUS</option>
-      <option value="BRIDGE">BRIDGE</option>
-      <option value="SOLO">SOLO</option>
-      <option value="INSTRUMENTAL">INSTRUMENTAL</option>
-    </select>
-  
-    <input id="sectionTitleCustom" placeholder="SECTION TITLE">
+  <input
+      id="sectionTitleCustom"
+      list="sectionPresets"
+      placeholder="SECTION TITLE">
+    
+    <datalist id="sectionPresets">
+      <option value="VERSE">
+      <option value="CHORUS">
+      <option value="PRE-CHORUS">
+      <option value="POST-CHORUS">
+      <option value="BRIDGE">
+      <option value="SOLO">
+      <option value="INSTRUMENTAL">
+    </datalist>
   </div>
   
   <div class="controls">
@@ -118,8 +119,10 @@
   
   </div>
   
-  <div id="sectionEditor" contenteditable="true" class="section-editor">
-    Enter chords and lyrics here...
+  <div id="sectionEditor"
+       contenteditable="true"
+       class="section-editor"
+       data-placeholder="Enter chords and lyrics here...">
   </div>
   
   <button onclick="addSection()" class="btn red">Add Section</button>
