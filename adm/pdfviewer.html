@@ -3,26 +3,68 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lyrics & Chords Viewer</title>
+  <title>PDF Viewer</title>
+
   <style>
     html, body {
       margin: 0;
       height: 100%;
       background: #000;
+      font-family: Arial, sans-serif;
+      overflow: hidden;
     }
 
-    iframe {
+    .pdf-topbar {
+      height: 58px;
+      background: #050505;
+      border-bottom: 2px solid #ff2020;
+      box-shadow: 0 0 18px rgba(255,0,0,.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 8px;
+      box-sizing: border-box;
+      z-index: 10;
+      position: relative;
+    }
+
+    .pdf-btn {
+      background: linear-gradient(180deg, #ff2b2b, #990000);
+      color: white;
+      border: 1px solid rgba(255,255,255,.2);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      text-decoration: none;
+      box-shadow: 0 0 10px rgba(255,0,0,.5);
+    }
+
+    .pdf-btn:hover {
+      box-shadow: 0 0 18px rgba(255,0,0,.8);
+    }
+
+    .pdf-frame {
       width: 100%;
-      height: 100vh;
+      height: calc(100vh - 58px);
       border: none;
       background: #000;
+      display: block;
     }
   </style>
 </head>
 
 <body>
 
-  <iframe id="pdfViewer"></iframe>
+  <div class="pdf-topbar">
+    <a href="host/karaokehostchordbook.html" class="pdf-btn">Back to Main</a>
+    <button onclick="goTop()" class="pdf-btn">Top</button>
+    <button onclick="exitFullscreen()" class="pdf-btn">Exit Fullscreen</button>
+  </div>
+
+  <iframe id="pdfViewer" class="pdf-frame"></iframe>
 
   <script>
     const params = new URLSearchParams(window.location.search);
@@ -35,12 +77,31 @@
       performance: "files/liveperformancelyrics.pdf"
     };
 
+    const pdfViewer = document.getElementById("pdfViewer");
+
     if (allowedFiles[file]) {
-      document.getElementById("pdfViewer").src =
-        allowedFiles[file] + "#page=" + page;
+      pdfViewer.src = allowedFiles[file] + "#page=" + page;
     } else {
       document.body.innerHTML = "<h1 style='color:white;text-align:center;margin-top:40px;'>PDF not found</h1>";
     }
+
+    function goTop() {
+      if (allowedFiles[file]) {
+        pdfViewer.src = allowedFiles[file] + "#page=2";
+      }
+    }
+
+    function exitFullscreen() {
+      if (document.fullscreenElement) {
+        document.exitFullscreen();
+      }
+    }
+
+    window.addEventListener("load", () => {
+      document.documentElement.requestFullscreen().catch(() => {
+        console.log("Fullscreen blocked by browser until user interaction.");
+      });
+    });
   </script>
 
 </body>
