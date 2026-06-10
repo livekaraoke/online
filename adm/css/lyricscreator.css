@@ -143,9 +143,17 @@ textarea {
   border: 1px solid #333;
   border-radius: 8px;
   font-size: 22px;
-  line-height: 1.15;
+  line-height: 0.5;
   white-space: pre-wrap;
   outline: none;
+}
+
+.section-editor p,
+.section-editor div,
+.section-text p,
+.section-text div {
+  margin: 0;
+  padding: 0;
 }
 
 .section-editor:focus {
@@ -176,6 +184,7 @@ textarea {
 
 .section-text {
   white-space: pre-wrap;
+  line-height: 0.5;
 }
 
 .section-separator hr {
