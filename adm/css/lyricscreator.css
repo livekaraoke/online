@@ -252,12 +252,12 @@ textarea {
 .format-buttons,
 .align-buttons {
   display: flex;
-  gap: 6px;
+  gap: 8px;
 }
 
 .format-buttons button,
 .align-buttons button {
-  width: 45px;
+  width: 55px;
   height: 38px;
   background: #050505;
   color: white;
