@@ -126,7 +126,7 @@ body {
 .viewer-section {
   margin-bottom: 0;
   font-size: 24px;
-  line-height: 1.15;
+  line-height: 1.30
 }
 
 .viewer-section h2 {
@@ -165,8 +165,8 @@ body {
 /* GUITAR TAB SECTION */
 
 .viewer-tab {
-  margin-top: 22px;
-  margin-bottom: 22px;
+  margin-top: 10px;
+  margin-bottom: 10px;
   padding: 10px 12px;
   cursor: pointer;
   user-select: none;
@@ -205,8 +205,9 @@ body {
 
 .viewer-tab .viewer-section-text {
   font-size: 18px;
-  line-height: 1.05;
+  line-height: 1.30;
   overflow-x: auto;
+  font-weight: 1200;
 }
 
 .viewer-tab.collapsed-tab .viewer-section-text {
