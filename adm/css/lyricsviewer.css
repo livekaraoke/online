@@ -164,3 +164,43 @@ body {
 .viewer-tab.collapsed-tab .viewer-section-text {
   display: none;
 }
+
+/* GUITAR TAB SECTION */
+
+.viewer-tab {
+  margin-top: 22px;
+  margin-bottom: 22px;
+  padding: 10px 12px;
+
+  border: 1px solid rgba(255,255,255,0.28);
+  border-radius: 8px;
+  font-family: Courier New, Verdana, Bahnschrift, Arial, sans-serif;
+  background: rgba(255,255,255,0.03);
+}
+
+.viewer-tab h2 {
+  text-align: center;
+  color: #FFD400;
+  cursor: pointer;
+
+  font-size: 18px;
+  margin: 0 0 6px;
+  letter-spacing: 1px;
+  font-weight: 1200;
+  font-family: Verdana, Bahnschrift, Arial, sans-serif;
+  cursor: pointer;
+}
+
+.viewer-tab .viewer-section-text {
+  font-size: 16px;
+  line-height: 1.05;
+  overflow-x: auto;
+}
+
+.viewer-tab.collapsed-tab .viewer-section-text {
+  display: none;
+}
+
+.viewer-tab.collapsed-tab h2 {
+  margin-bottom: 0;
+}
