@@ -30,8 +30,8 @@
   <h2>Create Section</h2>
 
   <div class="section-title-row">
-    <select id="sectionTitlePreset">
-      <option value="">CUSTOM SECTION</option>
+    <select id="sectionTitlePreset" onchange="loadSectionPreset()">
+      <option value="">SECTION TITLE</option>
       <option value="VERSE">VERSE</option>
       <option value="CHORUS">CHORUS</option>
       <option value="PRE-CHORUS">PRE-CHORUS</option>
@@ -40,44 +40,52 @@
       <option value="SOLO">SOLO</option>
       <option value="INSTRUMENTAL">INSTRUMENTAL</option>
     </select>
-
-    <input id="sectionTitleCustom" placeholder="Custom section title">
+  
+    <input id="sectionTitleCustom" placeholder="SECTION TITLE">
   </div>
-
+  
   <div class="controls">
-
-    <select id="fontFamily">
+  
+    <select id="fontFamily" onchange="updateEditorFont()">
       <option value="Arial">Arial</option>
       <option value="Verdana">Verdana</option>
       <option value="Bahnschrift">Bahnschrift</option>
       <option value="Courier New">Courier New</option>
     </select>
-
+  
     <div class="color-picker">
-      <button class="color-btn active" style="background:white" onclick="setColor('white', this)"></button>
-      <button class="color-btn" style="background:#7CFF3A" onclick="setColor('#7CFF3A', this)"></button>
-      <button class="color-btn" style="background:#FFD400" onclick="setColor('#FFD400', this)"></button>
-      <button class="color-btn" style="background:#FF7A1A" onclick="setColor('#FF7A1A', this)"></button>
-      <button class="color-btn" style="background:#ff3333" onclick="setColor('#ff3333', this)"></button>
-      <button class="color-btn" style="background:#35a7ff" onclick="setColor('#35a7ff', this)"></button>
+      <button class="color-btn active" style="background:white" onclick="setSectionColor('white', this)"></button>
+      <button class="color-btn" style="background:#7CFF3A" onclick="setSectionColor('#7CFF3A', this)"></button>
+      <button class="color-btn" style="background:#FFD400" onclick="setSectionColor('#FFD400', this)"></button>
+      <button class="color-btn" style="background:#FF7A1A" onclick="setSectionColor('#FF7A1A', this)"></button>
+      <button class="color-btn" style="background:#ff3333" onclick="setSectionColor('#ff3333', this)"></button>
     </div>
-
+  
     <div class="format-buttons">
-      <button type="button" id="boldBtn" onclick="toggleFormat('bold', this)"><b>B</b></button>
-      <button type="button" id="italicBtn" onclick="toggleFormat('italic', this)"><i>I</i></button>
-      <button type="button" id="underlineBtn" onclick="toggleFormat('underline', this)"><u>U</u></button>
+      <button type="button" onclick="formatText('bold')"><b>B</b></button>
+      <button type="button" onclick="formatText('italic')"><i>I</i></button>
+      <button type="button" onclick="formatText('underline')"><u>U</u></button>
     </div>
-
-    <div class="align-buttons">
-      <button type="button" onclick="setAlign('left', this)" class="active">L</button>
-      <button type="button" onclick="setAlign('center', this)">C</button>
-      <button type="button" onclick="setAlign('right', this)">R</button>
+  
+    <div class="format-buttons">
+      <button type="button" onclick="formatText('justifyLeft')">L</button>
+      <button type="button" onclick="formatText('justifyCenter')">C</button>
+      <button type="button" onclick="formatText('justifyRight')">R</button>
     </div>
-
+  
+    <div class="color-picker">
+      <button class="color-btn" style="background:#7CFF3A" onclick="formatColor('#7CFF3A')"></button>
+      <button class="color-btn" style="background:#FFD400" onclick="formatColor('#FFD400')"></button>
+      <button class="color-btn" style="background:#FF7A1A" onclick="formatColor('#FF7A1A')"></button>
+      <button class="color-btn" style="background:#ff3333" onclick="formatColor('#ff3333')"></button>
+    </div>
+  
   </div>
-
-  <textarea id="sectionText" placeholder="Enter chords and lyrics here..."></textarea>
-
+  
+  <div id="sectionEditor" contenteditable="true" class="section-editor">
+    Enter chords and lyrics here...
+  </div>
+  
   <button onclick="addSection()" class="btn red">Add Section</button>
 
 </section>
