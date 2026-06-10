@@ -1,5 +1,7 @@
 let selectedColor = "white";
 let selectedSectionColor = "white";
+let editingIndex = null;
+let editingBackup = null;
 
 let songData = {
   id: "",
@@ -166,38 +168,52 @@ function loadSectionPreset() {
 }
 */
 
-function addSection(index = null) {
+/* SAVE SECTION */
+function saveSection() {
   const title = document.getElementById("sectionTitleCustom").value.toUpperCase().trim();
   const editor = document.getElementById("sectionEditor");
   const html = editor.innerHTML.trim();
   const fontFamily = document.getElementById("fontFamily").value;
+  const sectionType = document.getElementById("sectionType").value;
 
-  if (!html || html === "Enter chords and lyrics here...") {
+  if (!html) {
     alert("Please enter lyrics/chords first.");
     return;
   }
 
   const section = {
-    type: "section",
+    type: sectionType,
     title,
     html,
+    collapsed: sectionType === "tab",
     style: {
       fontFamily,
       color: selectedSectionColor
     }
   };
 
-  if (index === null) {
-    songData.sections.push(section);
+  if (editingIndex !== null) {
+    songData.sections[editingIndex] = section;
   } else {
-    songData.sections.splice(index, 0, section);
+    songData.sections.push(section);
   }
 
+  clearEditor();
+  renderPreview();
+}
+
+/* CLEAR EDITOR */
+function clearEditor() {
   document.getElementById("sectionTitleCustom").value = "";
+  document.getElementById("sectionType").value = "lyrics";
   document.getElementById("sectionEditor").innerHTML = "";
   document.getElementById("liveSectionPreview").innerHTML = "";
 
-  renderPreview();
+  editingIndex = null;
+  editingBackup = null;
+
+  document.getElementById("saveSectionBtn").innerText = "Add Section";
+  document.getElementById("cancelEditBtn").style.display = "none";
 }
 
 function insertSeparator(index) {
@@ -220,6 +236,7 @@ function moveSection(index, direction) {
   renderPreview();
 }
 
+/* RENDER PREVIEW */
 function renderPreview() {
   updateMeta();
 
@@ -243,15 +260,25 @@ function renderPreview() {
       return;
     }
   
+    const isTab = section.type === "tab";
+  
     const div = document.createElement("div");
-    div.className = "lyric-section";
+    div.className = isTab ? "lyric-section tab-section" : "lyric-section";
   
     div.style.fontFamily = section.style.fontFamily;
     div.style.color = section.style.color;
   
     div.innerHTML = `
-      ${section.title ? `<div class="lyric-section-title">${section.title}</div>` : ""}
-      <div class="section-text">${section.html}</div>
+      ${section.title ? `
+        <div class="lyric-section-title ${isTab ? 'clickable-title' : ''}"
+             ${isTab ? `onclick="toggleTabSection(${index})"` : ""}>
+          ${isTab ? "▶ " : ""}${section.title}
+        </div>
+      ` : ""}
+  
+      <div class="section-text ${isTab && section.collapsed ? 'collapsed' : ''}">
+        ${section.html}
+      </div>
   
       <div class="section-actions">
         <button onclick="editSection(${index})">Edit</button>
@@ -267,19 +294,45 @@ function renderPreview() {
   });
 }
 
+/* TAB TOGGLE COLLAPSE SECTION */
+function toggleTabSection(index) {
+  songData.sections[index].collapsed = !songData.sections[index].collapsed;
+  renderPreview();
+}
+
+/* EDIT SECTION */
 function editSection(index) {
   const section = songData.sections[index];
 
   if (section.type === "separator") return;
 
-  document.getElementById("sectionTitleCustom").value = section.title;
-  document.getElementById("sectionEditor").innerHTML = section.html;
+  editingIndex = index;
+  editingBackup = JSON.parse(JSON.stringify(section));
+
+  document.getElementById("sectionTitleCustom").value = section.title || "";
+  document.getElementById("sectionType").value = section.type === "tab" ? "tab" : "lyrics";
+  document.getElementById("sectionEditor").innerHTML = section.html || "";
   document.getElementById("fontFamily").value = section.style.fontFamily;
   document.getElementById("sectionEditor").style.fontFamily = section.style.fontFamily;
 
   selectedSectionColor = section.style.color || "white";
 
-  songData.sections.splice(index, 1);
+  document.getElementById("saveSectionBtn").innerText = "Update Section";
+  document.getElementById("cancelEditBtn").style.display = "inline-block";
+
+  updateLivePreview();
+
+  window.scrollTo({
+    top: document.querySelector(".editor-panel").offsetTop - 20,
+    behavior: "smooth"
+  });
+}
+
+/* CANCEL EDIT FUNCTION */
+function cancelEdit() {
+  editingIndex = null;
+  editingBackup = null;
+  clearEditor();
   renderPreview();
 }
 
