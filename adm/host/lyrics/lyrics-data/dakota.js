@@ -154,19 +154,6 @@ window.songData = {
       "text": ""
     },
     {
-      "type": "chorus",
-      "lines": [
-        "So take a look at me now",
-        "So take a look at me now",
-        "So take a look at me now",
-        "So take a look at me now"
-      ]
-    },
-    {
-      "type": "section",
-      "text": ""
-    },
-    {
       "type": "chorusrepeat",
       "lines": [
         "So take a look at me now",
