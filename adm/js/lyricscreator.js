@@ -133,11 +133,13 @@ function updateMeta() {
 function formatText(command) {
   document.execCommand(command, false, null);
   document.getElementById("sectionEditor").focus();
+  updateLivePreview();
 }
 
 function formatColor(color) {
   document.execCommand("foreColor", false, color);
   document.getElementById("sectionEditor").focus();
+  updateLivePreview();
 }
 
 function setSectionColor(color, btn) {
@@ -191,8 +193,8 @@ function addSection(index = null) {
     songData.sections.splice(index, 0, section);
   }
 
-  document.getElementById("sectionTitlePreset").value = "";
   document.getElementById("sectionTitleCustom").value = "";
+  document.getElementById("sectionEditor").innerHTML = "";
   document.getElementById("liveSectionPreview").innerHTML = "";
 
   renderPreview();
@@ -270,7 +272,6 @@ function editSection(index) {
 
   if (section.type === "separator") return;
 
-  document.getElementById("sectionTitlePreset").value = "";
   document.getElementById("sectionTitleCustom").value = section.title;
   document.getElementById("sectionEditor").innerHTML = section.html;
   document.getElementById("fontFamily").value = section.style.fontFamily;
