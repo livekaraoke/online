@@ -188,7 +188,8 @@ function saveSection() {
     collapsed: sectionType === "tab",
     style: {
       fontFamily,
-      color: selectedSectionColor
+      color: selectedSectionColor,
+      isTab: sectionType === "tab"
     }
   };
 
@@ -446,6 +447,21 @@ function updateLivePreview() {
     </div>
   `;
 }
+
+document.getElementById("sectionType").addEventListener("change", function () {
+  const editor = document.getElementById("sectionEditor");
+  const fontSelect = document.getElementById("fontFamily");
+
+  if (this.value === "tab") {
+    fontSelect.value = "Courier New";
+    editor.style.fontFamily = "Courier New";
+
+    document.execCommand("bold", false, null);
+  }
+
+  updateLivePreview();
+});
+                                    
 
   
             
