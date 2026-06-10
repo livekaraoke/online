@@ -89,23 +89,27 @@
       }
 
       const div = document.createElement("section");
-      div.className = section.type === "tab"
-        ? "viewer-section viewer-tab collapsed-tab"
+
+      const isTab = section.type === "tab";
+      const isCollapsed = isTab && section.collapsed === true;
+
+      div.className = isTab
+        ? `viewer-section viewer-tab ${isCollapsed ? "collapsed-tab" : ""}`
         : "viewer-section";
 
       div.style.fontFamily = section.style?.fontFamily || "Verdana";
       div.style.color = section.style?.color || "white";
 
       div.innerHTML = `
-        ${section.title ? `<h2>${section.type === "tab" ? (section.collapsed ? "▶ " : "▼ ") : ""}${section.title}</h2>` : ""}
+        ${section.title ? `<h2>${isTab ? (isCollapsed ? "▶ " : "▼ ") : ""}$      {section.title}</h2>` : ""}
         <div class="viewer-section-text">${section.html}</div>
       `;
 
-      if (section.type === "tab") {
-        div.onclick = () => {
+      if (isTab) {
+        div.addEventListener("click", () => {
           section.collapsed = !section.collapsed;
           renderLoadedSong();
-        };
+        });
       }
 
       container.appendChild(div);
