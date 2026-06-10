@@ -31,7 +31,7 @@ This software is proprietary and intended for personal and performance use only.
 <header class="top-bar">
 
   <div class="top-controls">
-    <a href="../admin.html" class="back-main-btn">Back to Admin</a>
+    <a href="../admin.html" class="back-main-btn">← Back to Admin</a>
     <a href="../pdfviewer.html?file=karaoke" class="back-main-btn">View PDF</a>
     <!-- Fullscreen -->
     <button onclick="toggleFullscreen(this)" class="fullscreen-btn">
@@ -464,9 +464,8 @@ alphabet.forEach(letter => {
           <li>
             <span class="star ${isFav ? "active" : ""}"
                   onclick="toggleFav('${key}')">&#9733;</span>
-            <a href="${song.url}" class="${song.hasLyrics ? '' : 'missing-song'}">
-              ${song.hasLyrics ? '' : '* '}
-              ${title} - ${song.artist}
+            <a href="../pdfviewer.html?file=karaoke&page=${song.hostKaraokePage}">
+              ${song.title} - ${song.artist}
             </a>
           </li>
         `;
