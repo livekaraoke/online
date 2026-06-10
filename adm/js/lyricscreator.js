@@ -392,7 +392,7 @@ function downloadJS() {
     "song_" + makeSafeFileName(songData.title).replace(/-/g, "_");
 
   const content =
-`const ${variableName} = ${JSON.stringify(songData, null, 2)};`;
+`window.${variableName} = ${JSON.stringify(songData, null, 2)};`;
 
   const blob = new Blob([content], { type: "text/javascript" });
 
