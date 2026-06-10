@@ -185,8 +185,21 @@ textarea {
   margin-bottom: 6px;
 }
 
-.preview-draft {
-  margin-bottom: 1px;
+.preview-draft,
+.preview-draft .section-text {
+  margin-left: 0;
+  padding-left: 0;
+  text-indent: 0;
+}
+
+#liveSectionPreview {
+  padding-left: 0;
+  margin-left: 0;
+}
+
+#liveSectionPreview .section-text {
+  padding-left: 0;
+  margin-left: 0;
 }
 
 
@@ -303,4 +316,22 @@ textarea {
     justify-content: center;
     flex-wrap: wrap;
   }
+}
+
+/** GUITAR TABS **/
+
+.collapsed {
+  display: none;
+}
+
+.clickable-title {
+  cursor: pointer;
+  color: #FFD400;
+}
+
+.tab-section {
+  border: 1px solid rgba(255,255,255,0.12);
+  padding: 8px;
+  border-radius: 6px;
+  background: rgba(255,255,255,0.03);
 }
