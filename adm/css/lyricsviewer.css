@@ -153,14 +153,6 @@ body {
   );
 }
 
-.viewer-tab h2 {
-  color: #FFD400;
-  font-size: 17px;
-  font-weight: 900;
-  font-family: Verdana, Bahnschrift, Arial, sans-serif;
-  cursor: pointer;
-}
-
 .viewer-tab.collapsed-tab .viewer-section-text {
   display: none;
 }
@@ -171,11 +163,28 @@ body {
   margin-top: 22px;
   margin-bottom: 22px;
   padding: 10px 12px;
-
+  cursor: pointer;
+  user-select: none;
   border: 1px solid rgba(255,255,255,0.28);
   border-radius: 8px;
   font-family: Courier New, Verdana, Bahnschrift, Arial, sans-serif;
   background: rgba(255,255,255,0.03);
+  transition:
+    border-color .15s ease,
+    background .15s ease,
+    box-shadow .15s ease;
+}
+
+.viewer-tab {
+  
+}
+
+.viewer-tab:hover {
+  border-color: rgba(255,212,0,.8);
+  box-shadow:
+    0 0 10px rgba(255,212,0,.15);
+  background:
+    rgba(255,212,0,.03);
 }
 
 .viewer-tab h2 {
