@@ -1,32 +1,82 @@
+let selectedColor = "white";
+let currentFormats = {
+  bold: false,
+  italic: false,
+  underline: false
+};
+let currentAlign = "left";
+
 let songData = {
   title: "",
   artist: "",
-  bpm: "",
+  userBpm: "",
+  originalBpm: "",
+  capo: "",
+  key: "",
   sections: []
 };
 
 function updateMeta() {
   songData.title = document.getElementById("songTitle").value;
   songData.artist = document.getElementById("artistName").value;
-  songData.bpm = document.getElementById("bpm").value;
+  songData.userBpm = document.getElementById("userBpm").value;
+  songData.originalBpm = document.getElementById("originalBpm").value;
+  songData.capo = document.getElementById("capoNote").value;
+  songData.key = document.getElementById("songKey").value;
 
   document.getElementById("previewTitle").innerText =
     `${songData.title || "Song Title"} - ${songData.artist || "Artist"}`;
 
-  document.getElementById("previewBpm").innerText =
-    songData.bpm ? `${songData.bpm} BPM` : "BPM";
+  document.getElementById("previewUserBpm").innerText =
+    songData.userBpm ? `${songData.userBpm} BPM` : "";
+
+  document.getElementById("previewOriginalBpm").innerText =
+    songData.originalBpm ? `Original: ${songData.originalBpm} BPM` : "";
+
+  document.getElementById("previewCapo").innerText =
+    songData.capo ? songData.capo : "";
+
+  document.getElementById("previewKey").innerText =
+    songData.key ? songData.key : "";
 }
 
-document.getElementById("songTitle").addEventListener("input", updateMeta);
-document.getElementById("artistName").addEventListener("input", updateMeta);
-document.getElementById("bpm").addEventListener("input", updateMeta);
+["songTitle", "artistName", "userBpm", "originalBpm", "capoNote", "songKey"]
+  .forEach(id => {
+    document.getElementById(id).addEventListener("input", updateMeta);
+  });
+
+function setColor(color, btn) {
+  selectedColor = color;
+
+  document.querySelectorAll(".color-btn").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+}
+
+function toggleFormat(type, btn) {
+  currentFormats[type] = !currentFormats[type];
+  btn.classList.toggle("active", currentFormats[type]);
+}
+
+function setAlign(align, btn) {
+  currentAlign = align;
+
+  document.querySelectorAll(".align-buttons button")
+    .forEach(b => b.classList.remove("active"));
+
+  btn.classList.add("active");
+}
+
+function getSectionTitle() {
+  const preset = document.getElementById("sectionTitlePreset").value;
+  const custom = document.getElementById("sectionTitleCustom").value;
+
+  return (preset || custom || "").toUpperCase();
+}
 
 function addSection(index = null) {
-  const title = document.getElementById("sectionTitle").value;
+  const title = getSectionTitle();
   const text = document.getElementById("sectionText").value;
   const fontFamily = document.getElementById("fontFamily").value;
-  const color = document.getElementById("textColor").value;
-  const bold = document.getElementById("boldText").checked;
 
   if (!text.trim()) {
     alert("Please enter lyrics/chords first.");
@@ -38,8 +88,11 @@ function addSection(index = null) {
     text,
     style: {
       fontFamily,
-      color,
-      bold
+      color: selectedColor,
+      bold: currentFormats.bold,
+      italic: currentFormats.italic,
+      underline: currentFormats.underline,
+      align: currentAlign
     }
   };
 
@@ -49,7 +102,8 @@ function addSection(index = null) {
     songData.sections.splice(index, 0, section);
   }
 
-  document.getElementById("sectionTitle").value = "";
+  document.getElementById("sectionTitlePreset").value = "";
+  document.getElementById("sectionTitleCustom").value = "";
   document.getElementById("sectionText").value = "";
 
   renderPreview();
@@ -68,6 +122,9 @@ function renderPreview() {
     div.style.fontFamily = section.style.fontFamily;
     div.style.color = section.style.color;
     div.style.fontWeight = section.style.bold ? "900" : "400";
+    div.style.fontStyle = section.style.italic ? "italic" : "normal";
+    div.style.textDecoration = section.style.underline ? "underline" : "none";
+    div.style.textAlign = section.style.align || "left";
 
     div.innerHTML = `
       ${section.title ? `<div class="lyric-section-title">${section.title}</div>` : ""}
@@ -87,11 +144,30 @@ function renderPreview() {
 function editSection(index) {
   const section = songData.sections[index];
 
-  document.getElementById("sectionTitle").value = section.title;
+  document.getElementById("sectionTitlePreset").value = "";
+  document.getElementById("sectionTitleCustom").value = section.title;
   document.getElementById("sectionText").value = section.text;
   document.getElementById("fontFamily").value = section.style.fontFamily;
-  document.getElementById("textColor").value = section.style.color;
-  document.getElementById("boldText").checked = section.style.bold;
+
+  selectedColor = section.style.color || "white";
+
+  currentFormats.bold = !!section.style.bold;
+  currentFormats.italic = !!section.style.italic;
+  currentFormats.underline = !!section.style.underline;
+  currentAlign = section.style.align || "left";
+
+  document.querySelectorAll(".format-buttons button").forEach(btn => btn.classList.remove("active"));
+  document.getElementById("boldBtn").classList.toggle("active", currentFormats.bold);
+  document.getElementById("italicBtn").classList.toggle("active", currentFormats.italic);
+  document.getElementById("underlineBtn").classList.toggle("active", currentFormats.underline);
+
+  document.querySelectorAll(".align-buttons button").forEach(btn => {
+    btn.classList.toggle("active", btn.textContent.toLowerCase() === currentAlign[0]);
+  });
+
+  document.querySelectorAll(".color-btn").forEach(btn => {
+    btn.classList.toggle("active", btn.style.backgroundColor === selectedColor);
+  });
 
   songData.sections.splice(index, 1);
   renderPreview();
@@ -109,7 +185,10 @@ function insertBefore(index) {
     style: {
       fontFamily: "Arial",
       color: "white",
-      bold: false
+      bold: false,
+      italic: false,
+      underline: false,
+      align: "left"
     }
   });
 
