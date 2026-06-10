@@ -25,6 +25,80 @@ let currentFormats = {
 };
 let currentAlign = "left";
 
+const editor = document.getElementById("sectionEditor");
+
+editor.addEventListener("paste", function (e) {
+  e.preventDefault();
+
+  const html = (e.clipboardData || window.clipboardData).getData("text/html");
+  const text = (e.clipboardData || window.clipboardData).getData("text/plain");
+
+  if (!html) {
+    document.execCommand("insertText", false, text);
+    return;
+  }
+
+  const cleaned = cleanWordPaste(html);
+
+  document.execCommand("insertHTML", false, cleaned);
+});
+
+function cleanWordPaste(html) {
+  const doc = new DOMParser().parseFromString(html, "text/html");
+
+  doc.querySelectorAll("*").forEach(el => {
+    const tag = el.tagName.toLowerCase();
+
+    // Remove Word junk attributes
+    [...el.attributes].forEach(attr => {
+      if (!["style"].includes(attr.name)) {
+        el.removeAttribute(attr.name);
+      }
+    });
+
+    // Remove paragraph spacing/margins but keep useful styles
+    let style = el.getAttribute("style") || "";
+
+    const keep = [];
+
+    if (/font-weight:\s*(bold|[7-9]00)/i.test(style)) {
+      keep.push("font-weight:bold");
+    }
+
+    if (/font-style:\s*italic/i.test(style)) {
+      keep.push("font-style:italic");
+    }
+
+    if (/text-decoration[^;]*underline/i.test(style)) {
+      keep.push("text-decoration:underline");
+    }
+
+    const colorMatch = style.match(/color:\s*([^;]+)/i);
+    if (colorMatch) {
+      keep.push(`color:${colorMatch[1].trim()}`);
+    }
+
+    el.setAttribute("style", keep.join("; "));
+
+    // Convert paragraphs/divs into line breaks, not spaced blocks
+    if (tag === "p" || tag === "div") {
+      el.style.margin = "0";
+      el.style.padding = "0";
+    }
+  });
+
+  let cleaned = doc.body.innerHTML;
+
+  cleaned = cleaned
+    .replace(/<p[^>]*>/gi, "")
+    .replace(/<\/p>/gi, "<br>")
+    .replace(/<div[^>]*>/gi, "")
+    .replace(/<\/div>/gi, "<br>")
+    .replace(/(<br\s*\/?>\s*){3,}/gi, "<br><br>");
+
+  return cleaned;
+}
+
 function updateMeta() {
   songData.title = document.getElementById("songTitle").value;
   songData.artist = document.getElementById("artistName").value;
