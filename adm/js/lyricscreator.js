@@ -511,4 +511,17 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 });
   
+div.addEventListener("click", (e) => {
+
+  if (
+    e.target.tagName === "A" ||
+    e.target.tagName === "BUTTON"
+  ) {
+    return;
+  }
+
+  section.collapsed = !section.collapsed;
+
+  renderLoadedSong();
+});
             
