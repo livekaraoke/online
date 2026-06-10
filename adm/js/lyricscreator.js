@@ -461,7 +461,54 @@ document.getElementById("sectionType").addEventListener("change", function () {
 
   updateLivePreview();
 });
-                                    
 
+function loadSongForEditing(file) {
+  const script = document.createElement("script");
+
+  script.src = `lyrics/new-lyrics-data/${file}`;
+
+  script.onload = () => {
+    const variableName = getSongVariableName(file);
+    const loadedSong = window[variableName];
+
+    if (!loadedSong) {
+      alert("Could not load song for editing.");
+      return;
+    }
+
+    songData = JSON.parse(JSON.stringify(loadedSong));
+
+    document.getElementById("songTitle").value = songData.title || "";
+    document.getElementById("artistName").value = songData.artist || "";
+    document.getElementById("userBpm").value = songData.userBpm || "";
+    document.getElementById("originalBpm").value = songData.originalBpm || "";
+    document.getElementById("capoNote").value = songData.capo || "";
+    document.getElementById("songKey").value = songData.key || "";
+
+    updateMeta();
+    renderPreview();
+  };
+
+  script.onerror = () => {
+    alert("Could not find file: " + file);
+  };
+
+  document.body.appendChild(script);
+}
+
+function getSongVariableName(fileName) {
+  return "song_" + fileName
+    .replace(".js", "")
+    .replace(/-/g, "_");
+}
+                                    
+window.addEventListener("DOMContentLoaded", () => {
+  const params = new URLSearchParams(window.location.search);
+  const editFile = params.get("edit");
+
+  if (editFile) {
+    loadSongForEditing(editFile);
+  }
+});
   
             
