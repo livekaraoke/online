@@ -96,7 +96,7 @@ textarea {
 .song-preview {
   background: #000;
   border: 1px solid #222;
-  padding: 14px;
+  padding: 8px 14px 14px;
   min-height: 500px;
 }
 
@@ -104,7 +104,7 @@ textarea {
   display: flex;
   justify-content: space-between;
   align-items: start;
-  margin-bottom: 24px;
+  margin-bottom: 10px;
 }
 
 .song-header h3 {
@@ -126,10 +126,12 @@ textarea {
 }
 
 .lyric-section-title {
-  color: #7CFF3A;
+  color: #888;
   font-weight: 900;
-  margin-bottom: 8px;
-  font-size: 20px;
+  margin-bottom: 3px;
+  font-size: 15px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
 }
 
   .section-editor {
@@ -149,6 +151,12 @@ textarea {
 .section-editor:focus {
   border-color: #ff3333;
   box-shadow: 0 0 10px rgba(255,0,0,.45);
+}
+
+.section-editor:empty:before {
+  content: attr(data-placeholder);
+  color: #777;
+  pointer-events: none;
 }
 
 .lyric-section {
