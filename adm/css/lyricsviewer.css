@@ -95,7 +95,9 @@ body {
 
 .song-header h1 {
   margin: 0;
-  font-size: 22px;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
 }
 
 .song-meta-box {
@@ -122,7 +124,7 @@ body {
 }
 
 .viewer-section {
-  margin-bottom: 14px;
+  margin-bottom: 6px;
   font-size: 22px;
   line-height: 1.08;
 }
@@ -137,6 +139,7 @@ body {
 
 .viewer-section-text {
   white-space: pre-wrap;
+  margin-bottom: 0;
 }
 
 .viewer-separator {
@@ -212,4 +215,18 @@ body {
 
 .viewer-tab.collapsed-tab h2 {
   margin-bottom: 0;
+}
+
+.end-marker {
+  text-align: center;
+  color: #ff2b2b;
+  font-weight: 900;
+  font-size: 15px;
+  letter-spacing: 2px;
+  margin-top: 50px;
+  margin-bottom: 20px;
+
+  text-shadow:
+    0 0 5px rgba(255,0,0,.5),
+    0 0 10px rgba(255,0,0,.3);
 }
