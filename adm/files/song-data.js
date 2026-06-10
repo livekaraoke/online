@@ -3404,5 +3404,5 @@ const songs = [
     hostKaraokePage: "1",
     livePage: "1",
     hasLyrics: true
-  },
+  }
 ];
