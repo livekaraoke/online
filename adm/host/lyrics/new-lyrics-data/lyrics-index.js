@@ -8,5 +8,10 @@ const lyricsIndex = [
     title: "All Summer Long",
     artist: "Kid Rock",
     file: "all-summer-long.js"
+  },
+  {
+    title: "My Way",
+    artist: "Frank Sinatra",
+    file: "myway.js"
   }
 ];
