@@ -12,6 +12,6 @@ const lyricsIndex = [
   {
     title: "My Way",
     artist: "Frank Sinatra",
-    file: "myway.js"
+    file: "my-way.js"
   }
 ];
