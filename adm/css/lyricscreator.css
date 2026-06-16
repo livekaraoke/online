@@ -182,7 +182,9 @@ textarea {
 }
 
 
-
+#sectionType {
+  padding-right: 40px;
+}
 
 
 .section-editor {
