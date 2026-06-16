@@ -218,6 +218,11 @@ body {
   cursor: pointer;
 }
 
+.viewer-tab .viewer-section-text,
+.viewer-tab .viewer-section-text * {
+  text-align: left !important;
+}
+
 .viewer-tab .viewer-section-text {
   text-align: left !important;
   font-family: "Courier New", monospace !important;
@@ -228,6 +233,11 @@ body {
   margin-top: 0;
   margin-bottom: 0;
   white-space: pre;
+  display: block;
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+  text-indent: 0 !important;
+  direction: ltr;
 }
 
 .viewer-tab.collapsed-tab .viewer-section-text {
