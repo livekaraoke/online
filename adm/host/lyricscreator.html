@@ -8,216 +8,233 @@
 
 <body>
 
-<header class="topbar">
-  <button onclick="history.back()" class="btn">◀ BACK</button>
-  <h1 id="creatorTopTitle">● Lyrics & Chords Creator ●</h1>
-  <button onclick="downloadJS()" class="btn red">Download JS File</button>
-  <button onclick="saveSongToFirebase()" class="btn red">
-    Save
-  </button>
-</header>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  
+  <script>
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "livekaraokemt.firebaseapp.com",
+      projectId: "livekaraokemt",
+      storageBucket: "livekaraokemt.firebasestorage.app",
+      messagingSenderId: "425980659562",
+      appId: "YOUR_APP_ID"
+    };
+  
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+  </script>
 
-<section class="song-meta-wrapper">
-  <h2 class="panel-title">Song Details</h2>
-
-  <div class="song-meta">
-  
-    <div class="field">
-      <label>Song Title</label>
-      <input id="songTitle" placeholder="Song title">
-    </div>
-    
-     <div class="field">
-      <label>Artist</label>
-      <input id="artistName" placeholder="Artist">
-    </div>
-  
-    <div class="field">
-      <label>User BPM</label>
-      <input id="userBpm" placeholder="User BPM e.g. 96">
-    </div>
-    
-     <div class="field">
-      <label>Original BPM</label>
-      <input id="originalBpm" placeholder="Original BPM e.g. 101">
-    </div>
-    
-    <div class="field">
-      <label>Capo</label>
-      <input id="capoNote" placeholder="Capo note e.g. Capo 2">
-    </div>
-  
-    <div class="field">
-      <label>Key</label>
-      <input id="songKey" placeholder="Key e.g. C">
-    </div>
-  </div>
-</section>
-
-<section class="editor-panel">
-
-  <h2 id="editorTitle">Create Section</h2>
-  
-  <div class="field">
-    <label>Section Title</label>
-    <input
-      id="sectionTitleCustom"
-      list="sectionPresets"
-      placeholder="SECTION TITLE">
-  </div>
-
-    
-  <datalist id="sectionPresets">
-    <option value="INTRO">
-    <option value="VERSE">
-    <option value="CHORUS">
-    <option value="PRE-CHORUS">
-    <option value="POST-CHORUS">
-    <option value="BRIDGE">
-    <option value="SOLO">
-    <option value="INSTRUMENTAL">
-    <option value="OUTRO">
-    <option value="ENDING">
-  </datalist>
-
-  
-  <div class="field">
-    <label>Section Type</label>
-    <select id="sectionType">
-      <option value="lyrics">Lyrics & Chords</option>
-      <option value="tab">Guitar Tab</option>
-    </select>
-  </div>
-
-  
-  
-  <div class="controls">
-  
-    <select id="fontFamily" onchange="updateEditorFont()">
-      <option value="Verdana">Verdana</option>
-      <option value="Courier New">Courier New</option>
-      <option value="Arial">Arial</option>
-      <option value="Bahnschrift">Bahnschrift</option>
-    </select>
-    <!--
-    <div class="color-picker">
-      <button type="button"
-              class="color-btn active"
-              style="background:white"
-              onclick="setSectionColor('white', this)">
-      </button>
-      <button class="color-btn" style="background:#7CFF3A" onclick="setSectionColor('#7CFF3A', this)"></button>
-      <button type="button"
-              class="color-btn active"
-              style="background:#7CFF3A"
-              onclick="setSectionColor('#7CFF3A', this)">
-      </button>
-      <button type="button"
-              class="color-btn active"
-              style="background:#FFD400"
-              onclick="setSectionColor('#FFD400', this)">
-      </button>
-      <button type="button"
-              class="color-btn active"
-              style="background:#FF7A1A"
-              onclick="setSectionColor('#FF7A1A', this)">
-      </button>
-      <button type="button"
-              class="color-btn active"
-              style="background:#7CFF3A"
-              onclick="setSectionColor('#ff3333', this)">
-      </button>
-    </div>
-    -->
-    
-    <div class="format-buttons">
-      <button type="button"
-              class="color-btn active"
-              onclick="formatText('bold')">
-        <b>B</b>
-      </button>
-      <button type="button"
-              class="color-btn active"
-              onclick="formatText('italic')">
-        <i>I</i>
-      </button>
-      <button type="button"
-              class="color-btn active"
-              onclick="formatText('underline')">
-        <u>U</u>
-      </button>
-    </div>
-  
-    <div class="format-buttons">
-      <button type="button" onclick="formatText('justifyLeft')">◀ L</button>
-      <button type="button" onclick="formatText('justifyCenter')">C</button>
-      <button type="button" onclick="formatText('justifyRight')">R ▶</button>
-    </div>
-  
-    <div class="color-picker">
-      <button class="color-btn" style="background:#FFFFFF" onclick="formatColor('#FFFFFF')"></button>
-      <button class="color-btn" style="background:#7CFF3A" onclick="formatColor('#7CFF3A')"></button>
-      <button class="color-btn" style="background:#FFD400" onclick="formatColor('#FFD400')"></button>
-      <button class="color-btn" style="background:#FF7A1A" onclick="formatColor('#FF7A1A')"></button>
-      <button class="color-btn" style="background:#ff3333" onclick="formatColor('#ff3333')"></button>
-      <button class="color-btn" style="background:#7788FF" onclick="formatColor('#7788FF')"></button>
-    </div>
-
-    <button
-      type="button"
-      id="insertTabBtn"
-      class="btn tab-btn"
-      onclick="insertBlankTab()"
-      disabled>
-      Insert Blank Guitar Tab
+  <header class="topbar">
+    <button onclick="history.back()" class="btn">◀ BACK</button>
+    <h1 id="creatorTopTitle">● Lyrics & Chords Creator ●</h1>
+    <button onclick="downloadJS()" class="btn red">Download JS File</button>
+    <button onclick="saveSongToFirebase()" class="btn red">
+      Save
     </button>
+  </header>
   
-  </div>
+  <section class="song-meta-wrapper">
+    <h2 class="panel-title">Song Details</h2>
   
-  <div id="sectionEditor"
-       contenteditable="true"
-       class="section-editor"
-       data-placeholder="Enter chords and lyrics here...">
-  </div>
-  
-  <div class="section-save-row">
-    <button id="saveSectionBtn" onclick="saveSection()" class="btn red">
-      Add Section
-    </button>
-  
-    <button id="cancelEditBtn" onclick="cancelEdit()" class="btn" style="display:none;">
-      Cancel
-    </button>
-  </div>
-
-</section>
-
-<section class="preview-area">
-  <h2 class="previewSectionTitle">Preview Lyrics</h2>
-  <div class="song-preview">
+    <div class="song-meta">
     
-    <div class="song-header">
-      <h3 id="previewTitle">Song Title - Artist</h3>
-      <div class="preview-meta-right">
-        <div id="previewUserBpm"></div>
-        <div id="previewOriginalBpm"></div>
-        <div id="previewCapo"></div>
-        <div id="previewKey"></div>
+      <div class="field">
+        <label>Song Title</label>
+        <input id="songTitle" placeholder="Song title">
+      </div>
+      
+       <div class="field">
+        <label>Artist</label>
+        <input id="artistName" placeholder="Artist">
+      </div>
+    
+      <div class="field">
+        <label>User BPM</label>
+        <input id="userBpm" placeholder="User BPM e.g. 96">
+      </div>
+      
+       <div class="field">
+        <label>Original BPM</label>
+        <input id="originalBpm" placeholder="Original BPM e.g. 101">
+      </div>
+      
+      <div class="field">
+        <label>Capo</label>
+        <input id="capoNote" placeholder="Capo note e.g. Capo 2">
+      </div>
+    
+      <div class="field">
+        <label>Key</label>
+        <input id="songKey" placeholder="Key e.g. C">
       </div>
     </div>
-    <div id="livePreviewBox" class="live-preview-box hidden">
-      <div class="live-preview-label">Live Section Preview</div>
+  </section>
+  
+  <section class="editor-panel">
+  
+    <h2 id="editorTitle">Create Section</h2>
     
-      <div id="liveSectionPreview"
-           class="lyric-section preview-draft">
-      </div>
+    <div class="field">
+      <label>Section Title</label>
+      <input
+        id="sectionTitleCustom"
+        list="sectionPresets"
+        placeholder="SECTION TITLE">
     </div>
-    <div id="sectionsPreview"></div>
-
-  </div>
-</section>
-
-<script src="../js/lyricscreator.js"></script>
+  
+      
+    <datalist id="sectionPresets">
+      <option value="INTRO">
+      <option value="VERSE">
+      <option value="CHORUS">
+      <option value="PRE-CHORUS">
+      <option value="POST-CHORUS">
+      <option value="BRIDGE">
+      <option value="SOLO">
+      <option value="INSTRUMENTAL">
+      <option value="OUTRO">
+      <option value="ENDING">
+    </datalist>
+  
+    
+    <div class="field">
+      <label>Section Type</label>
+      <select id="sectionType">
+        <option value="lyrics">Lyrics & Chords</option>
+        <option value="tab">Guitar Tab</option>
+      </select>
+    </div>
+  
+    
+    
+    <div class="controls">
+    
+      <select id="fontFamily" onchange="updateEditorFont()">
+        <option value="Verdana">Verdana</option>
+        <option value="Courier New">Courier New</option>
+        <option value="Arial">Arial</option>
+        <option value="Bahnschrift">Bahnschrift</option>
+      </select>
+      <!--
+      <div class="color-picker">
+        <button type="button"
+                class="color-btn active"
+                style="background:white"
+                onclick="setSectionColor('white', this)">
+        </button>
+        <button class="color-btn" style="background:#7CFF3A" onclick="setSectionColor('#7CFF3A', this)"></button>
+        <button type="button"
+                class="color-btn active"
+                style="background:#7CFF3A"
+                onclick="setSectionColor('#7CFF3A', this)">
+        </button>
+        <button type="button"
+                class="color-btn active"
+                style="background:#FFD400"
+                onclick="setSectionColor('#FFD400', this)">
+        </button>
+        <button type="button"
+                class="color-btn active"
+                style="background:#FF7A1A"
+                onclick="setSectionColor('#FF7A1A', this)">
+        </button>
+        <button type="button"
+                class="color-btn active"
+                style="background:#7CFF3A"
+                onclick="setSectionColor('#ff3333', this)">
+        </button>
+      </div>
+      -->
+      
+      <div class="format-buttons">
+        <button type="button"
+                class="color-btn active"
+                onclick="formatText('bold')">
+          <b>B</b>
+        </button>
+        <button type="button"
+                class="color-btn active"
+                onclick="formatText('italic')">
+          <i>I</i>
+        </button>
+        <button type="button"
+                class="color-btn active"
+                onclick="formatText('underline')">
+          <u>U</u>
+        </button>
+      </div>
+    
+      <div class="format-buttons">
+        <button type="button" onclick="formatText('justifyLeft')">◀ L</button>
+        <button type="button" onclick="formatText('justifyCenter')">C</button>
+        <button type="button" onclick="formatText('justifyRight')">R ▶</button>
+      </div>
+    
+      <div class="color-picker">
+        <button class="color-btn" style="background:#FFFFFF" onclick="formatColor('#FFFFFF')"></button>
+        <button class="color-btn" style="background:#7CFF3A" onclick="formatColor('#7CFF3A')"></button>
+        <button class="color-btn" style="background:#FFD400" onclick="formatColor('#FFD400')"></button>
+        <button class="color-btn" style="background:#FF7A1A" onclick="formatColor('#FF7A1A')"></button>
+        <button class="color-btn" style="background:#ff3333" onclick="formatColor('#ff3333')"></button>
+        <button class="color-btn" style="background:#7788FF" onclick="formatColor('#7788FF')"></button>
+      </div>
+  
+      <button
+        type="button"
+        id="insertTabBtn"
+        class="btn tab-btn"
+        onclick="insertBlankTab()"
+        disabled>
+        Insert Blank Guitar Tab
+      </button>
+    
+    </div>
+    
+    <div id="sectionEditor"
+         contenteditable="true"
+         class="section-editor"
+         data-placeholder="Enter chords and lyrics here...">
+    </div>
+    
+    <div class="section-save-row">
+      <button id="saveSectionBtn" onclick="saveSection()" class="btn red">
+        Add Section
+      </button>
+    
+      <button id="cancelEditBtn" onclick="cancelEdit()" class="btn" style="display:none;">
+        Cancel
+      </button>
+    </div>
+  
+  </section>
+  
+  <section class="preview-area">
+    <h2 class="previewSectionTitle">Preview Lyrics</h2>
+    <div class="song-preview">
+      
+      <div class="song-header">
+        <h3 id="previewTitle">Song Title - Artist</h3>
+        <div class="preview-meta-right">
+          <div id="previewUserBpm"></div>
+          <div id="previewOriginalBpm"></div>
+          <div id="previewCapo"></div>
+          <div id="previewKey"></div>
+        </div>
+      </div>
+      <div id="livePreviewBox" class="live-preview-box hidden">
+        <div class="live-preview-label">Live Section Preview</div>
+      
+        <div id="liveSectionPreview"
+             class="lyric-section preview-draft">
+        </div>
+      </div>
+      <div id="sectionsPreview"></div>
+  
+    </div>
+  </section>
+  
+  <script src="../js/lyricscreator.js"></script>
 
 </body>
 </html>
