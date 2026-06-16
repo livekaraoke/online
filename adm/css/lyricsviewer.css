@@ -163,6 +163,19 @@ body {
   display: none;
 }
 
+.lyric-section-title,
+.viewer-section h2 {
+  margin-bottom: 0 !important;
+  padding-bottom: 0 !important;
+  line-height: 1 !important;
+}
+
+.section-text,
+.viewer-section-text {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
 /* GUITAR TAB SECTION */
 
 .viewer-tab {
@@ -219,6 +232,19 @@ body {
 
 .viewer-tab.collapsed-tab .viewer-section-text {
   display: none;
+}
+
+.lyric-section-title,
+.viewer-section h2 {
+  margin-bottom: 0 !important;
+  padding-bottom: 0 !important;
+  line-height: 1 !important;
+}
+
+.section-text,
+.viewer-section-text {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
 }
 
 .viewer-tab.collapsed-tab h2 {
