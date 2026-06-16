@@ -230,6 +230,7 @@ function clearEditor() {
   document.getElementById("insertTabBtn").classList.remove("enabled");
   
   document.getElementById("sectionEditor").classList.remove("tab-editing");
+  document.querySelector(".editor-panel").classList.remove("editing-mode");
 }
 
 function insertSeparator(index) {
@@ -339,6 +340,7 @@ function editSection(index) {
   document.getElementById("saveSectionBtn").innerText = "Update Section";
   document.getElementById("saveSectionBtn").classList.add("editing");
   document.getElementById("cancelEditBtn").style.display = "inline-block";
+  document.querySelector(".editor-panel").classList.add("editing-mode");
 
   updateLivePreview();
 
