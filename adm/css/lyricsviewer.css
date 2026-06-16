@@ -167,12 +167,12 @@ body {
   line-height: 1.4
 }
 
-
-
+/** Lyrics / sections' text **/
 .viewer-section-text {
   white-space: pre-wrap;
   margin-bottom: 10px;
   margin-top: 0;
+  font-weight: 550;
 }
 
 .viewer-separator {
@@ -207,23 +207,24 @@ body {
 
 /* GUITAR TAB SECTION */
 
+/** TAB sections text / tabs when closed **/
 .viewer-tab {
   padding: 10px 12px;
   cursor: pointer;
   user-select: none;
   border: 1px solid rgba(255,255,255,0.28);
   border-radius: 8px;
-  font-size: 18px;
+  font-size: 19px;
   font-family: Courier New, Verdana, Bahnschrift, Arial, sans-serif;
+  font-weight: 900;
   background: rgba(255,255,255,0.03);
   transition:
     border-color .15s ease,
     background .15s ease,
     box-shadow .15s ease;
-  margin-top: 0;
-  margin-bottom: 20px;
+  margin-top: 4px;
+  margin-bottom: 40px;
 }
-
 
 .viewer-tab:hover {
   border-color: rgba(255,212,0,.8);
@@ -233,13 +234,19 @@ body {
     rgba(255,212,0,.03);
 }
 
+/** TAB section when open **/
+.viewer-tab:not(.collapsed-tab){
+  border-color:#FFD400;
+}
+
+/** TAB sections title **/
 .viewer-tab h2 {
   text-align: center;
-  color: #FFD400;
+  color: #FFD400 !important;
   margin: 0 !important;
   padding: 0 !important;
 
-  font-size: 18px;
+  font-size: 16px;
   margin: 0 0 6px;
   letter-spacing: 1px;
   font-weight: 1200;
@@ -247,14 +254,13 @@ body {
   cursor: pointer;
 }
 
+/** Sections Titles **/
 .viewer-section h2 {
-  margin: 0 !important;
-  padding: 0 !important;
-
-  line-height: 1;
+  margin-top: 0;
+  margin-bottom: 2px;
+  line-height: 1.05;
   font-size: 16px;
   font-weight: 900;
-
   color: #888;
 }
 
@@ -263,10 +269,11 @@ body {
   text-align: left !important;
 }
 
+/** TAB text **/
 .viewer-tab .viewer-section-text {
   text-align: left !important;
   font-family: "Courier New", monospace !important;
-  font-size: 18px;
+  font-size: 19px;
   line-height: 1;
   overflow-x: auto;
   font-weight: 1500;
@@ -432,6 +439,7 @@ body {
   .viewer-title {
     font-size: 16px;
   }
+  
   /** Top bar BACK / EDIT btns on mobile **/
   .viewer-btn {
     font-size: 18px;
@@ -452,20 +460,33 @@ body {
     font-size:16px;
   }
   
+  /** User BPM, Original BPM, Capo, Key MOBILE **/
+  #userBpm{
+    font-size:26px;
+  }
+  #originalBpm,
+  #capo,
+  #songKey{
+    font-size:19px;
+  }
+  /** END of User BPM, Original BPM, Capo, Key MOBILE **/
+
+  /** Sections titles **/
+  .viewer-section h2{
+    font-size:15px;
+  }
+
+  /** TAB Text **/
+  .viewer-tab .viewer-section-text{
+    font-size:20px;
+  }
+  
 }
 /****************************************************************/
 /********************** END MOBILE SECTION **********************/
 /****************************************************************/
 
-.viewer-tab .viewer-section-text {
-  margin: 0;
-  padding: 0;
 
-  white-space: pre-wrap;
-  font-family: "Courier New", monospace;
-
-  text-indent: 0;
-}
 
 .viewer-tab .viewer-section-text * {
   margin: 0;
