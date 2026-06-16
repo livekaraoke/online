@@ -76,15 +76,21 @@ body {
 }
 
 .editor-panel.editing-mode {
-  background: #2a1600;
-  border-color: #ff9900;
-  box-shadow: 0 0 18px rgba(255,140,0,.25);
+  background: #3a1d00;
+  border: 2px solid #ff9900;
+  box-shadow:
+    0 0 20px rgba(255,140,0,.45),
+    inset 0 0 20px rgba(255,140,0,.15);
+}
+
+.editor-panel.editing-mode #editorTitle {
+  color: #ffb347;
 }
 
 .panel-title {
   margin: 0 0 16px;
   color: white;
-  font-size: 22px;
+  font-size: 20px;
   letter-spacing: 1px;
 }
 
