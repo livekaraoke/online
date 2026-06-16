@@ -145,6 +145,7 @@ body {
 /** User BPM, Original BPM, Capo, Key **/
 #userBpm {
   color: #FFD400;
+  color: #ff3333;
   font-size: 24px;
   font-weight: 900;
 }
