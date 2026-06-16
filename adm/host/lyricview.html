@@ -185,8 +185,10 @@
     document.getElementById("songTitle").innerText =
       `${song.title} - ${song.artist}`;
 
-    document.getElementById("topbarSongTitle").innerText =
-      song.title;
+    document.getElementById("topbarSongTitle").innerHTML = `
+        <div class="topbar-song-name">${song.title}</div>
+        <div class="topbar-song-artist">${song.artist}</div>
+      `;
 
     document.getElementById("userBpm").innerText =
       song.userBpm ? `${song.userBpm} BPM` : "";
@@ -234,10 +236,10 @@
         displayHtml = displayHtml
           .replace(/<!--StartFragment-->/g, "")
           .replace(/<!--EndFragment-->/g, "")
-          .replace(/<div>/gi, "<br>")
-          .replace(/<\/div>/gi, "")
-          .replace(/^\s+/, "")
-          .replace(/-/g, `<span class="tab-dash">-</span>`);
+          .replace(/<div>/gi, "")
+          .replace(/<\/div>/gi, "<br>")
+          .replace(/^<br\s*\/?>/i, "")
+          .replace(/^\s+/, "");
       }
 
       div.innerHTML = `
