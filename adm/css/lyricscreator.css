@@ -302,8 +302,6 @@ textarea {
 
 .preview-draft {
   margin-bottom: 6px;
-  border: 1px solid rgba(255,0,0,.3);
-  border-radius: 5px;
 }
 
 .preview-draft,
@@ -505,7 +503,7 @@ textarea {
 
 #insertTabBtn {
   margin-top: 0;
-  transform: translateY(-8px);
+  transform: translateY(-6px);
   align-self: center;
 }
 
