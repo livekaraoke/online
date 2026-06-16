@@ -587,12 +587,12 @@ function getSongVariableName(fileName) {
 async function saveSongToFirebase() {
   updateMeta();
 
-  if (!songData.title.trim()) {
-    alert("Please enter a song title.");
+  if (!songData.title.trim() || !songData.artist.trim()) {
+    alert("Please enter song title and artist.");
     return;
   }
 
-   = songData.id;
+  const songId = songData.id;
 
   await db.collection("lyrics").doc(songId).set(songData);
 
