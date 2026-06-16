@@ -173,16 +173,16 @@ function saveSection() {
   const title = document.getElementById("sectionTitleCustom").value.toUpperCase().trim();
   const editor = document.getElementById("sectionEditor");
   let html = editor.innerHTML.trim();
-
-  if (sectionType === "tab") {
-    html = html.replace(/^(<[^>]+>)*\s+/, "");
-  }
   const fontFamily = document.getElementById("fontFamily").value;
   const sectionType = document.getElementById("sectionType").value;
 
   if (!html) {
     alert("Please enter lyrics/chords first.");
     return;
+  }
+
+  if (sectionType === "tab") {
+    html = html.replace(/^(<[^>]+>)*\s+/, "");
   }
 
   const section = {
@@ -197,8 +197,8 @@ function saveSection() {
     }
   };
 
-  if (editingIndex !== null) {
-    songData.sections[editingIndex] = section;
+  if (editingIndex !== null && editingIndex >= 0) {
+    songData.sections.splice(editingIndex, 1, section);
   } else {
     songData.sections.push(section);
   }
@@ -220,6 +220,16 @@ function clearEditor() {
 
   document.getElementById("saveSectionBtn").innerText = "Add Section";
   document.getElementById("cancelEditBtn").style.display = "none";
+
+  document.getElementById("editorTitle").innerText = "Create Section";
+  document.getElementById("saveSectionBtn").innerText = "Create Section";
+  document.getElementById("saveSectionBtn").classList.remove("editing");
+  document.getElementById("cancelEditBtn").style.display = "none";
+  
+  document.getElementById("insertTabBtn").disabled = true;
+  document.getElementById("insertTabBtn").classList.remove("enabled");
+  
+  document.getElementById("sectionEditor").classList.remove("tab-editing");
 }
 
 function insertSeparator(index) {
@@ -325,7 +335,9 @@ function editSection(index) {
 
   selectedSectionColor = section.style.color || "white";
 
+  document.getElementById("editorTitle").innerText = "Edit Section";
   document.getElementById("saveSectionBtn").innerText = "Update Section";
+  document.getElementById("saveSectionBtn").classList.add("editing");
   document.getElementById("cancelEditBtn").style.display = "inline-block";
 
   updateLivePreview();
@@ -458,19 +470,28 @@ function updateLivePreview() {
 document.getElementById("sectionType").addEventListener("change", function () {
   const editor = document.getElementById("sectionEditor");
   const fontSelect = document.getElementById("fontFamily");
+  const tabBtn = document.getElementById("insertTabBtn");
 
   if (this.value === "tab") {
     fontSelect.value = "Courier New";
     editor.style.fontFamily = "Courier New";
     editor.classList.add("tab-editing");
 
+    tabBtn.disabled = false;
+    tabBtn.classList.add("enabled");
+
     document.execCommand("bold", false, null);
   } else {
     editor.classList.remove("tab-editing");
+
+    tabBtn.disabled = true;
+    tabBtn.classList.remove("enabled");
   }
 
   updateLivePreview();
 });
+
+
 
 function loadSongForEditing(file) {
   const script = document.createElement("script");
@@ -504,6 +525,28 @@ function loadSongForEditing(file) {
   };
 
   document.body.appendChild(script);
+}
+
+function insertBlankTab() {
+  const editor = document.getElementById("sectionEditor");
+
+  const tabText =
+`e|-----------------------------------------------------------|
+B|-----------------------------------------------------------|
+G|-----------------------------------------------------------|
+D|-----------------------------------------------------------|
+A|-----------------------------------------------------------|
+E|-----------------------------------------------------------|`;
+
+  editor.focus();
+
+  document.execCommand(
+    "insertHTML",
+    false,
+    `<b>${tabText.replace(/\n/g, "<br>")}</b>`
+  );
+
+  updateLivePreview();
 }
 
 function getSongVariableName(fileName) {
