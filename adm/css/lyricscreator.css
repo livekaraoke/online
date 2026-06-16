@@ -240,6 +240,11 @@ textarea {
   margin-top: 0;
   margin-bottom: 0;
 }
+.previewLiveSectionTitle {
+  
+  font-size: 18px;
+  font-weight: 900 !important;
+}
 
 .lyric-section-title,
 .viewer-section h2,
