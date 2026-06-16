@@ -109,10 +109,12 @@
       
       if (isTab) {
         displayHtml = displayHtml
-          .replace(/-/g, `<span class="tab-dash">-</span>`)
           .replace(/<!--StartFragment-->/g, "")
           .replace(/<!--EndFragment-->/g, "")
-          .replace(/^\s+/, "");
+          .replace(/^\s+/, "")
+          .replace(/<div>/gi, "<br>")
+          .replace(/<\/div>/gi, "")
+          .replace(/-/g, `<span class="tab-dash">-</span>`);
       }
       
       div.innerHTML = `
