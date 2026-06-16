@@ -166,8 +166,6 @@ body {
 /* GUITAR TAB SECTION */
 
 .viewer-tab {
-  margin-top: 10px;
-  margin-bottom: 10px;
   padding: 10px 12px;
   cursor: pointer;
   user-select: none;
@@ -181,7 +179,7 @@ body {
     background .15s ease,
     box-shadow .15s ease;
   margin-top: 0;
-  margin-bottom: 0;
+  margin-bottom: 10px;
 }
 
 
