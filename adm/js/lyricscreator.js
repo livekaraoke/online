@@ -440,43 +440,31 @@ document.getElementById("fontFamily")
 .addEventListener("change", updateLivePreview);
 
 function updateLivePreview() {
+  const title = document.getElementById("sectionTitleCustom").value.toUpperCase();
+  const html = document.getElementById("sectionEditor").innerHTML;
+  const font = document.getElementById("fontFamily").value;
 
   const previewBox = document.getElementById("livePreviewBox");
+  const preview = document.getElementById("liveSectionPreview");
 
-  if (!title && !html.trim()) {
+  const cleanHtml = html
+    .replace(/<br\s*\/?>/gi, "")
+    .replace(/&nbsp;/gi, "")
+    .trim();
+
+  const isEmpty = !title.trim() && !cleanHtml;
+
+  if (isEmpty) {
     previewBox.classList.add("hidden");
-  } else {
-    previewBox.classList.remove("hidden");
+    preview.innerHTML = "";
+    return;
   }
-  
-  const title =
-    document.getElementById("sectionTitleCustom")
-    .value
-    .toUpperCase();
 
-  const html =
-    document.getElementById("sectionEditor")
-    .innerHTML;
-
-  const font =
-    document.getElementById("fontFamily")
-    .value;
-
-  const preview =
-    document.getElementById("liveSectionPreview");
+  previewBox.classList.remove("hidden");
 
   preview.innerHTML = `
-    ${title ?
-      `<div class="lyric-section-title">${title}</div>`
-      : ""
-    }
-
-    <div
-      class="section-text"
-      style="
-        font-family:${font};
-        color:${selectedSectionColor};
-      ">
+    ${title ? `<div class="lyric-section-title">${title}</div>` : ""}
+    <div class="section-text" style="font-family:${font}; color:${selectedSectionColor};">
       ${html}
     </div>
   `;
@@ -582,16 +570,17 @@ window.addEventListener("DOMContentLoaded", () => {
 });
 
 window.addEventListener("DOMContentLoaded", () => {
-
   const params = new URLSearchParams(window.location.search);
+  const editFile = params.get("edit");
 
-  if (params.get("edit")) {
+  if (editFile) {
     document.getElementById("creatorTopTitle").innerText =
       "● Lyrics & Chords Editor ●";
+
+    loadSongForEditing(editFile);
   } else {
     document.getElementById("creatorTopTitle").innerText =
       "● Lyrics & Chords Creator ●";
   }
-
 });
   
