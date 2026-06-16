@@ -29,15 +29,16 @@ body {
 
 .btn {
   display: inline-block;
-  padding: 12px 18px;
+  padding: 11px 16px;
   background: #151515;
   border: 1px solid rgba(255,0,0,.45);
   color: white;
   text-decoration: none;
   border-radius: 8px;
   cursor: pointer;
-  font-weight: 700;
+  font-weight: 800;
 }
+
 
 .btn.red {
   background: linear-gradient(180deg, #ff2b2b, #aa0000);
