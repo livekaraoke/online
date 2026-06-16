@@ -317,3 +317,16 @@ body {
   margin-top: -2px !important;
   padding-top: 0 !important;
 }
+
+.viewer-tab .viewer-section-text,
+.viewer-tab .viewer-section-text * {
+  text-align: left !important;
+}
+
+.viewer-tab .viewer-section-text {
+  font-family: "Courier New", monospace !important;
+  white-space: pre !important;
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+  text-indent: 0 !important;
+}
