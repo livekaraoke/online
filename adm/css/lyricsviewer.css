@@ -301,3 +301,19 @@ body {
 .viewer-tab h2 + .viewer-section-text {
   margin-top: -2px !important;
 }
+
+
+.lyric-section-title,
+.viewer-section h2,
+.viewer-tab h2 {
+  margin: 0 !important;
+  padding: 0 !important;
+  line-height: 1 !important;
+  font-weight: 900 !important;
+}
+
+.section-text,
+.viewer-section-text {
+  margin-top: -2px !important;
+  padding-top: 0 !important;
+}
