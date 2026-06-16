@@ -9,14 +9,24 @@
 <body>
 
 <header class="viewer-topbar">
-  <a href="../admin.html" class="viewer-btn">◀ Back to Admin</a>
-  <h1>Lyrics Viewer ●</h1>
+  <a href="../admin.html" class="viewer-btn">◀ ADMIN</a>
+  
+  <h1 class="viewer-title">● Lyrics Viewer ●</h1>
+
+  <a href="lyricscreator.html" class="viewer-btn red">Create New Lyrics & Chords</a>
 </header>
 
 <main class="viewer-list">
+  <select id="artistFilter">
+    <option value="">All Artists</option>
+  </select>
+
   <input id="searchLyrics" placeholder="Search lyrics...">
+
   <div id="lyricsList"></div>
 </main>
+
+<div id="alphaNav" class="alpha-nav"></div>
 
 <!--<script src="lyrics/new-lyrics-data/lyrics-index.js"></script>-->
 
@@ -40,6 +50,8 @@
 <script>
   const list = document.getElementById("lyricsList");
   const search = document.getElementById("searchLyrics");
+  const artistFilter = document.getElementById("artistFilter");
+  const alphaNav = document.getElementById("alphaNav");
 
   let allSongs = [];
 
@@ -54,19 +66,73 @@
         allSongs.push(song);
       });
 
+      populateArtists();
       renderLyrics();
     });
 
-  function renderLyrics(filter = "") {
-    list.innerHTML = "";
+  function populateArtists() {
+    const artists = [...new Set(
+      allSongs
+        .map(song => song.artist)
+        .filter(Boolean)
+    )].sort();
 
-    allSongs
-      .filter(song =>
-        `${song.title} ${song.artist}`
-          .toLowerCase()
-          .includes(filter.toLowerCase())
-      )
-      .forEach(song => {
+    artistFilter.innerHTML = `<option value="">All Artists</option>`;
+
+    artists.forEach(artist => {
+      const option = document.createElement("option");
+      option.value = artist;
+      option.textContent = artist;
+      artistFilter.appendChild(option);
+    });
+  }
+
+  function getFilteredSongs() {
+    const searchText = search.value.toLowerCase();
+    const artist = artistFilter.value;
+
+    return allSongs
+      .filter(song => {
+        const matchesSearch =
+          `${song.title} ${song.artist}`
+            .toLowerCase()
+            .includes(searchText);
+
+        const matchesArtist =
+          !artist || song.artist === artist;
+
+        return matchesSearch && matchesArtist;
+      })
+      .sort((a, b) => a.title.localeCompare(b.title));
+  }
+
+  function renderLyrics() {
+    list.innerHTML = "";
+    alphaNav.innerHTML = "";
+
+    const songs = getFilteredSongs();
+
+    const groups = {};
+
+    songs.forEach(song => {
+      const letter = song.title
+        ? song.title.charAt(0).toUpperCase()
+        : "#";
+
+      if (!groups[letter]) groups[letter] = [];
+      groups[letter].push(song);
+    });
+
+    Object.keys(groups).sort().forEach(letter => {
+      const section = document.createElement("section");
+      section.className = "lyrics-group";
+      section.id = `letter-${letter}`;
+
+      const heading = document.createElement("h2");
+      heading.textContent = letter;
+      section.appendChild(heading);
+
+      groups[letter].forEach(song => {
         const a = document.createElement("a");
         a.className = "lyrics-item";
         a.href = `lyricview.html?id=${encodeURIComponent(song.firebaseId)}`;
@@ -76,13 +142,20 @@
           <span>${song.artist}</span>
         `;
 
-        list.appendChild(a);
+        section.appendChild(a);
       });
+
+      list.appendChild(section);
+
+      const nav = document.createElement("a");
+      nav.href = `#letter-${letter}`;
+      nav.textContent = letter;
+      alphaNav.appendChild(nav);
+    });
   }
 
-  search.addEventListener("input", e => {
-    renderLyrics(e.target.value);
-  });
+  search.addEventListener("input", renderLyrics);
+  artistFilter.addEventListener("change", renderLyrics);
 </script>
 
 </body>
