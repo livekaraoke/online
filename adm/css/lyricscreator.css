@@ -60,6 +60,14 @@ body {
   border-radius: 12px;
 }
 
+.editor-panel .label {
+  margin-top: 8px;
+}
+
+.editor-panel .input {
+  margin-top: 8px;
+}
+
 .song-meta {
   display: grid;
   grid-template-columns: 1fr 1fr 120px 140px;
