@@ -334,9 +334,14 @@ textarea {
   display: none;
 }
 
+.hidden {
+  display: none !important;
+}
+
 .live-preview-box.hidden {
   display: none;
 }
+
 
 #liveSectionPreview {
   padding-left: 0;
