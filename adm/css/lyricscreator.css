@@ -75,6 +75,29 @@ body {
   margin-top: 8px;
 }
 
+.editor-panel.editing-mode {
+  background: #2a1600;
+  border-color: #ff9900;
+  box-shadow: 0 0 18px rgba(255,140,0,.25);
+}
+
+.panel-title {
+  margin: 0 0 16px;
+  color: white;
+  font-size: 22px;
+  letter-spacing: 1px;
+}
+
+.song-meta-wrapper,
+.editor-panel {
+  max-width: 900px;
+  margin: 20px auto;
+  padding: 20px;
+  background: #111;
+  border: 1px solid rgba(255,0,0,.3);
+  border-radius: 12px;
+}
+
 .song-meta {
   display: grid;
   grid-template-columns: 1fr 1fr 120px 140px;
