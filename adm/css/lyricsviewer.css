@@ -252,9 +252,14 @@ body {
   letter-spacing: 1px;
   font-weight: 1200;
   font-family: Verdana, Bahnschrift, Arial, sans-serif;
+  text-transform: uppercase;
   cursor: pointer;
 }
 
+.viewer-tab h2::after {
+  font-size: 12px;
+  opacity: .8;
+}
 
 .viewer-tab .viewer-section-text,
 .viewer-tab .viewer-section-text * {
@@ -301,6 +306,8 @@ body {
 
 .tab-dash {
   color: rgba(255,255,255,0.45);
+  color: #666;
+  font-weight: 900;
 }
   
 .end-marker {
@@ -361,6 +368,7 @@ body {
 
 .viewer-tab .viewer-section-text {
   font-family: "Courier New", monospace !important;
+  color: white;
   white-space: pre !important;
   margin-left: 0 !important;
   padding-left: 0 !important;
