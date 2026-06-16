@@ -414,3 +414,19 @@ body {
     padding-right: 42px;
   }
 }
+
+.viewer-tab .viewer-section-text {
+  margin: 0;
+  padding: 0;
+
+  white-space: pre-wrap;
+  font-family: "Courier New", monospace;
+
+  text-indent: 0;
+}
+
+.viewer-tab .viewer-section-text * {
+  margin: 0;
+  padding: 0;
+  text-indent: 0;
+}
