@@ -14,25 +14,11 @@ let songData = {
   sections: []
 };
 
-db.collection("lyrics")
-  .orderBy("title")
-  .onSnapshot(snapshot => {
-    const songs = [];
-
-    snapshot.forEach(doc => {
-      songs.push(doc.data());
-    });
-
-    renderSongList(songs);
-  });
-
-const songId = params.get("id");
-
-db.collection("lyrics").doc(songId)
-  .onSnapshot(doc => {
-    const song = doc.data();
-    renderSong(song);
-  });
+function generateSongId(title, artist) {
+  return (title + artist)
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
+}
 
 function generateSongId(title, artist) {
   return (title + artist)
@@ -592,22 +578,11 @@ async function saveSongToFirebase() {
     return;
   }
 
-  const songId = songData.id;
-
-  await db.collection("lyrics").doc(songId).set(songData);
+  await db.collection("lyrics").doc(songData.id).set(songData);
 
   alert("Lyrics saved successfully!");
 }
                                     
-window.addEventListener("DOMContentLoaded", () => {
-  const params = new URLSearchParams(window.location.search);
-  const editFile = params.get("edit");
-
-  if (editFile) {
-    loadSongForEditing(editFile);
-  }
-});
-
 window.addEventListener("DOMContentLoaded", () => {
   const params = new URLSearchParams(window.location.search);
   const editFile = params.get("edit");
