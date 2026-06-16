@@ -20,12 +20,6 @@ function generateSongId(title, artist) {
     .replace(/[^a-z0-9]/g, "");
 }
 
-function generateSongId(title, artist) {
-  return (title + artist)
-    .toLowerCase()
-    .replace(/[^a-z0-9]/g, "");
-}
-
 let currentFormats = {
   bold: false,
   italic: false,
@@ -178,25 +172,27 @@ function loadSectionPreset() {
 function saveSection() {
   const title = document.getElementById("sectionTitleCustom").value.toUpperCase().trim();
   const editor = document.getElementById("sectionEditor");
-   = editor.innerHTML.trim();
+  let html = editor.innerHTML.trim();
   const fontFamily = document.getElementById("fontFamily").value;
   const sectionType = document.getElementById("sectionType").value;
 
-  let html = editor.innerHTML.trim();
-
-  html = html
-  .replace(/-family:[^>]*?>/gi, "")
-  .replace(/^<br>/i, "")
-  .trim();
-
-  ${section.html}
   if (!html) {
     alert("Please enter lyrics/chords first.");
     return;
   }
 
+  html = html
+    .replace(/<!--StartFragment-->/g, "")
+    .replace(/<!--EndFragment-->/g, "")
+    .replace(/-family:[^>]*?>/gi, "")
+    .replace(/^<br>/i, "")
+    .trim();
+
   if (sectionType === "tab") {
-    html = html.replace(/^(<[^>]+>)*\s+/, "");
+    html = html
+      .replace(/<div>/gi, "<br>")
+      .replace(/<\/div>/gi, "")
+      .replace(/^(<br\s*\/?>|\s)+/gi, "");
   }
 
   const section = {
@@ -220,6 +216,7 @@ function saveSection() {
   clearEditor();
   renderPreview();
 }
+  
 
 /* CLEAR EDITOR */
 function clearEditor() {
