@@ -250,11 +250,7 @@ textarea {
   margin-top: 0;
   margin-bottom: 0;
 }
-.previewLiveSectionTitle {
-  
-  font-size: 18px;
-  font-weight: 900 !important;
-}
+
 
 .lyric-section-title,
 .viewer-section h2,
@@ -315,10 +311,29 @@ textarea {
   text-indent: 0;
 }
 
+.live-preview-box {
+  border: 1px dashed rgba(255,255,255,0.35);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 16px;
+  background: rgba(255,255,255,0.03);
+}
 
-.previewLiveSectionTitle {
-  font-size: 20px;
-  color: #ffb347;
+.live-preview-label {
+  color: #FFD400;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.live-preview-box:empty {
+  display: none;
+}
+
+.live-preview-box.hidden {
+  display: none;
 }
 
 #liveSectionPreview {
