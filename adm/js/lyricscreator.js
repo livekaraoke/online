@@ -233,8 +233,6 @@ function clearEditor() {
   document.getElementById("sectionEditor").classList.remove("tab-editing");
   document.querySelector(".editor-panel").classList.remove("editing-mode");
 
-  document.getElementById("creatorTopTitle").innerText =
-  "● Lyrics & Chords Creator ●";
 }
 
 function insertSeparator(index) {
@@ -581,5 +579,19 @@ window.addEventListener("DOMContentLoaded", () => {
   if (editFile) {
     loadSongForEditing(editFile);
   }
+});
+
+window.addEventListener("DOMContentLoaded", () => {
+
+  const params = new URLSearchParams(window.location.search);
+
+  if (params.get("edit")) {
+    document.getElementById("creatorTopTitle").innerText =
+      "● Lyrics & Chords Editor ●";
+  } else {
+    document.getElementById("creatorTopTitle").innerText =
+      "● Lyrics & Chords Creator ●";
+  }
+
 });
   
