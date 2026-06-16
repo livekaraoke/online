@@ -97,8 +97,7 @@
 
     document.getElementById("editBtn").onclick = () => {
       window.location.href =
-        `lyricscreator.html?edit=${encodeURIComponent(file)}`;
-    };
+        `lyricscreator.html?firebaseId=${encodeURIComponent(songId)}`;
 
     const container = document.getElementById("lyricsContent");
     container.innerHTML = "";
