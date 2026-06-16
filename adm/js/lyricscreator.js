@@ -213,6 +213,7 @@ function clearEditor() {
   document.getElementById("sectionType").value = "lyrics";
   document.getElementById("sectionEditor").innerHTML = "";
   document.getElementById("liveSectionPreview").innerHTML = "";
+  document.getElementById("sectionEditor").classList.remove("tab-editing");
 
   editingIndex = null;
   editingBackup = null;
@@ -311,7 +312,8 @@ function editSection(index) {
   const section = songData.sections[index];
 
   if (section.type === "separator") return;
-
+  document.getElementById("sectionEditor")
+    .classList.toggle("tab-editing", section.type === "tab");
   editingIndex = index;
   editingBackup = JSON.parse(JSON.stringify(section));
 
@@ -460,8 +462,11 @@ document.getElementById("sectionType").addEventListener("change", function () {
   if (this.value === "tab") {
     fontSelect.value = "Courier New";
     editor.style.fontFamily = "Courier New";
+    editor.classList.add("tab-editing");
 
     document.execCommand("bold", false, null);
+  } else {
+    editor.classList.remove("tab-editing");
   }
 
   updateLivePreview();
