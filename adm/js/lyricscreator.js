@@ -587,19 +587,58 @@ async function saveSongToFirebase() {
 
   alert("Lyrics saved successfully!");
 }
+
+async function loadSongFromFirebase(firebaseId) {
+  try {
+    const doc = await db.collection("lyrics").doc(firebaseId).get();
+
+    if (!doc.exists) {
+      alert("Could not find song in Firebase.");
+      return;
+    }
+
+    songData = doc.data();
+
+    document.getElementById("songTitle").value = songData.title || "";
+    document.getElementById("artistName").value = songData.artist || "";
+    document.getElementById("userBpm").value = songData.userBpm || "";
+    document.getElementById("originalBpm").value = songData.originalBpm || "";
+    document.getElementById("capoNote").value = songData.capo || "";
+    document.getElementById("songKey").value = songData.key || "";
+
+    document.getElementById("creatorTopTitle").innerText =
+      "● Lyrics & Chords Editor ●";
+
+    updateMeta();
+    renderPreview();
+
+  } catch (error) {
+    console.error(error);
+    alert("Error loading song from Firebase.");
+  }
+}
                                     
+
 window.addEventListener("DOMContentLoaded", () => {
   const params = new URLSearchParams(window.location.search);
+
+  const firebaseId = params.get("firebaseId");
   const editFile = params.get("edit");
 
-  if (editFile) {
+  if (firebaseId) {
+    document.getElementById("creatorTopTitle").innerText =
+      "● Lyrics & Chords Editor ●";
+
+    loadSongFromFirebase(firebaseId);
+
+  } else if (editFile) {
     document.getElementById("creatorTopTitle").innerText =
       "● Lyrics & Chords Editor ●";
 
     loadSongForEditing(editFile);
+
   } else {
     document.getElementById("creatorTopTitle").innerText =
       "● Lyrics & Chords Creator ●";
   }
 });
-  
