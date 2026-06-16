@@ -156,17 +156,6 @@ function updateEditorFont() {
   document.getElementById("sectionEditor").style.fontFamily = font;
 }
 
-/*
-function loadSectionPreset() {
-  const preset = document.getElementById("sectionTitlePreset").value;
-  const input = document.getElementById("sectionTitleCustom");
-
-  if (preset) {
-    input.value = preset + " ";
-    input.focus();
-  }
-}
-*/
 
 /* SAVE SECTION */
 function saveSection() {
@@ -184,8 +173,10 @@ function saveSection() {
   html = html
     .replace(/<!--StartFragment-->/g, "")
     .replace(/<!--EndFragment-->/g, "")
-    .replace(/-family:[^>]*?>/gi, "")
-    .replace(/^<br>/i, "")
+    .replace(/<div>/gi, "")
+    .replace(/<\/div>/gi, "<br>")
+    .replace(/^<br\s*\/?>/i, "")
+    .replace(/^\s+/, "")
     .trim();
 
   if (sectionType === "tab") {
