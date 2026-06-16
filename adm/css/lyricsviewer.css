@@ -179,7 +179,7 @@ body {
     background .15s ease,
     box-shadow .15s ease;
   margin-top: 0;
-  margin-bottom: 10px;
+  margin-bottom: 20px;
 }
 
 
@@ -206,10 +206,12 @@ body {
 }
 
 .viewer-tab .viewer-section-text {
-  font-size: 16px;
+  text-align: left !important;
+  font-family: "Courier New", monospace !important;
+  font-size: 18px;
   line-height: 1;
   overflow-x: auto;
-  font-weight: 1300;
+  font-weight: 1500;
   margin-top: 0;
   margin-bottom: 0;
   white-space: pre;
