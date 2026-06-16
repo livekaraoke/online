@@ -178,10 +178,18 @@ function loadSectionPreset() {
 function saveSection() {
   const title = document.getElementById("sectionTitleCustom").value.toUpperCase().trim();
   const editor = document.getElementById("sectionEditor");
-  let html = editor.innerHTML.trim();
+   = editor.innerHTML.trim();
   const fontFamily = document.getElementById("fontFamily").value;
   const sectionType = document.getElementById("sectionType").value;
 
+  let html = editor.innerHTML.trim();
+
+  html = html
+  .replace(/-family:[^>]*?>/gi, "")
+  .replace(/^<br>/i, "")
+  .trim();
+
+  ${section.html}
   if (!html) {
     alert("Please enter lyrics/chords first.");
     return;
