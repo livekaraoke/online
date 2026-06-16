@@ -621,22 +621,13 @@ async function loadSongFromFirebase(firebaseId) {
 
 window.addEventListener("DOMContentLoaded", () => {
   const params = new URLSearchParams(window.location.search);
-
   const firebaseId = params.get("firebaseId");
-  const editFile = params.get("edit");
+
+  console.log("Page URL:", window.location.href);
+  console.log("firebaseId:", firebaseId);
 
   if (firebaseId) {
-    document.getElementById("creatorTopTitle").innerText =
-      "● Lyrics & Chords Editor ●";
-
     loadSongFromFirebase(firebaseId);
-
-  } else if (editFile) {
-    document.getElementById("creatorTopTitle").innerText =
-      "● Lyrics & Chords Editor ●";
-
-    loadSongForEditing(editFile);
-
   } else {
     document.getElementById("creatorTopTitle").innerText =
       "● Lyrics & Chords Creator ●";
