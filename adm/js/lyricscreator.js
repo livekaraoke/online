@@ -172,7 +172,11 @@ function loadSectionPreset() {
 function saveSection() {
   const title = document.getElementById("sectionTitleCustom").value.toUpperCase().trim();
   const editor = document.getElementById("sectionEditor");
-  const html = editor.innerHTML.trim();
+  let html = editor.innerHTML.trim();
+
+  if (sectionType === "tab") {
+    html = html.replace(/^(<[^>]+>)*\s+/, "");
+  }
   const fontFamily = document.getElementById("fontFamily").value;
   const sectionType = document.getElementById("sectionType").value;
 
