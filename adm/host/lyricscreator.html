@@ -14,50 +14,54 @@
   <button onclick="downloadJS()" class="btn red">Download JS File</button>
 </header>
 
-<section class="song-meta">
-  
-  <div class="field">
-    <label>Song Title</label>
-    <input id="songTitle" placeholder="Song title">
-  </div>
-  
-   <div class="field">
-    <label>Artist</label>
-    <input id="artistName" placeholder="Artist">
-  </div>
+<section class="song-meta-wrapper">
+  <h2 class="panel-title">Song Details</h2>
 
-  <div class="field">
-    <label>User BPM</label>
-    <input id="userBpm" placeholder="User BPM e.g. 96">
-  </div>
+  <div class="song-meta">
   
-   <div class="field">
-    <label>Original BPM</label>
-    <input id="originalBpm" placeholder="Original BPM e.g. 101">
-  </div>
+    <div class="field">
+      <label>Song Title</label>
+      <input id="songTitle" placeholder="Song title">
+    </div>
+    
+     <div class="field">
+      <label>Artist</label>
+      <input id="artistName" placeholder="Artist">
+    </div>
   
-  <div class="field">
-    <label>Capo</label>
-    <input id="capoNote" placeholder="Capo note e.g. Capo 2">
-  </div>
-
-  <div class="field">
-    <label>Key</label>
-    <input id="songKey" placeholder="Key e.g. C">
-  </div>
+    <div class="field">
+      <label>User BPM</label>
+      <input id="userBpm" placeholder="User BPM e.g. 96">
+    </div>
+    
+     <div class="field">
+      <label>Original BPM</label>
+      <input id="originalBpm" placeholder="Original BPM e.g. 101">
+    </div>
+    
+    <div class="field">
+      <label>Capo</label>
+      <input id="capoNote" placeholder="Capo note e.g. Capo 2">
+    </div>
   
+    <div class="field">
+      <label>Key</label>
+      <input id="songKey" placeholder="Key e.g. C">
+    </div>
+  </div>
 </section>
 
 <section class="editor-panel">
 
   <h2 id="editorTitle">Create Section</h2>
-
   
-  <label>SECTION TITLE</label>
-  <input
+  <div class="field">
+    <label>Section Title</label>
+    <input
       id="sectionTitleCustom"
       list="sectionPresets"
       placeholder="SECTION TITLE">
+  </div>
 
     
   <datalist id="sectionPresets">
@@ -74,11 +78,13 @@
   </datalist>
 
   
-  <label>SECTION TYPE</label>
-  <select id="sectionType">
-    <option value="lyrics">Lyrics & Chords</option>
-    <option value="tab">Guitar Tab</option>
-  </select>
+  <div class="field">
+    <label>Section Type</label>
+    <select id="sectionType">
+      <option value="lyrics">Lyrics & Chords</option>
+      <option value="tab">Guitar Tab</option>
+    </select>
+  </div>
 
   
   </div>
