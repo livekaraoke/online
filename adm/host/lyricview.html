@@ -111,9 +111,9 @@
         displayHtml = displayHtml
           .replace(/<!--StartFragment-->/g, "")
           .replace(/<!--EndFragment-->/g, "")
-          .replace(/^\s+/, "")
           .replace(/<div>/gi, "<br>")
           .replace(/<\/div>/gi, "")
+          .replace(/^\s+/, "")
           .replace(/-/g, `<span class="tab-dash">-</span>`);
       }
       
