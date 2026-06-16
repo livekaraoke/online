@@ -27,6 +27,18 @@ body {
   font-size: 22px;
 }
 
+.topbar-song-title {
+  flex: 1;
+  text-align: center;
+  font-size: 15px;
+  font-weight: 900;
+  color: white;
+  padding: 0 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .viewer-btn {
   background: #151515;
   border: 1px solid rgba(255,0,0,.45);
