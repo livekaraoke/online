@@ -62,6 +62,9 @@
 
     document.getElementById("songTitle").innerText =
       `${song.title} - ${song.artist}`;
+    
+    document.getElementById("topbarSongTitle").innerText =
+      `${song.title}`;
 
     document.getElementById("userBpm").innerText =
       song.userBpm ? `${song.userBpm} BPM` : "";
