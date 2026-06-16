@@ -1,4 +1,4 @@
-8let selectedColor = "white";
+let selectedColor = "white";
 let selectedSectionColor = "white";
 let editingIndex = null;
 let editingBackup = null;
@@ -610,6 +610,22 @@ async function loadSongFromFirebase(firebaseId) {
       "● Lyrics & Chords Editor ●";
 
     updateMeta();
+
+if (!Array.isArray(songData.sections)) {
+  songData.sections = [];
+}
+
+songData.sections = songData.sections.map(section => ({
+  type: section.type || "lyrics",
+  title: section.title || "",
+  html: section.html || "",
+  collapsed: section.collapsed || false,
+  style: {
+    fontFamily: section.style?.fontFamily || "Verdana",
+    color: section.style?.color || "white",
+    isTab: section.style?.isTab || false
+  }
+}));
     renderPreview();
 
   } catch (error) {
