@@ -102,8 +102,13 @@
       let displayHtml = section.html || "";
       
       if (isTab) {
-        displayHtml = displayHtml.replace(/-/g, `<span class="tab-dash">-</span>`);
+        displayHtml = displayHtml
+          .replace(/-/g, `<span class="tab-dash">-</span>`)
+          .replace(/<!--StartFragment-->/g, "")
+          .replace(/<!--EndFragment-->/g, "")
+          .replace(/^\s+/, "");
       }
+      
       div.innerHTML = `
         ${section.title
           ? `<h2>${isTab ? (isCollapsed ? "▶ " : "▼ ") : ""}${section.title}</h2>`
