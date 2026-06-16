@@ -259,7 +259,7 @@ body {
 /** Sections Titles **/
 .viewer-section h2 {
   margin-top: 0;
-  margin-bottom: 2px;
+  margin-bottom: -15px !important;
   line-height: 1.05;
   font-size: 16px;
   font-weight: 900;
