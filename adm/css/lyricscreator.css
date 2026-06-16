@@ -503,7 +503,13 @@ textarea {
   color: #FFD400;
 }
 
-  .lyric-section-title,
+#insertTabBtn {
+  margin-top: 0;
+  transform: translateY(-8px);
+  align-self: center;
+}
+
+.lyric-section-title,
 .viewer-section h2,
 .viewer-tab h2 {
   margin: 0 !important;
@@ -516,4 +522,15 @@ textarea {
 .viewer-section-text {
   margin-top: -2px !important;
   padding-top: 0 !important;
+}
+
+.panel-title,
+#editorTitle,
+.previewSectionTitle {
+  margin: 0 0 16px;
+  color: white;
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  font-family: Bahnschrift, Arial, sans-serif;
 }
