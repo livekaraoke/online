@@ -244,7 +244,7 @@
 
       div.innerHTML = `
         ${section.title
-          ? `<h2>${isTab ? (isCollapsed ? "▶ " : "▼ ") : ""}${section.title}</h2>`
+          ? `<h2> ${isTab ? (isCollapsed ? "▶ " : "▼ ") : ""} ${section.title} ${isTab ? " (Tab)" : ""} </h2>`
           : ""
         }
 
