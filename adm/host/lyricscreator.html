@@ -50,8 +50,10 @@
 
 <section class="editor-panel">
 
-  <h2>Create Section</h2>
+  <h2 id="editorTitle">Create Section</h2>
 
+  
+  <label>SECTION TITLE</label>
   <input
       id="sectionTitleCustom"
       list="sectionPresets"
@@ -72,10 +74,13 @@
   </datalist>
 
   
+  <label>SECTION TYPE</label>
   <select id="sectionType">
     <option value="lyrics">Lyrics & Chords</option>
     <option value="tab">Guitar Tab</option>
   </select>
+
+  
   </div>
   
   <div class="controls">
@@ -149,6 +154,15 @@
       <button class="color-btn" style="background:#ff3333" onclick="formatColor('#ff3333')"></button>
       <button class="color-btn" style="background:#7788FF" onclick="formatColor('#7788FF')"></button>
     </div>
+
+    <button
+      type="button"
+      id="insertTabBtn"
+      class="btn tab-btn"
+      onclick="insertBlankTab()"
+      disabled>
+      Insert Blank Guitar Tab
+    </button>
   
   </div>
   
