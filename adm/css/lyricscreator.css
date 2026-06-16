@@ -225,6 +225,10 @@ textarea {
   pointer-events: none;
 }
 
+.section-save-row {
+  margin-top: 14px;
+}
+
 .lyric-section {
   margin-bottom: 8px;
   white-space: normal;
