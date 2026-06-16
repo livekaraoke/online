@@ -177,12 +177,29 @@ textarea {
   letter-spacing: 1px;
   text-transform: uppercase;
 }
-
 .section-text {
   white-space: pre-wrap;
   line-height: 1.08;
   margin-top: 0;
   margin-bottom: 0;
+}
+
+.lyric-section-title,
+.viewer-section h2 {
+  margin-bottom: 0 !important;
+  padding-bottom: 0 !important;
+  line-height: 1 !important;
+}
+
+.section-text,
+.viewer-section-text {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+.lyric-section,
+.viewer-section {
+  margin-bottom: 8px;
 }
 
 .section-separator {
