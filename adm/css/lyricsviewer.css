@@ -225,6 +225,10 @@ body {
   margin-bottom: 0;
 }
 
+.tab-dash {
+  color: rgba(255,255,255,0.45);
+}
+  
 .end-marker {
   text-align: center;
   color: #ff2b2b;
