@@ -311,7 +311,7 @@ textarea {
   text-indent: 0;
 }
 
-.live-preview-box {
+.-preview-box {
   border: 1px dashed rgba(255,255,255,0.35);
   border-radius: 8px;
   padding: 10px 12px;
@@ -325,6 +325,7 @@ textarea {
   font-weight: 900;
   letter-spacing: 1px;
   text-transform: uppercase;
+  text-align: center;
   margin-bottom: 6px;
 }
 
