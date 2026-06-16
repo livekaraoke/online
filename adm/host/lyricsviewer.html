@@ -135,7 +135,7 @@
       groups[letter].forEach(song => {
         const a = document.createElement("a");
         a.className = "lyrics-item";
-        a.href = `lyricview.html?id=${encodeURIComponent(song.firebaseId)}`;
+        a.href = `lyricview.html?firebaseId=${encodeURIComponent(song.firebaseId)}`;
 
         a.innerHTML = `
           <strong>${song.title}</strong>
