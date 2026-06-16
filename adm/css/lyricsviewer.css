@@ -173,7 +173,7 @@ body {
   user-select: none;
   border: 1px solid rgba(255,255,255,0.28);
   border-radius: 8px;
-  font-size: 20px;
+  font-size: 18px;
   font-family: Courier New, Verdana, Bahnschrift, Arial, sans-serif;
   background: rgba(255,255,255,0.03);
   transition:
@@ -196,7 +196,6 @@ body {
 .viewer-tab h2 {
   text-align: center;
   color: #FFD400;
-  cursor: pointer;
   margin-top: 0;
   margin-bottom: 0;
 
@@ -209,12 +208,13 @@ body {
 }
 
 .viewer-tab .viewer-section-text {
-  font-size: 20px;
-  line-height: 1.30;
+  font-size: 16px;
+  line-height: 1;
   overflow-x: auto;
-  font-weight: 1200;
+  font-weight: 1300;
   margin-top: 0;
   margin-bottom: 0;
+  white-space: pre;
 }
 
 .viewer-tab.collapsed-tab .viewer-section-text {
