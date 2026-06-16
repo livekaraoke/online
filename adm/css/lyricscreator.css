@@ -106,6 +106,7 @@ body {
 
 .field label {
   display: block;
+  margin-top: 10px;
   margin-bottom: 5px;
   color: #aaa;
   font-size: 12px;
