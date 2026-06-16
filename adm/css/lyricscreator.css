@@ -122,7 +122,7 @@ textarea {
 
 
 
-  .section-editor {
+.section-editor {
   min-height: 220px;
   margin-top: 10px;
   padding: 14px;
@@ -143,6 +143,12 @@ textarea {
 .section-text br {
   margin-top: 0;
   margin-bottom: 0;
+}
+
+.section-editor.tab-editing {
+  font-family: "Courier New", monospace !important;
+  font-size: 16px;
+  line-height: 1;
 }
 
 .section-editor:focus {
