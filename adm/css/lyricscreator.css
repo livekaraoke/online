@@ -186,6 +186,13 @@ textarea {
   padding-right: 45px;
 }
 
+.section-being-edited {
+  background: #3a1d00;
+  border: 2px solid #ff9900;
+  border-radius: 8px;
+  padding: 10px;
+  box-shadow: 0 0 18px rgba(255,140,0,.35);
+}
 
 .section-editor {
   min-height: 220px;
