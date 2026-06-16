@@ -201,7 +201,7 @@ textarea {
 }
 .lyric-section-title {
   color: #888;
-  font-weight: 1200;
+  font-weight: 1200 !important;
   margin-top: 10px;
   margin-bottom: 1px;
   font-size: 15px;
@@ -213,6 +213,15 @@ textarea {
   line-height: 1.08;
   margin-top: 0;
   margin-bottom: 0;
+}
+
+.lyric-section-title,
+.viewer-section h2,
+.viewer-tab h2 {
+  font-weight: 900 !important;
+  margin-bottom: 0 !important;
+  padding-bottom: 0 !important;
+  line-height: 1 !important;
 }
 
 .lyric-section-title,
