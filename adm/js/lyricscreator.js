@@ -209,6 +209,7 @@ function saveSection() {
 
 /* CLEAR EDITOR */
 function clearEditor() {
+  document.getElementById("livePreviewBox").classList.add("hidden");
   document.getElementById("sectionTitleCustom").value = "";
   document.getElementById("sectionType").value = "lyrics";
   document.getElementById("sectionEditor").innerHTML = "";
@@ -442,6 +443,14 @@ document.getElementById("fontFamily")
 
 function updateLivePreview() {
 
+  const previewBox = document.getElementById("livePreviewBox");
+
+  if (!title && !html.trim()) {
+    previewBox.classList.add("hidden");
+  } else {
+    previewBox.classList.remove("hidden");
+  }
+  
   const title =
     document.getElementById("sectionTitleCustom")
     .value
