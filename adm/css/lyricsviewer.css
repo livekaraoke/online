@@ -145,7 +145,6 @@ body {
 /** User BPM, Original BPM, Capo, Key **/
 #userBpm {
   color: #FFD400;
-  color: #ff3333;
   font-size: 24px;
   font-weight: 900;
 }
@@ -174,7 +173,7 @@ body {
   white-space: pre-wrap;
   margin-bottom: 10px;
   margin-top: 0;
-  font-weight: 400;
+  font-weight: 450;
 }
 
 .viewer-separator {
@@ -216,7 +215,7 @@ body {
   user-select: none;
   border: 1px solid rgba(255,255,255,0.28);
   border-radius: 8px;
-  font-size: 19px;
+  font-size: 20px;
   font-family: Courier New, Verdana, Bahnschrift, Arial, sans-serif;
   font-weight: 900;
   background: rgba(255,255,255,0.03);
@@ -256,15 +255,6 @@ body {
   cursor: pointer;
 }
 
-/** Sections Titles **/
-.viewer-section h2 {
-  margin-top: 0;
-  margin-bottom: -15px !important;
-  line-height: 1.05;
-  font-size: 16px;
-  font-weight: 900;
-  color: #888;
-}
 
 .viewer-tab .viewer-section-text,
 .viewer-tab .viewer-section-text * {
@@ -275,7 +265,7 @@ body {
 .viewer-tab .viewer-section-text {
   text-align: left !important;
   font-family: "Courier New", monospace !important;
-  font-size: 19px;
+  font-size: 20px;
   line-height: 1;
   overflow-x: auto;
   font-weight: 1500;
@@ -335,6 +325,17 @@ body {
 .viewer-section h2 + .viewer-section-text,
 .viewer-tab h2 + .viewer-section-text {
   margin-top: -2px !important;
+}
+
+
+/** Sections Titles **/
+.viewer-section h2 {
+  margin-top: 0;
+  margin-bottom: -10px  !important;
+  line-height: 1.05;
+  font-size: 16px;
+  font-weight: 900;
+  color: #888;
 }
 
 
