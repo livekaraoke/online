@@ -311,6 +311,12 @@ textarea {
   text-indent: 0;
 }
 
+
+.previewLiveSectionTitle {
+  font-size: 20px;
+  color: #ffb347;
+}
+
 #liveSectionPreview {
   padding-left: 0;
   margin-left: 0;
