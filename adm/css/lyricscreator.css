@@ -237,15 +237,6 @@ textarea {
   );
 }
 
-.section-actions {
-  margin-top: 4px;
-  margin-bottom: 18px;
-}
-
-.section-actions button {
-  margin-bottom: 6px;
-}
-
 .preview-draft {
   margin-bottom: 6px;
 }
@@ -278,10 +269,12 @@ textarea {
 
 .section-actions {
   margin-top: 4px;
+  margin-bottom: 10px;
 }
 
 .section-actions button {
   margin-right: 8px;
+  margin-bottom: 10px;
   padding: 6px 10px;
   background: #111;
   color: white;
