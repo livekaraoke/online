@@ -190,7 +190,7 @@ function saveSection() {
     type: sectionType,
     title,
     html,
-    collapsed: sectionType === "tab",
+    collapsed: sectionType === "tab" ? document.getElementById("tabStartsCollapsed").checked : false,
     style: {
       fontFamily,
       color: selectedSectionColor,
@@ -480,19 +480,21 @@ document.getElementById("sectionType").addEventListener("change", function () {
   const editor = document.getElementById("sectionEditor");
   const fontSelect = document.getElementById("fontFamily");
   const tabBtn = document.getElementById("insertTabBtn");
-
+  const tabOptions = document.getElementById("tabOptions");
+ 
   if (this.value === "tab") {
     fontSelect.value = "Courier New";
     editor.style.fontFamily = "Courier New";
     editor.classList.add("tab-editing");
-
+    tabOptions.style.display = "block";
     tabBtn.disabled = false;
     tabBtn.classList.add("enabled");
-
     document.execCommand("bold", false, null);
   } else {
+    fontSelect.value = "Verdana";
+    editor.style.fontFamily = "Verdana";
     editor.classList.remove("tab-editing");
-
+    tabOptions.style.display = "none";
     tabBtn.disabled = true;
     tabBtn.classList.remove("enabled");
   }
@@ -610,7 +612,7 @@ songData.sections = songData.sections.map(section => ({
   type: section.type || "lyrics",
   title: section.title || "",
   html: section.html || "",
-  collapsed: section.collapsed || false,
+  collapsed: section.collapsed !== undefined ? section.collapsed : true,
   style: {
     fontFamily: section.style?.fontFamily || "Verdana",
     color: section.style?.color || "white",
