@@ -1,4 +1,4 @@
-let selectedColor = "white";
+8let selectedColor = "white";
 let selectedSectionColor = "white";
 let editingIndex = null;
 let editingBackup = null;
@@ -593,7 +593,7 @@ async function loadSongFromFirebase(firebaseId) {
     const doc = await db.collection("lyrics").doc(firebaseId).get();
 
     if (!doc.exists) {
-      alert("Could not find song in Firebase.");
+      alert("Could not find song in DB.");
       return;
     }
 
@@ -614,7 +614,7 @@ async function loadSongFromFirebase(firebaseId) {
 
   } catch (error) {
     console.error(error);
-    alert("Error loading song from Firebase.");
+    alert("Error loading song from DB");
   }
 }
                                     
