@@ -512,7 +512,7 @@ textarea {
 
 #insertTabBtn {
   margin-top: 0;
-  transform: translateY(0px);
+  transform: translateY(1px);
   align-self: center;
 }
 
