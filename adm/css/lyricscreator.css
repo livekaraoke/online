@@ -61,6 +61,13 @@ body {
 }
 
 .editor-panel .label {
+  display: block;
+  margin-bottom: 5px;
+  color: #aaa;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  text-transform: uppercase;
   margin-top: 8px;
 }
 
