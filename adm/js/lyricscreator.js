@@ -304,6 +304,10 @@ function renderPreview() {
 
     const div = document.createElement("div");
     div.className = isTab ? "lyric-section tab-section" : "lyric-section";
+    
+    if (index === editingIndex) {
+      div.classList.add("section-being-edited");
+    }
 
     div.style.fontFamily = section.style?.fontFamily || "Verdana";
     div.style.color = section.style?.color || "white";
