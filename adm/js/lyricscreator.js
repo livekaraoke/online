@@ -180,15 +180,21 @@ function saveSection() {
     .trim();
 
   if (sectionType === "tab") {
-    html = editor.innerText
-      .replace(/\u00A0/g, " ")
+    html = editor.innerHTML
+      .replace(/<!--StartFragment-->/g, "")
+      .replace(/<!--EndFragment-->/g, "")
+      .replace(/<div>/gi, "\n")
+      .replace(/<\/div>/gi, "")
+      .replace(/<br\s*\/?>/gi, "\n")
+      .replace(/&nbsp;/gi, " ")
       .replace(/\r\n/g, "\n")
       .replace(/\r/g, "\n")
       .split("\n")
       .map(line => line.trimStart())
       .join("\n")
+      .replace(/\n{3,}/g, "\n\n")
       .trimEnd();
-  }
+  }  
 
   const section = {
     type: sectionType,
