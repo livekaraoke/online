@@ -550,6 +550,12 @@ body {
 
 }
 
+
+.viewer-tab h2 {
+  margin-bottom: 10px !important;
+  color: #FFFFFF;
+}
+
 .viewer-tab .viewer-section-text {
   display: block;
   margin: 0 !important;
