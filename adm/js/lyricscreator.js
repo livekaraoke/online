@@ -184,7 +184,9 @@ function saveSection() {
       .replace(/\u00A0/g, " ")
       .replace(/\r\n/g, "\n")
       .replace(/\r/g, "\n")
-      .replace(/^\s+/, "")
+      .split("\n")
+      .map(line => line.trimStart())
+      .join("\n")
       .trimEnd();
   }
 
