@@ -370,8 +370,8 @@ textarea {
   border: 1px solid #FFD400 !important;
   box-shadow: 0 0 10px rgba(255,212,0,.18);
   border-radius: 8px;
-  padding: 10px;
   margin-bottom: 18px;
+  padding: 14px 16px !important;
 }
 
 .live-preview-box:empty {
@@ -407,7 +407,15 @@ textarea {
   font-weight: 900 !important;
   white-space: pre !important;
 }
+.live-preview-box .lyrics-preview .lyric-section-title {
+  color: #888 !important;
+  text-align: left;
+  font-family: Verdana, Arial, sans-serif !important;
+}
 
+.live-preview-box .lyrics-preview .section-text {
+  font-family: Verdana, Arial, sans-serif !important;
+}
 
 
 #liveSectionPreview {
