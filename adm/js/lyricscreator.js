@@ -176,18 +176,26 @@ function saveSection() {
   }
 
   html = html
-    .replace(/<!--StartFragment-->/g, "")
-    .replace(/<!--EndFragment-->/g, "")
-    .replace(/<div[^>]*>/gi, "")
-    .replace(/<\/div>/gi, "<br>")
-    .replace(/<p[^>]*>/gi, "")
-    .replace(/<\/p>/gi, "<br>")
-    .replace(/&nbsp;/gi, " ")
-    .replace(/(<br\s*\/?>\s*){2,}/gi, "<br>")
-    .replace(/^(<br\s*\/?>|\s)+/gi, "")
-    .replace(/(<br\s*\/?>|\s)+$/gi, "")
-    .trim();
+  .replace(/<!--StartFragment-->/g, "")
+  .replace(/<!--EndFragment-->/g, "")
+  .replace(/<div[^>]*>/gi, "<br>")
+  .replace(/<\/div>/gi, "")
+  .replace(/<p[^>]*>/gi, "<br>")
+  .replace(/<\/p>/gi, "")
+  .replace(/&nbsp;/gi, " ")
+  .replace(/(<br\s*\/?>\s*){3,}/gi, "<br><br>")
+  .replace(/^(<br\s*\/?>|\s)+/gi, "")
+  .replace(/(<br\s*\/?>|\s)+$/gi, "")
+  .trim();
 
+  if (sectionType === "tab") {
+    html = html
+      .replace(/<br\s*\/?>/gi, "\n")
+      .replace(/\u200B/g, "")
+      .replace(/\uFEFF/g, "");
+  }
+
+  /*
   if (sectionType === "tab") {
     html = html
       .replace(/<br\s*\/?>/gi, "\n")
@@ -197,6 +205,7 @@ function saveSection() {
       .replace(/\n{2,}/g, "\n")
       .trim();
   }
+  */
 
   const section = {
     type: sectionType,
