@@ -142,17 +142,26 @@ textarea {
 }
 
 .controls {
-  display: flex;
-  grid-template-columns: 1fr 1fr auto;
-  gap: 10px;
+  display: block;
   margin-top: 12px;
-  align-items: center;
-  flex-wrap: nowrap;
 }
 
-.controls select {
+.controls-main-row,
+.controls-second-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: nowrap;
+  margin-bottom: 10px;
+}
+
+.controls-main-row select {
   width: 160px;
   min-width: 160px;
+}
+
+.controls-second-row {
+  justify-content: flex-start;
 }
 
 .format-buttons,
