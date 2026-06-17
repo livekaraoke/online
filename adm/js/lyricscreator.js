@@ -482,6 +482,8 @@ function updateLivePreview() {
   const previewBox = document.getElementById("livePreviewBox");
   const preview = document.getElementById("liveSectionPreview");
 
+  const sectionType = document.getElementById("sectionType").value;
+
   const cleanHtml = html
     .replace(/<br\s*\/?>/gi, "")
     .replace(/&nbsp;/gi, "")
@@ -497,8 +499,13 @@ function updateLivePreview() {
 
   previewBox.classList.remove("hidden");
 
+  preview.className = 
+    sectionType === "tab"
+      ? "lyric-section preview-draft tab-preview"
+      : "lyric-section preview-draft";
+
   preview.innerHTML = `
-    ${title ? `<div class="lyric-section-title">${title}</div>` : ""}
+    ${title ? `<div class="lyric-section-title">${title}${document.getElementById("sectionType").value === "tab" ? " (TAB)" : ""}</div>` : ""}
     <div class="section-text" style="font-family:${font}; color:${selectedSectionColor};">
       ${html}
     </div>
