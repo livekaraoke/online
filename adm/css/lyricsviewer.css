@@ -508,7 +508,7 @@ body {
 
   /** Sections titles **/
   .viewer-section h2{
-    font-size:15px !important;
+    font-size:11px !important;
     margin-bottom: -50px !important;
   }
 
@@ -519,14 +519,14 @@ body {
 
   /** TAB Text **/
   .viewer-tab {
-    font-size:30px;
-    font-weight: 900;
+    font-size:40px;
+    font-weight: 900 !important;
     overflow: visible !important;
     overflow-x: hidden !important;
     scrollbar-width: none;
   }
   .viewer-tab h2 {
-    font-size:15px !important;
+    font-size:11px !important;
     margin-bottom: 10px !important;
   }
   .viewer-tab::-webkit-scrollbar {
