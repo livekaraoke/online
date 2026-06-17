@@ -721,6 +721,7 @@ document.getElementById("sectionEditor").addEventListener("input", function () {
 });
 
 function limitLineLength(editor) {
+  /*
   const text = editor.innerText;
   const lines = text.split("\n");
 
@@ -747,7 +748,7 @@ function limitLineLength(editor) {
 
     selection.removeAllRanges();
     selection.addRange(range);
-  }
+  }*/
 }
                                     
 
