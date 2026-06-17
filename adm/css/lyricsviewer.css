@@ -145,7 +145,7 @@ body {
 /** User BPM, Original BPM, Capo, Key **/
 #userBpm {
   color: #FFD400;
-  color: #ff3333;
+  /*color: #ff3333;*/
   font-size: 24px;
   font-weight: 900;
 }
@@ -490,7 +490,8 @@ body {
 
   /** TAB Text **/
   .viewer-tab .viewer-section-text{
-    font-size:20px;
+    font-size:24px;
+    font-weight: 1700;
   }
   
 }
@@ -498,10 +499,9 @@ body {
 /********************** END MOBILE SECTION **********************/
 /****************************************************************/
 
-
-
-.viewer-tab .viewer-section-text * {
-  margin: 0;
-  padding: 0;
-  text-indent: 0;
+.viewer-section-text b,
+.viewer-section-text strong {
+  font-weight: 950 !important;
+  color: #ffffff;
+  text-shadow: 0 0 0.4px rgba(255,255,255,.45);
 }
