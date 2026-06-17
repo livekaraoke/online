@@ -541,3 +541,27 @@ textarea {
   letter-spacing: 1px;
   font-family: Bahnschrift, Arial, sans-serif;
 }
+
+.tab-load-control {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tab-toggle-btn {
+  height: 38px;
+  padding: 0 14px;
+  border-radius: 6px;
+  border: 1px solid #555;
+  background: #111;
+  color: #aaa;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.tab-toggle-btn.active {
+  background: #FFD400;
+  color: #000;
+  border-color: #FFD400;
+  box-shadow: 0 0 10px rgba(255,212,0,.45);
+}
