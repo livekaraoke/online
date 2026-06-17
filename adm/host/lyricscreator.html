@@ -106,13 +106,6 @@
       </select>
     </div>
   
-    <div class="field" id="tabOptions" style="display:none;">
-      <label>
-        <input type="checkbox" id="tabStartsCollapsed" checked>
-        Load Closed
-      </label>
-    </div>
-    
     <div class="controls">
     
       <select id="fontFamily" onchange="updateEditorFont()">
@@ -168,6 +161,17 @@
                 onclick="formatText('underline')">
           <u>U</u>
         </button>
+      </div>
+
+      <div class="tab-load-control" id="tabOptions" style="display:none;">
+        <button
+          type="button"
+          id="tabStartsCollapsedBtn"
+          class="tab-toggle-btn active"
+          onclick="toggleTabStartsCollapsed()">
+          Load Closed
+        </button>
+        <input type="checkbox" id="tabStartsCollapsed" checked hidden>
       </div>
     
       <div class="format-buttons">
