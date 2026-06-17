@@ -145,7 +145,6 @@ body {
 /** User BPM, Original BPM, Capo, Key **/
 #userBpm {
   color: #FFD400;
-  color: #FF0000;
   font-size: 24px;
   font-weight: 900;
 }
@@ -169,11 +168,11 @@ body {
 
 #songYear {
   margin-top: 20px;
-  margin-left: 5px;
+  text-align: left;
   line-height: 1.05;
   font-size: 17px;
   font-weight: 900;
-  color: #888;
+  color: #999999;
 }
 /** END of User BPM, Original BPM, Capo, Key **/
 
