@@ -33,17 +33,12 @@ const editor = document.getElementById("sectionEditor");
 editor.addEventListener("paste", function (e) {
   e.preventDefault();
 
-  const html = (e.clipboardData || window.clipboardData).getData("text/html");
-  const text = (e.clipboardData || window.clipboardData).getData("text/plain");
+  const text = (e.clipboardData || window.clipboardData)
+    .getData("text/plain");
 
-  if (!html) {
-    document.execCommand("insertText", false, text);
-    return;
-  }
+  document.execCommand("insertText", false, text);
 
-  const cleaned = cleanWordPaste(html);
-
-  document.execCommand("insertHTML", false, cleaned);
+  updateLivePreview();
 });
 
 function cleanWordPaste(html) {
@@ -704,6 +699,43 @@ function toggleTabStartsCollapsed() {
   const checkbox = document.getElementById("tabStartsCollapsed");
   checkbox.checked = !checkbox.checked;
   syncTabToggleButton();
+}
+
+const MAX_CHARS_PER_LINE = 72;
+
+document.getElementById("sectionEditor").addEventListener("input", function () {
+  limitLineLength(this, MAX_CHARS_PER_LINE);
+  updateLivePreview();
+});
+
+function limitLineLength(editor) {
+  const text = editor.innerText;
+  const lines = text.split("\n");
+
+  const wrapped = lines.flatMap(line => {
+    const chunks = [];
+
+    while (line.length > MAX_CHARS_PER_LINE) {
+      chunks.push(line.slice(0, MAX_CHARS_PER_LINE));
+      line = line.slice(MAX_CHARS_PER_LINE);
+    }
+
+    chunks.push(line);
+    return chunks;
+  }).join("\n");
+
+  if (text !== wrapped) {
+    editor.innerText = wrapped;
+
+    const range = document.createRange();
+    const selection = window.getSelection();
+
+    range.selectNodeContents(editor);
+    range.collapse(false);
+
+    selection.removeAllRanges();
+    selection.addRange(range);
+  }
 }
                                     
 
