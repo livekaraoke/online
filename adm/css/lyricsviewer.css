@@ -583,9 +583,20 @@ body {
 }
 
 @media (max-width: 768px) {
+  /** TAB Text **/
+  .viewer-tab {
+    font-size:40px;
+    font-weight: 900 !important;
+    overflow: visible !important;
+    overflow-x: hidden !important;
+    scrollbar-width: none;
+  }
   .viewer-tab h2 {
     font-size:11px !important;
     margin-bottom: 10px !important;
+  }
+  .viewer-section-text{
+    font-size:24px !important;
   }
   .viewer-section h2{
     font-size:11px !important;
