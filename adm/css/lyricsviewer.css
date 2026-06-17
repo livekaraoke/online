@@ -567,6 +567,7 @@ body {
 
 .viewer-tab .viewer-section-text {
   display: block;
+  line-height: 1;
   margin: 0 !important;
   padding: 0 !important;
   text-indent: 0 !important;
@@ -576,5 +577,8 @@ body {
 
 .viewer-tab .viewer-section-text::firstline {
   text-indent: 0 !important;
+  font-size: 0;
+  line-height: 0;
+  color: transparent;
 }
   
