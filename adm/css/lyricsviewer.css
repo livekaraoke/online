@@ -561,6 +561,21 @@ body {
 
 }
 
+.tab-anchor {
+  /*position: absolute;*/
+  display: block;
+  height: 0;
+  overflow: hidden;
+  font-size: 2px;
+  line-height: 0;
+  color: transparent;
+  user-select: none;
+  pointer-events: none;
+  left: -99999px;
+}
+
+
+
 
 .viewer-tab h2 {
   margin-bottom: 10px !important;
