@@ -145,7 +145,7 @@ body {
 /** User BPM, Original BPM, Capo, Key **/
 #userBpm {
   color: #FFD400;
-  color: #00FF00;
+  /*color: #0000FF;*/
   font-size: 24px;
   font-weight: 900;
 }
@@ -154,11 +154,16 @@ body {
   font-size: 17px;
   font-weight: 700;
 }
-#capo,
-#songKey {
-  color: white;
-  font-size: 17px;
+#capo {
+  color: #FFFFFF;
+  font-size: 18px;
   font-weight: 800;
+}
+
+#songKey {
+  color: #55CC55;
+  font-size: 17px;
+  font-weight: 700;
 }
 /** END of User BPM, Original BPM, Capo, Key **/
 
@@ -176,6 +181,8 @@ body {
   margin-top: -20px !important;
   font-weight: 450;
 }
+
+
 
 .viewer-separator {
   height: 2px;
@@ -203,7 +210,6 @@ body {
 
 .section-text,
 .viewer-section-text {
-  margin-top: 0 !important;
   padding-top: 0 !important;
 }
 
@@ -226,7 +232,16 @@ body {
     box-shadow .15s ease;
   margin-top: 4px;
   margin-bottom: 40px;
+  overflow: visible !important;
+  overflow-x: hidden !important;
+  scrollbar-width: none;
+  text-shadow: 0 1px 0 rgba(0,0,0,.9), 0 0 3px rgba(255,255,255,.25);
 }
+.viewer-tab::-webkit-scrollbar {
+    display: none;
+  }
+
+
 
 .viewer-tab:hover {
   border-color: rgba(255,212,0,.8);
@@ -312,7 +327,14 @@ body {
 .tab-dash {
   color: rgba(255,255,255,0.45);
   color: #666 !important;
-  font-weight: 900;
+  text-shadow: none !important;
+  font-weight: 800;
+}
+
+.tab-anchor {
+  display: inline-block;
+  width: 0;
+  overflow: hidden;
 }
   
 .end-marker {
@@ -494,13 +516,24 @@ body {
     font-size:15px !important;
   }
 
-  /** TAB Text **/
-  .viewer-tab .viewer-section-text{
+  .viewer-section-text{
     font-size:24px;
-    font-weight: 1700;
+    font-weight: 450;
+  }
+
+  /** TAB Text **/
+  .viewer-tab {
+    font-size:30px;
+    font-weight: 900;
+    overflow: visible !important;
+    overflow-x: hidden !important;
+    scrollbar-width: none;
   }
   .viewer-tab h2 {
     font-size:15px !important;
+  }
+  .viewer-tab::-webkit-scrollbar {
+    display: none;
   }
   
 }
