@@ -125,8 +125,9 @@
       let displayHtml = section.html || "";
       
       if (isTab) {
+        displayHtml = "#1166611%001#\n" + displayHtml;
         displayHtml = displayHtml
-          .replace(/<!--StartFragment-->/g, "")
+          .replace(/<!--StartFragment-->/g, "\n")
           .replace(/<!--EndFragment-->/g, "")
           .replace(/<div>/gi, "\n")
           .replace(/<\/div>/gi, "")
