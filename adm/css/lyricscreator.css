@@ -437,6 +437,12 @@ textarea {
   font-weight: 700;
 }
 
+#songYear {
+  color: white;
+  font-size: 17px;
+  font-weight: 700;
+}
+
 .section-actions {
   margin-top: 4px;
   margin-bottom: 10px;
