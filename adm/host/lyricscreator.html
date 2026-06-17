@@ -107,96 +107,99 @@
     </div>
   
     <div class="controls">
-    
-      <select id="fontFamily" onchange="updateEditorFont()">
-        <option value="Verdana">Verdana</option>
-        <option value="Courier New">Courier New</option>
-        <option value="Arial">Arial</option>
-        <option value="Bahnschrift">Bahnschrift</option>
-      </select>
-      <!--
-      <div class="color-picker">
-        <button type="button"
-                class="color-btn active"
-                style="background:white"
-                onclick="setSectionColor('white', this)">
-        </button>
-        <button class="color-btn" style="background:#7CFF3A" onclick="setSectionColor('#7CFF3A', this)"></button>
-        <button type="button"
-                class="color-btn active"
-                style="background:#7CFF3A"
-                onclick="setSectionColor('#7CFF3A', this)">
-        </button>
-        <button type="button"
-                class="color-btn active"
-                style="background:#FFD400"
-                onclick="setSectionColor('#FFD400', this)">
-        </button>
-        <button type="button"
-                class="color-btn active"
-                style="background:#FF7A1A"
-                onclick="setSectionColor('#FF7A1A', this)">
-        </button>
-        <button type="button"
-                class="color-btn active"
-                style="background:#7CFF3A"
-                onclick="setSectionColor('#ff3333', this)">
-        </button>
-      </div>
-      -->
+      <div class="controls-main-row">
+        <select id="fontFamily" onchange="updateEditorFont()">
+          <option value="Verdana">Verdana</option>
+          <option value="Courier New">Courier New</option>
+          <option value="Arial">Arial</option>
+          <option value="Bahnschrift">Bahnschrift</option>
+        </select>
+        <!--
+        <div class="color-picker">
+          <button type="button"
+                  class="color-btn active"
+                  style="background:white"
+                  onclick="setSectionColor('white', this)">
+          </button>
+          <button class="color-btn" style="background:#7CFF3A" onclick="setSectionColor('#7CFF3A', this)"></button>
+          <button type="button"
+                  class="color-btn active"
+                  style="background:#7CFF3A"
+                  onclick="setSectionColor('#7CFF3A', this)">
+          </button>
+          <button type="button"
+                  class="color-btn active"
+                  style="background:#FFD400"
+                  onclick="setSectionColor('#FFD400', this)">
+          </button>
+          <button type="button"
+                  class="color-btn active"
+                  style="background:#FF7A1A"
+                  onclick="setSectionColor('#FF7A1A', this)">
+          </button>
+          <button type="button"
+                  class="color-btn active"
+                  style="background:#7CFF3A"
+                  onclick="setSectionColor('#ff3333', this)">
+          </button>
+        </div>
+        -->
+        
+        <div class="format-buttons">
+          <button type="button"
+                  class="color-btn active"
+                  onclick="formatText('bold')">
+            <b>B</b>
+          </button>
+          <button type="button"
+                  class="color-btn active"
+                  onclick="formatText('italic')">
+            <i>I</i>
+          </button>
+          <button type="button"
+                  class="color-btn active"
+                  onclick="formatText('underline')">
+            <u>U</u>
+          </button>
+        </div>
+  
+        <div class="tab-load-control" id="tabOptions" style="display:none;">
+          <button
+            type="button"
+            id="tabStartsCollapsedBtn"
+            class="tab-toggle-btn active"
+            onclick="toggleTabStartsCollapsed()">
+            Load Closed
+          </button>
+          <input type="checkbox" id="tabStartsCollapsed" checked hidden>
+        </div>
       
-      <div class="format-buttons">
-        <button type="button"
-                class="color-btn active"
-                onclick="formatText('bold')">
-          <b>B</b>
-        </button>
-        <button type="button"
-                class="color-btn active"
-                onclick="formatText('italic')">
-          <i>I</i>
-        </button>
-        <button type="button"
-                class="color-btn active"
-                onclick="formatText('underline')">
-          <u>U</u>
-        </button>
+        <div class="format-buttons">
+          <button type="button" onclick="formatText('justifyLeft')">◀ L</button>
+          <button type="button" onclick="formatText('justifyCenter')">C</button>
+          <button type="button" onclick="formatText('justifyRight')">R ▶</button>
+        </div>
       </div>
 
-      <div class="tab-load-control" id="tabOptions" style="display:none;">
+      <div class="controls-second-row">
+        <div class="color-picker">
+          <button class="color-btn" style="background:#FFFFFF" onclick="formatColor('#FFFFFF')"></button>
+          <button class="color-btn" style="background:#7CFF3A" onclick="formatColor('#7CFF3A')"></button>
+          <button class="color-btn" style="background:#FFD400" onclick="formatColor('#FFD400')"></button>
+          <button class="color-btn" style="background:#FF7A1A" onclick="formatColor('#FF7A1A')"></button>
+          <button class="color-btn" style="background:#ff3333" onclick="formatColor('#ff3333')"></button>
+          <button class="color-btn" style="background:#7788FF" onclick="formatColor('#7788FF')"></button>
+        </div>
+    
         <button
           type="button"
-          id="tabStartsCollapsedBtn"
-          class="tab-toggle-btn active"
-          onclick="toggleTabStartsCollapsed()">
-          Load Closed
+          id="insertTabBtn"
+          class="btn tab-btn"
+          onclick="insertBlankTab()"
+          disabled>
+          Insert Blank Guitar Tab
         </button>
-        <input type="checkbox" id="tabStartsCollapsed" checked hidden>
       </div>
-    
-      <div class="format-buttons">
-        <button type="button" onclick="formatText('justifyLeft')">◀ L</button>
-        <button type="button" onclick="formatText('justifyCenter')">C</button>
-        <button type="button" onclick="formatText('justifyRight')">R ▶</button>
-      </div>
-    
-      <div class="color-picker">
-        <button class="color-btn" style="background:#FFFFFF" onclick="formatColor('#FFFFFF')"></button>
-        <button class="color-btn" style="background:#7CFF3A" onclick="formatColor('#7CFF3A')"></button>
-        <button class="color-btn" style="background:#FFD400" onclick="formatColor('#FFD400')"></button>
-        <button class="color-btn" style="background:#FF7A1A" onclick="formatColor('#FF7A1A')"></button>
-        <button class="color-btn" style="background:#ff3333" onclick="formatColor('#ff3333')"></button>
-        <button class="color-btn" style="background:#7788FF" onclick="formatColor('#7788FF')"></button>
-      </div>
-  
-      <button
-        type="button"
-        id="insertTabBtn"
-        class="btn tab-btn"
-        onclick="insertBlankTab()"
-        disabled>
-        Insert Blank Guitar Tab
-      </button>
     
     </div>
     
