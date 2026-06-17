@@ -557,11 +557,11 @@ body {
 .tab-anchor {
   /*position: absolute;*/
   display: block;
-  height: 0;
+  /*height: 0;
   max-height: 0;
-  overflow: hidden;
+  overflow: hidden;*/
   font-size: 2px;
-  line-height: 0;
+  /*line-height: 0;*/
   color: transparent;
   opacity: 0;
   user-select: none;
