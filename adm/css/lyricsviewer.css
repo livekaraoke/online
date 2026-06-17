@@ -455,19 +455,19 @@ body {
     gap: 8px;
   }
   .viewer-title {
-    font-size: 16px;
+    /*font-size: 16px;*/
   }
   
   /** Top bar BACK / EDIT btns on mobile **/
   .viewer-btn {
-    font-size: 18px;
+    font-size: 24px;
     padding: 14px 18px;
   }
   .topbar-song-name {
-    font-size: 28px;
+    font-size: 36px;
   }
   .topbar-song-artist {
-    font-size: 16px;
+    font-size: 24px;
   }
   .viewer-list {
     padding-right: 42px;
@@ -475,29 +475,32 @@ body {
   
   /** Song Title - Artist heading **/
   .song-header h1 {
-    font-size:16px;
+    font-size:20px;
   }
   
   /** User BPM, Original BPM, Capo, Key MOBILE **/
-  #userBpm{
-    font-size:26px;
+  #userBpm,
+  #capo {
+    font-size:30px;
   }
   #originalBpm,
-  #capo,
   #songKey{
-    font-size:19px;
+    font-size:24px;
   }
   /** END of User BPM, Original BPM, Capo, Key MOBILE **/
 
   /** Sections titles **/
   .viewer-section h2{
-    font-size:15px;
+    font-size:15px !important;
   }
 
   /** TAB Text **/
   .viewer-tab .viewer-section-text{
     font-size:24px;
     font-weight: 1700;
+  }
+  .viewer-tab h2 {
+    font-size:15px !important;
   }
   
 }
