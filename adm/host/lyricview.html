@@ -125,7 +125,6 @@
       let displayHtml = section.html || "";
       
       if (isTab) {
-        displayHtml = `<span class="tab-anchor">#1166611%001#</span>` + displayHtml;
         displayHtml = displayHtml
           .replace(/<!--StartFragment-->/g, "")
           .replace(/<!--EndFragment-->/g, "")
@@ -141,10 +140,12 @@
 
       div.innerHTML = `
         ${section.title
-          ? `<h2> ${isTab ? (isCollapsed ? "▶ " : "▼ ") : ""} ${section.title} ${isTab ? " (Tab)" : ""} </h2>`
+          ? `<h2>${isTab ? (isCollapsed ? "▶ " : "▼ ") : ""}${section.title}${isTab ? " (Tab)" : ""}</h2>`
           : ""
         }
-
+      
+        ${isTab ? `<span class="tab-anchor">#1166611%001#</span>` : ""}
+      
         <div class="viewer-section-text">
           ${displayHtml}
         </div>
