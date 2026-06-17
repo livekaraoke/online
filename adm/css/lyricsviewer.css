@@ -330,12 +330,6 @@ body {
   text-shadow: none !important;
   font-weight: 800;
 }
-
-.tab-anchor {
-  display: inline-block;
-  width: 0;
-  overflow: hidden;
-}
   
 .end-marker {
   text-align: center;
