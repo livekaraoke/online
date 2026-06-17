@@ -145,7 +145,7 @@ body {
 /** User BPM, Original BPM, Capo, Key **/
 #userBpm {
   color: #FFD400;
-  color: #00FF00;
+  /*color: #00FF00;*/
   font-size: 24px;
   font-weight: 900;
 }
@@ -543,7 +543,20 @@ body {
 
 
 .viewer-tab {
-  p
+  padding-left: 6px;
 
+}
 
+.viewer-tab .viewer-section-text {
+  display: block;
+  margin: 0 !important;
+  padding: 0 !important;
+  text-indent: 0 !important;
+  white-space: pre !important;
+  overflow: hidden !important;
+}
+
+.viewer-tab .viewer-section-text::firstline {
+  text-indent: 0 !important;
+}
   
