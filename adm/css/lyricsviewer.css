@@ -145,7 +145,7 @@ body {
 /** User BPM, Original BPM, Capo, Key **/
 #userBpm {
   color: #FFD400;
-  /*color: #00FF00;*/
+  color: #0000FF;
   font-size: 24px;
   font-weight: 900;
 }
@@ -164,6 +164,7 @@ body {
   color: #33AA33;
   font-size: 17px;
   font-weight: 700;
+  line-spacing: 1;
 }
 /** END of User BPM, Original BPM, Capo, Key **/
 
