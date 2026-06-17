@@ -451,9 +451,10 @@ textarea {
 .section-actions button {
   margin-right: 8px;
   margin-bottom: 10px;
-  background: #111;4
-  color: #ddd;
+  background: #111;
+  color: #FFFFFF;
   border: 1px solid #444;
+  border: 1px solid #ff3333;
   padding: 7px 10px;
   border-radius: 6px;
   cursor: pointer;
@@ -463,6 +464,9 @@ textarea {
 .section-actions button:hover {
   border-color: #ff3333;
   color: white;
+  border-color: #FFD400;
+  color: #FFD400;
+  box-shadow: 0 0 8px rgba(255,212,0,.25);
 }
 
 .section-title-row {
