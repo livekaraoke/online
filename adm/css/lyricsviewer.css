@@ -370,7 +370,7 @@ body {
 /** Sections Titles **/
 .viewer-section h2 {
   margin-top: 0;
-  margin-bottom: -30px  !important;
+  margin-bottom: -20px  !important;
   line-height: 1.05;
   font-size: 16px;
   font-weight: 900;
@@ -519,7 +519,7 @@ body {
   /** Sections titles **/
   .viewer-section h2{
     font-size:11px !important;
-    margin-bottom: -50px !important;
+    margin-bottom: -30px !important;
   }
 
   .viewer-section-text{
