@@ -367,6 +367,8 @@ function editSection(index) {
   
     tabBtn.classList.toggle("active", tabCheckbox.checked);
     tabBtn.innerText = tabCheckbox.checked ? "Load Closed" : "Load Open";
+
+    syncTabToggleButton();
   
     document.getElementById("insertTabBtn").disabled = false;
     document.getElementById("insertTabBtn").classList.add("enabled");
@@ -535,6 +537,7 @@ document.getElementById("sectionType").addEventListener("change", function () {
     document.execCommand("bold", false, null);
     tabOptions.style.display = "flex";
     tabCheckbox.checked = true;
+    syncTabToggleButton();
     tabBtn.classList.add("active");
     tabBtn.innerText = "Load Closed";
   } else { /* LYRICS MODE */
@@ -674,14 +677,20 @@ songData.sections = songData.sections.map(section => ({
   }
 }
 
-function toggleTabStartsCollapsed() {
+function syncTabToggleButton() {
   const checkbox = document.getElementById("tabStartsCollapsed");
   const btn = document.getElementById("tabStartsCollapsedBtn");
 
-  checkbox.checked = !checkbox.checked;
+  if (!checkbox || !btn) return;
 
   btn.innerText = checkbox.checked ? "Load Closed" : "Load Open";
   btn.classList.toggle("active", !checkbox.checked);
+}
+
+function toggleTabStartsCollapsed() {
+  const checkbox = document.getElementById("tabStartsCollapsed");
+  checkbox.checked = !checkbox.checked;
+  syncTabToggleButton();
 }
                                     
 
