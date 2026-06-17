@@ -128,8 +128,12 @@ function updateMeta() {
   document.getElementById("previewKey").innerText =
     songData.key ? `Key: ${songData.key}` : "";
 
-  document.getElementById("previewYear").innerText =
-    songData.year ? `Year: ${songData.year}` : "";
+  const previewYear = document.getElementById("previewYear");
+
+  if (previewYear) {
+    previewYear.innerText =
+      songData.year ? `Year: ${songData.year}` : "";
+  }
 }
 
 ["songTitle", "artistName", "userBpm", "originalBpm", "capoNote", "songKey", "songYear"]
