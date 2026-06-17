@@ -558,10 +558,12 @@ body {
   /*position: absolute;*/
   display: block;
   height: 0;
+  max-height: 0;
   overflow: hidden;
   font-size: 2px;
   line-height: 0;
   color: transparent;
+  opacity: 0;
   user-select: none;
   pointer-events: none;
   left: -99999px;
