@@ -47,120 +47,8 @@
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
 </script>
-<!--
-<script>
-  const params = new URLSearchParams(window.location.search);
-  const file = params.get("file");
 
-  if (!file) {
-    document.body.innerHTML = "<h1 style='color:white;text-align:center;'>No file selected</h1>";
-  } else {
-    const script = document.createElement("script");
-    script.src = `lyrics/new-lyrics-data/${file}`;
-    script.onload = renderLoadedSong;
-    document.body.appendChild(script);
-  }
-
-  function getSongVariableName(fileName) {
-    return "song_" + fileName
-      .replace(".js", "")
-      .replace(/-/g, "_");
-  }
-
-  function renderLoadedSong() {
-    const variableName = getSongVariableName(file);
-    const song = window[variableName];
-
-    if (!song) {
-      document.getElementById("lyricsContent").innerHTML =
-        "<p>Could not load song data.</p>";
-      return;
-    }
-
-    document.getElementById("songTitle").innerText =
-      `${song.title} - ${song.artist}`;
-    
-    document.getElementById("topbarSongTitle").innerText =
-      `${song.title}`;
-
-    document.getElementById("userBpm").innerText =
-      song.userBpm ? `${song.userBpm} BPM` : "";
-
-    document.getElementById("originalBpm").innerText =
-      song.originalBpm ? `Original: ${song.originalBpm} BPM` : "";
-
-    document.getElementById("capo").innerText =
-      song.capo ? `Capo: ${song.capo}` : "";
-
-    document.getElementById("songKey").innerText =
-      song.key ? `Key: ${song.key}` : "";
-
-    document.getElementById("editBtn").onclick = () => {
-      window.location.href =
-        `lyricscreator.html?firebaseId=${encodeURIComponent(songId)}`;
-
-    const container = document.getElementById("lyricsContent");
-    container.innerHTML = "";
-
-    song.sections.forEach(section => {
-      if (section.type === "separator") {
-        const sep = document.createElement("div");
-        sep.className = "viewer-separator";
-        container.appendChild(sep);
-        return;
-      }
-
-      const div = document.createElement("section");
-
-      const isTab = section.type === "tab";
-      const isCollapsed = isTab && section.collapsed === true;
-
-      div.className = isTab
-        ? `viewer-section viewer-tab ${isCollapsed ? "collapsed-tab" : ""}`
-        : "viewer-section";
-
-      div.style.fontFamily = section.style?.fontFamily || "Verdana";
-      div.style.color = section.style?.color || "white";
-      let displayHtml = section.html || "";
-      
-      if (isTab) {
-        displayHtml = displayHtml
-          .replace(/<!--StartFragment--><!--/g, "")
-          .replace(/<!--EndFragment--><!--/g, "")
-          .replace(/<div>/gi, "<br>")
-          .replace(/<\/div>/gi, "")
-          .replace(/^\s+/, "")
-          .replace(/-/g, `<span class="tab-dash">-</span>`);
-      }
-      
-      div.innerHTML = `
-        ${section.title
-          ? `<h2>${isTab ? (isCollapsed ? "▶ " : "▼ ") : ""}${section.title}</h2>`
-          : ""
-        }
-
-        <div class="viewer-section-text">
-          ${displayHtml}
-        </div>
-      `;
-
-      if (isTab) {
-        div.addEventListener("click", () => {
-          section.collapsed = !section.collapsed;
-          renderLoadedSong();
-        });
-      }
-
-      container.appendChild(div);
-    });
-    const endMarker = document.createElement("div");
-
-    endMarker.className = "end-marker";
-    endMarker.innerHTML = "[ END ]";
-    container.appendChild(endMarker);
-  }
-</script>
-            -->
+  
 <script>
   const params = new URLSearchParams(window.location.search);
   const songId = params.get("id");
@@ -231,15 +119,10 @@
       div.style.color = section.style?.color || "white";
 
       let displayHtml = section.html || "";
-
+      
       if (isTab) {
-        displayHtml = displayHtml
-          .replace(/<!--StartFragment-->/g, "")
-          .replace(/<!--EndFragment-->/g, "")
-          .replace(/<div>/gi, "")
-          .replace(/<\/div>/gi, "<br>")
-          .replace(/^<br\s*\/?>/i, "")
-          .replace(/^\s+/, "");
+        displayHtml = escapeHTML(displayHtml)
+          .replace(/-/g, `<span class="tab-dash">-</span>`);
       }
 
       div.innerHTML = `
@@ -268,6 +151,14 @@
     endMarker.innerHTML = "[ END ]";
     container.appendChild(endMarker);
   }
+
+  function escapeHTML(str) {
+    return String(str)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+  }
+  
 </script>
   
 </body>
