@@ -125,8 +125,8 @@
       let displayHtml = section.html || "";
       
       if (isTab) {
+        displayHtml = `<span class="tab-anchor">#1166611%001#</span>` + displayHtml;
         displayHtml = displayHtml
-          .replace(/^#1166611%001#\n?/g, "")
           .replace(/<!--StartFragment-->/g, "")
           .replace(/<!--EndFragment-->/g, "")
           .replace(/<div>/gi, "\n")
