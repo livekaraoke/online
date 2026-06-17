@@ -145,7 +145,6 @@ body {
 /** User BPM, Original BPM, Capo, Key **/
 #userBpm {
   color: #FFD400;
-  /*color: #0000FF;*/
   font-size: 24px;
   font-weight: 900;
 }
@@ -161,7 +160,7 @@ body {
 }
 
 #songKey {
-  color: #55CC55;
+  color: #33AA33;
   font-size: 17px;
   font-weight: 700;
 }
