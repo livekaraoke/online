@@ -19,6 +19,7 @@
 <main class="lyric-page">
   <div class="song-header">
     <h1 id="songTitle"></h1>
+    <div id="songYear"></div>
 
     <div class="song-meta-box">
       <div id="userBpm"></div>
@@ -89,6 +90,9 @@
 
     document.getElementById("songKey").innerText =
       song.key ? `Key: ${song.key}` : "";
+
+    document.getElementById("songYear").innerText =
+      song.year ? `Year: ${song.year}` : "";
 
     document.getElementById("editBtn").onclick = () => {
       window.location.href =
