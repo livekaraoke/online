@@ -229,7 +229,7 @@ body {
 
 /** TAB sections text / tabs when closed **/
 .viewer-tab {
-  padding: 10px 12px;
+  padding: 10px 0;
   cursor: pointer;
   user-select: none;
   border: 1px solid rgba(255,255,255,0.28);
@@ -555,12 +555,6 @@ body {
   text-shadow: 0 0 0.4px rgba(255,255,255,.45);
 }
 
-
-.viewer-tab {
-  padding-left: 6px;
-
-}
-
 .tab-anchor {
   /*position: absolute;*/
   display: block;
@@ -592,7 +586,7 @@ body {
   overflow: hidden !important;
 }
 
-.viewer-tab .viewer-section-text::firstline {
+.viewer-tab .viewer-section-text::first-line {
   text-indent: 0 !important;
   font-size: 0;
   line-height: 0;
