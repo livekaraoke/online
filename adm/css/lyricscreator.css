@@ -643,6 +643,11 @@ textarea {
   font-family: Bahnschrift, Arial, sans-serif;
 }
 
+.tab-dash {
+  color: #555 !important;
+  text-shadow: none !important;
+}
+
 .tab-load-control {
   display: flex;
   align-items: center;
