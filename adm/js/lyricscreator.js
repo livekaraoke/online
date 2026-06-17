@@ -185,7 +185,6 @@ function saveSection() {
 
   if (sectionType === "tab") {
     html = editor.innerHTML
-      .replace(/\u00A0/g, " ")
       .replace(/<!--StartFragment-->/g, "")
       .replace(/<!--EndFragment-->/g, "")
       .replace(/<div>/gi, "\n")
