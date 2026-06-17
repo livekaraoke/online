@@ -122,6 +122,7 @@
       
       if (isTab) {
         displayHtml = escapeHTML(displayHtml)
+          .replace(/^/, `<span class="tab-anchor">&#8203;</span>`)
           .replace(/-/g, `<span class="tab-dash">-</span>`);
       }
 
