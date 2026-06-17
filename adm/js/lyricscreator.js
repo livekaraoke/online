@@ -192,7 +192,10 @@ function saveSection() {
     type: sectionType,
     title,
     html,
-    collapsed: sectionType === "tab" ? document.getElementById("tabStartsCollapsed").checked : false,
+    collapsed:
+      sectionType === "tab"
+        ? document.getElementById("tabStartsCollapsed").checked
+        : false,
     style: {
       fontFamily,
       color: selectedSectionColor,
@@ -340,6 +343,27 @@ function editSection(index) {
 
   document.getElementById("sectionTitleCustom").value = section.title || "";
   document.getElementById("sectionType").value = section.type === "tab" ? "tab" : "lyrics";
+
+  const tabOptions = document.getElementById("tabOptions");
+  const tabCheckbox = document.getElementById("tabStartsCollapsed");
+  const tabBtn = document.getElementById("tabStartsCollapsedBtn");
+  
+  if (section.type === "tab") {
+    tabOptions.style.display = "flex";
+  
+    tabCheckbox.checked =
+      section.collapsed !== undefined ? section.collapsed : true;
+  
+    tabBtn.classList.toggle("active", tabCheckbox.checked);
+    tabBtn.innerText = tabCheckbox.checked ? "Load Closed" : "Load Open";
+  
+    document.getElementById("insertTabBtn").disabled = false;
+    document.getElementById("insertTabBtn").classList.add("enabled");
+  
+  } else {
+    tabOptions.style.display = "none";
+  }
+  
   document.getElementById("sectionEditor").innerHTML = section.html || "";
   document.getElementById("fontFamily").value = section.style.fontFamily;
   document.getElementById("sectionEditor").style.fontFamily = section.style.fontFamily;
@@ -484,15 +508,18 @@ document.getElementById("sectionType").addEventListener("change", function () {
   const tabBtn = document.getElementById("insertTabBtn");
   const tabOptions = document.getElementById("tabOptions");
  
-  if (this.value === "tab") {
+  if (this.value === "tab") { /* TAB MODE */
     fontSelect.value = "Courier New";
     editor.style.fontFamily = "Courier New";
     editor.classList.add("tab-editing");
-    tabOptions.style.display = "block";
     tabBtn.disabled = false;
     tabBtn.classList.add("enabled");
     document.execCommand("bold", false, null);
-  } else {
+    tabOptions.style.display = "flex";
+    tabCheckbox.checked = true;
+    tabBtn.classList.add("active");
+    tabBtn.innerText = "Load Closed";
+  } else { /* LYRICS MODE */
     fontSelect.value = "Verdana";
     editor.style.fontFamily = "Verdana";
     editor.classList.remove("tab-editing");
