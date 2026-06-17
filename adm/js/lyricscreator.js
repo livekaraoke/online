@@ -713,7 +713,7 @@ function toggleTabStartsCollapsed() {
   syncTabToggleButton();
 }
 
-const MAX_CHARS_PER_LINE = 72;
+const MAX_CHARS_PER_LINE = 90;
 
 document.getElementById("sectionEditor").addEventListener("input", function () {
   limitLineLength(this, MAX_CHARS_PER_LINE);
