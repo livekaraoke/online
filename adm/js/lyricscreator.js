@@ -240,6 +240,9 @@ function clearEditor() {
   document.getElementById("sectionEditor").classList.remove("tab-editing");
   document.querySelector(".editor-panel").classList.remove("editing-mode");
 
+  document.getElementById("fontFamily").value = "Verdana";
+  document.getElementById("sectionEditor").style.fontFamily = "Verdana";
+  document.getElementById("sectionEditor").classList.remove("tab-editing");
 }
 
 function insertSeparator(index) {
@@ -661,9 +664,9 @@ function toggleTabStartsCollapsed() {
   const btn = document.getElementById("tabStartsCollapsedBtn");
 
   checkbox.checked = !checkbox.checked;
-  btn.classList.toggle("active", checkbox.checked);
 
   btn.innerText = checkbox.checked ? "Load Closed" : "Load Open";
+  btn.classList.toggle("active", !checkbox.checked);
 }
                                     
 
