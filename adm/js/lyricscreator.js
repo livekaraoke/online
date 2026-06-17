@@ -314,6 +314,12 @@ function renderPreview() {
     div.style.fontFamily = section.style?.fontFamily || "Verdana";
     div.style.color = section.style?.color || "white";
 
+    let sectionHtml = section.html || "";
+
+    if (isTab) {
+      sectionHtml = sectionHtml.replace(/-/g, `<span class="tab-dash">-</span>`);
+    }
+    
     div.innerHTML = `
       ${section.title ? `
         <div class="lyric-section-title ${isTab ? "clickable-title" : ""}"
@@ -323,7 +329,7 @@ function renderPreview() {
       ` : ""}
 
       <div class="section-text ${isCollapsed ? "collapsed" : ""}">
-        ${section.html || ""}
+        ${sectionHtml}
       </div>
 
       <div class="section-actions">
@@ -520,11 +526,17 @@ function updateLivePreview() {
     sectionType === "tab"
       ? "lyric-section preview-draft tab-preview"
       : "lyric-section preview-draft lyrics-preview";
+
+  let previewHtml = html;
+
+  if (sectionType === "tab") {
+    previewHtml = html.replace(/-/g, `<span class="tab-dash">-</span>`);
+  }
   
   preview.innerHTML = `
     ${title ? `<div class="lyric-section-title">${title}${sectionType === "tab" ? " (TAB)" : ""}</div>` : ""}
     <div class="section-text" style="font-family:${previewFont}; color:${selectedSectionColor};">
-      ${html}
+      ${previewHtml}
     </div>
   `;
 }
@@ -547,6 +559,8 @@ document.getElementById("sectionType").addEventListener("change", function () {
     syncTabToggleButton();
     tabBtn.classList.add("active");
     tabBtn.innerText = "Load Closed";
+    editor.focus();
+    document.execCommand("bold", false, true);
   } else { /* LYRICS MODE */
     fontSelect.value = "Verdana";
     editor.style.fontFamily = "Verdana";
@@ -688,8 +702,6 @@ songData.sections = songData.sections.map(section => ({
 function syncTabToggleButton() {
   const checkbox = document.getElementById("tabStartsCollapsed");
   const btn = document.getElementById("tabStartsCollapsedBtn");
-
-  if (!checkbox || !btn) return;
 
   btn.innerText = checkbox.checked ? "Load Closed" : "Load Open";
   btn.classList.toggle("active", !checkbox.checked);
