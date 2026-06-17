@@ -166,6 +166,15 @@ body {
   font-weight: 700;
   line-spacing: 1;
 }
+
+#songYear {
+  margin-top: 20px;
+  margin-left: 5px;
+  line-height: 1.05;
+  font-size: 17px;
+  font-weight: 900;
+  color: #888;
+}
 /** END of User BPM, Original BPM, Capo, Key **/
 
 .viewer-section {
