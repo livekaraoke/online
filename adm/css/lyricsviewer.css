@@ -50,7 +50,7 @@ body {
 
 .topbar-song-name {
   font-size: 22px;
-  font-weight: 1500;
+  font-weight: 700;
   color: white;
   line-height: 1.1;
 }
@@ -145,7 +145,7 @@ body {
 /** User BPM, Original BPM, Capo, Key **/
 #userBpm {
   color: #FFD400;
-  /*color: #ff3333;*/
+  color: #ff3333;
   font-size: 24px;
   font-weight: 900;
 }
@@ -173,7 +173,7 @@ body {
 .viewer-section-text {
   white-space: pre-wrap;
   margin-bottom: 10px;
-  margin-top: 0;
+  margin-top: -20px !important;
   font-weight: 450;
 }
 
@@ -218,7 +218,7 @@ body {
   border-radius: 8px;
   font-size: 19px;
   font-family: Courier New, Verdana, Bahnschrift, Arial, sans-serif;
-  font-weight: 900;
+  font-weight: 900 !important;
   background: rgba(255,255,255,0.03);
   transition:
     border-color .15s ease,
@@ -274,7 +274,7 @@ body {
   font-size: 19px;
   line-height: 1;
   overflow-x: auto;
-  font-weight: 1500;
+  font-weight: 1500 !important;
   margin-top: 0;
   margin-bottom: 0;
   white-space: pre !important;
@@ -343,7 +343,7 @@ body {
 /** Sections Titles **/
 .viewer-section h2 {
   margin-top: 0;
-  margin-bottom: -10px  !important;
+  margin-bottom: -20px  !important;
   line-height: 1.05;
   font-size: 16px;
   font-weight: 900;
@@ -354,10 +354,12 @@ body {
 .lyric-section-title,
 .viewer-section h2,
 .viewer-tab h2 {
-  margin: 0 !important;
   padding: 0 !important;
-  line-height: 1 !important;
+  line-height: 1.05 !important;
+  font-size: 16px;
+  font-family: Verdana, Bahnschrift, Arial, sans-serif;
   font-weight: 900 !important;
+  color: #888;
 }
 
 .section-text,
@@ -505,6 +507,6 @@ body {
 
 .viewer-section-text b,
 .viewer-section-text strong {
-  font-weight: 950 !important;
+  font-weight: 900 !important;
   text-shadow: 0 0 0.4px rgba(255,255,255,.45);
 }
