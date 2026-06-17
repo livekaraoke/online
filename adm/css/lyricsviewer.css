@@ -506,6 +506,5 @@ body {
 .viewer-section-text b,
 .viewer-section-text strong {
   font-weight: 950 !important;
-  color: #ffffff;
   text-shadow: 0 0 0.4px rgba(255,255,255,.45);
 }
