@@ -165,11 +165,12 @@ function updateEditorFont() {
 function saveSection() {
   const title = document.getElementById("sectionTitleCustom").value.toUpperCase().trim();
   const editor = document.getElementById("sectionEditor");
-  let html = editor.innerHTML.trim();
   const fontFamily = document.getElementById("fontFamily").value;
   const sectionType = document.getElementById("sectionType").value;
 
-  if (!html) {
+  let html = editor.innerHTML;
+
+  if (!html.replace(/<br\s*\/?>/gi, "").trim()) {
     alert("Please enter lyrics/chords first.");
     return;
   }
@@ -177,28 +178,25 @@ function saveSection() {
   html = html
     .replace(/<!--StartFragment-->/g, "")
     .replace(/<!--EndFragment-->/g, "")
-    .replace(/<div>/gi, "")
+    .replace(/<div[^>]*>/gi, "")
     .replace(/<\/div>/gi, "<br>")
-    .replace(/^<br\s*\/?>/i, "")
-    .replace(/^\s+/, "")
+    .replace(/<p[^>]*>/gi, "")
+    .replace(/<\/p>/gi, "<br>")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/(<br\s*\/?>\s*){2,}/gi, "<br>")
+    .replace(/^(<br\s*\/?>|\s)+/gi, "")
+    .replace(/(<br\s*\/?>|\s)+$/gi, "")
     .trim();
 
   if (sectionType === "tab") {
-    html = editor.innerHTML
-      .replace(/<!--StartFragment-->/g, "")
-      .replace(/<!--EndFragment-->/g, "")
-      .replace(/<div>/gi, "\n")
-      .replace(/<\/div>/gi, "")
+    html = html
       .replace(/<br\s*\/?>/gi, "\n")
-      .replace(/&nbsp;/gi, " ")
-      .replace(/\r\n/g, "\n")
-      .replace(/\r/g, "\n")
       .split("\n")
       .map(line => line.trimStart())
       .join("\n")
-      .replace(/\n{3,}/g, "\n\n")
-      .trimEnd();
-  }  
+      .replace(/\n{2,}/g, "\n")
+      .trim();
+  }
 
   const section = {
     type: sectionType,
