@@ -581,4 +581,14 @@ body {
   line-height: 0;
   color: transparent;
 }
-  
+
+@media (max-width: 768px) {
+  .viewer-tab h2 {
+    font-size:11px !important;
+    margin-bottom: 10px !important;
+  }
+  .viewer-section h2{
+    font-size:11px !important;
+    margin-bottom: -50px !important;
+  }
+}
