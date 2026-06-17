@@ -11,6 +11,7 @@ let songData = {
   originalBpm: "",
   capo: "",
   key: "",
+  year: "",
   sections: []
 };
 
@@ -110,6 +111,7 @@ function updateMeta() {
   songData.originalBpm = document.getElementById("originalBpm").value;
   songData.capo = document.getElementById("capoNote").value;
   songData.key = document.getElementById("songKey").value;
+  songData.year = document.getElementById("songYear").value;
 
   document.getElementById("previewTitle").innerText =
     `${songData.title || "Song Title"} - ${songData.artist || "Artist"}`;
@@ -125,9 +127,12 @@ function updateMeta() {
 
   document.getElementById("previewKey").innerText =
     songData.key ? `Key: ${songData.key}` : "";
+
+  document.getElementById("previewYear").innerText =
+    songData.year ? `Year: ${songData.year}` : "";
 }
 
-["songTitle", "artistName", "userBpm", "originalBpm", "capoNote", "songKey"]
+["songTitle", "artistName", "userBpm", "originalBpm", "capoNote", "songKey", "songYear"]
   .forEach(id => {
     document.getElementById(id).addEventListener("input", updateMeta);
   });
@@ -651,6 +656,7 @@ async function loadSongFromFirebase(firebaseId) {
     document.getElementById("originalBpm").value = songData.originalBpm || "";
     document.getElementById("capoNote").value = songData.capo || "";
     document.getElementById("songKey").value = songData.key || "";
+    document.getElementById("songYear").value = songData.year || "";
 
     document.getElementById("creatorTopTitle").innerText =
       "● Lyrics & Chords Editor ●";
