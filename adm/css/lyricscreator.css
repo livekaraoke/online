@@ -446,7 +446,8 @@ textarea {
 .section-actions {
   margin-top: 4px;
   margin-bottom: 10px;
-
+  justify-content: center;
+  text-align: center;
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
