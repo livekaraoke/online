@@ -259,6 +259,11 @@ textarea {
   white-space: normal;
   font-size: 22px;
   line-height: 1.08;
+
+  border: 1px solid rgba(255,255,255,.18);
+  border-radius: 8px;
+  padding: 10px;
+  background: rgba(255,255,255,.02);
 }
 .lyric-section-title {
   color: #888;
@@ -352,6 +357,14 @@ textarea {
   margin-bottom: 6px;
 }
 
+.live-preview-box {
+  border: 1px solid #FFD400 !important;
+  box-shadow: 0 0 10px rgba(255,212,0,.18);
+  border-radius: 8px;
+  padding: 10px;
+  margin-bottom: 18px;
+}
+
 .live-preview-box:empty {
   display: none;
 }
@@ -363,6 +376,29 @@ textarea {
 .live-preview-box.hidden {
   display: none;
 }
+
+.live-preview-box .tab-section,
+.live-preview-box .preview-draft.tab-preview {
+  border: 1px solid #555;
+  border-radius: 8px;
+  padding: 10px;
+}
+
+.live-preview-box .lyric-section-title {
+  font-family: Verdana, Bahnschrift, Arial, sans-serif !important;
+  text-align: center;
+  color: #FFD400 !important;
+  font-size: 16px;
+  font-weight: 900 !important;
+}
+
+.live-preview-box .section-text {
+  font-family: "Courier New", monospace !important;
+  font-size: 19px !important;
+  font-weight: 900 !important;
+  white-space: pre !important;
+}
+
 
 
 #liveSectionPreview {
@@ -387,16 +423,29 @@ textarea {
 .section-actions {
   margin-top: 4px;
   margin-bottom: 10px;
+
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255,255,255,.12);
 }
 
 .section-actions button {
   margin-right: 8px;
   margin-bottom: 10px;
-  padding: 6px 10px;
-  background: #111;
-  color: white;
-  border: 1px solid #333;
+  background: #111;4
+  color: #ddd;
+  border: 1px solid #444;
+  padding: 7px 10px;
+  border-radius: 6px;
   cursor: pointer;
+  font-weight: 800;
+}
+
+.section-actions button:hover {
+  border-color: #ff3333;
+  color: white;
 }
 
 .section-title-row {
@@ -442,11 +491,16 @@ textarea {
   font-weight: 900;
 }
 
-.format-buttons button.active,
-.align-buttons button.active {
-  background: #ff2b2b;
-  border-color: #ff2b2b;
-  box-shadow: 0 0 10px rgba(255,0,0,.7);
+.format-buttons .color-btn {
+  background: #111 !important;
+  color: #ddd;
+  border: 1px solid #444;
+  box-shadow: none !important;
+}
+
+.format-buttons .color-btn:hover {
+  border-color: #777;
+  background: #181818 !important;
 }
 
 .preview-meta-right {
