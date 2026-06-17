@@ -180,10 +180,12 @@ function saveSection() {
     .trim();
 
   if (sectionType === "tab") {
-    html = html
-      .replace(/<div>/gi, "<br>")
-      .replace(/<\/div>/gi, "")
-      .replace(/^(<br\s*\/?>|\s)+/gi, "");
+    html = editor.innerText
+      .replace(/\u00A0/g, " ")
+      .replace(/\r\n/g, "\n")
+      .replace(/\r/g, "\n")
+      .replace(/^\s+/, "")
+      .trimEnd();
   }
 
   const section = {
@@ -625,6 +627,16 @@ songData.sections = songData.sections.map(section => ({
     console.error(error);
     alert("Error loading song from DB");
   }
+}
+
+function toggleTabStartsCollapsed() {
+  const checkbox = document.getElementById("tabStartsCollapsed");
+  const btn = document.getElementById("tabStartsCollapsedBtn");
+
+  checkbox.checked = !checkbox.checked;
+  btn.classList.toggle("active", checkbox.checked);
+
+  btn.innerText = checkbox.checked ? "Load Closed" : "Load Open";
 }
                                     
 
