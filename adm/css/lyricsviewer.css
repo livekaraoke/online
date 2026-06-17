@@ -172,7 +172,7 @@ body {
   margin-top: 1px;
   margin-bottom: 10px;
   font-size: 24px;
-  line-height: 1.4
+  line-height: 1.2
 }
 
 /** Lyrics / sections' text **/
@@ -288,9 +288,9 @@ body {
   text-align: left !important;
   font-family: "Courier New", monospace !important;
   font-size: 19px;
-  line-height: 1;
+  line-height: 0.9;
   overflow-x: auto;
-  font-weight: 1500 !important;
+  font-weight: 900 !important;
   margin-top: 0;
   margin-bottom: 0;
   white-space: pre !important;
