@@ -277,12 +277,16 @@ body {
   font-weight: 1500;
   margin-top: 0;
   margin-bottom: 0;
-  white-space: pre;
+  white-space: pre !important;
   display: block;
   margin-left: 0 !important;
   padding-left: 0 !important;
   text-indent: 0 !important;
   direction: ltr;
+}
+
+.viewer-tab .viewer-section-text::first-line {
+  text-indent: 0 !important;
 }
 
 .viewer-tab.collapsed-tab .viewer-section-text {
