@@ -145,7 +145,7 @@ body {
 /** User BPM, Original BPM, Capo, Key **/
 #userBpm {
   color: #FFD400;
-  color: #0000FF;
+  color: #00FF00;
   font-size: 24px;
   font-weight: 900;
 }
@@ -270,7 +270,7 @@ body {
   font-family: Verdana, Bahnschrift, Arial, sans-serif;
   text-transform: uppercase;
   cursor: pointer;
-  margin-bottom: 5px;
+  margin-bottom: 15px;
 }
 
 .viewer-tab h2::after {
@@ -322,7 +322,7 @@ body {
 }
 
 .viewer-tab.collapsed-tab h2 {
-  margin-bottom: 0;
+  margin-bottom: 10px;
 }
 
 .tab-dash {
@@ -509,6 +509,7 @@ body {
   /** Sections titles **/
   .viewer-section h2{
     font-size:15px !important;
+    margin-bottom: -40px !important;
   }
 
   .viewer-section-text{
@@ -526,6 +527,7 @@ body {
   }
   .viewer-tab h2 {
     font-size:15px !important;
+    margin-bottom: 10px !important;
   }
   .viewer-tab::-webkit-scrollbar {
     display: none;
