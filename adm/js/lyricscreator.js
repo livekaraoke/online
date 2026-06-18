@@ -170,10 +170,12 @@ function updateEditorFont() {
 /* SAVE SECTION */
 function saveSection() {
 
+  /*
   if (editingIndex !== null) {
     const ok = confirm("Update this section?");
     if (!ok) return;
   }
+  */
   
   const title = document.getElementById("sectionTitleCustom").value.toUpperCase().trim();
   const editor = document.getElementById("sectionEditor");
@@ -243,7 +245,22 @@ function saveSection() {
   clearEditor();
   renderPreview();
 }
-  
+
+async function confirmUpdateSection() {
+  return await showConfirm(
+    "Update Section?",
+    "Do you want to update this section?"
+  );
+}
+
+async function saveSectionWithConfirm() {
+  if (editingIndex !== null) {
+    const ok = await confirmUpdateSection();
+    if (!ok) return;
+  }
+
+  saveSection();
+}
 
 /* CLEAR EDITOR */
 function clearEditor() {
@@ -274,6 +291,10 @@ function clearEditor() {
   document.getElementById("fontFamily").value = "Verdana";
   document.getElementById("sectionEditor").style.fontFamily = "Verdana";
   document.getElementById("sectionEditor").classList.remove("tab-editing");
+
+  document.getElementById("updateNextBtn").style.display = "none";
+  document.getElementById("updateNextBtn").disabled = false;
+  document.getElementById("updateNextBtn").classList.remove("disabled");
 }
 
 function insertSeparator(index) {
@@ -294,6 +315,34 @@ function moveSection(index, direction) {
   songData.sections[newIndex] = temp;
 
   renderPreview();
+}
+
+async function updateAndGoNext() {
+  if (editingIndex === null) return;
+
+  const currentIndex = editingIndex;
+
+  const ok = await showConfirm(
+    "Update Section?",
+    "Update this section and go to the next section?"
+  );
+
+  if (!ok) return;
+
+  saveSection();
+
+  let nextIndex = currentIndex + 1;
+
+  while (
+    nextIndex < songData.sections.length &&
+    songData.sections[nextIndex].type === "separator"
+  ) {
+    nextIndex++;
+  }
+
+  if (nextIndex < songData.sections.length) {
+    editSection(nextIndex);
+  }
 }
 
 /* RENDER PREVIEW */
@@ -375,6 +424,21 @@ function toggleTabSection(index) {
 function editSection(index) {
   const section = songData.sections[index];
 
+  const updateNextBtn = document.getElementById("updateNextBtn");
+
+  updateNextBtn.style.display = "inline-block";
+  
+  const hasNextSection =
+    songData.sections.slice(index + 1).some(sec => sec.type !== "separator");
+  
+  updateNextBtn.disabled = !hasNextSection;
+  
+  if (updateNextBtn.disabled) {
+    updateNextBtn.classList.add("disabled");
+  } else {
+    updateNextBtn.classList.remove("disabled");
+  }
+  
   if (section.type === "separator") return;
   document.getElementById("sectionEditor")
     .classList.toggle("tab-editing", section.type === "tab");
@@ -668,7 +732,10 @@ async function saveSongToFirebase() {
 
   await db.collection("lyrics").doc(songData.id).set(songData);
 
-  alert("Lyrics saved successfully!");
+  await showConfirm(
+    "Saved",
+    "Lyrics saved successfully."
+  );
 }
 
 async function loadSongFromFirebase(firebaseId) {
