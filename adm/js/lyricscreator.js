@@ -205,14 +205,16 @@ function saveSection() {
     .trim();
   
   if (sectionType === "tab") {
-    html = editor.innerHTML
-      .replace(/<!--StartFragment-->/g, "")
-      .replace(/<!--EndFragment-->/g, "")
-      .replace(/<br\s*\/?>\s*$/gi, "")
-      .replace(/contenteditable="true"/gi, "")
-      .replace(/contenteditable="false"/gi, "")
-      .trim();
-  }
+  html = editor.innerHTML
+    .replace(/<!--StartFragment-->/g, "")
+    .replace(/<!--EndFragment-->/g, "")
+    .replace(/<br\s*\/?>\s*$/gi, "")
+    .replace(/<button[^>]*class="delete-tab-btn"[^>]*>.*?<\/button>/gi, "")
+    .replace(/<div[^>]*class="tab-insert-row"[^>]*>.*?<\/div>/gi, "")
+    .replace(/contenteditable="true"/gi, "")
+    .replace(/contenteditable="false"/gi, "")
+    .trim();
+}
   
   /*
   html = html
