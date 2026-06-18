@@ -769,9 +769,10 @@ textarea {
 
 .tab-apostrophe {
   color: #050505 !important;
-  height: 0;
-  line-height: 0;
-  overflow: hidden;
+  height: 0 !important;
+  line-height: 0 !important;
+  overflow: hidden !important;
+  font-size: 0 !important;
 }
 
 .tab-editable {
