@@ -764,17 +764,21 @@ function insertBlankTab() {
   const editor = document.getElementById("sectionEditor");
 
   const tabHtml =
-    `<div class="tab-block" contenteditable="false">
-    <div class="tab-line tab-apostrophe">'</div>
-    <div class="tab-line tab-note-line"><span class="tab-fixed">»</span><span class="tab-note tab-hidden-fill" contenteditable="true">__________________________________________________________</span><span class="tab-fixed">«</span></div>
-    <div class="tab-spacer"></div>
-    ${createStringLine("e")}
-    ${createStringLine("B")}
-    ${createStringLine("G", true)}
-    ${createStringLine("D")}
-    ${createStringLine("A")}
-    ${createStringLine("E")}
-    </div><br>`;
+    '<div class="tab-block" contenteditable="false">' +
+    '<div class="tab-line tab-apostrophe">\')</div>' +
+    '<div class="tab-line tab-note-line">' +
+    '<span class="tab-fixed">»</span>' +
+    '<span class="tab-note tab-hidden-fill" contenteditable="true">__________________________________________________________</span>' +
+    '<span class="tab-fixed">«</span>' +
+    '</div>' +
+    '<div class="tab-spacer"></div>' +
+    createStringLine("e") +
+    createStringLine("B") +
+    createStringLine("G", true) +
+    createStringLine("D") +
+    createStringLine("A") +
+    createStringLine("E") +
+    '</div><br>';
 
   insertHtmlAtCursor(tabHtml);
   updateLivePreview();
@@ -788,7 +792,7 @@ function insertBlankTab() {
 /**********************************/
 
 function createStringLine(letter, repeat = false) {
-  return `<div class="tab-line"><span class="tab-fixed">${letter}⦗|</span><span class="tab-dashes" contenteditable="true">---------------------------------------------------------</span><span class="tab-fixed">|⦘</span>${repeat ? `<span class="tab-repeat">(x<span contenteditable="true" class="tab-repeat-number">1</span>)</span>` : ""}</div>`;
+  return `<div class="tab-line"><span class="tab-fixed">${letter}⦗|</span><span class="tab-dashes" contenteditable="true">---------------------------------------------------------</span><span class="tab-fixed">|⦘</span>${repeat ? `<span class="tab-repeat"> (x<span contenteditable="true" class="tab-repeat-number">1</span>)</span>` : ""}</div>`;
 }
 
 function insertHtmlAtCursor(html) {
