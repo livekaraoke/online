@@ -192,6 +192,30 @@ function saveSection() {
   }
 
   html = html
+    .replace(/<!--StartFragment-->/g, "")
+    .replace(/<!--EndFragment-->/g, "")
+    .replace(/<div[^>]*>/gi, "<br>")
+    .replace(/<\/div>/gi, "")
+    .replace(/<p[^>]*>/gi, "<br>")
+    .replace(/<\/p>/gi, "")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/(<br\s*\/?>\s*){3,}/gi, "<br><br>")
+    .replace(/^(<br\s*\/?>|\s)+/gi, "")
+    .replace(/(<br\s*\/?>|\s)+$/gi, "")
+    .trim();
+  
+  if (sectionType === "tab") {
+    html = editor.innerHTML
+      .replace(/<!--StartFragment-->/g, "")
+      .replace(/<!--EndFragment-->/g, "")
+      .replace(/<br\s*\/?>\s*$/gi, "")
+      .replace(/contenteditable="true"/gi, "")
+      .replace(/contenteditable="false"/gi, "")
+      .trim();
+  }
+  
+  /*
+  html = html
   .replace(/<!--StartFragment-->/g, "")
   .replace(/<!--EndFragment-->/g, "")
   .replace(/<div[^>]*>/gi, "<br>")
@@ -225,8 +249,7 @@ function saveSection() {
     .replace(/<br\s*\/?>\s*$/gi, "")
     .trim();
 }
-
-
+  */
 
   const section = {
     type: sectionType,
