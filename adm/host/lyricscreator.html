@@ -246,8 +246,17 @@
     
     <div class="section-save-row">
       <!------ SECTION SAVE / UPDATE ------>
-      <button id="saveSectionBtn" onclick="saveSection()" class="btn red">
+      <button id="saveSectionBtn" onclick="saveSectionWithConfirm()" class="btn red">
         Add Section
+      </button>
+
+      <!------ UPDATE SECTION & GO TO NEXT SECTION ------>
+      <button
+        id="updateNextBtn"
+        onclick="updateAndGoNext()"
+        class="btn next-btn"
+        style="display:none;">
+        Update & Go to Next Section
       </button>
     
       <!------ SECTION CANCEL SAVE / UPDATE ------>
