@@ -422,7 +422,8 @@ function renderPreview() {
     let sectionHtml = section.html || "";
 
     if (isTab) {
-      sectionHtml = sectionHtml.replace(/-/g, `<span class="tab-dash">-</span>`);
+      sectionHtml = section.html || ""; // DO NOT replace dashes here
+      //sectionHtml = sectionHtml.replace(/-/g, `<span class="tab-dash">-</span>`);
     }
     
     div.innerHTML = `
@@ -528,6 +529,11 @@ function editSection(index) {
   }
   
   document.getElementById("sectionEditor").innerHTML = section.html || "";
+  
+  if (section.type === "tab") {
+    restoreTabEditability(document.getElementById("sectionEditor"));
+  }
+  
   document.getElementById("fontFamily").value = section.style.fontFamily;
   document.getElementById("sectionEditor").style.fontFamily = section.style.fontFamily;
 
@@ -578,6 +584,17 @@ function insertBefore(index) {
   });
 
   renderPreview();
+}
+
+function restoreTabEditability(root) {
+  root.querySelectorAll(".tab-note, .tab-dashes, .tab-repeat-number")
+    .forEach(el => {
+      el.setAttribute("contenteditable", "true");
+    });
+
+  root.querySelectorAll(".tab-block").forEach(el => {
+    el.setAttribute("contenteditable", "false");
+  });
 }
 
 function deleteSection(index) {
@@ -670,7 +687,7 @@ function updateLivePreview() {
   let previewHtml = html;
 
   if (sectionType === "tab") {
-    previewHtml = html.replace(/-/g, `<span class="tab-dash">-</span>`);
+    previewHtml = html; // DO NOT replace dashes here .replace(/-/g, `<span class="tab-dash">-</span>`);
   }
   
   preview.innerHTML = `
@@ -765,7 +782,7 @@ function insertBlankTab() {
 
   const tabHtml =
     '<div class="tab-block" contenteditable="false">' +
-    '<div class="tab-line tab-apostrophe">\')</div>' +
+    '<div class="tab-line tab-apostrophe">\'</div>' +
     '<div class="tab-line tab-note-line">' +
     '<span class="tab-fixed">»</span>' +
     '<span class="tab-note tab-hidden-fill" contenteditable="true">__________________________________________________________</span>' +
@@ -830,6 +847,20 @@ function insertHtmlAtCursor(html) {
   }
 }
 
+function setCaret(el, pos) {
+  const textNode = el.firstChild;
+  if (!textNode) return;
+
+  const range = document.createRange();
+  const sel = window.getSelection();
+
+  range.setStart(textNode, Math.min(pos, textNode.length));
+  range.collapse(true);
+
+  sel.removeAllRanges();
+  sel.addRange(range);
+}
+
 /*** Tab Event Handlers ***********/
 /**********************************/
 
@@ -838,67 +869,122 @@ function insertHtmlAtCursor(html) {
 /**/
 document.addEventListener("keydown", function (e) {
   const target = e.target;
-
   if (!target.classList.contains("tab-dashes")) return;
 
-  if (e.key.length !== 1) return;
+  const navKeys = ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Tab"];
+  if (navKeys.includes(e.key)) return;
 
   e.preventDefault();
 
-  const selection = window.getSelection();
-  if (!selection.rangeCount) return;
+  const max = 57;
+  let text = target.innerText.replace(/\n/g, "");
 
-  const range = selection.getRangeAt(0);
-  const textNode = target.firstChild;
+  while (text.length < max) text += "-";
+  if (text.length > max) text = text.slice(0, max);
 
-  if (!textNode || textNode.nodeType !== Node.TEXT_NODE) return;
+  const sel = window.getSelection();
+  let pos = 0;
 
-  let pos = range.startOffset;
+  if (sel.rangeCount && target.contains(sel.anchorNode)) {
+    const range = sel.getRangeAt(0);
+    pos = range.startOffset;
+  }
 
-  const chars = textNode.nodeValue.split("");
+  if (e.key === "Backspace") {
+    pos = Math.max(0, pos - 1);
+    text = text.substring(0, pos) + "-" + text.substring(pos + 1);
+    target.innerText = text;
+    setCaret(target, pos);
+    return;
+  }
 
-  if (pos >= chars.length) return;
+  if (e.key === "Delete") {
+    text = text.substring(0, pos) + "-" + text.substring(pos + 1);
+    target.innerText = text;
+    setCaret(target, pos);
+    return;
+  }
 
-  chars[pos] = e.key;
-
-  textNode.nodeValue = chars.join("");
-
-  const newRange = document.createRange();
-  newRange.setStart(textNode, pos + 1);
-  newRange.collapse(true);
-
-  selection.removeAllRanges();
-  selection.addRange(newRange);
-
-  updateLivePreview();
-});
-document.addEventListener("input", function (e) {
-  if (!e.target.classList.contains("tab-note")) return;
-
-  const max = 58;
-
-  let text = e.target.innerText
-    .replace(/\n/g, "")
-    .slice(0, max);
-
-  const visibleText = text.replace(/_/g, "");
-
-  if (!visibleText) {
-    e.target.innerText = "_".repeat(max);
-    e.target.classList.add("tab-hidden-fill");
-  } else {
-    e.target.innerText =
-      visibleText + "_".repeat(Math.max(0, max - visibleText.length));
-
-    e.target.classList.remove("tab-hidden-fill");
-    e.target.style.color = "white";
+  if (e.key.length === 1) {
+    text = text.substring(0, pos) + e.key + text.substring(pos + 1);
+    target.innerText = text;
+    target.classList.add("has-input");
+    setCaret(target, pos + 1);
   }
 
   updateLivePreview();
 });
 /**/
 /**/
+document.addEventListener("keydown", function (e) {
+  const target = e.target;
+  if (!target.classList.contains("tab-note")) return;
 
+  const navKeys = ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Tab"];
+  if (navKeys.includes(e.key)) return;
+
+  e.preventDefault();
+
+  const max = 58;
+  let text = target.innerText.replace(/\n/g, "");
+
+  while (text.length < max) text += "_";
+  if (text.length > max) text = text.slice(0, max);
+
+  const sel = window.getSelection();
+  let pos = 0;
+
+  if (sel.rangeCount && target.contains(sel.anchorNode)) {
+    pos = sel.getRangeAt(0).startOffset;
+  }
+
+  if (e.key === "Backspace") {
+    pos = Math.max(0, pos - 1);
+    text = text.substring(0, pos) + "_" + text.substring(pos + 1);
+    target.innerText = text;
+    setCaret(target, pos);
+    updateNoteClass(target);
+    return;
+  }
+
+  if (e.key === "Delete") {
+    text = text.substring(0, pos) + "_" + text.substring(pos + 1);
+    target.innerText = text;
+    setCaret(target, pos);
+    updateNoteClass(target);
+    return;
+  }
+
+  if (e.key.length === 1) {
+    text = text.substring(0, pos) + e.key + text.substring(pos + 1);
+    target.innerText = text;
+    setCaret(target, pos + 1);
+    updateNoteClass(target);
+  }
+
+  updateLivePreview();
+});
+
+function updateNoteClass(el) {
+  const hasText = el.innerText.replace(/_/g, "").trim().length > 0;
+  el.classList.toggle("tab-hidden-fill", !hasText);
+  el.classList.toggle("has-input", hasText);
+}
+/**/
+/**/
+document.addEventListener("input", function (e) {
+  if (!e.target.classList.contains("tab-repeat-number")) return;
+
+  let value = e.target.innerText.replace(/[^0-9]/g, "").slice(0, 1);
+  if (value === "") value = "0";
+
+  e.target.innerText = value;
+
+  const repeat = e.target.closest(".tab-repeat");
+  repeat.classList.toggle("zero", value === "0");
+
+  setCaret(e.target, 1);
+});
 /**/
 /** Limit repeat number to 0-9 **/
 /**/
