@@ -167,7 +167,9 @@ function updateEditorFont() {
 }
 
 
-/* SAVE SECTION */
+/**********************************************************/
+/********************** SAVE SECTION **********************/
+/**********************************************************/
 function saveSection() {
 
   /*
@@ -202,16 +204,6 @@ function saveSection() {
   .replace(/(<br\s*\/?>|\s)+$/gi, "")
   .trim();
 
-  /*
-  if (sectionType === "tab") {
-    html = editor.innerText
-      .replace(/\u00A0/g, " ")
-      .replace(/\r\n/g, "\n")
-      .replace(/\r/g, "\n")
-      .replace(/\n{3,}/g, "\n\n")
-      .trim();
-  }
-  */
 
   if (sectionType === "tab") {
     html = editor.innerHTML
@@ -225,6 +217,14 @@ function saveSection() {
       .replace(/\n{3,}/g, "\n\n")
       .trim();
   }
+
+  if (sectionType === "tab") {
+  html = editor.innerHTML
+    .replace(/<!--StartFragment-->/g, "")
+    .replace(/<!--EndFragment-->/g, "")
+    .replace(/<br\s*\/?>\s*$/gi, "")
+    .trim();
+}
 
 
 
@@ -252,6 +252,9 @@ function saveSection() {
   clearEditor();
   renderPreview();
 }
+/**********************************************************/
+/******************* END OF SAVE SECTION ******************/
+/**********************************************************/
 
 async function confirmUpdateSection() {
   return await showConfirm(
@@ -728,27 +731,165 @@ function loadSongForEditing(file) {
   document.body.appendChild(script);
 }
 
+/**********************************************************/
+/******************* GUITAR TAB DESIGN ********************/
+/**********************************************************/
+
+/*** Insert Blank Tab *************/
+/**********************************/
 function insertBlankTab() {
   const editor = document.getElementById("sectionEditor");
 
-  const tabText =
-`e|-----------------------------------------------------------|
-B|-----------------------------------------------------------|
-G|-----------------------------------------------------------|
-D|-----------------------------------------------------------|
-A|-----------------------------------------------------------|
-E|-----------------------------------------------------------|`;
+  const tabHtml = `
+    <div class="tab-block" contenteditable="false">
+  
+    <div class="tab-line tab-apostrophe">'</div>
+  
+    <div class="tab-line tab-note-line">
+      <span class="tab-fixed">»</span><span class="tab-note" contenteditable="true">__________________________________________________________</span><span class="tab-fixed">«</span>
+    </div>
+  
+    <div class="tab-spacer">&nbsp;</div>
+  
+    ${createStringLine("e")}
+    ${createStringLine("B")}
+    ${createStringLine("G", true)}
+    ${createStringLine("D")}
+    ${createStringLine("A")}
+    ${createStringLine("E")}
+  
+    </div><br>`;
 
+  insertHtmlAtCursor(tabHtml);
+  updateLivePreview();
+
+  document.querySelectorAll(".tab-note").forEach(note => {
+    note.classList.add("tab-hidden-fill");
+  });
+  
+}
+/*** Insert Blank Tab END *********/
+/**********************************/
+
+function createStringLine(letter, repeat = false) {
+  return `
+  <div class="tab-line">
+    <span class="tab-fixed">${letter}⦗|</span><span class="tab-dashes" contenteditable="true">---------------------------------------------------------</span><span class="tab-fixed">|⦘</span>${repeat ? ` <span class="tab-repeat">(x<span contenteditable="true" class="tab-repeat-number">1</span>)</span>` : ""}
+  </div>`;
+}
+
+function insertHtmlAtCursor(html) {
+  const editor = document.getElementById("sectionEditor");
   editor.focus();
 
-  document.execCommand(
-    "insertHTML",
-    false,
-    `<b>${tabText.replace(/\n/g, "<br>")}</b>`
-  );
+  const selection = window.getSelection();
 
-  updateLivePreview();
+  if (!selection.rangeCount) {
+    editor.insertAdjacentHTML("beforeend", html);
+    return;
+  }
+
+  const range = selection.getRangeAt(0);
+  range.deleteContents();
+
+  const temp = document.createElement("div");
+  temp.innerHTML = html;
+
+  const fragment = document.createDocumentFragment();
+  let node;
+  let lastNode;
+
+  while ((node = temp.firstChild)) {
+    lastNode = fragment.appendChild(node);
+  }
+
+  range.insertNode(fragment);
+
+  if (lastNode) {
+    range.setStartAfter(lastNode);
+    range.collapse(true);
+    selection.removeAllRanges();
+    selection.addRange(range);
+  }
 }
+
+/*** Tab Event Handlers ***********/
+/**********************************/
+
+/**/
+/** Tab note (dash '-') input **/
+/**/
+document.addEventListener("input", function (e) {
+  if (!e.target.classList.contains("tab-note")) return;
+
+  const max = 58;
+  let text = e.target.innerText.replace(/\n/g, "");
+
+  if (!text || /^_+$/.test(text)) {
+    e.target.innerText = "_".repeat(max);
+    e.target.classList.add("tab-hidden-fill");
+    return;
+  }
+
+  text = text.replace(/_/g, "");
+
+  if (text.length > max) {
+    text = text.slice(0, max);
+  }
+
+  e.target.innerText =
+    text + "_".repeat(Math.max(0, max - text.length));
+
+  e.target.classList.remove("tab-hidden-fill");
+});
+/**/
+/**/
+
+/**/
+/** Limit repeat number to 0-9 **/
+/**/
+document.addEventListener("input", function (e) {
+  if (!e.target.classList.contains("tab-repeat-number")) return;
+
+  let value = e.target.innerText.replace(/[^0-9]/g, "").slice(0, 1);
+
+  if (value === "") value = "0";
+
+  e.target.innerText = value;
+
+  const repeat = e.target.closest(".tab-repeat");
+  repeat.classList.toggle("zero", value === "0");
+});
+/**/
+/**/
+
+/**/
+/** Prevent typing outside tab blocks while in Guitar Tab mode**/
+/**/
+document.getElementById("sectionEditor").addEventListener("keydown", function (e) {
+  const sectionType = document.getElementById("sectionType").value;
+
+  if (sectionType !== "tab") return;
+
+  const allowed =
+    e.target.closest(".tab-note") ||
+    e.target.closest(".tab-dashes") ||
+    e.target.closest(".tab-repeat-number") ||
+    ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Backspace", "Delete", "Tab"].includes(e.key);
+
+  if (!allowed) {
+    e.preventDefault();
+  }
+});
+/**/
+/**/
+
+/*** Tab Event Handlers END *******/
+/**********************************/
+
+/**********************************************************/
+/**************** END OF GUITAR TAB DESIGN ****************/
+/**********************************************************/
 
 function getSongVariableName(fileName) {
   return "song_" + fileName
