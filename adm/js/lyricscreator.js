@@ -763,24 +763,17 @@ function loadSongForEditing(file) {
 function insertBlankTab() {
   const editor = document.getElementById("sectionEditor");
 
-  const tabHtml = `
-    <div class="tab-block" contenteditable="false">
-  
+  const tabHtml =
+    `<div class="tab-block" contenteditable="false">
     <div class="tab-line tab-apostrophe">'</div>
-  
-    <div class="tab-line tab-note-line">
-      <span class="tab-fixed">»</span><span class="tab-note" contenteditable="true">__________________________________________________________</span><span class="tab-fixed">«</span>
-    </div>
-  
-    <div class="tab-spacer">&nbsp;</div>
-  
+    <div class="tab-line tab-note-line"><span class="tab-fixed">»</span><span class="tab-note tab-hidden-fill" contenteditable="true">__________________________________________________________</span><span class="tab-fixed">«</span></div>
+    <div class="tab-spacer"></div>
     ${createStringLine("e")}
     ${createStringLine("B")}
     ${createStringLine("G", true)}
     ${createStringLine("D")}
     ${createStringLine("A")}
     ${createStringLine("E")}
-  
     </div><br>`;
 
   insertHtmlAtCursor(tabHtml);
@@ -795,10 +788,7 @@ function insertBlankTab() {
 /**********************************/
 
 function createStringLine(letter, repeat = false) {
-  return `
-  <div class="tab-line">
-    <span class="tab-fixed">${letter}⦗|</span><span class="tab-dashes" contenteditable="true">---------------------------------------------------------</span><span class="tab-fixed">|⦘</span>${repeat ? ` <span class="tab-repeat">(x<span contenteditable="true" class="tab-repeat-number">1</span>)</span>` : ""}
-  </div>`;
+  return `<div class="tab-line"><span class="tab-fixed">${letter}⦗|</span><span class="tab-dashes" contenteditable="true">---------------------------------------------------------</span><span class="tab-fixed">|⦘</span>${repeat ? `<span class="tab-repeat">(x<span contenteditable="true" class="tab-repeat-number">1</span>)</span>` : ""}</div>`;
 }
 
 function insertHtmlAtCursor(html) {
@@ -842,7 +832,20 @@ function insertHtmlAtCursor(html) {
 /**/
 /** Tab note (dash '-') input **/
 /**/
-document.addEventListener("input", function (e) {
+document.addEventListener("keydown", e => {
+
+  const target = e.target;
+
+  if (!target.classList.contains("tab-dashes")) return;
+
+  if (e.key.length !== 1) return;
+
+  e.preventDefault();
+
+  document.execCommand("delete");
+  document.execCommand("insertText", false, e.key);
+});
+/*document.addEventListener("input", function (e) {
   if (!e.target.classList.contains("tab-note")) return;
 
   const max = 58;
@@ -864,7 +867,7 @@ document.addEventListener("input", function (e) {
     text + "_".repeat(Math.max(0, max - text.length));
 
   e.target.classList.remove("tab-hidden-fill");
-});
+});*/
 /**/
 /**/
 
