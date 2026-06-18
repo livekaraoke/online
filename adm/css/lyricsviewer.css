@@ -27,6 +27,8 @@ body {
   font-size: 22px;
 }
 
+
+
 /********************************/
 /****** TOP BAR SONG TITLE ******/
 .topbar-song-title {
@@ -224,7 +226,26 @@ body {
   padding-top: 0 !important;
 }
 
-/* GUITAR TAB SECTION */
+/*************************************************************************************************/
+/************************************** GUITAR TABS SECTION **************************************/
+/*************************************************************************************************/
+
+.viewer-tab .tab-hidden-fill {
+  color: transparent;
+}
+
+.viewer-tab .tab-repeat.zero {
+  color: transparent;
+}
+
+.viewer-tab .tab-line {
+  padding-left: 12px;
+  padding-right: 12px;
+}
+
+.viewer-tab {
+  padding: 14px 18px;
+}
 
 /** TAB sections text / tabs when closed **/
 .viewer-tab {
@@ -318,6 +339,10 @@ body {
 .viewer-tab.collapsed-tab .viewer-section-text {
   display: none;
 }
+
+/*************************************************************************************************/
+/*********************************** END OF GUITAR TABS SECTION **********************************/
+/*************************************************************************************************/
 
 .lyric-section-title {
   margin-bottom: 0 !important;
