@@ -519,6 +519,14 @@ textarea {
   display: none;
 }
 
+.tab-dashes {
+  color: #666 !important;
+}
+
+.tab-dashes.has-input {
+  color: white !important;
+}
+
 .live-preview-box .tab-section,
 .live-preview-box .preview-draft.tab-preview {
   border: 1px solid #555;
