@@ -251,10 +251,12 @@ body {
 
 .tab-dashes {
   color: #666 !important;
+  font-weight: 900;
 }
 
 .tab-dashes.has-input {
   color: white !important;
+  font-weight: 900;
 }
 
 .tab-note.tab-hidden-fill {
