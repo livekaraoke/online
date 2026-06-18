@@ -163,6 +163,12 @@ function updateEditorFont() {
 
 /* SAVE SECTION */
 function saveSection() {
+
+  if (editingIndex !== null) {
+    const ok = confirm("Update this section?");
+    if (!ok) return;
+  }
+  
   const title = document.getElementById("sectionTitleCustom").value.toUpperCase().trim();
   const editor = document.getElementById("sectionEditor");
   const fontFamily = document.getElementById("fontFamily").value;
@@ -756,6 +762,85 @@ function limitLineLength(editor) {
     selection.removeAllRanges();
     selection.addRange(range);
   }*/
+}
+
+function toggleSaveMenu() {
+  document.getElementById("saveDropdown").classList.toggle("show");
+}
+
+function showConfirm(title, message) {
+  return new Promise(resolve => {
+    const modal = document.getElementById("confirmModal");
+    const titleEl = document.getElementById("confirmTitle");
+    const messageEl = document.getElementById("confirmMessage");
+    const ok = document.getElementById("confirmOk");
+    const cancel = document.getElementById("confirmCancel");
+
+    titleEl.innerText = title;
+    messageEl.innerText = message;
+    modal.classList.remove("hidden");
+
+    ok.onclick = () => {
+      modal.classList.add("hidden");
+      resolve(true);
+    };
+
+    cancel.onclick = () => {
+      modal.classList.add("hidden");
+      resolve(false);
+    };
+  });
+}
+
+async function confirmPendingSectionUpdate() {
+  if (editingIndex !== null) {
+    const updateNow = await showConfirm(
+      "Update Section?",
+      "You are currently editing a section. Update it before continuing?"
+    );
+
+    if (!updateNow) return false;
+
+    saveSection();
+  }
+
+  return true;
+}
+
+async function handleSaveClick() {
+  document.getElementById("saveDropdown").classList.remove("show");
+
+  const updated = await confirmPendingSectionUpdate();
+  if (!updated) return;
+
+  const confirmSave = await showConfirm(
+    "Save Lyrics?",
+    "Do you want to save this song to Firebase?"
+  );
+
+  if (!confirmSave) return;
+
+  await saveSongToFirebase();
+
+  history.back();
+}
+
+async function handleDownloadClick() {
+  document.getElementById("saveDropdown").classList.remove("show");
+
+  const updated = await confirmPendingSectionUpdate();
+  if (!updated) return;
+
+  const confirmDownload = await showConfirm(
+    "Download .JS File?",
+    "Do you want to download this lyrics file?"
+  );
+
+  if (!confirmDownload) return;
+
+  downloadJS();
+
+  history.back();
 }
                                     
 
