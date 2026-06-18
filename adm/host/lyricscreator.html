@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+  
 <head>
   <meta charset="UTF-8">
   <title>Lyrics & Chords Creator</title>
@@ -7,10 +8,12 @@
 </head>
 
 <body>
-
+  <!---------------------------------------------------------------------------------------->
+  <!------------------------------------ DB SETTINGS --------------------------------------->
+  <!---------------------------------------------------------------------------------------->
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-  
+
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyC4gSodXM35E2ZdYaz6mrCvTUYzW75ZCBk",
@@ -24,7 +27,14 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
   </script>
+  <!---------------------------------------------------------------------------------------->
+  <!--------------------------------- END OF DB SETTINGS ----------------------------------->
+  <!---------------------------------------------------------------------------------------->
 
+  
+  <!---------------------------------------------------------------------------------------->
+  <!--------------------------------------- TOP BAR ---------------------------------------->
+  <!---------------------------------------------------------------------------------------->
   <header class="topbar">
     <button onclick="history.back()" class="btn">◀ BACK</button>
     
@@ -48,7 +58,14 @@
       </div>
     </div>
   </header>
+  <!---------------------------------------------------------------------------------------->
+  <!------------------------------------ END OF TOP BAR ------------------------------------>
+  <!---------------------------------------------------------------------------------------->
+
   
+  <!---------------------------------------------------------------------------------------->
+  <!------------------------------------- SONG DETAILS ------------------------------------->
+  <!---------------------------------------------------------------------------------------->
   <section class="song-meta-wrapper">
     <h2 class="panel-title">Song Details</h2>
   
@@ -91,11 +108,19 @@
       
     </div>
   </section>
+  <!---------------------------------------------------------------------------------------->
+  <!--------------------------------- END OF SONG DETAILS ---------------------------------->
+  <!---------------------------------------------------------------------------------------->
+
   
+  <!---------------------------------------------------------------------------------------->
+  <!------------------------------------- EDITOR PANEL ------------------------------------->
+  <!---------------------------------------------------------------------------------------->
   <section class="editor-panel">
   
     <h2 id="editorTitle">Create Section</h2>
-    
+
+    <!------ SECTION TITLE ------>
     <div class="field">
       <label>Section Title</label>
       <input
@@ -104,7 +129,7 @@
         placeholder="SECTION TITLE">
     </div>
   
-      
+    <!------ SECTION PRESETS ------>
     <datalist id="sectionPresets">
       <option value="INTRO">
       <option value="VERSE">
@@ -118,7 +143,7 @@
       <option value="ENDING">
     </datalist>
   
-    
+    <!------ SECTION TYPE ------>
     <div class="field">
       <label>Section Type</label>
       <select id="sectionType">
@@ -126,46 +151,22 @@
         <option value="tab">Guitar Tab</option>
       </select>
     </div>
-  
+
+    <!------ SECTION EDITOR CONTROLS ------>
     <div class="controls">
+      
+      <!------ SECTION CONTROLS ROW 1 ------>
       <div class="controls-main-row">
+        
+        <!------ SECTION TEXT FONT ------>
         <select id="fontFamily" onchange="updateEditorFont()">
           <option value="Verdana">Verdana</option>
           <option value="Courier New">Courier New</option>
           <option value="Arial">Arial</option>
           <option value="Bahnschrift">Bahnschrift</option>
         </select>
-        <!--
-        <div class="color-picker">
-          <button type="button"
-                  class="color-btn active"
-                  style="background:white"
-                  onclick="setSectionColor('white', this)">
-          </button>
-          <button class="color-btn" style="background:#7CFF3A" onclick="setSectionColor('#7CFF3A', this)"></button>
-          <button type="button"
-                  class="color-btn active"
-                  style="background:#7CFF3A"
-                  onclick="setSectionColor('#7CFF3A', this)">
-          </button>
-          <button type="button"
-                  class="color-btn active"
-                  style="background:#FFD400"
-                  onclick="setSectionColor('#FFD400', this)">
-          </button>
-          <button type="button"
-                  class="color-btn active"
-                  style="background:#FF7A1A"
-                  onclick="setSectionColor('#FF7A1A', this)">
-          </button>
-          <button type="button"
-                  class="color-btn active"
-                  style="background:#7CFF3A"
-                  onclick="setSectionColor('#ff3333', this)">
-          </button>
-        </div>
-        -->
         
+        <!------ SECTION TEXT FORMATTING ------>
         <div class="format-buttons">
           <button type="button"
                   class="color-btn active"
@@ -184,6 +185,7 @@
           </button>
         </div>
   
+        <!------ SECTION TAB Load Open / Closed ------>
         <div class="tab-load-control" id="tabOptions" style="display:none;">
           <button
             type="button"
@@ -195,14 +197,20 @@
           <input type="checkbox" id="tabStartsCollapsed" checked hidden>
         </div>
       
+        <!------ SECTION TEXT ALIGN ------>
         <div class="format-buttons">
           <button type="button" onclick="formatText('justifyLeft')">◀ L</button>
           <button type="button" onclick="formatText('justifyCenter')">C</button>
           <button type="button" onclick="formatText('justifyRight')">R ▶</button>
         </div>
+        
+      <!------ END OF SECTION CONTROLS ROW 1 ------>
       </div>
 
+      <!------ SECTION CONTROLS ROW 2 ------>
       <div class="controls-second-row">
+
+        <!------ SECTION TEXT COLOR ------>
         <div class="color-picker">
           <button class="color-btn" style="background:#FFFFFF" onclick="formatColor('#FFFFFF')"></button>
           <button class="color-btn" style="background:#7CFF3A" onclick="formatColor('#7CFF3A')"></button>
@@ -212,6 +220,7 @@
           <button class="color-btn" style="background:#7788FF" onclick="formatColor('#7788FF')"></button>
         </div>
     
+        <!------ SECTION TAB INSERT BLANK TAB ------>
         <button
           type="button"
           id="insertTabBtn"
@@ -220,10 +229,14 @@
           disabled>
           Insert Blank Guitar Tab
         </button>
+        
+      <!------ END OF SECTION CONTROLS ROW 2 ------>
       </div>
-    
+    <!------ END OF SECTION EDITOR CONTROLS ------>
     </div>
+
     
+    <!------ SECTION TEXT BOX / EDITOR ------>
     <div id="sectionEditor"
          contenteditable="true"
          class="section-editor"
@@ -231,45 +244,80 @@
     </div>
     
     <div class="section-save-row">
+      <!------ SECTION SAVE / UPDATE ------>
       <button id="saveSectionBtn" onclick="saveSection()" class="btn red">
         Add Section
       </button>
     
+      <!------ SECTION CANCEL SAVE / UPDATE ------>
       <button id="cancelEditBtn" onclick="cancelEdit()" class="btn" style="display:none;">
         Cancel
       </button>
     </div>
-  
+    
   </section>
+  <!---------------------------------------------------------------------------------------->
+  <!---------------------------------- END OF EDITOR PANEL --------------------------------->
+  <!---------------------------------------------------------------------------------------->
+
   
+  <!---------------------------------------------------------------------------------------->
+  <!------------------------------------- PREVIEW AREA ------------------------------------->
+  <!---------------------------------------------------------------------------------------->
   <section class="preview-area">
+  
+    <!------ SONG PREVIEW AREA TITLE ------>
     <h2 class="previewSectionTitle">Preview Lyrics</h2>
+    
+    <!------ SONG PREVIEW ------>
     <div class="song-preview">
-      
+
+      <!------ SONG DETAILS ------>
       <div class="song-header">
-        <h3 id="previewTitle">Song Title - Artist</h3>
+        <div>
+          <h3 id="previewTitle">Song Title - Artist</h3>
+          <div id="previewYear" class="preview-year-under-title"></div>
+        </div>
         <div class="preview-meta-right">
           <div id="previewUserBpm"></div>
           <div id="previewOriginalBpm"></div>
           <div id="previewCapo"></div>
           <div id="previewKey"></div>
-          <div id="previewYear"></div>
         </div>
       </div>
+      <!-------------------------->
+
+      <!------ LIVE PREVIEW OF CURRENT SECTION BEING CREATED / EDITED ------>
       <div id="livePreviewBox" class="live-preview-box hidden">
         <div class="live-preview-label">Live Section Preview</div>
-      
         <div id="liveSectionPreview"
              class="lyric-section preview-draft">
         </div>
       </div>
+      <!-------------------------------------------------------------------->
+
+      <!------ REST OF THE SONG PREVIEW ------>
       <div id="sectionsPreview"></div>
   
+    <!------ END OF SONG PREVIEW ------>
     </div>
+    
   </section>
-  
-  <script src="../js/lyricscreator.js?v=10"></script>
+  <!---------------------------------------------------------------------------------------->
+  <!--------------------------------- END OF PREVIEW AREA ---------------------------------->
+  <!---------------------------------------------------------------------------------------->
 
+  
+  <!---------------------------------------------------------------------------------------->
+  <!------------------------------------ LOAD JS FILE -------------------------------------->
+  <!---------------------------------------------------------------------------------------->
+  <script src="../js/lyricscreator.js?v=10"></script>
+  <!---------------------------------------------------------------------------------------->
+
+  
+  <!---------------------------------------------------------------------------------------->
+  <!------------------------------------ CONFIRM MODAL ------------------------------------->
+  <!---------------------------------------------------------------------------------------->
   <div id="confirmModal" class="confirm-modal hidden">
     <div class="confirm-box">
       <h3 id="confirmTitle">Confirm</h3>
@@ -281,6 +329,10 @@
       </div>
     </div>
   </div>
+  <!---------------------------------------------------------------------------------------->
+  <!--------------------------------- END OF CONFIRM MODAL --------------------------------->
+  <!---------------------------------------------------------------------------------------->
 
+  
 </body>
 </html>
