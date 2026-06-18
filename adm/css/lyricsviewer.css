@@ -263,6 +263,14 @@ body {
   color: white !important;
 }
 
+.tab-apostrophe {
+  color: #050505 !important;
+  height: 0 !important;
+  line-height: 0 !important;
+  overflow: hidden !important;
+  font-size: 0 !important;
+}
+
 /** TAB sections text / tabs when closed **/
 .viewer-tab {
   padding: 10px 0;
