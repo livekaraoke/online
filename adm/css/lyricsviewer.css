@@ -235,7 +235,9 @@ body {
 }
 
 .viewer-tab .tab-repeat.zero {
-  color: transparent;
+  color: transparent;.viewer-tab .tab-repeat.zero {
+  color: #050505 !important;
+}
 }
 
 .viewer-tab .tab-line {
