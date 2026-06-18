@@ -791,6 +791,10 @@ textarea {
   color:#444;
 }
 
+.viewer-tab .tab-repeat.zero {
+  color: #050505 !important;
+}
+
 .section-editor.tab-editing {
   padding: 18px 20px;
 }
