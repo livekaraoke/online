@@ -126,6 +126,9 @@
       
       if (isTab) {
         displayHtml = displayHtml
+          .replace(/-/g, `<span class="tab-dash">-</span>`);
+        /*
+        displayHtml = displayHtml
           .replace(/<!--StartFragment-->/g, "")
           .replace(/<!--EndFragment-->/g, "")
           .replace(/<div>/gi, "\n")
@@ -136,11 +139,12 @@
           .map(line => line.trimStart())
           .join("\n")
           .replace(/-/g, `<span class="tab-dash">-</span>`);
+          */
       }
 
       div.innerHTML = `
         ${section.title
-          ? `<h2>${isTab ? (isCollapsed ? "▶ " : "▼ ") : ""}${section.title}${isTab ? " (Tab)" : ""}</h2>`
+          ? `<h2>${isTab ? (isCollapsed ? "▶ " : "⯆ ") : ""}${section.title}${isTab ? " (Tab)" : ""}</h2>`
           : ""
         }
       
