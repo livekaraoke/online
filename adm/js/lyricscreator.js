@@ -203,10 +203,12 @@ function saveSection() {
   .trim();
 
   if (sectionType === "tab") {
-    html = html
-      .replace(/<br\s*\/?>/gi, "\n")
-      .replace(/\u200B/g, "")
-      .replace(/\uFEFF/g, "");
+    html = editor.innerText
+      .replace(/\u00A0/g, " ")
+      .replace(/\r\n/g, "\n")
+      .replace(/\r/g, "\n")
+      .replace(/\n{3,}/g, "\n\n")
+      .trim();
   }
 
   /*
