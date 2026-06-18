@@ -896,6 +896,47 @@ textarea {
   font-weight: 900;
 }
 
+.tab-block {
+  position: relative;
+  padding: 10px 14px;
+  margin: 0;
+}
+
+.tab-gap {
+  height: 12px;
+}
+
+.delete-tab-btn {
+  position: absolute;
+  right: 6px;
+  top: 4px;
+  background: #330000;
+  color: #ff3333;
+  border: 1px solid #ff3333;
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.tab-insert-row {
+  text-align: center;
+  height: 26px;
+  line-height: 26px;
+}
+
+.insert-tab-here-btn {
+  background: #111;
+  color: #FFD400;
+  border: 1px solid #FFD400;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
 .tab-load-control {
   display: flex;
   align-items: center;
@@ -920,6 +961,7 @@ textarea {
   border-color: #FFD400;
   box-shadow: 0 0 8px rgba(255,212,0,.25);
 }
+
 
 .tab-note.tab-hidden-fill {
   color: #050505 !important;
