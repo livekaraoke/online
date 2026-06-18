@@ -836,8 +836,7 @@ function insertHtmlAtCursor(html) {
 /**/
 /** Tab note (dash '-') input **/
 /**/
-document.addEventListener("keydown", e => {
-
+document.addEventListener("keydown", function (e) {
   const target = e.target;
 
   if (!target.classList.contains("tab-dashes")) return;
@@ -846,32 +845,57 @@ document.addEventListener("keydown", e => {
 
   e.preventDefault();
 
-  document.execCommand("delete");
-  document.execCommand("insertText", false, e.key);
+  const selection = window.getSelection();
+  if (!selection.rangeCount) return;
+
+  const range = selection.getRangeAt(0);
+  const textNode = target.firstChild;
+
+  if (!textNode || textNode.nodeType !== Node.TEXT_NODE) return;
+
+  let pos = range.startOffset;
+
+  const chars = textNode.nodeValue.split("");
+
+  if (pos >= chars.length) return;
+
+  chars[pos] = e.key;
+
+  textNode.nodeValue = chars.join("");
+
+  const newRange = document.createRange();
+  newRange.setStart(textNode, pos + 1);
+  newRange.collapse(true);
+
+  selection.removeAllRanges();
+  selection.addRange(newRange);
+
+  updateLivePreview();
 });
-/*document.addEventListener("input", function (e) {
+document.addEventListener("input", function (e) {
   if (!e.target.classList.contains("tab-note")) return;
 
   const max = 58;
-  let text = e.target.innerText.replace(/\n/g, "");
 
-  if (!text || /^_+$/.test(text)) {
+  let text = e.target.innerText
+    .replace(/\n/g, "")
+    .slice(0, max);
+
+  const visibleText = text.replace(/_/g, "");
+
+  if (!visibleText) {
     e.target.innerText = "_".repeat(max);
     e.target.classList.add("tab-hidden-fill");
-    return;
+  } else {
+    e.target.innerText =
+      visibleText + "_".repeat(Math.max(0, max - visibleText.length));
+
+    e.target.classList.remove("tab-hidden-fill");
+    e.target.style.color = "white";
   }
 
-  text = text.replace(/_/g, "");
-
-  if (text.length > max) {
-    text = text.slice(0, max);
-  }
-
-  e.target.innerText =
-    text + "_".repeat(Math.max(0, max - text.length));
-
-  e.target.classList.remove("tab-hidden-fill");
-});*/
+  updateLivePreview();
+});
 /**/
 /**/
 
