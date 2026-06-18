@@ -372,6 +372,9 @@ textarea {
   margin-bottom: 0;
 }
 
+
+
+
 .section-editor.tab-editing {
   font-family: "Courier New", monospace !important;
   font-size: 18px;
@@ -716,7 +719,62 @@ textarea {
   }
 }
 
-/** GUITAR TABS **/
+/***************************************************************************************/
+/**************************** GUITAR TABS SECTION **************************************/
+/***************************************************************************************/
+
+/**********************************************************/
+/**************** TAB COLOURING AND FORMAT ****************/
+/**********************************************************/
+.tab-line {
+  font-family: "Courier New", monospace;
+  font-size: 19px;
+  font-weight: 900;
+  white-space: pre;
+}
+
+.tab-note-line {
+  margin-bottom: 2px;
+}
+
+.tab-spacer {
+  height: 5px;
+  font-size: 5px;
+  line-height: 5px;
+}
+
+.tab-hidden-fill {
+  color: #000;
+}
+
+.tab-editable {
+  color: white;
+}
+
+.tab-fixed {
+  color: white;
+}
+
+.tab-repeat {
+  color: white;
+}
+
+.tab-repeat.zero {
+  color: #000;
+}
+
+.section-editor.tab-editing {
+  padding: 18px 20px;
+}
+/**********************************************************/
+/************* END OF TAB COLOURING AND FORMAT ************/
+/**********************************************************/
+
+
+
+.tab-line {
+  font-family: "Cour
+}
 
 .collapsed {
   display: none;
