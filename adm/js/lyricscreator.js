@@ -799,6 +799,32 @@ function insertBlankTab() {
 /*** Insert Blank Tab END *********/
 /**********************************/
 
+function createTabBlock() {
+  return (
+    '<div class="tab-gap"></div>' +
+    '<div class="tab-block" contenteditable="false">' +
+      '<button type="button" class="delete-tab-btn" contenteditable="false">✕</button>' +
+      '<div class="tab-line tab-apostrophe">\'</div>' +
+      '<div class="tab-line tab-note-line">' +
+        '<span class="tab-fixed">»</span>' +
+        '<span class="tab-note tab-hidden-fill" contenteditable="true">__________________________________________________________</span>' +
+        '<span class="tab-fixed">«</span>' +
+      '</div>' +
+      '<div class="tab-spacer"></div>' +
+      createStringLine("e") +
+      createStringLine("B") +
+      createStringLine("G", true) +
+      createStringLine("D") +
+      createStringLine("A") +
+      createStringLine("E") +
+    '</div>'
+  );
+}
+
+function createTabInsertButton() {
+  return '<div class="tab-insert-row" contenteditable="false"><button type="button" class="insert-tab-here-btn">＋</button></div>';
+}
+
 function createStringLine(letter, repeat = false) {
   return `<div class="tab-line"><span class="tab-fixed">${letter}⦗|</span><span class="tab-dashes" contenteditable="true">---------------------------------------------------------</span><span class="tab-fixed">|⦘</span>${repeat ? `<span class="tab-repeat"> (x<span contenteditable="true" class="tab-repeat-number">1</span>)</span>` : ""}</div>`;
 }
@@ -906,6 +932,28 @@ document.addEventListener("keydown", function (e) {
   updateLivePreview();
 });
 /**/
+document.addEventListener("click", function (e) {
+  if (e.target.classList.contains("delete-tab-btn")) {
+    const block = e.target.closest(".tab-block");
+    const prev = block.previousElementSibling;
+
+    if (prev && prev.classList.contains("tab-insert-row")) {
+      prev.remove();
+    }
+
+    block.remove();
+    updateLivePreview();
+  }
+
+  if (e.target.classList.contains("insert-tab-here-btn")) {
+    const row = e.target.closest(".tab-insert-row");
+    row.insertAdjacentHTML("afterend", createTabBlock() + createTabInsertButton());
+
+    restoreTabEditability(document.getElementById("sectionEditor"));
+    updateTabNoteStates(document.getElementById("sectionEditor"));
+    updateLivePreview();
+  }
+});
 /**/
 document.addEventListener("keydown", function (e) {
   const target = e.target;
