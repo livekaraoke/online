@@ -816,7 +816,7 @@ textarea {
 
 
 .tab-line {
-  font-family: "Cour
+  /*font-family: "Cour*/
 }
 
 .collapsed {
@@ -884,6 +884,16 @@ textarea {
 .tab-dash {
   color: #555 !important;
   text-shadow: none !important;
+}
+
+.tab-dashes {
+  color: #666 !important;
+  font-weight: 900;
+}
+
+.tab-dashes.has-input {
+  color: white !important;
+  font-weight: 900;
 }
 
 .tab-load-control {
