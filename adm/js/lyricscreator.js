@@ -202,6 +202,7 @@ function saveSection() {
   .replace(/(<br\s*\/?>|\s)+$/gi, "")
   .trim();
 
+  /*
   if (sectionType === "tab") {
     html = editor.innerText
       .replace(/\u00A0/g, " ")
@@ -210,18 +211,22 @@ function saveSection() {
       .replace(/\n{3,}/g, "\n\n")
       .trim();
   }
+  */
 
-  /*
   if (sectionType === "tab") {
-    html = html
+    html = editor.innerHTML
+      .replace(/<!--StartFragment-->/g, "")
+      .replace(/<!--EndFragment-->/g, "")
+      .replace(/<div[^>]*>/gi, "\n")
+      .replace(/<\/div>/gi, "")
       .replace(/<br\s*\/?>/gi, "\n")
-      .split("\n")
-      .map(line => line.trimStart())
-      .join("\n")
-      .replace(/\n{2,}/g, "\n")
+      .replace(/&nbsp;/gi, " ")
+      .replace(/<(?!\/?(font|span|b)\b)[^>]+>/gi, "")
+      .replace(/\n{3,}/g, "\n\n")
       .trim();
   }
-  */
+
+
 
   const section = {
     type: sectionType,
@@ -297,6 +302,10 @@ function clearEditor() {
   document.getElementById("updateNextBtn").style.display = "none";
   document.getElementById("updateNextBtn").disabled = false;
   document.getElementById("updateNextBtn").classList.remove("disabled");
+
+  document.getElementById("sectionType").disabled = false;
+  document.getElementById("fontFamily").disabled = false;
+  setTabControlMode(false);
 }
 
 function insertSeparator(index) {
@@ -422,6 +431,23 @@ function toggleTabSection(index) {
   renderPreview();
 }
 
+/* Disable font/B/I/U/align/ type controls when editing tabs */
+function setTabControlMode(isTab) {
+  const font = document.getElementById("fontFamily");
+  const sectionType = document.getElementById("sectionType");
+
+  sectionType.disabled = isTab;
+
+  font.disabled = isTab;
+
+  document
+    .querySelectorAll(".format-buttons button")
+    .forEach(btn => {
+      btn.disabled = isTab;
+      btn.classList.toggle("disabled-control", isTab);
+    });
+}
+
 /* EDIT SECTION */
 function editSection(index) {
   const section = songData.sections[index];
@@ -442,6 +468,9 @@ function editSection(index) {
   }
   
   if (section.type === "separator") return;
+
+  setTabControlMode(section.type === "tab");
+  
   document.getElementById("sectionEditor")
     .classList.toggle("tab-editing", section.type === "tab");
   editingIndex = index;
@@ -626,6 +655,7 @@ function updateLivePreview() {
   `;
 }
 
+/* sectionType Listener */
 document.getElementById("sectionType").addEventListener("change", function () {
   const editor = document.getElementById("sectionEditor");
   const fontSelect = document.getElementById("fontFamily");
@@ -633,6 +663,7 @@ document.getElementById("sectionType").addEventListener("change", function () {
   const tabOptions = document.getElementById("tabOptions");
  
   if (this.value === "tab") { /* TAB MODE */
+    setTabControlMode(true);
     fontSelect.value = "Courier New";
     editor.style.fontFamily = "Courier New";
     editor.classList.add("tab-editing");
@@ -647,6 +678,7 @@ document.getElementById("sectionType").addEventListener("change", function () {
     editor.focus();
     document.execCommand("bold", false, true);
   } else { /* LYRICS MODE */
+    setTabControlMode(false);
     fontSelect.value = "Verdana";
     editor.style.fontFamily = "Verdana";
     editor.classList.remove("tab-editing");
