@@ -778,32 +778,23 @@ function loadSongForEditing(file) {
 /*** Insert Blank Tab *************/
 /**********************************/
 function insertBlankTab() {
+  const tabHtml = createTabBlock();
+
   const editor = document.getElementById("sectionEditor");
+  editor.focus();
 
-  const tabHtml =
-    '<div class="tab-block" contenteditable="false">' +
-    '<div class="tab-line tab-apostrophe">\'</div>' +
-    '<div class="tab-line tab-note-line">' +
-    '<span class="tab-fixed">»</span>' +
-    '<span class="tab-note tab-hidden-fill" contenteditable="true">__________________________________________________________</span>' +
-    '<span class="tab-fixed">«</span>' +
-    '</div>' +
-    '<div class="tab-spacer"></div>' +
-    createStringLine("e") +
-    createStringLine("B") +
-    createStringLine("G", true) +
-    createStringLine("D") +
-    createStringLine("A") +
-    createStringLine("E") +
-    '</div><br>';
+  const existingTabs = editor.querySelectorAll(".tab-block");
 
-  insertHtmlAtCursor(tabHtml);
+  if (existingTabs.length > 0) {
+    existingTabs[existingTabs.length - 1]
+      .insertAdjacentHTML("afterend", createTabInsertButton() + tabHtml);
+  } else {
+    insertHtmlAtCursor(tabHtml);
+  }
+
+  restoreTabEditability(editor);
+  updateTabNoteStates(editor);
   updateLivePreview();
-
-  document.querySelectorAll(".tab-note").forEach(note => {
-    note.classList.add("tab-hidden-fill");
-  });
-  
 }
 /*** Insert Blank Tab END *********/
 /**********************************/
