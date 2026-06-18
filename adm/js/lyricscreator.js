@@ -821,7 +821,7 @@ async function handleSaveClick() {
 
   const confirmSave = await showConfirm(
     "Save Lyrics?",
-    "Do you want to save this song to Firebase?"
+    "Do you want to save this song?"
   );
 
   if (!confirmSave) return;
