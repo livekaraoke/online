@@ -27,11 +27,26 @@
 
   <header class="topbar">
     <button onclick="history.back()" class="btn">◀ BACK</button>
-    <h1 id="creatorTopTitle">● Lyrics & Chords Creator ●</h1>
-    <button onclick="downloadJS()" class="btn red">Download JS File</button>
-    <button onclick="saveSongToFirebase()" class="btn red">
-      Save
-    </button>
+    
+    <div class="creator-title-wrap">
+      <h1 id="creatorTopTitle">● Lyrics & Chords Creator ●</h1>
+      <div id="creatorSubTitle" class="creator-subtitle"></div>
+    </div>
+    
+    <div class="save-split">
+      <button onclick="handleSaveClick()" class="save-main-btn">
+        💾 Save
+      </button>
+    
+      <button onclick="toggleSaveMenu()" class="save-arrow-btn">
+        ▼
+      </button>
+    
+      <div id="saveDropdown" class="save-dropdown">
+        <button onclick="handleDownloadClick()">Download .JS</button>
+        <button onclick="handleSaveClick()">Save to Firebase</button>
+      </div>
+    </div>
   </header>
   
   <section class="song-meta-wrapper">
@@ -254,6 +269,18 @@
   </section>
   
   <script src="../js/lyricscreator.js?v=10"></script>
+
+  <div id="confirmModal" class="confirm-modal hidden">
+    <div class="confirm-box">
+      <h3 id="confirmTitle">Confirm</h3>
+      <p id="confirmMessage"></p>
+  
+      <div class="confirm-actions">
+        <button id="confirmCancel" class="btn">Cancel</button>
+        <button id="confirmOk" class="btn red">Confirm</button>
+      </div>
+    </div>
+  </div>
 
 </body>
 </html>
