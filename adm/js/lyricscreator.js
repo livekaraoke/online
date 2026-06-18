@@ -1006,10 +1006,14 @@ document.addEventListener("keydown", function (e) {
 
 function updateNoteClass(el) {
   const hasText = el.innerText.replace(/_/g, "").trim().length > 0;
+
   el.classList.toggle("tab-hidden-fill", !hasText);
   el.classList.toggle("has-input", hasText);
 }
 /**/
+function updateTabNoteStates(root) {
+  root.querySelectorAll(".tab-note").forEach(updateNoteClass);
+}
 /**/
 document.addEventListener("input", function (e) {
   if (!e.target.classList.contains("tab-repeat-number")) return;
