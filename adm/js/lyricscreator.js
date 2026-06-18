@@ -101,6 +101,12 @@ function updateMeta() {
   songData.title = document.getElementById("songTitle").value;
   songData.artist = document.getElementById("artistName").value;
   songData.id = generateSongId(songData.title, songData.artist);
+  const subTitle = document.getElementById("creatorSubTitle");
+  if (subTitle) {
+    subTitle.innerText = songData.title
+      ? `Editing: ${songData.title}`
+      : "";
+  }
 
   songData.userBpm = document.getElementById("userBpm").value;
   songData.originalBpm = document.getElementById("originalBpm").value;
