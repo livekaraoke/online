@@ -160,6 +160,20 @@ body {
   margin-top: 18px;
 }
 
+.next-btn {
+  background: #151515;
+  border-color: #FFD400;
+  color: #FFD400;
+}
+
+.next-btn.disabled,
+.next-btn:disabled {
+  opacity: .35;
+  cursor: not-allowed;
+  border-color: #555;
+  color: #777;
+}
+
 .song-meta,
 .editor-panel {
   max-width: 900px;
