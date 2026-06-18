@@ -905,3 +905,11 @@ textarea {
   border-color: #FFD400;
   box-shadow: 0 0 8px rgba(255,212,0,.25);
 }
+
+.tab-note.tab-hidden-fill {
+  color: #050505 !important;
+}
+
+.tab-note.has-input {
+  color: white !important;
+}
