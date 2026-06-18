@@ -752,7 +752,18 @@ textarea {
 }
 
 .tab-hidden-fill {
-  color: #000;
+  color: #050505 !important;
+}
+
+.tab-note:not(.tab-hidden-fill) {
+  color: white;
+}
+
+.tab-apostrophe {
+  color: #050505 !important;
+  height: 0;
+  line-height: 0;
+  overflow: hidden;
 }
 
 .tab-editable {
