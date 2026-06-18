@@ -247,6 +247,22 @@ body {
   padding: 14px 18px;
 }
 
+.tab-dashes {
+  color: #666 !important;
+}
+
+.tab-dashes.has-input {
+  color: white !important;
+}
+
+.tab-note.tab-hidden-fill {
+  color: #050505 !important;
+}
+
+.tab-note.has-input {
+  color: white !important;
+}
+
 /** TAB sections text / tabs when closed **/
 .viewer-tab {
   padding: 10px 0;
