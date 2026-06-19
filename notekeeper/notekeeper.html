@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Note Keeper</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="../css/notekeeper.css">
+</head>
+
+<body>
+
+<header class="note-topbar">
+  <button onclick="history.back()" class="note-btn">◀ BACK</button>
+
+  <h1>Note Keeper</h1>
+
+  <div class="split-menu">
+    <button onclick="toggleTopMenu()" class="note-btn red">OPTIONS ▼</button>
+    <div id="topMenu" class="dropdown-menu">
+      <button onclick="window.location.href='../admin.html'">Go to Admin</button>
+      <button onclick="window.location.href='noteeditor.html'">Create New Note</button>
+    </div>
+  </div>
+</header>
+
+<main class="note-page">
+
+  <div class="note-controls">
+    <button onclick="selectCategory('Favourites')" id="favBtn" class="note-btn sticky-btn">
+      ★ Favourites
+    </button>
+
+    <select id="categorySelect" onchange="selectCategory(this.value)">
+      <option value="">All Notes</option>
+      <option value="Favourites">Favourites</option>
+    </select>
+
+    <button onclick="addCategory()" class="note-btn">+ Category</button>
+
+    <input id="searchNotes" placeholder="Search notes...">
+  </div>
+
+  <div id="activeCategoryTitle" class="active-category"></div>
+
+  <div id="notesList"></div>
+
+</main>
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyC4gSodXM35E2ZdYaz6mrCvTUYzW75ZCBk",
+  authDomain: "livekaraokemt.firebaseapp.com",
+  projectId: "livekaraokemt",
+  storageBucket: "livekaraokemt.firebasestorage.app",
+  messagingSenderId: "425980659562",
+  appId: "1:425980659562:web:892ddcd53fb209d1114713"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+let allNotes = [];
+let categories = ["Favourites"];
+let activeCategory = "";
+const CATEGORY_SETTINGS_ID = "settings";
+
+function toggleTopMenu() {
+  document.getElementById("topMenu").classList.toggle("show");
+}
+
+function getPlainPreview(html) {
+  const div = document.createElement("div");
+  div.innerHTML = html || "";
+  return div.innerText.trim().slice(0, 120);
+}
+
+function formatDate(timestamp) {
+  if (!timestamp) return "";
+  const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+  return date.toLocaleDateString() + " " + date.toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+}
+
+function selectCategory(category) {
+  activeCategory = category;
+  document.getElementById("categorySelect").value = category;
+  renderNotes();
+}
+
+async function loadCategories() {
+  const doc = await db.collection("noteSettings").doc(CATEGORY_SETTINGS_ID).get();
+
+  if (doc.exists && Array.isArray(doc.data().categories)) {
+    categories = ["Favourites", ...doc.data().categories.filter(c => c !== "Favourites")];
+  }
+
+  renderCategorySelect();
+}
+
+function renderCategorySelect() {
+  const select = document.getElementById("categorySelect");
+  select.innerHTML = `<option value="">All Notes</option>`;
+
+  categories.forEach(cat => {
+    const opt = document.createElement("option");
+    opt.value = cat;
+    opt.textContent = cat;
+    select.appendChild(opt);
+  });
+}
+
+async function addCategory() {
+  const name = prompt("New category name:");
+  if (!name || !name.trim()) return;
+
+  const cleanName = name.trim();
+
+  if (!categories.includes(cleanName)) {
+    categories.push(cleanName);
+  }
+
+  await db.collection("noteSettings").doc(CATEGORY_SETTINGS_ID).set({
+    categories: categories.filter(c => c !== "Favourites")
+  });
+
+  renderCategorySelect();
+  selectCategory(cleanName);
+}
+
+async function toggleNoteCategory(noteId, category) {
+  if (!category) category = "Favourites";
+
+  const note = allNotes.find(n => n.id === noteId);
+  if (!note) return;
+
+  let noteCategories = Array.isArray(note.categories) ? [...note.categories] : [];
+
+  if (noteCategories.includes(category)) {
+    noteCategories = noteCategories.filter(c => c !== category);
+  } else {
+    noteCategories.push(category);
+  }
+
+  await db.collection("notes").doc(noteId).update({
+    categories: noteCategories,
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  });
+}
+
+function renderNotes() {
+  const list = document.getElementById("notesList");
+  const search = document.getElementById("searchNotes").value.toLowerCase();
+
+  list.innerHTML = "";
+
+  document.getElementById("activeCategoryTitle").innerText =
+    activeCategory ? activeCategory : "All Notes";
+
+  let notes = allNotes.filter(note => {
+    const text = `${note.title || ""} ${getPlainPreview(note.contentHtml)}`.toLowerCase();
+
+    const matchesSearch = text.includes(search);
+
+    const matchesCategory =
+      !activeCategory ||
+      (Array.isArray(note.categories) && note.categories.includes(activeCategory));
+
+    return matchesSearch && matchesCategory;
+  });
+
+  notes.sort((a, b) => (a.title || "").localeCompare(b.title || ""));
+
+  if (activeCategory) {
+    const favTitle = document.createElement("h2");
+    favTitle.className = "letter-heading";
+    favTitle.textContent = activeCategory;
+    list.appendChild(favTitle);
+
+    notes.forEach(note => list.appendChild(createNoteRow(note)));
+    return;
+  }
+
+  const groups = {};
+
+  notes.forEach(note => {
+    const letter = (note.title || "#").charAt(0).toUpperCase();
+    if (!groups[letter]) groups[letter] = [];
+    groups[letter].push(note);
+  });
+
+  Object.keys(groups).sort().forEach(letter => {
+    const heading = document.createElement("h2");
+    heading.className = "letter-heading";
+    heading.textContent = letter;
+    list.appendChild(heading);
+
+    groups[letter].forEach(note => {
+      list.appendChild(createNoteRow(note));
+    });
+  });
+}
+
+function createNoteRow(note) {
+  const row = document.createElement("div");
+  row.className = "note-row";
+
+  const currentCategory = activeCategory || "Favourites";
+  const isSelected =
+    Array.isArray(note.categories) && note.categories.includes(currentCategory);
+
+  row.innerHTML = `
+    <button class="star-btn ${isSelected ? "active" : ""}"
+            onclick="event.stopPropagation(); toggleNoteCategory('${note.id}', '${currentCategory}')">
+      ★
+    </button>
+
+    <div class="note-main">
+      <strong>${note.title || "Untitled Note"}</strong>
+      <span>${getPlainPreview(note.contentHtml)}</span>
+    </div>
+
+    <div class="note-date">
+      ${formatDate(note.updatedAt)}
+    </div>
+  `;
+
+  row.onclick = () => {
+    window.location.href = `noteeditor.html?id=${encodeURIComponent(note.id)}`;
+  };
+
+  return row;
+}
+
+document.getElementById("searchNotes").addEventListener("input", renderNotes);
+
+loadCategories();
+
+db.collection("notes")
+  .orderBy("title")
+  .onSnapshot(snapshot => {
+    allNotes = [];
+
+    snapshot.forEach(doc => {
+      allNotes.push({
+        id: doc.id,
+        ...doc.data()
+      });
+    });
+
+    renderNotes();
+  });
+</script>
+
+</body>
+</html>
