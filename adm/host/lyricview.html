@@ -9,13 +9,26 @@
 <body>
 
 <header class="viewer-topbar">
-  <button onclick="history.back()" class="viewer-btn">◀ BACK</button>
+  <!-- BACK BUTTON -->
+  <div class="back-split">
+    <button onclick="history.back()" class="viewer-btn">◀ BACK</button>
+    <button onclick="toggleBackMenu()" class="viewer-btn back-arrow">▼</button>
+  
+    <div id="backDropdown" class="back-dropdown">
+      <button onclick="history.back()">Back to previous page</button>
+      <button onclick="window.location.href='../admin.html'">Admin Main Page</button>
+      <button onclick="window.location.href='lyricsviewer.html'">Lyric Viewer</button>
+    </div>
+  </div>
+
+  <!-- TOP BAR TITLE -->
   <div id="topbarSongTitle" class="topbar-song-title">
     Loading...
   </div>
   <button id="editBtn" class="viewer-btn red">📝 EDIT</button>
 </header>
 
+<!-- LYRIC PAGE -->
 <main class="lyric-page">
   <div class="song-header">
     <h1 id="songTitle"></h1>
@@ -142,9 +155,15 @@
       `;
 
       if (isTab) {
-        div.addEventListener("click", () => {
+        div.addEventListener("click", e => {
+          if (e.target.tagName === "A" || e.target.tagName === "BUTTON") return;
+        
           section.collapsed = !section.collapsed;
           renderSong(song, songId);
+        
+          setTimeout(() => {
+            div.scrollIntoView({ behavior: "smooth", block: "start" });
+          }, 50);
         });
       }
 
@@ -155,6 +174,10 @@
     endMarker.className = "end-marker";
     endMarker.innerHTML = "[ END ]";
     container.appendChild(endMarker);
+  }
+
+  function toggleBackMenu() {
+    document.getElementById("backDropdown").classList.toggle("show");
   }
 
   function escapeHTML(str) {
