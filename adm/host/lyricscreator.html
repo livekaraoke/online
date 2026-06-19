@@ -36,7 +36,16 @@
   <!--------------------------------------- TOP BAR ---------------------------------------->
   <!---------------------------------------------------------------------------------------->
   <header class="topbar">
-    <button onclick="history.back()" class="btn">◀ BACK</button>
+    <div class="back-split">
+      <button onclick="history.back()" class="btn">◀ BACK</button>
+      <button onclick="toggleBackMenu()" class="btn back-arrow">▼</button>
+  
+      <div id="backDropdown" class="back-dropdown">
+        <button onclick="history.back()">Back to previous page</button>
+        <button onclick="window.location.href='../admin.html'">Admin Main Page</button>
+        <button onclick="window.location.href='lyricsviewer.html'">Lyric Viewer</button>
+      </div>
+    </div>
     
     <div class="creator-title-wrap">
       <h1 id="creatorTopTitle">● Lyrics & Chords Creator ●</h1>
@@ -55,6 +64,7 @@
       <div id="saveDropdown" class="save-dropdown">
         <button onclick="handleSaveClick()">Save</button>
         <button onclick="handleDownloadClick()">Download .JS File</button>
+        <button onclick="handleDeleteSong()">Delete Song</button>
       </div>
     </div>
   </header>
@@ -150,6 +160,8 @@
       <select id="sectionType">
         <option value="lyrics">Lyrics & Chords</option>
         <option value="tab">Guitar Tab</option>
+        <option value="progressions">Chord Progressions</option>
+        <option value="notes">Notes</option>
       </select>
     </div>
 
@@ -220,16 +232,35 @@
           <button class="color-btn" style="background:#ff3333" onclick="formatColor('#ff3333')"></button>
           <button class="color-btn" style="background:#7788FF" onclick="formatColor('#7788FF')"></button>
         </div>
-    
+
+        
+        <!------ SECTION TEXT FORMATTING PRESET: GREEN & BOLD?? ------>
+        <button type="button" class="preset-btn green-preset" onclick="formatPreset('#7CFF3A')">
+          <b>B</b>
+        </button>
+        
+        <!------ SECTION TEXT FORMATTING PRESET : TEAL & BOLD ------>
+        <button type="button" class="preset-btn yellow-preset" onclick="formatPreset('#FFFF00')">
+          <b>B</b>
+        </button>
+
+        <!------ SECTION TAB INSERT REPEAT LABEL ------>
+        <button type="button" class="btn small-control-btn" onclick="insertRepeatLabel()">
+          (x2)
+        </button>
+
+        <!------ SECTION TAB INSERT SONG LINK ------>
+        <button type="button" class="btn small-control-btn" onclick="insertSongLink()">
+          LINK
+        </button>
+
         <!------ SECTION TAB INSERT BLANK TAB ------>
-        <button
-          type="button"
-          id="insertTabBtn"
-          class="btn tab-btn"
-          onclick="insertBlankTab()"
-          disabled>
+        <button type="button" id="insertTabBtn" class="btn tab-btn" onclick="insertBlankTab()">
           ➕ Guitar Tab
         </button>
+        
+        
+     
         
       <!------ END OF SECTION CONTROLS ROW 2 ------>
       </div>
