@@ -2,6 +2,7 @@ let selectedColor = "white";
 let selectedSectionColor = "white";
 let editingIndex = null;
 let editingBackup = null;
+let currentFirebaseId = null;
 
 let songData = {
   id: "",
@@ -14,6 +15,7 @@ let songData = {
   year: "",
   sections: []
 };
+
 
 function generateSongId(title, artist) {
   return (title + artist)
@@ -149,9 +151,37 @@ function formatText(command) {
 }
 
 function formatColor(color) {
+  const sel = window.getSelection();
+  const node = sel.anchorNode;
+  const parent = node?.parentElement;
+
+  if (parent && parent.classList.contains("tab-dashes")) {
+    colourDashSegment(parent, sel.anchorOffset, color);
+    updateLivePreview();
+    return;
+  }
+
   document.execCommand("foreColor", false, color);
   document.getElementById("sectionEditor").focus();
   updateLivePreview();
+}
+
+function colourDashSegment(el, pos, color) {
+  const text = el.innerText;
+  let left = pos;
+  let right = pos;
+
+  while (left > 0 && text[left - 1] === "-") left--;
+  while (right < text.length && text[right] === "-") right++;
+
+  const before = text.slice(0, left);
+  const middle = text.slice(left, right);
+  const after = text.slice(right);
+
+  el.innerHTML =
+    escapeHTML(before) +
+    `<span style="color:${color}">${escapeHTML(middle)}</span>` +
+    escapeHTML(after);
 }
 
 function setSectionColor(color, btn) {
@@ -205,16 +235,16 @@ function saveSection() {
     .trim();
   
   if (sectionType === "tab") {
-  html = editor.innerHTML
-    .replace(/<!--StartFragment-->/g, "")
-    .replace(/<!--EndFragment-->/g, "")
-    .replace(/<br\s*\/?>\s*$/gi, "")
-    .replace(/<button[^>]*class="delete-tab-btn"[^>]*>.*?<\/button>/gi, "")
-    .replace(/<div[^>]*class="tab-insert-row"[^>]*>.*?<\/div>/gi, "")
-    .replace(/contenteditable="true"/gi, "")
-    .replace(/contenteditable="false"/gi, "")
-    .trim();
-}
+    html = editor.innerHTML
+      .replace(/<!--StartFragment-->/g, "")
+      .replace(/<!--EndFragment-->/g, "")
+      .replace(/<button[^>]*class="delete-tab-btn"[^>]*>.*?<\/button>/gi, "")
+      .replace(/<button[^>]*class="delete-tab-line-btn"[^>]*>.*?<\/button>/gi, "")
+      .replace(/<div[^>]*class="tab-insert-row"[^>]*>.*?<\/div>/gi, "")
+      .replace(/contenteditable="true"/gi, "")
+      .replace(/contenteditable="false"/gi, "")
+      .trim();
+  }
   
   /*
   html = html
@@ -253,6 +283,8 @@ function saveSection() {
 }
   */
 
+  html = addSectionMarker(html);
+  
   const section = {
     type: sectionType,
     title,
@@ -295,6 +327,55 @@ async function saveSectionWithConfirm() {
   }
 
   saveSection();
+}
+
+function formatPreset(color) {
+  document.execCommand("foreColor", false, color);
+  document.execCommand("bold", false, null);
+  updateLivePreview();
+}
+
+function insertRepeatLabel() {
+  const html =
+    `<span class="tab-repeat-label" contenteditable="false">(x<span contenteditable="true" class="tab-repeat-number">2</span>)</span>`;
+
+  insertHtmlAtCursor(html);
+  updateLivePreview();
+}
+
+/*** INSET SONG LINK ***/
+async function insertSongLink() {
+  const snap = await db.collection("lyrics").orderBy("title").get();
+
+  const songs = [];
+  snap.forEach(doc => {
+    songs.push({
+      id: doc.id,
+      title: doc.data().title || "",
+      artist: doc.data().artist || ""
+    });
+  });
+
+  const list = songs
+    .map((s, i) => `${i + 1}. ${s.title} - ${s.artist}`)
+    .join("\n");
+
+  const choice = prompt("Choose song number:\n\n" + list);
+  const index = parseInt(choice, 10) - 1;
+
+  if (!songs[index]) return;
+
+  const song = songs[index];
+
+  const html = `
+    <span class="song-link-pill" contenteditable="false">
+      <a href="lyricview.html?id=${song.id}">${song.title} - ${song.artist}</a>
+      <button type="button" onclick="this.parentElement.remove()">×</button>
+    </span>
+  `;
+
+  insertHtmlAtCursor(html);
+  updateLivePreview();
 }
 
 /* CLEAR EDITOR */
@@ -409,7 +490,8 @@ function renderPreview() {
     }
 
     const isTab = section.type === "tab";
-    const isCollapsed = isTab && section.collapsed === true;
+    const isCollapsed = section.collapsed === true;
+    /*const isCollapsed = isTab && section.collapsed === true;*/
 
     const div = document.createElement("div");
     div.className = isTab ? "lyric-section tab-section" : "lyric-section";
@@ -430,9 +512,10 @@ function renderPreview() {
     
     div.innerHTML = `
       ${section.title ? `
-        <div class="lyric-section-title ${isTab ? "clickable-title" : ""}"
-             ${isTab ? `onclick="toggleTabSection(${index})"` : ""}>
-          ${isTab ? (isCollapsed ? "▶ " : "▼ ") : ""}${section.title}
+        <div class="lyric-section-title ${isTab ? "tab-title" : ""}"
+             onclick="toggleSectionCollapse(${index})">
+          <span class="tab-arrow">${isCollapsed ? "▶" : "▼"}</span>
+          ${section.title}
         </div>
       ` : ""}
 
@@ -442,7 +525,7 @@ function renderPreview() {
 
       <div class="section-actions">
         <button onclick="editSection(${index})">Edit</button>
-        <button onclick="insertBefore(${index})">Insert Above</button>
+        <button onclick="duplicateSection(${index})">Duplicate</button>
         <button onclick="insertSeparator(${index})">Insert Separator</button>
         <button onclick="moveSection(${index}, -1)">↑ Move Up</button>
         <button onclick="moveSection(${index}, 1)">↓ Move Down</button>
@@ -452,6 +535,23 @@ function renderPreview() {
 
     container.appendChild(div);
   });
+}
+
+function toggleSectionCollapse(index) {
+  songData.sections[index].collapsed = !songData.sections[index].collapsed;
+  renderPreview();
+}
+
+function duplicateSection(index) {
+  const copy = JSON.parse(JSON.stringify(songData.sections[index]));
+  copy.collapsed = false;
+  songData.sections.splice(index + 1, 0, copy);
+  renderPreview();
+}
+
+function addSectionMarker(html) {
+  html = html.replace(/<div class="section-marker"[^>]*>●<\/div>/gi, "");
+  return `<div class="section-marker" contenteditable="false">●</div>` + html;
 }
 
 /* TAB TOGGLE COLLAPSE SECTION */
@@ -599,8 +699,13 @@ function restoreTabEditability(root) {
   });
 }
 
-function deleteSection(index) {
-  if (!confirm("Delete this section?")) return;
+async function deleteSection(index) {
+  const ok = await showConfirm(
+    "Delete Section?",
+    "Are you sure you want to delete this section?"
+  );
+
+  if (!ok) return;
 
   songData.sections.splice(index, 1);
   renderPreview();
@@ -780,22 +885,21 @@ function loadSongForEditing(file) {
 /*** Insert Blank Tab *************/
 /**********************************/
 function insertBlankTab() {
-  const tabHtml = createTabBlock();
-
   const editor = document.getElementById("sectionEditor");
-  editor.focus();
-
   const existingTabs = editor.querySelectorAll(".tab-block");
+
+  const tabHtml =
+    createTabInsertButton() +
+    createTabBlock();
 
   if (existingTabs.length > 0) {
     existingTabs[existingTabs.length - 1]
-      .insertAdjacentHTML("afterend", createTabInsertButton() + tabHtml);
+      .insertAdjacentHTML("afterend", createTabInsertButton() + createTabBlock());
   } else {
-    insertHtmlAtCursor(tabHtml);
+    insertHtmlAtCursor(createTabBlock());
   }
 
   restoreTabEditability(editor);
-  updateTabNoteStates(editor);
   updateLivePreview();
 }
 /*** Insert Blank Tab END *********/
@@ -805,8 +909,8 @@ function createTabBlock() {
   return (
     '<div class="tab-gap"></div>' +
     '<div class="tab-block" contenteditable="false">' +
-      '<button type="button" class="delete-tab-btn" contenteditable="false">✕</button>' +
-      '<div class="tab-line tab-apostrophe">\'</div>' +
+      '<button type="button" class="delete-tab-btn">✕</button>' +
+      '<div class="tab-line tab-apostrophe">●</div>' +
       '<div class="tab-line tab-note-line">' +
         '<span class="tab-fixed">»</span>' +
         '<span class="tab-note tab-hidden-fill" contenteditable="true">__________________________________________________________</span>' +
@@ -819,6 +923,11 @@ function createTabBlock() {
       createStringLine("D") +
       createStringLine("A") +
       createStringLine("E") +
+      '<div class="tab-block-controls">' +
+        '<button type="button" class="move-tab-up-btn">↑</button>' +
+        '<button type="button" class="move-tab-down-btn">↓</button>' +
+        '<button type="button" class="delete-tab-btn-bottom">Delete</button>' +
+      '</div>' +
     '</div>'
   );
 }
@@ -828,7 +937,10 @@ function createTabInsertButton() {
 }
 
 function createStringLine(letter, repeat = false) {
-  return `<div class="tab-line"><span class="tab-fixed">${letter}⦗|</span><span class="tab-dashes" contenteditable="true">---------------------------------------------------------</span><span class="tab-fixed">|⦘</span>${repeat ? `<span class="tab-repeat"> (x<span contenteditable="true" class="tab-repeat-number">1</span>)</span>` : ""}</div>`;
+  return `<div class="tab-line">
+    <button type="button" class="delete-tab-line-btn">✕</button>
+    <span class="tab-fixed">${letter}⦗|</span><span class="tab-dashes" contenteditable="true">---------------------------------------------------------</span><span class="tab-fixed">|⦘</span>${repeat ? `<span class="tab-repeat"> (x<span contenteditable="true" class="tab-repeat-number">1</span>)</span>` : ""}
+  </div>`;
 }
 
 function insertHtmlAtCursor(html) {
@@ -934,27 +1046,69 @@ document.addEventListener("keydown", function (e) {
   updateLivePreview();
 });
 /**/
-document.addEventListener("click", function (e) {
-  if (e.target.classList.contains("delete-tab-btn")) {
-    const block = e.target.closest(".tab-block");
-    const prev = block.previousElementSibling;
-
-    if (prev && prev.classList.contains("tab-insert-row")) {
-      prev.remove();
-    }
-
-    block.remove();
-    updateLivePreview();
-  }
-
+/*** DELETE / INSERT / MOVE HANDLERS ***/
+document.addEventListener("click", async function (e) {
   if (e.target.classList.contains("insert-tab-here-btn")) {
-    const row = e.target.closest(".tab-insert-row");
-    row.insertAdjacentHTML("afterend", createTabBlock() + createTabInsertButton());
+    e.target.closest(".tab-insert-row")
+      .insertAdjacentHTML("afterend", createTabBlock() + createTabInsertButton());
 
     restoreTabEditability(document.getElementById("sectionEditor"));
-    updateTabNoteStates(document.getElementById("sectionEditor"));
     updateLivePreview();
   }
+
+  if (e.target.classList.contains("delete-tab-btn") ||
+      e.target.classList.contains("delete-tab-btn-bottom")) {
+    const ok = await showConfirm("Delete Tab?", "Delete this guitar tab block?");
+    if (!ok) return;
+
+    e.target.closest(".tab-block").remove();
+    updateLivePreview();
+  }
+
+  if (e.target.classList.contains("delete-tab-line-btn")) {
+    const ok = await showConfirm("Delete Tab Line?", "Delete this tab line?");
+    if (!ok) return;
+
+    e.target.closest(".tab-line").remove();
+    updateLivePreview();
+  }
+
+  if (e.target.classList.contains("move-tab-up-btn")) {
+    const block = e.target.closest(".tab-block");
+    const prev = block.previousElementSibling?.previousElementSibling;
+    if (prev) prev.before(block);
+    updateLivePreview();
+  }
+
+  if (e.target.classList.contains("move-tab-down-btn")) {
+    const block = e.target.closest(".tab-block");
+    const next = block.nextElementSibling?.nextElementSibling;
+    if (next) next.after(block);
+    updateLivePreview();
+  }
+
+  if (!e.target.classList.contains("tab-dashes")) return;
+
+  const el = e.target;
+  const textNode = el.firstChild;
+  if (!textNode) return;
+
+  const range = document.caretRangeFromPoint
+    ? document.caretRangeFromPoint(e.clientX, e.clientY)
+    : null;
+
+  if (!range) return;
+
+  const pos = Math.min(range.startOffset, textNode.length - 1);
+
+  const selRange = document.createRange();
+  selRange.setStart(textNode, pos);
+  selRange.setEnd(textNode, pos + 1);
+
+  const sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(selRange);
+  
 });
 /**/
 document.addEventListener("keydown", function (e) {
@@ -1086,16 +1240,17 @@ async function saveSongToFirebase() {
   updateMeta();
 
   if (!songData.title.trim() || !songData.artist.trim()) {
-    alert("Please enter song title and artist.");
+    await showAlert("Missing Details", "Please enter song title and artist.");
     return;
   }
 
-  await db.collection("lyrics").doc(songData.id).set(songData);
+  const docId = currentFirebaseId || songData.id;
 
-  await showConfirm(
-    "Saved",
-    "Lyrics saved successfully."
-  );
+  await db.collection("lyrics").doc(docId).set(songData, { merge: false });
+
+  currentFirebaseId = docId;
+
+  await showAlert("Saved", "Lyrics saved successfully.");
 }
 
 async function loadSongFromFirebase(firebaseId) {
@@ -1106,6 +1261,8 @@ async function loadSongFromFirebase(firebaseId) {
       alert("Could not find song in DB.");
       return;
     }
+
+    currentFirebaseId = firebaseId;
 
     songData = doc.data();
 
@@ -1120,7 +1277,10 @@ async function loadSongFromFirebase(firebaseId) {
     document.getElementById("creatorTopTitle").innerText =
       "● Lyrics & Chords Editor ●";
 
-    updateMeta();
+    const subTitle = document.getElementById("creatorSubTitle");
+    if (subTitle) {
+      subTitle.innerText = songData.title ? songData.title : "";
+    }
 
 if (!Array.isArray(songData.sections)) {
   songData.sections = [];
@@ -1143,6 +1303,28 @@ songData.sections = songData.sections.map(section => ({
     console.error(error);
     alert("Error loading song from DB");
   }
+}
+
+function showAlert(title, message) {
+  return new Promise(resolve => {
+    const modal = document.getElementById("confirmModal");
+    const titleEl = document.getElementById("confirmTitle");
+    const messageEl = document.getElementById("confirmMessage");
+    const ok = document.getElementById("confirmOk");
+    const cancel = document.getElementById("confirmCancel");
+
+    titleEl.innerText = title;
+    messageEl.innerText = message;
+
+    cancel.style.display = "none";
+    modal.classList.remove("hidden");
+
+    ok.onclick = () => {
+      modal.classList.add("hidden");
+      cancel.style.display = "";
+      resolve(true);
+    };
+  });
 }
 
 function syncTabToggleButton() {
@@ -1211,6 +1393,8 @@ function showConfirm(title, message) {
 
     titleEl.innerText = title;
     messageEl.innerText = message;
+
+    cancel.style.display = "";
     modal.classList.remove("hidden");
 
     ok.onclick = () => {
@@ -1243,20 +1427,28 @@ async function confirmPendingSectionUpdate() {
 async function handleSaveClick() {
   document.getElementById("saveDropdown").classList.remove("show");
 
-  const updated = await confirmPendingSectionUpdate();
-  if (!updated) return;
+  if (editingIndex !== null) {
+    const ok = await showConfirm(
+      "Update & Save?",
+      "You are editing a section. Update this section and save the song?"
+    );
 
-  const confirmSave = await showConfirm(
-    "Save Lyrics?",
-    "Do you want to save this song?"
-  );
+    if (!ok) return;
 
-  if (!confirmSave) return;
+    saveSection();
+    await saveSongToFirebase();
+    history.back();
+    return;
+  }
+
+  const ok = await showConfirm("Save Lyrics?", "Do you want to save this song?");
+  if (!ok) return;
 
   await saveSongToFirebase();
-
   history.back();
 }
+
+
 
 async function handleDownloadClick() {
   document.getElementById("saveDropdown").classList.remove("show");
@@ -1275,7 +1467,31 @@ async function handleDownloadClick() {
 
   history.back();
 }
-                                    
+
+async function handleDeleteSong() {
+  document.getElementById("saveDropdown").classList.remove("show");
+
+  if (!currentFirebaseId) {
+    await showAlert("Cannot Delete", "This song has not been saved yet.");
+    return;
+  }
+
+  const ok = await showConfirm(
+    "Delete Song?",
+    "Are you sure you want to permanently delete this song?"
+  );
+
+  if (!ok) return;
+
+  await db.collection("lyrics").doc(currentFirebaseId).delete();
+
+  await showAlert("Deleted", "Song deleted successfully.");
+  history.back();
+}
+
+function toggleBackMenu() {
+  document.getElementById("backDropdown").classList.toggle("show");
+}
 
 window.addEventListener("DOMContentLoaded", () => {
   const params = new URLSearchParams(window.location.search);
