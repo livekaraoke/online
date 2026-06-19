@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Note Editor</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="../css/notekeeper.css">
+</head>
+
+<body>
+
+<header class="note-topbar">
+  <button onclick="history.back()" class="note-btn">◀ BACK</button>
+
+  <div class="note-editor-title">
+    <strong id="topNoteTitle">New Note</strong>
+    <span>Note Keeper</span>
+  </div>
+
+  <div class="split-menu">
+    <button onclick="saveNote()" class="note-btn red">💾 Save</button>
+    <button onclick="toggleSaveMenu()" class="note-btn red">▼</button>
+
+    <div id="saveMenu" class="dropdown-menu right">
+      <button onclick="saveNote()">Save</button>
+      <button onclick="downloadNote()">Download .HTML</button>
+      <button onclick="deleteNote()">Delete Note</button>
+    </div>
+  </div>
+</header>
+
+<main class="note-editor-page">
+
+  <section class="note-details">
+    <label>Note Name / Title</label>
+    <input id="noteTitle" placeholder="Note name">
+  </section>
+
+  <section class="note-format-controls">
+    <button onclick="formatText('bold')"><b>B</b></button>
+    <button onclick="formatText('italic')"><i>I</i></button>
+    <button onclick="formatText('underline')"><u>U</u></button>
+
+    <button onclick="formatText('justifyLeft')">L</button>
+    <button onclick="formatText('justifyCenter')">C</button>
+    <button onclick="formatText('justifyRight')">R</button>
+
+    <button class="color-btn" style="background:white" onclick="formatColor('#ffffff')"></button>
+    <button class="color-btn" style="background:#7CFF3A" onclick="formatColor('#7CFF3A')"></button>
+    <button class="color-btn" style="background:#FFFF00" onclick="formatColor('#FFFF00')"></button>
+    <button class="color-btn" style="background:#33E6FF" onclick="formatColor('#33E6FF')"></button>
+
+    <select id="fontFamily" onchange="changeFont()">
+      <option value="Verdana">Verdana</option>
+      <option value="Arial">Arial</option>
+      <option value="Bahnschrift">Bahnschrift</option>
+      <option value="Courier New">Courier New</option>
+    </select>
+  </section>
+
+  <section>
+    <div id="noteEditor"
+         class="note-editor-box"
+         contenteditable="true"
+         data-placeholder="Write your note here..."></div>
+  </section>
+
+</main>
+
+<div id="noteModal" class="note-modal hidden">
+  <div class="note-modal-box">
+    <h3 id="modalTitle"></h3>
+    <p id="modalMessage"></p>
+
+    <div class="modal-actions">
+      <button id="modalCancel" class="note-btn">Cancel</button>
+      <button id="modalOk" class="note-btn red">OK</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyC4gSodXM35E2ZdYaz6mrCvTUYzW75ZCBk",
+  authDomain: "livekaraokemt.firebaseapp.com",
+  projectId: "livekaraokemt",
+  storageBucket: "livekaraokemt.firebasestorage.app",
+  messagingSenderId: "425980659562",
+  appId: "1:425980659562:web:892ddcd53fb209d1114713"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+const params = new URLSearchParams(window.location.search);
+let noteId = params.get("id");
+
+function makeNoteId(title) {
+  return title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "") || "untitled-note";
+}
+
+function toggleSaveMenu() {
+  document.getElementById("saveMenu").classList.toggle("show");
+}
+
+function formatText(command) {
+  document.execCommand(command, false, null);
+  document.getElementById("noteEditor").focus();
+}
+
+function formatColor(color) {
+  document.execCommand("foreColor", false, color);
+  document.getElementById("noteEditor").focus();
+}
+
+function changeFont() {
+  document.execCommand("fontName", false, document.getElementById("fontFamily").value);
+  document.getElementById("noteEditor").focus();
+}
+
+function plainTextFromHtml(html) {
+  const div = document.createElement("div");
+  div.innerHTML = html || "";
+  return div.innerText.trim();
+}
+
+function showAlert(title, message) {
+  return new Promise(resolve => {
+    const modal = document.getElementById("noteModal");
+    document.getElementById("modalTitle").innerText = title;
+    document.getElementById("modalMessage").innerText = message;
+
+    const ok = document.getElementById("modalOk");
+    const cancel = document.getElementById("modalCancel");
+
+    cancel.style.display = "none";
+    modal.classList.remove("hidden");
+
+    ok.onclick = () => {
+      modal.classList.add("hidden");
+      cancel.style.display = "";
+      resolve(true);
+    };
+  });
+}
+
+function showConfirm(title, message) {
+  return new Promise(resolve => {
+    const modal = document.getElementById("noteModal");
+    document.getElementById("modalTitle").innerText = title;
+    document.getElementById("modalMessage").innerText = message;
+
+    const ok = document.getElementById("modalOk");
+    const cancel = document.getElementById("modalCancel");
+
+    cancel.style.display = "";
+    modal.classList.remove("hidden");
+
+    ok.onclick = () => {
+      modal.classList.add("hidden");
+      resolve(true);
+    };
+
+    cancel.onclick = () => {
+      modal.classList.add("hidden");
+      resolve(false);
+    };
+  });
+}
+
+async function loadNote() {
+  if (!noteId) return;
+
+  const doc = await db.collection("notes").doc(noteId).get();
+
+  if (!doc.exists) {
+    await showAlert("Not Found", "This note could not be found.");
+    return;
+  }
+
+  const note = doc.data();
+
+  document.getElementById("noteTitle").value = note.title || "";
+  document.getElementById("noteEditor").innerHTML = note.contentHtml || "";
+  document.getElementById("topNoteTitle").innerText = note.title || "Untitled Note";
+}
+
+async function saveNote() {
+  const title = document.getElementById("noteTitle").value.trim();
+
+  if (!title) {
+    await showAlert("Missing Title", "Please enter a note title.");
+    return;
+  }
+
+  const contentHtml = document.getElementById("noteEditor").innerHTML.trim();
+  const plainText = plainTextFromHtml(contentHtml);
+
+  if (!noteId) {
+    noteId = makeNoteId(title);
+  }
+
+  await db.collection("notes").doc(noteId).set({
+    title,
+    contentHtml,
+    plainText,
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  }, { merge: true });
+
+  document.getElementById("topNoteTitle").innerText = title;
+
+  await showAlert("Saved", "Note saved successfully.");
+}
+
+function downloadNote() {
+  const title = document.getElementById("noteTitle").value.trim() || "note";
+  const content = document.getElementById("noteEditor").innerHTML;
+
+  const html =
+`<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>${title}</title>
+</head>
+<body>
+${content}
+</body>
+</html>`;
+
+  const blob = new Blob([html], { type: "text/html" });
+  const a = document.createElement("a");
+
+  a.href = URL.createObjectURL(blob);
+  a.download = title.toLowerCase().replace(/[^a-z0-9]+/g, "-") + ".html";
+  a.click();
+
+  URL.revokeObjectURL(a.href);
+}
+
+async function deleteNote() {
+  if (!noteId) {
+    await showAlert("Cannot Delete", "This note has not been saved yet.");
+    return;
+  }
+
+  const ok = await showConfirm("Delete Note?", "Are you sure you want to delete this note?");
+  if (!ok) return;
+
+  await db.collection("notes").doc(noteId).delete();
+
+  await showAlert("Deleted", "Note deleted successfully.");
+  history.back();
+}
+
+document.getElementById("noteTitle").addEventListener("input", () => {
+  document.getElementById("topNoteTitle").innerText =
+    document.getElementById("noteTitle").value || "New Note";
+});
+
+loadNote();
+</script>
+
+</body>
+</html>
