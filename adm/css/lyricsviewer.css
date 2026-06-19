@@ -668,3 +668,195 @@ body {
     margin-bottom: -60px !important;
   }
 }
+
+
+.back-split,
+.save-split {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.back-arrow,
+.save-arrow-btn {
+  border-left: 1px solid rgba(255,255,255,.2);
+}
+
+.back-dropdown,
+.save-dropdown {
+  display: none;
+  position: absolute;
+  top: 46px;
+  left: 0;
+  background: #111;
+  border: 1px solid #ff3333;
+  border-radius: 8px;
+  min-width: 190px;
+  z-index: 999;
+  overflow: hidden;
+}
+
+.save-dropdown {
+  right: 0;
+  left: auto;
+}
+
+.back-dropdown.show,
+.save-dropdown.show {
+  display: block;
+}
+
+.back-dropdown button,
+.save-dropdown button {
+  display: block;
+  width: 100%;
+  background: #111;
+  color: white;
+  border: none;
+  padding: 12px;
+  text-align: left;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.back-dropdown button:hover,
+.save-dropdown button:hover {
+  color: #FFD400;
+  background: #221111;
+}
+
+.section-marker {
+  color: #ff3333;
+  font-size: 34px;
+  line-height: 1;
+  font-weight: 900;
+  user-select: none;
+}
+
+.tab-title,
+.viewer-tab h2 {
+  font-family: Verdana, Bahnschrift, Arial, sans-serif !important;
+}
+
+.tab-dashes {
+  color: #666 !important;
+}
+
+.tab-dashes.has-input {
+  color: white !important;
+}
+
+.tab-note.tab-hidden-fill {
+  color: #050505 !important;
+}
+
+.tab-note.has-input {
+  color: white !important;
+}
+
+.tab-gap {
+  height: 14px;
+}
+
+.tab-block {
+  position: relative;
+  padding: 14px 18px;
+  margin: 10px 0;
+  border: 1px solid rgba(255,255,255,.25);
+  border-radius: 8px;
+}
+
+.tab-line {
+  font-family: "Courier New", monospace;
+  font-size: 19px;
+  font-weight: 900;
+  line-height: 1;
+  white-space: pre;
+}
+
+.tab-apostrophe {
+  color: #050505 !important;
+  height: 0;
+  line-height: 0;
+  overflow: hidden;
+  font-size: 0;
+}
+
+.tab-spacer {
+  height: 5px;
+  line-height: 5px;
+}
+
+.delete-tab-btn,
+.delete-tab-line-btn,
+.delete-tab-btn-bottom {
+  color: #ff3333;
+  background: #220000;
+  border: 1px solid #ff3333;
+  border-radius: 6px;
+  font-weight: 900;
+  cursor: pointer;
+  margin-right: 6px;
+}
+
+.delete-tab-btn {
+  position: absolute;
+  right: 8px;
+  top: 6px;
+}
+
+.tab-insert-row {
+  text-align: center;
+  margin: 8px 0;
+}
+
+.insert-tab-here-btn {
+  color: #FFD400;
+  background: #111;
+  border: 1px solid #FFD400;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.tab-block-controls {
+  margin-top: 8px;
+  text-align: center;
+}
+
+.tab-block-controls button {
+  margin: 0 4px;
+  background: #111;
+  color: white;
+  border: 1px solid #ff3333;
+  border-radius: 6px;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+.song-link-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #151515;
+  border: 1px solid #FFD400;
+  border-radius: 999px;
+  padding: 4px 8px;
+}
+
+.song-link-pill a {
+  color: #FFD400;
+  text-decoration: none;
+  font-weight: 900;
+}
+
+.song-link-pill button {
+  background: #330000;
+  color: #ff3333;
+  border: 1px solid #ff3333;
+  border-radius: 50%;
+  cursor: pointer;
+}
+    
