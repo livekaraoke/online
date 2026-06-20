@@ -16,6 +16,10 @@
   <a href="lyricscreator.html" class="viewer-btn red">Create New Lyrics & Chords</a>
 </header>
 
+<button id="stickyFavToggle" class="fav-toggle-btn" onclick="toggleStickyFavourites()">
+  ★ Sticky favourites at top: OFF
+</button>
+
 <main class="viewer-list">
   <select id="artistFilter">
     <option value="">All Artists</option>
@@ -106,6 +110,7 @@
       .sort((a, b) => a.title.localeCompare(b.title));
   }
 
+  /*
   function renderLyrics() {
     list.innerHTML = "";
     alphaNav.innerHTML = "";
@@ -153,6 +158,129 @@
       alphaNav.appendChild(nav);
     });
   }
+  */
+
+  /** START NEW CODE **/
+
+  let stickyFavourites = localStorage.getItem("stickyFavourites") === "true";
+let favouriteSongs = JSON.parse(localStorage.getItem("favouriteSongs") || "[]");
+
+function toggleFavourite(songId) {
+  if (favouriteSongs.includes(songId)) {
+    favouriteSongs = favouriteSongs.filter(id => id !== songId);
+  } else {
+    favouriteSongs.push(songId);
+  }
+
+  localStorage.setItem("favouriteSongs", JSON.stringify(favouriteSongs));
+  renderLyrics();
+}
+
+function toggleStickyFavourites() {
+  stickyFavourites = !stickyFavourites;
+  localStorage.setItem("stickyFavourites", stickyFavourites);
+  renderLyrics();
+}
+
+function renderLyrics() {
+  list.innerHTML = "";
+  alphaNav.innerHTML = "";
+
+  document.getElementById("stickyFavToggle").innerText =
+    stickyFavourites
+      ? "★ Sticky favourites at top: ON"
+      : "★ Sticky favourites at top: OFF";
+
+  const songs = getFilteredSongs();
+
+  if (stickyFavourites) {
+    const favs = songs.filter(song => favouriteSongs.includes(song.firebaseId));
+
+    if (favs.length > 0) {
+      const favSection = document.createElement("section");
+      favSection.className = "lyrics-group favourites-group";
+
+      const favHeading = document.createElement("h2");
+      favHeading.textContent = "★ FAVOURITES";
+      favSection.appendChild(favHeading);
+
+      favs.forEach(song => {
+        favSection.appendChild(createSongItem(song));
+      });
+
+      list.appendChild(favSection);
+    }
+  }
+
+  const groups = {};
+
+  songs.forEach(song => {
+    const letter = song.title
+      ? song.title.charAt(0).toUpperCase()
+      : "#";
+
+    if (!groups[letter]) groups[letter] = [];
+    groups[letter].push(song);
+  });
+
+  Object.keys(groups).sort().forEach(letter => {
+    const section = document.createElement("section");
+    section.className = "lyrics-group";
+    section.id = `letter-${letter}`;
+
+    const heading = document.createElement("h2");
+    heading.textContent = letter;
+    section.appendChild(heading);
+
+    groups[letter].forEach(song => {
+      section.appendChild(createSongItem(song));
+    });
+
+    list.appendChild(section);
+
+    const nav = document.createElement("a");
+    nav.href = `#letter-${letter}`;
+    nav.textContent = letter;
+    alphaNav.appendChild(nav);
+  });
+}
+
+function createSongItem(song) {
+  const row = document.createElement("div");
+  row.className = "lyrics-item-row";
+
+  const star = document.createElement("button");
+  star.className = favouriteSongs.includes(song.firebaseId)
+    ? "fav-star active"
+    : "fav-star";
+
+  star.innerHTML = "★";
+
+  star.onclick = e => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleFavourite(song.firebaseId);
+  };
+
+  const a = document.createElement("a");
+  a.className = "lyrics-item";
+  a.href = `lyricview.html?id=${encodeURIComponent(song.firebaseId)}`;
+
+  a.innerHTML = `
+    <strong>${song.title}</strong>
+    <span>${song.artist}</span>
+  `;
+
+  row.appendChild(star);
+  row.appendChild(a);
+
+  return row;
+}
+
+  /** END NEW CODE **/
+
+        
+          
 
   search.addEventListener("input", renderLyrics);
   artistFilter.addEventListener("change", renderLyrics);
