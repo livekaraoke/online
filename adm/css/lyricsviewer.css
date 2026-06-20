@@ -180,6 +180,57 @@ body {
 }
 /** END of User BPM, Original BPM, Capo, Key **/
 
+/** LYRICS VIEWER FAVOURITES **/
+
+.fav-toggle-btn {
+  width: 100%;
+  margin: 0 0 18px;
+  padding: 12px;
+  background: #111;
+  color: #ddd;
+  border: 1px solid #555;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.fav-toggle-btn:hover {
+  border-color: #FFD400;
+  color: #FFD400;
+}
+
+.lyrics-item-row {
+  display: grid;
+  grid-template-columns: 42px 1fr;
+  gap: 8px;
+  align-items: stretch;
+  margin-bottom: 10px;
+}
+
+.fav-star {
+  background: #111;
+  color: #555;
+  border: 1px solid #333;
+  border-radius: 8px;
+  font-size: 24px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.fav-star.active {
+  color: #FFD400;
+  border-color: #FFD400;
+  text-shadow: 0 0 10px rgba(255,212,0,.8);
+}
+
+.favourites-group h2 {
+  color: #FFD400;
+}
+
+/** END OF LYRICS VIEWER FAVOURITES **/
+
+  
 .viewer-section {
   margin-top: 1px;
   margin-bottom: 10px;
