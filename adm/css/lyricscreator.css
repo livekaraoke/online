@@ -521,10 +521,11 @@ textarea {
 
 .tab-dashes {
   color: #666 !important;
+  font-weight: 900;
 }
 
 .tab-dashes.has-input {
-  color: white !important;
+  color: #666 !important;
 }
 
 .live-preview-box .tab-section,
@@ -746,6 +747,9 @@ textarea {
   font-family: "Courier New", monospace;
   font-size: 19px;
   font-weight: 900;
+  line-height: 1 !important;
+  margin: 0 !important;
+  padding: 0 !important;
   white-space: pre;
 }
 
@@ -788,7 +792,8 @@ textarea {
 }
 
 .tab-repeat.zero {
-  color:#444;
+  color: #777 !important;
+  text-shadow: none !important;
 }
 
 .viewer-tab .tab-repeat.zero {
@@ -898,12 +903,18 @@ textarea {
 
 .tab-block {
   position: relative;
-  padding: 10px 14px;
-  margin: 0;
+  padding: 14px 18px;
+  margin: 10px 0;
+  border: 1px solid rgba(255,255,255,.25);
+  border-radius: 8px;
 }
 
 .tab-gap {
   height: 12px;
+}
+
+.tab-block .tab-line + .tab-line {
+  margin-top: 0 !important;
 }
 
 .delete-tab-btn {
@@ -1081,12 +1092,13 @@ textarea {
   height: 0;
   line-height: 0;
   overflow: hidden;
-  font-size: 0;
+  font-size: 1px;
 }
 
 .tab-spacer {
-  height: 5px;
-  line-height: 5px;
+  height: 4px;
+  line-height: 4px;
+  font-size: 4px;
 }
 
 .delete-tab-btn,
@@ -1105,6 +1117,7 @@ textarea {
   position: absolute;
   right: 8px;
   top: 6px;
+  display: none !important;
 }
 
 .tab-insert-row {
@@ -1126,6 +1139,7 @@ textarea {
 .tab-block-controls {
   margin-top: 8px;
   text-align: center;
+  display: none;
 }
 
 .tab-block-controls button {
@@ -1136,6 +1150,10 @@ textarea {
   border-radius: 6px;
   padding: 6px 10px;
   cursor: pointer;
+}
+
+.editor-panel.editing-mode .tab-block-controls {
+  display: block;
 }
 
 .song-link-pill {
