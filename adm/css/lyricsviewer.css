@@ -318,12 +318,14 @@ body {
   color: white !important;
 }
 
+/*
 .viewer-tab .tab-repeat.zero,
 .viewer-tab .tab-repeat.zero * {
   color: #050505 !important;
   text-shadow: none !important;
   opacity: 0 !important;
 }
+*/
 
 .viewer-tab .tab-line {
   margin: 0 !important;
@@ -361,8 +363,7 @@ body {
     box-shadow .15s ease;
   margin-top: 4px;
   margin-bottom: 40px;
-  margin-bottom: 0;
-  overflow: visible !important;
+  overflow: hidden !important;
   overflow-x: auto !important;
   scrollbar-width: none;
   text-shadow: 0 1px 0 rgba(0,0,0,.9), 0 0 3px rgba(255,255,255,.25);
@@ -449,7 +450,7 @@ body {
 /** Sections Titles **/
 .viewer-section h2 {
   margin-top: 0;
-  margin-bottom: -20px  !important;
+  margin-bottom: 4px  !important;
   line-height: 1.05;
   font-size: 16px;
   font-weight: 900;
@@ -587,7 +588,7 @@ body {
   }
   .viewer-section h2{
     font-size:11px !important;
-    margin-bottom: -60px !important;
+    margin-bottom: 0px !important;
   }
 
   .viewer-section-text{
@@ -599,8 +600,8 @@ body {
   .viewer-tab {
     font-size:19px;
     font-weight: 900 !important;
-    overflow: visible !important;
-    overflow-x: hidden !important;
+    overflow: hidden !important;
+    overflow-x: auto !important;
     scrollbar-width: none;
   }
   
@@ -629,6 +630,11 @@ body {
   color: transparent;
 }
 **/
+
+.viewer-tab .viewer-section-text {
+  font-family: "Courier New", monospace;
+  white-space: pre;
+}
 
 .back-split,
 .save-split {
@@ -695,12 +701,6 @@ body {
 
 .tab-title {
   font-family: Verdana, Bahnschrift, Arial, sans-serif !important;
-}
-
-
-
-.tab-note.has-input {
-  color: white !important;
 }
 
 .tab-gap {
