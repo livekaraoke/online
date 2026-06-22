@@ -909,7 +909,6 @@ function createTabBlock() {
   return (
     '<div class="tab-gap"></div>' +
     '<div class="tab-block" contenteditable="false">' +
-      '<button type="button" class="delete-tab-btn">✕</button>' +
       '<div class="tab-line tab-apostrophe">●</div>' +
       '<div class="tab-line tab-note-line">' +
         '<span class="tab-fixed">»</span>' +
@@ -1017,8 +1016,7 @@ document.addEventListener("keydown", function (e) {
   let pos = 0;
 
   if (sel.rangeCount && target.contains(sel.anchorNode)) {
-    const range = sel.getRangeAt(0);
-    pos = range.startOffset;
+    pos = sel.getRangeAt(0).startOffset;
   }
 
   if (e.key === "Backspace") {
@@ -1026,6 +1024,7 @@ document.addEventListener("keydown", function (e) {
     text = text.substring(0, pos) + "-" + text.substring(pos + 1);
     target.innerText = text;
     setCaret(target, pos);
+    updateLivePreview();
     return;
   }
 
@@ -1033,17 +1032,21 @@ document.addEventListener("keydown", function (e) {
     text = text.substring(0, pos) + "-" + text.substring(pos + 1);
     target.innerText = text;
     setCaret(target, pos);
+    updateLivePreview();
     return;
   }
 
   if (e.key.length === 1) {
-    text = text.substring(0, pos) + e.key + text.substring(pos + 1);
+    text = text.substring(0, pos) + e.key + text.substring(pos + e.key.length);
+
+    while (text.length < max) text += "-";
+    if (text.length > max) text = text.slice(0, max);
+
     target.innerText = text;
     target.classList.add("has-input");
-    setCaret(target, pos + 1);
+    setCaret(target, Math.min(pos + e.key.length, max));
+    updateLivePreview();
   }
-
-  updateLivePreview();
 });
 /**/
 /*** DELETE / INSERT / MOVE HANDLERS ***/
