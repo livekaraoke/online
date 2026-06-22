@@ -359,7 +359,6 @@ textarea {
   border-radius: 8px;
   font-size: 22px;
   line-height: 1.25;
-  white-space: pre-wrap;
   outline: none;
 }
 
@@ -379,6 +378,7 @@ textarea {
   font-family: "Courier New", monospace !important;
   font-size: 18px;
   line-height: 1;
+  white-space: pre !important;
 }
 
 .section-editor:focus {
@@ -409,13 +409,14 @@ textarea {
 }
 .lyric-section-title {
   color: #888;
-  font-weight: 1200 !important;
+  font-weight: 900 !important;
   margin-top: 10px;
   margin-bottom: 1px;
   font-size: 15px;
   letter-spacing: 1px;
   text-transform: uppercase;
 }
+
 .section-text {
   white-space: pre-wrap;
   line-height: 1.08;
@@ -424,21 +425,7 @@ textarea {
 }
 
 
-.lyric-section-title,
-.viewer-section h2,
-.viewer-tab h2 {
-  font-weight: 900 !important;
-  margin-bottom: 0 !important;
-  padding-bottom: 0 !important;
-  line-height: 1 !important;
-}
 
-.lyric-section-title,
-.viewer-section h2 {
-  margin-bottom: 0 !important;
-  padding-bottom: 0 !important;
-  line-height: 1 !important;
-}
 
 .section-text,
 .viewer-section-text {
@@ -481,14 +468,6 @@ textarea {
   text-indent: 0;
 }
 
-.-preview-box {
-  border: 1px dashed rgba(255,255,255,0.35);
-  border-radius: 8px;
-  padding: 10px 12px;
-  margin-bottom: 16px;
-  background: rgba(255,255,255,0.03);
-}
-
 .live-preview-label {
   color: #FFD400;
   font-size: 12px;
@@ -500,7 +479,8 @@ textarea {
 }
 
 .live-preview-box {
-  border: 1px solid #FFD400 !important;
+  background: rgba(255,255,255,0.03);
+  border: 1px dashed rgba(255,255,255,0.35);
   box-shadow: 0 0 10px rgba(255,212,0,.18);
   border-radius: 8px;
   margin-bottom: 18px;
@@ -525,7 +505,7 @@ textarea {
 }
 
 .tab-dashes.has-input {
-  color: #666 !important;
+  color: white !important;
 }
 
 .live-preview-box .tab-section,
@@ -535,13 +515,6 @@ textarea {
   padding: 10px;
 }
 
-.live-preview-box .lyric-section-title {
-  font-family: Verdana, Bahnschrift, Arial, sans-serif !important;
-  text-align: center;
-  color: #FFD400 !important;
-  font-size: 16px;
-  font-weight: 900 !important;
-}
 
 .live-preview-box .section-text {
   font-family: "Courier New", monospace !important;
@@ -549,11 +522,7 @@ textarea {
   font-weight: 900 !important;
   white-space: pre !important;
 }
-.live-preview-box .lyrics-preview .lyric-section-title {
-  color: #888 !important;
-  text-align: left;
-  font-family: Verdana, Arial, sans-serif !important;
-}
+
 
 .live-preview-box .lyrics-preview .section-text {
   font-family: Verdana, Arial, sans-serif !important;
@@ -709,7 +678,6 @@ textarea {
 /***************************************************************************************/
 @media (max-width: 700px) {
   .song-meta,
-  .controls,
   .section-title-row {
     grid-template-columns: 1fr;
   }
@@ -777,6 +745,7 @@ textarea {
   line-height: 0 !important;
   overflow: hidden !important;
   font-size: 0 !important;
+  opacity: 0;
 }
 
 .tab-editable {
@@ -820,9 +789,6 @@ textarea {
 
 
 
-.tab-line {
-  /*font-family: "Cour*/
-}
 
 .collapsed {
   display: none;
@@ -860,14 +826,7 @@ textarea {
   align-self: center;
 }
 
-.lyric-section-title,
-.viewer-section h2,
-.viewer-tab h2 {
-  margin: 0 !important;
-  padding: 0 !important;
-  line-height: 1 !important;
-  font-weight: 900 !important;
-}
+
 
 .section-text,
 .viewer-section-text {
@@ -891,26 +850,12 @@ textarea {
   text-shadow: none !important;
 }
 
-.tab-dashes {
-  color: #666 !important;
-  font-weight: 900;
-}
-
-.tab-dashes.has-input {
-  color: white !important;
-  font-weight: 900;
-}
-
 .tab-block {
   position: relative;
   padding: 14px 18px;
   margin: 10px 0;
   border: 1px solid rgba(255,255,255,.25);
   border-radius: 8px;
-}
-
-.tab-gap {
-  height: 12px;
 }
 
 .tab-block .tab-line + .tab-line {
@@ -971,11 +916,6 @@ textarea {
   color: #FFD400;
   border-color: #FFD400;
   box-shadow: 0 0 8px rgba(255,212,0,.25);
-}
-
-
-.tab-note.tab-hidden-fill {
-  color: #050505 !important;
 }
 
 .tab-note.has-input {
@@ -1051,40 +991,12 @@ textarea {
   font-family: Verdana, Bahnschrift, Arial, sans-serif !important;
 }
 
-.tab-dashes {
-  color: #666 !important;
-}
-
-.tab-dashes.has-input {
-  color: white !important;
-}
-
 .tab-note.tab-hidden-fill {
   color: #050505 !important;
 }
 
-.tab-note.has-input {
-  color: white !important;
-}
-
 .tab-gap {
   height: 14px;
-}
-
-.tab-block {
-  position: relative;
-  padding: 14px 18px;
-  margin: 10px 0;
-  border: 1px solid rgba(255,255,255,.25);
-  border-radius: 8px;
-}
-
-.tab-line {
-  font-family: "Courier New", monospace;
-  font-size: 19px;
-  font-weight: 900;
-  line-height: 1;
-  white-space: pre;
 }
 
 .tab-apostrophe {
@@ -1093,12 +1005,6 @@ textarea {
   line-height: 0;
   overflow: hidden;
   font-size: 1px;
-}
-
-.tab-spacer {
-  height: 4px;
-  line-height: 4px;
-  font-size: 4px;
 }
 
 .delete-tab-btn,
