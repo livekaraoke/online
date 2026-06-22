@@ -166,7 +166,7 @@ body {
   color: #33AA33;
   font-size: 17px;
   font-weight: 700;
-  line-spacing: 1;
+  line-height: 1;
 }
 
 #songYear {
@@ -235,14 +235,15 @@ body {
   margin-top: 1px;
   margin-bottom: 10px;
   font-size: 24px;
-  line-height: 1.2
+  line-height: 1.2;
 }
 
 /** Lyrics / sections' text **/
-.viewer-section-text {
+.viewer-section-text {  /** THE RIGHT ONE **/
   white-space: pre-wrap;
   margin-bottom: 10px;
   margin-top: -20px !important;
+  padding-top: 0 !important;
   font-weight: 450;
 }
 
@@ -266,14 +267,15 @@ body {
   display: none;
 }
 
+
+
 .lyric-section-title {
   margin-bottom: 0 !important;
   padding-bottom: 0 !important;
   line-height: 1 !important;
 }
 
-.section-text,
-.viewer-section-text {
+.section-text {
   padding-top: 0 !important;
 }
 
@@ -286,9 +288,7 @@ body {
 }
 
 .viewer-tab .tab-repeat.zero {
-  color: transparent;.viewer-tab .tab-repeat.zero {
   color: #050505 !important;
-}
 }
 
 .viewer-tab .tab-line {
@@ -296,34 +296,52 @@ body {
   padding-right: 12px;
 }
 
-.viewer-tab {
-  padding: 14px 18px;
-}
 
-.tab-dashes {
+.tab-dashes { /** THE RIGHT ONE **/
   color: #666 !important;
   font-weight: 900;
+  text-shadow:none !important;
 }
 
 .tab-dashes.has-input {
-  color: white !important;
+  color: #666 !important;
   font-weight: 900;
+  text-shadow: none !important;
 }
 
 .tab-note.tab-hidden-fill {
   color: #050505 !important;
+  text-shadow:none !important;
 }
 
 .tab-note.has-input {
   color: white !important;
 }
 
-.tab-apostrophe {
+.viewer-tab .tab-repeat.zero,
+.viewer-tab .tab-repeat.zero * {
   color: #050505 !important;
-  height: 0 !important;
-  line-height: 0 !important;
-  overflow: hidden !important;
-  font-size: 0 !important;
+  text-shadow: none !important;
+  opacity: 0 !important;
+}
+
+.viewer-tab .tab-line {
+  margin: 0 !important;
+  padding: 0 !important;
+  line-height: 1 !important;
+}
+
+.viewer-tab .tab-block {
+  padding: 14px 18px;
+}
+
+.viewer-tab .tab-block-controls,
+.viewer-tab .delete-tab-btn,
+.viewer-tab .delete-tab-line-btn,
+.viewer-tab .delete-tab-btn-bottom,
+.viewer-tab .insert-tab-here-btn,
+.viewer-tab .tab-insert-row {
+  display: none !important;
 }
 
 /** TAB sections text / tabs when closed **/
@@ -343,11 +361,20 @@ body {
     box-shadow .15s ease;
   margin-top: 4px;
   margin-bottom: 40px;
+  margin-bottom: 0;
   overflow: visible !important;
-  overflow-x: hidden !important;
+  overflow-x: auto !important;
   scrollbar-width: none;
   text-shadow: 0 1px 0 rgba(0,0,0,.9), 0 0 3px rgba(255,255,255,.25);
+  line-height: 0.9;
+  white-space: pre !important;
+  display: block;
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+  text-indent: 0 !important;
+  direction: ltr;
 }
+
 .viewer-tab::-webkit-scrollbar {
     display: none;
   }
@@ -368,69 +395,26 @@ body {
 }
 
 /** TAB sections title **/
-.viewer-tab h2 {
+.viewer-tab h2 {            /** THE RIGHT ONE **/
   text-align: center;
   color: #FFD400 !important;
-  margin: 0 !important;
   padding: 0 !important;
 
   font-size: 16px;
   letter-spacing: 1px;
-  font-weight: 1200;
+  font-weight: 900;
   font-family: Verdana, Bahnschrift, Arial, sans-serif;
   text-transform: uppercase;
   cursor: pointer;
-  margin-bottom: 15px;
+  margin-bottom: 6px;
 }
 
-.viewer-tab h2::after {
-  font-size: 12px;
-  opacity: .8;
-}
-
-.viewer-tab .viewer-section-text,
-.viewer-tab .viewer-section-text * {
-  text-align: left !important;
-}
-
-/** TAB text **/
-.viewer-tab .viewer-section-text {
-  text-align: left !important;
-  font-family: "Courier New", monospace !important;
-  font-size: 19px;
-  line-height: 0.9;
-  overflow-x: auto;
-  font-weight: 900 !important;
-  margin-top: 0;
-  margin-bottom: 0;
-  white-space: pre !important;
-  display: block;
-  margin-left: 0 !important;
-  padding-left: 0 !important;
-  text-indent: 0 !important;
-  direction: ltr;
-}
-
-.viewer-tab .viewer-section-text::first-line {
-  text-indent: 0 !important;
-}
-
-.viewer-tab.collapsed-tab .viewer-section-text {
-  display: none;
-}
 
 /*************************************************************************************************/
 /*********************************** END OF GUITAR TABS SECTION **********************************/
 /*************************************************************************************************/
 
-.lyric-section-title {
-  margin-bottom: 0 !important;
-  padding-bottom: 0 !important;
-  line-height: 1 !important;
-}
-
-.section-text,
-.viewer-section-text {
+.section-text {
   margin-top: 0 !important;
   padding-top: 0 !important;
 }
@@ -460,15 +444,6 @@ body {
     0 0 10px rgba(255,0,0,.2);
 }
 
-.viewer-section-text {
-  margin-top: 0 !important;
-  padding-top: 0 !important;
-}
-
-.viewer-section h2 + .viewer-section-text,
-.viewer-tab h2 + .viewer-section-text {
-  margin-top: -2px !important;
-}
 
 
 /** Sections Titles **/
@@ -483,8 +458,7 @@ body {
 
 
 .lyric-section-title,
-.viewer-section h2,
-.viewer-tab h2 {
+.viewer-section h2 {
   padding: 0 !important;
   line-height: 1.05 !important;
   font-size: 16px;
@@ -493,25 +467,11 @@ body {
   color: #888;
 }
 
-.section-text,
-.viewer-section-text {
+.section-text {
   margin-top: -2px !important;
   padding-top: 0 !important;
 }
 
-.viewer-tab .viewer-section-text,
-.viewer-tab .viewer-section-text * {
-  text-align: left !important;
-}
-
-.viewer-tab .viewer-section-text {
-  font-family: "Courier New", monospace !important;
-  color: white;
-  white-space: pre !important;
-  margin-left: 0 !important;
-  padding-left: 0 !important;
-  text-indent: 0 !important;
-}
 
 .viewer-title {
   flex: 1;
@@ -621,9 +581,13 @@ body {
   /** END of User BPM, Original BPM, Capo, Key MOBILE **/
 
   /** Sections titles **/
+  .viewer-tab h2 {
+    font-size:11px !important;
+    margin-bottom: 10px !important;
+  }
   .viewer-section h2{
     font-size:11px !important;
-    margin-bottom: -30px !important;
+    margin-bottom: -60px !important;
   }
 
   .viewer-section-text{
@@ -633,19 +597,18 @@ body {
 
   /** TAB Text **/
   .viewer-tab {
-    font-size:40px;
+    font-size:19px;
     font-weight: 900 !important;
     overflow: visible !important;
     overflow-x: hidden !important;
     scrollbar-width: none;
   }
-  .viewer-tab h2 {
-    font-size:11px !important;
-    margin-bottom: 10px !important;
-  }
+  
   .viewer-tab::-webkit-scrollbar {
     display: none;
   }
+
+
   
 }
 /****************************************************************/
@@ -658,68 +621,14 @@ body {
   text-shadow: 0 0 0.4px rgba(255,255,255,.45);
 }
 
-.tab-anchor {
-  /*position: absolute;*/
-  display: block;
-  /*height: 0;
-  max-height: 0;
-  overflow: hidden;*/
-  font-size: 2px;
-  /*line-height: 0;*/
-  color: transparent;
-  opacity: 0;
-  user-select: none;
-  pointer-events: none;
-  left: -99999px;
-}
-
-
-
-
-.viewer-tab h2 {
-  margin-bottom: 10px !important;
-  color: #FFFFFF;
-}
-
-.viewer-tab .viewer-section-text {
-  display: block;
-  line-height: 1;
-  margin: 0 !important;
-  padding: 0 !important;
-  text-indent: 0 !important;
-  white-space: pre !important;
-  overflow: hidden !important;
-}
-
+/**
 .viewer-tab .viewer-section-text::first-line {
   text-indent: 0 !important;
   font-size: 0;
   line-height: 0;
   color: transparent;
 }
-
-@media (max-width: 768px) {
-  /** TAB Text **/
-  .viewer-tab {
-    font-size:40px;
-    font-weight: 900 !important;
-    overflow: visible !important;
-    overflow-x: hidden !important;
-    scrollbar-width: none;
-  }
-  .viewer-tab h2 {
-    font-size:11px !important;
-    margin-bottom: 10px !important;
-  }
-  .viewer-section-text{
-    font-size:24px !important;
-  }
-  .viewer-section h2{
-    font-size:11px !important;
-    margin-bottom: -60px !important;
-  }
-}
-
+**/
 
 .back-split,
 .save-split {
@@ -784,22 +693,11 @@ body {
   user-select: none;
 }
 
-.tab-title,
-.viewer-tab h2 {
+.tab-title {
   font-family: Verdana, Bahnschrift, Arial, sans-serif !important;
 }
 
-.tab-dashes {
-  color: #666 !important;
-}
 
-.tab-dashes.has-input {
-  color: white !important;
-}
-
-.tab-note.tab-hidden-fill {
-  color: #050505 !important;
-}
 
 .tab-note.has-input {
   color: white !important;
