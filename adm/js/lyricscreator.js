@@ -152,13 +152,25 @@ function formatText(command) {
 
 function formatColor(color) {
   const sel = window.getSelection();
-  const node = sel.anchorNode;
-  const parent = node?.parentElement;
 
-  if (parent && parent.classList.contains("tab-dashes")) {
-    colourDashSegment(parent, sel.anchorOffset, color);
-    updateLivePreview();
-    return;
+  if (sel.rangeCount) {
+    const node = sel.anchorNode;
+    const el = node.nodeType === Node.TEXT_NODE
+      ? node.parentElement
+      : node;
+
+    const cell = el.closest?.(".tab-cell");
+
+    if (cell) {
+      if (cell.classList.contains("dash")) {
+        return; // dashes stay gray forever
+      }
+
+      cell.style.color = color;
+      cell.style.webkitTextFillColor = color;
+      updateLivePreview();
+      return;
+    }
   }
 
   document.execCommand("foreColor", false, color);
@@ -1066,10 +1078,20 @@ document.addEventListener("keydown", function (e) {
   }
 
   if (e.key.length === 1) {
+    /*
     cells[pos].innerText = e.key;
     cells[pos].classList.remove("dash");
     cells[pos].classList.add("filled");
     cells[pos].style.color = getCurrentEditorColor();
+    setCaretInsideCell(cells[Math.min(pos + 1, cells.length - 1)]);
+    updateLivePreview();
+    */
+
+    cells[pos].innerText = e.key;
+    cells[pos].className = "tab-cell filled";
+    cells[pos].style.color = "white";
+    cells[pos].style.webkitTextFillColor = "white";
+  
     setCaretInsideCell(cells[Math.min(pos + 1, cells.length - 1)]);
     updateLivePreview();
   }
@@ -1540,7 +1562,7 @@ async function handleDeleteSong() {
   await db.collection("lyrics").doc(currentFirebaseId).delete();
 
   await showAlert("Deleted", "Song deleted successfully.");
-  history.back();
+  window.location.href = "lyricsviewer.html";
 }
 
 function toggleBackMenu() {
