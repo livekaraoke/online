@@ -1030,13 +1030,13 @@ textarea {
 }
 
 .section-marker {
-  color: #666;
+  /*color: #666;*/
   font-weight: 900;
   color: transparent !important;
   -webkit-text-fill-color: transparent !important;
   text-shadow: none !important;
   font-size: 28px;
-  line-height: 0;
+  line-height: 1;
   user-select: none;
   pointer-events: none;
   margin-top: -20px !important;
