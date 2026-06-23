@@ -510,12 +510,6 @@ textarea {
   color: white !important;
 }
 
-.tab-dashes span,
-.tab-dashes font {
-  color: inherit !important;
-  -webkit-text-fill-color: inherit !important;
-}
-
 .live-preview-box .tab-section,
 .live-preview-box .preview-draft.tab-preview {
   border: 1px solid #555;
@@ -798,20 +792,21 @@ textarea {
 
 .tab-cell.dash,
 .note-cell.empty {
-  color: #050505 !important;
-  -webkit-text-fill-color: #050505 !important;
+  color: #666 !important;
+  -webkit-text-fill-color: #666 !important;
   text-shadow: none !important;
 }
 
 .tab-dashes .tab-cell.dash {
   color: #666 !important;
   -webkit-text-fill-color: #666 !important;
+  text-shadow: 0 1px 0 rgba(0,0,0,.9), 0 0 3px rgba(255,255,255,.25);
 }
 
 .tab-cell.filled,
 .note-cell.filled {
   color: white;
-  -webkit-text-fill-color: white;
+  -webkit-text-fill-color: currentColor;
 }
 
 
