@@ -936,10 +936,19 @@ function createTabInsertButton() {
 }
 
 function createStringLine(letter, repeat = false) {
-  return `<div class="tab-line">
-    <button type="button" class="delete-tab-line-btn">✕</button>
-    <span class="tab-fixed">${letter}⦗|</span><span class="tab-dashes" contenteditable="true">---------------------------------------------------------</span><span class="tab-fixed">|⦘</span>${repeat ? `<span class="tab-repeat"> (x<span contenteditable="true" class="tab-repeat-number">1</span>)</span>` : ""}
-  </div>`;
+  return (
+    '<div class="tab-line">' +
+      '<button type="button" class="delete-tab-line-btn">✕</button>' +
+      `<span class="tab-fixed">${letter}⦗|</span>` +
+      '<span class="tab-dashes" contenteditable="true">' +
+        '<span class="tab-cell dash">-</span>'.repeat(57) +
+      '</span>' +
+      '<span class="tab-fixed">|⦘</span>' +
+      (repeat
+        ? '<span class="tab-repeat"> (x<span contenteditable="true" class="tab-repeat-number">1</span>)</span>'
+        : '') +
+    '</div>'
+  );
 }
 
 function insertHtmlAtCursor(html) {
@@ -991,6 +1000,21 @@ function setCaret(el, pos) {
   sel.addRange(range);
 }
 
+function setCaretInsideCell(cell) {
+  const range = document.createRange();
+  const sel = window.getSelection();
+
+  range.selectNodeContents(cell);
+  range.collapse(false);
+
+  sel.removeAllRanges();
+  sel.addRange(range);
+}
+
+function getCurrentEditorColor() {
+  return document.queryCommandValue("foreColor") || "white";
+}
+
 /*** Tab Event Handlers ***********/
 /**********************************/
 
@@ -998,53 +1022,55 @@ function setCaret(el, pos) {
 /** Tab note (dash '-') input **/
 /**/
 document.addEventListener("keydown", function (e) {
-  const target = e.target;
-  if (!target.classList.contains("tab-dashes")) return;
+  const target = e.target.closest(".tab-dashes");
+  if (!target) return;
 
   const navKeys = ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Tab"];
   if (navKeys.includes(e.key)) return;
 
   e.preventDefault();
 
-  const max = 57;
-  let text = target.innerText.replace(/\n/g, "");
-
-  while (text.length < max) text += "-";
-  if (text.length > max) text = text.slice(0, max);
+  const cells = [...target.querySelectorAll(".tab-cell")];
+  if (!cells.length) return;
 
   const sel = window.getSelection();
   let pos = 0;
 
-  if (sel.rangeCount && target.contains(sel.anchorNode)) {
-    pos = sel.getRangeAt(0).startOffset;
+  if (sel.rangeCount) {
+    const node = sel.anchorNode;
+    const cell = node.nodeType === Node.TEXT_NODE
+      ? node.parentElement.closest(".tab-cell")
+      : node.closest?.(".tab-cell");
+
+    const found = cells.indexOf(cell);
+    if (found >= 0) pos = found;
   }
 
   if (e.key === "Backspace") {
     pos = Math.max(0, pos - 1);
-    text = text.substring(0, pos) + "-" + text.substring(pos + 1);
-    target.innerText = text;
-    setCaret(target, pos);
+    cells[pos].innerText = "-";
+    cells[pos].className = "tab-cell dash";
+    cells[pos].removeAttribute("style");
+    setCaretInsideCell(cells[pos]);
     updateLivePreview();
     return;
   }
 
   if (e.key === "Delete") {
-    text = text.substring(0, pos) + "-" + text.substring(pos + 1);
-    target.innerText = text;
-    setCaret(target, pos);
+    cells[pos].innerText = "-";
+    cells[pos].className = "tab-cell dash";
+    cells[pos].removeAttribute("style");
+    setCaretInsideCell(cells[pos]);
     updateLivePreview();
     return;
   }
 
   if (e.key.length === 1) {
-    text = text.substring(0, pos) + e.key + text.substring(pos + e.key.length);
-
-    while (text.length < max) text += "-";
-    if (text.length > max) text = text.slice(0, max);
-
-    target.innerText = text;
-    target.classList.add("has-input");
-    setCaret(target, Math.min(pos + e.key.length, max));
+    cells[pos].innerText = e.key;
+    cells[pos].classList.remove("dash");
+    cells[pos].classList.add("filled");
+    cells[pos].style.color = getCurrentEditorColor();
+    setCaretInsideCell(cells[Math.min(pos + 1, cells.length - 1)]);
     updateLivePreview();
   }
 });
@@ -1115,53 +1141,78 @@ document.addEventListener("click", async function (e) {
 });
 /**/
 document.addEventListener("keydown", function (e) {
-  const target = e.target;
-  if (!target.classList.contains("tab-note")) return;
+  const target = e.target.closest(".tab-note");
+  if (!target) return;
 
   const navKeys = ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Tab"];
   if (navKeys.includes(e.key)) return;
 
   e.preventDefault();
 
-  const max = 58;
-  let text = target.innerText.replace(/\n/g, "");
+  prepareNoteCells(target);
 
-  while (text.length < max) text += "_";
-  if (text.length > max) text = text.slice(0, max);
+  const cells = [...target.querySelectorAll(".note-cell")];
 
   const sel = window.getSelection();
   let pos = 0;
 
-  if (sel.rangeCount && target.contains(sel.anchorNode)) {
-    pos = sel.getRangeAt(0).startOffset;
+  if (sel.rangeCount) {
+    const node = sel.anchorNode;
+    const cell = node.nodeType === Node.TEXT_NODE
+      ? node.parentElement.closest(".note-cell")
+      : node.closest?.(".note-cell");
+
+    const found = cells.indexOf(cell);
+    if (found >= 0) pos = found;
   }
 
   if (e.key === "Backspace") {
     pos = Math.max(0, pos - 1);
-    text = text.substring(0, pos) + "_" + text.substring(pos + 1);
-    target.innerText = text;
-    setCaret(target, pos);
-    updateNoteClass(target);
+    resetNoteCell(cells[pos]);
+    setCaretInsideCell(cells[pos]);
+    updateLivePreview();
     return;
   }
 
   if (e.key === "Delete") {
-    text = text.substring(0, pos) + "_" + text.substring(pos + 1);
-    target.innerText = text;
-    setCaret(target, pos);
-    updateNoteClass(target);
+    resetNoteCell(cells[pos]);
+    setCaretInsideCell(cells[pos]);
+    updateLivePreview();
     return;
   }
 
   if (e.key.length === 1) {
-    text = text.substring(0, pos) + e.key + text.substring(pos + 1);
-    target.innerText = text;
-    setCaret(target, pos + 1);
-    updateNoteClass(target);
-  }
+    cells[pos].innerText = e.key;
+    cells[pos].classList.remove("empty");
+    cells[pos].classList.add("filled");
+    cells[pos].style.color = getCurrentEditorColor();
 
-  updateLivePreview();
+    setCaretInsideCell(cells[Math.min(pos + 1, cells.length - 1)]);
+    updateLivePreview();
+  }
 });
+
+function prepareNoteCells(note) {
+  if (note.querySelector(".note-cell")) return;
+
+  const text = note.innerText || "_".repeat(58);
+  note.innerHTML = "";
+
+  for (let i = 0; i < 58; i++) {
+    const ch = text[i] || "_";
+    const span = document.createElement("span");
+    span.className = ch === "_" ? "note-cell empty" : "note-cell filled";
+    span.innerText = ch;
+    if (ch !== "_") span.style.color = "white";
+    note.appendChild(span);
+  }
+}
+
+function resetNoteCell(cell) {
+  cell.innerText = "_";
+  cell.className = "note-cell empty";
+  cell.removeAttribute("style");
+}
 
 function updateNoteClass(el) {
   const hasText = el.innerText.replace(/_/g, "").trim().length > 0;
