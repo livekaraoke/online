@@ -155,19 +155,28 @@ function formatColor(color) {
 
   if (sel.rangeCount) {
     const node = sel.anchorNode;
-    const el = node.nodeType === Node.TEXT_NODE
-      ? node.parentElement
-      : node;
+    const el =
+      node.nodeType === Node.TEXT_NODE
+        ? node.parentElement
+        : node;
 
-    const cell = el.closest?.(".tab-cell");
+    const tabCell = el.closest?.(".tab-cell");
+    const noteCell = el.closest?.(".note-cell");
 
-    if (cell) {
-      if (cell.classList.contains("dash")) {
-        return; // dashes stay gray forever
-      }
+    if (tabCell) {
+      if (tabCell.classList.contains("dash")) return;
 
-      cell.style.color = color;
-      cell.style.webkitTextFillColor = color;
+      tabCell.style.color = color;
+      tabCell.style.webkitTextFillColor = color;
+      updateLivePreview();
+      return;
+    }
+
+    if (noteCell) {
+      if (noteCell.classList.contains("empty")) return;
+
+      noteCell.style.color = color;
+      noteCell.style.webkitTextFillColor = color;
       updateLivePreview();
       return;
     }
@@ -409,9 +418,9 @@ function clearEditor() {
   document.getElementById("saveSectionBtn").innerText = "Create Section";
   document.getElementById("saveSectionBtn").classList.remove("editing");
   document.getElementById("cancelEditBtn").style.display = "none";
-  
-  document.getElementById("insertTabBtn").disabled = true;
-  document.getElementById("insertTabBtn").classList.remove("enabled");
+
+  document.getElementById("insertTabBtn").disabled = false;
+  document.getElementById("insertTabBtn").classList.add("enabled");
   
   document.getElementById("sectionEditor").classList.remove("tab-editing");
   document.querySelector(".editor-panel").classList.remove("editing-mode");
@@ -835,8 +844,8 @@ document.getElementById("sectionType").addEventListener("change", function () {
     tabOptions.style.display = "flex";
     tabCheckbox.checked = true;
     syncTabToggleButton();
-    tabBtn.classList.add("active");
-    tabBtn.innerText = "Load Closed";
+    /*tabBtn.classList.add("active");
+    tabBtn.innerText = "Load Closed";*/
     editor.focus();
     document.execCommand("bold", false, true);
   } else { /* LYRICS MODE */
@@ -845,8 +854,8 @@ document.getElementById("sectionType").addEventListener("change", function () {
     editor.style.fontFamily = "Verdana";
     editor.classList.remove("tab-editing");
     tabOptions.style.display = "none";
-    tabBtn.disabled = true;
-    tabBtn.classList.remove("enabled");
+    tabBtn.disabled = false;
+    tabBtn.classList.add("enabled");
   }
 
   updateLivePreview();
@@ -1174,15 +1183,17 @@ document.addEventListener("keydown", function (e) {
   prepareNoteCells(target);
 
   const cells = [...target.querySelectorAll(".note-cell")];
+  if (!cells.length) return;
 
   const sel = window.getSelection();
   let pos = 0;
 
   if (sel.rangeCount) {
     const node = sel.anchorNode;
-    const cell = node.nodeType === Node.TEXT_NODE
-      ? node.parentElement.closest(".note-cell")
-      : node.closest?.(".note-cell");
+    const cell =
+      node.nodeType === Node.TEXT_NODE
+        ? node.parentElement.closest(".note-cell")
+        : node.closest?.(".note-cell");
 
     const found = cells.indexOf(cell);
     if (found >= 0) pos = found;
@@ -1205,12 +1216,9 @@ document.addEventListener("keydown", function (e) {
 
   if (e.key.length === 1) {
     cells[pos].innerText = e.key;
-
-    cells[pos].classList.remove("empty");
-    cells[pos].classList.add("filled");
-    
-    cells[pos].style.color = selectedSectionColor || "white";
-    cells[pos].style.webkitTextFillColor = selectedSectionColor || "white";
+    cells[pos].className = "note-cell filled";
+    cells[pos].style.color = "white";
+    cells[pos].style.webkitTextFillColor = "white";
 
     setCaretInsideCell(cells[Math.min(pos + 1, cells.length - 1)]);
     updateLivePreview();
@@ -1226,12 +1234,17 @@ function prepareNoteCells(note) {
   for (let i = 0; i < 58; i++) {
     const ch = text[i] || "_";
     const span = document.createElement("span");
-    span.className = ch === "_" ? "note-cell empty" : "note-cell filled";
-    span.innerText = ch;
-    if (ch !== "_") {
+
+    if (ch === "_") {
+      span.className = "note-cell empty";
+      span.innerText = "_";
+    } else {
+      span.className = "note-cell filled";
+      span.innerText = ch;
       span.style.color = "white";
       span.style.webkitTextFillColor = "white";
     }
+
     note.appendChild(span);
   }
 }
