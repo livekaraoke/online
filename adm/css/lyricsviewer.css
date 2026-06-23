@@ -412,13 +412,11 @@ body {
 }
 
 /*** UNDERSCORES / NOTE CELL ***/
-.viewer-tab:hover .note-cell.empty {
-  color: rgba(255,212,0,.03);
+.note-cell.empty {
+  color: transparent !important;
+  -webkit-text-fill-color: transparent !important;
+  text-shadow: none !important;
 }
-.viewer-tab .note-cell.empty {
-  color: rgba(255,255,255,0.03);
-}
-
 
 /** TAB section when open **/
 .viewer-tab:not(.collapsed-tab){
@@ -440,8 +438,7 @@ body {
   cursor: pointer;
 }
 
-.tab-cell.dash,
-.note-cell.empty {
+.tab-cell.dash {
   color: #050505 !important;
   -webkit-text-fill-color: #666 !important;
   text-shadow: none !important;
