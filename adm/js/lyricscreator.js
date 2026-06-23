@@ -854,6 +854,11 @@ function updateLivePreview() {
 
   let previewHtml = html;
 
+  previewHtml = previewHtml
+    .replace(/<div[^>]*class="tab-block-controls"[^>]*>[\s\S]*?<\/div>/gi, "")
+    .replace(/<div[^>]*class="tab-insert-row"[^>]*>[\s\S]*?<\/div>/gi, "")
+    .replace(/<button[^>]*class="delete-tab-line-btn"[^>]*>[\s\S]*?<\/button>/gi, "");
+
   if (sectionType === "tab") {
     previewHtml = html; // DO NOT replace dashes here .replace(/-/g, `<span class="tab-dash">-</span>`);
   }
