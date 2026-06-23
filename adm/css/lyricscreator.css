@@ -1025,11 +1025,16 @@ textarea {
 }
 
 .section-marker {
-  color: #ff3333;
-  font-size: 34px;
-  line-height: 1;
+  color: #666;
   font-weight: 900;
+  color: transparent !important;
+  -webkit-text-fill-color: transparent !important;
+  text-shadow: none !important;
+  font-size: 28px;
+  line-height: 0;
   user-select: none;
+  pointer-events: none;
+  margin-top: -10px !important;
 }
 
 .tab-title,
