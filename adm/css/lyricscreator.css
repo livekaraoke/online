@@ -1034,7 +1034,7 @@ textarea {
   line-height: 0;
   user-select: none;
   pointer-events: none;
-  margin-top: -10px !important;
+  margin-top: -20px !important;
 }
 
 .tab-title,
