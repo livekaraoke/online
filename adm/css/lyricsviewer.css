@@ -439,7 +439,7 @@ body {
 }
 
 .tab-cell.dash {
-  color: #050505 !important;
+  color: #666 !important;
   -webkit-text-fill-color: #666 !important;
   text-shadow: none !important;
 }
