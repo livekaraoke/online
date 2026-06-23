@@ -796,7 +796,23 @@ textarea {
 /************* END OF TAB COLOURING AND FORMAT ************/
 /**********************************************************/
 
+.tab-cell.dash,
+.note-cell.empty {
+  color: #050505 !important;
+  -webkit-text-fill-color: #050505 !important;
+  text-shadow: none !important;
+}
 
+.tab-dashes .tab-cell.dash {
+  color: #666 !important;
+  -webkit-text-fill-color: #666 !important;
+}
+
+.tab-cell.filled,
+.note-cell.filled {
+  color: white;
+  -webkit-text-fill-color: white;
+}
 
 
 .collapsed {
