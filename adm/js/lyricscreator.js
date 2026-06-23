@@ -1089,8 +1089,8 @@ document.addEventListener("keydown", function (e) {
 
     cells[pos].innerText = e.key;
     cells[pos].className = "tab-cell filled";
-    cells[pos].style.color = "white";
-    cells[pos].style.webkitTextFillColor = "white";
+    cells[pos].style.color = selectedSectionColor || "white";
+    cells[pos].style.webkitTextFillColor = selectedSectionColor || "white";
   
     setCaretInsideCell(cells[Math.min(pos + 1, cells.length - 1)]);
     updateLivePreview();
@@ -1205,9 +1205,12 @@ document.addEventListener("keydown", function (e) {
 
   if (e.key.length === 1) {
     cells[pos].innerText = e.key;
+
     cells[pos].classList.remove("empty");
     cells[pos].classList.add("filled");
-    cells[pos].style.color = getCurrentEditorColor();
+    
+    cells[pos].style.color = selectedSectionColor || "white";
+    cells[pos].style.webkitTextFillColor = selectedSectionColor || "white";
 
     setCaretInsideCell(cells[Math.min(pos + 1, cells.length - 1)]);
     updateLivePreview();
@@ -1225,7 +1228,10 @@ function prepareNoteCells(note) {
     const span = document.createElement("span");
     span.className = ch === "_" ? "note-cell empty" : "note-cell filled";
     span.innerText = ch;
-    if (ch !== "_") span.style.color = "white";
+    if (ch !== "_") {
+      span.style.color = "white";
+      span.style.webkitTextFillColor = "white";
+    }
     note.appendChild(span);
   }
 }
@@ -1561,7 +1567,7 @@ async function handleDeleteSong() {
 
   await db.collection("lyrics").doc(currentFirebaseId).delete();
 
-  await showAlert("Deleted", "Song deleted successfully.");
+  await showAlert("Deleted", "Song deleted successfully!");
   window.location.href = "lyricsviewer.html";
 }
 
