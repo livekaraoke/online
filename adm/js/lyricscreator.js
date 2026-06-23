@@ -253,7 +253,6 @@ function saveSection() {
     .replace(/(<br\s*\/?>\s*){3,}/gi, "<br><br>")
     .replace(/^(<br\s*\/?>|\s)+/gi, "")
     .replace(/(<br\s*\/?>|\s)+$/gi, "")
-    .trim();
   
   if (sectionType === "tab") {
     html = editor.innerHTML
@@ -651,7 +650,13 @@ function editSection(index) {
     tabOptions.style.display = "none";
   }
   
-  document.getElementById("sectionEditor").innerHTML = section.html || "";
+  const editor = document.getElementById("sectionEditor");
+
+  editor.innerHTML = section.html || "";
+  
+  if (section.type !== "tab") {
+    editor.style.whiteSpace = "pre-wrap";
+  }
   
   if (section.type === "tab") {
     restoreTabEditability(document.getElementById("sectionEditor"));
