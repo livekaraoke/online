@@ -508,6 +508,7 @@ function renderPreview() {
         <div class="section-actions">
           <button onclick="moveSection(${index}, -1)">↑</button>
           <button onclick="moveSection(${index}, 1)">↓</button>
+          <button onclick="duplicateTabBlock(${index}, 1)">⧉ Duplicate</button>
           <button onclick="deleteSection(${index})">Delete</button>
         </div>
       `;
