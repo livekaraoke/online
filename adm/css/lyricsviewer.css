@@ -416,6 +416,7 @@ body {
 .viewer-tab h2 {            /** THE RIGHT ONE **/
   text-align: center;
   color: #FFD400 !important;
+  color: #00FF00 !important;
   padding: 0 !important;
 
   font-size: 16px;
@@ -424,7 +425,7 @@ body {
   font-family: Verdana, Bahnschrift, Arial, sans-serif;
   text-transform: uppercase;
   cursor: pointer;
-  margin-bottom: 6px;
+  margin-bottom: -20px;
 }
 
 .tab-cell.dash,
