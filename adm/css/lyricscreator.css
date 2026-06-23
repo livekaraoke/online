@@ -939,12 +939,13 @@ textarea {
 .insert-tab-here-btn {
   background: #111;
   color: #FFD400;
-  border: 1px solid #FFD400;
+  border: 2px solid #FFD400;
   border-radius: 50%;
   width: 24px;
   height: 24px;
   font-weight: 900;
   cursor: pointer;
+  margin-top: 6px;
 }
 
 .tab-load-control {
