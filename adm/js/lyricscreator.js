@@ -1580,7 +1580,7 @@ async function handleDeleteSong() {
 
   await db.collection("lyrics").doc(currentFirebaseId).delete();
 
-  await showAlert("Deleted", "Song deleted successfully!");
+  await showAlert("Deleted", "Song deleted successfully.");
   window.location.href = "lyricsviewer.html";
 }
 
