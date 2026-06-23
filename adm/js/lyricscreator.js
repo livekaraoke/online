@@ -231,6 +231,12 @@ function saveSection() {
   */
   
   const title = document.getElementById("sectionTitleCustom").value.toUpperCase().trim();
+
+  if (!title) {
+    showAlert("Missing Section Title", "Please enter a section title before adding this section.");
+    return;
+  }
+  
   const editor = document.getElementById("sectionEditor");
   const fontFamily = document.getElementById("fontFamily").value;
   const sectionType = document.getElementById("sectionType").value;
@@ -1225,7 +1231,20 @@ document.addEventListener("click", async function (e) {
     const ok = await showConfirm("Delete Tab?", "Delete this guitar tab block?");
     if (!ok) return;
 
-    e.target.closest(".tab-block").remove();
+    const block = e.target.closest(".tab-block");
+    const next = block.nextElementSibling;
+    const prev = block.previousElementSibling;
+
+    if (next && next.classList.contains("tab-insert-row")) {
+      next.remove();
+    }
+
+    if (prev && prev.classList.contains("tab-insert-row")) {
+      prev.remove();
+    }
+
+    block.remove();
+    ensureTabInsertRows(document.getElementById("sectionEditor"));
     updateLivePreview();
   }
 
@@ -1305,8 +1324,7 @@ document.addEventListener("keydown", function (e) {
 
   if (sel.rangeCount) {
     const node = sel.anchorNode;
-    const cell =
-      node.nodeType === Node.TEXT_NODE
+    const cell = node.nodeType === Node.TEXT_NODE
         ? node.parentElement.closest(".note-cell")
         : node.closest?.(".note-cell");
 
@@ -1393,6 +1411,43 @@ document.addEventListener("input", function (e) {
   repeat.classList.toggle("zero", value === "0");
 
   setCaret(e.target, 1);
+});
+/**/
+document.addEventListener("input", function (e) {
+  if (!e.target.classList.contains("tab-repeat-number")) return;
+
+  let value = e.target.innerText.replace(/[^0-9]/g, "").slice(0, 1);
+  if (value === "") value = "0";
+
+  e.target.innerText = value;
+
+  const repeat = e.target.closest(".tab-repeat");
+  repeat.classList.toggle("zero", value === "0");
+
+  setCaret(e.target, 1);
+});
+/**/
+document.addEventListener("click", function (e) {
+  if (!e.target.classList.contains("tab-repeat-number")) return;
+
+  const range = document.createRange();
+  const sel = window.getSelection();
+
+  range.selectNodeContents(e.target);
+  sel.removeAllRanges();
+  sel.addRange(range);
+});
+/**/
+document.addEventListener("click", function (e) {
+  const cell = e.target.closest(".tab-cell.filled, .note-cell.filled");
+  if (!cell) return;
+
+  const range = document.createRange();
+  const sel = window.getSelection();
+
+  range.selectNodeContents(cell);
+  sel.removeAllRanges();
+  sel.addRange(range);
 });
 /**/
 /** Limit repeat number to 0-9 **/
