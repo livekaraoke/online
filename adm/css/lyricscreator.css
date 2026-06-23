@@ -802,8 +802,8 @@ textarea {
 }
 
 .note-cell.empty {
-  color: #050505 !important;
-  -webkit-text-fill-color: #050505 !important;
+  color: transparent !important;
+  -webkit-text-fill-color: transparent !important;
   text-shadow: none !important;
 }
 
