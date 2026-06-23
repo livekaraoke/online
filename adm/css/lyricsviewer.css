@@ -738,6 +738,7 @@ body {
   line-height: 0;
   user-select: none;
   pointer-events: none;
+  margin-top: -20px;
 }
 
 .tab-title {
