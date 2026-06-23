@@ -243,7 +243,7 @@ body {
 .viewer-section-text {  /** THE RIGHT ONE **/
   white-space: pre-wrap;
   margin-bottom: 10px;
-  margin-top: -35px !important;
+  margin-top: -25px !important;
   padding-top: 0 !important;
   font-weight: 450;
 }
@@ -491,7 +491,7 @@ body {
 /** Sections Titles **/
 .viewer-section h2 {
   margin-top: 0;
-  margin-bottom: -10px  !important;
+  margin-bottom: -17px  !important;
   line-height: 1;
   font-size: 16px;
   font-weight: 900;
