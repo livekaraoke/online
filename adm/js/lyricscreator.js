@@ -532,6 +532,12 @@ function renderPreview() {
 
     let sectionHtml = section.html || "";
 
+    sectionHtml = sectionHtml
+      .replace(/<div[^>]*class="tab-block-controls"[^>]*>[\s\S]*?<\/div>/gi, "")
+      .replace(/<div[^>]*class="tab-insert-row"[^>]*>[\s\S]*?<\/div>/gi, "")
+      .replace(/<button[^>]*class="delete-tab-line-btn"[^>]*>[\s\S]*?<\/button>/gi, "");
+
+
     if (isTab) {
       sectionHtml = section.html || ""; // DO NOT replace dashes here
       //sectionHtml = sectionHtml.replace(/-/g, `<span class="tab-dash">-</span>`);
@@ -655,6 +661,7 @@ function editSection(index) {
   const tabBtn = document.getElementById("tabStartsCollapsedBtn");
   
   if (section.type === "tab") {
+
     tabOptions.style.display = "flex";
   
     tabCheckbox.checked =
@@ -667,6 +674,9 @@ function editSection(index) {
   
     document.getElementById("insertTabBtn").disabled = false;
     document.getElementById("insertTabBtn").classList.add("enabled");
+
+   
+
   
   } else {
     tabOptions.style.display = "none";
@@ -687,12 +697,18 @@ function editSection(index) {
   
   if (section.type === "tab") {
     restoreTabEditability(document.getElementById("sectionEditor"));
-    editor.querySelectorAll(".tab-block-controls")
-      .forEach(el => el.style.display = "flex");
-    
-    editor.querySelectorAll(".delete-tab-line-btn")
-      .forEach(el => el.style.display = "inline-flex");
-    ensureTabInsertRows(document.getElementById("sectionEditor"));
+    editor.querySelectorAll(".tab-line").forEach(line => {
+
+  if (!line.querySelector(".tab-dashes")) return;
+
+  if (!line.querySelector(".delete-tab-line-btn")) {
+
+    line.insertAdjacentHTML(
+      "afterbegin",
+      '<button type="button" class="delete-tab-line-btn">✕</button>'
+    );
+  }
+});
   }
   
   document.getElementById("fontFamily").value = section.style.fontFamily;
@@ -1574,6 +1590,8 @@ function showConfirm(title, message) {
     };
   });
 }
+
+
 
 async function confirmPendingSectionUpdate() {
   if (editingIndex !== null) {
