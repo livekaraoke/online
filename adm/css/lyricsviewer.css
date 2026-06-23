@@ -380,7 +380,28 @@ body {
     display: none;
   }
 
+.viewer-tab .tab-dashes {
+  color: #666 !important;
+  -webkit-text-fill-color: #666 !important;
+  text-shadow: none !important;
+}
 
+.viewer-tab .tab-dashes span,
+.viewer-tab .tab-dashes font {
+  color: inherit !important;
+  -webkit-text-fill-color: inherit !important;
+}
+
+.viewer-tab .tab-note.tab-hidden-fill {
+  color: #050505 !important;
+  -webkit-text-fill-color: #050505 !important;
+  text-shadow: none !important;
+}
+
+.viewer-tab .tab-note.has-input {
+  color: white;
+  -webkit-text-fill-color: white;
+}
 
 .viewer-tab:hover {
   border-color: rgba(255,212,0,.8);
