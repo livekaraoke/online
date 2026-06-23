@@ -177,7 +177,7 @@ body {
   font-size: 17px;
   font-weight: 900;
   color: #999999;
-  color: #FF5555;
+  /*color: #FF5555;*/
 }
 /** END of User BPM, Original BPM, Capo, Key **/
 
@@ -363,7 +363,7 @@ body {
     background .15s ease,
     box-shadow .15s ease;
   margin-top: 4px;
-  margin-bottom: 40px;
+  margin-bottom: 5px;
   overflow: hidden !important;
   overflow-x: auto !important;
   scrollbar-width: none;
@@ -407,6 +407,15 @@ body {
     rgba(255,212,0,.03);
 }
 
+/*** UNDERSCORES / NOTE CELL ***/
+.viewer-tab:hover .note-cell.empty {
+  color: rgba(255,212,0,.03);
+}
+.viewer-tab .note-cell.empty {
+  color: rgba(255,255,255,0.03);
+}
+
+
 /** TAB section when open **/
 .viewer-tab:not(.collapsed-tab){
   border-color:#FFD400;
@@ -426,6 +435,7 @@ body {
   text-transform: uppercase;
   cursor: pointer;
   margin-bottom: -20px;
+  margin-top: -20px;
 }
 
 .tab-cell.dash,
