@@ -1000,13 +1000,15 @@ function createTabBlock() {
       createStringLine("A") +
       createStringLine("E") +
       '<div class="tab-block-controls">' +
-        '<button type="button" class="move-tab-up-btn">↑</button>' +
-        '<button type="button" class="move-tab-down-btn">↓</button>' +
-        '<button type="button" class="duplicate-tab-btn">Duplicate</button>' +
-        '<button type="button" class="delete-tab-btn-bottom">Delete</button>' +
+        '<button type="button" class="move-tab-up-btn">▲ Up</button>' +
+        '<button type="button" class="move-tab-down-btn">▼ Down</button>' +
+        '<button type="button" class="duplicate-tab-btn">⧉ Duplicate</button>' +
+        '<button type="button" class="delete-tab-btn-bottom">✖ Delete</button>' +
       '</div>' +
     '</div>'
   );
+  /* Saved symbols:  ↑   ↓   ▲    ▼    ⧉    ✖  */
+ 
 }
 
 function createTabInsertButton() {
