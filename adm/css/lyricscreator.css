@@ -502,10 +502,18 @@ textarea {
 .tab-dashes {
   color: #666 !important;
   font-weight: 900;
+  -webkit-text-fill-color: #666 !important;
+  text-shadow: none !important;
 }
 
 .tab-dashes.has-input {
   color: white !important;
+}
+
+.tab-dashes span,
+.tab-dashes font {
+  color: inherit !important;
+  -webkit-text-fill-color: inherit !important;
 }
 
 .live-preview-box .tab-section,
@@ -712,6 +720,7 @@ textarea {
 /**************** TAB COLOURING AND FORMAT ****************/
 /**********************************************************/
 .tab-line {
+  display: block;
   font-family: "Courier New", monospace;
   font-size: 19px;
   font-weight: 900;
@@ -856,10 +865,18 @@ textarea {
   margin: 10px 0;
   border: 1px solid rgba(255,255,255,.25);
   border-radius: 8px;
+  display: block;
+  line-height: 1 !important;
 }
 
 .tab-block .tab-line + .tab-line {
   margin-top: 0 !important;
+}
+
+.tab-block div {
+  margin: 0 !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
 }
 
 .delete-tab-btn {
@@ -920,6 +937,7 @@ textarea {
 
 .tab-note.has-input {
   color: white !important;
+  -webkit-text-fill-color: white;
 }
 
 
@@ -993,6 +1011,8 @@ textarea {
 
 .tab-note.tab-hidden-fill {
   color: #050505 !important;
+  -webkit-text-fill-color: #050505 !important;
+  text-shadow: none !important;
 }
 
 .tab-gap {
