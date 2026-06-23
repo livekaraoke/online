@@ -570,7 +570,15 @@ function duplicateSection(index) {
 }
 
 function addSectionMarker(html) {
-  html = html.replace(/<div class="section-marker"[^>]*>●<\/div>/gi, "");
+  html = String(html || "");
+
+  // Remove old marker versions first, so it never duplicates
+  html = html
+    .replace(/<div[^>]*class=["']section-marker["'][^>]*>●<\/div>/gi, "")
+    .replace(/<span[^>]*class=["']section-anchor["'][^>]*>●<\/span><br\s*\/?>?/gi, "")
+    .replace(/<span[^>]*class=["']section-marker["'][^>]*>●<\/span><br\s*\/?>?/gi, "")
+    .replace(/^(<br\s*\/?>|\s)+/gi, "");
+
   return `<div class="section-marker" contenteditable="false">●</div>` + html;
 }
 
@@ -652,7 +660,12 @@ function editSection(index) {
   
   const editor = document.getElementById("sectionEditor");
 
-  editor.innerHTML = section.html || "";
+  //editor.innerHTML = section.html || "";
+
+  editor.innerHTML = (section.html || "")
+    .replace(/<div[^>]*class=["']section-marker["'][^>]*>●<\/div>/gi, "")
+    .replace(/<span[^>]*class=["']section-anchor["'][^>]*>●<\/span><br\s*\/?>?/gi, "")
+    .replace(/<span[^>]*class=["']section-marker["'][^>]*>●<\/span><br\s*\/?>?/gi, "");
   
   if (section.type !== "tab") {
     editor.style.whiteSpace = "pre-wrap";
