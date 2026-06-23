@@ -326,6 +326,12 @@ function saveSection() {
     songData.sections.push(section);
   }
 
+  editor.querySelectorAll(".tab-block-controls")
+    .forEach(el => el.style.display = "none");
+  
+  editor.querySelectorAll(".delete-tab-line-btn")
+    .forEach(el => el.style.display = "none");
+
   clearEditor();
   renderPreview();
 }
@@ -680,6 +686,11 @@ function editSection(index) {
   
   if (section.type === "tab") {
     restoreTabEditability(document.getElementById("sectionEditor"));
+    editor.querySelectorAll(".tab-block-controls")
+      .forEach(el => el.style.display = "flex");
+    
+    editor.querySelectorAll(".delete-tab-line-btn")
+      .forEach(el => el.style.display = "inline-flex");
     ensureTabInsertRows(document.getElementById("sectionEditor"));
   }
   
@@ -860,7 +871,7 @@ function updateLivePreview() {
     .replace(/<button[^>]*class="delete-tab-line-btn"[^>]*>[\s\S]*?<\/button>/gi, "");
 
   if (sectionType === "tab") {
-    previewHtml = html; // DO NOT replace dashes here .replace(/-/g, `<span class="tab-dash">-</span>`);
+    previewHtml = previewHtml;
   }
   
   preview.innerHTML = `
