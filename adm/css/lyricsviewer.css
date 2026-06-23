@@ -128,21 +128,30 @@ body {
 .song-header {
   display: flex;
   justify-content: space-between;
+  align-items: flex-start;
   gap: 20px;
   margin-bottom: 18px;
+}
+
+.song-title-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 /** Song Title - Artist heading **/
 .song-header h1 {
   margin: 0;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 700;
   letter-spacing: 0.5px;
+  color: #999999;
 }
 
 
 .song-meta-box {
   text-align: right;
+  flex-shrink: 0;
 }
 
 /** User BPM, Original BPM, Capo, Key **/
@@ -170,11 +179,10 @@ body {
 }
 
 #songYear {
-  margin-top: 20px;
-  justify-content: left;
+  margin-top: 3px;
   text-align: left;
-  line-height: 1.05;
-  font-size: 17px;
+  line-height: 1;
+  font-size: 15px;
   font-weight: 900;
   color: #999999;
   /*color: #FF5555;*/
