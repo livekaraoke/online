@@ -868,6 +868,10 @@ textarea {
   box-shadow: 0 0 8px rgba(255,212,0,.25);
 }
 
+.duplicate-tab-btn {
+  border-color: #FFD400 !important;
+  color: #FFD400 !important;
+}
 
 
 .section-text,
