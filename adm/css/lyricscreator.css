@@ -868,6 +868,7 @@ textarea {
   border-color: #FFD400 !important;
   color: #FFD400 !important;
   box-shadow: 0 0 8px rgba(255,212,0,.25);
+  display: none;
 }
 
 .duplicate-tab-btn {
