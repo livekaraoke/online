@@ -530,12 +530,19 @@ function renderPreview() {
       //sectionHtml = sectionHtml.replace(/-/g, `<span class="tab-dash">-</span>`);
     }
     
-    div.innerHTML = `
+    /*div.innerHTML = `
       ${section.title ? `
         <div class="lyric-section-title ${isTab ? "tab-title" : ""}"
              onclick="toggleSectionCollapse(${index})">
           <span class="tab-arrow">${isCollapsed ? "▶" : "▼"}</span>
           ${section.title}
+        </div>
+      ` : ""}*/
+    div.innerHTML = `
+      ${section.title ? `
+        <div class="lyric-section-title ${isTab ? "clickable-title" : ""}"
+             ${isTab ? `onclick="toggleTabSection(${index})"` : ""}>
+          ${isTab ? (isCollapsed ? "▶ " : "▼ ") : ""}${section.title}
         </div>
       ` : ""}
 
@@ -673,6 +680,7 @@ function editSection(index) {
   
   if (section.type === "tab") {
     restoreTabEditability(document.getElementById("sectionEditor"));
+    ensureTabInsertRows(document.getElementById("sectionEditor"));
   }
   
   document.getElementById("fontFamily").value = section.style.fontFamily;
@@ -694,6 +702,20 @@ function editSection(index) {
   window.scrollTo({
     top: document.querySelector(".editor-panel").offsetTop - 20,
     behavior: "smooth"
+  });
+}
+
+function ensureTabInsertRows(root) {
+  const blocks = [...root.querySelectorAll(".tab-block")];
+
+  blocks.forEach((block, index) => {
+    const next = block.nextElementSibling;
+
+    if (index < blocks.length - 1) {
+      if (!next || !next.classList.contains("tab-insert-row")) {
+        block.insertAdjacentHTML("afterend", createTabInsertButton());
+      }
+    }
   });
 }
 
@@ -860,7 +882,7 @@ document.getElementById("sectionType").addEventListener("change", function () {
     tabBtn.classList.add("enabled");
     document.execCommand("bold", false, null);
     tabOptions.style.display = "flex";
-    tabCheckbox.checked = true;
+    tabCheckbox.checked = false;
     syncTabToggleButton();
     /*tabBtn.classList.add("active");
     tabBtn.innerText = "Load Closed";*/
@@ -964,6 +986,7 @@ function createTabBlock() {
       '<div class="tab-block-controls">' +
         '<button type="button" class="move-tab-up-btn">↑</button>' +
         '<button type="button" class="move-tab-down-btn">↓</button>' +
+        '<button type="button" class="duplicate-tab-btn">Duplicate</button>' +
         '<button type="button" class="delete-tab-btn-bottom">Delete</button>' +
       '</div>' +
     '</div>'
@@ -1162,6 +1185,17 @@ document.addEventListener("click", async function (e) {
     const block = e.target.closest(".tab-block");
     const next = block.nextElementSibling?.nextElementSibling;
     if (next) next.after(block);
+    updateLivePreview();
+  }
+
+  if (e.target.classList.contains("duplicate-tab-btn")) {
+    const block = e.target.closest(".tab-block");
+    const clone = block.cloneNode(true);
+  
+    block.insertAdjacentHTML("afterend", createTabInsertButton());
+    block.nextElementSibling.insertAdjacentElement("afterend", clone);
+  
+    restoreTabEditability(document.getElementById("sectionEditor"));
     updateLivePreview();
   }
 
