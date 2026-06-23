@@ -424,13 +424,18 @@ function clearEditor() {
   document.getElementById("saveSectionBtn").classList.remove("editing");
   document.getElementById("cancelEditBtn").style.display = "none";
 
-  document.getElementById("insertTabBtn").disabled = false;
-  document.getElementById("insertTabBtn").classList.add("enabled");
+  const tabBtn = document.getElementById("insertTabBtn");
+  tabBtn.style.display = "none";
+  tabBtn.disabled = true;
+  tabBtn.classList.remove("enabled");
+
+  document.getElementById("sectionType").disabled = false;
   
   document.getElementById("sectionEditor").classList.remove("tab-editing");
   document.querySelector(".editor-panel").classList.remove("editing-mode");
 
   document.getElementById("fontFamily").value = "Verdana";
+  document.getElementById("fontFamily").disabled = false;
   document.getElementById("sectionEditor").style.fontFamily = "Verdana";
   document.getElementById("sectionEditor").classList.remove("tab-editing");
 
@@ -438,8 +443,13 @@ function clearEditor() {
   document.getElementById("updateNextBtn").disabled = false;
   document.getElementById("updateNextBtn").classList.remove("disabled");
 
+  const tabCheckbox = document.getElementById("tabStartsCollapsed");
+  tabCheckbox.checked = false;
+  syncTabToggleButton();
+
+  document.getElementById("tabOptions").style.display = "none";
+
   document.getElementById("sectionType").disabled = false;
-  document.getElementById("fontFamily").disabled = false;
   setTabControlMode(false);
 }
 
@@ -664,22 +674,27 @@ function editSection(index) {
 
     tabOptions.style.display = "flex";
   
-    tabCheckbox.checked =
-      section.collapsed !== undefined ? section.collapsed : true;
+    tabCheckbox.checked = section.collapsed === true;
+    syncTabToggleButton();
   
     tabBtn.classList.toggle("active", tabCheckbox.checked);
     tabBtn.innerText = tabCheckbox.checked ? "Load Closed" : "Load Open";
 
     syncTabToggleButton();
   
+    document.getElementById("insertTabBtn").style.display = "inline-block";
     document.getElementById("insertTabBtn").disabled = false;
     document.getElementById("insertTabBtn").classList.add("enabled");
 
-   
-
+    document.getElementById("sectionType").disabled = true;
   
   } else {
+    
     tabOptions.style.display = "none";
+    document.getElementById("insertTabBtn").style.display = "none";
+    document.getElementById("insertTabBtn").disabled = true;
+    document.getElementById("sectionType").disabled = true;
+    
   }
   
   const editor = document.getElementById("sectionEditor");
@@ -905,30 +920,43 @@ document.getElementById("sectionType").addEventListener("change", function () {
   const fontSelect = document.getElementById("fontFamily");
   const tabBtn = document.getElementById("insertTabBtn");
   const tabOptions = document.getElementById("tabOptions");
+  const tabCheckbox = document.getElementById("tabStartsCollapsed");
  
   if (this.value === "tab") { /* TAB MODE */
+    
     setTabControlMode(true);
+
     fontSelect.value = "Courier New";
     editor.style.fontFamily = "Courier New";
     editor.classList.add("tab-editing");
+
+    tabBtn.style.display = "inline-block";
     tabBtn.disabled = false;
     tabBtn.classList.add("enabled");
-    document.execCommand("bold", false, null);
+
     tabOptions.style.display = "flex";
+
     tabCheckbox.checked = false;
     syncTabToggleButton();
     /*tabBtn.classList.add("active");
     tabBtn.innerText = "Load Closed";*/
     editor.focus();
     document.execCommand("bold", false, true);
+    
   } else { /* LYRICS MODE */
+
     setTabControlMode(false);
+
     fontSelect.value = "Verdana";
+
     editor.style.fontFamily = "Verdana";
     editor.classList.remove("tab-editing");
+
     tabOptions.style.display = "none";
-    tabBtn.disabled = false;
-    tabBtn.classList.add("enabled");
+
+    tabBtn.disabled = true;
+    tabBtn.classList.remove("enabled");
+    tabBtn.style.display = "none";
   }
 
   updateLivePreview();
