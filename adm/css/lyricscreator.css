@@ -869,8 +869,14 @@ textarea {
 }
 
 .duplicate-tab-btn {
+  margin-top: 0;
+  transform: translateY(1px);
+  align-self: center;
+  opacity: 1 !important;
+  background: #222 !important;
   border-color: #FFD400 !important;
   color: #FFD400 !important;
+  box-shadow: 0 0 8px rgba(255,212,0,.25);
 }
 
 
@@ -1109,6 +1115,7 @@ textarea {
   margin-top: 8px;
   text-align: center;
   display: none;
+  gap: 6px;
 }
 
 .tab-block-controls button {
