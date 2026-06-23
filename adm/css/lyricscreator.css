@@ -790,10 +790,15 @@ textarea {
 /************* END OF TAB COLOURING AND FORMAT ************/
 /**********************************************************/
 
-.tab-cell.dash,
-.note-cell.empty {
+.tab-cell.dash {
   color: #666 !important;
   -webkit-text-fill-color: #666 !important;
+  text-shadow: none !important;
+}
+
+.note-cell.empty {
+  color: #050505 !important;
+  -webkit-text-fill-color: #050505 !important;
   text-shadow: none !important;
 }
 
