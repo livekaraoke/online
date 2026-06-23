@@ -457,8 +457,8 @@ body {
 /*************************************************************************************************/
 
 .section-text {
-  margin-top: -20 !important;
-  padding-top: 0 !important;
+  margin-top: -20px !important;
+  padding-top: 10px !important;
 }
 
 .viewer-tab.collapsed-tab h2 {
@@ -492,7 +492,7 @@ body {
 .viewer-section h2 {
   margin-top: 0;
   margin-bottom: -10px  !important;
-  line-height: 1.05;
+  line-height: 1;
   font-size: 16px;
   font-weight: 900;
   color: #888;
@@ -502,7 +502,7 @@ body {
 .lyric-section-title,
 .viewer-section h2 {
   padding: 0 !important;
-  line-height: 1.05 !important;
+  line-height: 1 !important;
   font-size: 16px;
   font-family: Verdana, Bahnschrift, Arial, sans-serif;
   font-weight: 900 !important;
@@ -744,7 +744,7 @@ body {
   line-height: 1;
   user-select: none;
   pointer-events: none;
-  /*margin-top: -100px !important;*/
+  margin-top: -40px !important;
 }
 
 .tab-title {
@@ -752,7 +752,7 @@ body {
 }
 
 .tab-gap {
-  height: 14px;
+  height: 30px;
 }
 
 .tab-block {
