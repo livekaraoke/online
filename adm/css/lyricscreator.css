@@ -371,7 +371,12 @@ textarea {
   margin-bottom: 0;
 }
 
-
+.section-editor,
+.section-text,
+#liveSectionPreview,
+#liveSectionPreview .section-text {
+  white-space: pre-wrap !important;
+}
 
 
 .section-editor.tab-editing {
