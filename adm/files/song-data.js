@@ -652,7 +652,7 @@ const songs = [
     setFrequency: "rare",
     hostKaraokePage: "1",
     livePage: "1",
-    hasLyrics: false
+    hasLyrics: true
   },
   {
     title: "Could you be loved",
@@ -673,7 +673,7 @@ const songs = [
     setFrequency: "rare",
     hostKaraokePage: "1",
     livePage: "1",
-    hasLyrics: false
+    hasLyrics: true
   },
   {
     title: "Crazy little thing called love",
@@ -1765,7 +1765,7 @@ const songs = [
     setFrequency: "rare",
     hostKaraokePage: "1",
     livePage: "1",
-    hasLyrics: false
+    hasLyrics: true
   },
   {
     title: "Man on the moon",
@@ -2269,7 +2269,7 @@ const songs = [
     setFrequency: "rare",
     hostKaraokePage: "1",
     livePage: "1",
-    hasLyrics: false
+    hasLyrics: true
   },
   {
     title: "Runaway train",
