@@ -110,8 +110,10 @@ This software is proprietary and intended for personal and performance use only.
 
   function startSlaveLyrics() {
     if (slaveLyricsUnsubscribe) return;
-  
-    slaveLyricsUnsubscribe = db.collection("liveLyrics").doc("currentSongId")
+    
+
+    
+    slaveLyricsUnsubscribe = db.collection("karaokeControl").doc("liveLyrics")
       .onSnapshot(doc => {
         if (!doc.exists) return;
   
