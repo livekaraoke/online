@@ -1892,6 +1892,7 @@ function cleanKaraokeUrl(url) {
 
 function loadKaraokeLyricsList() {
   const raw =
+    songs ||
     window.songs ||
     window.songData ||
     window.SONG_DATA ||
