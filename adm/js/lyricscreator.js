@@ -1882,23 +1882,31 @@ window.addEventListener("DOMContentLoaded", () => {
 /*********************** KARAOKE LYRICS LIST ***********************/
 /*******************************************************************/
 let karaokeLyricsList = [];
-/*
+
+function cleanKaraokeUrl(url) {
+  return String(url || "")
+    .replace(/^lyrics\/song\.html\?id=/i, "")
+    .replace(/^\.?\/?lyrics\/song\.html\?id=/i, "")
+    .trim();
+}
+
 function loadKaraokeLyricsList() {
-  karaokeLyricsList =
+  const raw =
     window.songs ||
     window.songData ||
     window.SONG_DATA ||
-    songs ||
+    window.songList ||
+    window.SONGS ||
     [];
-}
-*/
-function loadKaraokeLyricsList() {
-  karaokeLyricsList =
-    (window.songs || []).map(song => ({
+
+  karaokeLyricsList = raw
+    .filter(song => song && song.url)
+    .map(song => ({
       ...song,
-      karaokeId: (song.url || "")
-        .replace(/^lyrics\/song\.html\?id=/i, "")
+      karaokeId: cleanKaraokeUrl(song.url)
     }));
+
+  console.log("karaokeLyricsList:", karaokeLyricsList);
 }
 
 async function handleKaraokeLyricsChange() {
@@ -1918,8 +1926,8 @@ async function handleKaraokeLyricsChange() {
 
   karaokeLyricsList.forEach(song => {
     const opt = document.createElement("option");
-    opt.value = song.url;
-    opt.textContent = song.title || song.name || song.url;
+    opt.value = song.karaokeId;
+    opt.textContent = song.title || song.name || song.karaokeId;
     picker.appendChild(opt);
   });
 
