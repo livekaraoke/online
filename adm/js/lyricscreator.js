@@ -1918,7 +1918,7 @@ async function handleKaraokeLyricsChange() {
 
   karaokeLyricsList.forEach(song => {
     const opt = document.createElement("option");
-    opt.value = song.karaokeId;
+    opt.value = song.url;
     opt.textContent = song.title || song.name || song.url;
     picker.appendChild(opt);
   });
