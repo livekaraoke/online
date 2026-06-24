@@ -375,39 +375,53 @@ function insertRepeatLabel() {
   updateLivePreview();
 }
 
-/*** INSET SONG LINK ***/
+/*** INSERT SONG LINK ***/
 async function insertSongLink() {
+  const modal = document.getElementById("songLinkModal");
+  const select = document.getElementById("songLinkSelect");
+  const insertBtn = document.getElementById("songLinkInsertBtn");
+  const cancelBtn = document.getElementById("songLinkCancelBtn");
+
+  select.innerHTML = "";
+
   const snap = await db.collection("lyrics").orderBy("title").get();
 
-  const songs = [];
   snap.forEach(doc => {
-    songs.push({
-      id: doc.id,
-      title: doc.data().title || "",
-      artist: doc.data().artist || ""
-    });
+    const song = doc.data();
+    const option = document.createElement("option");
+
+    option.value = doc.id;
+    option.dataset.title = song.title || "";
+    option.dataset.artist = song.artist || "";
+    option.textContent = `${song.title || "Untitled"} - ${song.artist || "Unknown Artist"}`;
+
+    select.appendChild(option);
   });
 
-  const list = songs
-    .map((s, i) => `${i + 1}. ${s.title} - ${s.artist}`)
-    .join("\n");
+  modal.classList.remove("hidden");
 
-  const choice = prompt("Choose song number:\n\n" + list);
-  const index = parseInt(choice, 10) - 1;
+  cancelBtn.onclick = () => {
+    modal.classList.add("hidden");
+  };
 
-  if (!songs[index]) return;
+  insertBtn.onclick = () => {
+    const selected = select.options[select.selectedIndex];
 
-  const song = songs[index];
+    const id = selected.value;
+    const title = selected.dataset.title;
+    const artist = selected.dataset.artist;
 
-  const html = `
-    <span class="song-link-pill" contenteditable="false">
-      <a href="lyricview.html?id=${song.id}">${song.title} - ${song.artist}</a>
-      <button type="button" onclick="this.parentElement.remove()">×</button>
-    </span>
-  `;
+    const html = `
+      <span class="song-link-pill" contenteditable="false">
+        <a href="lyricview.html?id=${id}">${title} - ${artist}</a>
+        <button type="button" onclick="this.parentElement.remove()">×</button>
+      </span>
+    `;
 
-  insertHtmlAtCursor(html);
-  updateLivePreview();
+    insertHtmlAtCursor(html);
+    updateLivePreview();
+    modal.classList.add("hidden");
+  };
 }
 
 /* CLEAR EDITOR */
