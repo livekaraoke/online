@@ -55,6 +55,43 @@ real-time typography control, and performance styling tools.
 </div>
 <!-- ------------------------------------------------------- -->
 
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyC4gSodXM35E2ZdYaz6mrCvTUYzW75ZCBk",
+    authDomain: "livekaraokemt.firebaseapp.com",
+    projectId: "livekaraokemt",
+    storageBucket: "livekaraokemt.firebasestorage.app",
+    messagingSenderId: "425980659562",
+    appId: "1:425980659562:web:892ddcd53fb209d1114713"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  const currentParams = new URLSearchParams(window.location.search);
+  const currentSongId = currentParams.get("id");
+  
+  db.collection("karaokeControl").doc("liveLyrics")
+    .onSnapshot(doc => {
+      if (!doc.exists) return;
+  
+      const data = doc.data();
+      const newSongId = data.currentSongId;
+  
+      if (!newSongId || newSongId === currentSongId) return;
+  
+      window.location.href =
+        `song.html?id=${encodeURIComponent(newSongId)}`;
+    });
+</script>
+
+
+
+  
 <!-- ================================================================
 ============================== SCRIPTS ==============================
 ================================================================= -->
