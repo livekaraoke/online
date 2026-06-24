@@ -1049,6 +1049,17 @@ textarea {
   margin-top: 6px;
 }
 
+#insertBarBtn {
+  margin-top: 0;
+  transform: translateY(1px);
+  align-self: center;
+}
+
+.tab-cell.tab-bar {
+  color: white;
+  -webkit-text-fill-color: currentColor;
+}
+
 .tab-toggle-btn {
   height: 38px;
   padding: 0 14px;
