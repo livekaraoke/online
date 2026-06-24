@@ -120,6 +120,23 @@
     document.getElementById("songYear").innerText =
       song.year ? `Year: ${song.year}` : "";
 
+
+    document.getElementById("sendToSingerBtn").onclick = async () => {
+    const karaokeId = song.karaokeLyrics;
+  
+    if (!karaokeId || karaokeId === "No") {
+      showAlert("This song has no Karaoke Lyrics ID.");
+      return;
+    }
+  
+    await db.collection("karaokeControl").doc("liveLyrics").set({
+      currentSongId: karaokeId,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  
+    showAlert("Singer screen updated.");
+  };
+
     document.getElementById("editBtn").onclick = () => {
       window.location.href =
         `lyricscreator.html?firebaseId=${encodeURIComponent(songId)}`;
@@ -185,6 +202,28 @@
     endMarker.className = "end-marker";
     endMarker.innerHTML = "[ END ]";
     container.appendChild(endMarker);
+  }
+
+  function showAlert(title, message) {
+    return new Promise(resolve => {
+      const modal = document.getElementById("confirmModal");
+      const titleEl = document.getElementById("confirmTitle");
+      const messageEl = document.getElementById("confirmMessage");
+      const ok = document.getElementById("confirmOk");
+      const cancel = document.getElementById("confirmCancel");
+  
+      titleEl.innerText = title;
+      messageEl.innerText = message;
+  
+      cancel.style.display = "none";
+      modal.classList.remove("hidden");
+  
+      ok.onclick = () => {
+        modal.classList.add("hidden");
+        cancel.style.display = "";
+        resolve(true);
+      };
+    });
   }
 
   function toggleBackMenu() {
