@@ -1926,8 +1926,8 @@ async function handleKaraokeLyricsChange() {
 
   karaokeLyricsList.forEach(song => {
     const opt = document.createElement("option");
-    opt.value = song.karaokeId;
-    opt.textContent = song.title || song.name || song.karaokeId;
+    opt.value = cleanKaraokeUrl(song.url);
+    opt.textContent = song.title || song.name || cleanKaraokeUrl(song.url);
     picker.appendChild(opt);
   });
 
