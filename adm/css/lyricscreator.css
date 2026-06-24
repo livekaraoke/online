@@ -314,6 +314,18 @@ textarea {
   border-radius: 5px;
 }
 
+.preview-area .tab-note-space-fix {
+  display:none !important;
+  line-height: 0 !important;
+}
+.preview-area .tab-n-fix {
+  margin-left: -2px !important;
+}
+
+.tab-n-fix {
+  margin-left: -0.5px !important;
+}
+
 .song-preview {
   background: #000;
   border: 1px solid #222;
