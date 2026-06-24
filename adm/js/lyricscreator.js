@@ -1650,7 +1650,7 @@ async function loadSongFromFirebase(firebaseId) {
     loadKaraokeLyricsList();
 
     if (songData.karaokeLyrics && songData.karaokeLyrics !== "No") {
-      const found = karaokeLyricsList.find(s => s.url === songData.karaokeLyrics);
+      const found = karaokeLyricsList.find(s => s.karaokeId === songData.karaokeLyrics);
     
       const dropdown = document.getElementById("karaokeLyrics");
     
@@ -1918,7 +1918,7 @@ async function handleKaraokeLyricsChange() {
 
   karaokeLyricsList.forEach(song => {
     const opt = document.createElement("option");
-    opt.value = song.url;
+    opt.value = song.karaokeId;
     opt.textContent = song.title || song.name || song.url;
     picker.appendChild(opt);
   });
