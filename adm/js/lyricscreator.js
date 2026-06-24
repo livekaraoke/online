@@ -1891,16 +1891,8 @@ function cleanKaraokeUrl(url) {
 }
 
 function loadKaraokeLyricsList() {
-  const raw =
-    window.songs ||
-    window.songData ||
-    window.SONG_DATA ||
-    window.songList ||
-    window.SONGS ||
-    [];
-
-  karaokeLyricsList = raw
-    .filter(song => song && song.url)
+  karaokeLyricsList = (window.songs || [])
+    .filter(song => song && song.url && song.hasLyrics === true)
     .map(song => ({
       ...song,
       karaokeId: cleanKaraokeUrl(song.url)
