@@ -205,6 +205,8 @@ select:disabled {
   margin-top: 8px;
 }
 
+
+
 .editor-panel .input {
   margin-top: 8px;
 }
@@ -319,7 +321,7 @@ textarea {
   line-height: 0 !important;
 }
 .preview-area .tab-n-fix {
-  margin-left: -2px !important;
+  margin-left: -3px !important;
 }
 
 .tab-n-fix {
@@ -540,8 +542,8 @@ textarea {
 
 .live-preview-box .section-text {
   font-family: "Courier New", monospace !important;
-  font-size: 19px !important;
-  font-weight: 900 !important;
+  /*font-size: 19px !important;
+  font-weight: 900 !important;*/
   white-space: pre !important;
 }
 
@@ -574,6 +576,16 @@ textarea {
   color: white;
   font-size: 17px;
   font-weight: 700;
+}
+
+#previewKaraokeLyrics,
+#previewSongNote,
+#karaokeLyrics,
+#songNote {
+  margin-top: 3px;
+  color: #aaa;
+  font-size: 13px;
+  font-weight: 800;
 }
 
 .preview-year-under-title {
@@ -635,12 +647,10 @@ textarea {
   border: 2px solid #333;
   cursor: pointer;
 }
-
 .color-btn.active {
   border-color: white;
   box-shadow: 0 0 10px rgba(255,255,255,.8);
 }
-
 
 .color-btn-justify {
   background-color: #000 !important;
@@ -831,6 +841,8 @@ textarea {
   line-height: 5px;
 }
 
+
+
 .tab-hidden-fill {
   color: #050505 !important;
 }
@@ -949,7 +961,6 @@ textarea {
 }
 
 
-
 .duplicate-tab-btn {
   margin-top: 0;
   transform: translateY(1px);
@@ -1059,6 +1070,8 @@ textarea {
   color: white;
   -webkit-text-fill-color: currentColor;
 }
+
+
 
 .tab-toggle-btn {
   height: 38px;
