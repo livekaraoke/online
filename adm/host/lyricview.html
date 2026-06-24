@@ -7,7 +7,6 @@
 </head>
 
 <body>
-<script src="../files/song-data-kl.js"></script>
 <header class="viewer-topbar">
   <!-- BACK BUTTON -->
   <div class="back-split">
@@ -26,7 +25,7 @@
     Loading...
   </div>
 
-  <select id="liveKaraokeLyrics" class="viewer-btn red send-temp"></select>
+  <!--<select id="liveKaraokeLyrics" class="viewer-btn red send-temp"></select>-->
   
   <button id="sendToSingerBtn" class="viewer-btn red send-to-singer-screen">
     🎤 Send to Singer Screen
@@ -190,13 +189,13 @@
         
           section.collapsed = !section.collapsed;
           renderSong(song, songId);
-
+/**
           const ddl = document.getElementById("liveKaraokeLyrics");
 
 if (song.karaokeLyrics && song.karaokeLyrics !== "No") {
   ddl.value = song.karaokeLyrics;
 }
-          
+          **/
           setTimeout(() => {
             div.scrollIntoView({ behavior: "smooth", block: "start" });
           }, 50);
@@ -268,46 +267,52 @@ if (song.karaokeLyrics && song.karaokeLyrics !== "No") {
   <!---------------------------------------------------------------------------------------->
   <!---------------------------------- TEMP SEND LYRICS ------------------------------------>
   <!---------------------------------------------------------------------------------------->
+<!--
+  
+<script src="../files/song-data-kl.js"></script>
+  
 <script>
-  function populateKaraokeDropdown() {
-    const ddl = document.getElementById("liveKaraokeLyrics");
-  
-    ddl.innerHTML = "";
+function populateKaraokeDropdown() {
+  const ddl = document.getElementById("liveKaraokeLyrics");
 
-    ddl.innerHTML =
+  ddl.innerHTML = "";
+
+  ddl.innerHTML =
   '<option value="">Select karaoke lyrics...</option>';
-    
-    window.songs
-      .filter(s => s.hasLyrics)
-      .forEach(song => {
   
-        const id = song.url.replace(
-          /^lyrics\/song\.html\?id=/i,
-          ""
-        );
-  
-        const opt = document.createElement("option");
-        opt.value = id;
-        opt.textContent = `${song.title} - ${song.artist}`;
-  
-        ddl.appendChild(opt);
-      });
-  }
+  window.songs
+    .filter(s => s.hasLyrics)
+    .forEach(song => {
 
-  document.getElementById("liveKaraokeLyrics")
-    .addEventListener("change", async function () {
-  
-      await db
-        .collection("karaokeControl")
-        .doc("liveLyrics")
-        .set({
-          currentSongId: this.value,
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-  
+      const id = song.url.replace(
+        /^lyrics\/song\.html\?id=/i,
+        ""
+      );
+
+      const opt = document.createElement("option");
+      opt.value = id;
+      opt.textContent = `${song.title} - ${song.artist}`;
+
+      ddl.appendChild(opt);
     });
+}
+
+document.getElementById("liveKaraokeLyrics")
+  .addEventListener("change", async function () {
+
+    await db
+      .collection("karaokeControl")
+      .doc("liveLyrics")
+      .set({
+        currentSongId: this.value,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+  });
+
+window.addEventListener("DOMContentLoaded", populateKaraokeDropdown);
 </script>
-  
+  -->
   <!---------------------------------------------------------------------------------------->
   <!------------------------------- END OF TEMP SEND LYRICS -------------------------------->
   <!---------------------------------------------------------------------------------------->
