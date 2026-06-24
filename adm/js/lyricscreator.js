@@ -13,6 +13,8 @@ let songData = {
   capo: "",
   key: "",
   year: "",
+  karaokeLyrics: "",
+  note: "",
   sections: []
 };
 
@@ -115,6 +117,8 @@ function updateMeta() {
   songData.capo = document.getElementById("capoNote").value;
   songData.key = document.getElementById("songKey").value;
   songData.year = document.getElementById("songYear").value;
+  songData.karaokeLyrics = document.getElementById("karaokeLyrics").value;
+  songData.note = document.getElementById("songNote").value;
 
   document.getElementById("previewTitle").innerText =
     `${songData.title || "Song Title"} - ${songData.artist || "Artist"}`;
@@ -137,9 +141,15 @@ function updateMeta() {
     previewYear.innerText =
       songData.year ? `Year: ${songData.year}` : "";
   }
+
+  document.getElementById("previewKaraokeLyrics").innerText =
+  songData.karaokeLyrics ? `Karaoke Lyrics: ${songData.karaokeLyrics}` : "";
+
+  document.getElementById("previewSongNote").innerText =
+  songData.note ? `Note: ${songData.note}` : "";
 }
 
-["songTitle", "artistName", "userBpm", "originalBpm", "capoNote", "songKey", "songYear"]
+["songTitle", "artistName", "userBpm", "originalBpm", "capoNote", "songKey", "songYear", "karaokeLyrics", "songNote"]
   .forEach(id => {
     document.getElementById(id).addEventListener("input", updateMeta);
   });
@@ -1250,7 +1260,7 @@ document.addEventListener("keydown", function (e) {
   }
 
   if (e.key === "Backspace") {
-    pos = Math.max(0, pos - 1);
+    pos = Math.max(0, pos);
     cells[pos].innerText = "-";
     cells[pos].className = "tab-cell dash";
     cells[pos].removeAttribute("style");
@@ -1610,6 +1620,8 @@ async function loadSongFromFirebase(firebaseId) {
     document.getElementById("capoNote").value = songData.capo || "";
     document.getElementById("songKey").value = songData.key || "";
     document.getElementById("songYear").value = songData.year || "";
+    document.getElementById("karaokeLyrics").value = songData.karaokeLyrics || "Default";
+    document.getElementById("songNote").value = songData.note || "";
 
     document.getElementById("creatorTopTitle").innerText =
       "● Lyrics & Chords Editor ●";
