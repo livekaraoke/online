@@ -1631,21 +1631,37 @@ async function loadSongFromFirebase(firebaseId) {
       subTitle.innerText = songData.title ? songData.title : "";
     }
 
-if (!Array.isArray(songData.sections)) {
-  songData.sections = [];
-}
+    if (!Array.isArray(songData.sections)) {
+      songData.sections = [];
+    }
+    
+    songData.sections = songData.sections.map(section => ({
+      type: section.type || "lyrics",
+      title: section.title || "",
+      html: section.html || "",
+      collapsed: section.collapsed !== undefined ? section.collapsed : true,
+      style: {
+        fontFamily: section.style?.fontFamily || "Verdana",
+        color: section.style?.color || "white",
+        isTab: section.style?.isTab || false
+      }
+    }));
 
-songData.sections = songData.sections.map(section => ({
-  type: section.type || "lyrics",
-  title: section.title || "",
-  html: section.html || "",
-  collapsed: section.collapsed !== undefined ? section.collapsed : true,
-  style: {
-    fontFamily: section.style?.fontFamily || "Verdana",
-    color: section.style?.color || "white",
-    isTab: section.style?.isTab || false
-  }
-}));
+    await loadKaraokeLyricsList();
+
+    if (songData.karaokeLyrics && songData.karaokeLyrics !== "No") {
+      const found = karaokeLyricsList.find(s => s.id === songData.karaokeLyrics);
+    
+      const dropdown = document.getElementById("karaokeLyrics");
+      const opt = document.createElement("option");
+      opt.value = songData.karaokeLyrics;
+      opt.textContent = found?.title || songData.karaokeLyrics;
+    
+      dropdown.insertBefore(opt, dropdown.querySelector('option[value="__add__"]'));
+      dropdown.value = songData.karaokeLyrics;
+    }
+
+
     renderPreview();
 
   } catch (error) {
