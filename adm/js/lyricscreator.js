@@ -1053,8 +1053,8 @@ function createTabBlock() {
     '<div class="tab-block" contenteditable="false">' +
       '<div class="tab-line tab-apostrophe">●</div>' +
       '<div class="tab-line tab-note-line">' +
-        '<span class="tab-fixed">»</span>' +
-        '<span class="tab-note tab-hidden-fill" contenteditable="true">__________________________________________________________</span>' +
+        '<span class="tab-fixed"><span class="tab-note-space-fix">  </span><span class="tab-n-fix"> </span>»</span>' +
+        '<span class="tab-note tab-hidden-fill" contenteditable="true">_________________________________________________________</span>' +
         '<span class="tab-fixed">«</span>' +
       '</div>' +
       '<div class="tab-spacer"></div>' +
@@ -1086,7 +1086,7 @@ function createStringLine(letter, repeat = false) {
       '<button type="button" class="delete-tab-line-btn">✕</button>' +
       `<span class="tab-fixed">${letter}⦗|</span>` +
       '<span class="tab-dashes" contenteditable="true">' +
-        '<span class="tab-cell dash">-</span>'.repeat(57) +
+        '<span class="tab-cell dash">-</span>'.repeat(55) +
       '</span>' +
       '<span class="tab-fixed">|⦘</span>' +
       (repeat
@@ -1375,10 +1375,10 @@ document.addEventListener("keydown", function (e) {
 function prepareNoteCells(note) {
   if (note.querySelector(".note-cell")) return;
 
-  const text = note.innerText || "_".repeat(58);
+  const text = note.innerText || "_".repeat(57);
   note.innerHTML = "";
 
-  for (let i = 0; i < 58; i++) {
+  for (let i = 0; i < 57; i++) {
     const ch = text[i] || "_";
     const span = document.createElement("span");
 
