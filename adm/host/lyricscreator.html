@@ -252,9 +252,17 @@
         -->
 
         <!------ SECTION TAB INSERT SONG LINK ------>
-        <button type="button" class="btn small-control-btn" onclick="insertSongLink()">
-          LINK
-        </button>
+        <div id="songLinkModal" class="confirm-modal hidden">
+          <div class="confirm-box">
+            <h3>Insert Song Link</h3>
+            <select id="songLinkSelect"></select>
+        
+            <div class="confirm-actions">
+              <button id="songLinkInsertBtn" class="btn red">Insert</button>
+              <button id="songLinkCancelBtn" class="btn">Cancel</button>
+            </div>
+          </div>
+        </div>
 
         <!------ SECTION TAB INSERT BLANK TAB ------>
         <button type="button" id="insertTabBtn" class="btn tab-btn" onclick="insertBlankTab()">
