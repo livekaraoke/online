@@ -629,6 +629,83 @@ textarea {
   box-shadow: 0 0 10px rgba(255,255,255,.8);
 }
 
+
+.color-btn-justify {
+  background-color: #000 !important;
+}
+
+.preset-btn.green-preset {
+  color: #7CFF3A !important;
+  background-color: #111;
+  font-size: 18px;
+  font-weight: 900;
+  text-align: center;
+  line-height: 1;
+  width: 45px;
+  height: 45px;
+  border-radius: 6px;
+  border: 2px solid #333;
+  cursor: pointer;
+}
+
+.preset-btn.yellow-preset {
+  color: #FFFF00 !important;
+  background-color: #111;
+  font-size: 18px;
+  font-weight: 900;
+  text-align: center;
+  line-height: 1;
+  width: 45px;
+  height: 45px;
+  border-radius: 6px;
+  border: 2px solid #333;
+  cursor: pointer;
+}
+
+.small-control-btn {
+  background-color: #111;
+  font-size: 12px;
+  font-weight: 900;
+  text-align: center;
+  line-height: 1;
+  height: 45px;
+  border-radius: 6px;
+  border: 2px solid #333;
+  cursor: pointer;
+}
+
+
+#insertTabBtn {
+  margin-top: 0px;
+  align-self: center;
+  opacity: 1 !important;
+  background-color: #111 !important;
+  border-radius: 6px;
+  border: 2px solid #AA8000 !important;
+  color: #FFD400 !important;
+  height: 45px !important;
+  display: none;
+  box-shadow: 0 0 8px rgba(255,212,0,0.25);
+}
+
+#insertTabBtn:hover {
+  border-color: #FFE511 !important;
+}
+
+.tab-load-control {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.preset-btn.green-preset:hover,
+.preset-btn.yellow-preset:hover,
+.small-control-btn:hover,
+.color-btn-justify:hover {
+  background-color: #282828 !important;
+  border-color: #666;
+}
+
 .format-buttons,
 .align-buttons {
   display: flex;
@@ -859,17 +936,7 @@ textarea {
   color: #FFD400;
 }
 
-#insertTabBtn {
-  margin-top: 0;
-  transform: translateY(1px);
-  align-self: center;
-  opacity: 1 !important;
-  background: #222 !important;
-  border-color: #FFD400 !important;
-  color: #FFD400 !important;
-  box-shadow: 0 0 8px rgba(255,212,0,.25);
-  display: none;
-}
+
 
 .duplicate-tab-btn {
   margin-top: 0;
@@ -968,12 +1035,6 @@ textarea {
   font-weight: 900;
   cursor: pointer;
   margin-top: 6px;
-}
-
-.tab-load-control {
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .tab-toggle-btn {
