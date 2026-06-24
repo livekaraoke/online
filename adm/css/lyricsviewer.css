@@ -187,6 +187,18 @@ body {
   color: #999999;
   /*color: #FF5555;*/
 }
+
+#previewKaraokeLyrics,
+#previewSongNote,
+#karaokeLyrics,
+#songNote {
+  margin-top: 3px;
+  color: #aaa;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+
 /** END of User BPM, Original BPM, Capo, Key **/
 
 /** LYRICS VIEWER FAVOURITES **/
