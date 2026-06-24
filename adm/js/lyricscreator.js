@@ -986,7 +986,7 @@ document.getElementById("sectionType").addEventListener("change", function () {
   const editor = document.getElementById("sectionEditor");
   const fontSelect = document.getElementById("fontFamily");
   const tabBtn = document.getElementById("insertTabBtn");
-  const tabBtn = document.getElementById("insertBarBtn");
+  const tabBarBtn = document.getElementById("insertBarBtn");
   const tabOptions = document.getElementById("tabOptions");
   const tabCheckbox = document.getElementById("tabStartsCollapsed");
  
@@ -1001,6 +1001,10 @@ document.getElementById("sectionType").addEventListener("change", function () {
     tabBtn.style.display = "inline-block";
     tabBtn.disabled = false;
     tabBtn.classList.add("enabled");
+
+    tabBarBtn.style.display = "inline-block";
+    tabBarBtn.disabled = false;
+    tabBarBtn.classList.add("enabled");
 
     tabOptions.style.display = "flex";
 
@@ -1025,6 +1029,12 @@ document.getElementById("sectionType").addEventListener("change", function () {
     tabBtn.disabled = true;
     tabBtn.classList.remove("enabled");
     tabBtn.style.display = "none";
+    
+    tabBarBtn.disabled = true;
+    tabBarBtn.classList.remove("enabled");
+    tabBarBtn.style.display = "none";
+
+    
   }
 
   updateLivePreview();
