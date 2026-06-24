@@ -449,6 +449,11 @@ function clearEditor() {
   tabBtn.disabled = true;
   tabBtn.classList.remove("enabled");
 
+  const tabBarBtn = document.getElementById("insertBarBtn");
+  tabBarBtn.style.display = "none";
+  tabBarBtn.disabled = true;
+  tabBarBtn.classList.remove("enabled");
+
   document.getElementById("sectionType").disabled = false;
   
   document.getElementById("sectionEditor").classList.remove("tab-editing");
@@ -479,6 +484,42 @@ function insertSeparator(index) {
   });
 
   renderPreview();
+}
+
+function insertTabBar() {
+  const sel = window.getSelection();
+  if (!sel.rangeCount) return;
+
+  const node = sel.anchorNode;
+  const el = node.nodeType === Node.TEXT_NODE ? node.parentElement : node;
+
+  const currentCell = el.closest?.(".tab-cell");
+  if (!currentCell) {
+    showAlert("No Tab Position", "Click inside a guitar tab dash line first.");
+    return;
+  }
+
+  const currentLine = currentCell.closest(".tab-line");
+  const block = currentCell.closest(".tab-block");
+
+  if (!currentLine || !block) return;
+
+  const currentCells = [...currentLine.querySelectorAll(".tab-cell")];
+  const pos = currentCells.indexOf(currentCell);
+
+  if (pos < 0) return;
+
+  block.querySelectorAll(".tab-line").forEach(line => {
+    const cells = [...line.querySelectorAll(".tab-cell")];
+    if (!cells[pos]) return;
+
+    cells[pos].innerText = "|";
+    cells[pos].className = "tab-cell filled tab-bar";
+    cells[pos].style.color = selectedSectionColor || "white";
+    cells[pos].style.webkitTextFillColor = selectedSectionColor || "white";
+  });
+
+  updateLivePreview();
 }
 
 function moveSection(index, direction) {
@@ -705,6 +746,10 @@ function editSection(index) {
     document.getElementById("insertTabBtn").style.display = "inline-block";
     document.getElementById("insertTabBtn").disabled = false;
     document.getElementById("insertTabBtn").classList.add("enabled");
+  
+    document.getElementById("insertBarBtn").style.display = "inline-block";
+    document.getElementById("insertBarBtn").disabled = false;
+    document.getElementById("insertBarBtn").classList.add("enabled");
 
     document.getElementById("sectionType").disabled = true;
   
@@ -713,6 +758,8 @@ function editSection(index) {
     tabOptions.style.display = "none";
     document.getElementById("insertTabBtn").style.display = "none";
     document.getElementById("insertTabBtn").disabled = true;
+    document.getElementById("insertBarBtn").style.display = "none";
+    document.getElementById("insertBarBtn").disabled = true;
     document.getElementById("sectionType").disabled = true;
     
   }
@@ -939,6 +986,7 @@ document.getElementById("sectionType").addEventListener("change", function () {
   const editor = document.getElementById("sectionEditor");
   const fontSelect = document.getElementById("fontFamily");
   const tabBtn = document.getElementById("insertTabBtn");
+  const tabBtn = document.getElementById("insertBarBtn");
   const tabOptions = document.getElementById("tabOptions");
   const tabCheckbox = document.getElementById("tabStartsCollapsed");
  
