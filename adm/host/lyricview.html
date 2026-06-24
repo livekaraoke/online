@@ -26,7 +26,7 @@
     Loading...
   </div>
 
-  <button id="sendToSingerBtn" class="viewer-btn red">
+  <button id="sendToSingerBtn" class="viewer-btn red send-to-singer-screen">
     🎤 Send to Singer Screen
   </button>
   
@@ -125,7 +125,7 @@
     const karaokeId = song.karaokeLyrics;
   
     if (!karaokeId || karaokeId === "No") {
-      showAlert("This song has no Karaoke Lyrics ID.");
+      showAlert("No Karaoke Lyrics connected", "This song has no Karaoke Lyrics ID.");
       return;
     }
   
@@ -134,7 +134,7 @@
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     });
   
-    showAlert("Singer screen updated.");
+    showAlert("Singer screen updated.", "Singer screen updated according to the Karaoke Lyrics ID.");
   };
 
     document.getElementById("editBtn").onclick = () => {
