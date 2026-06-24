@@ -1882,7 +1882,7 @@ window.addEventListener("DOMContentLoaded", () => {
 /*********************** KARAOKE LYRICS LIST ***********************/
 /*******************************************************************/
 let karaokeLyricsList = [];
-
+/*
 function loadKaraokeLyricsList() {
   karaokeLyricsList =
     window.songs ||
@@ -1890,6 +1890,15 @@ function loadKaraokeLyricsList() {
     window.SONG_DATA ||
     songs ||
     [];
+}
+*/
+function loadKaraokeLyricsList() {
+  karaokeLyricsList =
+    (window.songs || []).map(song => ({
+      ...song,
+      karaokeId: (song.url || "")
+        .replace(/^lyrics\/song\.html\?id=/i, "")
+    }));
 }
 
 async function handleKaraokeLyricsChange() {
