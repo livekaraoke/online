@@ -36,6 +36,11 @@ This software is proprietary and intended for personal and performance use only.
     <button onclick="toggleFullscreen(this)" class="fullscreen-btn">
       &#9974; Fullscreen
     </button>
+
+    <label class="slave-lyrics-toggle">
+      <input type="checkbox" id="slaveLyricsToggle" class="slave-lyrics-btn">
+      Slave Lyrics
+    </label>
     
   </div>
 
@@ -83,6 +88,7 @@ This software is proprietary and intended for personal and performance use only.
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
 
+  /*
   db.collection("karaokeControl").doc("liveLyrics")
   .onSnapshot(doc => {
     if (!doc.exists) return;
@@ -95,6 +101,42 @@ This software is proprietary and intended for personal and performance use only.
     window.location.href =
       `lyrics/song.html?id=${encodeURIComponent(songId)}`;
   });
+  */
+
+  let slaveLyricsUnsubscribe = null;
+
+  function startSlaveLyrics() {
+    if (slaveLyricsUnsubscribe) return;
+  
+    slaveLyricsUnsubscribe = db.collection("liveLyrics").doc("currentSongId")
+      .onSnapshot(doc => {
+        if (!doc.exists) return;
+  
+        const data = doc.data();
+        const songId = data.currentSongId;
+  
+        if (!songId) return;
+  
+        window.location.href =
+          `lyrics/song.html?id=${encodeURIComponent(songId)}&slave=1`;
+      });
+  }
+  
+  function stopSlaveLyrics() {
+    if (slaveLyricsUnsubscribe) {
+      slaveLyricsUnsubscribe();
+      slaveLyricsUnsubscribe = null;
+    }
+  }
+  
+  document.getElementById("slaveLyricsToggle").addEventListener("change", function () {
+    if (this.checked) {
+      startSlaveLyrics();
+    } else {
+      stopSlaveLyrics();
+    }
+  });
+  
 </script>
 
 <!-- A–Z SIDEBAR -->
