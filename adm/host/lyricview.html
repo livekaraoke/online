@@ -7,7 +7,7 @@
 </head>
 
 <body>
-
+<script src="../files/song-data-kl.js"></script>
 <header class="viewer-topbar">
   <!-- BACK BUTTON -->
   <div class="back-split">
@@ -190,7 +190,13 @@
         
           section.collapsed = !section.collapsed;
           renderSong(song, songId);
-        
+
+          const ddl = document.getElementById("liveKaraokeLyrics");
+
+if (song.karaokeLyrics && song.karaokeLyrics !== "No") {
+  ddl.value = song.karaokeLyrics;
+}
+          
           setTimeout(() => {
             div.scrollIntoView({ behavior: "smooth", block: "start" });
           }, 50);
@@ -267,7 +273,10 @@
     const ddl = document.getElementById("liveKaraokeLyrics");
   
     ddl.innerHTML = "";
-  
+
+    ddl.innerHTML =
+  '<option value="">Select karaoke lyrics...</option>';
+    
     window.songs
       .filter(s => s.hasLyrics)
       .forEach(song => {
