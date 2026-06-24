@@ -36,6 +36,7 @@ This software is proprietary and intended for personal and performance use only.
     <button onclick="toggleFullscreen(this)" class="fullscreen-btn">
       &#9974; Fullscreen
     </button>
+    
   </div>
 
   <div class="header-center">
@@ -92,7 +93,7 @@ This software is proprietary and intended for personal and performance use only.
     if (!songId) return;
 
     window.location.href =
-      `song.html?id=${encodeURIComponent(songId)}`;
+      `lyrics/song.html?id=${encodeURIComponent(songId)}`;
   });
 </script>
 
