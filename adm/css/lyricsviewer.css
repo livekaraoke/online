@@ -81,6 +81,10 @@ body {
   background: linear-gradient(180deg, #ff2b2b, #aa0000);
 }
 
+.viewer-btn red send-temp {
+margin-left: 80px;
+}
+
 .viewer-list {
   max-width: 900px;
   margin: 20px auto;
