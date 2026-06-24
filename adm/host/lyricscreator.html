@@ -115,6 +115,18 @@
         <label>Song Year</label>
         <input id="songYear" placeholder="e.g. 1999">
       </div>
+
+      <div class="field">
+        <label>Karaoke Lyrics</label>
+        <select id="karaokeLyrics">
+          <option value="Default">0</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Note</label>
+        <input id="songNote" placeholder="Any notes">
+      </div>
       
     </div>
   </section>
@@ -333,6 +345,8 @@
         <div>
           <h3 id="previewTitle">Song Title - Artist</h3>
           <div id="previewYear" class="preview-year-under-title"></div>
+          <div id="previewKaraokeLyrics"></div>
+          <div id="previewSongNote"></div>
         </div>
         <div class="preview-meta-right">
           <div id="previewUserBpm"></div>
