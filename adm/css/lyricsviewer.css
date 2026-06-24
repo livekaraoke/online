@@ -888,3 +888,64 @@ body {
   cursor: pointer;
 }
     
+.confirm-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.confirm-modal.hidden {
+  display: none;
+}
+
+.confirm-box {
+  width: min(420px, 90%);
+  background: #111;
+  border: 1px solid #ff3333;
+  border-radius: 14px;
+  padding: 24px;
+  text-align: center;
+  box-shadow: 0 0 25px rgba(255,0,0,.35);
+}
+
+.confirm-box h3 {
+  margin-top: 0;
+  color: #FFD400;
+}
+
+.confirm-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 18px;
+}
+    
+.btn {
+  display: inline-block;
+  padding: 11px 16px;
+  background: #151515;
+  border: 1px solid rgba(255,0,0,.45);
+  color: white;
+  text-decoration: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+
+.btn.red {
+  background: linear-gradient(180deg, #ff2b2b, #aa0000);
+  box-shadow: 0 0 12px rgba(255,0,0,.45);
+}
+
+.btn.red.editing {
+  background: linear-gradient(180deg, #d97900, #8a4300);
+  border-color: #ff9900;
+  box-shadow: 0 0 12px rgba(255,140,0,.45);
+}
+
+  
