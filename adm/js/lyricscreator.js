@@ -1647,17 +1647,21 @@ async function loadSongFromFirebase(firebaseId) {
       }
     }));
 
-    await loadKaraokeLyricsList();
+    loadKaraokeLyricsList();
 
     if (songData.karaokeLyrics && songData.karaokeLyrics !== "No") {
       const found = karaokeLyricsList.find(s => s.url === songData.karaokeLyrics);
     
       const dropdown = document.getElementById("karaokeLyrics");
-      const opt = document.createElement("option");
-      opt.value = songData.karaokeLyrics;
-      opt.textContent = found?.title || songData.karaokeLyrics;
     
-      dropdown.insertBefore(opt, dropdown.querySelector('option[value="__add__"]'));
+      if (![...dropdown.options].some(opt => opt.value === songData.karaokeLyrics)) {
+        const opt = document.createElement("option");
+        opt.value = songData.karaokeLyrics;
+        opt.textContent = found?.title || songData.karaokeLyrics;
+    
+        dropdown.insertBefore(opt, dropdown.querySelector('option[value="__add__"]'));
+      }
+    
       dropdown.value = songData.karaokeLyrics;
     }
 
@@ -1879,9 +1883,13 @@ window.addEventListener("DOMContentLoaded", () => {
 /*******************************************************************/
 let karaokeLyricsList = [];
 
-async function loadKaraokeLyricsList() {
-  const res = await fetch("../files/song-data.json");
-  karaokeLyricsList = await res.json();
+function loadKaraokeLyricsList() {
+  karaokeLyricsList =
+    window.songs ||
+    window.songData ||
+    window.SONG_DATA ||
+    songs ||
+    [];
 }
 
 async function handleKaraokeLyricsChange() {
@@ -1901,8 +1909,8 @@ async function handleKaraokeLyricsChange() {
 
   karaokeLyricsList.forEach(song => {
     const opt = document.createElement("option");
-    opt.value = song.id;
-    opt.textContent = song.title || song.id;
+    opt.value = song.url;
+    opt.textContent = song.title || song.name || song.url;
     picker.appendChild(opt);
   });
 
