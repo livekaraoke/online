@@ -118,9 +118,9 @@
 
       <div class="field">
         <label>Karaoke Lyrics</label>
-        <select id="karaokeLyrics">
+        <select id="karaokeLyrics" onchange="handleKaraokeLyricsChange()">
           <option value="No">No</option>
-          <option value="No">Add...</option>
+          <option value="__add__">Add...</option>
         </select>
       </div>
 
@@ -395,6 +395,19 @@
       <div class="confirm-actions">
         <button id="confirmOk" class="btn red">Confirm</button>
         <button id="confirmCancel" class="btn">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="karaokePickerModal" class="confirm-modal hidden">
+    <div class="confirm-box">
+      <h3>Select Karaoke Lyrics</h3>
+  
+      <select id="karaokePickerSelect"></select>
+  
+      <div class="confirm-actions">
+        <button class="btn red" onclick="confirmKaraokeLyricsChoice()">Add</button>
+        <button class="btn" onclick="closeKaraokePicker()">Cancel</button>
       </div>
     </div>
   </div>
