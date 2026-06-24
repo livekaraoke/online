@@ -935,7 +935,8 @@ window.addEventListener("DOMContentLoaded", () => {
 
   /** SLAVE LYRICS **/
 const params = new URLSearchParams(window.location.search);
-const currentSongId = params.get("id");
+/*const currentSongId = params.get("id");*/
+  const currentSongId = new URLSearchParams(window.location.search).get("id");
 
 let slaveLyricsUnsubscribe = null;
 
