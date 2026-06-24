@@ -59,6 +59,7 @@ body.searching .alphabet-nav {
 
 /* make both buttons consistent */
 .back-main-btn,
+.slave-lyrics-btn,
 .fullscreen-btn {
   height: 35px;
   min-width: 130px;
@@ -83,6 +84,7 @@ body.searching .alphabet-nav {
 }
 
 .fullscreen-btn:hover,
+.slave-lyrics-btn:hover
 .back-main-btn:hover {
   background: #333;
   border-color: #666;
