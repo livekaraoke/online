@@ -1858,3 +1858,74 @@ window.addEventListener("DOMContentLoaded", () => {
       "● Lyrics & Chords Creator ●";
   }
 });
+
+/*******************************************************************/
+/*********************** KARAOKE LYRICS LIST ***********************/
+/*******************************************************************/
+let karaokeLyricsList = [];
+
+async function loadKaraokeLyricsList() {
+  const res = await fetch("../files/song-data.json");
+  karaokeLyricsList = await res.json();
+}
+
+async function handleKaraokeLyricsChange() {
+  const dropdown = document.getElementById("karaokeLyrics");
+
+  if (dropdown.value !== "__add__") {
+    updateMeta();
+    return;
+  }
+
+  if (!karaokeLyricsList.length) {
+    await loadKaraokeLyricsList();
+  }
+
+  const picker = document.getElementById("karaokePickerSelect");
+  picker.innerHTML = "";
+
+  karaokeLyricsList.forEach(song => {
+    const opt = document.createElement("option");
+    opt.value = song.id;
+    opt.textContent = song.title || song.id;
+    picker.appendChild(opt);
+  });
+
+  document.getElementById("karaokePickerModal").classList.remove("hidden");
+}
+
+function confirmKaraokeLyricsChoice() {
+  const picker = document.getElementById("karaokePickerSelect");
+  const selectedId = picker.value;
+  const selectedText = picker.options[picker.selectedIndex].textContent;
+
+  const dropdown = document.getElementById("karaokeLyrics");
+
+  let existing = [...dropdown.options].find(opt => opt.value === selectedId);
+
+  if (!existing) {
+    const opt = document.createElement("option");
+    opt.value = selectedId;
+    opt.textContent = selectedText;
+
+    const addOption = [...dropdown.options].find(opt => opt.value === "__add__");
+    dropdown.insertBefore(opt, addOption);
+  }
+
+  dropdown.value = selectedId;
+  closeKaraokePicker();
+  updateMeta();
+}
+
+function closeKaraokePicker() {
+  const dropdown = document.getElementById("karaokeLyrics");
+  if (dropdown.value === "__add__") dropdown.value = "No";
+
+  document.getElementById("karaokePickerModal").classList.add("hidden");
+}
+/*******************************************************************/
+/******************** END OF KARAOKE LYRICS LIST *******************/
+/*******************************************************************/
+
+
+
