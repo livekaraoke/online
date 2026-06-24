@@ -1661,7 +1661,6 @@ async function loadSongFromFirebase(firebaseId) {
       dropdown.value = songData.karaokeLyrics;
     }
 
-
     renderPreview();
 
   } catch (error) {
