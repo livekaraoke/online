@@ -3447,4 +3447,25 @@ window.songs = [
     livePage: "1",
     hasLyrics: true
   },
+  {
+    title: "My Sweet Lord",
+    artist: "George Harrison",
+    url: "lyrics/song.html?id=mysweetlord",
+    year: 1970,
+    bpm: 120,
+    gender: "Male",
+    genre: "Folk",
+    vibe: "Drama",
+    energy: "Low",
+    energyPeak: "Building",
+    crowdFunction: "Listening",
+    vocalDemand: "Medium",
+    setPosition: "Cooldown",
+    reliabilityScore: "Safe",
+    venueFit: "Small Acoustic",
+    setFrequency: "rare",
+    hostKaraokePage: "1",
+    livePage: "1",
+    hasLyrics: true
+  }
 ];
