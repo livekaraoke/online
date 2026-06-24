@@ -1650,7 +1650,7 @@ async function loadSongFromFirebase(firebaseId) {
     loadKaraokeLyricsList();
 
     if (songData.karaokeLyrics && songData.karaokeLyrics !== "No") {
-      const found = karaokeLyricsList.find(s => cleanKaraokeId(s.url) === songData.karaokeLyrics);
+      const found = karaokeLyricsList.find(s => cleanKaraokeUrl(s.url) === songData.karaokeLyrics);
     
       const dropdown = document.getElementById("karaokeLyrics");
     
