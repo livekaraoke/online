@@ -2,7 +2,7 @@
 // generated: 16-6-26
 // version file: 01
 
-const window.songs = [
+window.songs = [
   {
     title: "Ain’t no sunshine",
     artist: "Bill Withers",
