@@ -325,6 +325,16 @@ body {
   color: white !important;
 }
 
+.tab-note-space-fix {
+  display:none !important;
+  line-height: 0 !important;
+}
+
+.tab-n-fix {
+  margin-left: -2px !important;
+}
+
+
 /*
 .viewer-tab .tab-repeat.zero,
 .viewer-tab .tab-repeat.zero * {
