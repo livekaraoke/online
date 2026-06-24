@@ -26,6 +26,8 @@
     Loading...
   </div>
 
+  <select id="liveKaraokeLyrics" class="viewer-btn red"></select>
+  
   <button id="sendToSingerBtn" class="viewer-btn red send-to-singer-screen">
     🎤 Send to Singer Screen
   </button>
@@ -261,6 +263,40 @@
   <!---------------------------------- TEMP SEND LYRICS ------------------------------------>
   <!---------------------------------------------------------------------------------------->
 
+  function populateKaraokeDropdown() {
+    const ddl = document.getElementById("liveKaraokeLyrics");
+  
+    ddl.innerHTML = "";
+  
+    window.songs
+      .filter(s => s.hasLyrics)
+      .forEach(song => {
+  
+        const id = song.url.replace(
+          /^lyrics\/song\.html\?id=/i,
+          ""
+        );
+  
+        const opt = document.createElement("option");
+        opt.value = id;
+        opt.textContent = `${song.title} - ${song.artist}`;
+  
+        ddl.appendChild(opt);
+      });
+  }
+
+  document.getElementById("liveKaraokeLyrics")
+    .addEventListener("change", async function () {
+  
+      await db
+        .collection("karaokeControl")
+        .doc("liveLyrics")
+        .set({
+          currentSongId: this.value,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+  
+    });
 
   
   <!---------------------------------------------------------------------------------------->
