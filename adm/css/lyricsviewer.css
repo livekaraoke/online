@@ -693,7 +693,8 @@ margin-left: 80px;
   }
 
   .tab-line {
-    font-weight: 900 !important;
+    font-size: 25px;
+    font-weight: 950 !important;
   }
 
   /** TAB Text **/
