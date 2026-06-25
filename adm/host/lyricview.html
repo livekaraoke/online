@@ -207,8 +207,27 @@ if (song.karaokeLyrics && song.karaokeLyrics !== "No") {
 
     const endMarker = document.createElement("div");
     endMarker.className = "end-marker";
+
+    const startSymb = document.createElement("div");
+    startSymb.className = "marker-symbols";
+    startSymb.textContent = "⦓";
+
+    const endSymb = document.createElement("div");
+    endSymb.className = "marker-symbols";
+    endSymb.textContent = "⦔";
+
+    endMarker.appendChild(startSymb);
+    endMarker.append(" END "); // adds a text node
+    endMarker.appendChild(endSymb);
+
+    container.appendChild(endMarker);
+    
+    /*
+    const endMarker = document.createElement("div");
+    endMarker.className = "end-marker";
     endMarker.innerHTML = "[ END ]";
     container.appendChild(endMarker);
+    */
   }
 
   function showAlert(title, message) {
