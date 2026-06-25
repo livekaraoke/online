@@ -697,6 +697,14 @@ margin-left: 80px;
     font-weight: 950 !important;
   }
 
+  .viewer-tab .tab-line,
+  .viewer-tab .tab-dashes,
+  .viewer-tab .tab-cell,
+  .viewer-tab .note-cell {
+    font-weight: 950 !important;
+    -webkit-text-stroke: 0.2px currentColor;
+  }
+
   /** TAB Text **/
   .viewer-tab {
     font-size:21px;
@@ -709,6 +717,8 @@ margin-left: 80px;
   .viewer-tab::-webkit-scrollbar {
     display: none;
   }
+
+
 
 
   
