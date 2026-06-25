@@ -510,10 +510,10 @@ margin-left: 80px;
 .end-marker {
   text-align: center;
   color: #666;
-  font-weight: 600;
+  font-weight: 550;
   font-size: 20px;
   font-family: Verdana, Bahnschrift, Arial, sans-serif;
-  letter-spacing: 2px;
+  letter-spacing: 1.5px;
   margin-top: 70px;
   margin-bottom: 70px;
   display: flex;
@@ -527,11 +527,15 @@ margin-left: 80px;
 .end-marker::after {
   content: "";
   flex: 1;
-  height: 1.2px;
+  height: 1.3px;
   background: #FFCC;
   background: linear-gradient(to right, transparent, #666, transparent);
   opacity: 0.7;
   margin-top: 13px;
+}
+
+.marker-symbols {
+  margin-top: -2px;
 }
 
 
