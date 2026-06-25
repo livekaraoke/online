@@ -370,7 +370,7 @@ margin-left: 80px;
 }
 
 .viewer-tab .tab-block {
-  padding: 10px 5px 15px 15px;
+  padding: 10px 5px 10px 10px;
   margin-bottom: -10px;
   border: 1px solid rgba(100,100,100,0.1);
   border-radius: 8px;
@@ -693,7 +693,7 @@ margin-left: 80px;
   }
 
   .tab-line {
-    font-size: 25px;
+    font-size: 21px;
     font-weight: 950 !important;
   }
 
@@ -702,13 +702,13 @@ margin-left: 80px;
   .viewer-tab .tab-cell,
   .viewer-tab .note-cell {
     font-weight: 950 !important;
-    -webkit-text-stroke: 0.2px currentColor;
+    -webkit-text-stroke: 0.4px currentColor;
   }
 
   /** TAB Text **/
   .viewer-tab {
     font-size:21px;
-    font-weight: 900 !important;
+    font-weight: 950 !important;
     overflow: hidden !important;
     overflow-x: auto !important;
     scrollbar-width: none;
