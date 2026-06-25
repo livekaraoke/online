@@ -372,6 +372,7 @@ margin-left: 80px;
 .tab-line {
   font-family: "Lucida Console", "Consolas", monospace !important;
   font-weight: 950 !important;
+  /*-webkit-text-stroke: 0.1px currentColor;*/
 }
 
 .viewer-tab .tab-block {
@@ -709,7 +710,7 @@ margin-left: 80px;
   .viewer-tab .tab-cell,
   .viewer-tab .note-cell {
     font-weight: 950 !important;
-    -webkit-text-stroke: 0.8px currentColor;
+    -webkit-text-stroke: 1.5px currentColor;
   }
 
   /** TAB Text **/
