@@ -369,6 +369,11 @@ margin-left: 80px;
   line-height: 1 !important;
 }
 
+.tab-line {
+  font-family: "Lucida Console", "Consolas", monospace !important;
+  font-weight: 950 !important;
+}
+
 .viewer-tab .tab-block {
   padding: 10px 5px 10px 10px;
   margin-bottom: -10px;
@@ -693,8 +698,10 @@ margin-left: 80px;
   }
 
   .tab-line {
-    font-size: 21px;
+    font-size: 20px;
     font-weight: 950 !important;
+    
+    font-family: "Lucida Console", "Consolas", monospace;
   }
 
   .viewer-tab .tab-line,
