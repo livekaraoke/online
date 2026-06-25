@@ -443,7 +443,7 @@ textarea {
   white-space: pre-wrap;
   line-height: 1.08;
   margin-top: 0;
-  margin-bottom: 0;
+  margin-bottom: -40px;
 }
 
 
@@ -596,7 +596,7 @@ textarea {
 }
 
 .section-actions {
-  margin-top: 4px;
+  margin-top: 60px;
   margin-bottom: 10px;
   justify-content: center;
   text-align: center;
@@ -609,7 +609,7 @@ textarea {
 
 .section-actions button {
   margin-right: 8px;
-  margin-bottom: 10px;
+  margin-bottom: 0px;
   background: #111;
   color: #FFFFFF;
   border: 1px solid #444;
@@ -885,6 +885,7 @@ textarea {
   padding: 18px 20px;
 }
 
+
 .tab-block,
 .tab-line {
   margin: 0;
@@ -941,6 +942,8 @@ textarea {
   padding: 8px;
   border-radius: 6px;
   background: rgba(255,255,255,0.03);
+  font-family: Verdana, Arial, sans-serif !important;
+  text-align: center;
 }
 
 .tab-btn {
@@ -1083,6 +1086,7 @@ textarea {
   font-weight: 900;
   cursor: pointer;
   box-shadow: none;
+   
 }
 
 .tab-toggle-btn.active {
