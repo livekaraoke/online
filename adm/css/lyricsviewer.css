@@ -372,7 +372,7 @@ margin-left: 80px;
 .viewer-tab .tab-block {
   padding: 10px 5px 15px 15px;
   margin-bottom: -10px;
-  border: 0px solid rgba(100,100,100,0.1);
+  border: 1px solid rgba(100,100,100,0.1);
   border-radius: 8px;
 }
 
@@ -692,6 +692,10 @@ margin-left: 80px;
     font-weight: 450;
   }
 
+  .tab-line {
+    font-weight: 900 !important;
+  }
+
   /** TAB Text **/
   .viewer-tab {
     font-size:21px;
@@ -812,17 +816,18 @@ margin-left: 80px;
 
 .tab-block {
   position: relative;
-  padding: 14px 18px;
-  margin: 10px 0;
+  padding: 0px 0px 0 0;
+  margin: 20px 0;
   border: 1px solid rgba(255,255,255,.25);
   border-radius: 8px;
 }
 
 .tab-line {
   font-family: "Courier New", monospace;
-  font-size: 19px;
-  font-weight: 900;
+  font-size: 21px;
+  font-weight: 900 !important;
   line-height: 1;
+  letter-spacing: 0px;
   white-space: pre;
 }
 
