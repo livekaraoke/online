@@ -65,6 +65,7 @@ body {
   line-height: 1.1;
   margin-top: 2px;
 }
+
 /**** END TOP BAR SONG TITLE ****/
 /********************************/
 .viewer-btn {
@@ -369,9 +370,9 @@ margin-left: 80px;
 }
 
 .viewer-tab .tab-block {
-  padding: 10px 5px 15px 30px;
+  padding: 10px 5px 15px 15px;
   margin-bottom: -10px;
-  border: 1px solid rgba(255,255,255,0.1);
+  border: 0px solid rgba(100,100,100,0.1);
   border-radius: 8px;
 }
 
@@ -386,7 +387,7 @@ margin-left: 80px;
 
 /** TAB sections text / tabs when closed **/
 .viewer-tab {
-  padding: 0px 20px 0px 20px;
+  padding: 0px 10px 0px 10px;
   cursor: pointer;
   user-select: none;
   border: 1px solid rgba(255,255,255,0.28);
@@ -693,7 +694,7 @@ margin-left: 80px;
 
   /** TAB Text **/
   .viewer-tab {
-    font-size:19px;
+    font-size:21px;
     font-weight: 900 !important;
     overflow: hidden !important;
     overflow-x: auto !important;
