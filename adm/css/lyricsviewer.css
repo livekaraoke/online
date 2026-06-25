@@ -531,11 +531,12 @@ margin-left: 80px;
   background: #FFCC;
   background: linear-gradient(to right, transparent, #666, transparent);
   opacity: 0.7;
-  margin-top: 13px;
+  margin-top: 12px;
 }
 
 .marker-symbols {
   margin-top: -2px;
+  font-weight: 300;
 }
 
 
