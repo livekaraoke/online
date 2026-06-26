@@ -483,8 +483,8 @@ margin-left: 80px;
 .tab-dashes .tab-cell.dash { /***** THE ACTUAL DASHES --- ******/
   color: #555 !important;
   -webkit-text-fill-color: #555 !important;
-  letter-spacing: -1px;
-  font-weight: 900 !important;
+  letter-spacing: 1px;
+  font-weight: 950 !important;
   font-size: 19px;
   font-family: "Courier New", monospace !important;
 }
