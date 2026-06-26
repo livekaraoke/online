@@ -1137,7 +1137,7 @@ function createTabBlock() {
       '<div class="tab-line tab-apostrophe">●</div>' +
       '<div class="tab-line tab-note-line">' +
         '<span class="tab-fixed"><span class="tab-note-space-fix">  </span><span class="tab-n-fix"> </span>»</span>' +
-        '<span class="tab-note tab-hidden-fill" contenteditable="true">_________________________________________________________</span>' +
+        '<span class="tab-note tab-hidden-fill" contenteditable="true">_________________________________________________________________</span>' +
         '<span class="tab-fixed">«</span>' +
       '</div>' +
       '<div class="tab-spacer"></div>' +
