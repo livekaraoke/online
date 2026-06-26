@@ -480,9 +480,11 @@ margin-left: 80px;
   text-shadow: none !important;
 }
 
-.tab-dashes .tab-cell.dash {
-  color: #666 !important;
-  -webkit-text-fill-color: #666 !important;
+.tab-dashes .tab-cell.dash { /***** THE ACTUAL DASHES --- ******/
+  color: #555 !important;
+  -webkit-text-fill-color: #555 !important;
+  letter-spacing: -0.5px;
+  font-size: 19px;
 }
 
 .tab-cell.filled,
@@ -840,7 +842,7 @@ margin-left: 80px;
 
 .tab-line {
   font-family: "Courier New", monospace;
-  font-size: 19px;
+  font-size: 18px;
   font-weight: 900 !important;
   line-height: 1;
   letter-spacing: 0px;
@@ -862,13 +864,20 @@ margin-left: 80px;
 .tab-note {
   color:  #FF0000 !important; /*white;*/
   color:  #FF0000 !important; /*  white;  #FF0000  #FFE55C  */
+  /*-webkit-text-fill-color: #FF0000;*/
 }
+
+/*
+.viewer-tab .tab-cell.filled {
+  color: white !important;
+  -webkit-text-fill-color: currentColor;
+}*/
 
 
 /* Fixed tab symbols: e⦗|, B⦗|, |⦘, », « */
 .viewer-tab .tab-fixed {
   font-family: "Courier New", monospace !important;
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 950 !important;
   letter-spacing: -4px;
   line-height: 0.5;
