@@ -912,7 +912,7 @@ margin-left: 80px;
 /* Repeat label */
 .viewer-tab .tab-repeat {
   font-family: Consolas, monospace !important;
-  font-size: 18px !important;
+  font-size: 17px !important;
   font-weight: 800 !important;
   margin-left: -2px !important;
   letter-spacing: -2px;
@@ -923,7 +923,7 @@ margin-left: 80px;
 
 /* Repeat number */
 .viewer-tab .tab-repeat-number {
-  font-size: 21px !important;
+  font-size: 19px !important;
   font-weight: 950 !important;
   margin-left: 2.5px;
   color: #FF0000 !important;
