@@ -875,28 +875,42 @@ margin-left: 80px;
 
 
 /* Fixed tab symbols: e⦗|, B⦗|, |⦘, », « */
-.viewer-tab .tab-fixed {
+.viewer-tab .tab-fixed,
+.tab-string-letter {
   font-family: "Courier New", monospace !important;
-  font-size: 17px;
-  font-weight: 950 !important;
+  font-size: 18px;
+  font-weight: 550 !important;
   letter-spacing: -4px;
-  line-height: 0.5;
   color: #AB8D26;
   -webkit-text-fill-color: #AB8D26;/*  #FFD400;  #FFE55C  #DDB000  */
-  color: #AAAA4;
-  -webkit-text-fill-color: #BB9500;
+  color: #AA8500;
+  -webkit-text-fill-color: #AA8500;
 
 
   text-shadow: none !important;
+}
+
+.tab-string-letter {
+    color: #BB9500;
+  -webkit-text-fill-color: #CCA500;
+  font-size: 17px;
+  font-weight: 950 !important;
+  font-family: Consolas, monospace !important;
+  text-align: center;
+  letter-spacing: -1px;
+}
+
+.tab-string-gap {
+  font-size: 12px;
 }
 
 /* Repeat label */
 .viewer-tab .tab-repeat {
   font-family: Consolas, monospace !important;
   font-size: 18px !important;
-  font-weight: 700 !important;
-  margin-left: -5px !important;
-  letter-spacing: -1.5px;
+  font-weight: 800 !important;
+  margin-left: -3px !important;
+  letter-spacing: -2px;
   color: white;
   color: #ff0000;
   -webkit-text-fill-color: #BBDD00;
@@ -905,8 +919,8 @@ margin-left: 80px;
 /* Repeat number */
 .viewer-tab .tab-repeat-number {
   font-size: 21px !important;
-  font-weight: 900 !important;
-  margin-left: 2px;
+  font-weight: 950 !important;
+  margin-left: 2.5px;
   color: #FF0000 !important;
   -webkit-text-fill-color: #CCEE00;
 }
