@@ -333,6 +333,7 @@ margin-left: 80px;
   color: #666 !important;
   font-weight: 900;
   text-shadow: none !important;
+
 }
 
 .tab-note.tab-hidden-fill {
@@ -695,7 +696,7 @@ margin-left: 80px;
   }
 
   .tab-line {
-    font-size: 19px;
+    font-size: 19px !important;
     font-weight: 950 !important;
     
     font-family: "Lucida Console", "Consolas", monospace;
@@ -839,7 +840,7 @@ margin-left: 80px;
 
 .tab-line {
   font-family: "Courier New", monospace;
-  font-size: 20px;
+  font-size: 19px;
   font-weight: 900 !important;
   line-height: 1;
   letter-spacing: 0px;
@@ -867,11 +868,14 @@ margin-left: 80px;
 /* Fixed tab symbols: e⦗|, B⦗|, |⦘, », « */
 .viewer-tab .tab-fixed {
   font-family: "Courier New", monospace !important;
-  font-weight: 550 !important;
+  font-size: 18px;
+  font-weight: 950 !important;
+  letter-spacing: -4px;
+  line-height: 0.5;
   color: #AB8D26;
   -webkit-text-fill-color: #AB8D26;/*  #FFD400;  #FFE55C  #DDB000  */
   color: #AAAA4;
-  -webkit-text-fill-color: #AA9000;
+  -webkit-text-fill-color: #BB9500;
 
 
   text-shadow: none !important;
@@ -879,21 +883,23 @@ margin-left: 80px;
 
 /* Repeat label */
 .viewer-tab .tab-repeat {
-  font-family: "Lucida Console", Consolas, monospace !important;
-  font-size: 17px !important;
+  font-family: Consolas, monospace !important;
+  font-size: 18px !important;
   font-weight: 700 !important;
-  margin-left: -8px !important;
+  margin-left: -5px !important;
+  letter-spacing: -1.5px;
   color: white;
   color: #ff0000;
-  -webkit-text-fill-color: #AAC400;
+  -webkit-text-fill-color: #BBDD00;
 }
 
 /* Repeat number */
 .viewer-tab .tab-repeat-number {
-  font-size: 17px !important;
+  font-size: 21px !important;
   font-weight: 900 !important;
   margin-left: 2px;
   color: #FF0000 !important;
+  -webkit-text-fill-color: #CCEE00;
 }
 
 
