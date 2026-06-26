@@ -481,12 +481,13 @@ margin-left: 80px;
 }
 
 .tab-dashes .tab-cell.dash { /***** THE ACTUAL DASHES --- ******/
-  color: #555 !important;
-  -webkit-text-fill-color: #555 !important;
+  color: #666 !important;
+  -webkit-text-fill-color: #666 !important;
   letter-spacing: 1px;
   font-weight: 950 !important;
-  font-size: 19px;
+  font-size: 21px;
   font-family: "Courier New", monospace !important;
+  font-family: Consolas, monospace !important;
 }
 
 .tab-cell.filled,
