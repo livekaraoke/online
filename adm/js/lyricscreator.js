@@ -319,6 +319,10 @@ function saveSection() {
 }
   */
 
+  if (sectionType === "tab") {
+    html = upgradeOldTabStrings(html);
+  }
+
   html = addSectionMarker(html);
   
   const section = {
@@ -354,6 +358,17 @@ function saveSection() {
 /**********************************************************/
 /******************* END OF SAVE SECTION ******************/
 /**********************************************************/
+
+function upgradeOldTabStrings(html) {
+
+  return html.replace(
+    /<span class="tab-fixed">([eBGDAE])\s*⦗\|<\/span>/g,
+    (_, letter) =>
+      `<span class="tab-fixed"><span class="tab-string-letter">${letter}</span><span class="tab-string-gap"> </span>⦗|</span>`
+  );
+
+}
+
 
 async function confirmUpdateSection() {
   return await showConfirm(
@@ -1126,12 +1141,12 @@ function createTabBlock() {
         '<span class="tab-fixed">«</span>' +
       '</div>' +
       '<div class="tab-spacer"></div>' +
-      createStringLine("e ") +
-      createStringLine("B ") +
-      createStringLine("G ", true) +
-      createStringLine("D ") +
-      createStringLine("A ") +
-      createStringLine("E ") +
+      createStringLine("e") +
+      createStringLine("B") +
+      createStringLine("G", true) +
+      createStringLine("D") +
+      createStringLine("A") +
+      createStringLine("E") +
       '<div class="tab-block-controls">' +
         '<button type="button" class="move-tab-up-btn">▲ Up</button>' +
         '<button type="button" class="move-tab-down-btn">▼ Down</button>' +
@@ -1152,7 +1167,11 @@ function createStringLine(letter, repeat = false) {
   return (
     '<div class="tab-line">' +
       '<button type="button" class="delete-tab-line-btn">✕</button>' +
-      `<span class="tab-fixed">${letter}⦗|</span>` +
+      '<span class="tab-fixed">' +
+        `<span class="tab-string-letter">${letter}</span>` +
+        '<span class="tab-string-gap"> </span>' +
+        '⦗|' +
+      '</span>' +
       '<span class="tab-dashes" contenteditable="true">' +
         '<span class="tab-cell dash">-</span>'.repeat(55) +
       '</span>' +
