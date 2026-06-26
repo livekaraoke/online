@@ -6,7 +6,7 @@
 body {
   margin: 0;
   background: #050505;
-  color: white;
+  color: white
   font-family: Bahnschrift, Arial, sans-serif;
 }
 
@@ -324,8 +324,8 @@ margin-left: 80px;
 }
 
 .tab-dashes { /** THE RIGHT ONE **/
-  color: #666 !important;
-  font-weight: 900;
+  color: #777777 !important;
+  font-weight: 950;
   text-shadow:none !important;
 }
 
@@ -341,8 +341,8 @@ margin-left: 80px;
 }
 
 .tab-note.has-input {
-  color: white !important;
-}
+  color: #FF0000 !important; /*white !important;*/
+} 
 
 .tab-note-space-fix {
   display:none !important;
@@ -369,11 +369,7 @@ margin-left: 80px;
   line-height: 1 !important;
 }
 
-.tab-line {
-  font-family: "Lucida Console", "Consolas", monospace !important;
-  font-weight: 950 !important;
-  /*-webkit-text-stroke: 0.1px currentColor;*/
-}
+
 
 .viewer-tab .tab-block {
   padding: 10px 5px 10px 10px;
@@ -438,8 +434,8 @@ margin-left: 80px;
 }
 
 .viewer-tab .tab-note.has-input {
-  color: white;
-  -webkit-text-fill-color: white;
+  color: #FF0000 !important; /*white;*/
+  -webkit-text-fill-color: #FF0000 !important; /*white;*/
 }
 
 .viewer-tab:hover {
@@ -843,12 +839,63 @@ margin-left: 80px;
 
 .tab-line {
   font-family: "Courier New", monospace;
-  font-size: 21px;
-  font-weight: 950 !important;
+  font-size: 20px;
+  font-weight: 900 !important;
   line-height: 1;
   letter-spacing: 0px;
   white-space: pre;
+  /*font-family: "Lucida Console", "Consolas", monospace !important;
+  font-weight: 950 !important;*/
+  /*-webkit-text-stroke: 0.1px currentColor;*/
 }
+
+/* Tab editable/content characters */
+.viewer-tab .tab-note,
+.viewer-tab .tab-dashes,
+.viewer-tab .tab-cell,
+.viewer-tab .note-cell {
+  font-family: "Lucida Console", Consolas, monospace !important;
+  font-weight: 950 !important;
+}
+
+.tab-note {
+  color:  #FF0000 !important; /*white;*/
+  color:  #FF0000 !important; /*  white;  #FF0000  #FFE55C  */
+}
+
+
+/* Fixed tab symbols: e⦗|, B⦗|, |⦘, », « */
+.viewer-tab .tab-fixed {
+  font-family: "Courier New", monospace !important;
+  font-weight: 550 !important;
+  color: #AB8D26;
+  -webkit-text-fill-color: #AB8D26;/*  #FFD400;  #FFE55C  #DDB000  */
+  color: #AAAA4;
+  -webkit-text-fill-color: #AA9000;
+
+
+  text-shadow: none !important;
+}
+
+/* Repeat label */
+.viewer-tab .tab-repeat {
+  font-family: "Lucida Console", Consolas, monospace !important;
+  font-size: 17px !important;
+  font-weight: 700 !important;
+  margin-left: -8px !important;
+  color: white;
+  color: #ff0000;
+  -webkit-text-fill-color: #AAC400;
+}
+
+/* Repeat number */
+.viewer-tab .tab-repeat-number {
+  font-size: 17px !important;
+  font-weight: 900 !important;
+  margin-left: 2px;
+  color: #FF0000 !important;
+}
+
 
 .tab-apostrophe {
   color: #050505 !important;
