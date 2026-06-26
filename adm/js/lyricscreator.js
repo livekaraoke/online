@@ -1126,12 +1126,12 @@ function createTabBlock() {
         '<span class="tab-fixed">«</span>' +
       '</div>' +
       '<div class="tab-spacer"></div>' +
-      createStringLine("e") +
-      createStringLine("B") +
-      createStringLine("G", true) +
-      createStringLine("D") +
-      createStringLine("A") +
-      createStringLine("E") +
+      createStringLine("e ") +
+      createStringLine("B ") +
+      createStringLine("G ", true) +
+      createStringLine("D ") +
+      createStringLine("A ") +
+      createStringLine("E ") +
       '<div class="tab-block-controls">' +
         '<button type="button" class="move-tab-up-btn">▲ Up</button>' +
         '<button type="button" class="move-tab-down-btn">▼ Down</button>' +
