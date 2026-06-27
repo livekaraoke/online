@@ -83,7 +83,7 @@ body {
   background: linear-gradient(180deg, #ff2b2b, #aa0000);
 }
 
-.viewer-btn red send-temp {
+.viewer-btn red.send-temp {
 margin-left: 80px;
 }
 
