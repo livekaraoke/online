@@ -1326,7 +1326,7 @@ function createStringLine(letter, repeat = false) {
         '⦗|' +
       '</span>' +
       '<span class="tab-dashes" contenteditable="true">' +
-        '<span class="tab-cell dash">-</span>'.repeat(55) +
+        '<span class="tab-cell dash">-</span>'.repeat(56) +
       '</span>' +
       '<span class="tab-fixed">|⦘</span>' +
       (repeat
@@ -1646,10 +1646,10 @@ document.addEventListener("beforeinput", function (e) {
 function prepareNoteCells(note) {
   if (note.querySelector(".note-cell")) return;
 
-  const text = note.innerText || " ".repeat(65);
+  const text = note.innerText || " ".repeat(56);
   note.innerHTML = "";
 
-  for (let i = 0; i < 55; i++) {
+  for (let i = 0; i < 56; i++) {
     const ch = text[i] || " ";
     const span = document.createElement("span");
 
