@@ -15,6 +15,7 @@ let songData = {
   year: "",
   karaokeLyrics: "",
   note: "",
+  youtubeLink: "",
   sections: []
 };
 
@@ -122,6 +123,7 @@ function updateMeta() {
   songData.year = document.getElementById("songYear").value;
   songData.karaokeLyrics = document.getElementById("karaokeLyrics").value;
   songData.note = document.getElementById("songNote").value;
+  songData.youtubeLink = document.getElementById("youtubeLink").value;
 
   document.getElementById("previewTitle").innerText =
     `${songData.title || "Song Title"} - ${songData.artist || "Artist"}`;
@@ -152,7 +154,7 @@ function updateMeta() {
   songData.note ? `Note: ${songData.note}` : "";
 }
 
-["songTitle", "artistName", "userBpm", "originalBpm", "capoNote", "songKey", "songYear", "karaokeLyrics", "songNote"]
+["songTitle", "artistName", "userBpm", "originalBpm", "capoNote", "songKey", "songYear", "karaokeLyrics", "songNote", "youtubeLink"]
   .forEach(id => {
     document.getElementById(id).addEventListener("input", updateMeta);
   });
@@ -1922,6 +1924,8 @@ async function loadSongFromFirebase(firebaseId) {
     document.getElementById("songYear").value = songData.year || "";
     document.getElementById("karaokeLyrics").value = songData.karaokeLyrics || "Default";
     document.getElementById("songNote").value = songData.note || "";
+
+    document.getElementById("youtubeLink").value = songData.youtubeLink || "";
 
     document.getElementById("creatorTopTitle").innerText =
       "● Lyrics & Chords Editor ●";
