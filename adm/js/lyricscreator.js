@@ -449,6 +449,7 @@ function saveSection() {
 
   if (sectionType === "tab") {
     html = upgradeOldTabStrings(html);
+    html = normalizeTabBlocks(html);
   }
 
   html = addSectionMarker(html);
