@@ -227,6 +227,123 @@ function updateEditorFont() {
   document.getElementById("sectionEditor").style.fontFamily = font;
 }
 
+const TIME_SYMBOLS = ["⸳", "𝅝", "𝅗𝅥", "𝅘𝅥", "𝅘𝅥𝅮", "𝄽", "𝄾", "♯", "♮", "♭", "⫰", "|", "⸾", "⦚"];
+
+function createTabTimeLine() {
+  return `
+    <div class="tab-time-line" contenteditable="false">
+      ${Array.from({ length: 16 }).map(() =>
+        `<span class="tab-time-symbol" contenteditable="true">⸳</span>`
+      ).join('<span class="tab-time-gap">   </span>')}
+    </div>
+  `;
+}
+
+function insertTabTimeLine() {
+  const sel = window.getSelection();
+  if (!sel.rangeCount) {
+    showAlert("No Tab Selected", "Click inside a guitar tab block first.");
+    return;
+  }
+
+  const node = sel.anchorNode;
+  const el = node.nodeType === Node.TEXT_NODE ? node.parentElement : node;
+  const block = el.closest?.(".tab-block");
+
+  if (!block) {
+    showAlert("No Tab Selected", "Click inside a guitar tab block first.");
+    return;
+  }
+
+  const existing = block.querySelector(".tab-time-line");
+
+  if (existing) {
+    showAlert("Time Line Exists", "This guitar tab block already has a time line.");
+    return;
+  }
+
+  block.insertAdjacentHTML("beforeend", createTabTimeLine());
+  restoreTabEditability(document.getElementById("sectionEditor"));
+  updateLivePreview();
+}
+
+document.addEventListener("click", function (e) {
+  if (!e.target.classList.contains("tab-time-symbol")) return;
+
+  const current = e.target.innerText.trim();
+  const index = TIME_SYMBOLS.indexOf(current);
+  const next = TIME_SYMBOLS[(index + 1) % TIME_SYMBOLS.length];
+
+  e.target.innerText = next;
+  updateLivePreview();
+});
+
+document.addEventListener("keydown", function (e) {
+  if (!e.target.classList.contains("tab-time-symbol")) return;
+
+  e.preventDefault();
+
+  if (TIME_SYMBOLS.includes(e.key)) {
+    e.target.innerText = e.key;
+    updateLivePreview();
+  }
+});
+
+function togglePerfNoteMenu() {
+  document.getElementById("perfNoteMenu").classList.toggle("hidden");
+}
+
+function createPerformanceNote(icon) {
+  return `
+    <div class="performance-note-line" contenteditable="false">
+      <span class="performance-note-icon">${icon}</span>
+      <span class="performance-note-bracket">⦓</span>
+      <span class="performance-note-text" contenteditable="true">                                        </span>
+      <span class="performance-note-bracket">⦔</span>
+      <span class="performance-note-icon">${icon}</span>
+    </div>
+  `;
+}
+
+function insertPerformanceNote(icon) {
+  insertHtmlAtCursor(createPerformanceNote(icon));
+  document.getElementById("perfNoteMenu").classList.add("hidden");
+  updateLivePreview();
+}
+
+document.addEventListener("keydown", function (e) {
+  const target = e.target.closest(".performance-note-text");
+  if (!target) return;
+
+  const allowed = ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Backspace", "Delete", "Tab"];
+  if (allowed.includes(e.key)) return;
+
+  if (e.key.length !== 1) return;
+
+  e.preventDefault();
+
+  const max = 40;
+  const text = target.innerText;
+  const clean = text.trimEnd();
+
+  if (clean.length >= max) return;
+
+  document.execCommand("insertText", false, e.key);
+  target.innerText = target.innerText.slice(0, max).padEnd(max, " ");
+  setCaret(target, Math.min(clean.length + 1, max));
+  updateLivePreview();
+});
+
+function toggleSymbolMenu() {
+  document.getElementById("symbolMenu").classList.toggle("hidden");
+}
+
+function insertMusicSymbol(symbol) {
+  insertHtmlAtCursor(symbol);
+  document.getElementById("symbolMenu").classList.add("hidden");
+  updateLivePreview();
+}
+
 
 /**********************************************************/
 /********************** SAVE SECTION **********************/
@@ -478,6 +595,11 @@ function clearEditor() {
   tabBarBtn.style.display = "none";
   tabBarBtn.disabled = true;
   tabBarBtn.classList.remove("enabled");
+
+  document.getElementById("insertTimeBtn").style.display = "none";
+  document.getElementById("insertTimeBtn").disabled = true;
+  document.getElementById("insertTimeBtn").classList.remove("enabled");
+
 
   document.getElementById("sectionType").disabled = false;
   
@@ -778,6 +900,12 @@ function editSection(index) {
 
     document.getElementById("sectionType").disabled = true;
   
+
+    document.getElementById("insertTimeBtn").style.display = "inline-block";
+    document.getElementById("insertTimeBtn").disabled = false;
+    document.getElementById("insertTimeBtn").classList.add("enabled");
+
+
   } else {
     
     tabOptions.style.display = "none";
@@ -787,6 +915,9 @@ function editSection(index) {
     document.getElementById("insertBarBtn").disabled = true;
     document.getElementById("sectionType").disabled = true;
     
+    document.getElementById("insertTimeBtn").style.display = "none";
+    document.getElementById("insertTimeBtn").disabled = true;
+    document.getElementById("insertTimeBtn").classList.remove("enabled");
   }
   
   const editor = document.getElementById("sectionEditor");
@@ -885,10 +1016,11 @@ function insertBefore(index) {
 }
 
 function restoreTabEditability(root) {
-  root.querySelectorAll(".tab-note, .tab-dashes, .tab-repeat-number")
-    .forEach(el => {
-      el.setAttribute("contenteditable", "true");
-    });
+  root.querySelectorAll(
+    ".tab-note, .tab-dashes, .tab-repeat-number, .tab-time-symbol, .performance-note-text"
+  ).forEach(el => {
+    el.setAttribute("contenteditable", "true");
+  });
 
   root.querySelectorAll(".tab-block").forEach(el => {
     el.setAttribute("contenteditable", "false");
@@ -1037,6 +1169,12 @@ document.getElementById("sectionType").addEventListener("change", function () {
     syncTabToggleButton();
     /*tabBtn.classList.add("active");
     tabBtn.innerText = "Load Closed";*/
+
+    document.getElementById("insertTimeBtn").style.display = "inline-block";
+    document.getElementById("insertTimeBtn").disabled = false;
+    document.getElementById("insertTimeBtn").classList.add("enabled");
+
+
     editor.focus();
     document.execCommand("bold", false, true);
     
@@ -1059,6 +1197,9 @@ document.getElementById("sectionType").addEventListener("change", function () {
     tabBarBtn.classList.remove("enabled");
     tabBarBtn.style.display = "none";
 
+    document.getElementById("insertTimeBtn").style.display = "none";
+    document.getElementById("insertTimeBtn").disabled = true;
+    document.getElementById("insertTimeBtn").classList.remove("enabled");
     
   }
 
