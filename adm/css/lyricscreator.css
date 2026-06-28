@@ -1404,30 +1404,37 @@ textarea {
   color: transparent;
 }
 
+
 .performance-note-line {
-  margin: 8px 0;
-  font-family: Verdana, Arial, sans-serif;
-  font-size: 17px;
-  font-weight: 900;
-  color: white;
-  white-space: pre;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  vertical-align: middle;
+  width: auto;
+  max-width: 100%;
 }
 
 .performance-note-icon {
-  color: #FFD400;
-  margin: 0 5px;
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
 }
 
 .performance-note-bracket {
-  color: #999;
-  font-family: "Courier New", monospace;
-  font-weight: 900;
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
 }
 
 .performance-note-text {
   display: inline-block;
-  min-width: 300px;
-  color: #7CFF3A;
-  font-weight: 900;
+  flex: 0 0 320px;
+  width: 320px;
+  min-width: 320px;
+  max-width: 320px;
+  white-space: pre;
+  overflow: hidden;
+  color: var(--performance-note-text-color, #ffd54a); /* or your original color */
+  -webkit-text-fill-color: var(--performance-note-text-color, #ffd54a);
 }
-
