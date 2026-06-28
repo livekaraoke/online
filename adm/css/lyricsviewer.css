@@ -847,7 +847,7 @@ margin-left: 80px;
 .tab-block {
   position: relative;
   padding: 0px 0px 0 0;
-  margin: 20px 0;
+  margin: 5px 0;
   border: 1px solid rgba(255,255,255,.25);
   border-radius: 8px;
 }
@@ -883,13 +883,14 @@ margin-left: 80px;
   -webkit-text-fill-color: #FFE55C;
   font-size: 20px;
   font-family: Verdana, Bahnschrift, Arial, sans-serif !important;
+  letter-spacing: 0.5px;
 }
 
 
 .viewer-tab .tab-cell.filled {
   /*color: white !important;
   -webkit-text-fill-color: currentColor;*/
-font-size: 20px;
+  font-size: 20px;
 }
 
 
@@ -1079,7 +1080,6 @@ font-size: 20px;
   font-weight: 700;
 }
 
-
 .btn.red {
   background: linear-gradient(180deg, #ff2b2b, #aa0000);
   box-shadow: 0 0 12px rgba(255,0,0,.45);
@@ -1131,7 +1131,7 @@ font-size: 20px;
 }
 
 .tab-time-line {
-  margin-top: -70px !important;
+  margin-top: -72px !important;
   font-family: "Courier New", "Lucida Console", Consolas, monospace;
   font-size: 19px;
   font-weight: 900;
