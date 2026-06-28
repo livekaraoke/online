@@ -18,7 +18,8 @@ let songData = {
   sections: []
 };
 
-let tabCharNum = 57;
+const TAB_NOTE_CHARS = 57;
+const TAB_DASH_CHARS = 54;
 
 
 function generateSongId(title, artist) {
@@ -530,7 +531,7 @@ function normalizeTabNoteLine(block) {
 
   note.innerHTML = "";
 
-  for (let i = 0; i < tabCharNum; i++) {
+  for (let i = 0; i < TAB_NOTE_CHARS; i++) {
     const ch = chars[i] || " ";
     const span = document.createElement("span");
 
@@ -565,7 +566,7 @@ function normalizeTabDashLines(block) {
 
     line.innerHTML = "";
 
-    for (let i = 0; i < tabCharNum; i++) {
+    for (let i = 0; i < TAB_DASH_CHARS; i++) {
       const ch = chars[i] || "-";
       const span = document.createElement("span");
 
@@ -1378,7 +1379,7 @@ function createTabBlock() {
       '<div class="tab-line tab-note-line">' +
         '<span class="tab-fixed"><span class="tab-note-space-fix">  </span><span class="tab-n-fix"> </span>»</span>' +
         '<span class="tab-note tab-hidden-fill" contenteditable="true">' +
-  '<span class="note-cell empty"> </span>'.repeat(tabCharNum) +
+  '<span class="note-cell empty"> </span>'.repeat(TAB_NOTE_CHARS) +
 '</span>' +
         '<span class="tab-fixed">«</span>' +
       '</div>' +
@@ -1415,7 +1416,7 @@ function createStringLine(letter, repeat = false) {
         '⦗|' +
       '</span>' +
       '<span class="tab-dashes" contenteditable="true">' +
-        '<span class="tab-cell dash">-</span>'.repeat(tabCharNum) +
+        '<span class="tab-cell dash">-</span>'.repeat(TAB_DASH_CHARS) +
       '</span>' +
       '<span class="tab-fixed">|⦘</span>' +
       (repeat
@@ -1735,10 +1736,10 @@ document.addEventListener("beforeinput", function (e) {
 function prepareNoteCells(note) {
   if (note.querySelector(".note-cell")) return;
 
-  const text = note.innerText || " ".repeat(tabCharNum);
+  const text = note.innerText || " ".repeat(TAB_NOTE_CHARS);
   note.innerHTML = "";
 
-  for (let i = 0; i < tabCharNum; i++) {
+  for (let i = 0; i < TAB_NOTE_CHARS; i++) {
     const ch = text[i] || " ";
     const span = document.createElement("span");
 
