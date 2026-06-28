@@ -18,6 +18,8 @@ let songData = {
   sections: []
 };
 
+let tabCharNum = 57;
+
 
 function generateSongId(title, artist) {
   return (title + artist)
@@ -1289,7 +1291,7 @@ function createTabBlock() {
       '<div class="tab-line tab-note-line">' +
         '<span class="tab-fixed"><span class="tab-note-space-fix">  </span><span class="tab-n-fix"> </span>»</span>' +
         '<span class="tab-note tab-hidden-fill" contenteditable="true">' +
-  '<span class="note-cell empty"> </span>'.repeat(56) +
+  '<span class="note-cell empty"> </span>'.repeat(tabCharNum) +
 '</span>' +
         '<span class="tab-fixed">«</span>' +
       '</div>' +
@@ -1326,7 +1328,7 @@ function createStringLine(letter, repeat = false) {
         '⦗|' +
       '</span>' +
       '<span class="tab-dashes" contenteditable="true">' +
-        '<span class="tab-cell dash">-</span>'.repeat(56) +
+        '<span class="tab-cell dash">-</span>'.repeat(tabCharNum) +
       '</span>' +
       '<span class="tab-fixed">|⦘</span>' +
       (repeat
@@ -1646,10 +1648,10 @@ document.addEventListener("beforeinput", function (e) {
 function prepareNoteCells(note) {
   if (note.querySelector(".note-cell")) return;
 
-  const text = note.innerText || " ".repeat(56);
+  const text = note.innerText || " ".repeat(tabCharNum);
   note.innerHTML = "";
 
-  for (let i = 0; i < 56; i++) {
+  for (let i = 0; i < tabCharNum; i++) {
     const ch = text[i] || " ";
     const span = document.createElement("span");
 
