@@ -498,6 +498,92 @@ function upgradeOldTabStrings(html) {
 
 }
 
+function normalizeTabBlocks(html) {
+  const temp = document.createElement("div");
+  temp.innerHTML = html;
+
+  temp.querySelectorAll(".tab-block").forEach(block => {
+    normalizeTabNoteLine(block);
+    normalizeTabDashLines(block);
+  });
+
+  return temp.innerHTML;
+}
+
+function normalizeTabNoteLine(block) {
+  const note = block.querySelector(".tab-note");
+  if (!note) return;
+
+  const chars = [];
+
+  note.querySelectorAll(".note-cell").forEach(cell => {
+    const txt = cell.innerText || " ";
+    chars.push(txt === "_" ? " " : txt.slice(0, 1));
+  });
+
+  if (!chars.length) {
+    const raw = note.innerText || "";
+    for (let i = 0; i < raw.length; i++) {
+      chars.push(raw[i] === "_" ? " " : raw[i]);
+    }
+  }
+
+  note.innerHTML = "";
+
+  for (let i = 0; i < tabCharNum; i++) {
+    const ch = chars[i] || " ";
+    const span = document.createElement("span");
+
+    if (ch === " " || ch === "_") {
+      span.className = "note-cell empty";
+      span.innerText = " ";
+    } else {
+      span.className = "note-cell filled";
+      span.innerText = ch;
+      span.style.color = selectedSectionColor || "#FFFFFF";
+      span.style.webkitTextFillColor = selectedSectionColor || "#FFFFFF";
+    }
+
+    note.appendChild(span);
+  }
+}
+
+function normalizeTabDashLines(block) {
+  block.querySelectorAll(".tab-dashes").forEach(line => {
+    const chars = [];
+
+    line.querySelectorAll(".tab-cell").forEach(cell => {
+      chars.push((cell.innerText || "-").slice(0, 1));
+    });
+
+    if (!chars.length) {
+      const raw = line.innerText || "";
+      for (let i = 0; i < raw.length; i++) {
+        chars.push(raw[i]);
+      }
+    }
+
+    line.innerHTML = "";
+
+    for (let i = 0; i < tabCharNum; i++) {
+      const ch = chars[i] || "-";
+      const span = document.createElement("span");
+
+      if (ch === "-") {
+        span.className = "tab-cell dash";
+        span.innerText = "-";
+      } else {
+        span.className = "tab-cell filled";
+        span.innerText = ch;
+        span.style.color = selectedSectionColor || "#FFFFFF";
+        span.style.webkitTextFillColor = selectedSectionColor || "#FFFFFF";
+      }
+
+      line.appendChild(span);
+    }
+  });
+}
+
 
 async function confirmUpdateSection() {
   return await showConfirm(
