@@ -741,9 +741,6 @@ margin-left: 80px;
   }
 
 
-
-
-  
 }
 /****************************************************************/
 /********************** END MOBILE SECTION **********************/
@@ -857,7 +854,7 @@ margin-left: 80px;
 
 .tab-line {
   font-family: "Courier New", monospace;
-  font-size: 19px;
+  font-size: 20px;
   font-weight: 950 !important;
   line-height: 1;
   letter-spacing: 0.5px;
@@ -874,21 +871,26 @@ margin-left: 80px;
 .viewer-tab .note-cell {
   font-family: "Courier New", monospace;
   font-weight: 950 !important;
+  font-size: 20px;
+  font-weight: 950 !important;
+  line-height: 1;
+  letter-spacing: 0.5px;
 }
 
 .tab-note {
   color:  #FF0000 !important; /*white;*/
   color:  #FFE55C !important; /*  white;  #FF0000  #FFE55C  */
   -webkit-text-fill-color: #FFE55C;
-  font-size: 19px;
+  font-size: 20px;
   font-family: Verdana, Bahnschrift, Arial, sans-serif !important;
 }
 
-/*
+
 .viewer-tab .tab-cell.filled {
-  color: white !important;
-  -webkit-text-fill-color: currentColor;
-}*/
+  /*color: white !important;
+  -webkit-text-fill-color: currentColor;*/
+font-size: 20px;
+}
 
 
 /* Fixed tab symbols: e⦗|, B⦗|, |⦘, », « */
@@ -1129,7 +1131,7 @@ margin-left: 80px;
 }
 
 .tab-time-line {
-  margin-top: -50px !important;
+  margin-top: -70px !important;
   font-family: "Courier New", "Lucida Console", Consolas, monospace;
   font-size: 19px;
   font-weight: 900;
