@@ -1129,11 +1129,11 @@ margin-left: 80px;
 }
 
 .tab-time-line {
-  margin-top: -40px !important;
+  margin-top: -50px !important;
   font-family: "Courier New", "Lucida Console", Consolas, monospace;
   font-size: 19px;
   font-weight: 900;
-  line-spacing: 0.3;
+  letter-spacing: -0.5;
   color: #FFD400;
   white-space: pre;
   margin-left: -30px !important;
