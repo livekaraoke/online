@@ -497,9 +497,9 @@ margin-left: 80px;
   -webkit-text-fill-color: #666 !important;
   letter-spacing: 0px;
   font-weight: 950 !important;
-  font-size: 20px;
+  font-size: 18px;
   font-family: "Courier New", monospace !important;
-  font-family: Consolas, monospace !important;
+  /*font-family: Consolas, monospace !important;*/
 }
 
 .tab-cell.filled,
