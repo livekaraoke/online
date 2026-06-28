@@ -43,6 +43,7 @@
       <h1 id="songTitle"></h1>
       <div id="songYear"></div>
       <div id="karaokeLyrics"></div>
+      <button id="youtubeBtn" class="viewer-btn" style="display:none;"> ▶ Media</button>
       <div id="songNote"></div>
     </div>
 
@@ -338,5 +339,13 @@ window.addEventListener("DOMContentLoaded", populateKaraokeDropdown);
   <!------------------------------- END OF TEMP SEND LYRICS -------------------------------->
   <!---------------------------------------------------------------------------------------->
   
+<div id="youtubeModal" class="confirm-modal hidden">
+  <div class="confirm-box youtube-box">
+    <button class="youtube-close" onclick="closeYoutubePopup()">✕</button>
+    <div id="youtubePlayerWrap"></div>
+  </div>
+</div>
+
+
 </body>
 </html>
