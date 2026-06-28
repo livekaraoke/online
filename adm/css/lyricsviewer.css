@@ -406,7 +406,7 @@ margin-left: 80px;
   user-select: none;
   border: 1px solid rgba(255,255,255,0.28);
   border-radius: 8px;
-  font-size: 14px;
+  font-size: 19px;
   font-family: Courier New, Verdana, Bahnschrift, Arial, sans-serif;
   font-weight: 900 !important;
   background: rgba(255,255,255,0.03);
@@ -494,9 +494,9 @@ margin-left: 80px;
 .tab-dashes .tab-cell.dash { /***** THE ACTUAL DASHES --- ******/
   color: #666 !important;
   -webkit-text-fill-color: #666 !important;
-  letter-spacing: 0px;
+  letter-spacing: 0.5px;
   font-weight: 950 !important;
-  font-size: 18px;
+  font-size: 19px;
   font-family: "Courier New", monospace !important;
   /*font-family: Consolas, monospace !important;*/
 }
@@ -537,8 +537,8 @@ margin-left: 80px;
   font-size: 20px;
   font-family: Verdana, Bahnschrift, Arial, sans-serif;
   letter-spacing: 1.5px;
-  margin-top: 70px;
-  margin-bottom: 70px;
+  margin-top: 100px;
+  margin-bottom: 100px;
   display: flex;
   gap: 20px;
   
@@ -857,10 +857,10 @@ margin-left: 80px;
 
 .tab-line {
   font-family: "Courier New", monospace;
-  font-size: 18px;
+  font-size: 19px;
   font-weight: 950 !important;
   line-height: 1;
-  letter-spacing: 0px;
+  letter-spacing: 0.5px;
   white-space: pre;
   /*font-family: "Lucida Console", "Consolas", monospace !important;
   font-weight: 950 !important;*/
@@ -878,9 +878,9 @@ margin-left: 80px;
 
 .tab-note {
   color:  #FF0000 !important; /*white;*/
-  color:  #FF0000 !important; /*  white;  #FF0000  #FFE55C  */
-  /*-webkit-text-fill-color: #FF0000;*/
-  font-size: 18px;
+  color:  #FFE55C !important; /*  white;  #FF0000  #FFE55C  */
+  -webkit-text-fill-color: #FFE55C;
+  font-size: 19px;
   font-family: Verdana, Bahnschrift, Arial, sans-serif !important;
 }
 
@@ -1131,7 +1131,7 @@ margin-left: 80px;
 .tab-time-line {
   margin-top: 7px;
   font-family: "Lucida Console", Consolas, monospace;
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 900;
   color: #FFD400;
   white-space: pre;
@@ -1151,7 +1151,7 @@ margin-left: 80px;
 performance-note-line {
   margin: 8px 0;
   font-family: Verdana, Arial, sans-serif;
-  font-size: 17px;
+  font-size: 20px;
   font-weight: 900;
   color: white;
   white-space: pre;
