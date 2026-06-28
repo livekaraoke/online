@@ -733,8 +733,8 @@ function renderPreview() {
       sep.innerHTML = `
         <hr>
         <div class="section-actions">
-          <button onclick="moveSection(${index}, -1)">▲↑</button>
-          <button onclick="moveSection(${index}, 1)">↓</button>
+          <button onclick="moveSection(${index}, -1)">▲</button>
+          <button onclick="moveSection(${index}, 1)">▼</button>
           <button onclick="duplicateTabBlock(${index}, 1)">⧉ Duplicate</button>
           <button onclick="deleteSection(${index})">Delete</button>
         </div>
@@ -776,7 +776,7 @@ function renderPreview() {
       ${section.title ? `
         <div class="lyric-section-title ${isTab ? "tab-title" : ""}"
              onclick="toggleSectionCollapse(${index})">
-          <span class="tab-arrow">${isCollapsed ? "▶ " : "i▼ "}</span>
+          <span class="tab-arrow">${isCollapsed ? "▶ " : "▼ "}</span>
           ${section.title}
         </div>
       ` : ""}*/
@@ -784,7 +784,7 @@ function renderPreview() {
       ${section.title ? `
         <div class="lyric-section-title ${isTab ? "clickable-title" : ""}"
              ${isTab ? `onclick="toggleTabSection(${index})"` : ""}>
-          ${isTab ? (isCollapsed ? "▶ " : "i▼ ") : ""}${section.title}
+          ${isTab ? (isCollapsed ? "▶ " : "▼ ") : ""}${section.title}
         </div>
       ` : ""}
 
@@ -1289,7 +1289,7 @@ function createTabBlock() {
       '<div class="tab-line tab-note-line">' +
         '<span class="tab-fixed"><span class="tab-note-space-fix">  </span><span class="tab-n-fix"> </span>»</span>' +
         '<span class="tab-note tab-hidden-fill" contenteditable="true">' +
-  '<span class="note-cell empty"> </span>'.repeat(55) +
+  '<span class="note-cell empty"> </span>'.repeat(56) +
 '</span>' +
         '<span class="tab-fixed">«</span>' +
       '</div>' +
