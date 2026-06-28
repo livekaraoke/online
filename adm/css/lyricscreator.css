@@ -1256,7 +1256,7 @@ textarea {
   width: 30px;
   height: 30px;
   font-weight: 900;
-  padding-top: -2px !
+  padding-top: -2px !important;
   cursor: pointer;
 }
 
