@@ -9,7 +9,7 @@ body {
   margin: 0;
   background: #050505;
   color: white;
-  font-family: Bahnschrift, Arial, sans-serif;
+  font-family: Verdana, Bahnschrift, Arial, sans-serif;
 }
 
 .topbar {
@@ -299,6 +299,10 @@ textarea {
   justify-content: flex-start;
 }
 
+.controls-third-row {
+  justify-content: flex-start;
+}
+
 .format-buttons,
 .color-picker,
 .tab-load-control {
@@ -360,10 +364,10 @@ textarea {
 
 .section-being-edited {
   background: #3a1d00;
-  border: 2px solid #ff9900;
+  border: 3px solid #ff9900;
   border-radius: 8px;
   padding: 10px;
-  box-shadow: 0 0 18px rgba(255,140,0,.35);
+  box-shadow: 0 0 18px rgba(255,140,0,.55);
 }
 
 .section-editor {
@@ -446,9 +450,6 @@ textarea {
   margin-bottom: -40px;
 }
 
-
-
-
 .section-text,
 .viewer-section-text {
   margin-top: 0 !important;
@@ -501,11 +502,11 @@ textarea {
 }
 
 .live-preview-box {
-  background: rgba(255,255,255,0.03);
-  border: 1px dashed rgba(255,255,255,0.35);
-  box-shadow: 0 0 10px rgba(255,212,0,.18);
+  background: rgba(255,255,255,0.09);
+  border: 2px dashed rgba(255,255,255,0.45);
+  box-shadow: 0 0 10px rgba(255,212,0,.28);
   border-radius: 8px;
-  margin-bottom: 18px;
+  margin-bottom: 40px;
   padding: 14px 16px !important;
 }
 
@@ -534,7 +535,7 @@ textarea {
 
 .live-preview-box .tab-section,
 .live-preview-box .preview-draft.tab-preview {
-  border: 1px solid #555;
+  border: 2px solid #555;
   border-radius: 8px;
   padding: 10px;
 }
@@ -542,6 +543,7 @@ textarea {
 
 .live-preview-box .section-text {
   font-family: "Courier New", monospace !important;
+  font-family: Verdana, Arial, sans-serif !important;
   /*font-size: 19px !important;
   font-weight: 900 !important;*/
   white-space: pre !important;
@@ -1067,7 +1069,8 @@ textarea {
   height: 24px;
   font-weight: 900;
   cursor: pointer;
-  margin-top: 6px;
+  margin-top: 10px;
+  margin-bottom: 10px;
 }
 
 #insertBarBtn {
@@ -1080,8 +1083,6 @@ textarea {
   color: white;
   -webkit-text-fill-color: currentColor;
 }
-
-
 
 .tab-toggle-btn {
   height: 38px;
@@ -1211,13 +1212,14 @@ textarea {
   margin-right: 6px;
 }
 
+/** X **/
 .delete-tab-line-btn {
   display:inline-flex !important;
   align-items:center;
   justify-content:center;
 
-  width:22px;
-  height:22px;
+  width:16px;
+  height:16px;
 
   margin-right:6px;
 
@@ -1249,16 +1251,17 @@ textarea {
 .insert-tab-here-btn {
   color: #FFD400;
   background: #111;
-  border: 1px solid #FFD400;
+  border: 4px solid #FFD400;
   border-radius: 50%;
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 30px;
   font-weight: 900;
+  padding-top: -2px !
   cursor: pointer;
 }
 
 .tab-block-controls {
-  margin-top: 5px;
+  margin-top: 10px;
   text-align: center;
   justify-content: center;
   align-items: center;
@@ -1371,7 +1374,7 @@ textarea {
 }
 
 .tab-time-line {
-  margin-top: 4px;
+  margin-top: 0px;
   margin-bottom: 6px;
   white-space: pre;
   font-family: "Courier New", monospace;
@@ -1385,12 +1388,16 @@ textarea {
   font-weight: 900;
   cursor: pointer;
   margin-right: 6px;
+  margin-left: -30px;
+  margin-top: 15px;
 }
 
 .tab-time-symbol {
   display: inline-block;
   color: #FFD400;
   font-weight: 900;
+  width: 20px;
+  height: 20px;
 }
 
 .tab-time-gap {
