@@ -172,9 +172,11 @@
         displayHtml = section.html || "";
       }
 
+/* Saved symbols:  ↑   ↓   ▲    ▼    ⧉   ✕   ✖  */
+
       div.innerHTML = `
         ${section.title
-          ? `<h2>${isTab ? (isCollapsed ? "▶ " : "⯆ ") : ""}${section.title}${isTab ? " (Tab)" : ""}</h2>`
+          ? `<h2>${isTab ? (isCollapsed ? "▶ " : "▼ ") : ""}${section.title}${isTab ? " (Tab)" : ""}</h2>`
           : ""
         }
             
