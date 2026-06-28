@@ -1511,7 +1511,7 @@ textarea {
 
 .note-field textarea {
   width: 100%;
-  min-height: 175px;
+  min-height: 100px;
   height: 100%;
   box-sizing: border-box;
 
@@ -1524,6 +1524,7 @@ textarea {
   padding: 14px 16px;
 
   font: inherit;
+  font-family: Verdana, Arial, sans-serif !important;
   line-height: 1.5;
 
   resize: vertical;
