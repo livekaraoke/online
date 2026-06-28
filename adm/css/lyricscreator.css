@@ -841,7 +841,10 @@ textarea {
   line-height: 5px;
 }
 
-
+.tab-note {
+  display: inline-block;
+  white-space: pre;
+}
 
 .tab-hidden-fill {
   color: #050505 !important;
@@ -909,7 +912,11 @@ textarea {
 .note-cell.empty {
   color: transparent !important;
   -webkit-text-fill-color: transparent !important;
-  text-shadow: none !important;
+}
+
+.note-cell.filled {
+  color: #FFFFFF;
+  -webkit-text-fill-color: currentColor;
 }
 
 .tab-dashes .tab-cell.dash {
@@ -1364,18 +1371,26 @@ textarea {
 }
 
 .tab-time-line {
-  margin-top: 7px;
-  font-family: "Lucida Console", Consolas, monospace;
-  font-size: 18px;
-  font-weight: 900;
-  color: #FFD400;
+  margin-top: 4px;
+  margin-bottom: 6px;
   white-space: pre;
+  font-family: "Courier New", monospace;
+}
+
+.delete-tab-time-btn {
+  color: #ff3333;
+  background: #220000;
+  border: 1px solid #ff3333;
+  border-radius: 6px;
+  font-weight: 900;
+  cursor: pointer;
+  margin-right: 6px;
 }
 
 .tab-time-symbol {
   display: inline-block;
   color: #FFD400;
-  cursor: pointer;
+  font-weight: 900;
 }
 
 .tab-time-gap {
