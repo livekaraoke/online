@@ -733,7 +733,7 @@ function renderPreview() {
       sep.innerHTML = `
         <hr>
         <div class="section-actions">
-          <button onclick="moveSection(${index}, -1)">↑</button>
+          <button onclick="moveSection(${index}, -1)">▲↑</button>
           <button onclick="moveSection(${index}, 1)">↓</button>
           <button onclick="duplicateTabBlock(${index}, 1)">⧉ Duplicate</button>
           <button onclick="deleteSection(${index})">Delete</button>
@@ -742,6 +742,8 @@ function renderPreview() {
       container.appendChild(sep);
       return;
     }
+/* Saved symbols:  ↑   ↓   ▲    ▼    ⧉   ✕   ✖  */
+
 
     const isTab = section.type === "tab";
     const isCollapsed = section.collapsed === true;
@@ -774,7 +776,7 @@ function renderPreview() {
       ${section.title ? `
         <div class="lyric-section-title ${isTab ? "tab-title" : ""}"
              onclick="toggleSectionCollapse(${index})">
-          <span class="tab-arrow">${isCollapsed ? "▶ " : "▼ "}</span>
+          <span class="tab-arrow">${isCollapsed ? "▶ " : "i▼ "}</span>
           ${section.title}
         </div>
       ` : ""}*/
@@ -782,7 +784,7 @@ function renderPreview() {
       ${section.title ? `
         <div class="lyric-section-title ${isTab ? "clickable-title" : ""}"
              ${isTab ? `onclick="toggleTabSection(${index})"` : ""}>
-          ${isTab ? (isCollapsed ? "▶ " : "▼ ") : ""}${section.title}
+          ${isTab ? (isCollapsed ? "▶ " : "i▼ ") : ""}${section.title}
         </div>
       ` : ""}
 
@@ -949,7 +951,7 @@ function editSection(index) {
   if (!line.querySelector(".tab-dashes")) return;
 
   if (!line.querySelector(".delete-tab-line-btn")) {
-/* Saved symbols:  ↑   ↓   ▲    ▼    ⧉   ✕   ✖  */
+/* Saved symbols:  ↑   ↓   ▲    ▼    ⧉   ✕   ✖  *//* Saved symbols:  ↑   ↓   ▲    ▼    ⧉   ✕   ✖  */
     line.insertAdjacentHTML(
       "afterbegin",
       '<button type="button" class="delete-tab-line-btn">✕</button>'
@@ -1012,7 +1014,7 @@ function insertBefore(index) {
     title,
     text,
     style: {
-      fontFamily: "Verdana",
+      fontFamily: "Courier New",
       color: "white",
       bold: false,
       italic: false,
@@ -1287,7 +1289,7 @@ function createTabBlock() {
       '<div class="tab-line tab-note-line">' +
         '<span class="tab-fixed"><span class="tab-note-space-fix">  </span><span class="tab-n-fix"> </span>»</span>' +
         '<span class="tab-note tab-hidden-fill" contenteditable="true">' +
-  '<span class="note-cell empty"> </span>'.repeat(65) +
+  '<span class="note-cell empty"> </span>'.repeat(55) +
 '</span>' +
         '<span class="tab-fixed">«</span>' +
       '</div>' +
@@ -1647,7 +1649,7 @@ function prepareNoteCells(note) {
   const text = note.innerText || " ".repeat(65);
   note.innerHTML = "";
 
-  for (let i = 0; i < 65; i++) {
+  for (let i = 0; i < 55; i++) {
     const ch = text[i] || " ";
     const span = document.createElement("span");
 
@@ -1805,7 +1807,7 @@ async function saveSongToFirebase() {
 
   currentFirebaseId = docId;
 
-  await showAlert("Saved", "Lyrics saved successfully.");
+  await showAlert("Saved", "Lyrics saved successfully!");
 }
 
 async function loadSongFromFirebase(firebaseId) {
