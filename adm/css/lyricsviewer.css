@@ -7,7 +7,7 @@ body {
   margin: 0;
   background: #050505;
   color: white;
-  font-family: Verdana, Bahnschrift, Arial, sans-serif;
+  /*font-family: Verdana, Bahnschrift, Arial, sans-serif;*/
 }
 
 .viewer-topbar {
@@ -70,6 +70,8 @@ body {
 
 /**** END TOP BAR SONG TITLE ****/
 /********************************/
+
+
 .viewer-btn {
   background: #151515;
   border: 1px solid rgba(255,0,0,.45);
@@ -871,7 +873,7 @@ margin-left: 80px;
 .viewer-tab .tab-dashes,
 .viewer-tab .tab-cell,
 .viewer-tab .note-cell {
-  font-family: "Lucida Console", Consolas, monospace !important;
+  font-family: "Courier New", monospace;
   font-weight: 950 !important;
 }
 
@@ -879,7 +881,8 @@ margin-left: 80px;
   color:  #FF0000 !important; /*white;*/
   color:  #FF0000 !important; /*  white;  #FF0000  #FFE55C  */
   /*-webkit-text-fill-color: #FF0000;*/
-  font-size: 28px;
+  font-size: 18px;
+  font-family: Verdana, Bahnschrift, Arial, sans-serif !important;
 }
 
 /*
@@ -1145,7 +1148,8 @@ margin-left: 80px;
   color: transparent;
 }
 
-.performance-note-line {
+
+performance-note-line {
   margin: 8px 0;
   font-family: Verdana, Arial, sans-serif;
   font-size: 17px;
@@ -1171,4 +1175,3 @@ margin-left: 80px;
   color: #7CFF3A;
   font-weight: 900;
 }
-  
