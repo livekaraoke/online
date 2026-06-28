@@ -18,7 +18,7 @@ let songData = {
   sections: []
 };
 
-const TAB_NOTE_CHARS = 56;
+const TAB_NOTE_CHARS = 55;
 const TAB_DASH_CHARS = 54;
 
 
