@@ -43,7 +43,7 @@
       <h1 id="songTitle"></h1>
       <div id="songYear"></div>
       <div id="karaokeLyrics"></div>
-      <button id="youtubeBtn" class="viewer-btn" style="display:none;"> ▶ Media</button>
+      <button id="youtubeBtn" class="viewer-btn" style="display:none;"> ▶ YouTube</button>
       <div id="songNote"></div>
     </div>
 
@@ -122,6 +122,14 @@
     document.getElementById("songYear").innerText =
       song.year ? `Year: ${song.year}` : "";
 
+    const youtubeBtn = document.getElementById("youtubeBtn");
+
+    if (song.youtubeLink) {
+      youtubeBtn.style.display = "inline-block";
+      youtubeBtn.onclick = () => openYoutubePopup(song.youtubeLink);
+    } else {
+      youtubeBtn.style.display = "none";
+    }
 
     document.getElementById("sendToSingerBtn").onclick = async () => {
     const karaokeId = song.karaokeLyrics;
@@ -254,6 +262,48 @@ if (song.karaokeLyrics && song.karaokeLyrics !== "No") {
       };
     });
   }
+
+function getYoutubeEmbedUrl(url) {
+  const text = String(url || "").trim();
+
+  let id = "";
+
+  const watchMatch = text.match(/[?&]v=([^&]+)/);
+  const shortMatch = text.match(/youtu\.be\/([^?&]+)/);
+  const embedMatch = text.match(/youtube\.com\/embed\/([^?&]+)/);
+
+  if (watchMatch) id = watchMatch[1];
+  else if (shortMatch) id = shortMatch[1];
+  else if (embedMatch) id = embedMatch[1];
+
+  if (!id) return "";
+
+  return `https://www.youtube.com/embed/${id}?autoplay=1`;
+}
+
+function openYoutubePopup(url) {
+  const embedUrl = getYoutubeEmbedUrl(url);
+
+  if (!embedUrl) {
+    showAlert("Invalid YouTube Link", "This song does not have a valid YouTube link.");
+    return;
+  }
+
+  document.getElementById("youtubePlayerWrap").innerHTML = `
+    <iframe
+      src="${embedUrl}"
+      allow="autoplay; encrypted-media"
+      allowfullscreen>
+    </iframe>
+  `;
+
+  document.getElementById("youtubeModal").classList.remove("hidden");
+}
+
+function closeYoutubePopup() {
+  document.getElementById("youtubePlayerWrap").innerHTML = "";
+  document.getElementById("youtubeModal").classList.add("hidden");
+}
 
   function toggleBackMenu() {
     document.getElementById("backDropdown").classList.toggle("show");
