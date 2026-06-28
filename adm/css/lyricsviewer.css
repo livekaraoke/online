@@ -85,7 +85,7 @@ body {
   background: linear-gradient(180deg, #ff2b2b, #aa0000);
 }
 
-.viewer-btn red send-temp {
+.viewer-btn.red.send-temp {
 margin-left: 80px;
 }
 
@@ -879,7 +879,7 @@ margin-left: 80px;
   color:  #FF0000 !important; /*white;*/
   color:  #FF0000 !important; /*  white;  #FF0000  #FFE55C  */
   /*-webkit-text-fill-color: #FF0000;*/
-  font-size: 18px;
+  font-size: 28px;
 }
 
 /*
