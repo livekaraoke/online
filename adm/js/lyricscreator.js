@@ -765,7 +765,7 @@ function renderPreview() {
       ${section.title ? `
         <div class="lyric-section-title ${isTab ? "tab-title" : ""}"
              onclick="toggleSectionCollapse(${index})">
-          <span class="tab-arrow">${isCollapsed ? "▶" : "▼"}</span>
+          <span class="tab-arrow">${isCollapsed ? "▶ " : "▼ "}</span>
           ${section.title}
         </div>
       ` : ""}*/
@@ -786,7 +786,7 @@ function renderPreview() {
         <button onclick="duplicateSection(${index})">Duplicate</button>
         <button onclick="insertSeparator(${index})">Insert Separator</button>
         <button onclick="moveSection(${index}, -1)">↑ Move Up</button>
-        <button onclick="moveSection(${index}, 1)">↓ Move Down</button>
+        <button onclick="moveSection(${index}, 1)">↓▼ Move Down</button>
         <button onclick="deleteSection(${index})">Delete</button>
       </div>
     `;
@@ -940,10 +940,10 @@ function editSection(index) {
   if (!line.querySelector(".tab-dashes")) return;
 
   if (!line.querySelector(".delete-tab-line-btn")) {
-
+/* Saved symbols:  ↑   ↓   ▲    ▼    ⧉    ✖  */
     line.insertAdjacentHTML(
       "afterbegin",
-      '<button type="button" class="delete-tab-line-btn">✕</button>'
+      '<button type="button" class="delete-tab-line-btn">✖</button>'
     );
   }
 });
@@ -1278,7 +1278,9 @@ function createTabBlock() {
       '<div class="tab-line tab-apostrophe">●</div>' +
       '<div class="tab-line tab-note-line">' +
         '<span class="tab-fixed"><span class="tab-note-space-fix">  </span><span class="tab-n-fix"> </span>»</span>' +
-        '<span class="tab-note tab-hidden-fill" contenteditable="true">_________________________________________________________________</span>' +
+        '<span class="tab-note tab-hidden-fill" contenteditable="true">' +
+  '<span class="note-cell empty"> </span>'.repeat(65) +
+'</span>' +
         '<span class="tab-fixed">«</span>' +
       '</div>' +
       '<div class="tab-spacer"></div>' +
