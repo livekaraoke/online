@@ -273,9 +273,8 @@ function insertTabTimeLine() {
   updateLivePreview();
 }
 
-document.addEventListener("click", function (e) {
-  if (!e.target.classList.contains("tab-time-symbol")) return;
 
+document.addEventListener("click", async function (e) {
   if (e.target.classList.contains("delete-tab-time-btn")) {
     const ok = await showConfirm("Delete Time Line?", "Delete this time indication line?");
     if (!ok) return;
@@ -284,14 +283,14 @@ document.addEventListener("click", function (e) {
     updateLivePreview();
     return;
   }
-  
+
+  if (!e.target.classList.contains("tab-time-symbol")) return;
 
   const current = e.target.innerText.trim();
   const index = TIME_SYMBOLS.indexOf(current);
   const next = TIME_SYMBOLS[(index + 1) % TIME_SYMBOLS.length];
 
   e.target.innerText = next;
-
   updateLivePreview();
 });
 
@@ -1184,7 +1183,6 @@ document.getElementById("sectionType").addEventListener("change", function () {
     document.getElementById("insertTimeBtn").disabled = false;
     document.getElementById("insertTimeBtn").classList.add("enabled");
 
-
     editor.focus();
     document.execCommand("bold", false, true);
     
@@ -1869,7 +1867,7 @@ async function loadSongFromFirebase(firebaseId) {
         opt.value = songData.karaokeLyrics;
         opt.textContent = found?.title || songData.karaokeLyrics;
     
-        dropdown.insertBefore(opt, dropdown.querySelector('option[value="__add...__"]'));
+        dropdown.insertBefore(opt, dropdown.querySelector('option[value="__add__"]'));
       }
     
       dropdown.value = songData.karaokeLyrics;
@@ -2150,7 +2148,7 @@ function confirmKaraokeLyricsChoice() {
     opt.value = selectedId;
     opt.textContent = selectedText;
 
-    const addOption = [...dropdown.options].find(opt => opt.value === "__add...__");
+    const addOption = [...dropdown.options].find(opt => opt.value === "__add__");
     dropdown.insertBefore(opt, addOption);
   }
 
@@ -2161,7 +2159,7 @@ function confirmKaraokeLyricsChoice() {
 
 function closeKaraokePicker() {
   const dropdown = document.getElementById("karaokeLyrics");
-  if (dropdown.value === "__add...__") dropdown.value = "No";
+  if (dropdown.value === "__add__") dropdown.value = "No";
 
   document.getElementById("karaokePickerModal").classList.add("hidden");
 }
