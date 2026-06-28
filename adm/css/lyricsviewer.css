@@ -1149,6 +1149,18 @@ margin-left: 80px;
   color: transparent;
 }
 
+.delete-tab-time-btn {
+  color: #ff3333;
+  background: #220000;
+  border: 1px solid #ff3333;
+  border-radius: 6px;
+  font-weight: 900;
+  cursor: pointer;
+  margin-right: 6px;
+  margin-left: -50px;
+  margin-top: 35px;
+  display: none;
+}
 
 performance-note-line {
   margin: 8px 0;
