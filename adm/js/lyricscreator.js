@@ -232,6 +232,7 @@ const TIME_SYMBOLS = ["⸳", "𝅝", "𝅗𝅥", "𝅘𝅥", "𝅘𝅥𝅮", "𝄽", "𝄾", "�
 function createTabTimeLine() {
   return `
     <div class="tab-time-line" contenteditable="false">
+      <button type="button" class="delete-tab-time-btn">✕</button>
       ${Array.from({ length: 16 }).map(() =>
         `<span class="tab-time-symbol" contenteditable="true">⸳</span>`
       ).join('<span class="tab-time-gap">   </span>')}
@@ -262,7 +263,12 @@ function insertTabTimeLine() {
     return;
   }
 
-  block.insertAdjacentHTML("beforeend", createTabTimeLine());
+  const controls = block.querySelector(".tab-block-controls");
+  if (controls) {
+    controls.insertAdjacentHTML("beforebegin", createTabTimeLine());
+  } else {
+    block.insertAdjacentHTML("beforeend", createTabTimeLine());
+  }
   restoreTabEditability(document.getElementById("sectionEditor"));
   updateLivePreview();
 }
@@ -270,11 +276,22 @@ function insertTabTimeLine() {
 document.addEventListener("click", function (e) {
   if (!e.target.classList.contains("tab-time-symbol")) return;
 
+  if (e.target.classList.contains("delete-tab-time-btn")) {
+    const ok = await showConfirm("Delete Time Line?", "Delete this time indication line?");
+    if (!ok) return;
+
+    e.target.closest(".tab-time-line").remove();
+    updateLivePreview();
+    return;
+  }
+  
+
   const current = e.target.innerText.trim();
   const index = TIME_SYMBOLS.indexOf(current);
   const next = TIME_SYMBOLS[(index + 1) % TIME_SYMBOLS.length];
 
   e.target.innerText = next;
+
   updateLivePreview();
 });
 
@@ -295,14 +312,7 @@ function togglePerfNoteMenu() {
 
 function createPerformanceNote(icon) {
   return `
-    <div class="performance-note-line" contenteditable="false">
-      <span class="performance-note-icon">${icon}</span>
-      <span class="performance-note-bracket">⦓</span>
-      <span class="performance-note-text" contenteditable="true">                                        </span>
-      <span class="performance-note-bracket">⦔</span>
-      <span class="performance-note-icon">${icon}</span>
-    </div>
-  `;
+    <div class="performance-note-line" contenteditable="false"><span class="performance-note-icon">${icon}</span><span class="performance-note-bracket">⦓</span><span class="performance-note-text" contenteditable="true"></span><span class="performance-note-bracket">⦔</span><span class="performance-note-icon">${icon}</span></div>`;
 }
 
 function insertPerformanceNote(icon) {
@@ -642,7 +652,7 @@ function insertTabBar() {
 
   const currentCell = el.closest?.(".tab-cell");
   if (!currentCell) {
-    showAlert("No Tab Position", "Click inside a guitar tab dash line first.");
+    showAlert("No Tab Position", "Click inside a guitar tab line first.");
     return;
   }
 
@@ -940,10 +950,10 @@ function editSection(index) {
   if (!line.querySelector(".tab-dashes")) return;
 
   if (!line.querySelector(".delete-tab-line-btn")) {
-/* Saved symbols:  ↑   ↓   ▲    ▼    ⧉    ✖  */
+/* Saved symbols:  ↑   ↓   ▲    ▼    ⧉   ✕   ✖  */
     line.insertAdjacentHTML(
       "afterbegin",
-      '<button type="button" class="delete-tab-line-btn">✖</button>'
+      '<button type="button" class="delete-tab-line-btn">✕</button>'
     );
   }
 });
@@ -1003,7 +1013,7 @@ function insertBefore(index) {
     title,
     text,
     style: {
-      fontFamily: "Arial",
+      fontFamily: "Verdana",
       color: "white",
       bold: false,
       italic: false,
@@ -1396,69 +1406,59 @@ function getCurrentEditorColor() {
 /**/
 /** Tab note (dash '-') input **/
 /**/
-document.addEventListener("keydown", function (e) {
+document.addEventListener("beforeinput", function (e) {
   const target = e.target.closest(".tab-dashes");
   if (!target) return;
 
-  const navKeys = ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Tab"];
-  if (navKeys.includes(e.key)) return;
-
   e.preventDefault();
 
-  const cells = [...target.querySelectorAll(".tab-cell")];
+  const cells = Array.from(target.querySelectorAll(".tab-cell"));
   if (!cells.length) return;
 
-  const sel = window.getSelection();
-  let pos = 0;
+  let pos = getActiveCellIndex(cells);
+  if (pos < 0) pos = 0;
 
-  if (sel.rangeCount) {
-    const node = sel.anchorNode;
-    const cell = node.nodeType === Node.TEXT_NODE
-      ? node.parentElement.closest(".tab-cell")
-      : node.closest?.(".tab-cell");
-
-    const found = cells.indexOf(cell);
-    if (found >= 0) pos = found;
-  }
-
-  if (e.key === "Backspace") {
-    pos = Math.max(0, pos);
-    cells[pos].innerText = "-";
-    cells[pos].className = "tab-cell dash";
-    cells[pos].removeAttribute("style");
+  if (e.inputType === "deleteContentBackward" || e.inputType === "deleteContentForward") {
+    resetTabCell(cells[pos]);
     setCaretInsideCell(cells[pos]);
     updateLivePreview();
     return;
   }
 
-  if (e.key === "Delete") {
-    cells[pos].innerText = "-";
-    cells[pos].className = "tab-cell dash";
-    cells[pos].removeAttribute("style");
-    setCaretInsideCell(cells[pos]);
-    updateLivePreview();
-    return;
+  const text = e.data || "";
+  if (!text) return;
+
+  for (let i = 0; i < text.length && pos + i < cells.length; i++) {
+    fillTabCell(cells[pos + i], text[i]);
   }
 
-  if (e.key.length === 1) {
-    /*
-    cells[pos].innerText = e.key;
-    cells[pos].classList.remove("dash");
-    cells[pos].classList.add("filled");
-    cells[pos].style.color = getCurrentEditorColor();
-    setCaretInsideCell(cells[Math.min(pos + 1, cells.length - 1)]);
-    updateLivePreview();
-    */
-
-    cells[pos].innerText = e.key;
-    cells[pos].className = "tab-cell filled";
-    cells[pos].style.color = selectedSectionColor || "white";
-    cells[pos].style.webkitTextFillColor = selectedSectionColor || "white";
-  
-    setCaretInsideCell(cells[Math.min(pos + 1, cells.length - 1)]);
-    updateLivePreview();
-  }
+  setCaretInsideCell(cells[Math.min(pos + text.length, cells.length - 1)]);
+  updateLivePreview();
 });
+
+function getActiveCellIndex(cells) {
+  const sel = window.getSelection();
+  if (!sel.rangeCount) return -1;
+
+  const node = sel.anchorNode;
+  const el = node.nodeType === Node.TEXT_NODE ? node.parentElement : node;
+  const cell = el.closest ? el.closest(".tab-cell, .note-cell") : null;
+
+  return cells.indexOf(cell);
+}
+
+function fillTabCell(cell, ch) {
+  cell.innerText = ch;
+  cell.className = "tab-cell filled";
+  cell.style.color = selectedSectionColor || "#FFFFFF";
+  cell.style.webkitTextFillColor = selectedSectionColor || "#FFFFFF";
+}
+
+function resetTabCell(cell) {
+  cell.innerText = "-";
+  cell.className = "tab-cell dash";
+  cell.removeAttribute("style");
+}
 /**/
 /*** DELETE / INSERT / MOVE HANDLERS ***/
 document.addEventListener("click", async function (e) {
@@ -1549,6 +1549,14 @@ document.addEventListener("click", async function (e) {
   
 });
 /**/
+document.addEventListener("click", function (e) {
+  const cell = e.target.closest(".tab-cell, .note-cell");
+  if (!cell) return;
+
+  setCaretInsideCell(cell);
+});
+/**/
+/*
 document.addEventListener("keydown", function (e) {
   const target = e.target.closest(".tab-note");
   if (!target) return;
@@ -1601,33 +1609,73 @@ document.addEventListener("keydown", function (e) {
     updateLivePreview();
   }
 });
+*/
+
+document.addEventListener("beforeinput", function (e) {
+  const target = e.target.closest(".tab-note");
+  if (!target) return;
+
+  e.preventDefault();
+
+  prepareNoteCells(target);
+
+  const cells = Array.from(target.querySelectorAll(".note-cell"));
+  if (!cells.length) return;
+
+  let pos = getActiveCellIndex(cells);
+  if (pos < 0) pos = 0;
+
+  if (e.inputType === "deleteContentBackward" || e.inputType === "deleteContentForward") {
+    resetNoteCell(cells[pos]);
+    setCaretInsideCell(cells[pos]);
+    updateLivePreview();
+    return;
+  }
+
+  const text = e.data || "";
+  if (!text) return;
+
+  for (let i = 0; i < text.length && pos + i < cells.length; i++) {
+    fillNoteCell(cells[pos + i], text[i]);
+  }
+
+  setCaretInsideCell(cells[Math.min(pos + text.length, cells.length - 1)]);
+  updateLivePreview();
+});
 
 function prepareNoteCells(note) {
   if (note.querySelector(".note-cell")) return;
 
-  const text = note.innerText || "_".repeat(57);
+  const text = note.innerText || " ".repeat(65);
   note.innerHTML = "";
 
-  for (let i = 0; i < 57; i++) {
-    const ch = text[i] || "_";
+  for (let i = 0; i < 65; i++) {
+    const ch = text[i] || " ";
     const span = document.createElement("span");
 
-    if (ch === "_") {
+    if (ch === " " || ch === "_") {
       span.className = "note-cell empty";
-      span.innerText = "_";
+      span.innerText = " ";
     } else {
       span.className = "note-cell filled";
       span.innerText = ch;
-      span.style.color = "white";
-      span.style.webkitTextFillColor = "white";
+      span.style.color = selectedSectionColor || "#FFFFFF";
+      span.style.webkitTextFillColor = selectedSectionColor || "#FFFFFF";
     }
 
     note.appendChild(span);
   }
 }
 
+function fillNoteCell(cell, ch) {
+  cell.innerText = ch;
+  cell.className = "note-cell filled";
+  cell.style.color = selectedSectionColor || "#FFFFFF";
+  cell.style.webkitTextFillColor = selectedSectionColor || "#FFFFFF";
+}
+
 function resetNoteCell(cell) {
-  cell.innerText = "_";
+  cell.innerText = " ";
   cell.className = "note-cell empty";
   cell.removeAttribute("style");
 }
@@ -1821,7 +1869,7 @@ async function loadSongFromFirebase(firebaseId) {
         opt.value = songData.karaokeLyrics;
         opt.textContent = found?.title || songData.karaokeLyrics;
     
-        dropdown.insertBefore(opt, dropdown.querySelector('option[value="__add__"]'));
+        dropdown.insertBefore(opt, dropdown.querySelector('option[value="__add...__"]'));
       }
     
       dropdown.value = songData.karaokeLyrics;
@@ -2102,7 +2150,7 @@ function confirmKaraokeLyricsChoice() {
     opt.value = selectedId;
     opt.textContent = selectedText;
 
-    const addOption = [...dropdown.options].find(opt => opt.value === "__add__");
+    const addOption = [...dropdown.options].find(opt => opt.value === "__add...__");
     dropdown.insertBefore(opt, addOption);
   }
 
@@ -2113,7 +2161,7 @@ function confirmKaraokeLyricsChoice() {
 
 function closeKaraokePicker() {
   const dropdown = document.getElementById("karaokeLyrics");
-  if (dropdown.value === "__add__") dropdown.value = "No";
+  if (dropdown.value === "__add...__") dropdown.value = "No";
 
   document.getElementById("karaokePickerModal").classList.add("hidden");
 }
