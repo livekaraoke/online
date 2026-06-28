@@ -342,7 +342,7 @@ margin-left: 80px;
 
 .tab-dashes.has-input {
   color: #666 !important;
-  font-weight: 900;
+  font-weight: 950;
   text-shadow: none !important;
 
 }
@@ -406,7 +406,7 @@ margin-left: 80px;
   user-select: none;
   border: 1px solid rgba(255,255,255,0.28);
   border-radius: 8px;
-  font-size: 20px;
+  font-size: 19.5px;
   font-family: Courier New, Verdana, Bahnschrift, Arial, sans-serif;
   font-weight: 900 !important;
   background: rgba(255,255,255,0.03);
@@ -496,7 +496,7 @@ margin-left: 80px;
   -webkit-text-fill-color: #666 !important;
   letter-spacing: 0.4px;
   font-weight: 950 !important;
-  font-size: 20px;
+  font-size: 19.5px;
   font-family: "Courier New", monospace !important;
   /*font-family: Consolas, monospace !important;*/
 }
@@ -854,7 +854,7 @@ margin-left: 80px;
 
 .tab-line {
   font-family: "Courier New", monospace;
-  font-size: 20px;
+  font-size: 19.5px;
   font-weight: 950 !important;
   line-height: 1;
   letter-spacing: 0.4px;
@@ -872,7 +872,7 @@ margin-left: 80px;
   font-family: "Courier New", monospace;
   /*font-family: Verdana, Bahnschrift, Arial, sans-serif !important;*/
   font-weight: 950 !important;
-  font-size: 20px;
+  font-size: 19.5px;
   font-weight: 950 !important;
   line-height: 1;
   letter-spacing: 0.4px;
@@ -882,7 +882,7 @@ margin-left: 80px;
   color:  #FF0000 !important; /*white;*/
   color:  #FFE55C !important; /*  white;  #FF0000  #FFE55C  */
   -webkit-text-fill-color: #FFE55C;
-  font-size: 20px;
+  font-size: 19.5px;
   font-family: Verdana, Bahnschrift, Arial, sans-serif !important;
   font-family: "Courier New", monospace !important;
   letter-spacing: 0.4px;
@@ -892,7 +892,7 @@ margin-left: 80px;
 .viewer-tab .tab-cell.filled {
   /*color: white !important;
   -webkit-text-fill-color: currentColor;*/
-  font-size: 20px;
+  font-size: 19.5px;
   font-weight: 950 !important;
   font-family: Verdana, Bahnschrift, Arial, sans-serif !important;
   font-family: "Courier New", monospace !important;
@@ -932,7 +932,7 @@ margin-left: 80px;
 /* Repeat label */
 .viewer-tab .tab-repeat {
   font-family: Consolas, monospace !important;
-  font-size: 17px !important;
+  font-size: 16px !important;
   font-weight: 800 !important;
   margin-left: -2px !important;
   letter-spacing: -2px;
@@ -943,7 +943,7 @@ margin-left: 80px;
 
 /* Repeat number */
 .viewer-tab .tab-repeat-number {
-  font-size: 19px !important;
+  font-size: 18px !important;
   font-weight: 950 !important;
   margin-left: 2.5px;
   color: #FF0000 !important;
@@ -1138,8 +1138,8 @@ margin-left: 80px;
 .tab-time-line {
   margin-top: -50px !important;
   font-family: "Courier New", "Lucida Console", Consolas, monospace;
-  font-size: 20px;
-  font-weight: 900;
+  font-size: 19.5px;
+  font-weight: 950;
   letter-spacing: -0.4;
   color: #FFD400;
   white-space: pre;
