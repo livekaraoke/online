@@ -1504,3 +1504,28 @@ textarea {
   border: 0;
   border-radius: 10px;
 }
+
+.note-field {
+  grid-row: span 2;
+}
+
+.note-field textarea {
+  width: 100%;
+  min-height: 175px;
+  height: 100%;
+  box-sizing: border-box;
+
+  background: #090909;
+  color: #fff;
+
+  border: 1px solid #333;
+  border-radius: 12px;
+
+  padding: 14px 16px;
+
+  font: inherit;
+  line-height: 1.5;
+
+  resize: vertical;
+  overflow-y: auto;
+}
