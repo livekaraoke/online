@@ -266,6 +266,7 @@
         </button>
 
         <!------ SECTION TAB INSERT REPEAT LABEL ------>
+
         <!--
         <button type="button" class="btn small-control-btn" onclick="insertRepeatLabel()">
           (x2)
@@ -294,8 +295,46 @@
         <button type="button" id="insertBarBtn" class="btn tab-btn" onclick="insertTabBar()" style="display:none;" disabled>
         + Bar
         </button>
-        
-        
+  
+        <!------ INSERT TIME IN CURRENT TAB BLOCK -->      
+        <button type="button" id="insertTimeBtn" class="btn tab-btn" onclick="insertTabTimeLine()" style="display:none;" disabled>
+        ⨥ Time
+        </button>
+
+        <!------ INSERT PERFORMANCE NOTE -->
+        <div class="dropdown-control">
+          <button type="button" class="btn tab-btn" onclick="togglePerfNoteMenu()">
+            + Note ▼
+          </button>
+
+          <div id="perfNoteMenu" class="mini-dropdown hidden">
+            <button type="button" onclick="insertPerformanceNote('🎤')">🎤 Vocal Note</button>
+            <button type="button" onclick="insertPerformanceNote('🎸')">🎸 Guitar Note</button>
+          </div>
+        </div>
+
+        <!------ INSERT MUSIC SYMBOL IN CURRENT TAB BLOCK -->
+        <div class="dropdown-control">
+          <button type="button" class="btn tab-btn" onclick="toggleSymbolMenu()">
+            ♪ Symbol ▼
+          </button>
+
+          <div id="symbolMenu" class="mini-dropdown hidden">
+            <button onclick="insertMusicSymbol('𝅝')">𝅝</button>
+            <button onclick="insertMusicSymbol('𝅗𝅥')">𝅗𝅥</button>
+            <button onclick="insertMusicSymbol('𝅘𝅥')">𝅘𝅥</button>
+            <button onclick="insertMusicSymbol('𝅘𝅥𝅮')">𝅘𝅥𝅮</button>
+            <button onclick="insertMusicSymbol('𝄽')">𝄽</button>
+            <button onclick="insertMusicSymbol('𝄾')">𝄾</button>
+            <button onclick="insertMusicSymbol('♯')">♯</button>
+            <button onclick="insertMusicSymbol('♮')">♮</button>
+            <button onclick="insertMusicSymbol('♭')">♭</button>
+            <button onclick="insertMusicSymbol('⫰')">⫰</button>
+            <button onclick="insertMusicSymbol('|')">|</button>
+            <button onclick="insertMusicSymbol('⸾')">⸾</button>
+            <button onclick="insertMusicSymbol('⦚')">⦚</button>
+          </div>
+        </div>
      
         
       <!------ END OF SECTION CONTROLS ROW 2 ------>
