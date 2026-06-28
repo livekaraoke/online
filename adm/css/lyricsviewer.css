@@ -1195,3 +1195,29 @@ performance-note-line {
   color: #7CFF3A;
   font-weight: 900;
 }
+
+.youtube-box {
+  position: relative;
+  width: min(900px, 94vw);
+  padding: 44px 16px 16px;
+}
+
+.youtube-close {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  background: #330000;
+  color: #ff3333;
+  border: 1px solid #ff3333;
+  border-radius: 8px;
+  font-size: 20px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+#youtubePlayerWrap iframe {
+  width: 100%;
+  height: min(55vw, 500px);
+  border: 0;
+  border-radius: 10px;
+}
