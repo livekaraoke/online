@@ -1521,7 +1521,7 @@ textarea {
 
 .note-field textarea {
   width: 100%;
-  min-height: 70px;
+  min-height: 50px;
   height: 100%;
   box-sizing: border-box;
 
