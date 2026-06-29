@@ -1222,6 +1222,38 @@ textarea {
   font-family: Verdana, Bahnschrift, Arial, sans-serif !important;
 }
 
+
+
+
+/* Fixed tab symbols: e⦗|, B⦗|, |⦘, », « */
+.viewer-tab .tab-fixed,
+.tab-string-letter {
+  font-family: "Courier New", monospace !important;
+  font-size: 16px;
+  font-weight: 600 !important;
+  letter-spacing: -4px;
+  color: #AB8D26;
+  -webkit-text-fill-color: #AB8D26;/*  #FFD400;  #FFE55C  #DDB000  */
+  color: #AA8500;
+  -webkit-text-fill-color: #AA8500;
+
+
+  text-shadow: none !important;
+}
+
+.tab-string-letter {
+    color: #BB9500;
+  -webkit-text-fill-color: #CCA500;
+  font-size: 16px;
+  font-weight: 950 !important;
+  font-family: Consolas, monospace !important;
+  text-align: center;
+  letter-spacing: -1px;
+}
+
+
+
+
 .tab-note.tab-hidden-fill {
   color: #050505 !important;
   -webkit-text-fill-color: #050505 !important;
@@ -1230,6 +1262,7 @@ textarea {
 
 .tab-gap {
   height: 14px;
+  font-size: 12px;
 }
 
 .tab-apostrophe {
@@ -1521,7 +1554,7 @@ textarea {
 
 .note-field textarea {
   width: 100%;
-  min-height: 50px;
+  min-height: 40px;
   height: 100%;
   box-sizing: border-box;
 
