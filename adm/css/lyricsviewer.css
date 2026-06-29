@@ -491,7 +491,7 @@ margin-left: 80px;
   text-shadow: none !important;
 }
 
-.tab-dashes .tab-cell.dash { /***** THE ACTUAL DASHES --- ******/
+.tab-dashes .tab-cell.dash { /* THE ACTUAL DASHES --- */
   color: #666 !important;
   -webkit-text-fill-color: #666 !important;
   letter-spacing: 0.4px;
