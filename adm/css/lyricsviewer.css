@@ -335,13 +335,13 @@ margin-left: 80px;
 }
 
 .tab-dashes { /** THE RIGHT ONE **/
-  color: #777777 !important;
+  color: #777 !important;
   font-weight: 950;
   text-shadow:none !important;
 }
 
 .tab-dashes.has-input {
-  color: #666 !important;
+  color: #777 !important;
   font-weight: 950;
   text-shadow: none !important;
 
