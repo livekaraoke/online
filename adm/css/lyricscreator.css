@@ -629,7 +629,7 @@ textarea {
 }
 
 .section-actions {
-  margin-top: 60px;
+  margin-top: 20px;
   margin-bottom: 10px;
   justify-content: center;
   text-align: center;
@@ -696,8 +696,8 @@ textarea {
   font-weight: 900;
   text-align: center;
   line-height: 1;
-  width: 45px;
-  height: 45px;
+  width: 45px !important;
+  height: 45px !important;
   border-radius: 6px;
   border: 2px solid #333;
   cursor: pointer;
@@ -710,8 +710,8 @@ textarea {
   font-weight: 900;
   text-align: center;
   line-height: 1;
-  width: 45px;
-  height: 45px;
+  width: 45px !important;
+  height: 45px !important;
   border-radius: 6px;
   border: 2px solid #333;
   cursor: pointer;
@@ -769,7 +769,7 @@ textarea {
 
 .format-buttons button,
 .align-buttons button {
-  width: 50px;
+  width: 45px;
   height: 45px;
   background: #050505;
   color: white;
@@ -856,7 +856,7 @@ textarea {
 .tab-line {
   display: block;
   font-family: "Courier New", monospace;
-  font-size: 19.5px;
+  font-size: 17px;
   font-weight: 950 !important;
   line-height: 1 !important;
   margin: 0 !important;
@@ -1100,7 +1100,7 @@ textarea {
 .insert-tab-here-btn {
   background: #111;
   color: #FFD400;
-  border: 2px solid #FFD400;
+  border: 3px solid #FFD400;
   border-radius: 50%;
   width: 30px;
   height: 30px;
@@ -1418,7 +1418,7 @@ textarea {
   margin-bottom: 5px;
   white-space: pre;
     font-family: "Courier New", "Lucida Console", Consolas, monospace;
-  font-size: 15px;
+  font-size: 17px;
   font-weight: 950;
   letter-spacing: -0.4;
   color: #FFD400;
