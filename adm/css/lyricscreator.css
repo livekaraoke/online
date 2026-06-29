@@ -856,12 +856,14 @@ textarea {
 .tab-line {
   display: block;
   font-family: "Courier New", monospace;
-  font-size: 19px;
-  font-weight: 900;
+  font-size: 19.5px;
+  font-weight: 950 !important;
   line-height: 1 !important;
   margin: 0 !important;
   padding: 0 !important;
   white-space: pre;
+
+  letter-spacing: 0.4px;
 }
 
 .tab-note-line {
@@ -1054,12 +1056,15 @@ textarea {
 .tab-block {
   position: relative;
   padding: 5px 5px;
-  margin: 10px 0;
+  margin: 5px 0;
   border: 1px solid rgba(255,255,255,.25);
   border-radius: 8px;
   display: block;
   line-height: 1 !important;
   margin-left: 5px;
+
+  padding: 0px 0px 0 0;
+  margin: 5px 0;
 }
 
 .tab-block .tab-line + .tab-line {
@@ -1409,10 +1414,16 @@ textarea {
 }
 
 .tab-time-line {
-  margin-top: -60px !important;
+  margin-top: -50px !important;
   margin-bottom: 5px;
   white-space: pre;
-  font-family: "Courier New", monospace;
+    font-family: "Courier New", "Lucida Console", Consolas, monospace;
+  font-size: 19.5px;
+  font-weight: 950;
+  letter-spacing: -0.4;
+  color: #FFD400;
+  white-space: pre;
+  margin-left: -23px !important;
 }
 
 .delete-tab-time-btn {
