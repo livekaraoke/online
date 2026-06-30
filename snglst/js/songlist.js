@@ -60,7 +60,16 @@ async function loadSections() {
     ...doc.data()
   }));
 
-  sortSections();
+  sections.sort((a, b) => {
+    const orderA = Number(a.order || 0);
+    const orderB = Number(b.order || 0);
+
+    if (orderA !== orderB) return orderA - orderB;
+
+    return (a.title || "").localeCompare(b.title || "", undefined, {
+      sensitivity: "base"
+    });
+  });
 }
 
 async function loadSongs() {
@@ -73,7 +82,11 @@ async function loadSongs() {
     ...doc.data()
   }));
 
-  sortSongs();
+  songs.sort((a, b) =>
+    (a.title || "").localeCompare(b.title || "", undefined, {
+      sensitivity: "base"
+    })
+  );
 }
 
 /* ---------- PUBLIC PAGE ---------- */
