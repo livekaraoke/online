@@ -160,43 +160,20 @@ function togglePublicSection(titleEl) {
 async function initEditor() {
   await ensureMainList();
 
-  document.getElementById("seedOldListBtn")
-    .addEventListener("click", seedFromOldPublicSongList);
-
-  document.getElementById("saveEditorBtn")
-    .addEventListener("click", saveEditorSongList);
-
-  document.getElementById("addFeaturedSectionBtn")
-    .addEventListener("click", () => {
-      editorSections.push({
-        type: "featured",
-        title: "★ NEW FEATURED SECTION",
-        collapsed: false,
-        songs: []
-      });
-      renderEditor();
-    });
-
-  document.getElementById("addSongSectionBtn")
-    .addEventListener("click", () => {
-      editorSections.push({
-        type: "songs",
-        title: "NEW SECTION",
-        collapsed: false,
-        songs: []
-      });
-      renderEditor();
-    });
-
   await loadEditorData();
 }
+
 
 async function loadEditorData() {
   const listDoc = await db.collection(LISTS_COLLECTION).doc(MAIN_LIST_ID).get();
 
   if (listDoc.exists) {
-    document.getElementById("listNameInput").value =
-      listDoc.data().name || "Venue Main Public Song List";
+    const data = listDoc.data();
+
+    const listNameInput = document.getElementById("listNameInput");
+    if (listNameInput) {
+      listNameInput.value = data.name || "Venue Main Public Song List";
+    }
   }
 
   const snap = await db.collection(SECTIONS_COLLECTION)
@@ -213,7 +190,7 @@ async function loadEditorData() {
 }
 
 function renderEditor() {
-  const wrap = document.getElementById("editorSections");
+  const wrap = document.getElementById("sectionEditorList");
 
   wrap.innerHTML = editorSections.map((section, sectionIndex) => `
     <div class="editor-section-card">
@@ -269,6 +246,8 @@ function renderEditor() {
   `).join("");
 }
 
+
+
 function addEditorSong(sectionIndex) {
   if (!Array.isArray(editorSections[sectionIndex].songs)) {
     editorSections[sectionIndex].songs = [];
@@ -315,14 +294,16 @@ function deleteEditorSection(index) {
   renderEditor();
 }
 
+
 async function saveEditorSongList() {
-  const autoSort = document.getElementById("autoSortInput").checked;
-  const listName = document.getElementById("listNameInput").value.trim() ||
+  const listName =
+    document.getElementById("listNameInput")?.value.trim() ||
     "Venue Main Public Song List";
 
   await db.collection(LISTS_COLLECTION).doc(MAIN_LIST_ID).set({
     name: listName,
     slug: MAIN_LIST_ID,
+    isDefault: true,
     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
   }, { merge: true });
 
@@ -339,7 +320,7 @@ async function saveEditorSongList() {
   editorSections.forEach((section, index) => {
     const ref = db.collection(SECTIONS_COLLECTION).doc();
 
-    const songs = autoSort && section.type !== "featured"
+    const songs = section.type !== "featured"
       ? sortSongs(section.songs || [])
       : (section.songs || []);
 
@@ -356,9 +337,9 @@ async function saveEditorSongList() {
 
   await batch.commit();
 
-  alert("Public song list saved.");
   await loadEditorData();
 }
+
 
 /* ========================= SEED OLD LIST ========================= */
 
@@ -637,4 +618,17 @@ function escapeHTML(str) {
 
 function escapeAttr(str) {
   return escapeHTML(str).replace(/"/g, "&quot;");
+}
+
+
+async function seedVenueMainList() {
+  if (!confirm("This will delete the current Venue Main Public Song List and seed it from scratch. Continue?")) {
+    return;
+  }
+
+  editorSections = JSON.parse(JSON.stringify(OLD_PUBLIC_SONG_LIST_SECTIONS));
+
+  await saveEditorSongList();
+
+  alert("Venue Main Public Song List seeded from scratch.");
 }
