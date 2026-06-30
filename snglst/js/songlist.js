@@ -6,21 +6,10 @@ let songs = [];
 
 /* ---------- HELPERS ---------- */
 
-function makeSong(title, artist = "", sectionId = "main") {
-  return {
-    title: title.trim(),
-    artist: artist.trim(),
-    sectionId,
-    visible: true,
-    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-  };
-}
-
 function sortSections() {
   sections.sort((a, b) => {
     const orderA = Number(a.order || 0);
     const orderB = Number(b.order || 0);
-
     if (orderA !== orderB) return orderA - orderB;
 
     return (a.title || "").localeCompare(b.title || "", undefined, {
@@ -37,6 +26,13 @@ function sortSongs() {
   );
 }
 
+function escapeHTML(value) {
+  return String(value || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
 async function ensureMainList() {
   const ref = db.collection("songlists").doc(MAIN_LIST_ID);
   const snap = await ref.get();
@@ -51,7 +47,6 @@ async function ensureMainList() {
 
   const fresh = await ref.get();
   currentList = { id: fresh.id, ...fresh.data() };
-
   return currentList;
 }
 
@@ -81,12 +76,6 @@ async function loadSongs() {
   sortSongs();
 }
 
-function sectionLabel(section) {
-  return section.openByDefault
-    ? `${section.title} ▲ (Click to Hide)`
-    : `${section.title} ▼ (Click to View)`;
-}
-
 /* ---------- PUBLIC PAGE ---------- */
 
 async function initPublicSongList() {
@@ -94,17 +83,26 @@ async function initPublicSongList() {
   await loadSections();
   await loadSongs();
 
-  document.getElementById("listTitle").innerText =
-    currentList.name || "Venue Main Public Song List";
+  const listTitle = document.getElementById("listTitle");
+  if (listTitle) {
+    listTitle.innerText = currentList.name || "Venue Main Public Song List";
+  }
 
   renderPublicSongList();
 
-  document.getElementById("searchInput").addEventListener("input", renderPublicSongList);
+  const searchInput = document.getElementById("searchInput");
+  if (searchInput) {
+    searchInput.addEventListener("input", renderPublicSongList);
+  }
 }
 
 function renderPublicSongList() {
   const container = document.getElementById("publicSongList");
-  const search = (document.getElementById("searchInput")?.value || "").toLowerCase().trim();
+  if (!container) return;
+
+  const search = (document.getElementById("searchInput")?.value || "")
+    .toLowerCase()
+    .trim();
 
   container.innerHTML = "";
 
@@ -119,76 +117,54 @@ function renderPublicSongList() {
     const sectionSongs = visibleSongs.filter(song => song.sectionId === section.id);
     if (!sectionSongs.length && search) return;
 
-    const sectionBox = document.createElement("section");
-    sectionBox.className = "public-section";
-
-    const title = document.createElement("h2");
-    title.className = "public-section-title";
-    title.dataset.open = section.openByDefault ? "true" : "false";
-    title.innerText = sectionLabel(section);
-
-    const songWrap = document.createElement("div");
-    songWrap.className = "public-section-songs";
-    songWrap.style.display = section.openByDefault ? "block" : "none";
-
-    title.onclick = () => {
-      const isOpen = songWrap.style.display !== "none";
-      songWrap.style.display = isOpen ? "none" : "block";
-      title.innerText = isOpen
-        ? `${section.title} ▼ (Click to View)`
-        : `${section.title} ▲ (Click to Hide)`;
-    };
-
-    sectionSongs.forEach(song => {
-      const row = document.createElement("div");
-      row.className = "public-song-row";
-      row.innerHTML = `
-        <strong>${song.title || ""}</strong>
-        <span>${song.artist || ""}</span>
-      `;
-      songWrap.appendChild(row);
-    });
-
-    sectionBox.appendChild(title);
-    sectionBox.appendChild(songWrap);
-    container.appendChild(sectionBox);
+    renderPublicSection(container, section.title, sectionSongs, section.openByDefault);
   });
 
-  const noSectionSongs = visibleSongs.filter(song => !song.sectionId || song.sectionId === "main");
-
-  if (noSectionSongs.length) {
-    const sectionBox = document.createElement("section");
-    sectionBox.className = "public-section";
-
-    const title = document.createElement("h2");
-    title.className = "public-section-title";
-    title.innerText = "Songs ▲ (Click to Hide)";
-
-    const songWrap = document.createElement("div");
-    songWrap.className = "public-section-songs";
-
-    title.onclick = () => {
-      const isOpen = songWrap.style.display !== "none";
-      songWrap.style.display = isOpen ? "none" : "block";
-      title.innerText = isOpen
-        ? "Songs ▼ (Click to View)"
-        : "Songs ▲ (Click to Hide)";
-    };
-
-    noSectionSongs.forEach(song => {
-      const row = document.createElement("div");
-      row.className = "public-song-row";
-      row.innerHTML = `
-        <strong>${song.title || ""}</strong>
-        <span>${song.artist || ""}</span>
-      `;
-      songWrap.appendChild(row);
-    });
-
-    sectionBox.appendChild(title);
-    sectionBox.appendChild(songWrap);
-    container.appendChild(sectionBox);
+  const mainSongs = visibleSongs.filter(song => !song.sectionId || song.sectionId === "main");
+  if (mainSongs.length) {
+    renderPublicSection(container, "Songs", mainSongs, true);
   }
+}
+
+function renderPublicSection(container, titleText, sectionSongs, openByDefault) {
+  const sectionBox = document.createElement("section");
+  sectionBox.className = "public-section";
+
+  const title = document.createElement("h2");
+  title.className = "public-section-title";
+
+  const songWrap = document.createElement("div");
+  songWrap.className = "public-section-songs";
+  songWrap.style.display = openByDefault ? "block" : "none";
+
+  function updateTitle() {
+    const isOpen = songWrap.style.display !== "none";
+    title.innerText = isOpen
+      ? `${titleText} ▲ (Click to Hide)`
+      : `${titleText} ▼ (Click to View)`;
+  }
+
+  title.onclick = () => {
+    const isOpen = songWrap.style.display !== "none";
+    songWrap.style.display = isOpen ? "none" : "block";
+    updateTitle();
+  };
+
+  updateTitle();
+
+  sectionSongs.forEach(song => {
+    const row = document.createElement("div");
+    row.className = "public-song-row";
+    row.innerHTML = `
+      <strong>${escapeHTML(song.title)}</strong>
+      <span>${escapeHTML(song.artist)}</span>
+    `;
+    songWrap.appendChild(row);
+  });
+
+  sectionBox.appendChild(title);
+  sectionBox.appendChild(songWrap);
+  container.appendChild(sectionBox);
 }
 
 /* ---------- EDITOR ---------- */
@@ -198,8 +174,10 @@ async function initEditor() {
   await loadSections();
   await loadSongs();
 
-  document.getElementById("listNameInput").value =
-    currentList.name || "Venue Main Public Song List";
+  const listNameInput = document.getElementById("listNameInput");
+  if (listNameInput) {
+    listNameInput.value = currentList.name || "Venue Main Public Song List";
+  }
 
   renderSectionDropdown();
   renderEditorSongList();
@@ -225,6 +203,11 @@ function renderEditorSongList() {
 
   container.innerHTML = "";
 
+  const total = document.createElement("div");
+  total.className = "editor-count";
+  total.innerText = `Total songs: ${songs.length}`;
+  container.appendChild(total);
+
   sections.forEach(section => {
     const sectionSongs = songs.filter(song => song.sectionId === section.id);
 
@@ -233,7 +216,7 @@ function renderEditorSongList() {
 
     box.innerHTML = `
       <div class="editor-section-head">
-        <strong>${section.title}</strong>
+        <strong>${escapeHTML(section.title)}</strong>
         <span>${section.openByDefault ? "Open by default" : "Closed by default"}</span>
         <button onclick="toggleSectionDefault('${section.id}', ${section.openByDefault ? "false" : "true"})">
           ${section.openByDefault ? "Set Closed" : "Set Open"}
@@ -275,8 +258,8 @@ function createEditorSongRow(song) {
 
   row.innerHTML = `
     <div>
-      <strong>${song.title || ""}</strong>
-      <span>${song.artist || ""}</span>
+      <strong>${escapeHTML(song.title)}</strong>
+      <span>${escapeHTML(song.artist)}</span>
     </div>
 
     <button onclick="toggleSongVisible('${song.id}', ${song.visible === false ? "true" : "false"})">
@@ -349,10 +332,7 @@ async function addSong() {
 }
 
 async function toggleSongVisible(songId, visible) {
-  await db.collection("songlistSongs").doc(songId).set({
-    visible
-  }, { merge: true });
-
+  await db.collection("songlistSongs").doc(songId).set({ visible }, { merge: true });
   await initEditor();
 }
 
@@ -364,10 +344,7 @@ async function deleteSong(songId) {
 }
 
 async function toggleSectionDefault(sectionId, openByDefault) {
-  await db.collection("songlistSections").doc(sectionId).set({
-    openByDefault
-  }, { merge: true });
-
+  await db.collection("songlistSections").doc(sectionId).set({ openByDefault }, { merge: true });
   await initEditor();
 }
 
@@ -390,10 +367,29 @@ async function deleteSection(sectionId) {
 /* ---------- SEED OLD LIST ---------- */
 
 async function seedFromOldPublicSongList() {
-  const ok = confirm("Seed the public song list with the old song list data?");
+  const ok = confirm("Seed the public song list with the full old song list data?");
   if (!ok) return;
 
   await ensureMainList();
+  await loadSongs();
+
+  if (songs.length > 0) {
+    const replaceOk = confirm(
+      `This list already has ${songs.length} songs. Delete existing public-list songs and reseed?`
+    );
+
+    if (!replaceOk) return;
+
+    for (const song of songs) {
+      await db.collection("songlistSongs").doc(song.id).delete();
+    }
+
+    await loadSections();
+
+    for (const section of sections) {
+      await db.collection("songlistSections").doc(section.id).delete();
+    }
+  }
 
   const seedSectionRef = await db.collection("songlistSections").add({
     listId: MAIN_LIST_ID,
@@ -404,181 +400,197 @@ async function seedFromOldPublicSongList() {
   });
 
   const seedSongs = [
-  ["Ain’t No Sunshine", "Bill Withers"],
-  ["All Along the Watchtower", "Jimi Hendrix"],
-  ["All Summer Long", "Kid Rock"],
-  ["All the Small Things", "Blink-182"],
-  ["Angels", "Robbie Williams"],
-  ["Angie", "The Rolling Stones"],
-  ["Another Brick in the Wall (part 2)", "Pink Floyd"],
-  ["Another One Bites the Dust", "Queen"],
-  ["Bad Moon Rising", "CCR"],
-  ["Bad Romance", "Lady Gaga"],
-  ["Basket Case", "Green Day"],
-  ["Beds Are Burning", "Midnight Oil"],
-  ["Behind Blue Eyes", "The Who"],
-  ["Bella Ciao", "Misc. – unknown"],
-  ["Big Me", "Foo Fighters"],
-  ["Bittersweet Symphony", "The Verve"],
-  ["Bohemian Like You", "The Dandy Warhols"],
-  ["Born to Be Wild", "Steppenwolf"],
-  ["Boulevard of Broken Dreams", "Green Day"],
-  ["Breakfast at Tiffany’s", "Deep Blue Something"],
+    ["Ain’t No Sunshine", "Bill Withers"],
+    ["All Along the Watchtower", "Jimi Hendrix"],
+    ["All Summer Long", "Kid Rock"],
+    ["All the Small Things", "Blink-182"],
+    ["Angels", "Robbie Williams"],
+    ["Angie", "The Rolling Stones"],
+    ["Another Brick in the Wall (part 2)", "Pink Floyd"],
+    ["Another One Bites the Dust", "Queen"],
+    ["Bad Moon Rising", "CCR"],
+    ["Bad Romance", "Lady Gaga"],
+    ["Basket Case", "Green Day"],
+    ["Beds Are Burning", "Midnight Oil"],
+    ["Behind Blue Eyes", "The Who"],
+    ["Bella Ciao", "Misc. – unknown"],
+    ["Big Me", "Foo Fighters"],
+    ["Bittersweet Symphony", "The Verve"],
+    ["Bohemian Like You", "The Dandy Warhols"],
+    ["Born to Be Wild", "Steppenwolf"],
+    ["Boulevard of Broken Dreams", "Green Day"],
+    ["Breakfast at Tiffany’s", "Deep Blue Something"],
 
-  ["Californication", "Red Hot Chili Peppers"],
-  ["Call Me the Breeze", "Lynyrd Skynyrd"],
-  ["Can’t Get Enough", "Bad Company"],
-  ["Can’t Take My Eyes Off You", "Frankie Valli / Muse"],
-  ["Changes", "Black Sabbath"],
-  ["Chasing Cars", "Snow Patrol"],
-  ["Clocks", "Coldplay"],
-  ["Cocaine", "Eric Clapton"],
-  ["Come as You Are", "Nirvana"],
-  ["Come Together", "The Beatles"],
-  ["Could You Be Loved", "Bob Marley"],
-  ["Crazy Little Thing Called Love", "Queen"],
-  ["Creep", "Radiohead"],
-  ["Dakota", "Stereophonics"],
-  ["Dani California", "Red Hot Chili Peppers"],
-  ["Do I Wanna Know", "Arctic Monkeys"],
-  ["Don’t Look Back in Anger", "Oasis"],
-  ["Don’t Stop Me Now", "Queen"],
-  ["Down Under", "Men At Work"],
-  ["Dreams", "Fleetwood Mac"],
-  ["Drive", "Incubus"],
-  ["Drops of Jupiter", "Train"],
+    ["Californication", "Red Hot Chili Peppers"],
+    ["Call Me the Breeze", "Lynyrd Skynyrd"],
+    ["Can’t Get Enough", "Bad Company"],
+    ["Can’t Take My Eyes Off You", "Frankie Valli / Muse"],
+    ["Changes", "Black Sabbath"],
+    ["Chasing Cars", "Snow Patrol"],
+    ["Clocks", "Coldplay"],
+    ["Cocaine", "Eric Clapton"],
+    ["Come as You Are", "Nirvana"],
+    ["Come Together", "The Beatles"],
+    ["Could You Be Loved", "Bob Marley"],
+    ["Crazy Little Thing Called Love", "Queen"],
+    ["Creep", "Radiohead"],
+    ["Dakota", "Stereophonics"],
+    ["Dani California", "Red Hot Chili Peppers"],
+    ["Do I Wanna Know", "Arctic Monkeys"],
+    ["Don’t Look Back in Anger", "Oasis"],
+    ["Don’t Stop Me Now", "Queen"],
+    ["Down Under", "Men At Work"],
+    ["Dreams", "Fleetwood Mac"],
+    ["Drive", "Incubus"],
+    ["Drops of Jupiter", "Train"],
 
-  ["Every Breath You Take", "The Police"],
-  ["Every Rose Has Its Thorn", "Poison"],
-  ["Fat Bottomed Girls", "Queen"],
-  ["Feel Like Making Love", "Bad Company"],
-  ["Flowers", "Miley Cyrus"],
-  ["Free Bird", "Lynyrd Skynyrd"],
-  ["Friday I’m in Love", "The Cure"],
-  ["Gimme All Your Lovin’", "ZZ Top"],
-  ["Go with the Flow", "Queens Of The Stone Age"],
-  ["Good Riddance", "Green Day"],
-  ["Hard to Handle", "The Black Crowes"],
-  ["Have You Ever Seen the Rain", "CCR"],
-  ["Here Without You", "Three Doors Down"],
-  ["Hey Jude", "The Beatles"],
-  ["Highway to Hell", "AC/DC"],
-  ["Home Sweet Home", "Mötley Crüe"],
-  ["Hotel California", "The Eagles"],
-  ["House of the Rising Sun", "The Animals"],
-  ["How You Remind Me", "Nickelback"],
+    ["Every Breath You Take", "The Police"],
+    ["Every Rose Has Its Thorn", "Poison"],
+    ["Fat Bottomed Girls", "Queen"],
+    ["Feel Like Making Love", "Bad Company"],
+    ["Flowers", "Miley Cyrus"],
+    ["Free Bird", "Lynyrd Skynyrd"],
+    ["Friday I’m in Love", "The Cure"],
+    ["Gimme All Your Lovin’", "ZZ Top"],
+    ["Go with the Flow", "Queens Of The Stone Age"],
+    ["Good Riddance", "Green Day"],
+    ["Hard to Handle", "The Black Crowes"],
+    ["Have You Ever Seen the Rain", "CCR"],
+    ["Here Without You", "Three Doors Down"],
+    ["Hey Jude", "The Beatles"],
+    ["Highway to Hell", "AC/DC"],
+    ["Home Sweet Home", "Mötley Crüe"],
+    ["Hotel California", "The Eagles"],
+    ["House of the Rising Sun", "The Animals"],
+    ["How You Remind Me", "Nickelback"],
 
-  ["I See Fire", "Ed Sheeran"],
-  ["I Want to Break Free", "Queen"],
-  ["I Will Survive", "Gloria Gaynor"],
-  ["Imagine", "John Lennon"],
-  ["In the Summertime", "Mungo Jerry"],
-  ["Ironic", "Alanis Morissette"],
-  ["It’s My Life", "Bon Jovi"],
-  ["Johnny B Goode", "Chuck Berry"],
-  ["Jolene", "Dolly Parton"],
-  ["Knockin’ on Heaven’s Door", "Dylan / Guns N’ Roses"],
-  ["Kryptonite", "Three Doors Down"],
-  ["La Bamba", "Ritchie Valens"],
-  ["La Grange", "ZZ Top"],
-  ["Learn to Fly", "Foo Fighters"],
-  ["Legs", "ZZ Top"],
-  ["Let It Be", "The Beatles"],
-  ["Let Me Entertain You", "Robbie Williams"],
-  ["Lithium", "Nirvana"],
-  ["Live Forever", "Oasis"],
-  ["Livin’ on a Prayer", "Bon Jovi"],
-  ["Losing My Religion", "R.E.M."],
-  ["Love Me Do", "The Beatles"],
+    ["I See Fire", "Ed Sheeran"],
+    ["I Want to Break Free", "Queen"],
+    ["I Will Survive", "Gloria Gaynor"],
+    ["Imagine", "John Lennon"],
+    ["In the Summertime", "Mungo Jerry"],
+    ["Ironic", "Alanis Morissette"],
+    ["It’s My Life", "Bon Jovi"],
+    ["Johnny B Goode", "Chuck Berry"],
+    ["Jolene", "Dolly Parton"],
+    ["Knockin’ on Heaven’s Door", "Dylan / Guns N’ Roses"],
+    ["Kryptonite", "Three Doors Down"],
+    ["La Bamba", "Ritchie Valens"],
+    ["La Grange", "ZZ Top"],
+    ["Learn to Fly", "Foo Fighters"],
+    ["Legs", "ZZ Top"],
+    ["Let It Be", "The Beatles"],
+    ["Let Me Entertain You", "Robbie Williams"],
+    ["Lithium", "Nirvana"],
+    ["Live Forever", "Oasis"],
+    ["Livin’ on a Prayer", "Bon Jovi"],
+    ["Losing My Religion", "R.E.M."],
+    ["Love Me Do", "The Beatles"],
 
-  ["Man On the Moon", "R.E.M."],
-  ["Mr Brightside", "The Killers"],
-  ["Mustang Sally", "Wilson Pickett"],
-  ["My Girl", "The Temptations"],
-  ["Nobody’s Wife", "Anouk"],
-  ["Old Town Road", "Lil Nas X & Billy R. Cyrus"],
-  ["One", "U2"],
-  ["Otherside", "Red Hot Chili Peppers"],
-  ["Paint It Black", "The Rolling Stones"],
-  ["Paranoid", "Black Sabbath"],
-  ["Penny Arcade", "Roy Orbison"],
-  ["People Are Strange", "The Doors"],
-  ["Personal Jesus", "Depeche Mode"],
-  ["Pretty Woman", "Roy Orbison"],
-  ["Proud Mary", "CCR"],
-  ["Psycho Killer", "Talking Heads"],
-  ["Purple Rain", "Prince"],
+    ["Man On the Moon", "R.E.M."],
+    ["Mr Brightside", "The Killers"],
+    ["Mustang Sally", "Wilson Pickett"],
+    ["My Girl", "The Temptations"],
+    ["Nobody’s Wife", "Anouk"],
+    ["Old Town Road", "Lil Nas X & Billy R. Cyrus"],
+    ["One", "U2"],
+    ["Otherside", "Red Hot Chili Peppers"],
+    ["Paint It Black", "The Rolling Stones"],
+    ["Paranoid", "Black Sabbath"],
+    ["Penny Arcade", "Roy Orbison"],
+    ["People Are Strange", "The Doors"],
+    ["Personal Jesus", "Depeche Mode"],
+    ["Pretty Woman", "Roy Orbison"],
+    ["Proud Mary", "CCR"],
+    ["Psycho Killer", "Talking Heads"],
+    ["Purple Rain", "Prince"],
 
-  ["Rebel Rebel", "David Bowie"],
-  ["Rebel Yell", "Billy Idol"],
-  ["Red Red Wine", "UB40"],
-  ["Ring of Fire", "Johnny Cash"],
-  ["Roadhouse Blues", "The Doors"],
-  ["Rockin’ in the Free World", "Neil Young"],
-  ["Ruby", "Kaiser Chiefs"],
-  ["Runaway Train", "Soul Asylum"],
-  ["Satisfaction (I Can’t Get No)", "The Rolling Stones"],
-  ["Save Tonight", "Eagle-Eye Cherry"],
-  ["Scientist, The", "Coldplay"],
-  ["Self Esteem", "The Offspring"],
-  ["Seven Nation Army", "The White Stripes"],
-  ["Sex on Fire", "Kings of Leon"],
-  ["Sharp Dressed Man", "ZZ Top"],
-  ["Should I Stay or Should I Go", "The Clash"],
-  ["Simple Man", "Lynyrd Skynyrd"],
-  ["Sing", "Travis"],
-  ["Smells Like Teen Spirit", "Nirvana"],
-  ["Smoke on the Water", "Deep Purple"],
-  ["So Far Away", "Dire Straits"],
-  ["Somebody Told Me", "The Killers"],
-  ["Stand by Me", "Ben E. King"],
-  ["Stand by Me", "Oasis"],
-  ["Summer of ‘69", "Bryan Adams"],
-  ["Sunshine of Your Love", "Cream"],
-  ["Sweet Caroline", "Neil Diamond"],
-  ["Sweet Child O’ Mine", "Guns N’ Roses"],
-  ["Sweet Home Alabama", "Lynyrd Skynyrd"],
+    ["Rebel Rebel", "David Bowie"],
+    ["Rebel Yell", "Billy Idol"],
+    ["Red Red Wine", "UB40"],
+    ["Ring of Fire", "Johnny Cash"],
+    ["Roadhouse Blues", "The Doors"],
+    ["Rockin’ in the Free World", "Neil Young"],
+    ["Ruby", "Kaiser Chiefs"],
+    ["Runaway Train", "Soul Asylum"],
+    ["Satisfaction (I Can’t Get No)", "The Rolling Stones"],
+    ["Save Tonight", "Eagle-Eye Cherry"],
+    ["Scientist, The", "Coldplay"],
+    ["Self Esteem", "The Offspring"],
+    ["Seven Nation Army", "The White Stripes"],
+    ["Sex on Fire", "Kings of Leon"],
+    ["Sharp Dressed Man", "ZZ Top"],
+    ["Should I Stay or Should I Go", "The Clash"],
+    ["Simple Man", "Lynyrd Skynyrd"],
+    ["Sing", "Travis"],
+    ["Smells Like Teen Spirit", "Nirvana"],
+    ["Smoke on the Water", "Deep Purple"],
+    ["So Far Away", "Dire Straits"],
+    ["Somebody Told Me", "The Killers"],
+    ["Stand by Me", "Ben E. King"],
+    ["Stand by Me", "Oasis"],
+    ["Summer of ‘69", "Bryan Adams"],
+    ["Sunshine of Your Love", "Cream"],
+    ["Sweet Caroline", "Neil Diamond"],
+    ["Sweet Child O’ Mine", "Guns N’ Roses"],
+    ["Sweet Home Alabama", "Lynyrd Skynyrd"],
 
-  ["Tainted Love", "Soft Cell"],
-  ["Take Me Home, Country Roads", "John Denver"],
-  ["Teenage Dirtbag", "Wheatus"],
-  ["The Chain", "Fleetwood Mac"],
-  ["The Man Who Sold the World", "David Bowie / Nirvana"],
-  ["These Boots Are Made for Walking", "Nancy Sinatra"],
-  ["Three Little Birds", "Bob Marley"],
-  ["Two out of Three Ain’t Bad", "Meatloaf"],
-  ["Under Pressure", "Queen"],
-  ["Under the Bridge", "Red Hot Chili Peppers"],
-  ["Valerie", "The Zutons / Amy Winehouse"],
-  ["What a Wonderful World", "Louis Armstrong"],
-  ["What’s Up", "4 Non Blondes"],
-  ["Where Is My Mind", "The Pixies"],
-  ["Wherever You Will Go", "The Calling"],
-  ["Whiskey in the Jar", "Thin Lizzy / Metallica"],
-  ["White Wedding", "Billy Idol"],
-  ["Whole Lotta Rosie", "AC/DC"],
-  ["Wicked Game", "H.I.M. / Chris Isaak"],
-  ["Wild Thing", "The Troggs"],
-  ["Wind of Change", "Scorpions"],
-  ["Wish You Were Here", "Pink Floyd"],
-  ["With or Without You", "U2"],
-  ["Wonderful Tonight", "Eric Clapton"],
-  ["Wonderwall", "Oasis"],
-  ["Word Up", "Cameo / Korn"],
-  ["Xemx", "The Tramps"],
-  ["Yellow", "Coldplay"],
-  ["You Sexy Thing", "Hot Chocolate"],
-  ["You Spin Me Round", "Dead or Alive"],
-  ["Zombie", "The Cranberries"]
-];
+    ["Tainted Love", "Soft Cell"],
+    ["Take Me Home, Country Roads", "John Denver"],
+    ["Teenage Dirtbag", "Wheatus"],
+    ["The Chain", "Fleetwood Mac"],
+    ["The Man Who Sold the World", "David Bowie / Nirvana"],
+    ["These Boots Are Made for Walking", "Nancy Sinatra"],
+    ["Three Little Birds", "Bob Marley"],
+    ["Two out of Three Ain’t Bad", "Meatloaf"],
+    ["Under Pressure", "Queen"],
+    ["Under the Bridge", "Red Hot Chili Peppers"],
+    ["Valerie", "The Zutons / Amy Winehouse"],
+    ["What a Wonderful World", "Louis Armstrong"],
+    ["What’s Up", "4 Non Blondes"],
+    ["Where Is My Mind", "The Pixies"],
+    ["Wherever You Will Go", "The Calling"],
+    ["Whiskey in the Jar", "Thin Lizzy / Metallica"],
+    ["White Wedding", "Billy Idol"],
+    ["Whole Lotta Rosie", "AC/DC"],
+    ["Wicked Game", "H.I.M. / Chris Isaak"],
+    ["Wild Thing", "The Troggs"],
+    ["Wind of Change", "Scorpions"],
+    ["Wish You Were Here", "Pink Floyd"],
+    ["With or Without You", "U2"],
+    ["Wonderful Tonight", "Eric Clapton"],
+    ["Wonderwall", "Oasis"],
+    ["Word Up", "Cameo / Korn"],
+    ["Xemx", "The Tramps"],
+    ["Yellow", "Coldplay"],
+    ["You Sexy Thing", "Hot Chocolate"],
+    ["You Spin Me Round", "Dead or Alive"],
+    ["Zombie", "The Cranberries"]
+  ];
 
-  for (const song of seedSongs) {
+  for (const [title, artist] of seedSongs) {
     await db.collection("songlistSongs").add({
-      ...song,
-      listId: MAIN_LIST_ID
+      listId: MAIN_LIST_ID,
+      title,
+      artist,
+      sectionId: seedSectionRef.id,
+      visible: true,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
   }
 
   await initEditor();
-  alert("Seed complete.");
+  alert(`Seed complete. Added ${seedSongs.length} songs.`);
 }
+
+/* ---------- AUTO INIT ---------- */
+
+window.addEventListener("DOMContentLoaded", () => {
+  if (document.body.dataset.page === "editor") {
+    initEditor();
+  }
+
+  if (document.body.dataset.page === "public-songlist") {
+    initPublicSongList();
+  }
+});
