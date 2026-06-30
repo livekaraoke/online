@@ -1,64 +1,67 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Public Song List Editor</title>
-  <link rel="stylesheet" href="../css/style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Song List Editor</title>
+  <link rel="stylesheet" href="../css/style.css" />
 </head>
-<body>
-  <header class="songlist-header editor-header">
-    <h1>Public Song List Editor</h1>
-    <button onclick="seedFromOldPublicSongList()" class="admin-btn red">
-      Seed From Old Song List
-    </button>
-  </header>
 
-  <main class="editor-container">
+<body data-page="editor">
+  <main class="editor-page">
+    <header class="editor-topbar">
+      <a href="../index.html" class="editor-btn">← Public List</a>
+      <h1>Venue Public Song List Editor</h1>
+      <button class="editor-btn red" onclick="saveListSettings()">Save List Name</button>
+    </header>
 
-    <section class="editor-card">
+    <section class="editor-panel">
       <h2>List Settings</h2>
-
       <label>Public Song List Name</label>
-      <input id="listNameInput" placeholder="Venue Main Public Song List">
+      <input id="listNameInput" placeholder="Venue Main Public Song List" />
 
-      <button onclick="saveListSettings()" class="admin-btn">
-        Save List Name
-      </button>
+      <div class="editor-actions">
+        <button onclick="seedFromOldPublicSongList()" class="editor-btn gold">
+          Seed Full Old Song List
+        </button>
+      </div>
     </section>
 
-    <section class="editor-card">
+    <section class="editor-panel">
       <h2>Add Section</h2>
 
-      <input id="sectionTitleInput" placeholder="Section title e.g. 90s Rock Songs">
+      <label>Section Title</label>
+      <input id="sectionTitleInput" placeholder="Example: 90s Rock Songs" />
 
       <label class="checkbox-row">
-        <input type="checkbox" id="sectionOpenInput" checked>
+        <input id="sectionOpenInput" type="checkbox" checked />
         Open by default
       </label>
 
-      <button onclick="addSection()" class="admin-btn">
-        Add Section
-      </button>
+      <button onclick="addSection()" class="editor-btn red">Add Section</button>
     </section>
 
-    <section class="editor-card">
+    <section class="editor-panel">
       <h2>Add Song</h2>
 
-      <select id="songSectionSelect"></select>
+      <label>Song Title</label>
+      <input id="songTitleInput" placeholder="Song title" />
 
-      <input id="songTitleInput" placeholder="Song title">
-      <input id="songArtistInput" placeholder="Artist">
+      <label>Artist</label>
+      <input id="songArtistInput" placeholder="Artist" />
 
-      <button onclick="addSong()" class="admin-btn">
-        Add Song
-      </button>
+      <label>Section</label>
+      <select id="songSectionSelect">
+        <option value="main">No Section / Main Songs</option>
+      </select>
+
+      <button onclick="addSong()" class="editor-btn red">Add Song</button>
     </section>
 
-    <section class="editor-card">
-      <h2>Sections & Songs</h2>
+    <section class="editor-panel">
+      <h2>Current Public List</h2>
       <div id="editorSongList"></div>
     </section>
-
   </main>
 
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -79,8 +82,5 @@
   </script>
 
   <script src="../js/songlist.js"></script>
-  <script>
-    initEditor();
-  </script>
 </body>
 </html>
