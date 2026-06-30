@@ -1,615 +1,632 @@
-const SYSTEM_MAIN_LIST_ID = "venuemainpubliclist";
+const MAIN_LIST_ID = "venue-main-public-song-list";
+const LISTS_COLLECTION = "songlists";
+const SECTIONS_COLLECTION = "songlistSections";
 
-let allLyricsSongs = [];
-let songLists = [];
-let currentListId = SYSTEM_MAIN_LIST_ID;
-let currentList = null;
-let currentSections = [];
-let selectedSectionId = null;
-let publicSearch = "";
+let editorSections = [];
 
-function slugify(text) {
-  return String(text || "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "")
-    .trim();
+function normaliseText(str) {
+  return String(str || "")
+    .trim()
+    .replace(/\s+/g, " ");
 }
 
-function cleanTitle(title) {
-  return String(title || "").trim();
+function makeSong(title = "", artist = "") {
+  return {
+    title: normaliseText(title),
+    artist: normaliseText(artist)
+  };
 }
 
-function sortSongsAZ(songs) {
-  return [...songs].sort((a, b) => {
-    const aa = cleanTitle(a.sortTitle || a.title);
-    const bb = cleanTitle(b.sortTitle || b.title);
-    return aa.localeCompare(bb, undefined, { sensitivity: "base" });
-  });
+function sortSongs(songs) {
+  return [...songs].sort((a, b) =>
+    String(a.title || "").localeCompare(String(b.title || ""), undefined, {
+      sensitivity: "base"
+    })
+  );
 }
 
-function songBelongsToList(song, listId) {
-  if (Array.isArray(song.songLists)) return song.songLists.includes(listId);
-  if (song.publicList === listId) return true;
-  if (song.visibility === "public" && listId === SYSTEM_MAIN_LIST_ID) return true;
-  return false;
+function isFeaturedSection(section) {
+  return section.type === "featured";
 }
 
-function songBadge(song, listId) {
-  if (song.visibility === "private" || !songBelongsToList(song, listId)) {
-    return `<span class="song-badge private">PRIVATE</span>`;
+async function ensureMainList() {
+  const ref = db.collection(LISTS_COLLECTION).doc(MAIN_LIST_ID);
+  const doc = await ref.get();
+
+  if (!doc.exists) {
+    await ref.set({
+      name: "Venue Main Public Song List",
+      slug: MAIN_LIST_ID,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
   }
 
-  if (listId === SYSTEM_MAIN_LIST_ID) {
-    return `<span class="song-badge public">PUBLIC</span>`;
-  }
-
-  return `<span class="song-badge list">LIST</span>`;
+  return ref;
 }
 
-/* PUBLIC PAGE */
-
-window.addEventListener("DOMContentLoaded", () => {
-  if (document.getElementById("songlistContent")) {
-    initPublicSongList();
-  }
-});
+/* ========================= PUBLIC PAGE ========================= */
 
 async function initPublicSongList() {
-  const params = new URLSearchParams(window.location.search);
-  currentListId = params.get("list") || await getDefaultListId();
+  await ensureMainList();
 
-  document.getElementById("publicSongSearch").addEventListener("input", e => {
-    publicSearch = e.target.value.toLowerCase().trim();
-    renderPublicSongList();
-  });
+  db.collection(SECTIONS_COLLECTION)
+    .where("listId", "==", MAIN_LIST_ID)
+    .orderBy("order", "asc")
+    .onSnapshot(snapshot => {
+      const sections = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
 
-  await loadPublicData();
-  renderPublicSongList();
+      renderPublicSongList(sections);
+    }, error => {
+      console.error(error);
+      document.getElementById("publicListContent").innerHTML =
+        `<p class="loading-message">Could not load song list.</p>`;
+    });
 }
 
-async function getDefaultListId() {
-  const snap = await db.collection("songlists")
-    .where("defaultList", "==", true)
-    .limit(1)
-    .get();
+function renderPublicSongList(sections) {
+  const content = document.getElementById("publicListContent");
 
-  if (!snap.empty) return snap.docs[0].id;
-  return SYSTEM_MAIN_LIST_ID;
-}
+  const featured = sections.filter(s => s.type === "featured");
+  const songSections = sections.filter(s => s.type !== "featured");
 
-async function loadPublicData() {
-  const listDoc = await db.collection("songlists").doc(currentListId).get();
-
-  if (!listDoc.exists) {
-    currentListId = SYSTEM_MAIN_LIST_ID;
-    currentList = {
-      name: "Venue Main Public Song List",
-      isSystem: true,
-      defaultList: true
-    };
-  } else {
-    currentList = { id: listDoc.id, ...listDoc.data() };
-  }
-
-  const sectionSnap = await db.collection("songlistSections")
-    .where("listId", "==", currentListId)
-    .get();
-
-  currentSections = sectionSnap.docs
-    .map(doc => ({ id: doc.id, ...doc.data() }))
-    .sort((a, b) => (a.order || 0) - (b.order || 0));
-
-  const lyricsSnap = await db.collection("lyrics").get();
-  allLyricsSongs = lyricsSnap.docs.map(doc => ({
-    firebaseId: doc.id,
-    id: doc.id,
-    ...doc.data()
-  }));
-}
-
-function renderPublicSongList() {
-  document.getElementById("publicListTitle").innerText =
-    currentList?.name || "Live Karaoke Song List";
-
-  const container = document.getElementById("songlistContent");
-  container.innerHTML = "";
-
-  const visibleSongs = allLyricsSongs.filter(song => {
-    if (!songBelongsToList(song, currentListId)) return false;
-
-    const q = `${song.title || ""} ${song.artist || ""} ${song.publicNote || ""}`.toLowerCase();
-
-    return !publicSearch || q.includes(publicSearch);
-  });
-
-  document.getElementById("songCount").innerText =
-    `${visibleSongs.length} songs available`;
-
-  renderAlphaNav(visibleSongs);
-
-  currentSections.forEach(section => {
-    container.appendChild(renderPublicSection(section, visibleSongs));
-  });
-}
-
-function renderAlphaNav(songs) {
-  const nav = document.getElementById("alphaNav");
-  const letters = [...new Set(sortSongsAZ(songs).map(s => {
-    return cleanTitle(s.sortTitle || s.title).charAt(0).toUpperCase();
-  }))].filter(Boolean);
-
-  nav.innerHTML = letters.map(letter =>
-    `<button onclick="scrollToLetter('${letter}')">${letter}</button>`
-  ).join("");
-}
-
-function scrollToLetter(letter) {
-  const el = document.getElementById(`letter-${letter}`);
-  if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-}
-
-function renderPublicSection(section, visibleSongs) {
-  const wrap = document.createElement("section");
-  wrap.className = "song-section";
-
-  const box = document.createElement("div");
-  box.className = "song-section-box";
-
-  const isClosed = section.collapsed === true;
-  const title = document.createElement("h2");
-  title.className = "collapsible-title";
-  title.innerHTML = `${section.title || "Section"} <span>${isClosed ? "▼ (Click to View)" : "▲ (Click to Hide)"}</span>`;
-
-  const content = document.createElement("div");
-  content.className = isClosed ? "section-inner collapsed" : "section-inner";
-
-  title.onclick = () => {
-    content.classList.toggle("collapsed");
-    const closed = content.classList.contains("collapsed");
-    title.innerHTML = `${section.title || "Section"} <span>${closed ? "▼ (Click to View)" : "▲ (Click to Hide)"}</span>`;
-  };
-
-  if (section.type === "alphabetical") {
-    content.innerHTML = renderAlphabeticalSongs(visibleSongs);
-  } else if (section.type === "featured" || section.type === "custom") {
-    const ids = section.songIds || [];
-    const songs = ids.map(id => allLyricsSongs.find(s => s.firebaseId === id || s.id === id)).filter(Boolean);
-    content.innerHTML = renderSimpleSongList(sortSongsAZ(songs));
-  } else if (section.type === "cta") {
-    content.innerHTML = renderCTA(section);
-  } else if (section.type === "ad") {
-    content.innerHTML = renderAd(section);
-  } else if (section.type === "html") {
-    content.innerHTML = section.content || "";
-  } else {
-    content.innerHTML = `<div class="text-block">${escapeHTML(section.content || "")}</div>`;
-  }
-
-  box.appendChild(title);
-  box.appendChild(content);
-  wrap.appendChild(box);
-
-  return wrap;
-}
-
-function renderAlphabeticalSongs(songs) {
-  const sorted = sortSongsAZ(songs);
   let html = "";
-  let currentLetter = "";
-  let count = 1;
 
-  sorted.forEach(song => {
-    const letter = cleanTitle(song.sortTitle || song.title).charAt(0).toUpperCase() || "#";
+  if (featured.length) {
+    html += `<section class="featured"><div class="featured-grid">`;
 
-    if (letter !== currentLetter) {
-      currentLetter = letter;
-      html += `<h3 id="letter-${letter}" class="letter-heading">${letter}</h3><ol start="${count}">`;
-    }
+    featured.forEach(section => {
+      const isClosed = section.collapsed === true;
 
-    html += renderSongLI(song);
-    count++;
+      html += `
+        <div class="featured-box">
+          <h2 class="collapsible-title" onclick="togglePublicSection(this)">
+            ${escapeHTML(section.title || "Featured")}
+            <span>${isClosed ? "▼ (Click to View)" : "▲ (Click to Hide)"}</span>
+          </h2>
 
-    const next = sorted[count - 1];
-    const nextLetter = next ? cleanTitle(next.sortTitle || next.title).charAt(0).toUpperCase() : null;
+          <ul class="collapsible-body ${isClosed ? "hidden-section" : ""}">
+            ${(section.songs || []).map(song => `
+              <li>
+                <strong>${escapeHTML(song.title)}</strong>
+                <span>${escapeHTML(song.artist)}</span>
+              </li>
+            `).join("")}
+          </ul>
+        </div>
+      `;
+    });
 
-    if (nextLetter !== currentLetter) html += `</ol>`;
+    html += `</div></section>`;
+  }
+
+  html += `
+    <section class="song-list-title">
+      <h1>★ SONG LIST ★</h1>
+    </section>
+  `;
+
+  let songNumber = 1;
+
+  songSections.forEach(section => {
+    const songs = section.songs || [];
+    const isClosed = section.collapsed === true;
+
+    html += `
+      <section class="song-section">
+        <div class="song-section-grid">
+          <div class="song-section-box">
+            <h2 class="collapsible-title" onclick="togglePublicSection(this)">
+              ${escapeHTML(section.title || "SONGS")}
+              <span>${isClosed ? "▼ (Click to View)" : "▲ (Click to Hide)"}</span>
+            </h2>
+
+            <ol start="${songNumber}" class="collapsible-body ${isClosed ? "hidden-section" : ""}">
+              ${songs.map(song => `
+                <li>
+                  <div class="song-info">
+                    <span>${escapeHTML(song.title)}</span>
+                    <em>${escapeHTML(song.artist)}</em>
+                  </div>
+                </li>
+              `).join("")}
+            </ol>
+          </div>
+        </div>
+      </section>
+    `;
+
+    songNumber += songs.length;
   });
 
-  return html;
+  content.innerHTML = html;
 }
 
-function renderSimpleSongList(songs) {
-  return `<ol>${songs.map(renderSongLI).join("")}</ol>`;
+function togglePublicSection(titleEl) {
+  const body = titleEl.parentElement.querySelector(".collapsible-body");
+  const label = titleEl.querySelector("span");
+
+  if (!body) return;
+
+  const isHidden = body.classList.toggle("hidden-section");
+  label.innerText = isHidden ? "▼ (Click to View)" : "▲ (Click to Hide)";
 }
 
-function renderSongLI(song) {
-  const note = song.publicNote ? `<b class="public-note">${escapeHTML(song.publicNote)}</b>` : "";
-
-  return `
-    <li>
-      <div class="song-info">
-        <span>${escapeHTML(song.title || "Untitled")} ${note}</span>
-        <em>${escapeHTML(song.artist || "Unknown Artist")}</em>
-      </div>
-    </li>
-  `;
-}
-
-function renderCTA(section) {
-  const btn = section.buttonText && section.buttonUrl
-    ? `<a class="cta-btn" href="${escapeAttr(section.buttonUrl)}">${escapeHTML(section.buttonText)}</a>`
-    : "";
-
-  return `
-    <div class="cta-box">
-      <p>${escapeHTML(section.content || "")}</p>
-      ${btn}
-    </div>
-  `;
-}
-
-function renderAd(section) {
-  const btn = section.buttonText && section.buttonUrl
-    ? `<a class="cta-btn" href="${escapeAttr(section.buttonUrl)}">${escapeHTML(section.buttonText)}</a>`
-    : "";
-
-  return `
-    <div class="ad-box">
-      <p>${escapeHTML(section.content || "")}</p>
-      ${btn}
-    </div>
-  `;
-}
-
-/* EDITOR */
+/* ========================= EDITOR ========================= */
 
 async function initEditor() {
+  await ensureMainList();
+
+  document.getElementById("seedOldListBtn")
+    .addEventListener("click", seedFromOldPublicSongList);
+
+  document.getElementById("saveEditorBtn")
+    .addEventListener("click", saveEditorSongList);
+
+  document.getElementById("addFeaturedSectionBtn")
+    .addEventListener("click", () => {
+      editorSections.push({
+        type: "featured",
+        title: "★ NEW FEATURED SECTION",
+        collapsed: false,
+        songs: []
+      });
+      renderEditor();
+    });
+
+  document.getElementById("addSongSectionBtn")
+    .addEventListener("click", () => {
+      editorSections.push({
+        type: "songs",
+        title: "NEW SECTION",
+        collapsed: false,
+        songs: []
+      });
+      renderEditor();
+    });
+
   await loadEditorData();
-  renderEditorLists();
 }
 
 async function loadEditorData() {
-  const listsSnap = await db.collection("songlists").get();
-  songLists = listsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  const listDoc = await db.collection(LISTS_COLLECTION).doc(MAIN_LIST_ID).get();
 
-  if (!songLists.some(l => l.id === SYSTEM_MAIN_LIST_ID)) {
-    await seedVenueMainList();
-    return;
+  if (listDoc.exists) {
+    document.getElementById("listNameInput").value =
+      listDoc.data().name || "Venue Main Public Song List";
   }
 
-  const lyricsSnap = await db.collection("lyrics").orderBy("title").get();
-  allLyricsSongs = lyricsSnap.docs.map(doc => ({
-    firebaseId: doc.id,
+  const snap = await db.collection(SECTIONS_COLLECTION)
+    .where("listId", "==", MAIN_LIST_ID)
+    .orderBy("order", "asc")
+    .get();
+
+  editorSections = snap.docs.map(doc => ({
     id: doc.id,
     ...doc.data()
   }));
+
+  renderEditor();
 }
 
-function renderEditorLists() {
-  const select = document.getElementById("listSelect");
-  select.innerHTML = "";
+function renderEditor() {
+  const wrap = document.getElementById("editorSections");
 
-  songLists
-    .sort((a, b) => (a.order || 0) - (b.order || 0))
-    .forEach(list => {
-      const opt = document.createElement("option");
-      opt.value = list.id;
-      opt.textContent = list.name || list.id;
-      select.appendChild(opt);
-    });
+  wrap.innerHTML = editorSections.map((section, sectionIndex) => `
+    <div class="editor-section-card">
+      <div class="editor-section-head">
+        <input
+          value="${escapeAttr(section.title || "")}"
+          onchange="editorSections[${sectionIndex}].title = this.value"
+        >
 
-  select.value = currentListId;
-  loadSelectedList();
+        <select onchange="editorSections[${sectionIndex}].type = this.value">
+          <option value="featured" ${section.type === "featured" ? "selected" : ""}>Featured</option>
+          <option value="songs" ${section.type !== "featured" ? "selected" : ""}>Song Section</option>
+        </select>
+
+        <label>
+          <input
+            type="checkbox"
+            ${section.collapsed ? "checked" : ""}
+            onchange="editorSections[${sectionIndex}].collapsed = this.checked"
+          >
+          Closed by default
+        </label>
+
+        <button onclick="moveEditorSection(${sectionIndex}, -1)">▲</button>
+        <button onclick="moveEditorSection(${sectionIndex}, 1)">▼</button>
+        <button onclick="deleteEditorSection(${sectionIndex})">Delete</button>
+      </div>
+
+      <div class="editor-song-rows">
+        ${(section.songs || []).map((song, songIndex) => `
+          <div class="editor-song-row">
+            <input
+              placeholder="Song title"
+              value="${escapeAttr(song.title || "")}"
+              onchange="editorSections[${sectionIndex}].songs[${songIndex}].title = this.value"
+            >
+
+            <input
+              placeholder="Artist"
+              value="${escapeAttr(song.artist || "")}"
+              onchange="editorSections[${sectionIndex}].songs[${songIndex}].artist = this.value"
+            >
+
+            <button onclick="moveEditorSong(${sectionIndex}, ${songIndex}, -1)">▲</button>
+            <button onclick="moveEditorSong(${sectionIndex}, ${songIndex}, 1)">▼</button>
+            <button onclick="deleteEditorSong(${sectionIndex}, ${songIndex})">✕</button>
+          </div>
+        `).join("")}
+      </div>
+
+      <button class="editor-btn small" onclick="addEditorSong(${sectionIndex})">+ Add Song</button>
+    </div>
+  `).join("");
 }
 
-async function loadSelectedList() {
-  currentListId = document.getElementById("listSelect").value || SYSTEM_MAIN_LIST_ID;
-  currentList = songLists.find(l => l.id === currentListId);
-
-  document.getElementById("listNameInput").value = currentList?.name || "";
-  document.getElementById("defaultListCheck").checked = currentList?.defaultList === true;
-
-  const sectionSnap = await db.collection("songlistSections")
-    .where("listId", "==", currentListId)
-    .get();
-
-  currentSections = sectionSnap.docs
-    .map(doc => ({ id: doc.id, ...doc.data() }))
-    .sort((a, b) => (a.order || 0) - (b.order || 0));
-
-  renderSectionEditorList();
-}
-
-function renderSectionEditorList() {
-  const box = document.getElementById("sectionEditorList");
-  box.innerHTML = "";
-
-  currentSections.forEach((section, index) => {
-    const row = document.createElement("div");
-    row.className = "editor-section-row";
-    row.innerHTML = `
-      <strong>${escapeHTML(section.title)}</strong>
-      <span>${section.type}</span>
-      <small>${section.collapsed ? "Starts Closed" : "Starts Open"}</small>
-      <button onclick="selectSection('${section.id}')">Edit</button>
-      <button onclick="moveSectionOrder('${section.id}', -1)">▲</button>
-      <button onclick="moveSectionOrder('${section.id}', 1)">▼</button>
-      <button onclick="deleteSection('${section.id}')">Delete</button>
-    `;
-    box.appendChild(row);
-  });
-}
-
-async function createSongList() {
-  const name = document.getElementById("newListName").value.trim();
-  if (!name) return alert("Enter a list name.");
-
-  const id = slugify(name);
-
-  await db.collection("songlists").doc(id).set({
-    name,
-    isSystem: false,
-    defaultList: false,
-    order: Date.now(),
-    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-  });
-
-  document.getElementById("newListName").value = "";
-  currentListId = id;
-  await loadEditorData();
-  renderEditorLists();
-}
-
-async function deleteCurrentList() {
-  if (currentListId === SYSTEM_MAIN_LIST_ID) {
-    alert("Venue Main Public List cannot be deleted.");
-    return;
+function addEditorSong(sectionIndex) {
+  if (!Array.isArray(editorSections[sectionIndex].songs)) {
+    editorSections[sectionIndex].songs = [];
   }
 
-  if (!confirm("Delete this list and its sections?")) return;
+  editorSections[sectionIndex].songs.push(makeSong());
+  renderEditor();
+}
 
-  const sectionSnap = await db.collection("songlistSections")
-    .where("listId", "==", currentListId)
+function deleteEditorSong(sectionIndex, songIndex) {
+  editorSections[sectionIndex].songs.splice(songIndex, 1);
+  renderEditor();
+}
+
+function moveEditorSong(sectionIndex, songIndex, direction) {
+  const songs = editorSections[sectionIndex].songs;
+  const newIndex = songIndex + direction;
+
+  if (newIndex < 0 || newIndex >= songs.length) return;
+
+  const temp = songs[songIndex];
+  songs[songIndex] = songs[newIndex];
+  songs[newIndex] = temp;
+
+  renderEditor();
+}
+
+function moveEditorSection(index, direction) {
+  const newIndex = index + direction;
+
+  if (newIndex < 0 || newIndex >= editorSections.length) return;
+
+  const temp = editorSections[index];
+  editorSections[index] = editorSections[newIndex];
+  editorSections[newIndex] = temp;
+
+  renderEditor();
+}
+
+function deleteEditorSection(index) {
+  if (!confirm("Delete this section?")) return;
+
+  editorSections.splice(index, 1);
+  renderEditor();
+}
+
+async function saveEditorSongList() {
+  const autoSort = document.getElementById("autoSortInput").checked;
+  const listName = document.getElementById("listNameInput").value.trim() ||
+    "Venue Main Public Song List";
+
+  await db.collection(LISTS_COLLECTION).doc(MAIN_LIST_ID).set({
+    name: listName,
+    slug: MAIN_LIST_ID,
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  }, { merge: true });
+
+  const oldSnap = await db.collection(SECTIONS_COLLECTION)
+    .where("listId", "==", MAIN_LIST_ID)
     .get();
 
   const batch = db.batch();
 
-  sectionSnap.docs.forEach(doc => batch.delete(doc.ref));
-  batch.delete(db.collection("songlists").doc(currentListId));
+  oldSnap.forEach(doc => {
+    batch.delete(doc.ref);
+  });
+
+  editorSections.forEach((section, index) => {
+    const ref = db.collection(SECTIONS_COLLECTION).doc();
+
+    const songs = autoSort && section.type !== "featured"
+      ? sortSongs(section.songs || [])
+      : (section.songs || []);
+
+    batch.set(ref, {
+      listId: MAIN_LIST_ID,
+      title: section.title || "Untitled Section",
+      type: section.type || "songs",
+      collapsed: section.collapsed === true,
+      songs,
+      order: index,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  });
 
   await batch.commit();
 
-  currentListId = SYSTEM_MAIN_LIST_ID;
+  alert("Public song list saved.");
   await loadEditorData();
-  renderEditorLists();
 }
 
-async function saveListSettings() {
-  const name = document.getElementById("listNameInput").value.trim();
-  const defaultList = document.getElementById("defaultListCheck").checked;
+/* ========================= SEED OLD LIST ========================= */
 
-  if (!name) return alert("List name required.");
-
-  if (defaultList) {
-    const batch = db.batch();
-    const snap = await db.collection("songlists").get();
-
-    snap.docs.forEach(doc => {
-      batch.update(doc.ref, { defaultList: doc.id === currentListId });
-    });
-
-    await batch.commit();
+async function seedFromOldPublicSongList() {
+  if (!confirm("Replace the Venue Main Public Song List with the old public song list data?")) {
+    return;
   }
 
-  await db.collection("songlists").doc(currentListId).set({
-    name,
-    defaultList,
-    isSystem: currentListId === SYSTEM_MAIN_LIST_ID
-  }, { merge: true });
+  editorSections = JSON.parse(JSON.stringify(OLD_PUBLIC_SONG_LIST_SECTIONS));
+  await saveEditorSongList();
 
-  await loadEditorData();
-  renderEditorLists();
+  alert("Seed complete. All old public song list songs were imported.");
 }
 
-async function createSection() {
-  const title = document.getElementById("newSectionTitle").value.trim();
-  const type = document.getElementById("newSectionType").value;
-  const collapsed = document.getElementById("newSectionCollapsed").checked;
-
-  if (!title) return alert("Section title required.");
-
-  await db.collection("songlistSections").add({
-    listId: currentListId,
-    title,
-    type,
-    collapsed,
-    order: Date.now(),
-    songIds: [],
-    content: "",
-    buttonText: "",
-    buttonUrl: "",
-    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-  });
-
-  document.getElementById("newSectionTitle").value = "";
-  await loadSelectedList();
-}
-
-async function selectSection(sectionId) {
-  selectedSectionId = sectionId;
-
-  const section = currentSections.find(s => s.id === sectionId);
-  if (!section) return;
-
-  document.getElementById("selectedSectionInfo").innerHTML = `
-    <h3>${escapeHTML(section.title)}</h3>
-    <p>Type: ${escapeHTML(section.type)}</p>
-  `;
-
-  const songArea = document.getElementById("songPickerArea");
-  const contentArea = document.getElementById("customContentArea");
-
-  if (["featured", "custom"].includes(section.type)) {
-    songArea.classList.remove("hidden");
-    contentArea.classList.add("hidden");
-    renderSongPicker();
-  } else if (["cta", "ad", "text", "html"].includes(section.type)) {
-    songArea.classList.add("hidden");
-    contentArea.classList.remove("hidden");
-
-    document.getElementById("sectionContentInput").value = section.content || "";
-    document.getElementById("sectionButtonText").value = section.buttonText || "";
-    document.getElementById("sectionButtonUrl").value = section.buttonUrl || "";
-  } else {
-    songArea.classList.add("hidden");
-    contentArea.classList.add("hidden");
+const OLD_PUBLIC_SONG_LIST_SECTIONS = [
+  {
+    type: "featured",
+    title: "★ MOST POPULAR SONGS",
+    collapsed: false,
+    songs: [
+      makeSong("Mr. Brightside", "The Killers"),
+      makeSong("Paint It Black", "The Rolling Stones"),
+      makeSong("Wonderwall", "Oasis"),
+      makeSong("Pretty Woman", "Roy Orbison"),
+      makeSong("Zombie", "The Cranberries"),
+      makeSong("Valerie", "Amy Winehouse"),
+      makeSong("Creep", "Radiohead"),
+      makeSong("What’s Up", "4 Non Blondes"),
+      makeSong("I Will Survive", "Gloria Gaynor"),
+      makeSong("Hotel California", "The Eagles")
+    ]
+  },
+  {
+    type: "featured",
+    title: "🔥 PARTY ANTHEMS",
+    collapsed: false,
+    songs: [
+      makeSong("Sweet Home Alabama", "Lynyrd Skynyrd"),
+      makeSong("Sex on Fire", "Kings of Leon"),
+      makeSong("Seven Nation Army", "The White Stripes"),
+      makeSong("Summer of ’69", "Bryan Adams"),
+      makeSong("Born to Be Wild", "Steppenwolf")
+    ]
+  },
+  {
+    type: "featured",
+    title: "♥ EASY TO SING",
+    collapsed: false,
+    songs: [
+      makeSong("Stand by Me", "Ben E. King"),
+      makeSong("Three Little Birds", "Bob Marley"),
+      makeSong("Let It Be", "The Beatles"),
+      makeSong("Chasing Cars", "Snow Patrol"),
+      makeSong("Ring of Fire", "Johnny Cash")
+    ]
+  },
+  {
+    type: "songs",
+    title: "A – B",
+    collapsed: false,
+    songs: [
+      makeSong("Ain’t No Sunshine", "Bill Withers"),
+      makeSong("All Along the Watchtower", "Jimi Hendrix"),
+      makeSong("All Summer Long", "Kid Rock"),
+      makeSong("All the Small Things", "Blink-182"),
+      makeSong("Angels", "Robbie Williams"),
+      makeSong("Angie", "The Rolling Stones"),
+      makeSong("Another Brick in the Wall (part 2)", "Pink Floyd"),
+      makeSong("Another One Bites the Dust", "Queen"),
+      makeSong("Bad Moon Rising", "CCR"),
+      makeSong("Bad Romance", "Lady Gaga"),
+      makeSong("Basket Case", "Green Day"),
+      makeSong("Beds Are Burning", "Midnight Oil"),
+      makeSong("Behind Blue Eyes", "The Who"),
+      makeSong("Bella Ciao", "Misc. – unknown"),
+      makeSong("Big Me", "Foo Fighters"),
+      makeSong("Bittersweet Symphony", "The Verve"),
+      makeSong("Bohemian Like You", "The Dandy Warhols"),
+      makeSong("Born to Be Wild", "Steppenwolf"),
+      makeSong("Boulevard of Broken Dreams", "Green Day"),
+      makeSong("Breakfast at Tiffany’s", "Deep Blue Something")
+    ]
+  },
+  {
+    type: "songs",
+    title: "C – D",
+    collapsed: false,
+    songs: [
+      makeSong("Californication", "Red Hot Chili Peppers"),
+      makeSong("Call Me the Breeze", "Lynyrd Skynyrd"),
+      makeSong("Can’t Get Enough", "Bad Company"),
+      makeSong("Can’t Take My Eyes Off You", "Frankie Valli / Muse"),
+      makeSong("Changes", "Black Sabbath"),
+      makeSong("Chasing Cars", "Snow Patrol"),
+      makeSong("Clocks", "Coldplay"),
+      makeSong("Cocaine", "Eric Clapton"),
+      makeSong("Come as You Are", "Nirvana"),
+      makeSong("Come Together", "The Beatles"),
+      makeSong("Could You Be Loved", "Bob Marley"),
+      makeSong("Crazy Little Thing Called Love", "Queen"),
+      makeSong("Creep", "Radiohead"),
+      makeSong("Dakota", "Stereophonics"),
+      makeSong("Dani California", "Red Hot Chili Peppers"),
+      makeSong("Do I Wanna Know", "Arctic Monkeys"),
+      makeSong("Don’t Look Back in Anger", "Oasis"),
+      makeSong("Don’t Stop Me Now", "Queen"),
+      makeSong("Down Under", "Men At Work"),
+      makeSong("Dreams", "Fleetwood Mac"),
+      makeSong("Drive", "Incubus"),
+      makeSong("Drops of Jupiter", "Train")
+    ]
+  },
+  {
+    type: "songs",
+    title: "E – H",
+    collapsed: false,
+    songs: [
+      makeSong("Every Breath You Take", "The Police"),
+      makeSong("Every Rose Has Its Thorn", "Poison"),
+      makeSong("Fat Bottomed Girls", "Queen"),
+      makeSong("Feel Like Making Love", "Bad Company"),
+      makeSong("Flowers", "Miley Cyrus"),
+      makeSong("Free Bird", "Lynyrd Skynyrd"),
+      makeSong("Friday I’m in Love", "The Cure"),
+      makeSong("Gimme All Your Lovin’", "ZZ Top"),
+      makeSong("Go with the Flow", "Queens Of The Stone Age"),
+      makeSong("Good Riddance", "Green Day"),
+      makeSong("Hard to Handle", "The Black Crowes"),
+      makeSong("Have You Ever Seen the Rain", "CCR"),
+      makeSong("Here Without You", "Three Doors Down"),
+      makeSong("Hey Jude", "The Beatles"),
+      makeSong("Highway to Hell", "AC/DC"),
+      makeSong("Home Sweet Home", "Mötley Crüe"),
+      makeSong("Hotel California", "The Eagles"),
+      makeSong("House of the Rising Sun", "The Animals"),
+      makeSong("How You Remind Me", "Nickelback")
+    ]
+  },
+  {
+    type: "songs",
+    title: "I – L",
+    collapsed: false,
+    songs: [
+      makeSong("I See Fire", "Ed Sheeran"),
+      makeSong("I Want to Break Free", "Queen"),
+      makeSong("I Will Survive", "Gloria Gaynor"),
+      makeSong("Imagine", "John Lennon"),
+      makeSong("In the Summertime", "Mungo Jerry"),
+      makeSong("Ironic", "Alanis Morissette"),
+      makeSong("It’s My Life", "Bon Jovi"),
+      makeSong("Johnny B Goode", "Chuck Berry"),
+      makeSong("Jolene", "Dolly Parton"),
+      makeSong("Knockin’ on Heaven’s Door", "Dylan / Guns N’ Roses"),
+      makeSong("Kryptonite", "Three Doors Down"),
+      makeSong("La Bamba", "Ritchie Valens"),
+      makeSong("La Grange", "ZZ Top"),
+      makeSong("Learn to Fly", "Foo Fighters"),
+      makeSong("Legs", "ZZ Top"),
+      makeSong("Let It Be", "The Beatles"),
+      makeSong("Let Me Entertain You", "Robbie Williams"),
+      makeSong("Lithium", "Nirvana"),
+      makeSong("Live Forever", "Oasis"),
+      makeSong("Livin’ on a Prayer", "Bon Jovi"),
+      makeSong("Losing My Religion", "R.E.M."),
+      makeSong("Love Me Do", "The Beatles")
+    ]
+  },
+  {
+    type: "songs",
+    title: "M – P",
+    collapsed: false,
+    songs: [
+      makeSong("Man On the Moon", "R.E.M."),
+      makeSong("Mr Brightside", "The Killers"),
+      makeSong("Mustang Sally", "Wilson Pickett"),
+      makeSong("My Girl", "The Temptations"),
+      makeSong("Nobody’s Wife", "Anouk"),
+      makeSong("Old Town Road", "Lil Nas X & Billy R. Cyrus"),
+      makeSong("One", "U2"),
+      makeSong("Otherside", "Red Hot Chili Peppers"),
+      makeSong("Paint It Black", "The Rolling Stones"),
+      makeSong("Paranoid", "Black Sabbath"),
+      makeSong("Penny Arcade", "Roy Orbison"),
+      makeSong("People Are Strange", "The Doors"),
+      makeSong("Personal Jesus", "Depeche Mode"),
+      makeSong("Pretty Woman", "Roy Orbison"),
+      makeSong("Proud Mary", "CCR"),
+      makeSong("Psycho Killer", "Talking Heads"),
+      makeSong("Purple Rain", "Prince")
+    ]
+  },
+  {
+    type: "songs",
+    title: "R – S",
+    collapsed: false,
+    songs: [
+      makeSong("Rebel Rebel", "David Bowie"),
+      makeSong("Rebel Yell", "Billy Idol"),
+      makeSong("Red Red Wine", "UB40"),
+      makeSong("Ring of Fire", "Johnny Cash"),
+      makeSong("Roadhouse Blues", "The Doors"),
+      makeSong("Rockin’ in the Free World", "Neil Young"),
+      makeSong("Ruby", "Kaiser Chiefs"),
+      makeSong("Runaway Train", "Soul Asylum"),
+      makeSong("Satisfaction (I Can’t Get No)", "The Rolling Stones"),
+      makeSong("Save Tonight", "Eagle-Eye Cherry"),
+      makeSong("Scientist, The", "Coldplay"),
+      makeSong("Self Esteem", "The Offspring"),
+      makeSong("Seven Nation Army", "The White Stripes"),
+      makeSong("Sex on Fire", "Kings of Leon"),
+      makeSong("Sharp Dressed Man", "ZZ Top"),
+      makeSong("Should I Stay or Should I Go", "The Clash"),
+      makeSong("Simple Man", "Lynyrd Skynyrd"),
+      makeSong("Sing", "Travis"),
+      makeSong("Smells Like Teen Spirit", "Nirvana"),
+      makeSong("Smoke on the Water", "Deep Purple"),
+      makeSong("So Far Away", "Dire Straits"),
+      makeSong("Somebody Told Me", "The Killers"),
+      makeSong("Stand by Me", "Ben E. King"),
+      makeSong("Stand by Me", "Oasis"),
+      makeSong("Summer of ‘69", "Bryan Adams"),
+      makeSong("Sunshine of Your Love", "Cream"),
+      makeSong("Sweet Caroline", "Neil Diamond"),
+      makeSong("Sweet Child O’ Mine", "Guns N’ Roses"),
+      makeSong("Sweet Home Alabama", "Lynyrd Skynyrd")
+    ]
+  },
+  {
+    type: "songs",
+    title: "T – Z",
+    collapsed: false,
+    songs: [
+      makeSong("Tainted Love", "Soft Cell"),
+      makeSong("Take Me Home, Country Roads", "John Denver"),
+      makeSong("Teenage Dirtbag", "Wheatus"),
+      makeSong("The Chain", "Fleetwood Mac"),
+      makeSong("The Man Who Sold the World", "David Bowie / Nirvana"),
+      makeSong("These Boots Are Made for Walking", "Nancy Sinatra"),
+      makeSong("Three Little Birds", "Bob Marley"),
+      makeSong("Two out of Three Ain’t Bad", "Meatloaf"),
+      makeSong("Under Pressure", "Queen"),
+      makeSong("Under the Bridge", "Red Hot Chili Peppers"),
+      makeSong("Valerie", "The Zutons / Amy Winehouse"),
+      makeSong("What a Wonderful World", "Louis Armstrong"),
+      makeSong("What’s Up", "4 Non Blondes"),
+      makeSong("Where Is My Mind", "The Pixies"),
+      makeSong("Wherever You Will Go", "The Calling"),
+      makeSong("Whiskey in the Jar", "Thin Lizzy / Metallica"),
+      makeSong("White Wedding", "Billy Idol"),
+      makeSong("Whole Lotta Rosie", "AC/DC"),
+      makeSong("Wicked Game", "H.I.M. / Chris Isaak"),
+      makeSong("Wild Thing", "The Troggs"),
+      makeSong("Wind of Change", "Scorpions"),
+      makeSong("Wish You Were Here", "Pink Floyd"),
+      makeSong("With or Without You", "U2"),
+      makeSong("Wonderful Tonight", "Eric Clapton"),
+      makeSong("Wonderwall", "Oasis"),
+      makeSong("Word Up", "Cameo / Korn"),
+      makeSong("Xemx", "The Tramps"),
+      makeSong("Yellow", "Coldplay"),
+      makeSong("You Sexy Thing", "Hot Chocolate"),
+      makeSong("You Spin Me Round", "Dead or Alive"),
+      makeSong("Zombie", "The Cranberries")
+    ]
   }
-}
+];
 
-function renderSongPicker() {
-  const section = currentSections.find(s => s.id === selectedSectionId);
-  if (!section) return;
-
-  const q = document.getElementById("songPickerSearch").value.toLowerCase().trim();
-  const selected = section.songIds || [];
-
-  const results = sortSongsAZ(allLyricsSongs)
-    .filter(song => {
-      const hay = `${song.title || ""} ${song.artist || ""}`.toLowerCase();
-      return !q || hay.includes(q);
-    })
-    .slice(0, 250);
-
-  document.getElementById("songPickerResults").innerHTML = results.map(song => {
-    const checked = selected.includes(song.firebaseId) ? "checked" : "";
-    return `
-      <label class="picker-song">
-        <input type="checkbox" ${checked} onchange="toggleSectionSong('${song.firebaseId}', this.checked)">
-        <strong>${escapeHTML(song.title || "Untitled")}</strong>
-        <span>${escapeHTML(song.artist || "")}</span>
-        ${songBadge(song, currentListId)}
-      </label>
-    `;
-  }).join("");
-}
-
-async function toggleSectionSong(songId, checked) {
-  const section = currentSections.find(s => s.id === selectedSectionId);
-  if (!section) return;
-
-  let ids = section.songIds || [];
-
-  if (checked && !ids.includes(songId)) ids.push(songId);
-  if (!checked) ids = ids.filter(id => id !== songId);
-
-  await db.collection("songlistSections").doc(selectedSectionId).update({
-    songIds: ids
-  });
-
-  section.songIds = ids;
-
-  await toggleSongInList(songId, checked);
-}
-
-async function toggleSongInList(songId, checked) {
-  const ref = db.collection("lyrics").doc(songId);
-  const doc = await ref.get();
-  if (!doc.exists) return;
-
-  const song = doc.data();
-  let lists = Array.isArray(song.songLists) ? song.songLists : [];
-
-  if (checked && !lists.includes(currentListId)) lists.push(currentListId);
-  if (!checked) lists = lists.filter(id => id !== currentListId);
-
-  await ref.set({
-    songLists: lists,
-    visibility: lists.length ? "public" : "private"
-  }, { merge: true });
-}
-
-async function saveSectionContent() {
-  if (!selectedSectionId) return;
-
-  await db.collection("songlistSections").doc(selectedSectionId).update({
-    content: document.getElementById("sectionContentInput").value,
-    buttonText: document.getElementById("sectionButtonText").value,
-    buttonUrl: document.getElementById("sectionButtonUrl").value
-  });
-
-  alert("Section content saved.");
-  await loadSelectedList();
-}
-
-async function moveSectionOrder(sectionId, direction) {
-  const index = currentSections.findIndex(s => s.id === sectionId);
-  const otherIndex = index + direction;
-
-  if (index < 0 || otherIndex < 0 || otherIndex >= currentSections.length) return;
-
-  const a = currentSections[index];
-  const b = currentSections[otherIndex];
-
-  await db.collection("songlistSections").doc(a.id).update({ order: b.order || 0 });
-  await db.collection("songlistSections").doc(b.id).update({ order: a.order || 0 });
-
-  await loadSelectedList();
-}
-
-async function deleteSection(sectionId) {
-  if (!confirm("Delete this section?")) return;
-  await db.collection("songlistSections").doc(sectionId).delete();
-  await loadSelectedList();
-}
-
-async function seedVenueMainList() {
-  await db.collection("songlists").doc(SYSTEM_MAIN_LIST_ID).set({
-    name: "Venue Main Public Song List",
-    isSystem: true,
-    defaultList: true,
-    order: 0,
-    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-  }, { merge: true });
-
-  const existing = await db.collection("songlistSections")
-    .where("listId", "==", SYSTEM_MAIN_LIST_ID)
-    .get();
-
-  if (existing.empty) {
-    const seedSections = [
-      ["★ MOST POPULAR SONGS", "featured", false],
-      ["🔥 PARTY ANTHEMS", "featured", false],
-      ["♥ EASY TO SING", "featured", false],
-      ["★ FULL SONG LIST ★", "alphabetical", false],
-      ["THANK YOU", "cta", false]
-    ];
-
-    const batch = db.batch();
-
-    seedSections.forEach((s, i) => {
-      const ref = db.collection("songlistSections").doc();
-      batch.set(ref, {
-        listId: SYSTEM_MAIN_LIST_ID,
-        title: s[0],
-        type: s[1],
-        collapsed: s[2],
-        order: i + 1,
-        songIds: [],
-        content: s[1] === "cta" ? "YOU SING, I PLAY, EVERYONE HAS FUN!" : "",
-        buttonText: s[1] === "cta" ? "← BACK TO MAIN PAGE" : "",
-        buttonUrl: s[1] === "cta" ? "../index.html" : ""
-      });
-    });
-
-    await batch.commit();
-  }
-
-  alert("Venue Main Public List created/checked.");
-  await loadEditorData();
-  renderEditorLists();
-}
-
-/* UTILS */
+/* ========================= HELPERS ========================= */
 
 function escapeHTML(str) {
   return String(str || "")
@@ -619,140 +636,5 @@ function escapeHTML(str) {
 }
 
 function escapeAttr(str) {
-  return String(str || "")
-    .replace(/"/g, "&quot;");
-}
-
-async function seedFromOldPublicSongList() {
-  const url = "https://livekaraoke.github.io/online/snglst/songList.html";
-
-  const ok = confirm("Import songs from old public song list?");
-  if (!ok) return;
-
-  const res = await fetch(url);
-  const html = await res.text();
-
-  const doc = new DOMParser().parseFromString(html, "text/html");
-
-  await seedVenueMainList();
-
-  const listId = SYSTEM_MAIN_LIST_ID;
-
-  const lyricsSnap = await db.collection("lyrics").get();
-  const existingSongs = lyricsSnap.docs.map(d => ({
-    firebaseId: d.id,
-    ...d.data()
-  }));
-
-  function normalise(str) {
-    return String(str || "")
-      .toLowerCase()
-      .replace(/[^a-z0-9]/g, "");
-  }
-
-  function bestMatchSong(lineText) {
-    const cleanLine = normalise(lineText);
-
-    let best = null;
-
-    existingSongs.forEach(song => {
-      const titleKey = normalise(song.title);
-
-      if (!titleKey) return;
-
-      if (cleanLine.startsWith(titleKey)) {
-        if (!best || titleKey.length > normalise(best.title).length) {
-          best = song;
-        }
-      }
-    });
-
-    return best;
-  }
-
-  const sectionMap = {
-    "★ MOST POPULAR SONGS": [],
-    "PARTY ANTHEMS": [],
-    "♥ EASY TO SING": [],
-    "★ FULL SONG LIST ★": []
-  };
-
-  let currentSection = "";
-
-  [...doc.body.querySelectorAll("h1, h2, li")].forEach(el => {
-    const text = el.innerText.replace(/\s+/g, " ").trim();
-
-    if (!text) return;
-
-    if (el.tagName === "H1" && text.includes("SONG LIST")) {
-      currentSection = "★ FULL SONG LIST ★";
-      return;
-    }
-
-    if (el.tagName === "H2") {
-      if (text.includes("MOST POPULAR")) currentSection = "★ MOST POPULAR SONGS";
-      else if (text.includes("PARTY ANTHEMS")) currentSection = "PARTY ANTHEMS";
-      else if (text.includes("EASY TO SING")) currentSection = "♥ EASY TO SING";
-      return;
-    }
-
-    if (el.tagName !== "LI" || !currentSection) return;
-
-    const lineText = text.replace(/^\d+\.\s*/, "").trim();
-    const matchedSong = bestMatchSong(lineText);
-
-    if (matchedSong) {
-      sectionMap[currentSection].push(matchedSong.firebaseId);
-    }
-  });
-
-  const batch = db.batch();
-
-  for (const ids of Object.values(sectionMap)) {
-    ids.forEach(songId => {
-      const song = existingSongs.find(s => s.firebaseId === songId);
-      if (!song) return;
-
-      const lists = Array.isArray(song.songLists) ? song.songLists : [];
-
-      if (!lists.includes(listId)) lists.push(listId);
-
-      batch.set(db.collection("lyrics").doc(songId), {
-        songLists: lists,
-        visibility: "public"
-      }, { merge: true });
-    });
-  }
-
-  await batch.commit();
-
-  const sectionSnap = await db.collection("songlistSections")
-    .where("listId", "==", listId)
-    .get();
-
-  const sections = sectionSnap.docs.map(d => ({
-    id: d.id,
-    ...d.data()
-  }));
-
-  for (const [title, ids] of Object.entries(sectionMap)) {
-    const section = sections.find(s =>
-      String(s.title || "").toLowerCase().includes(
-        title.replace(/[★♥]/g, "").trim().toLowerCase()
-      )
-    );
-
-    if (!section) continue;
-
-    if (title === "★ FULL SONG LIST ★") continue;
-
-    await db.collection("songlistSections").doc(section.id).set({
-      songIds: ids,
-      collapsed: false
-    }, { merge: true });
-  }
-
-  alert("Venue Main Public Song List seeded from old song list.");
-  await loadEditorData();
-  await loadSelectedList();
+  return escapeHTML(str).replace(/"/g, "&quot;");
 }
