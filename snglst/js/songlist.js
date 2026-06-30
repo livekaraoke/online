@@ -622,3 +622,137 @@ function escapeAttr(str) {
   return String(str || "")
     .replace(/"/g, "&quot;");
 }
+
+async function seedFromOldPublicSongList() {
+  const url = "https://livekaraoke.github.io/online/snglst/songList.html";
+
+  const ok = confirm("Import songs from old public song list?");
+  if (!ok) return;
+
+  const res = await fetch(url);
+  const html = await res.text();
+
+  const doc = new DOMParser().parseFromString(html, "text/html");
+
+  await seedVenueMainList();
+
+  const listId = SYSTEM_MAIN_LIST_ID;
+
+  const lyricsSnap = await db.collection("lyrics").get();
+  const existingSongs = lyricsSnap.docs.map(d => ({
+    firebaseId: d.id,
+    ...d.data()
+  }));
+
+  function normalise(str) {
+    return String(str || "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, "");
+  }
+
+  function bestMatchSong(lineText) {
+    const cleanLine = normalise(lineText);
+
+    let best = null;
+
+    existingSongs.forEach(song => {
+      const titleKey = normalise(song.title);
+
+      if (!titleKey) return;
+
+      if (cleanLine.startsWith(titleKey)) {
+        if (!best || titleKey.length > normalise(best.title).length) {
+          best = song;
+        }
+      }
+    });
+
+    return best;
+  }
+
+  const sectionMap = {
+    "★ MOST POPULAR SONGS": [],
+    "PARTY ANTHEMS": [],
+    "♥ EASY TO SING": [],
+    "★ FULL SONG LIST ★": []
+  };
+
+  let currentSection = "";
+
+  [...doc.body.querySelectorAll("h1, h2, li")].forEach(el => {
+    const text = el.innerText.replace(/\s+/g, " ").trim();
+
+    if (!text) return;
+
+    if (el.tagName === "H1" && text.includes("SONG LIST")) {
+      currentSection = "★ FULL SONG LIST ★";
+      return;
+    }
+
+    if (el.tagName === "H2") {
+      if (text.includes("MOST POPULAR")) currentSection = "★ MOST POPULAR SONGS";
+      else if (text.includes("PARTY ANTHEMS")) currentSection = "PARTY ANTHEMS";
+      else if (text.includes("EASY TO SING")) currentSection = "♥ EASY TO SING";
+      return;
+    }
+
+    if (el.tagName !== "LI" || !currentSection) return;
+
+    const lineText = text.replace(/^\d+\.\s*/, "").trim();
+    const matchedSong = bestMatchSong(lineText);
+
+    if (matchedSong) {
+      sectionMap[currentSection].push(matchedSong.firebaseId);
+    }
+  });
+
+  const batch = db.batch();
+
+  for (const ids of Object.values(sectionMap)) {
+    ids.forEach(songId => {
+      const song = existingSongs.find(s => s.firebaseId === songId);
+      if (!song) return;
+
+      const lists = Array.isArray(song.songLists) ? song.songLists : [];
+
+      if (!lists.includes(listId)) lists.push(listId);
+
+      batch.set(db.collection("lyrics").doc(songId), {
+        songLists: lists,
+        visibility: "public"
+      }, { merge: true });
+    });
+  }
+
+  await batch.commit();
+
+  const sectionSnap = await db.collection("songlistSections")
+    .where("listId", "==", listId)
+    .get();
+
+  const sections = sectionSnap.docs.map(d => ({
+    id: d.id,
+    ...d.data()
+  }));
+
+  for (const [title, ids] of Object.entries(sectionMap)) {
+    const section = sections.find(s =>
+      String(s.title || "").toLowerCase().includes(
+        title.replace(/[★♥]/g, "").trim().toLowerCase()
+      )
+    );
+
+    if (!section) continue;
+
+    if (title === "★ FULL SONG LIST ★") continue;
+
+    await db.collection("songlistSections").doc(section.id).set({
+      songIds: ids,
+      collapsed: false
+    }, { merge: true });
+  }
+
+  alert("Venue Main Public Song List seeded from old song list.");
+  await loadEditorData();
+  await loadSelectedList();
+}
