@@ -1,63 +1,55 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Live Karaoke Song List</title>
+  <title>Venue Main Public Song List</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
 
 <body>
-<main class="songbook">
+  <main id="publicSongbook" class="songbook">
+    <section class="songlist-banner">
+      <img src="../img/songlistBanner.png" alt="Live Karaoke Song List">
+    </section>
 
-  <section class="songlist-banner">
-    <img src="../img/songlistBanner.png" alt="Live Karaoke Song List">
-  </section>
+    <section class="instructions">
+      <div class="step">⌕<strong>FIND</strong><span>your song</span></div>
+      <div class="plus">+</div>
+      <div class="step">✎<strong>CHOOSE</strong><span>your song</span></div>
+      <div class="plus">+</div>
+      <div class="step">♙<strong>SIGN UP</strong><span>at the desk</span></div>
+      <div class="plus">+</div>
+      <div class="step">🎤<strong>ENJOY!</strong><span>You’re up next!</span></div>
+    </section>
 
-  <section class="instructions">
-    <div class="step">⌕<strong>FIND</strong><span>your song</span></div>
-    <div class="plus">+</div>
-    <div class="step">✎<strong>CHOOSE</strong><span>your song</span></div>
-    <div class="plus">+</div>
-    <div class="step">♙<strong>SIGN UP</strong><span>at the desk</span></div>
-    <div class="plus">+</div>
-    <div class="step">🎤<strong>ENJOY!</strong><span>You’re up next!</span></div>
-  </section>
-
-  <section class="public-search-panel">
-    <h1 id="publicListTitle">Live Karaoke Song List</h1>
-    <div id="songCount" class="song-count"></div>
-
-    <input id="publicSongSearch" placeholder="Search song or artist...">
-
-    <div id="alphaNav" class="alpha-nav"></div>
-  </section>
-
-  <div id="songlistContent"></div>
-
-  <section class="instructions bottom-instructions">
-    <div class="step">⌕<strong>FIND</strong><span>your song</span></div>
-    <div class="plus">+</div>
-    <div class="step">✎<strong>CHOOSE</strong><span>your song</span></div>
-    <div class="plus">+</div>
-    <div class="step">♙<strong>SIGN UP</strong><span>at the desk</span></div>
-    <div class="plus">+</div>
-    <div class="step">🎤<strong>ENJOY!</strong><span>You’re up next!</span></div>
-  </section>
-
-  <section class="thank-you">
-    <h2>Thank You!</h2>
-    <h3>YOU SING, I PLAY,<br>EVERYONE HAS FUN!</h3>
-    <p class="neon-script-small">Thank you for being part of the show!</p>
-
-    <div class="request-box">
-      <h4>REQUEST A SONG FOR NEXT WEEK?</h4>
-      <p>Join our community and let us know!</p>
-      <a href="../index.html" class="back-home-btn">← BACK TO MAIN PAGE</a>
+    <div id="publicListContent">
+      <p class="loading-message">Loading song list...</p>
     </div>
-  </section>
 
-</main>
+    <section class="instructions bottom-instructions">
+      <div class="step">⌕<strong>FIND</strong><span>your song</span></div>
+      <div class="plus">+</div>
+      <div class="step">✎<strong>CHOOSE</strong><span>your song</span></div>
+      <div class="plus">+</div>
+      <div class="step">♙<strong>SIGN UP</strong><span>at the desk</span></div>
+      <div class="plus">+</div>
+      <div class="step">🎤<strong>ENJOY!</strong><span>You’re up next!</span></div>
+    </section>
+
+    <section class="thank-you">
+      <h2>Thank You!</h2>
+      <h3>YOU SING, I PLAY,<br>EVERYONE HAS FUN!</h3>
+      <p class="neon-script-small">Thank you for being part of the show!</p>
+
+      <div class="request-box">
+        <h4>REQUEST A SONG FOR NEXT WEEK?</h4>
+        <p>Join our community and let us know!</p>
+        <a href="../index.html" class="back-home-btn">← BACK TO MAIN PAGE</a>
+      </div>
+    </section>
+  </main>
+
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
