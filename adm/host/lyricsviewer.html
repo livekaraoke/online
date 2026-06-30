@@ -13,10 +13,6 @@
   
   <h1 class="viewer-title">● Lyrics Viewer ●</h1>
 
-<button class="viewer-btn" onclick="createSongsFromSongDataKL()">
-  TEMP: Import Song Data
-</button>
-
   <a href="lyricscreator.html" class="viewer-btn red">Create New Lyrics & Chords</a>
 </header>
 
@@ -301,67 +297,7 @@ function cleanLyricsUrlToId(url) {
     .trim();
 }
 
-async function createSongsFromSongDataKL() {
-  if (typeof songs === "undefined" || !Array.isArray(songs)) {
-    alert("songs array not found. Check that ../files/song-data-kl.js is loaded before this script.");
-    return;
-  }
 
-  const ok = confirm(`Create/update ${songs.length} songs from song-data-kl.js?`);
-  if (!ok) return;
-
-  let created = 0;
-  let skipped = 0;
-
-  for (const item of songs) {
-    const id = cleanLyricsUrlToId(item.url);
-
-    if (!id) {
-      skipped++;
-      continue;
-    }
-
-    const songDoc = {
-      id: id,
-      title: item.title || "",
-      artist: item.artist || "",
-
-      year: item.year || "",
-      originalBpm: item.bpm || "",
-      userBpm: "",
-
-      capo: "",
-      key: "",
-
-      karaokeLyrics: item.hasLyrics ? id : "No",
-      note: "",
-
-      youtubeLink: "",
-
-      gender: item.gender || "",
-      genre: item.genre || "",
-      vibe: item.vibe || "",
-      energy: item.energy || "",
-      energyPeak: item.energyPeak || "",
-      crowdFunction: item.crowdFunction || "",
-      vocalDemand: item.vocalDemand || "",
-      setPosition: item.setPosition || "",
-      reliabilityScore: item.reliabilityScore || "",
-      venueFit: item.venueFit || "",
-      setFrequency: item.setFrequency || "",
-      hostKaraokePage: item.hostKaraokePage || "",
-      livePage: item.livePage || "",
-      hasLyrics: item.hasLyrics === true,
-
-      sections: []
-    };
-
-    await db.collection("lyrics").doc(id).set(songDoc, { merge: true });
-    created++;
-  }
-
-  alert(`Import complete.\nCreated/updated: ${created}\nSkipped: ${skipped}`);
-}
 </script>
 
 </body>
