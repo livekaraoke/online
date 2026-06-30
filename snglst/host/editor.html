@@ -2,122 +2,85 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Song List Editor</title>
+  <title>Public Song List Editor</title>
   <link rel="stylesheet" href="../css/style.css">
 </head>
+<body>
+  <header class="songlist-header editor-header">
+    <h1>Public Song List Editor</h1>
+    <button onclick="seedFromOldPublicSongList()" class="admin-btn red">
+      Seed From Old Song List
+    </button>
+  </header>
 
-<body class="editor-body">
+  <main class="editor-container">
 
-<header class="editor-topbar">
-  <button onclick="window.location.href='../../admin.html'" class="editor-btn">◀ Admin</button>
-  <h1>Song List Editor!</h1>
+    <section class="editor-card">
+      <h2>List Settings</h2>
 
-  <button onclick="seedVenueMainList()" class="editor-btn red">
-    Seed Main List
-  </button>
-</header>
+      <label>Public Song List Name</label>
+      <input id="listNameInput" placeholder="Venue Main Public Song List">
 
-<main class="editor-layout">
+      <button onclick="saveListSettings()" class="admin-btn">
+        Save List Name
+      </button>
+    </section>
 
-  <section class="editor-panel">
-    <h2>Song Lists</h2>
+    <section class="editor-card">
+      <h2>Add Section</h2>
 
-    <select id="listSelect" onchange="loadSelectedList()"></select>
+      <input id="sectionTitleInput" placeholder="Section title e.g. 90s Rock Songs">
 
-    <input id="newListName" placeholder="New list name">
-    <button onclick="createSongList()" class="editor-btn green">+ Create List</button>
-    <button onclick="deleteCurrentList()" class="editor-btn danger">Delete List</button>
+      <label class="checkbox-row">
+        <input type="checkbox" id="sectionOpenInput" checked>
+        Open by default
+      </label>
 
-    <hr>
+      <button onclick="addSection()" class="admin-btn">
+        Add Section
+      </button>
+    </section>
 
-    <label>List Display Name</label>
-    <input id="listNameInput">
+    <section class="editor-card">
+      <h2>Add Song</h2>
 
-    <label>
-      <input type="checkbox" id="defaultListCheck">
-      Default Public List
-    </label>
+      <select id="songSectionSelect"></select>
 
-    <button onclick="saveListSettings()" class="editor-btn red">Save List Settings</button>
-  </section>
+      <input id="songTitleInput" placeholder="Song title">
+      <input id="songArtistInput" placeholder="Artist">
 
-  <section class="editor-panel">
-    <h2>Sections</h2>
+      <button onclick="addSong()" class="admin-btn">
+        Add Song
+      </button>
+    </section>
 
-    <div id="sectionEditorList"></div>
+    <section class="editor-card">
+      <h2>Sections & Songs</h2>
+      <div id="editorSongList"></div>
+    </section>
 
-    <hr>
+  </main>
 
-    <input id="newSectionTitle" placeholder="Section title">
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
-    <select id="newSectionType">
-      <option value="featured">Featured Songs</option>
-      <option value="alphabetical">Automatic Full Song List</option>
-      <option value="custom">Custom Songs</option>
-      <option value="cta">Call To Action</option>
-      <option value="ad">Advert / Promo</option>
-      <option value="text">Text Block</option>
-      <option value="html">HTML Block</option>
-    </select>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyC4gSodXM35E2ZdYaz6mrCvTUYzW75ZCBk",
+      authDomain: "livekaraokemt.firebaseapp.com",
+      projectId: "livekaraokemt",
+      storageBucket: "livekaraokemt.firebasestorage.app",
+      messagingSenderId: "425980659562",
+      appId: "1:425980659562:web:892ddcd53fb209d1114713"
+    };
 
-    <label>
-      <input type="checkbox" id="newSectionCollapsed">
-      Start Closed / Collapsed
-    </label>
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+  </script>
 
-    <button onclick="createSection()" class="editor-btn green">+ Add Section</button>
-  </section>
-
-  <section class="editor-panel wide">
-    <h2>Selected Section Content</h2>
-
-    <div id="selectedSectionInfo" class="section-info-box">
-      Select a section to edit its content.
-    </div>
-
-    <div id="songPickerArea" class="hidden">
-      <input id="songPickerSearch" placeholder="Search Firebase lyrics..." oninput="renderSongPicker()">
-      <div id="songPickerResults"></div>
-    </div>
-
-    <div id="customContentArea" class="hidden">
-      <label>Section Text / HTML / CTA Content</label>
-      <textarea id="sectionContentInput"></textarea>
-
-      <label>Button Text</label>
-      <input id="sectionButtonText" placeholder="Example: Join Community">
-
-      <label>Button URL</label>
-      <input id="sectionButtonUrl" placeholder="https://...">
-
-      <button onclick="saveSectionContent()" class="editor-btn red">Save Content</button>
-    </div>
-  </section>
-
-</main>
-
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-
-<script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyC4gSodXM35E2ZdYaz6mrCvTUYzW75ZCBk",
-    authDomain: "livekaraokemt.firebaseapp.com",
-    projectId: "livekaraokemt",
-    storageBucket: "livekaraokemt.firebasestorage.app",
-    messagingSenderId: "425980659562",
-    appId: "1:425980659562:web:892ddcd53fb209d1114713"
-  };
-
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore();
-</script>
-
-<script src="../js/songlist.js"></script>
-
-<script>
-  window.addEventListener("DOMContentLoaded", initEditor);
-</script>
-
+  <script src="../js/songlist.js"></script>
+  <script>
+    initEditor();
+  </script>
 </body>
 </html>
