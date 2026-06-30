@@ -4,15 +4,423 @@ let currentList = null;
 let sections = [];
 let songs = [];
 
-/* =========================================================
-   OLD PUBLIC SONG LIST SEED DATA
-========================================================= */
+function escapeHTML(value) {
+  return String(value || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
 
-const OLD_PUBLIC_SECTIONS = [
+function sortSections() {
+  sections.sort((a, b) => {
+    const orderA = Number(a.order || 0);
+    const orderB = Number(b.order || 0);
+    if (orderA !== orderB) return orderA - orderB;
+
+    return (a.title || "").localeCompare(b.title || "", undefined, {
+      sensitivity: "base"
+    });
+  });
+}
+
+function sortSongs() {
+  songs.sort((a, b) =>
+    (a.title || "").localeCompare(b.title || "", undefined, {
+      sensitivity: "base"
+    })
+  );
+}
+
+async function ensureMainList() {
+  const ref = db.collection("songlists").doc(MAIN_LIST_ID);
+  const snap = await ref.get();
+
+  if (!snap.exists) {
+    await ref.set({
+      name: "Venue Main Public Song List",
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  }
+
+  const fresh = await ref.get();
+  currentList = { id: fresh.id, ...fresh.data() };
+  return currentList;
+}
+
+async function loadSections() {
+  const snap = await db.collection("songlistSections")
+    .where("listId", "==", MAIN_LIST_ID)
+    .get();
+
+  sections = snap.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data()
+  }));
+
+  sortSections();
+}
+
+async function loadSongs() {
+  const snap = await db.collection("songlistSongs")
+    .where("listId", "==", MAIN_LIST_ID)
+    .get();
+
+  songs = snap.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data()
+  }));
+
+  sortSongs();
+}
+
+/* PUBLIC PAGE */
+
+async function initPublicSongList() {
+  await ensureMainList();
+  await loadSections();
+  await loadSongs();
+
+  const listTitle = document.getElementById("listTitle");
+  if (listTitle) {
+    listTitle.innerText = currentList.name || "★ SONG LIST ★";
+  }
+
+  renderFeaturedBoxes();
+  renderPublicSongList();
+
+  const searchInput = document.getElementById("searchInput");
+  if (searchInput) {
+    searchInput.addEventListener("input", renderPublicSongList);
+  }
+}
+
+function renderFeaturedBoxes() {
+  const popular = [
+    ["Mr Brightside", "The Killers"],
+    ["Paint It Black", "The Rolling Stones"],
+    ["Wonderwall", "Oasis"],
+    ["Pretty Woman", "Roy Orbison"],
+    ["Zombie", "The Cranberries"],
+    ["Valerie", "The Zutons / Amy Winehouse"],
+    ["Creep", "Radiohead"],
+    ["What’s Up", "4 Non Blondes"],
+    ["I Will Survive", "Gloria Gaynor"],
+    ["Hotel California", "The Eagles"]
+  ];
+
+  const party = [
+    ["Sweet Home Alabama", "Lynyrd Skynyrd"],
+    ["Sex on Fire", "Kings of Leon"],
+    ["Seven Nation Army", "The White Stripes"],
+    ["Summer of ‘69", "Bryan Adams"],
+    ["Born to Be Wild", "Steppenwolf"]
+  ];
+
+  const easy = [
+    ["Stand by Me", "Ben E. King"],
+    ["Three Little Birds", "Bob Marley"],
+    ["Let It Be", "The Beatles"],
+    ["Chasing Cars", "Snow Patrol"],
+    ["Ring of Fire", "Johnny Cash"]
+  ];
+
+  fillFeatured("popularSongs", popular);
+  fillFeatured("partySongs", party);
+  fillFeatured("easySongs", easy);
+}
+
+function fillFeatured(id, list) {
+  const el = document.getElementById(id);
+  if (!el) return;
+
+  el.innerHTML = list.map(([title, artist]) => `
+    <li>
+      <strong>${escapeHTML(title)}</strong>
+      <span>${escapeHTML(artist)}</span>
+    </li>
+  `).join("");
+}
+
+function renderPublicSongList() {
+  const container = document.getElementById("publicSongList");
+  if (!container) return;
+
+  const search = (document.getElementById("searchInput")?.value || "")
+    .toLowerCase()
+    .trim();
+
+  container.innerHTML = "";
+
+  const visibleSongs = songs.filter(song => {
+    if (song.visible === false) return false;
+
+    const text = `${song.title || ""} ${song.artist || ""}`.toLowerCase();
+    return !search || text.includes(search);
+  });
+
+  let runningStart = 1;
+
+  sections.forEach(section => {
+    const sectionSongs = visibleSongs.filter(song => song.sectionId === section.id);
+    if (!sectionSongs.length) return;
+
+    renderPublicSection(container, section, sectionSongs, runningStart);
+    runningStart += sectionSongs.length;
+  });
+
+  const mainSongs = visibleSongs.filter(song => !song.sectionId || song.sectionId === "main");
+  if (mainSongs.length) {
+    renderPublicSection(container, {
+      title: "Songs",
+      openByDefault: true
+    }, mainSongs, runningStart);
+  }
+}
+
+function renderPublicSection(container, section, sectionSongs, startNumber) {
+  const sectionEl = document.createElement("section");
+  sectionEl.className = "song-section";
+
+  const grid = document.createElement("div");
+  grid.className = "song-section-grid";
+
+  const box = document.createElement("div");
+  box.className = "song-section-box";
+
+  const title = document.createElement("h2");
+  const list = document.createElement("ol");
+
+  list.start = startNumber;
+  list.style.display = section.openByDefault === false ? "none" : "block";
+
+  function updateTitle() {
+    const open = list.style.display !== "none";
+    title.innerText = open
+      ? `${section.title} ▲ (Click to Hide)`
+      : `${section.title} ▼ (Click to View)`;
+  }
+
+  title.onclick = () => {
+    const open = list.style.display !== "none";
+    list.style.display = open ? "none" : "block";
+    updateTitle();
+  };
+
+  sectionSongs.forEach(song => {
+    const li = document.createElement("li");
+    li.innerHTML = `
+      <div class="song-info">
+        <span>${escapeHTML(song.title)}</span>
+        <em>${escapeHTML(song.artist)}</em>
+      </div>
+    `;
+    list.appendChild(li);
+  });
+
+  updateTitle();
+
+  box.appendChild(title);
+  box.appendChild(list);
+  grid.appendChild(box);
+  sectionEl.appendChild(grid);
+  container.appendChild(sectionEl);
+}
+
+/* EDITOR */
+
+async function initEditor() {
+  await ensureMainList();
+  await loadSections();
+  await loadSongs();
+
+  const listNameInput = document.getElementById("listNameInput");
+  if (listNameInput) {
+    listNameInput.value = currentList.name || "Venue Main Public Song List";
+  }
+
+  renderSectionDropdown();
+  renderEditorSongList();
+}
+
+function renderSectionDropdown() {
+  const select = document.getElementById("songSectionSelect");
+  if (!select) return;
+
+  select.innerHTML = `<option value="main">No Section / Main Songs</option>`;
+
+  sections.forEach(section => {
+    const opt = document.createElement("option");
+    opt.value = section.id;
+    opt.textContent = section.title;
+    select.appendChild(opt);
+  });
+}
+
+function renderEditorSongList() {
+  const container = document.getElementById("editorSongList");
+  if (!container) return;
+
+  container.innerHTML = "";
+
+  const total = document.createElement("div");
+  total.className = "editor-count";
+  total.innerText = `Total songs: ${songs.length}`;
+  container.appendChild(total);
+
+  sections.forEach(section => {
+    const sectionSongs = songs.filter(song => song.sectionId === section.id);
+    const box = document.createElement("div");
+    box.className = "editor-section";
+
+    box.innerHTML = `
+      <div class="editor-section-head">
+        <strong>${escapeHTML(section.title)}</strong>
+        <span>${section.openByDefault ? "Open by default" : "Closed by default"}</span>
+        <button onclick="toggleSectionDefault('${section.id}', ${section.openByDefault ? "false" : "true"})">
+          ${section.openByDefault ? "Set Closed" : "Set Open"}
+        </button>
+        <button onclick="deleteSection('${section.id}')">Delete Section</button>
+      </div>
+    `;
+
+    sectionSongs.forEach(song => {
+      box.appendChild(createEditorSongRow(song));
+    });
+
+    container.appendChild(box);
+  });
+
+  const mainSongs = songs.filter(song => !song.sectionId || song.sectionId === "main");
+
+  if (mainSongs.length) {
+    const box = document.createElement("div");
+    box.className = "editor-section";
+    box.innerHTML = `<div class="editor-section-head"><strong>Main Songs</strong></div>`;
+
+    mainSongs.forEach(song => {
+      box.appendChild(createEditorSongRow(song));
+    });
+
+    container.appendChild(box);
+  }
+}
+
+function createEditorSongRow(song) {
+  const row = document.createElement("div");
+  row.className = "editor-song-row";
+
+  row.innerHTML = `
+    <div>
+      <strong>${escapeHTML(song.title)}</strong>
+      <span>${escapeHTML(song.artist)}</span>
+    </div>
+
+    <button onclick="toggleSongVisible('${song.id}', ${song.visible === false ? "true" : "false"})">
+      ${song.visible === false ? "Show" : "Hide"}
+    </button>
+
+    <button onclick="deleteSong('${song.id}')">Delete</button>
+  `;
+
+  return row;
+}
+
+async function saveListSettings() {
+  const name = document.getElementById("listNameInput").value.trim();
+
+  await db.collection("songlists").doc(MAIN_LIST_ID).set({
+    name: name || "Venue Main Public Song List",
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  }, { merge: true });
+
+  await initEditor();
+  alert("List settings saved.");
+}
+
+async function addSection() {
+  const title = document.getElementById("sectionTitleInput").value.trim();
+  const openByDefault = document.getElementById("sectionOpenInput").checked;
+
+  if (!title) {
+    alert("Enter a section title.");
+    return;
+  }
+
+  await db.collection("songlistSections").add({
+    listId: MAIN_LIST_ID,
+    title,
+    openByDefault,
+    order: sections.length + 1,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  });
+
+  document.getElementById("sectionTitleInput").value = "";
+  await initEditor();
+}
+
+async function addSong() {
+  const title = document.getElementById("songTitleInput").value.trim();
+  const artist = document.getElementById("songArtistInput").value.trim();
+  const sectionId = document.getElementById("songSectionSelect").value || "main";
+
+  if (!title) {
+    alert("Enter a song title.");
+    return;
+  }
+
+  await db.collection("songlistSongs").add({
+    listId: MAIN_LIST_ID,
+    title,
+    artist,
+    sectionId,
+    visible: true,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  });
+
+  document.getElementById("songTitleInput").value = "";
+  document.getElementById("songArtistInput").value = "";
+  await initEditor();
+}
+
+async function toggleSongVisible(songId, visible) {
+  await db.collection("songlistSongs").doc(songId).set({ visible }, { merge: true });
+  await initEditor();
+}
+
+async function deleteSong(songId) {
+  if (!confirm("Delete this song?")) return;
+  await db.collection("songlistSongs").doc(songId).delete();
+  await initEditor();
+}
+
+async function toggleSectionDefault(sectionId, openByDefault) {
+  await db.collection("songlistSections").doc(sectionId).set({ openByDefault }, { merge: true });
+  await initEditor();
+}
+
+async function deleteSection(sectionId) {
+  if (!confirm("Delete this section? Songs inside it will move to Main Songs.")) return;
+
+  await db.collection("songlistSections").doc(sectionId).delete();
+
+  const affectedSongs = songs.filter(song => song.sectionId === sectionId);
+
+  for (const song of affectedSongs) {
+    await db.collection("songlistSongs").doc(song.id).set({
+      sectionId: "main"
+    }, { merge: true });
+  }
+
+  await initEditor();
+}
+
+/* SEED */
+
+const OLD_SEED_SECTIONS = [
   {
     title: "A – B",
     openByDefault: true,
-    order: 1,
     songs: [
       ["Ain’t No Sunshine", "Bill Withers"],
       ["All Along the Watchtower", "Jimi Hendrix"],
@@ -39,7 +447,6 @@ const OLD_PUBLIC_SECTIONS = [
   {
     title: "C – D",
     openByDefault: true,
-    order: 2,
     songs: [
       ["Californication", "Red Hot Chili Peppers"],
       ["Call Me the Breeze", "Lynyrd Skynyrd"],
@@ -68,7 +475,6 @@ const OLD_PUBLIC_SECTIONS = [
   {
     title: "E – H",
     openByDefault: true,
-    order: 3,
     songs: [
       ["Every Breath You Take", "The Police"],
       ["Every Rose Has Its Thorn", "Poison"],
@@ -94,7 +500,6 @@ const OLD_PUBLIC_SECTIONS = [
   {
     title: "I – L",
     openByDefault: true,
-    order: 4,
     songs: [
       ["I See Fire", "Ed Sheeran"],
       ["I Want to Break Free", "Queen"],
@@ -123,7 +528,6 @@ const OLD_PUBLIC_SECTIONS = [
   {
     title: "M – P",
     openByDefault: true,
-    order: 5,
     songs: [
       ["Man On the Moon", "R.E.M."],
       ["Mr Brightside", "The Killers"],
@@ -147,7 +551,6 @@ const OLD_PUBLIC_SECTIONS = [
   {
     title: "R – S",
     openByDefault: true,
-    order: 6,
     songs: [
       ["Rebel Rebel", "David Bowie"],
       ["Rebel Yell", "Billy Idol"],
@@ -183,7 +586,6 @@ const OLD_PUBLIC_SECTIONS = [
   {
     title: "T – Z",
     openByDefault: true,
-    order: 7,
     songs: [
       ["Tainted Love", "Soft Cell"],
       ["Take Me Home, Country Roads", "John Denver"],
@@ -220,607 +622,74 @@ const OLD_PUBLIC_SECTIONS = [
   }
 ];
 
-/* =========================================================
-   HELPERS
-========================================================= */
+async function seedFromOldPublicSongList() {
+  const ok = confirm("Seed the public song list with the full old song list data?");
+  if (!ok) return;
 
-function escapeHTML(value) {
-  return String(value || "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
-}
-
-function normalizeText(value) {
-  return String(value || "").trim().toLowerCase();
-}
-
-function sortSectionsClient() {
-  sections.sort((a, b) => {
-    const orderA = Number(a.order || 0);
-    const orderB = Number(b.order || 0);
-
-    if (orderA !== orderB) return orderA - orderB;
-
-    return String(a.title || "").localeCompare(String(b.title || ""), undefined, {
-      sensitivity: "base"
-    });
-  });
-}
-
-function sortSongsClient(list) {
-  return [...list].sort((a, b) =>
-    String(a.title || "").localeCompare(String(b.title || ""), undefined, {
-      sensitivity: "base"
-    })
-  );
-}
-
-function getTotalSeedSongs() {
-  return OLD_PUBLIC_SECTIONS.reduce((sum, section) => sum + section.songs.length, 0);
-}
-
-/* =========================================================
-   FIRESTORE LOADERS
-   IMPORTANT: no orderBy here, so Firestore does NOT need composite indexes.
-========================================================= */
-
-async function ensureMainList() {
-  const ref = db.collection("songlists").doc(MAIN_LIST_ID);
-  const snap = await ref.get();
-
-  if (!snap.exists) {
-    await ref.set({
-      name: "Venue Main Public Song List",
-      publicName: "Venue Main Public Song List",
-      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
-  }
-
-  const fresh = await ref.get();
-  currentList = { id: fresh.id, ...fresh.data() };
-  return currentList;
-}
-
-async function loadSections() {
-  const snap = await db
-    .collection("songlistSections")
-    .where("listId", "==", MAIN_LIST_ID)
-    .get();
-
-  sections = snap.docs.map(doc => ({
-    id: doc.id,
-    ...doc.data()
-  }));
-
-  sortSectionsClient();
-}
-
-async function loadSongs() {
-  const snap = await db
-    .collection("songlistSongs")
-    .where("listId", "==", MAIN_LIST_ID)
-    .get();
-
-  songs = snap.docs.map(doc => ({
-    id: doc.id,
-    ...doc.data()
-  }));
-
-  songs = sortSongsClient(songs);
-}
-
-async function reloadAll() {
   await ensureMainList();
   await loadSections();
   await loadSongs();
-}
 
-/* =========================================================
-   PUBLIC PAGE
-========================================================= */
-
-async function initPublicSongList() {
-  try {
-    await reloadAll();
-
-    const listTitle = document.getElementById("listTitle");
-    if (listTitle) {
-      listTitle.innerText =
-        currentList.publicName ||
-        currentList.name ||
-        "Venue Main Public Song List";
-    }
-
-    renderPublicSongList();
-
-    const searchInput = document.getElementById("searchInput");
-    if (searchInput) {
-      searchInput.addEventListener("input", renderPublicSongList);
-    }
-  } catch (error) {
-    console.error(error);
-    showPageError("Could not load the public song list. Check Firestore read permissions.");
-  }
-}
-
-function renderPublicSongList() {
-  const container = document.getElementById("publicSongList");
-  if (!container) return;
-
-  const search = normalizeText(document.getElementById("searchInput")?.value || "");
-  container.innerHTML = "";
-
-  const visibleSongs = songs.filter(song => {
-    if (song.visible === false) return false;
-
-    const haystack = normalizeText(`${song.title || ""} ${song.artist || ""}`);
-    return !search || haystack.includes(search);
-  });
-
-  let renderedAny = false;
-
-  sections.forEach(section => {
-    const sectionSongs = sortSongsClient(
-      visibleSongs.filter(song => song.sectionId === section.id)
+  if (songs.length || sections.length) {
+    const replaceOk = confirm(
+      `This list already has ${songs.length} songs and ${sections.length} sections. Delete and reseed?`
     );
+    if (!replaceOk) return;
 
-    if (!sectionSongs.length && search) return;
-
-    renderPublicSection(
-      container,
-      section.title || "Songs",
-      sectionSongs,
-      section.openByDefault !== false
-    );
-
-    renderedAny = true;
-  });
-
-  const mainSongs = sortSongsClient(
-    visibleSongs.filter(song => !song.sectionId || song.sectionId === "main")
-  );
-
-  if (mainSongs.length) {
-    renderPublicSection(container, "Songs", mainSongs, true);
-    renderedAny = true;
-  }
-
-  if (!renderedAny) {
-    container.innerHTML = `<div class="empty-message">No songs found.</div>`;
-  }
-}
-
-function renderPublicSection(container, titleText, sectionSongs, openByDefault) {
-  const sectionBox = document.createElement("section");
-  sectionBox.className = "song-section public-section";
-
-  const grid = document.createElement("div");
-  grid.className = "song-section-grid";
-
-  const box = document.createElement("div");
-  box.className = "song-section-box";
-
-  const title = document.createElement("h2");
-  title.className = "public-section-title";
-  title.style.cursor = "pointer";
-
-  const songWrap = document.createElement("ol");
-  songWrap.className = "public-section-songs";
-  songWrap.style.display = openByDefault ? "block" : "none";
-
-  function updateTitle() {
-    const isOpen = songWrap.style.display !== "none";
-    title.innerText = isOpen
-      ? `${titleText} ▲ (Click to Hide)`
-      : `${titleText} ▼ (Click to View)`;
-  }
-
-  title.onclick = () => {
-    const isOpen = songWrap.style.display !== "none";
-    songWrap.style.display = isOpen ? "none" : "block";
-    updateTitle();
-  };
-
-  updateTitle();
-
-  sectionSongs.forEach(song => {
-    const li = document.createElement("li");
-    li.innerHTML = `
-      <div class="song-info">
-        <span>${escapeHTML(song.title)}</span>
-        <em>${escapeHTML(song.artist)}</em>
-      </div>
-    `;
-    songWrap.appendChild(li);
-  });
-
-  box.appendChild(title);
-  box.appendChild(songWrap);
-  grid.appendChild(box);
-  sectionBox.appendChild(grid);
-  container.appendChild(sectionBox);
-}
-
-/* =========================================================
-   EDITOR PAGE
-========================================================= */
-
-async function initEditor() {
-  try {
-    await reloadAll();
-
-    const listNameInput = document.getElementById("listNameInput");
-    if (listNameInput) {
-      listNameInput.value =
-        currentList.publicName ||
-        currentList.name ||
-        "Venue Main Public Song List";
+    for (const song of songs) {
+      await db.collection("songlistSongs").doc(song.id).delete();
     }
 
-    renderSectionDropdown();
-    renderEditorSongList();
-  } catch (error) {
-    console.error(error);
-    showPageError("Could not load editor data. Check Firestore permissions.");
-  }
-}
-
-function renderSectionDropdown() {
-  const select = document.getElementById("songSectionSelect");
-  if (!select) return;
-
-  select.innerHTML = `<option value="main">No Section / Main Songs</option>`;
-
-  sections.forEach(section => {
-    const opt = document.createElement("option");
-    opt.value = section.id;
-    opt.textContent = section.title || "Untitled Section";
-    select.appendChild(opt);
-  });
-}
-
-function renderEditorSongList() {
-  const container = document.getElementById("editorSongList");
-  if (!container) return;
-
-  container.innerHTML = "";
-
-  const total = document.createElement("div");
-  total.className = "editor-count";
-  total.innerText = `Total songs: ${songs.length}`;
-  container.appendChild(total);
-
-  sections.forEach(section => {
-    const sectionSongs = sortSongsClient(
-      songs.filter(song => song.sectionId === section.id)
-    );
-
-    const box = document.createElement("div");
-    box.className = "editor-section";
-
-    box.innerHTML = `
-      <div class="editor-section-head">
-        <strong>${escapeHTML(section.title)}</strong>
-        <span>${section.openByDefault !== false ? "Open by default" : "Closed by default"}</span>
-        <button type="button" onclick="toggleSectionDefault('${section.id}', ${section.openByDefault !== false ? "false" : "true"})">
-          ${section.openByDefault !== false ? "Set Closed" : "Set Open"}
-        </button>
-        <button type="button" onclick="deleteSection('${section.id}')">Delete Section</button>
-      </div>
-    `;
-
-    if (!sectionSongs.length) {
-      const empty = document.createElement("div");
-      empty.className = "editor-empty";
-      empty.innerText = "No songs in this section.";
-      box.appendChild(empty);
+    for (const section of sections) {
+      await db.collection("songlistSections").doc(section.id).delete();
     }
-
-    sectionSongs.forEach(song => {
-      box.appendChild(createEditorSongRow(song));
-    });
-
-    container.appendChild(box);
-  });
-
-  const mainSongs = sortSongsClient(
-    songs.filter(song => !song.sectionId || song.sectionId === "main")
-  );
-
-  if (mainSongs.length) {
-    const box = document.createElement("div");
-    box.className = "editor-section";
-
-    box.innerHTML = `
-      <div class="editor-section-head">
-        <strong>Main Songs</strong>
-      </div>
-    `;
-
-    mainSongs.forEach(song => {
-      box.appendChild(createEditorSongRow(song));
-    });
-
-    container.appendChild(box);
   }
-}
 
-function createEditorSongRow(song) {
-  const row = document.createElement("div");
-  row.className = "editor-song-row";
+  let totalAdded = 0;
 
-  row.innerHTML = `
-    <div class="editor-song-info">
-      <strong>${escapeHTML(song.title)}</strong>
-      <span>${escapeHTML(song.artist)}</span>
-    </div>
+  for (let i = 0; i < OLD_SEED_SECTIONS.length; i++) {
+    const seedSection = OLD_SEED_SECTIONS[i];
 
-    <button type="button" onclick="toggleSongVisible('${song.id}', ${song.visible === false ? "true" : "false"})">
-      ${song.visible === false ? "Show" : "Hide"}
-    </button>
-
-    <button type="button" onclick="deleteSong('${song.id}')">Delete</button>
-  `;
-
-  return row;
-}
-
-async function saveListSettings() {
-  try {
-    const input = document.getElementById("listNameInput");
-    const name = input ? input.value.trim() : "";
-
-    await db.collection("songlists").doc(MAIN_LIST_ID).set({
-      name: name || "Venue Main Public Song List",
-      publicName: name || "Venue Main Public Song List",
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    }, { merge: true });
-
-    await initEditor();
-    alert("List settings saved.");
-  } catch (error) {
-    console.error(error);
-    alert("Could not save list settings. Check Firestore write permissions.");
-  }
-}
-
-async function addSection() {
-  try {
-    const titleInput = document.getElementById("sectionTitleInput");
-    const openInput = document.getElementById("sectionOpenInput");
-
-    const title = titleInput ? titleInput.value.trim() : "";
-    const openByDefault = openInput ? openInput.checked : true;
-
-    if (!title) {
-      alert("Enter a section title.");
-      return;
-    }
-
-    await db.collection("songlistSections").add({
+    const sectionRef = await db.collection("songlistSections").add({
       listId: MAIN_LIST_ID,
-      title,
-      openByDefault,
-      order: sections.length + 1,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      title: seedSection.title,
+      openByDefault: seedSection.openByDefault,
+      order: i + 1,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
 
-    titleInput.value = "";
-    await initEditor();
-  } catch (error) {
-    console.error(error);
-    alert("Could not add section. Check Firestore write permissions.");
-  }
-}
-
-async function addSong() {
-  try {
-    const titleInput = document.getElementById("songTitleInput");
-    const artistInput = document.getElementById("songArtistInput");
-    const sectionSelect = document.getElementById("songSectionSelect");
-
-    const title = titleInput ? titleInput.value.trim() : "";
-    const artist = artistInput ? artistInput.value.trim() : "";
-    const sectionId = sectionSelect ? sectionSelect.value || "main" : "main";
-
-    if (!title) {
-      alert("Enter a song title.");
-      return;
-    }
-
-    await db.collection("songlistSongs").add({
-      listId: MAIN_LIST_ID,
-      title,
-      artist,
-      sectionId,
-      visible: true,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
-
-    titleInput.value = "";
-    artistInput.value = "";
-
-    await initEditor();
-  } catch (error) {
-    console.error(error);
-    alert("Could not add song. Check Firestore write permissions.");
-  }
-}
-
-async function toggleSongVisible(songId, visible) {
-  try {
-    await db.collection("songlistSongs").doc(songId).set({
-      visible,
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    }, { merge: true });
-
-    await initEditor();
-  } catch (error) {
-    console.error(error);
-    alert("Could not update song visibility.");
-  }
-}
-
-async function deleteSong(songId) {
-  try {
-    if (!confirm("Delete this song?")) return;
-
-    await db.collection("songlistSongs").doc(songId).delete();
-    await initEditor();
-  } catch (error) {
-    console.error(error);
-    alert("Could not delete song.");
-  }
-}
-
-async function toggleSectionDefault(sectionId, openByDefault) {
-  try {
-    await db.collection("songlistSections").doc(sectionId).set({
-      openByDefault,
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    }, { merge: true });
-
-    await initEditor();
-  } catch (error) {
-    console.error(error);
-    alert("Could not update section.");
-  }
-}
-
-async function deleteSection(sectionId) {
-  try {
-    if (!confirm("Delete this section? Songs inside it will move to Main Songs.")) return;
-
-    await db.collection("songlistSections").doc(sectionId).delete();
-
-    const affectedSongs = songs.filter(song => song.sectionId === sectionId);
-
-    for (const song of affectedSongs) {
-      await db.collection("songlistSongs").doc(song.id).set({
-        sectionId: "main",
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-      }, { merge: true });
-    }
-
-    await initEditor();
-  } catch (error) {
-    console.error(error);
-    alert("Could not delete section.");
-  }
-}
-
-/* =========================================================
-   SEED FULL OLD PUBLIC LIST
-========================================================= */
-
-async function seedFromOldPublicSongList() {
-  try {
-    const totalSeedSongs = getTotalSeedSongs();
-
-    const ok = confirm(
-      `Seed the public song list with the old full list?\n\nThis will seed ${totalSeedSongs} songs.`
-    );
-
-    if (!ok) return;
-
-    await reloadAll();
-
-    if (songs.length > 0 || sections.length > 0) {
-      const replaceOk = confirm(
-        `This public list already has ${songs.length} songs and ${sections.length} sections.\n\nDelete them and reseed the old full list?`
-      );
-
-      if (!replaceOk) return;
-
-      await deleteExistingPublicListData();
-    }
-
-    const sectionIdByTitle = {};
-
-    for (const section of OLD_PUBLIC_SECTIONS) {
-      const sectionRef = await db.collection("songlistSections").add({
+    for (const [title, artist] of seedSection.songs) {
+      await db.collection("songlistSongs").add({
         listId: MAIN_LIST_ID,
-        title: section.title,
-        openByDefault: section.openByDefault,
-        order: section.order,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        title,
+        artist,
+        sectionId: sectionRef.id,
+        visible: true,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
 
-      sectionIdByTitle[section.title] = sectionRef.id;
-
-      for (const [title, artist] of section.songs) {
-        await db.collection("songlistSongs").add({
-          listId: MAIN_LIST_ID,
-          title,
-          artist,
-          sectionId: sectionRef.id,
-          visible: true,
-          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-      }
+      totalAdded++;
     }
-
-    await initEditor();
-    alert(`Seed complete. Added ${totalSeedSongs} songs in ${OLD_PUBLIC_SECTIONS.length} sections.`);
-  } catch (error) {
-    console.error(error);
-    alert("Seed failed. Check Firestore write permissions.");
-  }
-}
-
-async function deleteExistingPublicListData() {
-  await loadSongs();
-  await loadSections();
-
-  for (const song of songs) {
-    await db.collection("songlistSongs").doc(song.id).delete();
   }
 
-  for (const section of sections) {
-    await db.collection("songlistSections").doc(section.id).delete();
-  }
-
-  songs = [];
-  sections = [];
+  await initEditor();
+  alert(`Seed complete. Added ${totalAdded} songs.`);
 }
 
-/* =========================================================
-   ERROR DISPLAY
-========================================================= */
-
-function showPageError(message) {
-  const possibleContainers = [
-    document.getElementById("publicSongList"),
-    document.getElementById("editorSongList"),
-    document.body
-  ];
-
-  const container = possibleContainers.find(Boolean);
-  if (!container) return;
-
-  const box = document.createElement("div");
-  box.className = "page-error";
-  box.innerText = message;
-
-  container.prepend(box);
-}
-
-/* =========================================================
-   AUTO INIT
-========================================================= */
+/* AUTO INIT */
 
 window.addEventListener("DOMContentLoaded", () => {
   if (document.body.dataset.page === "editor") {
-    initEditor();
+    initEditor().catch(error => {
+      console.error(error);
+      alert(error.message);
+    });
   }
 
   if (document.body.dataset.page === "public-songlist") {
-    initPublicSongList();
+    initPublicSongList().catch(error => {
+      console.error(error);
+      alert(error.message);
+    });
   }
 });
