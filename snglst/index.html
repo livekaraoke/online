@@ -1,17 +1,76 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Venue Main Public Song List</title>
-  <link rel="stylesheet" href="css/style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Live Karaoke Song List</title>
+  <link rel="stylesheet" href="css/style.css" />
 </head>
-<body>
-  <header class="songlist-header">
-    <h1 id="listTitle">Venue Main Public Song List</h1>
-    <input id="searchInput" placeholder="Search song or artist...">
-  </header>
 
-  <main id="publicSongList" class="songlist-container"></main>
+<body data-page="public-songlist">
+  <main class="songbook">
+    <section class="songlist-banner">
+      <img src="../img/songlistBanner.png" alt="Live Karaoke Song List">
+    </section>
+
+    <section class="instructions">
+      <div class="step">⌕<strong>FIND</strong><span>your song</span></div>
+      <div class="plus">+</div>
+      <div class="step">✎<strong>CHOOSE</strong><span>your song</span></div>
+      <div class="plus">+</div>
+      <div class="step">♙<strong>SIGN UP</strong><span>at the desk</span></div>
+      <div class="plus">+</div>
+      <div class="step">🎤<strong>ENJOY!</strong><span>You’re up next!</span></div>
+    </section>
+
+    <section class="featured">
+      <div class="featured-grid">
+        <div class="featured-box">
+          <h2>★ MOST POPULAR SONGS</h2>
+          <ul id="popularSongs"></ul>
+        </div>
+
+        <div class="featured-box">
+          <h2>🔥 PARTY ANTHEMS</h2>
+          <ul id="partySongs"></ul>
+        </div>
+
+        <div class="featured-box">
+          <h2>♥ EASY TO SING</h2>
+          <ul id="easySongs"></ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="song-list-title">
+      <h1 id="listTitle">★ SONG LIST ★</h1>
+      <input id="searchInput" class="song-search" placeholder="Search song or artist..." />
+    </section>
+
+    <div id="publicSongList"></div>
+
+    <section class="instructions bottom-instructions">
+      <div class="step">⌕<strong>FIND</strong><span>your song</span></div>
+      <div class="plus">+</div>
+      <div class="step">✎<strong>CHOOSE</strong><span>your song</span></div>
+      <div class="plus">+</div>
+      <div class="step">♙<strong>SIGN UP</strong><span>at the desk</span></div>
+      <div class="plus">+</div>
+      <div class="step">🎤<strong>ENJOY!</strong><span>You’re up next!</span></div>
+    </section>
+
+    <section class="thank-you">
+      <h2>Thank You!</h2>
+      <h3>YOU SING, I PLAY,<br>EVERYONE HAS FUN!</h3>
+      <p class="neon-script-small">Thank you for being part of the show!</p>
+
+      <div class="request-box">
+        <h4>REQUEST A SONG FOR NEXT WEEK?</h4>
+        <p>Join our community and let us know!</p>
+        <a href="../index.html" class="back-home-btn">← BACK TO MAIN PAGE</a>
+      </div>
+    </section>
+  </main>
 
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
@@ -26,14 +85,10 @@
       appId: "1:425980659562:web:892ddcd53fb209d1114713"
     };
 
-
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
   </script>
 
   <script src="js/songlist.js"></script>
-  <script>
-    initPublicSongList();
-  </script>
 </body>
 </html>
