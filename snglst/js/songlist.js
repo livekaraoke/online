@@ -50,14 +50,8 @@ async function ensureMainList() {
 async function initPublicSongList() {
   await ensureMainList();
 
-  db.collection(SECTIONS_COLLECTION)
-    .where("listId", "==", MAIN_LIST_ID)
-    .orderBy("order", "asc")
-    .onSnapshot(snapshot => {
-      const sections = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
+  db.collection("songlistSections")
+  .where("listId", "==", MAIN_LIST_ID)
 
       renderPublicSongList(sections);
     }, error => {
