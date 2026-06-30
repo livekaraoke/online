@@ -1522,6 +1522,14 @@ textarea {
   -webkit-text-fill-color: var(--performance-note-text-color, #ffd54a);
 }
 
+.personalNotes {
+  position: relative;
+    padding: 44px 16px 16px;
+  
+  color: #FFD400;
+  font-weight: 900;
+}
+
 .youtube-box {
   position: relative;
   width: min(900px, 94vw);
