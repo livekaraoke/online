@@ -10,14 +10,11 @@
 
 <header class="editor-topbar">
   <button onclick="window.location.href='../../admin.html'" class="editor-btn">◀ Admin</button>
-  <h1>Song List Editor</h1>
-<button onclick="seedVenueMainList()" class="editor-btn red">
-  Seed Main List
-</button>
-  <button onclick="seedFromOldPublicSongList()" class="editor-btn red">
-    Seed From Old Public Song List
+  <h1>Song List Editor!</h1>
+
+  <button onclick="seedVenueMainList()" class="editor-btn red">
+    Seed Main List
   </button>
-  <button onclick="seedVenueMainList()" class="editor-btn red">Seed Main List</button>
 </header>
 
 <main class="editor-layout">
@@ -119,8 +116,6 @@
 <script src="../js/songlist.js"></script>
 
 <script>
-  window.seedFromOldPublicSongList = seedFromOldPublicSongList;
-
   window.addEventListener("DOMContentLoaded", initEditor);
 </script>
 
