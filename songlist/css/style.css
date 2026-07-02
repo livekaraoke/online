@@ -250,7 +250,7 @@ body[data-page="editor"] { background: #080808; color: white; }
 
 .signup-song-btn {
   background: #fff8ef;
-  color: #b30000;
+  color: #d40000;
   border: 2px solid #b30000;
   border-radius: 999px;
   width: 38px;
@@ -261,11 +261,13 @@ body[data-page="editor"] { background: #080808; color: white; }
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 0 0 2px #39ff14, 0 0 6px #39ff14, 0 0 7px #39ff14, 0 0 8px #22cc00;
 }
 
 .signup-song-btn:hover {
-  background: #b30000;
+  background: #29aa04;
   color: #fff8ef;
+  border: 2px solid #29dd04;
 }
 
 .song-info-with-year {
@@ -430,19 +432,29 @@ body[data-page="editor"] { background: #080808; color: white; }
 
 .custom-section .section-name {
   text-align: left;
+  font-family: Bahnschrift, Arial, sans-serif;
+  margin: 10px 0 0px 20px;
+  color: #d20d0d;
+  font-size: 30px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 .custom-section .section-toggle-text {
   margin-left: auto;
+  font-family: Bahnschrift, Arial, sans-serif;
   font-size: 16px;
-  color: #cc0000;
+  color: #aa0000;
   white-space: nowrap;
+  text-transform: uppercase;
+  margin-right: 10px;
 }
 
 .full-song-list-heading {
   text-align: center;
-  color: #000;
-  background: #f8f2e8;
+  color: #f8f2e8;
+  color: #FFD400;
+  /*background: #f8f2e8;*/
   font-size: 42px;
   font-weight: 900;
   letter-spacing: 4px;
