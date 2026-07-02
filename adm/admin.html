@@ -1011,6 +1011,219 @@ I think 📜, 🎼, ✍️🎼, ✍️, 📖, and 🗒️ work especially well t
         }
     }
 
+    let currentSessionId = null;
+let currentSessionData = null;
+let sessionNotesSaveTimer = null;
+
+function setSessionStatus(message) {
+  document.getElementById("sessionActionStatus").innerText = message || "";
+  logAdmin(message);
+}
+
+function showSessionConfirm(title, message, onConfirm) {
+  const ok = confirm(`${title}\n\n${message}`);
+  if (ok) onConfirm();
+}
+
+function confirmStartPerformance() {
+  showSessionConfirm(
+    "Start Performance?",
+    "This will start a new live session and begin linking new song requests to it.",
+    startPerformance
+  );
+}
+
+function confirmEndPerformance() {
+  showSessionConfirm(
+    "End Performance?",
+    "This will end the active session. New song requests will no longer be linked to this session.",
+    endPerformance
+  );
+}
+
+async function startPerformance() {
+  const title = document.getElementById("sessionTitleInput").value.trim() || "Untitled Session";
+  const venue = document.getElementById("venueInput").value.trim() || "Unknown Venue";
+
+  const ref = await db.collection("performanceSessions").add({
+    title,
+    venue,
+    notes: document.getElementById("sessionNotesInput").value || "",
+    status: "active",
+    startedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    endedAt: null,
+    breaks: [],
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  });
+
+  currentSessionId = ref.id;
+
+  await db.collection("karaokeControl").doc("currentSession").set({
+    sessionId: currentSessionId,
+    title,
+    venue,
+    active: true,
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  });
+
+  setSessionStatus("Performance started.");
+  listenToCurrentSession();
+}
+
+async function endPerformance() {
+  if (!currentSessionId) return;
+
+  await db.collection("performanceSessions").doc(currentSessionId).set({
+    status: "ended",
+    endedAt: firebase.firestore.FieldValue.serverTimestamp()
+  }, { merge: true });
+
+  await db.collection("karaokeControl").doc("currentSession").set({
+    active: false,
+    sessionId: null,
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  }, { merge: true });
+
+  setSessionStatus("Performance ended.");
+}
+
+async function startBreak() {
+  if (!currentSessionId || !currentSessionData) return;
+
+  const breaks = currentSessionData.breaks || [];
+  const lastBreak = breaks[breaks.length - 1];
+
+  if (lastBreak && !lastBreak.endedAt) return;
+
+  breaks.push({
+    startedAt: firebase.firestore.Timestamp.now(),
+    endedAt: null
+  });
+
+  await db.collection("performanceSessions").doc(currentSessionId).set({
+    breaks
+  }, { merge: true });
+
+  setSessionStatus("Break started.");
+}
+
+async function endBreak() {
+  if (!currentSessionId || !currentSessionData) return;
+
+  const breaks = currentSessionData.breaks || [];
+  const lastBreak = breaks[breaks.length - 1];
+
+  if (!lastBreak || lastBreak.endedAt) return;
+
+  lastBreak.endedAt = firebase.firestore.Timestamp.now();
+
+  await db.collection("performanceSessions").doc(currentSessionId).set({
+    breaks
+  }, { merge: true });
+
+  setSessionStatus("Break ended.");
+}
+
+function saveSessionNotesLive() {
+  if (!currentSessionId) return;
+
+  clearTimeout(sessionNotesSaveTimer);
+
+  sessionNotesSaveTimer = setTimeout(async () => {
+    await db.collection("performanceSessions").doc(currentSessionId).set({
+      notes: document.getElementById("sessionNotesInput").value,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+
+    setSessionStatus("Notes saved.");
+  }, 600);
+}
+
+document.getElementById("sessionNotesInput")
+  .addEventListener("input", saveSessionNotesLive);
+
+    function listenToCurrentSession() {
+  db.collection("karaokeControl").doc("currentSession").onSnapshot(async snap => {
+    const data = snap.data();
+
+    if (!data || !data.active || !data.sessionId) {
+      currentSessionId = null;
+      currentSessionData = null;
+      updateSessionUi(null);
+      return;
+    }
+
+    currentSessionId = data.sessionId;
+
+    db.collection("performanceSessions").doc(currentSessionId).onSnapshot(sessionSnap => {
+      currentSessionData = {
+        id: sessionSnap.id,
+        ...sessionSnap.data()
+      };
+
+      updateSessionUi(currentSessionData);
+    });
+  });
+}
+
+function updateSessionUi(session) {
+  const setup = document.getElementById("sessionSetupFields");
+  const labels = document.getElementById("activeSessionLabels");
+
+  const startBtn = document.getElementById("startPerformanceBtn");
+  const startBreakBtn = document.getElementById("startBreakBtn");
+  const endBreakBtn = document.getElementById("endBreakBtn");
+  const endBtn = document.getElementById("endPerformanceBtn");
+
+  if (!session || session.status === "ended") {
+    setup.style.display = "block";
+    labels.style.display = "none";
+
+    startBtn.disabled = false;
+    startBreakBtn.disabled = true;
+    endBreakBtn.disabled = true;
+    endBtn.disabled = true;
+    return;
+  }
+
+  setup.style.display = "none";
+  labels.style.display = "block";
+
+  document.getElementById("sessionTitleLabel").innerText = session.title || "";
+  document.getElementById("venueLabel").innerText = session.venue || "";
+  document.getElementById("sessionNotesInput").value = session.notes || "";
+
+  const breaks = session.breaks || [];
+  const lastBreak = breaks[breaks.length - 1];
+  const inBreak = lastBreak && !lastBreak.endedAt;
+
+  startBtn.disabled = true;
+  startBreakBtn.disabled = inBreak;
+  endBreakBtn.disabled = !inBreak;
+  endBtn.disabled = false;
+
+  updateBreaksLabel(session);
+}
+
+function updateBreaksLabel(session) {
+  const breaksLabel = document.getElementById("breaksLabel");
+  if (!breaksLabel) return;
+
+  const breaks = session.breaks || [];
+  let totalMs = 0;
+
+  breaks.forEach(br => {
+    const start = br.startedAt?.toDate ? br.startedAt.toDate() : null;
+    const end = br.endedAt?.toDate ? br.endedAt.toDate() : new Date();
+
+    if (start) totalMs += end - start;
+  });
+
+  const mins = Math.floor(totalMs / 60000);
+  breaksLabel.innerText = `Breaks: ${breaks.length} ( ${mins}mins )`;
+}
+
+listenToCurrentSession();
 
   </script>
 
