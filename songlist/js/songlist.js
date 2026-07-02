@@ -465,7 +465,8 @@ function renderPublicFullList(container, search) {
 }
 
 function renderPlainSongList(container, list) {
-  const ol = document.createElement("ol");
+  const ol = document.createElement("ul");
+  ol.className = "custom-song-list";
 
   list.forEach(song => {
     const li = document.createElement("li");
