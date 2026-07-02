@@ -53,6 +53,31 @@ function closeSignupModal() {
   selectedSignupSong = null;
 }
 
+async function getCurrentSignupSession() {
+  const snap = await db.collection("karaokeControl").doc("currentSession").get();
+  const data = snap.exists ? snap.data() : {};
+
+  if (data.activeSessionId) {
+    return {
+      sessionId: data.activeSessionId,
+      isTestSession: false
+    };
+  }
+
+  await db.collection("performanceSessions").doc("test-session").set({
+    title: "Test Session",
+    venue: "Test",
+    status: "test",
+    isActive: false,
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  }, { merge: true });
+
+  return {
+    sessionId: "test-session",
+    isTestSession: true
+  };
+}
+
 async function submitSongSignup() {
   if (!selectedSignupSong) return;
 
@@ -67,10 +92,16 @@ async function submitSongSignup() {
   submitBtn.disabled = true;
   submitBtn.innerText = "SENDING...";
 
+  const sessionInfo = await getCurrentSignupSession();
+
   try {
     await db.collection("publicSongRequests").add({
       listId: MAIN_LIST_ID,
 
+      sessionId: sessionInfo.sessionId,
+      isTestSession: sessionInfo.isTestSession,
+      status: "pending",
+      
       songId: selectedSignupSong.id || "",
       songTitle: selectedSignupSong.title || "",
       artist: selectedSignupSong.artist || "",
@@ -82,7 +113,7 @@ async function submitSongSignup() {
       rating: document.getElementById("signupRating").value,
       note: document.getElementById("signupNote").value.trim(),
 
-      status: "waiting",
+      /*status: "waiting",*/
       source: "public-songlist",
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
