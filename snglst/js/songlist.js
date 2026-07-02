@@ -6,6 +6,120 @@ let songs = [];
 
 const MAIN_PUBLIC_SECTION_TITLE = "Venue Main Public Song List";
 
+async function loadMainVenueSongs() {
+  const snap = await db.collection("lyrics").get();
+
+  songs = snap.docs.map(doc => {
+    const s = doc.data();
+
+    return {
+      id: doc.id,
+      title: s.title || "",
+      artist: s.artist || "",
+      year: s.year || "",
+      sectionId: "venue-main",
+      visible: s.publicSongListVisible !== false,
+      locked: true
+    };
+  });
+
+  songs.sort((a, b) =>
+    a.title.localeCompare(b.title, undefined, { sensitivity: "base" })
+  );
+}
+
+function createMainListSongRow(song) {
+  const row = document.createElement("div");
+  row.className = "editor-song-row";
+
+  row.innerHTML = `
+    <span class="drag-disabled">☰</span>
+
+    <div>
+      <strong>${escapeHTML(song.title)}</strong>
+      <span>${escapeHTML(song.artist)}</span>
+    </div>
+
+    <span class="song-year">${escapeHTML(song.year)}</span>
+
+    <button onclick="toggleMainSongVisible('${song.id}', ${song.visible ? "false" : "true"})">
+      ${song.visible ? "Hide" : "Show"}
+    </button>
+  `;
+
+  return row;
+}
+
+async function toggleMainSongVisible(songId, visible) {
+  await db.collection("lyrics").doc(songId).set({
+    publicSongListVisible: visible
+  }, { merge: true });
+
+  await initEditor();
+}
+
+function renderVenueMainPublicList(container, mainSongs) {
+  const grouped = groupSongsByAlphabetRange(mainSongs);
+
+  Object.keys(grouped).forEach(range => {
+    const sectionBox = document.createElement("section");
+    sectionBox.className = "song-section";
+
+    sectionBox.innerHTML = `
+      <div class="song-section-grid">
+        <div class="song-section-box">
+          <h2>${range}</h2>
+          <ol></ol>
+        </div>
+      </div>
+    `;
+
+    const ol = sectionBox.querySelector("ol");
+
+    grouped[range].forEach(song => {
+      const li = document.createElement("li");
+      li.innerHTML = `
+        <div class="song-info song-info-with-year">
+          <div>
+            <span>${escapeHTML(song.title)}</span>
+            <em>${escapeHTML(song.artist)}</em>
+          </div>
+          <strong class="song-year">${escapeHTML(song.year)}</strong>
+        </div>
+      `;
+      ol.appendChild(li);
+    });
+
+    container.appendChild(sectionBox);
+  });
+}
+
+function groupSongsByAlphabetRange(songList) {
+  const groups = {
+    "A – B": [],
+    "C – D": [],
+    "E – H": [],
+    "I – L": [],
+    "M – P": [],
+    "R – S": [],
+    "T – Z": []
+  };
+
+  songList.forEach(song => {
+    const first = (song.title || "").trim().charAt(0).toUpperCase();
+
+    if ("AB".includes(first)) groups["A – B"].push(song);
+    else if ("CD".includes(first)) groups["C – D"].push(song);
+    else if ("EFGH".includes(first)) groups["E – H"].push(song);
+    else if ("IJKL".includes(first)) groups["I – L"].push(song);
+    else if ("MNOPQ".includes(first)) groups["M – P"].push(song);
+    else if ("RS".includes(first)) groups["R – S"].push(song);
+    else groups["T – Z"].push(song);
+  });
+
+  return groups;
+}
+
 /* ---------- HELPERS ---------- */
 
 function escapeHTML(value) {
