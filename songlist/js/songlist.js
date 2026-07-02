@@ -108,6 +108,7 @@ async function submitSongSignup() {
       year: selectedSignupSong.year || "",
 
       singerName: name,
+      name: name,
       location: document.getElementById("signupLocation").value.trim(),
       ageRange: document.getElementById("signupAgeRange").value,
       rating: document.getElementById("signupRating").value,
