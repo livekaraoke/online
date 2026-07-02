@@ -1221,3 +1221,54 @@ performance-note-line {
   border: 0;
   border-radius: 10px;
 }
+
+
+  /* ADDED: floating lyricview scroll buttons */
+.floating-scroll-controls {
+  position: fixed;
+  right: 18px;
+  bottom: 22px;
+  z-index: 500;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.floating-scroll-btn {
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,.35);
+  background: rgba(20,20,20,.55);
+  color: white;
+  font-size: 32px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.floating-scroll-btn:hover {
+  background: rgba(255,0,0,.45);
+}
+
+/* ADDED: performed song buttons */
+.performance-log-buttons {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.performance-log-btn {
+  font-size: 12px;
+  padding: 9px 10px;
+}
+
+.performance-log-btn.self {
+  border-color: #FFD400;
+  color: #FFD400;
+}
+
+.performance-log-btn.singer {
+  border-color: #33ff66;
+  color: #33ff66;
+}
