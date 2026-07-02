@@ -6,6 +6,9 @@ let songs = [];
 
 const MAIN_PUBLIC_SECTION_TITLE = "Venue Main Public Song List";
 
+const visibleFullSongs = lyricsSongs.filter(song => song.publicSongListVisible !== false);
+total.innerText = `Total songs: ${visibleFullSongs.length}`;
+
 async function loadMainVenueSongs() {
   const snap = await db.collection("lyrics").get();
 
@@ -28,24 +31,46 @@ async function loadMainVenueSongs() {
   );
 }
 
+async function loadLyricsSongs() {
+  const snap = await db.collection("lyrics").get();
+
+  lyricsSongs = snap.docs.map(doc => ({
+    id: doc.id,
+    title: doc.data().title || "",
+    artist: doc.data().artist || "",
+    year: doc.data().year || "",
+    publicSongListVisible: doc.data().publicSongListVisible !== false
+  }));
+
+  lyricsSongs.sort((a, b) =>
+    a.title.localeCompare(b.title, undefined, { sensitivity: "base" })
+  );
+}
+
+async function toggleFullSongVisible(songId, visible) {
+  await db.collection("lyrics").doc(songId).set({
+    publicSongListVisible: visible
+  }, { merge: true });
+
+  await initEditor();
+}
+
 function createMainListSongRow(song) {
   const row = document.createElement("div");
   row.className = "editor-song-row";
 
   row.innerHTML = `
-    <span class="drag-disabled">☰</span>
+  <div>
+    <strong>${escapeHTML(song.title)}</strong>
+    <span>${escapeHTML(song.artist)}</span>
+  </div>
 
-    <div>
-      <strong>${escapeHTML(song.title)}</strong>
-      <span>${escapeHTML(song.artist)}</span>
-    </div>
+  <span class="song-year">${escapeHTML(song.year)}</span>
 
-    <span class="song-year">${escapeHTML(song.year)}</span>
-
-    <button onclick="toggleMainSongVisible('${song.id}', ${song.visible ? "false" : "true"})">
-      ${song.visible ? "Hide" : "Show"}
-    </button>
-  `;
+  <button onclick="toggleFullSongVisible('${song.id}', ${song.publicSongListVisible ? "false" : "true"})">
+    ${song.publicSongListVisible ? "Hide" : "Show"}
+  </button>
+`;
 
   return row;
 }
