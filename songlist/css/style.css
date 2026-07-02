@@ -199,6 +199,7 @@ body[data-page="editor"] { background: #080808; color: white; }
 
 .full-song-row {
   grid-template-columns: minmax(0, 1fr) 70px 80px !important;
+  margin-left: 10px;
 }
 
 .editor-song-buttons {
