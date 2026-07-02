@@ -1100,3 +1100,32 @@ footer p{
   font-weight: 900;
   margin-top: 8px;
 }
+
+.session-dashboard {
+  margin-top: 18px;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.dashboard-card {
+  background: #0b0b0b;
+  border: 1px solid rgba(255,0,0,.35);
+  border-radius: 8px;
+  padding: 10px;
+  color: #ddd;
+  text-align: left;
+}
+
+.dashboard-card strong {
+  color: #FFD400;
+}
+
+@media (max-width: 700px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}
