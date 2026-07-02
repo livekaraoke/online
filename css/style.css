@@ -1103,6 +1103,12 @@ footer p{
 
 .session-dashboard {
   margin-top: 18px;
+width: 100%;
+    max-width: none;
+
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
 }
 
 .dashboard-grid {
