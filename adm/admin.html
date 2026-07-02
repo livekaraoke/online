@@ -132,21 +132,30 @@ I think 📜, 🎼, ✍️🎼, ✍️, 📖, and 🗒️ work especially well t
       <section class="admin-panel session-panel">
         <h2>🎙️ PERFORMANCE SESSION</h2>
       
-        <input id="sessionTitleInput" class="admin-input" placeholder="Session title">
-      
-        <input id="venueInput" class="admin-input" list="venueOptions" placeholder="Venue">
-        <datalist id="venueOptions">
-          <option value="Whyte Harte"></option>
-          <option value="Smokehouse"></option>
-        </datalist>
-      
-        <textarea id="sessionNotesInput" class="admin-textarea" placeholder="Session notes"></textarea>
-      
-        <button onclick="startPerformanceSession()" class="admin-btn-main">▶ START PERFORMANCE</button>
-        <button onclick="startSessionBreak()" class="admin-btn">⏸ START BREAK</button>
-        <button onclick="endSessionBreak()" class="admin-btn">▶ END BREAK</button>
-        <button onclick="endPerformanceSession()" class="admin-btn-main danger">■ END PERFORMANCE</button>
-      
+       <div id="sessionSetupFields">
+          <input id="sessionTitleInput" placeholder="Session Title">
+          <input id="venueInput" list="venueOptions" placeholder="Venue">
+          <datalist id="venueOptions">
+            <option value="Whyte Harte">
+            <option value="Smokehouse">
+          </datalist>
+        </div>
+        
+        <div id="activeSessionLabels" style="display:none;">
+          <div><strong>Session:</strong> <span id="sessionTitleLabel"></span></div>
+          <div><strong>Venue:</strong> <span id="venueLabel"></span></div>
+        </div>
+        
+        <textarea id="sessionNotesInput" placeholder="Session notes..."></textarea>
+        
+        <div id="sessionActionStatus" class="session-action-status"></div>
+        
+        <div class="session-button-row">
+          <button id="startPerformanceBtn" onclick="confirmStartPerformance()">START PERFORMANCE</button>
+          <button id="startBreakBtn" onclick="startBreak()">START BREAK</button>
+          <button id="endBreakBtn" onclick="endBreak()">END BREAK</button>
+          <button id="endPerformanceBtn" onclick="confirmEndPerformance()">END PERFORMANCE</button>
+        </div>
         <div id="sessionDashboard" class="session-dashboard"></div>
       </section>
       
