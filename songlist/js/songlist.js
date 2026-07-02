@@ -57,9 +57,9 @@ async function getCurrentSignupSession() {
   const snap = await db.collection("karaokeControl").doc("currentSession").get();
   const data = snap.exists ? snap.data() : {};
 
-  if (data.activeSessionId) {
+  if (data.active === true && data.sessionId) {
     return {
-      sessionId: data.activeSessionId,
+      sessionId: data.sessionId,
       isTestSession: false
     };
   }
@@ -100,11 +100,12 @@ async function submitSongSignup() {
 
       sessionId: sessionInfo.sessionId,
       isTestSession: sessionInfo.isTestSession,
-      status: "pending",
+      status: "active",
       
       songId: selectedSignupSong.id || "",
       songTitle: selectedSignupSong.title || "",
       artist: selectedSignupSong.artist || "",
+songArtist: selectedSignupSong.artist || "",
       year: selectedSignupSong.year || "",
 
       singerName: name,
