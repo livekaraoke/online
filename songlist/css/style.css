@@ -467,3 +467,9 @@ body[data-page="editor"] { background: #080808; color: white; }
   font-size: 28px !important;
   letter-spacing: 8px;
 }
+
+ .custom-song-list {
+  list-style: none;
+  padding-left: 0;
+  margin: 0;
+}
