@@ -535,9 +535,18 @@ function calculateBreakMs(session) {
 }
 
 function updateDashboard(session) {
+  const dash = $("sessionDashboard");
+  if (!dash) return;
+
   if (!session) {
-    if ($("sessionDashboardStatus")) $("sessionDashboardStatus").innerText = "No active session";
-    if ($("breaksLabel")) $("breaksLabel").innerText = "Breaks: 0 ( 0mins )";
+    dash.innerHTML = `
+      <div class="dashboard-card">
+        <strong>Status:</strong> No active session
+      </div>
+      <div class="dashboard-card">
+        <strong>Breaks:</strong> 0 ( 0mins )
+      </div>
+    `;
     return;
   }
 
@@ -551,22 +560,22 @@ function updateDashboard(session) {
   const deleted = currentRequests.filter(r => r.status === "deleted").length;
   const activeLeft = currentRequests.filter(r => !r.status || r.status === "active").length;
 
-  if ($("sessionDashboardStatus")) $("sessionDashboardStatus").innerText = "Active session";
-  if ($("dashboardDate")) $("dashboardDate").innerText = startedAt ? startedAt.toLocaleDateString() : "-";
-  if ($("dashboardVenue")) $("dashboardVenue").innerText = session.venue || "-";
-  if ($("dashboardStart")) $("dashboardStart").innerText = formatTime(startedAt);
-  if ($("dashboardElapsed")) $("dashboardElapsed").innerText = `${msToMinutes(elapsedMs)}mins`;
-  if ($("dashboardTotalWithBreaks")) $("dashboardTotalWithBreaks").innerText = `${msToMinutes(elapsedMs)}mins`;
-  if ($("dashboardTotalWithoutBreaks")) $("dashboardTotalWithoutBreaks").innerText = `${msToMinutes(playingMs)}mins`;
-  if ($("dashboardCompleted")) $("dashboardCompleted").innerText = completed;
-  if ($("dashboardAbandoned")) $("dashboardAbandoned").innerText = abandoned;
-  if ($("dashboardDeleted")) $("dashboardDeleted").innerText = deleted;
-  if ($("dashboardLeft")) $("dashboardLeft").innerText = activeLeft;
-
-  if ($("breaksLabel")) {
-    $("breaksLabel").innerText =
-      `Breaks: ${(session.breaks || []).length} ( ${msToMinutes(breakMs)}mins )`;
-  }
+  dash.innerHTML = `
+    <div class="dashboard-grid">
+      <div class="dashboard-card"><strong>Status:</strong> Active session</div>
+      <div class="dashboard-card"><strong>Date:</strong> ${startedAt ? startedAt.toLocaleDateString() : "-"}</div>
+      <div class="dashboard-card"><strong>Venue:</strong> ${escapeHTML(session.venue || "-")}</div>
+      <div class="dashboard-card"><strong>Started:</strong> ${formatTime(startedAt)}</div>
+      <div class="dashboard-card"><strong>Elapsed:</strong> ${msToMinutes(elapsedMs)}mins</div>
+      <div class="dashboard-card"><strong>Breaks:</strong> ${(session.breaks || []).length} ( ${msToMinutes(breakMs)}mins )</div>
+      <div class="dashboard-card"><strong>Total incl. breaks:</strong> ${msToMinutes(elapsedMs)}mins</div>
+      <div class="dashboard-card"><strong>Total excl. breaks:</strong> ${msToMinutes(playingMs)}mins</div>
+      <div class="dashboard-card"><strong>Completed:</strong> ${completed}</div>
+      <div class="dashboard-card"><strong>Abandoned:</strong> ${abandoned}</div>
+      <div class="dashboard-card"><strong>Deleted:</strong> ${deleted}</div>
+      <div class="dashboard-card"><strong>Left:</strong> ${activeLeft}</div>
+    </div>
+  `;
 }
 
 setInterval(() => {
@@ -694,6 +703,8 @@ window.deleteRequestWithReason = deleteRequestWithReason;
 function initAdminAfterLogin() {
   listenKaraokeState();
   listenCurrentSession();
+updateDashboard(currentSessionData);
+renderActiveRequests();
 
   if ($("sessionNotesInput")) {
     $("sessionNotesInput").removeEventListener("input", saveSessionNotesLive);
