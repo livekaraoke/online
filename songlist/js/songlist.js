@@ -390,7 +390,7 @@ function renderPublicFullList(container, search) {
 
   const fullHeading = document.createElement("div");
   fullHeading.className = "full-song-list-heading";
-  fullHeading.innerText = "★ SONG LIST ★";
+  fullHeading.innerText = "★ FULL SONG LIST ★";
   container.appendChild(fullHeading);
 
   const { order, groups } = alphabetGroups(fullSongs);
