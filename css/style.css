@@ -1060,3 +1060,43 @@ footer p{
     font-size: 12px;
   }
 }
+
+.session-button-row {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: nowrap;
+  margin: 14px auto;
+}
+
+.session-button-row button {
+  padding: 12px 10px;
+  font-weight: 900;
+  border-radius: 8px;
+  border: 1px solid #ff3333;
+  background: #220000;
+  color: white;
+  cursor: pointer;
+}
+
+.session-button-row button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+#activeSessionLabels {
+  background: #111;
+  border: 1px solid rgba(255,0,0,.35);
+  border-radius: 10px;
+  padding: 12px;
+  margin: 10px auto;
+  max-width: 520px;
+  text-align: left;
+}
+
+.session-action-status {
+  min-height: 22px;
+  color: #ffd400;
+  font-weight: 900;
+  margin-top: 8px;
+}
