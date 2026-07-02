@@ -129,6 +129,32 @@ I think 📜, 🎼, ✍️🎼, ✍️, 📖, and 🗒️ work especially well t
       
       -->
 
+      <section class="admin-panel session-panel">
+        <h2>🎙️ PERFORMANCE SESSION</h2>
+      
+        <input id="sessionTitleInput" class="admin-input" placeholder="Session title">
+      
+        <input id="venueInput" class="admin-input" list="venueOptions" placeholder="Venue">
+        <datalist id="venueOptions">
+          <option value="Whyte Harte"></option>
+          <option value="Smokehouse"></option>
+        </datalist>
+      
+        <textarea id="sessionNotesInput" class="admin-textarea" placeholder="Session notes"></textarea>
+      
+        <button onclick="startPerformanceSession()" class="admin-btn-main">▶ START PERFORMANCE</button>
+        <button onclick="startSessionBreak()" class="admin-btn">⏸ START BREAK</button>
+        <button onclick="endSessionBreak()" class="admin-btn">▶ END BREAK</button>
+        <button onclick="endPerformanceSession()" class="admin-btn-main danger">■ END PERFORMANCE</button>
+      
+        <div id="sessionDashboard" class="session-dashboard"></div>
+      </section>
+      
+      <section class="admin-panel">
+        <h2>🎤 ACTIVE SONG REQUESTS</h2>
+        <div id="activeRequestsList" class="active-requests-list"></div>
+      </section>
+
       <br>
       <h2>🎤 VENUE MODE</h2>
 
@@ -249,6 +275,17 @@ I think 📜, 🎼, ✍️🎼, ✍️, 📖, and 🗒️ work especially well t
     </div>
   </div>
 
+  <div id="requestReasonModal" class="admin-modal hidden">
+    <div class="admin-modal-box">
+      <h3 id="requestReasonTitle">Request Note</h3>
+      <textarea id="requestReasonInput" placeholder="Reason / note optional"></textarea>
+      <div class="admin-modal-actions">
+        <button onclick="confirmRequestReason()" class="admin-btn-main">Save</button>
+        <button onclick="closeRequestReasonModal()" class="admin-btn">Cancel</button>
+      </div>
+    </div>
+  </div>
+
   <!-- FIREBASE -->
 
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -304,6 +341,333 @@ I think 📜, 🎼, ✍️🎼, ✍️, 📖, and 🗒️ work especially well t
     firebase.initializeApp(firebaseConfig);
 
     const db = firebase.firestore();
+
+    let activeSession = null;
+    let activeRequests = [];
+    let pendingRequestAction = null;
+    let sessionTimer = null;
+    
+    function tsToDate(ts) {
+      if (!ts) return null;
+      return ts.toDate ? ts.toDate() : new Date(ts);
+    }
+    
+    function formatTime(date) {
+      if (!date) return "-";
+      return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    }
+    
+    function formatDuration(ms) {
+      if (!ms || ms < 0) ms = 0;
+      const totalMin = Math.floor(ms / 60000);
+      const h = Math.floor(totalMin / 60);
+      const m = totalMin % 60;
+      return h ? `${h}h ${m}m` : `${m}m`;
+    }
+    
+    async function getOrCreateTestSession() {
+      const ref = db.collection("performanceSessions").doc("test-session");
+    
+      await ref.set({
+        title: "Test Session",
+        venue: "Test",
+        status: "test",
+        isActive: false,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+    
+      return ref.id;
+    }
+    
+    async function startPerformanceSession() {
+      const title = document.getElementById("sessionTitleInput").value.trim() || "Live Karaoke Session";
+      const venue = document.getElementById("venueInput").value.trim() || "Unknown Venue";
+      const notes = document.getElementById("sessionNotesInput").value.trim();
+    
+      const ref = await db.collection("performanceSessions").add({
+        title,
+        venue,
+        notes,
+        status: "active",
+        isActive: true,
+        startedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        endedAt: null,
+        breaks: [],
+        breakOpen: false,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    
+      await db.collection("karaokeControl").doc("currentSession").set({
+        activeSessionId: ref.id,
+        title,
+        venue,
+        startedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+    
+      logAdmin("Performance session started");
+    }
+    
+    async function startSessionBreak() {
+      if (!activeSession?.id || activeSession.breakOpen) return;
+    
+      const ref = db.collection("performanceSessions").doc(activeSession.id);
+      const snap = await ref.get();
+      const data = snap.data();
+    
+      const breaks = data.breaks || [];
+      breaks.push({
+        start: new Date(),
+        end: null
+      });
+    
+      await ref.set({
+        breaks,
+        breakOpen: true,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+    
+      logAdmin("Break started");
+    }
+    
+    async function endSessionBreak() {
+      if (!activeSession?.id || !activeSession.breakOpen) return;
+    
+      const ref = db.collection("performanceSessions").doc(activeSession.id);
+      const snap = await ref.get();
+      const data = snap.data();
+    
+      const breaks = data.breaks || [];
+      const last = breaks[breaks.length - 1];
+    
+      if (last && !last.end) {
+        last.end = new Date();
+      }
+    
+      await ref.set({
+        breaks,
+        breakOpen: false,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+    
+      logAdmin("Break ended");
+    }
+    
+    async function endPerformanceSession() {
+      if (!activeSession?.id) return;
+      if (!confirm("End this performance session?")) return;
+    
+      await db.collection("performanceSessions").doc(activeSession.id).set({
+        status: "ended",
+        isActive: false,
+        endedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+    
+      await db.collection("karaokeControl").doc("currentSession").set({
+        activeSessionId: null,
+        endedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+    
+      logAdmin("Performance session ended");
+    }
+    
+    function listenActiveSession() {
+      db.collection("performanceSessions")
+        .where("isActive", "==", true)
+        .onSnapshot(snapshot => {
+          if (snapshot.empty) {
+            activeSession = null;
+            renderSessionDashboard();
+            listenActiveRequests(null);
+            return;
+          }
+    
+          const doc = snapshot.docs[0];
+          activeSession = { id: doc.id, ...doc.data() };
+    
+          document.getElementById("sessionTitleInput").value = activeSession.title || "";
+          document.getElementById("venueInput").value = activeSession.venue || "";
+          document.getElementById("sessionNotesInput").value = activeSession.notes || "";
+    
+          renderSessionDashboard();
+          listenActiveRequests(activeSession.id);
+        });
+    }
+    
+    function listenActiveRequests(sessionId) {
+      if (!sessionId) {
+        activeRequests = [];
+        renderActiveRequests();
+        return;
+      }
+    
+      db.collection("publicSongRequests")
+        .where("sessionId", "==", sessionId)
+        .onSnapshot(snapshot => {
+          activeRequests = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          }));
+    
+          renderSessionDashboard();
+          renderActiveRequests();
+        });
+    }
+    
+    function getRequestCounts() {
+      return {
+        completed: activeRequests.filter(r => r.status === "completed").length,
+        abandoned: activeRequests.filter(r => r.status === "abandoned").length,
+        deleted: activeRequests.filter(r => r.status === "deletedByHost").length,
+        left: activeRequests.filter(r => !r.status || r.status === "pending").length
+      };
+    }
+    
+    function getBreakMs(session) {
+      let total = 0;
+      const now = new Date();
+    
+      (session?.breaks || []).forEach(br => {
+        const start = tsToDate(br.start);
+        const end = br.end ? tsToDate(br.end) : now;
+        if (start && end) total += end - start;
+      });
+    
+      return total;
+    }
+    
+    function renderSessionDashboard() {
+      const box = document.getElementById("sessionDashboard");
+      if (!box) return;
+    
+      if (!activeSession) {
+        box.innerHTML = `<div class="dash-empty">No active session.</div>`;
+        return;
+      }
+    
+      const start = tsToDate(activeSession.startedAt);
+      const end = tsToDate(activeSession.endedAt) || new Date();
+      const breakMs = getBreakMs(activeSession);
+      const totalMs = end - start;
+      const activeMs = totalMs - breakMs;
+      const counts = getRequestCounts();
+    
+      box.innerHTML = `
+        <div><strong>Date:</strong> ${start ? start.toLocaleDateString() : "-"}</div>
+        <div><strong>Venue:</strong> ${activeSession.venue || "-"}</div>
+        <div><strong>Started:</strong> ${formatTime(start)}</div>
+        <div><strong>Elapsed:</strong> ${formatDuration(totalMs)}</div>
+        <div><strong>Breaks:</strong> ${(activeSession.breaks || []).length}</div>
+        <div><strong>Total with breaks:</strong> ${formatDuration(totalMs)}</div>
+        <div><strong>Total without breaks:</strong> ${formatDuration(activeMs)}</div>
+        <div><strong>Completed:</strong> ${counts.completed}</div>
+        <div><strong>Abandoned:</strong> ${counts.abandoned}</div>
+        <div><strong>Deleted by host:</strong> ${counts.deleted}</div>
+        <div><strong>Requests left:</strong> ${counts.left}</div>
+      `;
+    }
+    
+    function renderActiveRequests() {
+      const box = document.getElementById("activeRequestsList");
+      if (!box) return;
+    
+      const pending = activeRequests
+        .filter(r => !r.status || r.status === "pending")
+        .sort((a, b) => {
+          const da = tsToDate(a.createdAt)?.getTime() || 0;
+          const dbb = tsToDate(b.createdAt)?.getTime() || 0;
+          return da - dbb;
+        });
+    
+      if (!pending.length) {
+        box.innerHTML = `<div class="dash-empty">No active requests.</div>`;
+        return;
+      }
+    
+      box.innerHTML = pending.map(req => {
+        const created = tsToDate(req.createdAt);
+        const minsAgo = created ? Math.max(0, Math.floor((Date.now() - created.getTime()) / 60000)) : "-";
+    
+        return `
+          <div class="active-request-row">
+            <div class="request-main">
+              <strong>${escapeHTML(req.songTitle || req.title || "")}</strong>
+              <span>${escapeHTML(req.singerName || req.name || "")}</span>
+            </div>
+    
+            <div class="request-bpm">${escapeHTML(req.userBpm || "")}</div>
+            <div class="request-time">${minsAgo}m</div>
+    
+            <button title="Completed" onclick="completeRequest('${req.id}')">★</button>
+            <button title="Abandoned" onclick="openRequestReasonModal('${req.id}', 'abandoned')">⚠</button>
+            <button title="Delete" onclick="openRequestReasonModal('${req.id}', 'deletedByHost')">✕</button>
+          </div>
+        `;
+      }).join("");
+    }
+    
+    async function completeRequest(requestId) {
+      await db.collection("publicSongRequests").doc(requestId).set({
+        status: "completed",
+        completedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+    
+      logAdmin("Song request completed");
+    }
+    
+    function openRequestReasonModal(requestId, action) {
+      pendingRequestAction = { requestId, action };
+    
+      document.getElementById("requestReasonTitle").innerText =
+        action === "abandoned" ? "Mark Request Abandoned" : "Delete Request";
+    
+      document.getElementById("requestReasonInput").value = "";
+      document.getElementById("requestReasonModal").classList.remove("hidden");
+    }
+    
+    function closeRequestReasonModal() {
+      pendingRequestAction = null;
+      document.getElementById("requestReasonModal").classList.add("hidden");
+    }
+    
+    async function confirmRequestReason() {
+      if (!pendingRequestAction) return;
+    
+      const note = document.getElementById("requestReasonInput").value.trim();
+      const { requestId, action } = pendingRequestAction;
+    
+      const update = {
+        status: action,
+        hostNote: note,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      };
+    
+      if (action === "abandoned") {
+        update.abandonedAt = firebase.firestore.FieldValue.serverTimestamp();
+      }
+    
+      if (action === "deletedByHost") {
+        update.deletedByHostAt = firebase.firestore.FieldValue.serverTimestamp();
+      }
+    
+      await db.collection("publicSongRequests").doc(requestId).set(update, { merge: true });
+    
+      closeRequestReasonModal();
+      logAdmin(action === "abandoned" ? "Request abandoned" : "Request deleted by host");
+    }
+    
+    function escapeHTML(value) {
+      return String(value || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+    }
+    
+    setInterval(() => {
+      renderSessionDashboard();
+      renderActiveRequests();
+    }, 30000);
 
     /*
     function setLive(state) {
@@ -428,6 +792,8 @@ I think 📜, 🎼, ✍️🎼, ✍️, 📖, and 🗒️ work especially well t
             gate.style.display = "none";
     
             adminContent.style.display = "block";
+
+            listenActiveSession();
     
             if (typeof logAdmin === "function") {
                 logAdmin("Logged in as: " + user.email);
