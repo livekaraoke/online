@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Live Karaoke Admin</title>
+  <link rel="stylesheet" href="admin.css" />
+</head>
+<body class="admin-body">
+
+  <div id="passwordGate" class="password-gate">
+    <div class="gate-box">
+      <h2>Admin Login</h2>
+      <input type="email" id="emailInput" placeholder="Email..." autocomplete="email" />
+      <input type="password" id="passwordInput" placeholder="Password..." autocomplete="current-password" />
+      <button type="button" onclick="adminLogin()">Login</button>
+      <p id="passwordError" class="error"></p>
+    </div>
+  </div>
+
+  <div id="reasonModal" class="admin-modal hidden">
+    <div class="admin-modal-box">
+      <h3 id="reasonModalTitle">Request Note</h3>
+      <textarea id="reasonModalInput" placeholder="Reason / note optional"></textarea>
+      <div class="admin-modal-actions">
+        <button id="reasonConfirmBtn" type="button" class="admin-action-btn danger">Save</button>
+        <button type="button" class="admin-action-btn muted" onclick="closeReasonModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="confirmModal" class="admin-modal hidden">
+    <div class="admin-modal-box compact">
+      <h3 id="confirmModalTitle">Confirm</h3>
+      <p id="confirmModalMessage"></p>
+      <div class="admin-modal-actions">
+        <button id="confirmModalOk" type="button" class="admin-action-btn danger">Confirm</button>
+        <button type="button" class="admin-action-btn muted" onclick="closeConfirmModal(false)">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="adminContent" class="admin-shell" style="display:none;">
+    <aside class="admin-sidebar">
+      <div class="brand-block">
+        <div class="brand-icon">🎙️</div>
+        <div>
+          <div class="brand-title">LIVE KARAOKE</div>
+          <div class="brand-title big">ADMIN</div>
+        </div>
+      </div>
+
+      <div class="admin-user-card">
+        <div class="avatar">👤</div>
+        <div>
+          <strong id="adminUserName">Billy Lee</strong>
+          <span>Admin</span>
+          <small>● Online</small>
+        </div>
+      </div>
+
+      <nav class="side-nav">
+        <a href="#dashboard" class="active">🎛️ Dashboard</a>
+        <a href="#sessionPanel">🎙️ Performance Session</a>
+        <a href="#requestsPanel">🎤 Active Song Requests</a>
+        <a href="../snglst/songList.html">📜 Song List</a>
+        <a href="host/venuekaraokelyricbook.html">📖 Karaoke Lyric Book</a>
+        <a href="host/lyricsviewer.html">🎸 Lyrics & Chords Viewer</a>
+        <a href="../snglst/host/editor.html">✎ Song List Editor</a>
+        <a href="../snglst/index.html">☰ Song List View</a>
+        <a href="../notekeeper/notekeeper.html">📝 Note Keeper</a>
+        <a href="../songMeta/index.html">🏷️ Song Meta Search</a>
+        <a href="../songMeta/index.html">⏱️ Metronome / Click</a>
+        <button type="button" onclick="adminLogout()">↗ Log Out</button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <span>© 2026 Live Karaoke Malta</span>
+        <span>Version 2.3.0</span>
+      </div>
+    </aside>
+
+    <main class="admin-main" id="dashboard">
+      <header class="admin-topbar">
+        <div></div>
+        <div class="topbar-time"><span id="todayLabel">--/--/----</span><span id="clockLabel">--:--</span></div>
+      </header>
+
+      <section class="status-strip">
+        <div><span>System Status</span><strong id="statusLiveLabel">● Loading</strong></div>
+        <div><span>Venue</span><strong id="statusVenueLabel">-</strong></div>
+        <div><span>Event End</span><strong id="statusEventEndLabel">-</strong></div>
+        <div><span>Songs</span><strong id="statusSongsLabel">-</strong></div>
+        <div><span>Last Updated</span><strong id="statusUpdatedLabel">-</strong></div>
+      </section>
+
+      <section id="sessionPanel" class="admin-card session-card">
+        <div class="card-title-row">
+          <h2>🎙️ Performance Session</h2>
+        </div>
+
+        <div class="session-layout">
+          <div class="session-details">
+            <div id="sessionSetupFields" class="setup-fields">
+              <label>Session Title</label>
+              <input id="sessionTitleInput" type="text" placeholder="Friday Night at Whyte Harte" />
+              <label>Venue</label>
+              <input id="venueInput" list="venueOptions" placeholder="Whyte Harte" />
+              <datalist id="venueOptions">
+                <option value="Whyte Harte"></option>
+                <option value="Smokehouse"></option>
+              </datalist>
+            </div>
+
+            <div id="activeSessionLabels" class="active-session-labels hidden">
+              <div><span>Session Title</span><strong id="sessionTitleLabel"></strong><button type="button" onclick="editActiveSessionDetails()">✎</button></div>
+              <div><span>Venue</span><strong id="venueLabel"></strong><button type="button" onclick="editActiveSessionDetails()">✎</button></div>
+            </div>
+
+            <label class="notes-label">Session Notes</label>
+            <textarea id="sessionNotesInput" class="session-notes" placeholder="Session notes..."></textarea>
+            <div id="sessionActionStatus" class="session-action-status">Notes autosave while a session is active.</div>
+          </div>
+
+          <div class="session-controls-and-dashboard">
+            <div class="session-button-row">
+              <button id="startPerformanceBtn" type="button" onclick="confirmStartPerformance()" class="session-btn green">▶ Start Performance</button>
+              <button id="startBreakBtn" type="button" onclick="startBreak()" class="session-btn amber">☕ Start Break</button>
+              <button id="endBreakBtn" type="button" onclick="endBreak()" class="session-btn muted">End Break</button>
+              <button id="endPerformanceBtn" type="button" onclick="confirmEndPerformance()" class="session-btn red">■ End Performance</button>
+            </div>
+            <div id="sessionDashboard" class="session-dashboard"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="requestsPanel" class="admin-card requests-card">
+        <div class="card-title-row split">
+          <h2>🎤 Active Song Requests <span id="activeRequestCount">(0)</span></h2>
+          <div class="request-toolbar">
+            <select id="requestSortSelect" onchange="renderActiveRequests()">
+              <option value="oldest">Sort: Oldest</option>
+              <option value="newest">Sort: Newest</option>
+              <option value="song">Sort: Song</option>
+            </select>
+            <button type="button" onclick="renderActiveRequests()">Filter</button>
+          </div>
+        </div>
+        <div id="activeRequestsList" class="active-requests-list"></div>
+        <button type="button" class="history-btn" onclick="scrollToConsole()">☰ View All Requests History</button>
+      </section>
+
+      <section class="quick-grid">
+        <div class="quick-card">
+          <h3>🎤 Venue Mode</h3>
+          <button onclick="window.location.href='../snglst/songList.html'">📜 Song List</button>
+          <button onclick="window.location.href='host/venuekaraokelyricbook.html'">📖 Karaoke Lyric Book</button>
+        </div>
+        <div class="quick-card">
+          <h3>🎸 Host Mode</h3>
+          <button onclick="window.location.href='host/lyricsviewer.html'">🎸 Lyrics & Chords Viewer</button>
+          <button onclick="window.location.href='../snglst/host/editor.html'">✎ Song List Editor</button>
+          <button onclick="window.location.href='../snglst/index.html'">☰ Song List View</button>
+        </div>
+        <div class="quick-card">
+          <h3>🛠️ Tools</h3>
+          <button onclick="window.location.href='../notekeeper/notekeeper.html'">📝 Note Keeper</button>
+          <button onclick="window.location.href='../songMeta/index.html'">🏷️ Song Meta Search</button>
+          <button onclick="window.location.href='../songMeta/index.html'">⏱️ Metronome / Click</button>
+        </div>
+        <div class="quick-card">
+          <h3>🎙️ Performance Mode</h3>
+          <button onclick="window.location.href='host/lyricsviewer.html'">🎙️ View Live Performance Book</button>
+        </div>
+      </section>
+
+      <section id="consolePanel" class="admin-card console-card">
+        <div class="card-title-row split">
+          <h2>🖥️ Control Panel</h2>
+          <div>
+            <button type="button" class="small-outline" onclick="clearConsole()">Clear</button>
+            <button type="button" class="small-outline" onclick="exportLog()">Export Log</button>
+          </div>
+        </div>
+        <div id="adminConsole" class="admin-console"></div>
+      </section>
+
+      <footer class="admin-footer">Live Karaoke Malta • You sing, I play, everyone has fun!</footer>
+    </main>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>
