@@ -2,12 +2,13 @@
 // Replace this config with your own Firebase web app config if needed.
 // Firebase Console > Project Settings > Your apps > Web app config.
 const firebaseConfig = {
-  apiKey: "AIzaSyC4gSodXM35E2ZdYaz6mrCvTUYzW75ZCBk",
-  authDomain: "livekaraokemt.firebaseapp.com",
-  projectId: "livekaraokemt",
-  storageBucket: "livekaraokemt.firebasestorage.app",
-  messagingSenderId: "425980659562",
-  appId: "1:425980659562:web:892ddcd53fb209d1114713"
+  apiKey: "AIzaSyA6OVCYxqBa2oz52KVnJRnoOmIhHLKYDnw",
+  authDomain: "ourhive-ed53b.firebaseapp.com",
+  projectId: "ourhive-ed53b",
+  storageBucket: "ourhive-ed53b.firebasestorage.app",
+  messagingSenderId: "526656445501",
+  appId: "1:526656445501:web:c6d814e4ba3e0ead149e54",
+  measurementId: "G-CD7VFWSS7Q"
 };
 
 firebase.initializeApp(firebaseConfig);
