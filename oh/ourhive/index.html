@@ -1,0 +1,27 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Our Hive Login</title><link rel="stylesheet" href="css/styles.css"></head><body class="auth-page">
+<div class="auth-wrap">
+  <img class="auth-logo" src="assets/ourhive-logo.jpg" alt="Our Hive logo">
+  <p class="tagline">♡ Built for two. Ready for more. ♡</p>
+  <h2 class="subtag">Your shared life, all in one place.</h2>
+  <div class="feature-row"><div><b>🛒</b>Shopping Lists</div><div><b>🔗</b>Link Sharing</div><div><b>📅</b>Calendars</div><div><b>🖼️</b>Photos</div><div><b>📝</b>Notes</div><div><b>👥</b>And more...</div></div>
+  <div class="auth-card">
+    <div class="field"><span>✉️</span><input id="email" type="email" placeholder="Email address"></div>
+    <div class="field"><span>🔒</span><input id="password" type="password" placeholder="Password"><button class="icon-btn" onclick="togglePassword()">👁️</button></div>
+    <div class="auth-options"><label><input id="remember" type="checkbox" checked> Keep me signed in</label><button class="btn" onclick="resetPassword()">Forgot password?</button></div>
+    <button class="btn primary" style="width:100%" onclick="emailLogin()">👤 Sign In</button>
+    <div style="display:flex;align-items:center;gap:14px;margin:18px 0;color:var(--muted)"><hr style="flex:1;border-color:var(--line)">or<hr style="flex:1;border-color:var(--line)"></div>
+    <button class="btn google" onclick="googleLogin()">G Continue with Google</button>
+    <button class="btn" style="width:100%;margin-top:10px" onclick="signupEmail()">Create account with email</button>
+  </div>
+  <p class="quote">💙 “The best thing to hold onto in life is each other.” 💙</p>
+</div>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script><script src="js/firebase-config.js"></script><script src="js/common.js"></script>
+<script>
+auth.onAuthStateChanged(async user=>{ if(user){ await saveUserProfile(user); window.location.href='dashboard.html'; }});
+function togglePassword(){ const p=$('password'); p.type = p.type==='password'?'text':'password'; }
+async function setPersistence(){ await auth.setPersistence($('remember').checked ? firebase.auth.Auth.Persistence.LOCAL : firebase.auth.Auth.Persistence.SESSION); }
+async function emailLogin(){ try{ await setPersistence(); await auth.signInWithEmailAndPassword($('email').value.trim(), $('password').value); }catch(e){ showModal('Login failed', `<p>${escapeHtml(e.message)}</p>`); }}
+async function signupEmail(){ try{ await setPersistence(); const cred=await auth.createUserWithEmailAndPassword($('email').value.trim(), $('password').value); await saveUserProfile(cred.user); await createHive(cred.user,'Our Hive'); window.location.href='dashboard.html'; }catch(e){ showModal('Signup failed', `<p>${escapeHtml(e.message)}</p>`); }}
+async function googleLogin(){ try{ await setPersistence(); await auth.signInWithPopup(googleProvider); }catch(e){ showModal('Google login failed', `<p>${escapeHtml(e.message)}</p>`); }}
+async function resetPassword(){ const email=$('email').value.trim(); if(!email) return showModal('Email needed','<p>Enter your email first.</p>'); await auth.sendPasswordResetEmail(email); showModal('Password reset sent','<p>Check your email.</p>'); }
+</script></body></html>
