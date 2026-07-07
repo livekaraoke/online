@@ -257,7 +257,7 @@ function getAlphaGroup(title) {
   if ("CD".includes(first)) return "C – D";
   if ("EFGH".includes(first)) return "E – H";
   if ("IJKL".includes(first)) return "I – L";
-  if ("MNOPQ".includes(first)) return "M – P";
+  if ("MNOPQ".includes(first)) return "M – Q";
   if ("RS".includes(first)) return "R – S";
   return "T – Z";
 }
