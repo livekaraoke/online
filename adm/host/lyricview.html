@@ -4,9 +4,14 @@
   <meta charset="UTF-8">
   <title>Lyric View</title>
   <link rel="stylesheet" href="../css/lyricsviewer.css">
+  <link rel="stylesheet" href="css/top-statusbar.css">
 </head>
 
 <body>
+
+  <!-- TOP STATUS BAR / DASHBOARD -->
+  <div id="topStatusContainer"></div>
+  
 <header class="viewer-topbar">
   <!-- BACK BUTTON -->
   <div class="back-split">
@@ -533,12 +538,19 @@ window.addEventListener("DOMContentLoaded", populateKaraokeDropdown);
   <!------------------------------- END OF TEMP SEND LYRICS -------------------------------->
   <!---------------------------------------------------------------------------------------->
   
-<div id="youtubeModal" class="confirm-modal hidden">
-  <div class="confirm-box youtube-box">
-    <button class="youtube-close" onclick="closeYoutubePopup()">✕</button>
-    <div id="youtubePlayerWrap"></div>
+  <div id="youtubeModal" class="confirm-modal hidden">
+    <div class="confirm-box youtube-box">
+      <button class="youtube-close" onclick="closeYoutubePopup()">✕</button>
+      <div id="youtubePlayerWrap"></div>
+    </div>
   </div>
-</div>
+
+  <script src="js/top-statusbar.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      LK.topStatus.loadTopStatusBar();
+    });
+  </script>
 
 
 </body>
