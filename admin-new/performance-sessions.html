@@ -27,7 +27,6 @@
 
   <div id="appShell" class="app-shell" style="display:none;">
     <div id="sidebarContainer"></div>
-    
 
     <main class="main-area">
       <header class="page-header">
@@ -122,38 +121,33 @@
 
   <div id="deleteSessionDialog" class="custom-dialog hidden">
     <div class="dialog-box">
-        <div class="dialog-title">
-            Delete Performance Session
-        </div>
-        <div class="dialog-text">
-            This will permanently delete:
-            <ul>
-                <li>Performance Session</li>
-                <li>All linked song requests</li>
-                <li>Performance logs</li>
-            </ul>
-            This action cannot be undone.
-        </div>
-        <div class="dialog-buttons">
-            <button
-                class="dialog-cancel"
-                onclick="closeDeleteDialog()">
-                Cancel
-            </button>
-            <button
-                class="dialog-delete"
-                id="confirmDeleteBtn">
-                Delete Session
-            </button>
-        </div>
+      <div class="dialog-title">Delete Performance Session</div>
+      <div class="dialog-text">
+        This will permanently delete:
+        <ul>
+          <li>Performance Session</li>
+          <li>All linked song requests</li>
+          <li>Performance logs</li>
+        </ul>
+        This action cannot be undone.
+      </div>
+      <div class="dialog-buttons">
+        <button class="dialog-cancel" onclick="closeDeleteDialog()">Cancel</button>
+        <button class="dialog-delete" id="confirmDeleteBtn">Delete Session</button>
+      </div>
     </div>
-</div>
+  </div>
+
+  <!-- Toast notification box used instead of alert() -->
+  <div id="toastBox" class="toast-box hidden"></div>
 
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-  <script src="js/sidebar.js"></script>
+
+  <!-- firebase.js must define firebase app, db, and auth once. -->
   <script src="js/firebase.js"></script>
+  <script src="js/sidebar.js"></script>
   <script src="js/performance-sessions.js"></script>
 </body>
 </html>
