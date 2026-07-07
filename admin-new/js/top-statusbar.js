@@ -4,19 +4,26 @@
   let notifications = [];
   let lastSeenNotificationTime = Number(localStorage.getItem("lkTopStatusSeen") || 0);
 
-  function loadTopStatusBar() {
-    const target = document.getElementById("topStatusContainer");
-    if (!target) return Promise.resolve();
+function loadTopStatusBar() {
+  const target = document.getElementById("topStatusContainer");
+  if (!target) return Promise.resolve();
 
-    return fetch("../includes/top-statusbar.html")
-      .then(r => r.text())
-      .then(html => {
-        target.innerHTML = html;
-        listenStatus();
-        listenCurrentSession();
-        listenRequests();
-      });
-  }
+  const includePath =
+    document.currentScript?.dataset.include ||
+    "../includes/top-statusbar.html";
+
+  return fetch(includePath)
+    .then(r => {
+      if (!r.ok) throw new Error("Top status bar include not found: " + includePath);
+      return r.text();
+    })
+    .then(html => {
+      target.innerHTML = html;
+      listenStatus();
+      listenCurrentSession();
+      listenRequests();
+    });
+}
 
   function toggle() {
     const bar = $("topStatusBar");
