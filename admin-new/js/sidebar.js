@@ -15,14 +15,32 @@
   }
 
   function highlightCurrentPage() {
-    const currentFile = location.pathname.split("/").pop() || "admin.html";
+    const path = location.pathname.split("/").pop() || "admin.html";
+  
     document.querySelectorAll(".side-nav a").forEach(link => {
       link.classList.remove("active");
-      const match = link.dataset.match || normalizePath(link.getAttribute("href"));
-      if (match === currentFile) link.classList.add("active");
-      if (location.hash && link.getAttribute("href")?.endsWith(location.hash)) link.classList.add("active");
+  
+      const href = link.getAttribute("href") || "";
+      const cleanHref = href.split("/").pop();
+  
+      if (cleanHref === path) {
+        link.classList.add("active");
+      }
     });
   }
+
+  function scrollToAdminSection(id) {
+    const el = document.getElementById(id);
+  
+    if (!el) return;
+  
+    el.scrollIntoView({
+      behavior: "smooth",
+      block: "start"
+    });
+  }
+  
+  window.scrollToAdminSection = scrollToAdminSection;
 
   function toggleMembersPanel() {
     const panel = $("membersPanel");
