@@ -15,32 +15,20 @@
   }
 
 function highlightCurrentPage() {
+  const page = location.pathname.split("/").pop() || "admin.html";
 
-    const page = location.pathname.split("/").pop() || "admin.html";
+  document.querySelectorAll(".side-nav a").forEach(link => {
+    link.classList.remove("active");
+  });
 
-    document.querySelectorAll(".side-nav a").forEach(link => {
-        link.classList.remove("active");
-    });
+  document.querySelectorAll(".side-nav a").forEach(link => {
+    const href = (link.getAttribute("href") || "").split("/").pop();
 
-    // Dashboard pages
-    if (
-        page === "admin.html" ||
-        page === "performance-session.html" ||
-        page === "performance-sessions.html" ||
-        page === "active-song-requests.html" ||
-        page === "members-users.html" ||
-        page === "control-panel.html"
-    ) {
-
-        const dashboard = document.querySelector(
-            '.side-nav a[href="admin.html"]'
-        );
-
-        if (dashboard)
-            dashboard.classList.add("active");
-
-        return;
+    if (href === page) {
+      link.classList.add("active");
     }
+  });
+}
 
     document.querySelectorAll(".side-nav a").forEach(link => {
 
