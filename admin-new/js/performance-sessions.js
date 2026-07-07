@@ -2,18 +2,8 @@
  * PERFORMANCE SESSIONS VIEWER
  ************************************************************/
 
-const firebaseConfig = {
-  apiKey: "AIzaSyC4gSodXM35E2ZdYaz6mrCvTUYzW75ZCBk",
-  authDomain: "livekaraokemt.firebaseapp.com",
-  projectId: "livekaraokemt",
-  storageBucket: "livekaraokemt.firebasestorage.app",
-  messagingSenderId: "425980659562",
-  appId: "1:425980659562:web:892ddcd53fb209d1114713"
-};
-
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-const auth = firebase.auth();
+// Firebase is initialized in js/firebase.js.
+// This file expects global `db` and `auth` from firebase.js.
 
 let sessions = [];
 let requests = [];
@@ -32,6 +22,23 @@ function msToMinutes(ms) { return Math.max(0, Math.floor(ms / 60000)); }
 function formatTime(d) { return d ? d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "–"; }
 function formatDate(d) { return d ? d.toLocaleDateString("en-GB") : "–"; }
 function slug(v) { return String(v || "").toLowerCase(); }
+
+function showToast(message, type = "success") {
+  const box = $("toastBox");
+  if (!box) {
+    console[type === "error" ? "error" : "log"](message);
+    return;
+  }
+
+  box.className = `toast-box ${type}`;
+  box.innerText = message;
+  box.classList.remove("hidden");
+
+  clearTimeout(box._timer);
+  box._timer = setTimeout(() => {
+    box.classList.add("hidden");
+  }, 3200);
+}
 
 function adminLogin() {
   const email = $("emailInput")?.value.trim() || "";
@@ -85,10 +92,12 @@ window.closeDeleteDialog=closeDeleteDialog;
 
 function initPage() {
 
-  loadSidebar({
-    active: "dashboard",
-    dashboardSub: "performance-sessions"
-  });
+  if (typeof loadSidebar === "function") {
+    loadSidebar({
+      active: "dashboard",
+      dashboardSub: "performance-sessions"
+    });
+  }
   
   setDefaultDates();
   listenCurrentSessionPointer();
@@ -98,18 +107,9 @@ function initPage() {
 
 
 
-async function deleteSession(sessionId) {
-  if(!sessionId) return;
-  
+function deleteSession(sessionId) {
+  if (!sessionId) return;
   showDeleteDialog(sessionId);
-
-  try {
-    
-
-  } catch (error) {
-    console.error(error);
-    alert("Could not delete session: " + error.message);
-  }
 }
 
 window.deleteSession = deleteSession;
@@ -178,10 +178,11 @@ async function reallyDeleteSession(){
     
         await batch.commit();
     
-        alert("Session deleted.");
+        showToast("Session deleted.", "success");
     }
     catch(error){
         console.error(error);
+        showToast("Could not delete session: " + error.message, "error");
     }
 }
 
@@ -202,7 +203,7 @@ function listenSessions() {
     applyFilters();
   }, error => {
     console.error(error);
-    alert("Could not load performanceSessions. Check Firebase permissions.");
+    showToast("Could not load performance sessions. Check Firebase permissions.", "error");
   });
 }
 
@@ -213,7 +214,7 @@ function listenRequests() {
     applyFilters();
   }, error => {
     console.error(error);
-    alert("Could not load publicSongRequests. Check Firebase permissions.");
+    showToast("Could not load song requests. Check Firebase permissions.", "error");
   });
 }
 
@@ -384,7 +385,7 @@ function renderAnalytics() {
 function sparkline(seed) {
   const points = Array.from({ length: 18 }, (_, i) => {
     const x = i * 6;
-    const y = 20 - Math.abs(Math.sin((i + seed) * 1.3) * 15) - (Math.random() * 4);
+    const y = 20 - Math.abs(Math.sin((i + seed) * 1.3) * 15);
     return `${x},${Math.max(2, y)}`;
   }).join(" ");
   return `<svg class="sparkline" viewBox="0 0 102 26" preserveAspectRatio="none"><polyline points="${points}" fill="none" stroke="#ff3333" stroke-width="2"/></svg>`;
@@ -500,3 +501,5 @@ document.addEventListener("DOMContentLoaded",()=>{
         btn.onclick=reallyDeleteSession;
     }
 });
+
+window.showToast = showToast;
