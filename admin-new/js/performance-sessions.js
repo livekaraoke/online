@@ -5,6 +5,9 @@
 // Firebase is initialized in js/firebase.js.
 // This file expects global `db` and `auth` from firebase.js.
 
+const db = LK.db;
+const auth = LK.auth;
+
 let sessions = [];
 let requests = [];
 let filteredSessions = [];
