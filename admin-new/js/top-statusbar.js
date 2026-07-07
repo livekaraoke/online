@@ -1,4 +1,8 @@
 (function () {
+  function $(id) {
+    return document.getElementById(id);
+  }
+
   let currentSession = null;
   let currentRequests = [];
   let notifications = [];
@@ -87,11 +91,12 @@ function loadTopStatusBar() {
     `).join("");
   }
 
-  function listenStatus() {
-    if (!LK?.db) return;
+function listenStatus() {
+  const dbRef = getDb();
+  if (!dbRef) return;
 
-    LK.db.collection("karaoke").doc("state").onSnapshot(doc => {
-      const data = doc.data() || {};
+  dbRef.collection("karaoke").doc("state").onSnapshot(doc => {
+    const data = doc.data() || {};
 
       const isLive = data.isLive === true;
       const songsEnabled = data.songsEnabled === true;
@@ -108,9 +113,10 @@ function loadTopStatusBar() {
   }
 
   function listenCurrentSession() {
-    if (!LK?.db) return;
-
-    LK.db.collection("karaokeControl").doc("currentSession").onSnapshot(doc => {
+    const dbRef = getDb();
+    if (!dbRef) return;
+  
+    dbRef.collection("karaokeControl").doc("currentSession").onSnapshot(doc => {
       const pointer = doc.data() || {};
       const sessionId = pointer.activeSessionId || pointer.sessionId || null;
 
@@ -128,9 +134,10 @@ function loadTopStatusBar() {
   }
 
   function listenRequests() {
-    if (!LK?.db) return;
-
-    LK.db.collection("publicSongRequests")
+    const dbRef = getDb();
+    if (!dbRef) return;
+  
+    dbRef.collection("publicSongRequests")
       .where("status", "in", ["pending", "waiting", "active"])
       .onSnapshot(snap => {
         const previousCount = currentRequests.length;
