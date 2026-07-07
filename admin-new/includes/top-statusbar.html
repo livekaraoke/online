@@ -1,0 +1,76 @@
+<div id="topStatusBar" class="top-statusbar collapsed">
+  <div class="top-status-strip" onclick="LK.topStatus.toggle()">
+    <div class="status-pill">
+      <span id="tsLiveDot" class="dot blue"></span>
+      <strong id="tsLiveLabel">Offline</strong>
+    </div>
+
+    <div class="status-pill">
+      <span>🎙️</span>
+      <strong id="tsSessionLabel">No active session</strong>
+    </div>
+
+    <div class="status-pill">
+      <span>🎤</span>
+      <strong id="tsRequestsLabel">0 requests</strong>
+    </div>
+
+    <div class="status-pill notification-pill">
+      <span>🔔</span>
+      <strong id="tsNotificationLabel">No new alerts</strong>
+    </div>
+
+    <button id="tsToggleBtn" class="top-status-toggle" type="button">▼</button>
+  </div>
+
+  <div class="top-status-expanded">
+    <div class="top-status-grid">
+      <div class="top-status-card">
+        <span>System Status</span>
+        <strong id="tsDashLive">Offline</strong>
+      </div>
+
+      <div class="top-status-card">
+        <span>Public Song List</span>
+        <strong id="tsDashSongs">Locked</strong>
+      </div>
+
+      <div class="top-status-card">
+        <span>Session</span>
+        <strong id="tsDashSession">No active session</strong>
+      </div>
+
+      <div class="top-status-card">
+        <span>Venue</span>
+        <strong id="tsDashVenue">-</strong>
+      </div>
+
+      <div class="top-status-card">
+        <span>Started</span>
+        <strong id="tsDashStarted">-</strong>
+      </div>
+
+      <div class="top-status-card">
+        <span>Elapsed</span>
+        <strong id="tsDashElapsed">0 mins</strong>
+      </div>
+
+      <div class="top-status-card">
+        <span>Active Requests</span>
+        <strong id="tsDashRequests">0</strong>
+      </div>
+
+      <div class="top-status-card">
+        <span>Completed</span>
+        <strong id="tsDashCompleted">0</strong>
+      </div>
+    </div>
+
+    <div class="top-status-notifications">
+      <h3>Notifications</h3>
+      <div id="tsNotificationsList" class="top-status-notifications-list">
+        No notifications yet.
+      </div>
+    </div>
+  </div>
+</div>
