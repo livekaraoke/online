@@ -33,6 +33,35 @@
 .side-nav { display: flex; flex-direction: column; gap: 8px; }
 .side-nav a, .side-nav button { color: #d8d8d8; background: transparent; border: 0; text-decoration: none; text-align: left; padding: 12px 13px; border-radius: 8px; font-size: 14px; font-weight: 800; text-transform: uppercase; cursor: pointer; }
 .side-nav a:hover, .side-nav button:hover, .side-nav a.active { background: linear-gradient(90deg, rgba(185,0,0,.72), rgba(90,0,0,.28)); color: white; }
+
+.sidebar-subsection {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: -4px;
+  margin-left: 14px;
+  padding-left: 10px;
+  border-left: 1px solid rgba(255,255,255,.12);
+}
+
+.sidebar-subsection button {
+  background: transparent !important;
+  border: 0 !important;
+  color: #aaa !important;
+  text-align: left;
+  padding: 8px 10px !important;
+  font-size: 12px !important;
+  border-radius: 7px;
+  cursor: pointer;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.sidebar-subsection button:hover {
+  color: #fff !important;
+  background: rgba(255,255,255,.06) !important;
+}
+
 .sidebar-footer { margin-top: auto; display: flex; flex-direction: column; gap: 8px; color: #777; font-size: 12px; }
 @media (max-width: 1100px) {
   .admin-sidebar { position: relative; height: auto; width: 100%; }
