@@ -124,6 +124,86 @@ button, input, textarea, select { font-family: inherit; }
 .detail-request-row { display: grid; grid-template-columns: 1fr 160px 130px 100px; gap: 12px; padding: 11px; border-bottom: 1px solid var(--line-soft); }
 .detail-request-row strong { display: block; }
 .detail-request-row span { color: var(--muted); }
+
+.custom-dialog {
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.75);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  z-index:99999;
+}
+
+.custom-dialog.hidden {
+  display:none;
+}
+
+.dialog-box {
+  width:470px;
+  max-width:95vw;
+  background:#111;
+  border:1px solid rgba(255,0,0,.45);
+  border-radius:16px;
+  padding:28px;
+  box-shadow:0 0 40px rgba(255,0,0,.3);
+  animation:dialogPop .18s ease;
+}
+
+@keyframes dialogPop{
+  from {
+    opacity:0;
+    transform:scale(.92);
+  }
+  
+  to {
+    opacity:1;
+    transform:scale(1);
+  }
+}
+
+.dialog-title {
+  font-size:24px;
+  font-weight:900;
+  margin-bottom:18px;
+}
+
+.dialog-text {
+  color:#d8d8d8;
+  line-height:1.7;
+}
+
+.dialog-text ul {
+  margin-top:15px;
+  padding-left:22px;
+}
+
+.dialog-buttons {
+  display:flex;
+  justify-content:flex-end;
+  gap:12px;
+  margin-top:30px;
+}
+
+.dialog-buttons button {
+  padding:13px 24px;
+  border-radius:9px;
+  cursor:pointer;
+  font-weight:bold;
+}
+
+.dialog-cancel {
+  background:#2b2b2b;
+  color:white;
+  border:1px solid #555;
+}
+
+.dialog-delete {
+  background:#b00000;
+  border:1px solid #ff4a4a;
+  color:white;
+}
+
 @media (max-width: 1200px) {
   .app-shell { grid-template-columns: 1fr; }
   .sidebar { position: relative; height: auto; }
