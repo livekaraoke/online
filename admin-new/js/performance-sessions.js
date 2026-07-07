@@ -90,13 +90,15 @@ function closeDeleteDialog(){
 
 window.closeDeleteDialog=closeDeleteDialog;
 
-function initPage() {
+async function initPage() {
 
-  setDefaultDates();
-  listenCurrentSessionPointer();
-  listenSessions();
-  listenRequests();
+    await LK.sidebar.loadSidebar();
 
+    setDefaultDates();
+
+    listenCurrentSessionPointer();
+    listenSessions();
+    listenRequests();
 }
 
 
