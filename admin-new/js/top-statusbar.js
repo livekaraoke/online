@@ -8,7 +8,7 @@
     const target = document.getElementById("topStatusContainer");
     if (!target) return Promise.resolve();
 
-    return fetch("includes/top-statusbar.html")
+    return fetch("../../admin-new/includes/top-statusbar.html")
       .then(r => r.text())
       .then(html => {
         target.innerHTML = html;
