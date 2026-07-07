@@ -61,20 +61,18 @@ window.adminLogout = adminLogout;
 
 let initialized = false;
 
-auth.onAuthStateChanged(user => {
-    if (user) {
-        $("passwordGate").style.display = "none";
-        $("appShell").style.display = "grid";
+auth.onAuthStateChanged(async user => {
+  if (user) {
+    $("passwordGate").style.display = "none";
+    $("appShell").style.display = "grid";
 
-        if (!initialized) {
-            initialized = true;
-            initPage();
-        }
-    } else {
-        initialized = false;
-        $("passwordGate").style.display = "flex";
-        $("appShell").style.display = "none";
-    }
+    await LK.profile.ensureMyProfile(user);
+    await initPage();
+
+  } else {
+    $("passwordGate").style.display = "flex";
+    $("appShell").style.display = "none";
+  }
 });
 
 document.addEventListener("keydown", e => {
