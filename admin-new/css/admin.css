@@ -30,7 +30,13 @@ button, input, textarea, select { font-family: inherit; }
   min-height: 100vh;
 }
 
-.admin-main { margin-left: 245px; width: calc(100% - 245px); padding: 18px 28px 40px; max-width: none; }
+.admin-main {
+  margin-left: 245px;
+  width: calc(100% - 245px);
+  padding: 18px 28px 40px;
+  max-width: none;
+}
+
 .admin-card { background: rgba(16,16,16,.94); border: 1px solid var(--line); border-radius: 13px; padding: 22px; margin-bottom: 18px; box-shadow: 0 0 22px rgba(255,0,0,.08); }
 .card-title-row { margin-bottom: 18px; }
 .card-title-row.split { display: flex; justify-content: space-between; align-items: center; gap: 14px; }
