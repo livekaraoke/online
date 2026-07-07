@@ -55,15 +55,22 @@ function adminLogout() { auth.signOut(); }
 window.adminLogin = adminLogin;
 window.adminLogout = adminLogout;
 
+let initialized = false;
+
 auth.onAuthStateChanged(user => {
-  if (user) {
-    $("passwordGate").style.display = "none";
-    $("appShell").style.display = "grid";
-    initPage();
-  } else {
-    $("passwordGate").style.display = "flex";
-    $("appShell").style.display = "none";
-  }
+    if (user) {
+        $("passwordGate").style.display = "none";
+        $("appShell").style.display = "grid";
+
+        if (!initialized) {
+            initialized = true;
+            initPage();
+        }
+    } else {
+        initialized = false;
+        $("passwordGate").style.display = "flex";
+        $("appShell").style.display = "none";
+    }
 });
 
 document.addEventListener("keydown", e => {
