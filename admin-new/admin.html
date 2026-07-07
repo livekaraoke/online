@@ -164,10 +164,24 @@
       <section id="membersPanel" class="admin-card members-card collapsed">
         <div class="card-title-row split">
           <h2>👥 Members & Users</h2>
-          <button id="membersToggleBtn" class="small-outline" onclick="toggleMembersPanel()">▼ Expand</button>
+        
+          <button
+            id="membersToggleBtn"
+            class="small-outline"
+            onclick="toggleMembersPanel()">
+            ▲ Collapse
+          </button>
         </div>
-        <div class="request-toolbar"><input id="memberSearchInput" type="text" placeholder="Search users..." oninput="renderMembersList()" /><button type="button" onclick="loadAllMembers()">Refresh</button></div>
-        <p class="admin-help-text">Only the owner account can edit roles. Roles: Admin, Manager, Band Member, Venue, Host, Member, Fan.</p>
+        
+        <div class="request-toolbar">
+          <input id="memberSearchInput" type="text" placeholder="Search users..." oninput="renderMembersList()" />
+          <button type="button" onclick="loadAllMembers()">Refresh</button>
+        </div>
+        
+        <p class="admin-help-text">
+          Only the owner account can edit roles. Roles: Admin, Manager, Band Member, Venue, Host, Member, Fan.
+        </p>
+        
         <div id="membersList" class="members-list"></div>
       </section>
 
