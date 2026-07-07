@@ -92,19 +92,12 @@ window.closeDeleteDialog=closeDeleteDialog;
 
 function initPage() {
 
-  if (typeof loadSidebar === "function") {
-    loadSidebar({
-      active: "dashboard",
-      dashboardSub: "performance-sessions"
-    });
-  }
-  
   setDefaultDates();
   listenCurrentSessionPointer();
   listenSessions();
   listenRequests();
-}
 
+}
 
 
 function deleteSession(sessionId) {
