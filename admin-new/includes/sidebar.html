@@ -1,0 +1,61 @@
+<aside class="admin-sidebar">
+  <div class="brand-block">
+    <div class="brand-icon">🎙️</div>
+    <div>
+      <div class="brand-title">LIVE KARAOKE</div>
+      <div class="brand-title big">ADMIN</div>
+    </div>
+  </div>
+
+  <button type="button" class="admin-user-card" onclick="openProfileModal()" title="Open profile">
+    <div class="avatar">
+      <img id="sidebarProfileImg" src="" alt="" />
+      <span id="sidebarProfileFallback">👤</span>
+    </div>
+    <div>
+      <strong id="adminUserName">Loading...</strong>
+      <span id="adminUserRole">Admin</span>
+      <small>● Online</small>
+    </div>
+  </button>
+
+  <div class="nav-group-title">Navigation</div>
+  <nav class="side-nav">
+    <a href="admin.html" data-match="admin.html">🎛️ Dashboard</a>
+    <a href="admin.html#sessionPanel">🎙️ Performance Session</a>
+    <a href="performance-sessions.html" data-match="performance-sessions.html">◷ Performance Sessions</a>
+    <a href="admin.html#requestsPanel">🔎 Active Song Requests</a>
+    <a id="membersNavLink" href="admin.html#membersPanel">👥 Members & Users</a>
+  </nav>
+
+  <div class="nav-group-title">Venue Mode</div>
+  <nav class="side-nav">
+    <a href="../snglst/songList.html">☷ Song List</a>
+    <a href="host/venuekaraokelyricbook.html">▣ Karaoke Lyric Book</a>
+  </nav>
+
+  <div class="nav-group-title">Host Mode</div>
+  <nav class="side-nav">
+    <a href="host/lyricsviewer.html">🎸 Lyrics & Chords Viewer</a>
+    <a href="../snglst/host/editor.html">✎ Song List Editor</a>
+    <a href="../snglst/index.html">☰ Song List View</a>
+  </nav>
+
+  <div class="nav-group-title">Tools</div>
+  <nav class="side-nav">
+    <a href="../notekeeper/notekeeper.html">📝 Note Keeper</a>
+    <a href="../songMeta/index.html">🏷️ Song Meta Search</a>
+    <a href="../songMeta/index.html">⏱️ Metronome / Click</a>
+  </nav>
+
+  <div class="nav-group-title">System</div>
+  <nav class="side-nav">
+    <a href="admin.html#consolePanel">🖥️ Control Panel</a>
+    <button type="button" onclick="adminLogout()">↗ Log Out</button>
+  </nav>
+
+  <div class="sidebar-footer">
+    <span>© 2026 Live Karaoke Malta</span>
+    <span>Version 2.5.0</span>
+  </div>
+</aside>

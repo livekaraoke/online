@@ -1,0 +1,49 @@
+:root {
+  --bg: #050505;
+  --panel: #101010;
+  --panel2: #151515;
+  --line: rgba(255, 44, 44, .42);
+  --line-soft: rgba(255,255,255,.08);
+  --red: #b90000;
+  --red2: #6c0000;
+  --gold: #ffd400;
+  --green: #43d14f;
+  --blue: #1da1ff;
+  --amber: #d87900;
+  --text: #f5f5f5;
+  --muted: #9b9b9b;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; min-height: 100%; }
+body.admin-body {
+  background: radial-gradient(circle at top center, #151515 0, #060606 42%, #000 100%);
+  color: var(--text);
+  font-family: Bahnschrift, Verdana, Arial, sans-serif;
+  overflow-x: hidden;
+}
+button, input, textarea, select { font-family: inherit; }
+.hidden { display: none !important; }
+.admin-shell { display: grid; grid-template-columns: 245px minmax(0, 1fr); min-height: 100vh; }
+.admin-main { margin-left: 245px; width: calc(100% - 245px); padding: 18px 28px 40px; max-width: none; }
+.admin-card { background: rgba(16,16,16,.94); border: 1px solid var(--line); border-radius: 13px; padding: 22px; margin-bottom: 18px; box-shadow: 0 0 22px rgba(255,0,0,.08); }
+.card-title-row { margin-bottom: 18px; }
+.card-title-row.split { display: flex; justify-content: space-between; align-items: center; gap: 14px; }
+.card-title-row h2 { margin: 0; font-size: 24px; letter-spacing: 1px; text-transform: uppercase; }
+.small-outline { background: #111; color: white; border: 1px solid var(--line); border-radius: 7px; padding: 10px 14px; font-weight: 800; cursor: pointer; }
+.admin-footer { display: flex; justify-content: space-between; color: #888; font-style: italic; padding: 16px 0; }
+.quick-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-bottom: 18px; }
+.quick-card { background: rgba(16,16,16,.94); border: 1px solid var(--line); border-radius: 13px; padding: 16px; }
+.quick-card h3 { margin: 0 0 14px; font-size: 18px; text-transform: uppercase; }
+.quick-card button { width: 100%; margin: 6px 0; padding: 14px; background: linear-gradient(180deg, #970000, #560000); border: 1px solid #d53131; border-radius: 7px; color: white; font-weight: 900; cursor: pointer; }
+.console-card .admin-console { height: 190px; overflow: auto; background: #050505; border: 1px solid #222; border-radius: 9px; padding: 14px; color: #00ff99; font-family: Consolas, monospace; font-size: 13px; }
+.console-line { padding: 3px 0; }
+@media (max-width: 1100px) {
+  .admin-shell { grid-template-columns: 1fr; }
+  .admin-main { margin-left: 0; width: 100%; }
+  .quick-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 640px) {
+  .admin-main { padding: 12px; }
+  .quick-grid { grid-template-columns: 1fr; }
+  .card-title-row.split { display: block; }
+}
