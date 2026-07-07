@@ -263,7 +263,7 @@ function getAlphaGroup(title) {
 }
 
 function alphabetGroups(list) {
-  const order = ["A – B", "C – D", "E – H", "I – L", "M – P", "R – S", "T – Z"];
+  const order = ["A – B", "C – D", "E – H", "I – L", "M – Q", "R – S", "T – Z"];
   const groups = {};
   order.forEach(name => groups[name] = []);
   list.forEach(song => groups[getAlphaGroup(song.title)].push(song));
