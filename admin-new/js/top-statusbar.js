@@ -14,7 +14,7 @@ function loadTopStatusBar() {
 
   const includePath =
     document.currentScript?.dataset.include ||
-    "../includes/top-statusbar.html";
+    "../../admin-new/includes/top-statusbar.html";
 
   return fetch(includePath)
     .then(r => {
