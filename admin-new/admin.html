@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Live Karaoke Admin</title>
+
+  <link rel="stylesheet" href="css/admin.css" />
+  <link rel="stylesheet" href="css/sidebar.css" />
+  <link rel="stylesheet" href="css/dashboard.css" />
+  <link rel="stylesheet" href="css/requests.css" />
+  <link rel="stylesheet" href="css/members.css" />
+  <link rel="stylesheet" href="css/modal.css" />
+</head>
+<body class="admin-body">
+
+  <div id="passwordGate" class="password-gate">
+    <div class="gate-box">
+      <h2>Admin Login</h2>
+      <input type="email" id="emailInput" placeholder="Email..." autocomplete="email" />
+      <input type="password" id="passwordInput" placeholder="Password..." autocomplete="current-password" />
+      <button type="button" onclick="adminLogin()">Login</button>
+      <p id="passwordError" class="error"></p>
+    </div>
+  </div>
+
+  <div id="profileModal" class="admin-modal hidden">
+    <div class="admin-modal-box profile-box">
+      <h3>👤 My Profile</h3>
+      <div class="profile-preview">
+        <img id="profilePreviewImg" src="" alt="Profile" />
+        <div><strong id="profilePreviewName">Profile</strong><span id="profilePreviewRole">Member</span></div>
+      </div>
+      <label>Display Name</label><input id="profileDisplayName" type="text" placeholder="Display name" />
+      <label>Profile Picture URL</label><input id="profilePhotoURL" type="text" placeholder="https://..." />
+      <label>Phone / Contact</label><input id="profilePhone" type="text" placeholder="Optional" />
+      <label>Notes / Skills / Instrument</label><textarea id="profileBio" placeholder="Short profile details..."></textarea>
+      <div class="profile-readonly-row">
+        <div><span>Email</span><strong id="profileEmailLabel">-</strong></div>
+        <div><span>Role</span><strong id="profileRoleLabel">Member</strong></div>
+      </div>
+      <div class="admin-modal-actions">
+        <button type="button" class="admin-action-btn danger" onclick="saveMyProfile()">Save Profile</button>
+        <button type="button" class="admin-action-btn muted" onclick="closeProfileModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="memberModal" class="admin-modal hidden">
+    <div class="admin-modal-box profile-box">
+      <h3>👥 Edit Member / User</h3>
+      <input id="memberUidInput" type="hidden" />
+      <label>Email</label><input id="memberEmailInput" type="text" disabled />
+      <label>Display Name</label><input id="memberDisplayNameInput" type="text" />
+      <label>Role / Permission Category</label>
+      <select id="memberRoleInput">
+        <option>Admin</option><option>Manager</option><option>Band Member</option><option>Venue</option><option>Host</option><option>Member</option><option>Fan</option>
+      </select>
+      <label>Profile Picture URL</label><input id="memberPhotoInput" type="text" />
+      <label>Admin Notes</label><textarea id="memberAdminNotesInput" placeholder="What they were up to / notes..."></textarea>
+      <div class="admin-modal-actions">
+        <button type="button" class="admin-action-btn danger" onclick="saveMemberFromModal()">Save Member</button>
+        <button type="button" class="admin-action-btn muted" onclick="closeMemberModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="reasonModal" class="admin-modal hidden">
+    <div class="admin-modal-box">
+      <h3 id="reasonModalTitle">Request Note</h3>
+      <textarea id="reasonModalInput" placeholder="Reason / note optional"></textarea>
+      <div class="admin-modal-actions">
+        <button id="reasonConfirmBtn" type="button" class="admin-action-btn danger">Save</button>
+        <button type="button" class="admin-action-btn muted" onclick="closeReasonModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="confirmModal" class="admin-modal hidden">
+    <div class="admin-modal-box compact">
+      <h3 id="confirmModalTitle">Confirm</h3>
+      <p id="confirmModalMessage"></p>
+      <div class="admin-modal-actions">
+        <button id="confirmModalOk" type="button" class="admin-action-btn danger">Confirm</button>
+        <button type="button" class="admin-action-btn muted" onclick="closeConfirmModal(false)">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="adminContent" class="admin-shell" style="display:none;">
+    <div id="sidebarContainer"></div>
+
+    <main class="admin-main" id="dashboard">
+      <header class="admin-topbar">
+        <div></div>
+        <div class="topbar-time">
+          <span id="dayLabel" class="day-label">---</span>
+          <span id="todayLabel">--/--/----</span>
+          <span id="clockLabel" class="clock-label">--:--</span>
+        </div>
+      </header>
+
+      <section class="status-strip advanced-status-strip">
+        <div class="status-box status-live-box">
+          <span>System Status</span>
+          <div class="status-action-line">
+            <strong id="statusLiveLabel" class="offline-status">● Offline</strong>
+            <button id="liveCircleBtn" type="button" class="circle-status-btn go" onclick="toggleLive()" title="Go live">▶</button>
+          </div>
+        </div>
+        <div class="status-box"><span>Venue</span><strong id="statusVenueLabel">-</strong></div>
+        <div class="status-box"><span>Event End</span><strong id="statusEventEndLabel">-</strong></div>
+        <div class="status-box public-song-status-box">
+          <span>Public Song List</span>
+          <div class="status-action-line">
+            <strong id="statusSongsLabel" class="songs-locked">LOCKED</strong>
+            <button id="songsCircleBtn" type="button" class="circle-status-btn go" onclick="toggleSongsAuto()" title="Unlock public song list">🔓</button>
+          </div>
+        </div>
+        <div class="status-box"><span>Last Updated</span><strong id="statusUpdatedLabel">-</strong></div>
+      </section>
+
+      <section id="sessionPanel" class="admin-card session-card">
+        <div class="card-title-row"><h2>🎙️ Performance Session</h2></div>
+        <div class="session-layout">
+          <div class="session-details">
+            <div id="sessionSetupFields" class="setup-fields">
+              <label>Session Title</label><input id="sessionTitleInput" type="text" placeholder="Friday Night at Whyte Harte" />
+              <label>Venue</label><input id="venueInput" list="venueOptions" placeholder="Whyte Harte" />
+              <datalist id="venueOptions"><option value="Whyte Harte"></option><option value="Smokehouse"></option></datalist>
+            </div>
+            <div id="activeSessionLabels" class="active-session-labels hidden">
+              <div><span>Session Title</span><strong id="sessionTitleLabel"></strong><button type="button" onclick="editActiveSessionDetails()">✎</button></div>
+              <div><span>Venue</span><strong id="venueLabel"></strong><button type="button" onclick="editActiveSessionDetails()">✎</button></div>
+            </div>
+            <label class="notes-label">Session Notes</label>
+            <textarea id="sessionNotesInput" class="session-notes" placeholder="Session notes..."></textarea>
+            <div id="sessionActionStatus" class="session-action-status">Notes autosave while a session is active.</div>
+          </div>
+          <div class="session-controls-and-dashboard">
+            <div class="session-button-row">
+              <button id="startPerformanceBtn" type="button" onclick="confirmStartPerformance()" class="session-btn green">▶ Start Performance</button>
+              <button id="startBreakBtn" type="button" onclick="startBreak()" class="session-btn amber">☕ Start Break</button>
+              <button id="endBreakBtn" type="button" onclick="endBreak()" class="session-btn muted">End Break</button>
+              <button id="endPerformanceBtn" type="button" onclick="confirmEndPerformance()" class="session-btn red">■ End Performance</button>
+            </div>
+            <div id="sessionDashboard" class="session-dashboard"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="requestsPanel" class="admin-card requests-card">
+        <div class="card-title-row split">
+          <h2>🎤 Active Song Requests <span id="activeRequestCount">(0)</span></h2>
+          <div class="request-toolbar">
+            <select id="requestSortSelect" onchange="renderActiveRequests()"><option value="oldest">Sort: Oldest</option><option value="newest">Sort: Newest</option><option value="song">Sort: Song</option></select>
+            <button type="button" onclick="renderActiveRequests()">Filter</button>
+          </div>
+        </div>
+        <div id="activeRequestsList" class="active-requests-list"></div>
+        <button type="button" class="history-btn" onclick="scrollToConsole()">☰ View All Requests History</button>
+      </section>
+
+      <section id="membersPanel" class="admin-card members-card collapsed">
+        <div class="card-title-row split">
+          <h2>👥 Members & Users</h2>
+          <button id="membersToggleBtn" class="small-outline" onclick="toggleMembersPanel()">▼ Expand</button>
+        </div>
+        <div class="request-toolbar"><input id="memberSearchInput" type="text" placeholder="Search users..." oninput="renderMembersList()" /><button type="button" onclick="loadAllMembers()">Refresh</button></div>
+        <p class="admin-help-text">Only the owner account can edit roles. Roles: Admin, Manager, Band Member, Venue, Host, Member, Fan.</p>
+        <div id="membersList" class="members-list"></div>
+      </section>
+
+      <section class="quick-grid">
+        <div class="quick-card"><h3>🎤 Venue Mode</h3><button onclick="window.location.href='../snglst/songList.html'">📜 Song List</button><button onclick="window.location.href='host/venuekaraokelyricbook.html'">📖 Karaoke Lyric Book</button></div>
+        <div class="quick-card"><h3>🎸 Host Mode</h3><button onclick="window.location.href='host/lyricsviewer.html'">🎸 Lyrics & Chords Viewer</button><button onclick="window.location.href='../snglst/host/editor.html'">✎ Song List Editor</button><button onclick="window.location.href='../snglst/index.html'">☰ Song List View</button></div>
+        <div class="quick-card"><h3>🛠️ Tools</h3><button onclick="window.location.href='../notekeeper/notekeeper.html'">📝 Note Keeper</button><button onclick="window.location.href='../songMeta/index.html'">🏷️ Song Meta Search</button><button onclick="window.location.href='../songMeta/index.html'">⏱️ Metronome / Click</button></div>
+        <div class="quick-card"><h3>🎙️ Performance Mode</h3><button onclick="window.location.href='host/lyricsviewer.html'">🎙️ View Live Performance Book</button></div>
+      </section>
+
+      <section id="consolePanel" class="admin-card console-card">
+        <div class="card-title-row split"><h2>🖥️ Control Panel</h2><div><button type="button" class="small-outline" onclick="clearConsole()">Clear</button><button type="button" class="small-outline" onclick="exportLog()">Export Log</button></div></div>
+        <div id="adminConsole" class="admin-console"></div>
+      </section>
+
+      <footer class="admin-footer">Live Karaoke Malta • You sing, I play, everyone has fun!</footer>
+    </main>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+
+  <script src="js/firebase.js"></script>
+  <script src="js/dashboard.js"></script>
+  <script src="js/sidebar.js"></script>
+  <script src="js/profile.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/sessions.js"></script>
+  <script src="js/requests.js"></script>
+  <script src="js/members.js"></script>
+  <script src="js/admin.js"></script>
+</body>
+</html>
