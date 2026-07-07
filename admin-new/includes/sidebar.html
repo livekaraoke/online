@@ -21,11 +21,25 @@
 
   <div class="nav-group-title">Navigation</div>
   <nav class="side-nav">
-    <a href="admin.html" data-match="admin.html">🎛️ Dashboard</a>
-    <a href="admin.html#sessionPanel">🎙️ Performance Session</a>
-    <a href="performance-sessions.html" data-match="performance-sessions.html">◷ Performance Sessions</a>
-    <a href="admin.html#requestsPanel">🔎 Active Song Requests</a>
-    <a id="membersNavLink" href="admin.html#membersPanel">👥 Members & Users</a>
+    <a href="admin.html" data-page="dashboard">🎛️ Dashboard</a>
+
+    <div class="sidebar-subsection">
+      <button type="button" onclick="scrollToAdminSection('sessionPanel')">
+        🎙️ Performance Session
+      </button>
+    
+      <button type="button" onclick="scrollToAdminSection('requestsPanel')">
+        🔎 Active Song Requests
+      </button>
+    
+      <button id="membersNavLink" type="button" onclick="scrollToAdminSection('membersPanel')">
+        👥 Members & Users
+      </button>
+    
+      <button type="button" onclick="scrollToAdminSection('consolePanel')">
+        🖥️ Control Panel
+      </button>
+    </div>
   </nav>
 
   <div class="nav-group-title">Venue Mode</div>
@@ -39,6 +53,8 @@
     <a href="host/lyricsviewer.html">🎸 Lyrics & Chords Viewer</a>
     <a href="../snglst/host/editor.html">✎ Song List Editor</a>
     <a href="../snglst/index.html">☰ Song List View</a>
+    <a href="performance-sessions.html">🎙️ Performance Sessions</a>
+    
   </nav>
 
   <div class="nav-group-title">Tools</div>
@@ -51,11 +67,14 @@
   <div class="nav-group-title">System</div>
   <nav class="side-nav">
     <a href="admin.html#consolePanel">🖥️ Control Panel</a>
+    <button id="membersNavLink" type="button" onclick="scrollToAdminSection('membersPanel')">
+      👥 Members & Users
+    </button>
     <button type="button" onclick="adminLogout()">↗ Log Out</button>
   </nav>
 
   <div class="sidebar-footer">
     <span>© 2026 Live Karaoke Malta</span>
-    <span>Version 2.5.0</span>
+    <span>Version 2.5.1</span>
   </div>
 </aside>
