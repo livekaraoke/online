@@ -14,20 +14,46 @@
     return a.pathname.split("/").pop() || "admin.html";
   }
 
-  function highlightCurrentPage() {
-    const path = location.pathname.split("/").pop() || "admin.html";
-  
+function highlightCurrentPage() {
+
+    const page = location.pathname.split("/").pop() || "admin.html";
+
     document.querySelectorAll(".side-nav a").forEach(link => {
-      link.classList.remove("active");
-  
-      const href = link.getAttribute("href") || "";
-      const cleanHref = href.split("/").pop();
-  
-      if (cleanHref === path) {
-        link.classList.add("active");
-      }
+        link.classList.remove("active");
     });
-  }
+
+    // Dashboard pages
+    if (
+        page === "admin.html" ||
+        page === "performance-session.html" ||
+        page === "performance-sessions.html" ||
+        page === "active-song-requests.html" ||
+        page === "members-users.html" ||
+        page === "control-panel.html"
+    ) {
+
+        const dashboard = document.querySelector(
+            '.side-nav a[href="admin.html"]'
+        );
+
+        if (dashboard)
+            dashboard.classList.add("active");
+
+        return;
+    }
+
+    document.querySelectorAll(".side-nav a").forEach(link => {
+
+        const href = (link.getAttribute("href") || "")
+            .split("/")
+            .pop();
+
+        if (href === page)
+            link.classList.add("active");
+
+    });
+
+}
 
   function scrollToAdminSection(id) {
     const el = document.getElementById(id);
