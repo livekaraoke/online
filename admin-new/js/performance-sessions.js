@@ -63,71 +63,48 @@ document.addEventListener("keydown", e => {
   if (e.key === "Enter" && $("passwordGate")?.style.display !== "none") adminLogin();
 });
 
+let deleteSessionPending = null;
+
+function showDeleteDialog(sessionId){
+
+    deleteSessionPending=sessionId;
+
+    $("deleteSessionDialog").classList.remove("hidden");
+
+}
+
+function closeDeleteDialog(){
+
+    deleteSessionPending=null;
+
+    $("deleteSessionDialog").classList.add("hidden");
+
+}
+
+window.closeDeleteDialog=closeDeleteDialog;
+
 function initPage() {
+
+  loadSidebar({
+    active: "dashboard",
+    dashboardSub: "performance-sessions"
+  });
+  
   setDefaultDates();
   listenCurrentSessionPointer();
   listenSessions();
   listenRequests();
 }
 
+
+
 async function deleteSession(sessionId) {
-  if (!sessionId) return;
-
-  const ok = confirm(
-    "Delete this performance session?\n\nThis will also delete its related request records and performance logs."
-  );
-
-  if (!ok) return;
+  if(!sessionId) return;
+  
+  showDeleteDialog(sessionId);
 
   try {
-    const batch = db.batch();
-
-    // Delete session document
-    const sessionRef = db.collection("performanceSessions").doc(sessionId);
-    batch.delete(sessionRef);
-
-    // Delete public song requests linked to this session
-    const requestsSnap = await db.collection("publicSongRequests")
-      .where("sessionId", "==", sessionId)
-      .get();
-
-    requestsSnap.forEach(doc => {
-      batch.delete(doc.ref);
-    });
-
-    // Delete performance logs linked to this session
-    const logsSnap = await db.collection("performanceLogs")
-      .where("sessionId", "==", sessionId)
-      .get();
-
-    logsSnap.forEach(doc => {
-      batch.delete(doc.ref);
-    });
-
-    // If deleted session is current active session, clear it
-    const currentSnap = await db.collection("karaokeControl")
-      .doc("currentSession")
-      .get();
-
-    const current = currentSnap.exists ? currentSnap.data() : null;
-
-    if (current && current.sessionId === sessionId) {
-      batch.set(
-        db.collection("karaokeControl").doc("currentSession"),
-        {
-          active: false,
-          sessionId: null,
-          title: "",
-          venue: "",
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        },
-        { merge: true }
-      );
-    }
-
-    await batch.commit();
-
-    alert("Session deleted.");
+    
 
   } catch (error) {
     console.error(error);
@@ -143,6 +120,69 @@ function setDefaultDates() {
   from.setDate(now.getDate() - 31);
   $("dateFromInput").value = from.toISOString().slice(0, 10);
   $("dateToInput").value = now.toISOString().slice(0, 10);
+}
+
+async function reallyDeleteSession(){
+
+    const sessionId=deleteSessionPending;
+
+    if(!sessionId) return;
+
+    closeDeleteDialog();
+
+    try{
+        const batch = db.batch();
+
+        // Delete session document
+        const sessionRef = db.collection("performanceSessions").doc(sessionId);
+        batch.delete(sessionRef);
+    
+        // Delete public song requests linked to this session
+        const requestsSnap = await db.collection("publicSongRequests")
+          .where("sessionId", "==", sessionId)
+          .get();
+    
+        requestsSnap.forEach(doc => {
+          batch.delete(doc.ref);
+        });
+    
+        // Delete performance logs linked to this session
+        const logsSnap = await db.collection("performanceLogs")
+          .where("sessionId", "==", sessionId)
+          .get();
+    
+        logsSnap.forEach(doc => {
+          batch.delete(doc.ref);
+        });
+    
+        // If deleted session is current active session, clear it
+        const currentSnap = await db.collection("karaokeControl")
+          .doc("currentSession")
+          .get();
+    
+        const current = currentSnap.exists ? currentSnap.data() : null;
+    
+        if (current && current.sessionId === sessionId) {
+          batch.set(
+            db.collection("karaokeControl").doc("currentSession"),
+            {
+              active: false,
+              sessionId: null,
+              title: "",
+              venue: "",
+              updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            },
+            { merge: true }
+          );
+        }
+    
+        await batch.commit();
+    
+        alert("Session deleted.");
+    }
+    catch(error){
+        console.error(error);
+    }
 }
 
 
@@ -451,4 +491,12 @@ function exportSessionsCsv() {
   a.click();
   URL.revokeObjectURL(a.href);
 }
+
 window.exportSessionsCsv = exportSessionsCsv;
+
+document.addEventListener("DOMContentLoaded",()=>{
+    const btn=$("confirmDeleteBtn");
+    if(btn){
+        btn.onclick=reallyDeleteSession;
+    }
+});
