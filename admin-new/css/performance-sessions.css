@@ -204,6 +204,33 @@ button, input, textarea, select { font-family: inherit; }
   color:white;
 }
 
+.toast-box {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 999999;
+  max-width: 360px;
+  padding: 14px 18px;
+  background: #111;
+  border: 1px solid rgba(255,0,0,.55);
+  border-radius: 10px;
+  color: #fff;
+  font-weight: 900;
+  box-shadow: 0 0 25px rgba(255,0,0,.3);
+}
+
+.toast-box.success {
+  border-color: #43d14f;
+}
+
+.toast-box.error {
+  border-color: #ff3333;
+}
+
+.toast-box.hidden {
+  display: none;
+}
+
 @media (max-width: 1200px) {
   .app-shell { grid-template-columns: 1fr; }
   .sidebar { position: relative; height: auto; }
