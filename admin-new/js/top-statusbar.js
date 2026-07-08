@@ -29,6 +29,10 @@ function loadTopStatusBar() {
     });
 }
 
+function getDb() {
+  return window.LK?.db || window.db || null;
+}
+    
   function toggle() {
     const bar = $("topStatusBar");
     const btn = $("tsToggleBtn");
