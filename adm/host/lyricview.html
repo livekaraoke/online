@@ -111,6 +111,7 @@
 <script>
   const params = new URLSearchParams(window.location.search);
   const songId = params.get("id");
+  const requestId = params.get("requestId");
 
   // ADDED: keep the latest song data available for performance logging
   let currentSongData = null;
@@ -419,47 +420,61 @@ function closeYoutubePopup() {
     }
   }
 
-  async function logSongPerformance(performedBy, song, songId) {
-    const label = performedBy === "self" ? "Performed by Me" : "Performed by Singer";
+ async function logSongPerformance(performedBy, song, songId) {
+  const label = performedBy === "self" ? "Performed by Me" : "Performed by Singer";
 
-    try {
-      setPerformanceButtonsDisabled(true);
+  try {
+    setPerformanceButtonsDisabled(true);
 
-      const sessionId = await getCurrentSessionIdOrTest();
+    const sessionId = await getCurrentSessionIdOrTest();
 
-      await db.collection("performanceLogs").add({
-        sessionId,
-        songId,
-        songTitle: song.title || "",
-        songArtist: song.artist || "",
-        userBpm: song.userBpm || "",
-        originalBpm: song.originalBpm || "",
-        capo: song.capo || "",
-        key: song.key || "",
-        year: song.year || "",
-        performedBy, // "self" or "singer"
-        performanceType: label,
-        source: "lyricview.html",
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
+    await db.collection("performanceLogs").add({
+      sessionId,
+      requestId: requestId || "",
+      songId,
+      songTitle: song.title || "",
+      songArtist: song.artist || "",
+      userBpm: song.userBpm || "",
+      originalBpm: song.originalBpm || "",
+      capo: song.capo || "",
+      key: song.key || "",
+      year: song.year || "",
+      performedBy,
+      performanceType: label,
+      source: "lyricview.html",
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
 
-      await db.collection("performanceSessions").doc(sessionId).collection("performedSongs").add({
-        songId,
-        songTitle: song.title || "",
-        songArtist: song.artist || "",
+    await db.collection("performanceSessions").doc(sessionId).collection("performedSongs").add({
+      requestId: requestId || "",
+      songId,
+      songTitle: song.title || "",
+      songArtist: song.artist || "",
+      performedBy,
+      performanceType: label,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    if (requestId && performedBy === "singer") {
+      await db.collection("publicSongRequests").doc(requestId).set({
+        status: "completed",
+        completedAt: firebase.firestore.FieldValue.serverTimestamp(),
         performedBy,
         performanceType: label,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
-
-      await showAlert("Performance Logged", `${label} has been logged.`);
-      window.location.href = "lyricsviewer.html";
-    } catch (error) {
-      console.error(error);
-      setPerformanceButtonsDisabled(false);
-      showAlert("Log Failed", "Could not log this performance. Check Firebase permissions for performanceLogs and performanceSessions.");
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
     }
+
+    await showAlert("Performance Logged", `${label} has been logged.`);
+
+    window.location.href = "../admin.html";
+
+  } catch (error) {
+    console.error(error);
+    setPerformanceButtonsDisabled(false);
+    showAlert("Log Failed", "Could not log this performance. Check Firebase permissions.");
   }
+}
 
   function setPerformanceButtonsDisabled(disabled) {
     const meBtn = document.getElementById("performedByMeBtn");
