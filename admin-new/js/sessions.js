@@ -110,28 +110,39 @@ console.log("START session clicked", {
   }
 
   async function endPerformance() {
-console.log("END sessiom clicked", {
-  LK,
-  db: LK?.db,
-  titleInput: $("sessionTitleInput"),
-  venueInput: $("venueInput")
-});
+  console.log("END session clicked", {
+    LK,
+    db: LK?.db,
+    currentSessionId: LK.state.currentSessionId
+  });
 
-    if (!LK.state.currentSessionId) return;
-
-    
-    await LK.db.collection("karaokeControl").doc("currentSession").set({
-      active: false,
-      sessionId: null,
-      activeSessionId: null,
-      title: "",
-      venue: "",
-      updatedAt: serverNow()
-    }, { merge: true });
-
-
-    setSessionStatus("Performance ended.");
+  if (!LK.state.currentSessionId) {
+    setSessionStatus("No active session to end.");
+    return;
   }
+
+  await LK.db.collection("performanceSessions").doc(LK.state.currentSessionId).set({
+    status: "ended",
+    isActive: false,
+    breakOpen: false,
+    endedAt: serverNow(),
+    updatedAt: serverNow()
+  }, { merge: true });
+
+  await LK.db.collection("karaokeControl").doc("currentSession").set({
+    active: false,
+    sessionId: null,
+    activeSessionId: null,
+    title: "",
+    venue: "",
+    updatedAt: serverNow()
+  }, { merge: true });
+
+  LK.state.currentSessionId = null;
+  LK.state.currentSessionData = null;
+
+  setSessionStatus("Performance ended.");
+}
 
   async function startBreak() {
 console.log("START break clicked", {
