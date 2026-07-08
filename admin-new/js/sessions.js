@@ -57,10 +57,15 @@
   }
 
   async function confirmStartPerformance() {
-    if (await LK.dashboard.showConfirm("Start Performance?", "This will start a new performance session and attach new song requests to it.")) {
-      ormance();
-    }
-  }
+  const ok = await LK.dashboard.showConfirm(
+    "Start Performance?",
+    "This will start a new performance session and attach new song requests to it."
+  );
+
+  if (!ok) return;
+
+  await startPerformance();
+}
 
   async function confirmEndPerformance() {
     if (await LK.dashboard.showConfirm("End Performance?", "This will end the current session. Are you sure?")) {
