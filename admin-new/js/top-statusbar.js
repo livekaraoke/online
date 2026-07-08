@@ -30,7 +30,14 @@ function loadTopStatusBar() {
 }
 
 function getDb() {
-  return window.LK?.db || window.db || null;
+  if (window.LK?.db) return window.LK.db;
+  if (window.db) return window.db;
+
+  if (window.firebase && firebase.apps && firebase.apps.length) {
+    return firebase.firestore();
+  }
+
+  return null;
 }
     
   function toggle() {
@@ -118,18 +125,23 @@ function listenStatus() {
 
 function listenCurrentSession() {
   const dbRef = getDb();
-  if (!dbRef) return;
 
-  dbRef.collection("karaokeControl").doc("currentSession").onSnapshot(doc => {
-    const pointer = doc.data() || {};
+  if (!dbRef) {
+    console.error("Top status bar: Firestore DB not found.");
+    return;
+  }
+
+  dbRef.collection("karaokeControl").doc("currentSession").onSnapshot(pointerSnap => {
+    const pointer = pointerSnap.exists ? pointerSnap.data() : {};
+
+    console.log("Top status currentSession pointer:", pointer);
 
     const sessionId =
       pointer.activeSessionId ||
       pointer.sessionId ||
-      pointer.id ||
       null;
 
-    if (sessionId) {
+    if (pointer.active === true && sessionId) {
       listenSessionDoc(sessionId);
       return;
     }
@@ -137,16 +149,19 @@ function listenCurrentSession() {
     dbRef.collection("performanceSessions")
       .where("isActive", "==", true)
       .limit(1)
-      .onSnapshot(snap => {
-        if (snap.empty) {
+      .onSnapshot(sessionSnap => {
+        if (sessionSnap.empty) {
           currentSession = null;
           renderSession();
+          listenRequests();
           return;
         }
 
-        const doc = snap.docs[0];
-        listenSessionDoc(doc.id);
+        const sessionDoc = sessionSnap.docs[0];
+        listenSessionDoc(sessionDoc.id);
       });
+  }, error => {
+    console.error("Top status session listener error:", error);
   });
 }
 
@@ -174,7 +189,11 @@ let topStatusRequestsUnsub = null;
 
 function listenRequests() {
   const dbRef = getDb();
-  if (!dbRef) return;
+
+  if (!dbRef) {
+    console.error("Top status bar: Firestore DB not found for requests.");
+    return;
+  }
 
   if (topStatusRequestsUnsub) topStatusRequestsUnsub();
 
@@ -185,16 +204,12 @@ function listenRequests() {
   }
 
   topStatusRequestsUnsub = query.onSnapshot(snap => {
-    const previousCount = currentRequests.length;
-
     currentRequests = snap.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
     }));
 
-    if (currentRequests.length > previousCount) {
-      addNotification("New song request received.");
-    }
+    console.log("Top status requests:", currentRequests);
 
     renderRequests();
   }, error => {
