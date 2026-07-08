@@ -177,3 +177,32 @@
     grid-template-columns: 1fr 1fr;
   }
 }
+
+/* Force top status bar to stay fixed on lyricview and all pages */
+#topStatusContainer {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  z-index: 999999 !important;
+}
+
+#topStatusContainer .top-statusbar {
+  position: relative !important;
+  top: auto !important;
+}
+
+/* Push page content down so the fixed bar does not cover it */
+body {
+  padding-top: 54px;
+}
+
+/* When expanded, keep it over the page */
+#topStatusContainer .top-statusbar.expanded {
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.viewer-topbar {
+  top: 54px !important;
+}
