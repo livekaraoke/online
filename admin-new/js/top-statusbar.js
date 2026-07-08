@@ -178,8 +178,7 @@ function listenRequests() {
 
   if (topStatusRequestsUnsub) topStatusRequestsUnsub();
 
-  let query = dbRef.collection("publicSongRequests")
-    .where("status", "in", ["pending", "waiting", "active"]);
+  let query = dbRef.collection("publicSongRequests");
 
   if (currentSession?.id) {
     query = query.where("sessionId", "==", currentSession.id);
@@ -227,10 +226,13 @@ function renderRequests() {
     !r.status ||
     r.status === "pending" ||
     r.status === "waiting" ||
-    r.status === "active"
+    r.status === "active" ||
+    r.status === "queued"
   );
 
-  const completed = currentRequests.filter(r => r.status === "completed");
+  const completed = currentRequests.filter(r =>
+    r.status === "completed"
+  );
 
   setText("tsRequestsLabel", `${active.length} active request${active.length === 1 ? "" : "s"}`);
   setText("tsDashRequests", String(active.length));
