@@ -101,6 +101,10 @@
 
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
+
+  window.db = db;
+  window.LK = window.LK || {};
+  window.LK.db = db;
 </script>
 
   
