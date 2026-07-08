@@ -56,9 +56,9 @@
     if (message) LK.dashboard.logAdmin(message);
   }
 
-  async function confirmStartPerformance() {
+  async function confirmormance() {
     if (await LK.dashboard.showConfirm("Start Performance?", "This will start a new performance session and attach new song requests to it.")) {
-      startPerformance();
+      ormance();
     }
   }
 
@@ -92,6 +92,7 @@
     await LK.db.collection("karaokeControl").doc("currentSession").set({
       active: true,
       sessionId: ref.id,
+      activeSessionId: ref.id,
       title,
       venue,
       updatedAt: serverNow()
@@ -114,6 +115,7 @@
     await LK.db.collection("karaokeControl").doc("currentSession").set({
       active: false,
       sessionId: null,
+      activeSessionId: null,
       title: "",
       venue: "",
       updatedAt: serverNow()
