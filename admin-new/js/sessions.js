@@ -69,6 +69,14 @@
   }
 
   async function startPerformance() {
+
+console.log("START session clicked", {
+  LK,
+  db: LK?.db,
+  titleInput: $("sessionTitleInput"),
+  venueInput: $("venueInput")
+});
+
     const title = $("sessionTitleInput")?.value.trim() || "Untitled Session";
     const venue = $("venueInput")?.value.trim() || "Unknown Venue";
     const notes = $("sessionNotesInput")?.value || "";
@@ -102,6 +110,13 @@
   }
 
   async function endPerformance() {
+console.log("END sessiom clicked", {
+  LK,
+  db: LK?.db,
+  titleInput: $("sessionTitleInput"),
+  venueInput: $("venueInput")
+});
+
     if (!LK.state.currentSessionId) return;
 
     
@@ -119,6 +134,12 @@
   }
 
   async function startBreak() {
+console.log("START break clicked", {
+  LK,
+  db: LK?.db,
+  titleInput: $("sessionTitleInput"),
+  venueInput: $("venueInput")
+});
     const session = LK.state.currentSessionData;
     if (!LK.state.currentSessionId || !session) return;
     const breaks = [...(session.breaks || [])];
@@ -129,6 +150,12 @@
   }
 
   async function endBreak() {
+console.log("END break clicked", {
+  LK,
+  db: LK?.db,
+  titleInput: $("sessionTitleInput"),
+  venueInput: $("venueInput")
+});
     const session = LK.state.currentSessionData;
     if (!LK.state.currentSessionId || !session) return;
     const breaks = [...(session.breaks || [])];
