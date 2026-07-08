@@ -112,3 +112,35 @@
     flex-direction: column !important;
   }
 }
+
+.sidebar-request-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 8px 0 12px 12px;
+  padding-left: 10px;
+  border-left: 1px solid rgba(255,255,255,.12);
+}
+
+.sidebar-request-item {
+  min-height: 54px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(0, 255, 100, .08);
+  border: 1px solid rgba(0, 255, 100, .35);
+  color: #fff;
+  cursor: pointer;
+  text-align: left;
+  font-weight: 900;
+}
+
+.sidebar-request-item span {
+  display: block;
+  color: #aaa;
+  font-size: 12px;
+  margin-top: 3px;
+}
+
+.sidebar-request-item:hover {
+  background: rgba(0, 255, 100, .18);
+}
