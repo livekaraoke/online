@@ -37,7 +37,7 @@
         <select id="artistFilterSelect" class="artist-filter-select" aria-label="Search by artist">
           <option value="">Search by artist</option>
         </select>
-        <button id="browseAllSongsBtn" class="browse-all-btn" type="button" onclick="toggleFullSongList(true)">♫ BROWSE ALL SONGS <span>→</span></button>
+        <button id="browseAllSongsBtn" class="browse-all-btn" type="button" onclick="toggleFullSongList(true)"><span>♫</span> BROWSE ALL SONGS <span>➔</span></button>
       </div>
       <div id="searchResultsBox" class="search-results-box hidden"></div>
       <div id="categoryNav" class="category-nav"></div>
@@ -47,7 +47,7 @@
 
     <section class="bottom-signup-bar requests-open-only">
       <div class="bottom-signup-copy"><b>🎙️</b><div><strong>READY TO SING?</strong><span>Add songs, then send your request to the host.</span></div></div>
-      <button class="bottom-signup-btn" type="button" onclick="openSignupModal()"><span>♙</span> SIGN UP TO SING <b class="cart-count">0</b></button>
+      <button class="bottom-signup-btn" type="button" onclick="openSignupModal()"><span>🎙️</span> SIGN UP TO SING <b class="cart-count">0</b></button>
     </section>
   </main>
 
@@ -65,7 +65,7 @@
       <p id="signupSongArtist"></p>
       <div id="signupCartPreview" class="signup-cart-preview"></div>
       <label>Your name *</label>
-      <input id="signupName" type="text" placeholder="Enter your name" required>
+      <input class="signupname" id="signupName" type="text" placeholder="Enter your name" required>
       <div class="signup-divider"></div>
       <p class="signup-help">Optional details help us understand song trends and make the night even better.</p>
       <label>Where are you visiting from?</label>
