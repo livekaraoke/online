@@ -10,6 +10,7 @@
 
     if (LK.profile?.applyProfileToDashboard) {
       LK.profile.applyProfileToDashboard();
+      listenSidebarSongRequests();
     }
   }
 
@@ -54,11 +55,64 @@
 
   window.LK = window.LK || {};
   LK.sidebar = {
-    loadSidebar,
-    highlightCurrentPage,
-    toggleMembersPanel
-  };
+  loadSidebar,
+  highlightCurrentPage,
+  toggleMembersPanel,
+  listenSidebarSongRequests
+};
 
   window.scrollToAdminSection = scrollToAdminSection;
   window.toggleMembersPanel = toggleMembersPanel;
+
+let sidebarRequestsUnsub = null;
+
+function listenSidebarSongRequests() {
+  const box = document.getElementById("sidebarSongRequests");
+  if (!box || !LK?.db) return;
+
+  if (sidebarRequestsUnsub) sidebarRequestsUnsub();
+
+  sidebarRequestsUnsub = LK.db.collection("publicSongRequests")
+    .where("status", "in", ["pending", "waiting", "active", "queued"])
+    .onSnapshot(snap => {
+      box.innerHTML = "";
+
+      if (snap.empty) return;
+
+      snap.docs.forEach(doc => {
+        const req = { id: doc.id, ...doc.data() };
+
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "sidebar-request-item";
+
+        const title = req.songTitle || req.title || "Untitled";
+        const artist = req.artist || req.songArtist || "";
+
+        btn.innerHTML = `
+          ${escapeHTML(title)}
+          <span>${escapeHTML(artist)}</span>
+        `;
+
+        btn.onclick = () => {
+          const songId = req.songId || req.lyricsId || "";
+          if (!songId) return;
+
+          window.location.href =
+            `host/lyricview.html?id=${encodeURIComponent(songId)}&requestId=${encodeURIComponent(req.id)}`;
+        };
+
+        box.appendChild(btn);
+      });
+    });
+}
+
+function escapeHTML(value) {
+  return String(value || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+
 })();
