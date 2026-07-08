@@ -116,50 +116,92 @@ function listenStatus() {
     });
   }
 
-  function listenCurrentSession() {
-    const dbRef = getDb();
-    if (!dbRef) return;
-  
-    dbRef.collection("karaokeControl").doc("currentSession").onSnapshot(doc => {
-      const pointer = doc.data() || {};
-      const sessionId = pointer.activeSessionId || pointer.sessionId || null;
+function listenCurrentSession() {
+  const dbRef = getDb();
+  if (!dbRef) return;
 
-      if (!sessionId) {
-        currentSession = null;
-        renderSession();
-        return;
-      }
+  dbRef.collection("karaokeControl").doc("currentSession").onSnapshot(doc => {
+    const pointer = doc.data() || {};
 
-      LK.db.collection("performanceSessions").doc(sessionId).onSnapshot(snap => {
-        currentSession = snap.exists ? { id: snap.id, ...snap.data() } : null;
-        renderSession();
-      });
-    });
-  }
+    const sessionId =
+      pointer.activeSessionId ||
+      pointer.sessionId ||
+      pointer.id ||
+      null;
 
-  function listenRequests() {
-    const dbRef = getDb();
-    if (!dbRef) return;
-  
-    dbRef.collection("publicSongRequests")
-      .where("status", "in", ["pending", "waiting", "active"])
+    if (sessionId) {
+      listenSessionDoc(sessionId);
+      return;
+    }
+
+    dbRef.collection("performanceSessions")
+      .where("isActive", "==", true)
+      .limit(1)
       .onSnapshot(snap => {
-        const previousCount = currentRequests.length;
-
-        currentRequests = snap.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
-
-        if (currentRequests.length > previousCount) {
-          addNotification("New song request received.");
+        if (snap.empty) {
+          currentSession = null;
+          renderSession();
+          return;
         }
 
-        renderRequests();
-      }, error => {
-        console.error(error);
+        const doc = snap.docs[0];
+        listenSessionDoc(doc.id);
       });
+  });
+}
+
+let topStatusSessionUnsub = null;
+
+function listenSessionDoc(sessionId) {
+  const dbRef = getDb();
+  if (!dbRef || !sessionId) return;
+
+  if (topStatusSessionUnsub) topStatusSessionUnsub();
+
+  topStatusSessionUnsub = dbRef.collection("performanceSessions")
+    .doc(sessionId)
+    .onSnapshot(snap => {
+      currentSession = snap.exists
+        ? { id: snap.id, ...snap.data() }
+        : null;
+
+      renderSession();
+      listenRequests();
+    });
+}
+            
+let topStatusRequestsUnsub = null;
+
+function listenRequests() {
+  const dbRef = getDb();
+  if (!dbRef) return;
+
+  if (topStatusRequestsUnsub) topStatusRequestsUnsub();
+
+  let query = dbRef.collection("publicSongRequests")
+    .where("status", "in", ["pending", "waiting", "active"]);
+
+  if (currentSession?.id) {
+    query = query.where("sessionId", "==", currentSession.id);
   }
+
+  topStatusRequestsUnsub = query.onSnapshot(snap => {
+    const previousCount = currentRequests.length;
+
+    currentRequests = snap.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+
+    if (currentRequests.length > previousCount) {
+      addNotification("New song request received.");
+    }
+
+    renderRequests();
+  }, error => {
+    console.error("Top status request listener error:", error);
+  });
+}
 
   function renderSession() {
     if (!currentSession) {
@@ -180,20 +222,20 @@ function listenStatus() {
     setText("tsDashElapsed", started ? formatDuration(Date.now() - started.getTime()) : "0 mins");
   }
 
-  function renderRequests() {
-    const active = currentRequests.filter(r =>
-      !r.status ||
-      r.status === "pending" ||
-      r.status === "waiting" ||
-      r.status === "active"
-    );
+function renderRequests() {
+  const active = currentRequests.filter(r =>
+    !r.status ||
+    r.status === "pending" ||
+    r.status === "waiting" ||
+    r.status === "active"
+  );
 
-    const completed = currentRequests.filter(r => r.status === "completed");
+  const completed = currentRequests.filter(r => r.status === "completed");
 
-    setText("tsRequestsLabel", `${active.length} request${active.length === 1 ? "" : "s"}`);
-    setText("tsDashRequests", String(active.length));
-    setText("tsDashCompleted", String(completed.length));
-  }
+  setText("tsRequestsLabel", `${active.length} active request${active.length === 1 ? "" : "s"}`);
+  setText("tsDashRequests", String(active.length));
+  setText("tsDashCompleted", String(completed.length));
+}
 
   function setText(id, value) {
     const el = $(id);
