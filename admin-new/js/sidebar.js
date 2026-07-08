@@ -99,7 +99,7 @@ function listenSidebarSongRequests() {
           if (!songId) return;
 
           window.location.href =
-            `${location.pathname.includes("/host/") ? "lyricview.html" : "host/lyricview.html"}?id=${encodeURIComponent(songId)}&requestId=${encodeURIComponent(req.id)}`;
+            `../../adm/host/lyricview.html?id=${encodeURIComponent(songId)}&requestId=${encodeURIComponent(req.id)}`;
         };
 
         box.appendChild(btn);
