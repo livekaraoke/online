@@ -232,7 +232,7 @@ window.songs = [
     setFrequency: "rare",
     hostKaraokePage: "1",
     livePage: "1",
-    hasLyrics: false
+    hasLyrics: true
   },
   {
     title: "Basket Case",
@@ -295,7 +295,7 @@ window.songs = [
     setFrequency: "rare",
     hostKaraokePage: "1",
     livePage: "1",
-    hasLyrics: false
+    hasLyrics: true
   },
   {
     title: "Bella Ciao",
@@ -337,7 +337,7 @@ window.songs = [
     setFrequency: "rare",
     hostKaraokePage: "1",
     livePage: "1",
-    hasLyrics: false
+    hasLyrics: true
   },
   {
     title: "Bittersweet Symphony",
@@ -463,7 +463,7 @@ window.songs = [
     setFrequency: "rare",
     hostKaraokePage: "1",
     livePage: "1",
-    hasLyrics: false
+    hasLyrics: true
   },
   {
     title: "Call Me The Breeze",
@@ -2337,7 +2337,7 @@ window.songs = [
   {
     title: "Scientist, The",
     artist: "Coldplay",
-    url: "lyrics/song.html?id=scientistthe",
+    url: "lyrics/song.html?id=thescientist",
     year: 2002,
     bpm: 72,
     gender: "Male",
@@ -2353,7 +2353,7 @@ window.songs = [
     setFrequency: "rare",
     hostKaraokePage: "1",
     livePage: "1",
-    hasLyrics: false
+    hasLyrics: true
   },
   {
     title: "Self Esteem",
@@ -3088,7 +3088,7 @@ window.songs = [
     setFrequency: "rare",
     hostKaraokePage: "1",
     livePage: "1",
-    hasLyrics: false
+    hasLyrics: true
   },
   {
     title: "White Wedding",
