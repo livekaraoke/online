@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Song List Editor</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body data-page="editor">
+  <main class="songbook editor-page">
+    <section class="songlist-banner editor-banner">
+      <h1>★ Song List Editor ★</h1>
+      <p>Edit the Venue Main Public Song List</p>
+    </section>
+
+    <section class="editor-panel">
+      <h2>List Settings</h2>
+      <label>Public List Name</label>
+      <input id="listNameInput" placeholder="Venue Main Public Song List">
+      <button onclick="saveListSettings()" class="editor-btn red">Save List Settings</button>
+    </section>
+
+    <section class="editor-panel">
+      <div class="panel-heading-row">
+        <h2>Sections</h2>
+        <span class="small-muted">Custom sections shown above the full song list</span>
+      </div>
+      <div class="section-add-grid">
+        <div>
+          <label>New Section Title</label>
+          <input id="sectionTitleInput" placeholder="e.g. 90s Rock Songs">
+        </div>
+        <label class="checkbox-row section-open-check">
+          <input type="checkbox" id="sectionOpenInput" checked> Open by default
+        </label>
+        <button onclick="addSection()" class="editor-btn red">Add Section</button>
+      </div>
+      <p class="editor-help">Use ☰ to drag section order. Use ▲/▼ to collapse the editor view of each section.</p>
+      <div id="sectionsEditor"></div>
+    </section>
+
+    <section class="editor-panel">
+      <h2>★ Full Song List ★</h2>
+      <p class="editor-help">This is loaded from the Firebase <strong>lyrics</strong> collection. Songs cannot be added or deleted here. Use Show/Hide only.</p>
+      <div id="fullSongCount" class="editor-count">Total songs: 0</div>
+      <div id="fullSongList"></div>
+    </section>
+  </main>
+
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyC4gSodXM35E2ZdYaz6mrCvTUYzW75ZCBk",
+      authDomain: "livekaraokemt.firebaseapp.com",
+      projectId: "livekaraokemt",
+      storageBucket: "livekaraokemt.firebasestorage.app",
+      messagingSenderId: "425980659562",
+      appId: "1:425980659562:web:892ddcd53fb209d1114713"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+  </script>
+  <script src="../js/songlist.js"></script>
+</body>
+</html>
