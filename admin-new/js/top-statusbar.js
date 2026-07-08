@@ -28,9 +28,21 @@ function loadTopStatusBar() {
       listenRequests();
     });
 }
-
+/*
 function getDb() {
   if (window.LK?.db) return window.LK.db;
+  if (window.db) return window.db;
+
+  if (window.firebase && firebase.apps && firebase.apps.length) {
+    return firebase.firestore();
+  }
+
+  return null;
+}
+*/
+
+function getDb() {
+  if (window.LK && window.LK.db) return window.LK.db;
   if (window.db) return window.db;
 
   if (window.firebase && firebase.apps && firebase.apps.length) {
@@ -287,10 +299,10 @@ function renderRequests() {
   }, 1000);
 
   window.LK = window.LK || {};
-  LK.topStatus = {
-    loadTopStatusBar,
-    toggle,
-    addNotification,
-    markNotificationsSeen
-  };
+window.LK.topStatus = {
+  loadTopStatusBar,
+  toggle,
+  addNotification,
+  markNotificationsSeen
+};
 })();
