@@ -56,7 +56,7 @@
     if (message) LK.dashboard.logAdmin(message);
   }
 
-  async function confirmormance() {
+  async function confirmPerformance() {
     if (await LK.dashboard.showConfirm("Start Performance?", "This will start a new performance session and attach new song requests to it.")) {
       ormance();
     }
