@@ -104,14 +104,7 @@
   async function endPerformance() {
     if (!LK.state.currentSessionId) return;
 
-    await LK.db.collection("performanceSessions").doc(LK.state.currentSessionId).set({
-      status: "ended",
-      isActive: false,
-      breakOpen: false,
-      endedAt: serverNow(),
-      updatedAt: serverNow()
-    }, { merge: true });
-
+    
     await LK.db.collection("karaokeControl").doc("currentSession").set({
       active: false,
       sessionId: null,
@@ -120,6 +113,7 @@
       venue: "",
       updatedAt: serverNow()
     }, { merge: true });
+
 
     setSessionStatus("Performance ended.");
   }
