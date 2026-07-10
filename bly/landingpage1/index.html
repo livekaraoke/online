@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#020c10">
+  <title>Billy Lee — Live Looping Show</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="stage-wrap">
+    <!--
+      The approved 1024 × 1536 mock is used as the visual layer so the local
+      webpage is pixel-identical to the supplied design. Transparent semantic
+      controls are positioned over the artwork to keep it functional.
+    -->
+    <section id="design-stage" class="design-stage" aria-label="Billy Lee landing page">
+      <img id="design-image" class="design-image" src="assets/mock-main.png" alt="Billy Lee landing page">
+
+      <button class="hotspot hs-menu" data-open="menu" aria-label="Open menu"></button>
+      <button class="hotspot hs-share" data-share aria-label="Share this page"></button>
+
+      <button class="hotspot hs-request" data-open="request" aria-label="Request a song"></button>
+      <button class="hotspot hs-songs" data-open="songs" aria-label="Open full song list"></button>
+      <button class="hotspot hs-gigs" data-open="gigs" aria-label="Open upcoming gigs"></button>
+      <button class="hotspot hs-tips" data-open="tips" aria-label="Open digital tips"></button>
+      <button class="hotspot hs-connect" data-open="connect" aria-label="Open follow and connect"></button>
+      <button class="hotspot hs-media" data-open="media" aria-label="Open watch and listen"></button>
+
+      <button class="hotspot hs-view-songs" data-open="songs" aria-label="View full song list"></button>
+      <button class="hotspot hs-song-1" data-song="Sweet Home Alabama" aria-label="Request Sweet Home Alabama"></button>
+      <button class="hotspot hs-song-2" data-song="Wonderwall" aria-label="Request Wonderwall"></button>
+      <button class="hotspot hs-song-3" data-song="Fix You" aria-label="Request Fix You"></button>
+      <button class="hotspot hs-song-4" data-song="Hallelujah" aria-label="Request Hallelujah"></button>
+      <button class="hotspot hs-song-5" data-song="I'm Yours" aria-label="Request I'm Yours"></button>
+
+      <button class="hotspot hs-view-gigs" data-open="gigs" aria-label="View all gigs"></button>
+      <button class="hotspot hs-gig-row" data-open="gigs" aria-label="Open weekly gig schedule"></button>
+
+      <a class="hotspot hs-roxanna" href="https://roxanna.mt" target="_blank" rel="noopener" aria-label="Visit the Roxanna page"></a>
+
+      <!-- Active only while the exact gigs-popup artwork is displayed. -->
+      <button class="hotspot hs-gigs-close modal-image-control" data-close-gigs aria-label="Close upcoming gigs"></button>
+      <button class="hotspot hs-calendar modal-image-control" data-calendar aria-label="Add weekly gigs to calendar"></button>
+    </section>
+  </main>
+
+  <!-- Other functions use a custom semitransparent window over the approved page. -->
+  <div id="modal-layer" class="modal-layer" hidden>
+    <div class="modal-backdrop" data-close></div>
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <button class="modal-close" data-close aria-label="Close">×</button>
+      <div id="modal-content"></div>
+    </section>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,222 @@
+:root{
+  --cyan:#5ee5ed;
+  --line:rgba(112,225,233,.45);
+  --text:#eef7f6;
+  --muted:#b5c5c5;
+  font-family:"Arial Narrow","Roboto Condensed",Arial,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:#00080b;color:var(--text)}
+body{overflow-x:hidden}
+button,input,textarea{font:inherit}
+.stage-wrap{display:flex;justify-content:center;min-height:100vh;background:#00080b}
+.design-stage{
+  position:relative;
+  width:min(100vw,1024px);
+  aspect-ratio:2/3;
+  flex:0 0 auto;
+  background:#031116;
+  overflow:hidden;
+}
+.design-image{
+  display:block;
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  user-select:none;
+  pointer-events:none;
+}
+.hotspot{
+  position:absolute;
+  padding:0;
+  margin:0;
+  border:0;
+  background:transparent;
+  cursor:pointer;
+  border-radius:8px;
+}
+.hotspot:focus-visible{
+  outline:2px solid var(--cyan);
+  outline-offset:2px;
+  background:rgba(94,229,237,.08);
+}
+.modal-image-control{display:none}
+.design-stage.gigs-open .modal-image-control{display:block}
+
+/* Pixel-mapped click areas based on the 1024 × 1536 approved mock. */
+.hs-menu{left:1.5%;top:1%;width:8%;height:5%}
+.hs-share{left:84%;top:1%;width:14%;height:5%}
+
+.hs-request{left:2.5%;top:48.1%;width:16%;height:12.2%}
+.hs-songs{left:18.5%;top:48.1%;width:16.8%;height:12.2%}
+.hs-gigs{left:35.3%;top:48.1%;width:16.8%;height:12.2%}
+.hs-tips{left:52.1%;top:48.1%;width:16.4%;height:12.2%}
+.hs-connect{left:68.5%;top:48.1%;width:16.1%;height:12.2%}
+.hs-media{left:84.6%;top:48.1%;width:15.2%;height:12.2%}
+
+.hs-view-songs{left:76%;top:61.4%;width:20%;height:3.5%}
+.hs-song-1{left:4.5%;top:65.0%;width:56%;height:2.8%}
+.hs-song-2{left:4.5%;top:67.8%;width:56%;height:2.8%}
+.hs-song-3{left:4.5%;top:70.6%;width:56%;height:2.8%}
+.hs-song-4{left:4.5%;top:73.4%;width:56%;height:2.8%}
+.hs-song-5{left:4.5%;top:76.2%;width:56%;height:2.8%}
+
+.hs-view-gigs{left:76%;top:80.1%;width:20%;height:3.5%}
+.hs-gig-row{left:4.5%;top:83.5%;width:91%;height:8%}
+.hs-roxanna{left:4.5%;top:93.0%;width:91%;height:4.8%}
+
+.hs-gigs-close{left:76.5%;top:23.5%;width:5.5%;height:4%}
+.hs-calendar{left:34%;top:76.0%;width:31%;height:3.8%}
+
+.modal-layer{
+  position:fixed;
+  z-index:40;
+  inset:0;
+  display:grid;
+  place-items:center;
+  padding:5vh 5vw;
+}
+.modal-layer[hidden]{display:none}
+.modal-backdrop{
+  position:absolute;
+  inset:0;
+  background:rgba(0,8,11,.78);
+  backdrop-filter:blur(8px);
+}
+.modal{
+  position:relative;
+  width:min(780px,75vw);
+  max-height:78vh;
+  overflow:auto;
+  padding:42px;
+  border:1px solid var(--line);
+  border-radius:21px;
+  background:linear-gradient(135deg,rgba(6,42,49,.94),rgba(2,20,25,.96));
+  box-shadow:0 28px 90px rgba(0,0,0,.75);
+}
+.modal-close{
+  position:sticky;
+  top:0;
+  float:right;
+  width:42px;
+  height:42px;
+  border:1px solid #dceaea;
+  border-radius:50%;
+  background:rgba(2,14,18,.72);
+  color:white;
+  font-size:25px;
+  cursor:pointer;
+}
+.modal-header{text-align:center;max-width:620px;margin:0 auto 28px}
+.modal-header .eyebrow{
+  margin:0 0 15px;
+  color:#c5d4d4;
+  font-size:12px;
+  letter-spacing:.18em;
+  text-transform:uppercase;
+}
+.modal-header h2{
+  margin:0 0 12px;
+  color:var(--cyan);
+  font-weight:400;
+  font-size:32px;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+}
+.modal-header p{color:#c9d6d6;line-height:1.65}
+.form-stack{display:grid;gap:16px}
+.form-stack label,.search-label{display:grid;gap:8px;color:var(--muted)}
+input,textarea{
+  width:100%;
+  border:1px solid rgba(112,225,233,.28);
+  border-radius:9px;
+  padding:13px 15px;
+  color:white;
+  background:rgba(0,10,13,.55);
+  outline:none;
+}
+input:focus,textarea:focus{border-color:var(--cyan)}
+.primary,.secondary,.amount{
+  width:100%;
+  border-radius:9px;
+  padding:14px 17px;
+  cursor:pointer;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+}
+.primary{border:1px solid var(--cyan);background:rgba(94,229,237,.08);color:var(--cyan)}
+.secondary{border:1px solid rgba(255,255,255,.18);background:transparent;color:white}
+.form-note{font-size:12px;color:#9fb0b0;line-height:1.55}
+.song-list{margin-top:16px;border:1px solid rgba(112,225,233,.25);border-radius:13px;overflow:hidden;max-height:48vh;overflow-y:auto}
+.song-button{
+  width:100%;
+  min-height:55px;
+  display:grid;
+  grid-template-columns:1fr .8fr 20px;
+  gap:15px;
+  align-items:center;
+  padding:0 17px;
+  border:0;
+  border-bottom:1px solid rgba(255,255,255,.08);
+  background:transparent;
+  color:white;
+  text-align:left;
+  cursor:pointer;
+}
+.song-button:last-child{border-bottom:0}
+.song-button span{color:#b9c7c7}
+.song-button i{color:var(--cyan);font-style:normal;font-size:23px}
+.amount-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:11px}
+.amount{border:1px solid rgba(112,225,233,.28);background:rgba(0,10,13,.45);color:var(--cyan);font-size:24px}
+.link-list{display:grid;gap:10px}
+.link-list a,.link-list button{
+  display:flex;
+  justify-content:space-between;
+  width:100%;
+  border:1px solid rgba(112,225,233,.28);
+  border-radius:9px;
+  padding:15px 17px;
+  background:rgba(0,10,13,.45);
+  color:white;
+  text-decoration:none;
+  cursor:pointer;
+}
+.media-box{
+  min-height:260px;
+  display:grid;
+  place-items:center;
+  border:1px solid rgba(112,225,233,.28);
+  border-radius:14px;
+  background:rgba(0,10,13,.48);
+  color:var(--cyan);
+  font-size:55px;
+}
+.toast{
+  position:fixed;
+  z-index:80;
+  left:50%;
+  bottom:24px;
+  transform:translate(-50%,25px);
+  opacity:0;
+  padding:12px 18px;
+  border:1px solid rgba(112,225,233,.35);
+  border-radius:999px;
+  background:#08262d;
+  color:white;
+  transition:.25s;
+  pointer-events:none;
+}
+.toast.visible{opacity:1;transform:translate(-50%,0)}
+
+@media(max-width:700px){
+  .modal-layer{padding:2vh 12px}
+  .modal{width:100%;max-height:92vh;padding:25px 17px}
+  .modal-header h2{font-size:25px}
+  .amount-grid{grid-template-columns:repeat(2,1fr)}
+}
+
+/* Interaction reliability fixes */
+.design-image{position:relative;z-index:1}
+.hotspot{z-index:5;pointer-events:auto}
+.design-stage.gigs-open .hotspot:not(.modal-image-control){pointer-events:none}
+.design-stage.gigs-open .modal-image-control{z-index:10;pointer-events:auto}
