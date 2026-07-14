@@ -1,184 +1,15 @@
-.top-statusbar {
-  position: sticky;
-  top: 0;
-  z-index: 9000;
-  width: 100%;
-  background: rgba(8, 8, 8, 0.92);
-  border-bottom: 1px solid rgba(255, 0, 0, 0.45);
-  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.45);
-  backdrop-filter: blur(10px);
-  color: #fff;
-  font-family: Bahnschrift, Arial, sans-serif;
+/* =========================================================
+   TOP PERFORMANCE STATUS BAR
+   ========================================================= */
+
+* {
+  box-sizing: border-box;
 }
 
-.top-statusbar.collapsed {
-  height: 54px;
-  overflow: hidden;
+.hidden {
+  display: none !important;
 }
 
-.top-statusbar.expanded {
-  min-height: 250px;
-  background: rgba(8, 8, 8, 0.78);
-}
-
-.top-statusbar.has-new {
-  animation: topStatusFlash 1.1s infinite;
-}
-
-@keyframes topStatusFlash {
-  0%, 100% {
-    box-shadow: 0 0 0 rgba(0, 255, 80, 0);
-    border-bottom-color: rgba(255, 0, 0, 0.45);
-  }
-
-  50% {
-    box-shadow: 0 0 26px rgba(0, 255, 80, 0.65);
-    border-bottom-color: #00ff66;
-  }
-}
-
-.top-status-strip {
-  min-height: 54px;
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr)) 44px;
-  align-items: center;
-  gap: 12px;
-  padding: 7px 16px;
-  cursor: pointer;
-}
-
-.status-pill {
-  min-width: 0;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 10px;
-  background: rgba(255, 255, 255, 0.035);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 10px;
-  white-space: nowrap;
-  overflow: hidden;
-}
-
-.status-pill strong {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  font-size: 14px;
-}
-
-.notification-pill strong {
-  color: #00ff66;
-}
-
-.dot {
-  width: 10px;
-  height: 10px;
-  display: inline-block;
-  border-radius: 50%;
-}
-
-.dot.blue {
-  background: #1ea7ff;
-  box-shadow: 0 0 12px #1ea7ff;
-}
-
-.dot.green {
-  background: #00ff66;
-  box-shadow: 0 0 12px #00ff66;
-}
-
-.dot.red {
-  background: #ff3333;
-  box-shadow: 0 0 12px #ff3333;
-}
-
-.top-status-toggle {
-  width: 38px;
-  height: 38px;
-  border: 1px solid rgba(255, 0, 0, 0.55);
-  border-radius: 10px;
-  background: rgba(255, 0, 0, 0.12);
-  color: #ffd400;
-  font-size: 18px;
-  font-weight: 900;
-  cursor: pointer;
-}
-
-.top-status-expanded {
-  padding: 10px 16px 18px;
-}
-
-.top-status-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
-}
-
-.top-status-card {
-  min-height: 70px;
-  padding: 12px;
-  background: rgba(0, 0, 0, 0.55);
-  border: 1px solid rgba(255, 0, 0, 0.28);
-  border-radius: 12px;
-}
-
-.top-status-card span {
-  display: block;
-  color: #aaa;
-  font-size: 11px;
-  text-transform: uppercase;
-  font-weight: 900;
-  margin-bottom: 8px;
-}
-
-.top-status-card strong {
-  color: #fff;
-  font-size: 18px;
-}
-
-.top-status-notifications {
-  margin-top: 12px;
-  padding: 12px;
-  background: rgba(0, 0, 0, 0.45);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
-}
-
-.top-status-notifications h3 {
-  margin: 0 0 8px;
-  color: #ffd400;
-  font-size: 15px;
-}
-
-.top-status-notifications-list {
-  max-height: 80px;
-  overflow-y: auto;
-  color: #ddd;
-  font-size: 13px;
-}
-
-.top-status-notification {
-  padding: 6px 0;
-  border-bottom: 1px solid rgba(255,255,255,.08);
-}
-
-@media (max-width: 699px) {
-  .top-status-strip {
-    grid-template-columns: 1fr 44px;
-  }
-
-  .status-pill:nth-child(2),
-  .status-pill:nth-child(3),
-  .status-pill:nth-child(4) {
-    display: none;
-  }
-
-  .top-status-grid {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-
-/* Force top status bar to stay fixed on lyricview and all pages */
 #topStatusContainer {
   position: fixed !important;
   top: 0 !important;
@@ -187,22 +18,762 @@
   z-index: 999999 !important;
 }
 
-#topStatusContainer .top-statusbar {
-  position: relative !important;
-  top: auto !important;
+.top-statusbar {
+  position: relative;
+  width: 100%;
+  color: #fff;
+  font-family: Bahnschrift, Arial, sans-serif;
+  background: rgba(4, 8, 13, 0.96);
+  border-bottom: 1px solid rgba(190, 30, 30, 0.65);
+  box-shadow: 0 10px 36px rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(14px);
 }
 
-/* Push page content down so the fixed bar does not cover it */
-body {
-  padding-top: 54px;
+.top-statusbar.collapsed {
+  height: 62px;
+  overflow: hidden;
 }
 
-/* When expanded, keep it over the page */
-#topStatusContainer .top-statusbar.expanded {
-  max-height: 260px;
+.top-statusbar.expanded {
+  max-height: calc(100vh - 12px);
   overflow-y: auto;
+  background: rgba(3, 8, 13, 0.9);
+}
+
+.top-statusbar.has-new {
+  animation: topStatusFlash 1.15s infinite;
+}
+
+@keyframes topStatusFlash {
+  0%,
+  100% {
+    border-bottom-color: rgba(190, 30, 30, 0.65);
+    box-shadow: 0 10px 36px rgba(0, 0, 0, 0.65);
+  }
+
+  50% {
+    border-bottom-color: #00e875;
+    box-shadow:
+      0 0 28px rgba(0, 232, 117, 0.58),
+      0 10px 36px rgba(0, 0, 0, 0.65);
+  }
+}
+
+/* =========================================================
+   COLLAPSED STRIP
+   ========================================================= */
+
+.top-status-strip {
+  min-height: 62px;
+  display: grid;
+  grid-template-columns:
+    minmax(145px, 0.9fr)
+    minmax(190px, 1fr)
+    minmax(180px, 1fr)
+    minmax(190px, 1fr)
+    54px;
+  align-items: center;
+  gap: 14px;
+  padding: 8px 20px;
+  cursor: pointer;
+}
+
+.status-pill {
+  min-width: 0;
+  height: 46px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 15px;
+  background:
+    linear-gradient(
+      145deg,
+      rgba(12, 22, 32, 0.92),
+      rgba(4, 10, 16, 0.92)
+    );
+  border: 1px solid rgba(100, 140, 175, 0.19);
+  border-radius: 14px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.035),
+    0 5px 12px rgba(0, 0, 0, 0.22);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.status-pill strong {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 16px;
+  letter-spacing: 0.15px;
+}
+
+.notification-pill strong {
+  color: #00e875;
+}
+
+.notification-icon-wrap {
+  position: relative;
+  flex: 0 0 auto;
+  font-size: 20px;
+}
+
+.notification-badge {
+  position: absolute;
+  top: -8px;
+  right: -10px;
+  min-width: 20px;
+  height: 20px;
+  display: grid;
+  place-items: center;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #f22b2b;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 900;
+  box-shadow: 0 0 12px rgba(242, 43, 43, 0.55);
+}
+
+.dot {
+  width: 12px;
+  height: 12px;
+  display: inline-block;
+  flex: 0 0 auto;
+  border-radius: 50%;
+}
+
+.dot.blue {
+  background: #18a7ff;
+  box-shadow: 0 0 14px #18a7ff;
+}
+
+.dot.green {
+  background: #12e879;
+  box-shadow: 0 0 16px #12e879;
+}
+
+.dot.red {
+  background: #ff3434;
+  box-shadow: 0 0 16px #ff3434;
+}
+
+.top-status-toggle {
+  width: 50px;
+  height: 46px;
+  border: 1px solid rgba(218, 37, 28, 0.72);
+  border-radius: 14px;
+  background:
+    linear-gradient(
+      145deg,
+      rgba(70, 9, 7, 0.88),
+      rgba(28, 3, 3, 0.92)
+    );
+  color: #fff;
+  font-size: 18px;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 0 15px rgba(200, 30, 22, 0.16);
+}
+
+.top-status-toggle:hover {
+  border-color: #ff4a3e;
+  background: rgba(115, 12, 8, 0.95);
+}
+
+/* =========================================================
+   EXPANDED CONTENT
+   ========================================================= */
+
+.top-status-expanded {
+  padding: 18px 20px 22px;
+}
+
+.top-performance-grid {
+  display: grid;
+  grid-template-columns:
+    minmax(180px, 0.9fr)
+    minmax(240px, 1.25fr)
+    minmax(170px, 0.75fr)
+    minmax(180px, 0.85fr)
+    minmax(270px, 1.45fr);
+  gap: 14px;
+}
+
+.performance-info-card,
+.top-status-queue-card {
+  background:
+    linear-gradient(
+      145deg,
+      rgba(8, 17, 25, 0.94),
+      rgba(3, 9, 14, 0.94)
+    );
+  border: 1px solid rgba(72, 112, 145, 0.25);
+  border-radius: 15px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.025),
+    0 8px 22px rgba(0, 0, 0, 0.3);
+}
+
+.performance-info-card {
+  min-height: 218px;
+  padding: 17px;
+}
+
+.status-card-heading {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #a9b9c9;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0.35px;
+  text-transform: uppercase;
+}
+
+.status-card-icon {
+  font-size: 19px;
+}
+
+.compact-heading {
+  margin-top: 2px;
+}
+
+.large-status-value {
+  display: block;
+  margin-top: 23px;
+  color: #fff;
+  font-size: 27px;
+  line-height: 1.08;
+  overflow-wrap: anywhere;
+}
+
+.green-value {
+  color: #1ce47a;
+}
+
+.amber-value {
+  color: #ffc21d;
+}
+
+.status-card-note {
+  display: block;
+  margin-top: 16px;
+  color: #97a7b8;
+  font-size: 13px;
+}
+
+.status-card-divider {
+  height: 1px;
+  margin: 27px 0 19px;
+  background: rgba(140, 160, 180, 0.2);
+}
+
+.status-card-divider.dashed {
+  background: none;
+  border-top: 1px dashed rgba(140, 160, 180, 0.23);
+}
+
+.song-list-locked {
+  color: #ff4444;
+}
+
+.song-list-unlocked {
+  color: #16e477;
+}
+
+/* =========================================================
+   BREAK CARD
+   ========================================================= */
+
+.break-card {
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.break-card.break-is-active {
+  border-color: rgba(255, 167, 0, 0.72);
+  box-shadow:
+    inset 0 0 35px rgba(255, 128, 0, 0.075),
+    0 0 20px rgba(255, 157, 0, 0.13);
+}
+
+.break-status-panel {
+  margin-top: 15px;
+  padding: 16px;
+  border: 1px solid rgba(100, 140, 175, 0.19);
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.break-status-panel.active-break {
+  border-color: rgba(255, 162, 0, 0.84);
+  background:
+    linear-gradient(
+      145deg,
+      rgba(92, 46, 0, 0.48),
+      rgba(23, 12, 0, 0.54)
+    );
+  box-shadow: 0 0 18px rgba(255, 157, 0, 0.13);
+}
+
+.break-status-label {
+  display: block;
+  color: #dbe6f0;
+  font-size: 20px;
+  text-transform: uppercase;
+}
+
+.active-break .break-status-label {
+  color: #ffc21d;
+  text-shadow: 0 0 10px rgba(255, 194, 29, 0.25);
+}
+
+.break-details {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 14px;
+  color: #b9c5d1;
+  font-size: 14px;
+}
+
+.break-details strong {
+  color: #fff;
+}
+
+#tsBreakDuration {
+  color: #ffc21d;
+}
+
+.break-action-btn {
+  width: 100%;
+  min-height: 42px;
+  margin-top: 12px;
+  border-radius: 10px;
+  color: #fff;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 900;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.break-action-btn.start {
+  border: 1px solid rgba(18, 217, 107, 0.62);
+  background:
+    linear-gradient(
+      180deg,
+      rgba(9, 116, 55, 0.82),
+      rgba(2, 65, 30, 0.9)
+    );
+}
+
+.break-action-btn.end {
+  border: 1px solid #ffa600;
+  background:
+    linear-gradient(
+      180deg,
+      #e28b00,
+      #a95700
+    );
+  box-shadow: 0 0 15px rgba(255, 153, 0, 0.23);
+}
+
+.break-action-btn:disabled {
+  opacity: 0.46;
+  cursor: not-allowed;
+}
+
+.break-action-message {
+  min-height: 16px;
+  margin: 7px 0 0;
+  color: #9cadbd;
+  font-size: 11px;
+  text-align: center;
+}
+
+/* =========================================================
+   NOTIFICATIONS
+   ========================================================= */
+
+.notifications-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.top-status-notifications-list {
+  flex: 1;
+  max-height: 126px;
+  margin-top: 15px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #50687c rgba(0, 0, 0, 0.25);
+}
+
+.top-status-notification {
+  display: grid;
+  grid-template-columns: 9px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 9px;
+  min-height: 34px;
+  padding: 7px 2px;
+  border-bottom: 1px solid rgba(135, 158, 180, 0.12);
+  color: #e2e9ef;
+  font-size: 13px;
+}
+
+.notification-state-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #16df76;
+  box-shadow: 0 0 9px rgba(22, 223, 118, 0.58);
+}
+
+.notification-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.top-status-notification time {
+  color: #8ea0b1;
+  font-size: 11px;
+}
+
+.top-status-empty {
+  padding: 20px 0;
+  color: #8191a0;
+  font-size: 13px;
+  text-align: center;
+}
+
+.top-status-admin-link {
+  display: block;
+  margin-top: 13px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(135, 158, 180, 0.13);
+  color: #58adff;
+  font-size: 13px;
+  font-weight: 900;
+  text-align: center;
+  text-decoration: none;
+}
+
+.top-status-admin-link:hover {
+  color: #92caff;
+}
+
+/* =========================================================
+   LIVE QUEUE
+   ========================================================= */
+
+.top-status-queue-card {
+  margin-top: 15px;
+  padding: 15px 17px 14px;
+}
+
+.queue-heading-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  padding: 0 6px 13px;
+  border-bottom: 1px solid rgba(135, 158, 180, 0.18);
+}
+
+.queue-heading-row h3 {
+  margin: 0;
+  color: #63afff;
+  font-size: 17px;
+  letter-spacing: 0.45px;
+  text-transform: uppercase;
+}
+
+.queue-heading-row h3 span:first-child {
+  margin-right: 7px;
+}
+
+#tsQueueCount {
+  margin-left: 3px;
+}
+
+.queue-scroll-hint {
+  color: #9badbd;
+  font-size: 12px;
+}
+
+.top-status-queue-list {
+  /*
+    Approximately three rows remain visible.
+    Additional requests scroll inside this box.
+  */
+  max-height: 228px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: #546b80 rgba(0, 0, 0, 0.24);
+}
+
+.top-status-queue-list::-webkit-scrollbar,
+.top-status-notifications-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.top-status-queue-list::-webkit-scrollbar-track,
+.top-status-notifications-list::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.22);
+  border-radius: 999px;
+}
+
+.top-status-queue-list::-webkit-scrollbar-thumb,
+.top-status-notifications-list::-webkit-scrollbar-thumb {
+  background: #50687c;
+  border-radius: 999px;
+}
+
+.top-status-queue-row {
+  min-height: 76px;
+  display: grid;
+  grid-template-columns:
+    52px
+    38px
+    minmax(180px, 1.5fr)
+    minmax(145px, 1fr)
+    95px;
+  align-items: center;
+  gap: 13px;
+  padding: 9px 11px;
+  border-bottom: 1px solid rgba(135, 158, 180, 0.13);
+}
+
+.top-status-queue-row:last-child {
+  border-bottom: 0;
+}
+
+.queue-position {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(83, 158, 223, 0.31);
+  border-radius: 10px;
+  background: rgba(17, 51, 80, 0.2);
+  color: #65b4ff;
+  font-size: 23px;
+  font-weight: 900;
+}
+
+.queue-song-icon {
+  font-size: 24px;
+}
+
+.queue-song-details,
+.queue-singer-details {
+  min-width: 0;
+}
+
+.queue-song-details strong,
+.queue-singer-details strong {
+  display: block;
+  overflow: hidden;
+  color: #fff;
+  font-size: 17px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.queue-song-details span,
+.queue-singer-details span {
+  display: block;
+  margin-top: 3px;
+  overflow: hidden;
+  color: #9cadbd;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.queue-person-icon {
+  margin-right: 5px;
+  color: #9cadbd;
+}
+
+.queue-position-label {
+  justify-self: center;
+  min-width: 72px;
+  padding: 8px 9px;
+  border: 1px solid rgba(66, 134, 196, 0.22);
+  border-radius: 10px;
+  background: rgba(16, 52, 86, 0.44);
+  color: #69b6ff;
+  font-size: 13px;
+  font-weight: 900;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.queue-position-label.up-next {
+  border-color: rgba(18, 218, 108, 0.28);
+  background: rgba(0, 87, 43, 0.42);
+  color: #18e478;
+}
+
+.top-status-queue-empty {
+  min-height: 95px;
+  display: grid;
+  place-items: center;
+  color: #899aa9;
+  font-size: 14px;
+}
+
+/* =========================================================
+   PAGE POSITIONING
+   ========================================================= */
+
+body {
+  padding-top: 62px;
 }
 
 .viewer-topbar {
-  top: 54px !important;
+  top: 62px !important;
+}
+
+/* =========================================================
+   TABLET
+   ========================================================= */
+
+@media (max-width: 1100px) {
+  .top-performance-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .notifications-card {
+    grid-column: span 4;
+    min-height: 150px;
+  }
+
+  .top-status-notifications-list {
+    max-height: 76px;
+  }
+
+  .top-status-queue-row {
+    grid-template-columns:
+      45px
+      34px
+      minmax(150px, 1.4fr)
+      minmax(120px, 1fr)
+      82px;
+  }
+}
+
+/* =========================================================
+   SMALL TABLET / PHONE
+   ========================================================= */
+
+@media (max-width: 699px) {
+  .top-statusbar.collapsed {
+    height: 58px;
+  }
+
+  .top-status-strip {
+    min-height: 58px;
+    grid-template-columns: minmax(0, 1fr) 48px;
+    gap: 8px;
+    padding: 6px 9px;
+  }
+
+  .status-pill {
+    height: 44px;
+  }
+
+  .status-pill:nth-child(2),
+  .status-pill:nth-child(3),
+  .status-pill:nth-child(4) {
+    display: none;
+  }
+
+  .top-status-toggle {
+    width: 46px;
+    height: 44px;
+  }
+
+  .top-status-expanded {
+    padding: 10px;
+  }
+
+  .top-performance-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 9px;
+  }
+
+  .performance-info-card {
+    min-height: 175px;
+    padding: 12px;
+  }
+
+  .notifications-card {
+    grid-column: span 2;
+  }
+
+  .large-status-value {
+    margin-top: 16px;
+    font-size: 21px;
+  }
+
+  .top-status-queue-card {
+    padding: 12px 8px;
+  }
+
+  .queue-heading-row {
+    align-items: flex-start;
+  }
+
+  .queue-scroll-hint {
+    display: none;
+  }
+
+  .top-status-queue-row {
+    min-height: 84px;
+    grid-template-columns: 38px minmax(0, 1fr) 64px;
+    gap: 9px;
+  }
+
+  .queue-position {
+    width: 34px;
+    height: 34px;
+    font-size: 18px;
+  }
+
+  .queue-song-icon {
+    display: none;
+  }
+
+  .queue-song-details {
+    grid-column: 2;
+  }
+
+  .queue-singer-details {
+    grid-column: 2;
+  }
+
+  .queue-position-label {
+    grid-column: 3;
+    grid-row: 1 / span 2;
+    min-width: 60px;
+    padding: 7px 5px;
+    font-size: 11px;
+  }
+
+  body {
+    padding-top: 58px;
+  }
+
+  .viewer-topbar {
+    top: 58px !important;
+  }
 }
