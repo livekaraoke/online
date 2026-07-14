@@ -15,6 +15,8 @@
   let knownActiveRequestIds = new Set();
 
   let breakActionRunning = false;
+  let notesSaveTimer = null;
+  let notesInputConnected = false;
 
   let lastSeenNotificationTime = Number(
     localStorage.getItem("lkTopStatusSeen") || 0
@@ -82,8 +84,10 @@
       renderSession();
       renderRequests();
 
+      connectSessionNotesInput();
       listenStatus();
       listenCurrentSession();
+      
     } catch (error) {
       console.error("Could not load top status bar:", error);
 
@@ -840,6 +844,142 @@
   }
 
   /************************************************************
+   * SESSION NOTES
+   ************************************************************/
+
+  function connectSessionNotesInput() {
+    const notesInput = $("tsSessionNotes");
+  
+    if (!notesInput || notesInputConnected) {
+      return;
+    }
+  
+    notesInput.addEventListener("click", event => {
+      event.stopPropagation();
+    });
+  
+    notesInput.addEventListener("keydown", event => {
+      event.stopPropagation();
+    });
+  
+    notesInput.addEventListener("input", saveSessionNotesDelayed);
+  
+    notesInputConnected = true;
+  }
+  
+  function renderSessionNotes() {
+    const notesInput = $("tsSessionNotes");
+    const status = $("tsNotesSaveStatus");
+  
+    if (!notesInput) {
+      return;
+    }
+  
+    if (!currentSession?.id) {
+      notesInput.disabled = true;
+      notesInput.value = "";
+  
+      if (status) {
+        status.innerText = "No active session";
+      }
+  
+      return;
+    }
+  
+    notesInput.disabled = false;
+  
+    /*
+     * Do not overwrite the text while the user is actively typing.
+     * Otherwise every Firestore update could move the cursor.
+     */
+    if (document.activeElement !== notesInput) {
+      notesInput.value = currentSession.notes || "";
+    }
+  
+    if (status && !status.dataset.saving) {
+      status.innerText = "Changes save automatically";
+    }
+  }
+  
+  function saveSessionNotesDelayed() {
+    const notesInput = $("tsSessionNotes");
+    const status = $("tsNotesSaveStatus");
+  
+    if (!notesInput || !currentSession?.id) {
+      return;
+    }
+  
+    clearTimeout(notesSaveTimer);
+  
+    if (status) {
+      status.dataset.saving = "true";
+      status.innerText = "Typing...";
+    }
+  
+    notesSaveTimer = setTimeout(saveSessionNotesNow, 700);
+  }
+  
+  async function saveSessionNotesNow() {
+    const dbRef = getDb();
+    const notesInput = $("tsSessionNotes");
+    const status = $("tsNotesSaveStatus");
+  
+    if (!dbRef || !notesInput || !currentSession?.id) {
+      return;
+    }
+  
+    const sessionIdAtSave = currentSession.id;
+    const notes = notesInput.value;
+  
+    if (status) {
+      status.dataset.saving = "true";
+      status.innerText = "Saving...";
+    }
+  
+    try {
+      await dbRef
+        .collection("performanceSessions")
+        .doc(sessionIdAtSave)
+        .set(
+          {
+            notes,
+            updatedAt: serverTimestamp()
+          },
+          { merge: true }
+        );
+  
+      /*
+       * Keep the local value in sync before Firestore returns its snapshot.
+       */
+      if (currentSession?.id === sessionIdAtSave) {
+        currentSession.notes = notes;
+      }
+  
+      if (status) {
+        delete status.dataset.saving;
+        status.innerText = "Saved";
+      }
+  
+      setTimeout(() => {
+        if (
+          status &&
+          !status.dataset.saving &&
+          currentSession?.id === sessionIdAtSave
+        ) {
+          status.innerText = "Changes save automatically";
+        }
+      }, 1400);
+    } catch (error) {
+      console.error("Could not save session notes:", error);
+  
+      if (status) {
+        delete status.dataset.saving;
+        status.innerText = "Could not save notes";
+      }
+    }
+  }
+
+  /************************************************************
    * SESSION RENDERING
    ************************************************************/
 
@@ -849,36 +989,38 @@
       setText("tsDashVenue", "-");
       setText("tsDashStarted", "-");
       setText("tsDashElapsed", "0 mins");
-
+  
       renderBreakStatus();
+      renderSessionNotes();
       return;
     }
-
+  
     setText(
       "tsSessionLabel",
       currentSession.title || "Active session"
     );
-
+  
     setText(
       "tsDashVenue",
       currentSession.venue || "-"
     );
-
+  
     const started = toDate(currentSession.startedAt);
-
+  
     setText(
       "tsDashStarted",
       formatClockTime(started)
     );
-
+  
     setText(
       "tsDashElapsed",
       started
         ? formatDuration(Date.now() - started.getTime())
         : "0 mins"
     );
-
+  
     renderBreakStatus();
+    renderSessionNotes();
   }
 
   /************************************************************
