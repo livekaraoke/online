@@ -75,25 +75,31 @@
           <span class="status-card-icon">☕</span>
           <span>Break Status</span>
         </div>
-
+      
         <div id="tsBreakPanel" class="break-status-panel">
           <strong id="tsBreakStatusLabel" class="break-status-label">
             Not on break
           </strong>
-
+      
           <div id="tsBreakDetails" class="break-details hidden">
             <span>
               Started:
               <strong id="tsBreakStarted">-</strong>
             </span>
-
+      
             <span>
-              Duration:
+              Current:
               <strong id="tsBreakDuration">0 mins</strong>
             </span>
           </div>
+      
+          <!-- ADDED: total accumulated break time -->
+          <div class="break-total-row">
+            <span>Total break time</span>
+            <strong id="tsDashBreakTotal">0 mins</strong>
+          </div>
         </div>
-
+      
         <button
           id="tsBreakActionBtn"
           class="break-action-btn start"
@@ -103,22 +109,27 @@
         >
           ☕ Start Break
         </button>
-
+      
         <p id="tsBreakActionMessage" class="break-action-message"></p>
       </section>
 
-      <!-- TOTAL BREAK TIME -->
-      <section class="performance-info-card total-break-card">
+      <section class="performance-info-card session-notes-card">
         <div class="status-card-heading">
-          <span class="status-card-icon">⏱</span>
-          <span>Total Break Time</span>
+          <span class="status-card-icon">📝</span>
+          <span>Session Notes</span>
         </div>
-
-        <strong id="tsDashBreakTotal" class="large-status-value amber-value">
-          0 mins
-        </strong>
-
-        <span class="status-card-note">Current session</span>
+      
+        <textarea
+          id="tsSessionNotes"
+          class="top-status-session-notes"
+          placeholder="Type session notes..."
+          aria-label="Session notes"
+          disabled
+        ></textarea>
+      
+        <div class="session-notes-footer">
+          <span id="tsNotesSaveStatus">No active session</span>
+        </div>
       </section>
 
       <!-- VENUE / SONG LIST -->
