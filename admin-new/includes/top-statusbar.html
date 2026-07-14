@@ -55,18 +55,24 @@
           <span class="status-card-icon">◷</span>
           <span>Started</span>
         </div>
-
+      
         <strong id="tsDashStarted" class="large-status-value">-</strong>
-
+      
         <div class="status-card-divider"></div>
-
-        <div class="status-card-heading compact-heading">
-          <span>Elapsed</span>
+      
+        <div class="elapsed-metric">
+          <span>Elapsed incl. breaks</span>
+          <strong id="tsDashElapsed" class="large-status-value green-value">
+            0 mins
+          </strong>
         </div>
-
-        <strong id="tsDashElapsed" class="large-status-value green-value">
-          0 mins
-        </strong>
+      
+        <div class="elapsed-metric elapsed-excluding">
+          <span>Elapsed excl. breaks</span>
+          <strong id="tsDashElapsedExcludingBreaks" class="secondary-time-value">
+            0 mins
+          </strong>
+        </div>
       </section>
 
       <!-- BREAK STATUS -->
@@ -94,10 +100,23 @@
           </div>
       
           <!-- ADDED: total accumulated break time -->
-          <div class="break-total-row">
-            <span>Total break time</span>
-            <strong id="tsDashBreakTotal">0 mins</strong>
+          <div class="break-summary-grid">
+            <div class="break-summary-item">
+              <span>Total break time</span>
+              <strong id="tsDashBreakTotal">0 mins</strong>
+            </div>
+          
+            <div class="break-summary-item">
+              <span>Total breaks</span>
+              <strong id="tsDashBreakCount">0</strong>
+            </div>
+          
+            <div class="break-summary-item full-width">
+              <span>Current elapsed break time</span>
+              <strong id="tsCurrentBreakDuration">0 mins</strong>
+            </div>
           </div>
+          
         </div>
       
         <button
