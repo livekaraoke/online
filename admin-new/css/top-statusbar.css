@@ -644,30 +644,250 @@ body {
 }
 
 /* =========================================================
+   COMBINED BREAK INFORMATION
+   ========================================================= */
+
+.break-total-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 13px;
+  padding-top: 11px;
+  border-top: 1px solid rgba(140, 160, 180, 0.18);
+  color: #a9b9c9;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.break-total-row strong {
+  color: #ffc21d;
+  font-size: 16px;
+  white-space: nowrap;
+}
+
+/* =========================================================
+   SESSION NOTES
+   ========================================================= */
+
+.session-notes-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.top-status-session-notes {
+  width: 100%;
+  flex: 1;
+  min-height: 122px;
+  margin-top: 15px;
+  padding: 12px 13px;
+  resize: none;
+  border: 1px solid rgba(100, 140, 175, 0.28);
+  border-radius: 11px;
+  outline: none;
+  background: rgba(0, 0, 0, 0.34);
+  color: #fff;
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.top-status-session-notes::placeholder {
+  color: #708090;
+}
+
+.top-status-session-notes:focus {
+  border-color: rgba(30, 170, 255, 0.72);
+  box-shadow: 0 0 13px rgba(30, 170, 255, 0.14);
+}
+
+.top-status-session-notes:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.session-notes-footer {
+  min-height: 16px;
+  margin-top: 8px;
+  color: #8fa1b1;
+  font-size: 11px;
+  text-align: right;
+}
+
+/* =========================================================
    TABLET
    ========================================================= */
 
-@media (max-width: 1100px) {
+@media (min-width: 700px) and (max-width: 1100px) {
+  .top-statusbar.expanded {
+    max-height: calc(100vh - 6px);
+    overflow-y: auto;
+  }
+
+  .top-status-expanded {
+    padding: 10px 12px 13px;
+  }
+
   .top-performance-grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    /*
+      Four compact cards across portrait tablet:
+      Started | Break | Notes | Venue
+    */
+    grid-template-columns:
+      minmax(125px, 0.8fr)
+      minmax(175px, 1.1fr)
+      minmax(205px, 1.3fr)
+      minmax(145px, 0.9fr);
+    gap: 9px;
+  }
+
+  .performance-info-card {
+    min-height: 175px;
+    padding: 12px;
+    border-radius: 12px;
+  }
+
+  .status-card-heading {
+    gap: 6px;
+    font-size: 10px;
+    letter-spacing: 0.2px;
+  }
+
+  .status-card-icon {
+    font-size: 15px;
+  }
+
+  .large-status-value {
+    margin-top: 14px;
+    font-size: 20px;
+  }
+
+  .status-card-divider {
+    margin: 16px 0 13px;
+  }
+
+  .break-status-panel {
+    margin-top: 10px;
+    padding: 10px;
+  }
+
+  .break-status-label {
+    font-size: 15px;
+  }
+
+  .break-details {
+    gap: 4px;
+    margin-top: 8px;
+    font-size: 11px;
+  }
+
+  .break-total-row {
+    margin-top: 8px;
+    padding-top: 7px;
+    font-size: 10px;
+  }
+
+  .break-total-row strong {
+    font-size: 13px;
+  }
+
+  .break-action-btn {
+    min-height: 34px;
+    margin-top: 8px;
+    font-size: 11px;
+  }
+
+  .break-action-message {
+    margin-top: 4px;
+    font-size: 9px;
+  }
+
+  .top-status-session-notes {
+    min-height: 105px;
+    margin-top: 10px;
+    padding: 9px;
+    font-size: 12px;
+  }
+
+  .session-notes-footer {
+    margin-top: 5px;
+    font-size: 9px;
   }
 
   .notifications-card {
-    grid-column: span 4;
-    min-height: 150px;
+    grid-column: 1 / -1;
+    min-height: 105px;
+    padding: 11px 13px;
   }
 
   .top-status-notifications-list {
-    max-height: 76px;
+    max-height: 48px;
+    margin-top: 8px;
+  }
+
+  .top-status-admin-link {
+    margin-top: 6px;
+    padding-top: 6px;
+    font-size: 11px;
+  }
+
+  .top-status-queue-card {
+    margin-top: 9px;
+    padding: 10px 12px;
+  }
+
+  .queue-heading-row {
+    padding-bottom: 8px;
+  }
+
+  .queue-heading-row h3 {
+    font-size: 13px;
+  }
+
+  .top-status-queue-list {
+    /*
+      Three compact queue rows.
+    */
+    max-height: 171px;
   }
 
   .top-status-queue-row {
+    min-height: 57px;
     grid-template-columns:
-      45px
-      34px
-      minmax(150px, 1.4fr)
-      minmax(120px, 1fr)
-      82px;
+      37px
+      28px
+      minmax(130px, 1.4fr)
+      minmax(100px, 1fr)
+      66px;
+    gap: 8px;
+    padding: 6px 8px;
+  }
+
+  .queue-position {
+    width: 31px;
+    height: 31px;
+    font-size: 16px;
+  }
+
+  .queue-song-icon {
+    font-size: 18px;
+  }
+
+  .queue-song-details strong,
+  .queue-singer-details strong {
+    font-size: 13px;
+  }
+
+  .queue-song-details span,
+  .queue-singer-details span {
+    margin-top: 1px;
+    font-size: 10px;
+  }
+
+  .queue-position-label {
+    min-width: 58px;
+    padding: 5px;
+    font-size: 9px;
   }
 }
 
