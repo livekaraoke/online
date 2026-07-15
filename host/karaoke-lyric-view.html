@@ -17,7 +17,9 @@
   </header>
 
   <div id="standbyView" class="standby-view">
-    <div class="standby-noise" aria-hidden="true"></div>
+    <div class="standby-noise" aria-hidden="true">
+      <canvas id="standbyStaticCanvas" class="standby-static-canvas"></canvas>
+    </div>
     <div class="standby-content">
       <div class="standby-logo-frame">
         <img class="standby-logo" src="img/karaokelyricdisplay_idle.png" alt="Live Karaoke — You Sing, I Play">
@@ -40,6 +42,13 @@
 
   <aside id="singerSettings" class="singer-settings hidden">
     <div class="settings-title"><h2>VIEW SETTINGS</h2><button id="closeSingerSettings" type="button">✕</button></div>
+    <label>GUIDANCE
+      <div class="settings-options guidance-options">
+        <button data-guidance="normal" class="active">Normal Mode</button>
+        <button data-guidance="pro">Lyrics Pro</button>
+      </div>
+      <small class="settings-help">Normal Mode uses clear section colours. Lyrics Pro also shows timing colours, emphasis, underlines and italics saved in the song.</small>
+    </label>
     <label>THEME<div class="settings-options"><button data-theme="default" class="active">Default</button><button data-theme="warm">Warm</button><button data-theme="contrast">High Contrast</button></div></label>
     <label>FONT<div class="settings-options"><button data-font="default" class="active">Default</button><button data-font="arial">Arial</button><button data-font="dyslexic">OpenDyslexic</button></div></label>
     <label>TEXT SIZE<div class="settings-options"><button data-size="small">A−</button><button data-size="normal" class="active">A</button><button data-size="large">A＋</button><button data-size="xlarge">A＋＋</button></div></label>
@@ -50,6 +59,11 @@
   </aside>
 
   <footer id="singerControls" class="singer-controls hidden"><button id="singerPlayBtn" class="play">▶</button><button id="singerMinusBtn">−</button><strong id="singerBottomSpeed">1.00×</strong><button id="singerPlusBtn">＋</button></footer>
+
+  <!-- CUSTOM PAGE SCROLLBAR: replaces the browser scrollbar -->
+  <div id="karaokeScrollTrack" class="karaoke-scroll-track" aria-hidden="true">
+    <div id="karaokeScrollThumb" class="karaoke-scroll-thumb"></div>
+  </div>
 
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
