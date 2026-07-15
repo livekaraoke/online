@@ -3260,7 +3260,7 @@ body[data-guidance="pro"] .singer-section-body {
 /* The PNG is now only a very faint texture underneath the live canvas. */
 .singer-standby-mode .standby-noise::before {
   opacity: .055 !important;
-  filter: grayscale(1) contrast(1.15) brightness(.52) !important;
+  filter: grayscale(1) contrast(1.15) brightness(.32) !important;
 }
 
 /* Scanlines/tracking remain visible without washing out the page. */
@@ -3283,12 +3283,12 @@ body[data-guidance="pro"] .singer-section-body {
 
 .singer-standby-mode .standby-noise.standby-glitch-frame .standby-static-canvas {
   transform: translate3d(10px, -2px, 0) scaleX(1.025) !important;
-  opacity: .62 !important;
+  opacity: .42 !important;
   filter: contrast(1.65) brightness(.72) !important;
 }
 
 .singer-standby-mode .standby-noise.standby-glitch-frame::after {
-  opacity: .40 !important;
+  opacity: .30 !important;
   transform: translate3d(-12px, 0, 0) !important;
 }
 
