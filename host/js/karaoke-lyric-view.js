@@ -9,6 +9,75 @@
   let currentControlSongId = "";
   let loadingSequence = 0;
   let loadingTimer = null;
+  let guidanceMode = localStorage.getItem("karaokeGuidanceMode") || "normal";
+  let scrollThumbDragging = false;
+  let scrollThumbStartY = 0;
+  let scrollStartY = 0;
+
+  /* ======================================================================
+   * LIVE TV STATIC CANVAS
+   * This guarantees visibly moving noise while the standby screen is open.
+   * It uses a small internal canvas and lets CSS scale it for performance.
+   * ====================================================================== */
+  let staticAnimationFrame = null;
+  let staticLastPaint = 0;
+
+  function paintStaticFrame(time = 0) {
+    const canvas = $("standbyStaticCanvas");
+    if (!canvas) return;
+
+    if (!document.body.classList.contains("singer-standby-mode")) {
+      staticAnimationFrame = requestAnimationFrame(paintStaticFrame);
+      return;
+    }
+
+    // Around 18 frames per second gives a convincing TV-static look without
+    // using unnecessary CPU on the singer tablet.
+    if (time - staticLastPaint >= 55) {
+      staticLastPaint = time;
+
+      const width = 180;
+      const height = 102;
+      if (canvas.width !== width || canvas.height !== height) {
+        canvas.width = width;
+        canvas.height = height;
+      }
+
+      const context = canvas.getContext("2d", { alpha: true });
+      const image = context.createImageData(width, height);
+      const pixels = image.data;
+
+      for (let i = 0; i < pixels.length; i += 4) {
+        const value = Math.random() < 0.08
+          ? 235 + Math.floor(Math.random() * 20)
+          : Math.floor(Math.random() * 190);
+        pixels[i] = value;
+        pixels[i + 1] = value;
+        pixels[i + 2] = value;
+        pixels[i + 3] = 205 + Math.floor(Math.random() * 50);
+      }
+
+      context.putImageData(image, 0, 0);
+
+      // Random brighter and darker horizontal tears, similar to analogue TV.
+      const tearCount = 2 + Math.floor(Math.random() * 4);
+      for (let i = 0; i < tearCount; i += 1) {
+        const y = Math.floor(Math.random() * height);
+        const h = 1 + Math.floor(Math.random() * 7);
+        context.fillStyle = Math.random() > 0.5
+          ? `rgba(255,255,255,${0.12 + Math.random() * 0.28})`
+          : `rgba(0,0,0,${0.25 + Math.random() * 0.35})`;
+        context.fillRect(0, y, width, h);
+      }
+    }
+
+    staticAnimationFrame = requestAnimationFrame(paintStaticFrame);
+  }
+
+  function initialiseLiveStatic() {
+    if (staticAnimationFrame) cancelAnimationFrame(staticAnimationFrame);
+    staticAnimationFrame = requestAnimationFrame(paintStaticFrame);
+  }
 
   function stopAutoScroll() {
     scrolling = false;
@@ -60,6 +129,7 @@
 
     setSettingsEnabled(false);
     window.scrollTo(0, 0);
+    requestAnimationFrame(updateCustomScrollbar);
   }
 
   function setLoadingState(nextSong) {
@@ -154,6 +224,50 @@
     }, error => setStandby(error.message));
   }
 
+  function sectionGuidanceClass(section) {
+    const label = String(section.title || section.type || "lyrics").toLowerCase();
+
+    if (/chorus repeat|repeat chorus|refrain repeat/.test(label)) return "guidance-repeat";
+    if (/ending|outro|end/.test(label)) return "guidance-ending";
+    if (/chorus/.test(label)) return "guidance-chorus";
+    if (/bridge/.test(label)) return "guidance-bridge";
+    if (/pre.?chorus/.test(label)) return "guidance-prechorus";
+    if (/intro|instrumental|solo|interlude|break/.test(label)) return "guidance-instrumental";
+    if (/verse/.test(label)) return "guidance-verse";
+    return "guidance-default";
+  }
+
+  function applyGuidanceMode(mode) {
+    guidanceMode = mode === "pro" ? "pro" : "normal";
+    document.body.dataset.guidance = guidanceMode;
+    localStorage.setItem("karaokeGuidanceMode", guidanceMode);
+
+    document.querySelectorAll("[data-guidance]").forEach(button => {
+      button.classList.toggle("active", button.dataset.guidance === guidanceMode);
+    });
+  }
+
+  function updateCustomScrollbar() {
+    const track = $("karaokeScrollTrack");
+    const thumb = $("karaokeScrollThumb");
+    if (!track || !thumb) return;
+
+    const pageHeight = Math.max(document.documentElement.scrollHeight, document.body.scrollHeight);
+    const viewportHeight = window.innerHeight;
+    const maxScroll = Math.max(0, pageHeight - viewportHeight);
+
+    track.classList.toggle("hidden-scrollbar", maxScroll <= 2 || document.body.classList.contains("singer-standby-mode") || document.body.classList.contains("singer-loading-mode"));
+    if (maxScroll <= 2) return;
+
+    const trackHeight = track.clientHeight;
+    const thumbHeight = Math.max(52, Math.round(trackHeight * (viewportHeight / pageHeight)));
+    const maxThumbTop = Math.max(0, trackHeight - thumbHeight);
+    const thumbTop = maxScroll ? (window.scrollY / maxScroll) * maxThumbTop : 0;
+
+    thumb.style.height = `${thumbHeight}px`;
+    thumb.style.transform = `translateY(${Math.max(0, Math.min(maxThumbTop, thumbTop))}px)`;
+  }
+
   function renderSingerSong(resetPosition = true) {
     document.body.classList.remove("singer-standby-mode", "singer-loading-mode");
     document.body.classList.add("singer-song-mode");
@@ -190,7 +304,7 @@
       }
 
       const block = document.createElement("section");
-      block.className = `singer-section type-${String(section.title || section.type || "lyrics")
+      block.className = `singer-section ${sectionGuidanceClass(section)} type-${String(section.title || section.type || "lyrics")
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, "-")}`;
 
@@ -206,7 +320,9 @@
     end.textContent = "[ END ]";
     content.appendChild(end);
 
+    applyGuidanceMode(guidanceMode);
     if (resetPosition) window.scrollTo({ top: 0, behavior: "instant" });
+    requestAnimationFrame(updateCustomScrollbar);
   }
 
   function scrollLoop() {
@@ -258,6 +374,11 @@
   $("singerPlusBtn").onclick = () => updateSpeed(0.25);
 
   document.addEventListener("click", event => {
+    const guidance = event.target.dataset.guidance;
+    if (guidance) {
+      applyGuidanceMode(guidance);
+    }
+
     const theme = event.target.dataset.theme;
     if (theme) {
       document.body.dataset.theme = theme;
@@ -291,6 +412,55 @@
     if (event.key === "Escape") $("singerSettings").classList.add("hidden");
   });
 
+  function initialiseCustomScrollbar() {
+    const track = $("karaokeScrollTrack");
+    const thumb = $("karaokeScrollThumb");
+    if (!track || !thumb) return;
+
+    window.addEventListener("scroll", updateCustomScrollbar, { passive: true });
+    window.addEventListener("resize", updateCustomScrollbar);
+
+    track.addEventListener("click", event => {
+      if (event.target === thumb) return;
+      const rect = track.getBoundingClientRect();
+      const ratio = Math.max(0, Math.min(1, (event.clientY - rect.top) / rect.height));
+      const maxScroll = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+      window.scrollTo({ top: ratio * maxScroll, behavior: "smooth" });
+    });
+
+    thumb.addEventListener("pointerdown", event => {
+      scrollThumbDragging = true;
+      scrollThumbStartY = event.clientY;
+      scrollStartY = window.scrollY;
+      thumb.setPointerCapture(event.pointerId);
+      document.body.classList.add("scroll-thumb-dragging");
+    });
+
+    thumb.addEventListener("pointermove", event => {
+      if (!scrollThumbDragging) return;
+      const trackHeight = track.clientHeight;
+      const thumbHeight = thumb.offsetHeight;
+      const maxThumbTravel = Math.max(1, trackHeight - thumbHeight);
+      const maxScroll = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+      const scrollDelta = ((event.clientY - scrollThumbStartY) / maxThumbTravel) * maxScroll;
+      window.scrollTo(0, Math.max(0, Math.min(maxScroll, scrollStartY + scrollDelta)));
+    });
+
+    const stopDrag = event => {
+      if (!scrollThumbDragging) return;
+      scrollThumbDragging = false;
+      document.body.classList.remove("scroll-thumb-dragging");
+      try { thumb.releasePointerCapture(event.pointerId); } catch (_) {}
+    };
+
+    thumb.addEventListener("pointerup", stopDrag);
+    thumb.addEventListener("pointercancel", stopDrag);
+    updateCustomScrollbar();
+  }
+
+  applyGuidanceMode(guidanceMode);
+  initialiseLiveStatic();
+  initialiseCustomScrollbar();
   setStandby();
   listenForHost();
 })();
