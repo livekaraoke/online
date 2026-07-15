@@ -15,68 +15,113 @@
   let scrollStartY = 0;
 
   /* ======================================================================
-   * LIVE TV STATIC CANVAS
-   * This guarantees visibly moving noise while the standby screen is open.
-   * It uses a small internal canvas and lets CSS scale it for performance.
+   * LIVE TV STATIC CANVAS — TEMPORAL NOISE ENGINE
+   * Generates a completely new analogue-style static frame roughly 24 times
+   * per second. This is intentionally JavaScript-driven rather than relying
+   * on a moving background image, so the noise visibly changes on tablets.
    * ====================================================================== */
-  let staticAnimationFrame = null;
-  let staticLastPaint = 0;
+  let staticTimer = null;
+  let staticContext = null;
+  let staticImageData = null;
+  let staticWidth = 0;
+  let staticHeight = 0;
 
-  function paintStaticFrame(time = 0) {
+  function resizeStaticCanvas() {
     const canvas = $("standbyStaticCanvas");
-    if (!canvas) return;
+    if (!canvas) return false;
 
-    if (!document.body.classList.contains("singer-standby-mode")) {
-      staticAnimationFrame = requestAnimationFrame(paintStaticFrame);
-      return;
+    // A low internal resolution looks more like genuine television snow and
+    // is inexpensive enough to redraw continuously on older singer tablets.
+    const aspect = Math.max(1, window.innerWidth / Math.max(1, window.innerHeight));
+    staticHeight = 150;
+    staticWidth = Math.max(220, Math.round(staticHeight * aspect));
+
+    if (canvas.width !== staticWidth || canvas.height !== staticHeight) {
+      canvas.width = staticWidth;
+      canvas.height = staticHeight;
+      staticContext = canvas.getContext("2d", { alpha: false });
+      staticImageData = staticContext.createImageData(staticWidth, staticHeight);
+      staticContext.imageSmoothingEnabled = false;
     }
 
-    // Around 18 frames per second gives a convincing TV-static look without
-    // using unnecessary CPU on the singer tablet.
-    if (time - staticLastPaint >= 55) {
-      staticLastPaint = time;
+    return !!staticContext;
+  }
 
-      const width = 180;
-      const height = 102;
-      if (canvas.width !== width || canvas.height !== height) {
-        canvas.width = width;
-        canvas.height = height;
-      }
+  function paintStaticFrame() {
+    if (!document.body.classList.contains("singer-standby-mode")) return;
+    if (!resizeStaticCanvas()) return;
 
-      const context = canvas.getContext("2d", { alpha: true });
-      const image = context.createImageData(width, height);
-      const pixels = image.data;
+    const pixels = staticImageData.data;
+    const width = staticWidth;
+    const height = staticHeight;
+    const brightBandY = Math.floor(Math.random() * height);
+    const darkBandY = Math.floor(Math.random() * height);
+    const brightBandH = 2 + Math.floor(Math.random() * 9);
+    const darkBandH = 3 + Math.floor(Math.random() * 12);
+    const globalFlash = Math.random() < 0.08 ? 30 + Math.random() * 55 : 0;
 
-      for (let i = 0; i < pixels.length; i += 4) {
-        const value = Math.random() < 0.08
-          ? 235 + Math.floor(Math.random() * 20)
-          : Math.floor(Math.random() * 190);
+    for (let y = 0; y < height; y += 1) {
+      const inBrightBand = y >= brightBandY && y < brightBandY + brightBandH;
+      const inDarkBand = y >= darkBandY && y < darkBandY + darkBandH;
+      const lineBias = (Math.random() - 0.5) * 42;
+
+      for (let x = 0; x < width; x += 1) {
+        const i = (y * width + x) * 4;
+        // Weighted mixture produces dense grey snow with occasional white and
+        // black sparks rather than a flat, overly bright texture.
+        const r = Math.random();
+        let value;
+        if (r < 0.045) value = 235 + Math.random() * 20;
+        else if (r < 0.10) value = Math.random() * 28;
+        else value = 45 + Math.random() * 150;
+
+        value += lineBias + globalFlash;
+        if (inBrightBand) value += 80;
+        if (inDarkBand) value -= 75;
+        value = Math.max(0, Math.min(255, value));
+
         pixels[i] = value;
         pixels[i + 1] = value;
         pixels[i + 2] = value;
-        pixels[i + 3] = 205 + Math.floor(Math.random() * 50);
-      }
-
-      context.putImageData(image, 0, 0);
-
-      // Random brighter and darker horizontal tears, similar to analogue TV.
-      const tearCount = 2 + Math.floor(Math.random() * 4);
-      for (let i = 0; i < tearCount; i += 1) {
-        const y = Math.floor(Math.random() * height);
-        const h = 1 + Math.floor(Math.random() * 7);
-        context.fillStyle = Math.random() > 0.5
-          ? `rgba(255,255,255,${0.12 + Math.random() * 0.28})`
-          : `rgba(0,0,0,${0.25 + Math.random() * 0.35})`;
-        context.fillRect(0, y, width, h);
+        pixels[i + 3] = 255;
       }
     }
 
-    staticAnimationFrame = requestAnimationFrame(paintStaticFrame);
+    staticContext.putImageData(staticImageData, 0, 0);
+
+    // Add 1–4 horizontally shifted slices each frame to mimic signal tearing.
+    const tears = 1 + Math.floor(Math.random() * 4);
+    for (let i = 0; i < tears; i += 1) {
+      const sourceY = Math.floor(Math.random() * (height - 10));
+      const sliceH = 2 + Math.floor(Math.random() * 10);
+      const shift = -22 + Math.floor(Math.random() * 45);
+      staticContext.drawImage(
+        staticContext.canvas,
+        0, sourceY, width, sliceH,
+        shift, sourceY, width, sliceH
+      );
+    }
+
+    // A transient tracking line makes movement obvious even from a distance.
+    if (Math.random() < 0.38) {
+      const y = Math.floor(Math.random() * height);
+      staticContext.fillStyle = `rgba(255,255,255,${0.18 + Math.random() * 0.26})`;
+      staticContext.fillRect(0, y, width, 1 + Math.floor(Math.random() * 3));
+    }
   }
 
   function initialiseLiveStatic() {
-    if (staticAnimationFrame) cancelAnimationFrame(staticAnimationFrame);
-    staticAnimationFrame = requestAnimationFrame(paintStaticFrame);
+    if (staticTimer) clearInterval(staticTimer);
+    resizeStaticCanvas();
+    paintStaticFrame();
+
+    // setInterval is used deliberately: some tablet browsers heavily throttle
+    // requestAnimationFrame for visually subtle canvases.
+    staticTimer = setInterval(paintStaticFrame, 42); // about 24 FPS
+    window.addEventListener("resize", resizeStaticCanvas);
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) paintStaticFrame();
+    });
   }
 
   function stopAutoScroll() {
