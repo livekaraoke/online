@@ -11,19 +11,142 @@
   let scrollFrame = null;
   let sectionElements = [];
   let activeSectionIndex = 0;
+  let legacyMarkerMigrationAttempted = false;
 
   if (!songId) {
     $("hostLyricsContent").innerHTML = '<div class="error-state">No song selected.</div>';
     return;
   }
 
+  /**********************************************************************
+   * TEMPORARY ONE-TIME DATABASE CLEANUP — REMOVE LEGACY LEADING "●"
+   *
+   * This migration runs once when lyricview.html loads. It scans EVERY
+   * document in the Firebase "lyrics" collection and removes a standalone
+   * "●" only when it is the first meaningful line of a saved section.
+   * Firestore batches are kept below the 500-operation limit.
+   *
+   * DELETE this entire marked block, plus the temporary call in loadSong(),
+   * after the migration has completed successfully for all songs.
+   **********************************************************************/
+  function stripLegacyLeadingMarkerFromHTML(html) {
+    const original = String(html || "");
+    if (!original.trim()) return original;
+
+    const holder = document.createElement("div");
+    holder.innerHTML = original;
+
+    while (
+      holder.firstChild &&
+      holder.firstChild.nodeType === Node.TEXT_NODE &&
+      !holder.firstChild.textContent.trim()
+    ) {
+      holder.firstChild.remove();
+    }
+
+    const first = holder.firstChild;
+    if (
+      first &&
+      first.nodeType === Node.ELEMENT_NODE &&
+      first.textContent.trim() === "●"
+    ) {
+      first.remove();
+      return holder.innerHTML.replace(/^(?:\s|&nbsp;|<br\s*\/?\s*>)+/i, "");
+    }
+
+    return original
+      .replace(/^\s*●\s*(?:<br\s*\/?\s*>|\r?\n)/i, "")
+      .replace(/^\s*<span[^>]*>\s*●\s*<\/span>\s*(?:<br\s*\/?\s*>)?/i, "");
+  }
+
+  function stripLegacyLeadingMarkerFromText(text) {
+    return String(text || "").replace(/^\s*●\s*(?:\r?\n|$)/, "");
+  }
+
+  function cleanLegacyMarkersFromSongData(rawSong) {
+    if (!Array.isArray(rawSong.sections)) {
+      return { changed: false, data: rawSong };
+    }
+
+    let changed = false;
+    const sections = rawSong.sections.map(section => {
+      const cleaned = { ...section };
+
+      if (typeof cleaned.html === "string") {
+        const nextHTML = stripLegacyLeadingMarkerFromHTML(cleaned.html);
+        if (nextHTML !== cleaned.html) {
+          cleaned.html = nextHTML;
+          changed = true;
+        }
+      }
+
+      if (typeof cleaned.text === "string") {
+        const nextText = stripLegacyLeadingMarkerFromText(cleaned.text);
+        if (nextText !== cleaned.text) {
+          cleaned.text = nextText;
+          changed = true;
+        }
+      }
+
+      return cleaned;
+    });
+
+    return {
+      changed,
+      data: changed ? { ...rawSong, sections } : rawSong
+    };
+  }
+
+  async function migrateLegacySectionMarkersAcrossDatabase() {
+    if (legacyMarkerMigrationAttempted) return;
+    legacyMarkerMigrationAttempted = true;
+
+    const snapshot = await db.collection("lyrics").get();
+    const updates = [];
+
+    snapshot.forEach(doc => {
+      const cleaned = cleanLegacyMarkersFromSongData(doc.data() || {});
+      if (cleaned.changed) {
+        updates.push({ ref: doc.ref, sections: cleaned.data.sections });
+      }
+    });
+
+    for (let offset = 0; offset < updates.length; offset += 450) {
+      const batch = db.batch();
+      updates.slice(offset, offset + 450).forEach(update => {
+        batch.set(update.ref, {
+          sections: update.sections,
+          legacyLeadingMarkersRemoved: true,
+          legacyLeadingMarkersRemovedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+      });
+      await batch.commit();
+    }
+
+    console.info(`Legacy leading ● migration complete. Updated ${updates.length} song(s).`);
+  }
+  /**************** END TEMPORARY LEGACY MARKER CLEANUP ****************/
+
   function loadSong() {
-    db.collection("lyrics").doc(songId).onSnapshot(doc => {
+    db.collection("lyrics").doc(songId).onSnapshot(async doc => {
       if (!doc.exists) {
         $("hostLyricsContent").innerHTML = '<div class="error-state">Song not found.</div>';
         return;
       }
-      song = LyricsCommon.normalizeSong(doc.data(), doc.id);
+
+      const rawSong = doc.data() || {};
+
+      try {
+        // TEMPORARY MIGRATION CALL — remove together with the block above.
+        await migrateLegacySectionMarkersAcrossDatabase();
+      } catch (migrationError) {
+        console.error("Legacy marker cleanup failed:", migrationError);
+        // Continue loading the song even if migration permissions fail.
+      }
+
+      // Also clean the current snapshot locally so the old marker never flashes.
+      const locallyCleanedSong = cleanLegacyMarkersFromSongData(rawSong).data;
+      song = LyricsCommon.normalizeSong(locallyCleanedSong, doc.id);
       capoDisplay = Number(String(song.capo || "0").match(/-?\d+/)?.[0] || 0);
       renderSong();
     }, error => {
@@ -161,6 +284,7 @@
         songTitle: song.title,
         songArtist: song.artist,
         chordTranspose: chordShift,
+        displayState: "loading",
         sentAt: firebase.firestore.FieldValue.serverTimestamp(),
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       }, { merge: true });
@@ -172,6 +296,42 @@
     } finally {
       button.disabled = false;
     }
+  }
+
+  async function resetKaraoke() {
+    const button = $("resetKaraokeBtn");
+    if (button) button.disabled = true;
+    $("sendStatus").textContent = "Resetting karaoke…";
+
+    try {
+      await db.collection("karaokeControl").doc("liveLyrics").set({
+        currentLyricsSongId: "",
+        currentSongId: "",
+        songTitle: "",
+        songArtist: "",
+        chordTranspose: 0,
+        displayState: "idle",
+        resetAt: firebase.firestore.FieldValue.serverTimestamp(),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+
+      $("sendStatus").textContent = "Karaoke reset ✓";
+      setTimeout(() => $("sendStatus").textContent = "", 3000);
+      setSendMenuOpen(false);
+    } catch (error) {
+      console.error(error);
+      $("sendStatus").textContent = `Reset failed: ${error.message}`;
+    } finally {
+      if (button) button.disabled = false;
+    }
+  }
+
+  function setSendMenuOpen(open) {
+    const menu = $("sendKaraokeMenu");
+    const arrow = $("sendKaraokeMenuBtn");
+    menu.classList.toggle("hidden", !open);
+    arrow.setAttribute("aria-expanded", open ? "true" : "false");
+    arrow.textContent = open ? "▲" : "▼";
   }
 
   function setSidebarOpen(open) {
@@ -222,6 +382,11 @@
   });
 
   $("sendSingerBtn").onclick = sendToSinger;
+  $("sendKaraokeMenuBtn").onclick = event => {
+    event.stopPropagation();
+    setSendMenuOpen($("sendKaraokeMenu").classList.contains("hidden"));
+  };
+  $("resetKaraokeBtn").onclick = resetKaraoke;
   $("sidebarToggleBtn").onclick = toggleSidebar;
   $("sidebarCloseBtn").onclick = () => setSidebarOpen(false);
   $("sidebarBackdrop").onclick = () => setSidebarOpen(false);
@@ -238,8 +403,15 @@
   $("favouriteBtn").onclick = () => { const key = `fav:${songId}`; const on = localStorage.getItem(key) === "1"; localStorage.setItem(key, on ? "0" : "1"); $("favouriteBtn").textContent = on ? "☆" : "★"; };
   $("liveSessionBtn").onclick = () => window.open("../../admin-new/admin.html", "_blank");
 
+  document.addEventListener("click", event => {
+    if (!event.target.closest(".send-karaoke-split")) setSendMenuOpen(false);
+  });
+
   document.addEventListener("keydown", event => {
-    if (event.key === "Escape") setSidebarOpen(false);
+    if (event.key === "Escape") {
+      setSidebarOpen(false);
+      setSendMenuOpen(false);
+    }
   });
 
   loadSong();
