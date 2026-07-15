@@ -1078,27 +1078,26 @@ body {
 }
 
 @media (min-width: 700px) and (max-width: 1100px) {
-  #topStatusContainer {
-    height: auto !important;
-    max-height: 100dvh !important;
-    overflow: hidden !important;
-  }
-
-  .top-statusbar.expanded {
-    height: 100dvh;
-    max-height: 100dvh;
-    overflow: hidden;
-  }
-
-  .top-status-expanded {
-    height: calc(100dvh - 62px);
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: auto minmax(0, 1fr);
-    gap: 9px;
-    padding: 9px 11px 11px;
-    overflow: hidden;
-  }
+   #topStatusContainer {
+     height: auto !important;
+     max-height: none !important;
+     overflow: visible !important;
+   }
+   
+   .top-statusbar.expanded {
+     height: auto !important;
+     max-height: calc(100dvh - 8px) !important;
+     overflow-x: hidden !important;
+     overflow-y: auto !important;
+   }
+   
+   .top-status-expanded {
+     height: auto !important;
+     min-height: 0 !important;
+     display: block !important;
+     padding: 9px 11px 11px !important;
+     overflow: visible !important;
+   }
 
   .top-performance-grid {
     grid-column: 1 / -1;
@@ -1159,43 +1158,136 @@ body {
     margin-top: 8px;
   }
 
-  .notifications-card {
-    grid-column: auto;
-    min-height: 0;
-    height: auto;
-  }
 
-  .top-status-notifications {
-    grid-column: 1;
-    min-height: 0;
-    height: 100%;
-    margin-top: 0;
-  }
 
   .top-status-notifications-list {
     max-height: none;
     height: calc(100% - 62px);
   }
 
-  .top-status-queue-card {
-    grid-column: 2;
-    min-height: 0;
-    height: 100%;
-    margin-top: 0;
-    overflow: hidden;
-  }
 
-  .top-status-queue-list {
-    max-height: none;
-    height: calc(100% - 42px);
-    overflow-y: auto;
-  }
+
 
   .top-status-queue-row {
     min-height: 55px;
   }
 }
 
+/* =========================================================
+   LOWER DASHBOARD LAYOUT
+   Notifications | Shortcuts | Queue spanning two columns
+   ========================================================= */
+
+.top-status-lower-grid {
+  display: grid;
+  grid-template-columns:
+    minmax(180px, 0.9fr)
+    minmax(240px, 1.25fr)
+    minmax(170px, 0.75fr)
+    minmax(180px, 0.85fr);
+  gap: 14px;
+  margin-top: 14px;
+  align-items: stretch;
+}
+
+.top-status-lower-grid .notifications-card {
+  grid-column: 1;
+}
+
+.top-status-shortcuts-card {
+  grid-column: 2;
+  display: flex;
+  flex-direction: column;
+}
+
+.top-status-lower-grid .top-status-queue-card {
+  grid-column: 3 / 5;
+  margin-top: 0;
+  min-width: 0;
+}
+
+/* =========================================================
+   SHORTCUTS
+   ========================================================= */
+
+.top-status-shortcuts {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 9px;
+  margin-top: 14px;
+}
+
+.top-status-shortcut-btn {
+  width: 100%;
+  min-height: 45px;
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  align-items: center;
+  gap: 9px;
+  padding: 8px 12px;
+  border: 1px solid rgba(90, 130, 165, 0.28);
+  border-radius: 10px;
+  background: rgba(5, 15, 23, 0.82);
+  color: #fff;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 0.18s ease,
+    background 0.18s ease,
+    transform 0.18s ease;
+}
+
+.top-status-shortcut-btn:hover {
+  border-color: rgba(90, 180, 255, 0.7);
+  background: rgba(13, 42, 65, 0.9);
+  transform: translateY(-1px);
+}
+
+.top-status-shortcut-btn span {
+  font-size: 18px;
+  text-align: center;
+}
+
+.top-status-shortcut-btn strong {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 12px;
+  font-weight: 900;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.admin-shortcut {
+  border-color: rgba(255, 70, 60, 0.38);
+}
+
+.lyrics-shortcut {
+  border-color: rgba(32, 177, 255, 0.38);
+}
+
+.songs-shortcut {
+  border-color: rgba(28, 223, 119, 0.38);
+}
+
+.top-status-lower-grid .top-status-queue-list {
+  width: 100%;
+  max-height: 174px;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.top-status-lower-grid .top-status-queue-row {
+  width: 100%;
+  grid-template-columns:
+    44px
+    32px
+    minmax(140px, 1.45fr)
+    minmax(110px, 0.9fr)
+    76px;
+}
+     
 /* =========================================================
    FINAL TABLET TYPOGRAPHY FIX
    Keep this at the very bottom of top-statusbar.css
@@ -1444,4 +1536,103 @@ body {
     margin-top: 2px !important;
     font-size: 8px !important;
   }
+
+   .top-status-lower-grid {
+     grid-template-columns:
+       minmax(145px, 0.9fr)
+       minmax(195px, 1.15fr)
+       minmax(220px, 1.35fr)
+       minmax(150px, 0.9fr);
+     gap: 8px;
+     margin-top: 8px;
+   }
+   
+   .top-status-lower-grid .notifications-card {
+     grid-column: 1;
+     height: 205px;
+     min-height: 0;
+   }
+   
+   .top-status-shortcuts-card {
+     grid-column: 2;
+     height: 205px;
+     min-height: 0;
+   }
+   
+   .top-status-lower-grid .top-status-queue-card {
+     grid-column: 3 / 5;
+     height: 205px;
+     min-height: 0;
+     margin-top: 0;
+     padding: 10px;
+     overflow: hidden;
+   }
+   
+   .top-status-shortcuts {
+     gap: 6px;
+     margin-top: 9px;
+   }
+   
+   .top-status-shortcut-btn {
+     min-height: 38px;
+     padding: 6px 8px;
+   }
+   
+   .top-status-shortcut-btn span {
+     font-size: 15px;
+   }
+   
+   .top-status-shortcut-btn strong {
+     font-size: 9px;
+   }
+   
+   .top-status-lower-grid .top-status-notifications-list {
+     flex: 1;
+     max-height: 104px;
+     margin-top: 8px;
+   }
+   
+   .top-status-lower-grid .top-status-queue-list {
+     height: 153px;
+     max-height: 153px;
+     overflow-y: auto;
+   }
+   
+   .top-status-lower-grid .top-status-queue-row {
+     min-height: 51px;
+     grid-template-columns:
+       32px
+       24px
+       minmax(95px, 1.4fr)
+       minmax(70px, 0.8fr)
+       54px;
+     gap: 6px;
+     padding: 5px 6px;
+   }
+   
+   .top-status-lower-grid .queue-position {
+     width: 28px;
+     height: 28px;
+     font-size: 14px;
+   }
+   
+   .top-status-lower-grid .queue-song-icon {
+     font-size: 15px;
+   }
+   
+   .top-status-lower-grid .queue-song-details strong,
+   .top-status-lower-grid .queue-singer-details strong {
+     font-size: 10px;
+   }
+   
+   .top-status-lower-grid .queue-song-details span,
+   .top-status-lower-grid .queue-singer-details span {
+     font-size: 8px;
+   }
+   
+   .top-status-lower-grid .queue-position-label {
+     min-width: 48px;
+     padding: 4px;
+     font-size: 8px;
+   }
 }
