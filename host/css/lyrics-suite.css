@@ -2485,3 +2485,262 @@ body.host-sidebar-open {
     max-height: 47vh;
   }
 }
+
+/* ========================================================================== */
+/* KARAOKE STANDBY VISUAL — NEON FRAME + REALISTIC ANIMATED TV STATIC          */
+/* ========================================================================== */
+
+/* Replace the earlier standby background/noise presentation with a layered
+   static texture, scan lines, soft red spill, and occasional horizontal roll. */
+.singer-standby-mode {
+  overflow: hidden;
+  background: #000;
+}
+
+.standby-view {
+  position: fixed;
+  inset: 70px 0 0;
+  min-height: calc(100vh - 70px);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  isolation: isolate;
+  background: #030303;
+}
+
+.standby-view::before {
+  content: "";
+  position: absolute;
+  z-index: -4;
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 38%, rgba(116, 0, 0, .22), transparent 48%),
+    linear-gradient(180deg, rgba(255,255,255,.025), transparent 20%, rgba(0,0,0,.16));
+  pointer-events: none;
+}
+
+.standby-noise {
+  position: absolute;
+  z-index: -3;
+  inset: -8%;
+  pointer-events: none;
+  opacity: .23;
+  background-image: url("../img/karaoke_static_noise.jpg");
+  background-size: 118% 118%;
+  background-position: 50% 50%;
+  filter: grayscale(1) contrast(1.25) brightness(.54);
+  mix-blend-mode: screen;
+  animation:
+    karaokeStaticFrame .085s steps(2, end) infinite,
+    karaokeStaticZoom 2.4s steps(1, end) infinite;
+  will-change: transform, background-position, filter;
+}
+
+/* Fine grain overlay, independent of the reference image, so the noise keeps
+   moving even on devices that cache the background image aggressively. */
+.standby-noise::before {
+  content: "";
+  position: absolute;
+  inset: -25%;
+  opacity: .38;
+  background-image:
+    repeating-radial-gradient(circle at 37% 41%, rgba(255,255,255,.26) 0 1px, transparent 1px 3px),
+    repeating-radial-gradient(circle at 73% 62%, rgba(255,255,255,.18) 0 1px, transparent 1px 4px);
+  background-size: 5px 5px, 7px 7px;
+  animation: karaokeFineGrain .11s steps(2, end) infinite;
+}
+
+/* CRT scan lines and dark banding. */
+.standby-noise::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: .62;
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      rgba(255,255,255,.025) 0,
+      rgba(255,255,255,.025) 1px,
+      rgba(0,0,0,.08) 2px,
+      rgba(0,0,0,.08) 4px
+    ),
+    linear-gradient(
+      to bottom,
+      transparent 0 19%,
+      rgba(255,255,255,.13) 20%,
+      rgba(0,0,0,.24) 25%,
+      transparent 31% 48%,
+      rgba(255,255,255,.12) 50%,
+      rgba(0,0,0,.27) 58%,
+      transparent 64% 78%,
+      rgba(255,255,255,.09) 80%,
+      rgba(0,0,0,.24) 88%,
+      transparent 94%
+    );
+  animation: karaokeRollBand 3.2s linear infinite;
+}
+
+.standby-content {
+  position: relative;
+  z-index: 1;
+  width: min(1120px, 94vw);
+  max-height: calc(100vh - 92px);
+  padding: 22px 28px 32px;
+  text-align: center;
+}
+
+/* New wrapper added in karaoke-lyric-view.html. */
+.standby-logo-frame {
+  position: relative;
+  width: min(920px, 83vw);
+  margin: 0 auto 18px;
+  padding: 8px;
+  border: 2px solid #ff3232;
+  border-radius: 24px;
+  background: rgba(0,0,0,.9);
+  box-shadow:
+    0 0 4px #fff,
+    0 0 9px #ff5b5b,
+    0 0 17px #ff1c1c,
+    0 0 32px rgba(255,0,0,.92),
+    inset 0 0 5px rgba(255,255,255,.38),
+    inset 0 0 16px rgba(255,0,0,.36);
+  animation: karaokeNeonFrame 2.35s ease-in-out infinite;
+}
+
+.standby-logo-frame::before,
+.standby-logo-frame::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+.standby-logo-frame::before {
+  inset: -6px;
+  border: 1px solid rgba(255,55,55,.48);
+  filter: blur(2px);
+}
+
+.standby-logo-frame::after {
+  inset: -14px;
+  border: 1px solid rgba(255,0,0,.2);
+  filter: blur(8px);
+}
+
+.standby-logo {
+  display: block;
+  width: 100%;
+  max-height: 55vh;
+  object-fit: contain;
+  margin: 0;
+  border-radius: 16px;
+  background: #000;
+  box-shadow: inset 0 0 28px rgba(0,0,0,.6);
+}
+
+.standby-content .standby-icon {
+  margin-top: 4px;
+  font-size: clamp(34px, 3.8vw, 58px);
+  filter: drop-shadow(0 0 9px rgba(255,25,25,.48));
+  animation: standbyMicPulse 2s ease-in-out infinite;
+}
+
+.standby-content h1 {
+  margin: 8px 0 6px;
+  color: #fff;
+  font-size: clamp(27px, 3vw, 47px);
+  letter-spacing: .14em;
+  text-shadow: 0 2px 0 #000, 0 0 14px rgba(255,255,255,.08);
+}
+
+.standby-content p {
+  margin: 0;
+  color: #b8b8b8;
+  font-size: clamp(15px, 1.45vw, 22px);
+  text-shadow: 0 2px 0 #000;
+}
+
+@keyframes karaokeStaticFrame {
+  0%   { transform: translate3d(-1.4%, .8%, 0) scale(1.035); filter: grayscale(1) contrast(1.3) brightness(.50); }
+  20%  { transform: translate3d(.9%, -1.2%, 0) scale(1.045); filter: grayscale(1) contrast(1.15) brightness(.58); }
+  40%  { transform: translate3d(-.6%, 1.4%, 0) scale(1.025); filter: grayscale(1) contrast(1.42) brightness(.48); }
+  60%  { transform: translate3d(1.3%, .1%, 0) scale(1.04); filter: grayscale(1) contrast(1.22) brightness(.61); }
+  80%  { transform: translate3d(-1%, -1.3%, 0) scale(1.03); filter: grayscale(1) contrast(1.35) brightness(.52); }
+  100% { transform: translate3d(.5%, .9%, 0) scale(1.045); filter: grayscale(1) contrast(1.25) brightness(.56); }
+}
+
+@keyframes karaokeStaticZoom {
+  0%, 22%  { background-position: 50% 50%; background-size: 118% 118%; }
+  23%, 46% { background-position: 46% 53%; background-size: 124% 121%; }
+  47%, 70% { background-position: 54% 47%; background-size: 115% 127%; }
+  71%, 100%{ background-position: 49% 51%; background-size: 121% 116%; }
+}
+
+@keyframes karaokeFineGrain {
+  0%   { transform: translate(-2%, 1%); }
+  25%  { transform: translate(1%, -2%); }
+  50%  { transform: translate(2%, 2%); }
+  75%  { transform: translate(-1%, -1%); }
+  100% { transform: translate(-2%, 1%); }
+}
+
+@keyframes karaokeRollBand {
+  0%   { transform: translateY(-12%); }
+  100% { transform: translateY(12%); }
+}
+
+@keyframes karaokeNeonFrame {
+  0%, 100% {
+    border-color: #ff3838;
+    box-shadow:
+      0 0 4px #fff,
+      0 0 9px #ff5b5b,
+      0 0 17px #ff1c1c,
+      0 0 32px rgba(255,0,0,.92),
+      inset 0 0 5px rgba(255,255,255,.38),
+      inset 0 0 16px rgba(255,0,0,.36);
+  }
+  48% {
+    border-color: #ff7a7a;
+    box-shadow:
+      0 0 5px #fff,
+      0 0 13px #ff7373,
+      0 0 26px #ff1f1f,
+      0 0 44px rgba(255,0,0,1),
+      inset 0 0 8px rgba(255,255,255,.48),
+      inset 0 0 22px rgba(255,0,0,.48);
+  }
+  50% {
+    opacity: .93;
+  }
+  52% {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 720px) {
+  .standby-logo-frame {
+    width: min(92vw, 920px);
+    border-radius: 17px;
+    padding: 5px;
+  }
+
+  .standby-logo {
+    max-height: 45vh;
+    border-radius: 11px;
+  }
+
+  .standby-content {
+    padding-inline: 14px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .standby-noise,
+  .standby-noise::before,
+  .standby-noise::after,
+  .standby-logo-frame {
+    animation: none !important;
+  }
+}
