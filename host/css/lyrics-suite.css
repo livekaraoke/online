@@ -3252,7 +3252,7 @@ body[data-guidance="pro"] .singer-section-body {
 
 /* Keep the animated snow present but stop it overpowering the standby logo. */
 .singer-standby-mode .standby-static-canvas {
-  opacity: .50 !important;
+  opacity: .25 !important;
   filter: contrast(1.28) brightness(.64) !important;
   animation: standbyStaticBreath 10s ease-in-out infinite !important;
 }
