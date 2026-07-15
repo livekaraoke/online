@@ -429,19 +429,18 @@
     const breaks = Array.isArray(session?.breaks)
       ? session.breaks
       : [];
-
+  
     let totalBreakMs = 0;
+    let currentBreakMs = 0;
     let activeBreak = null;
-
+  
     breaks.forEach(breakItem => {
       const start = toDate(breakItem?.start);
-
-      if (!start) {
-        return;
-      }
-
+  
+      if (!start) return;
+  
       const end = toDate(breakItem?.end);
-
+  
       if (end) {
         totalBreakMs += Math.max(
           0,
@@ -449,17 +448,21 @@
         );
       } else {
         activeBreak = breakItem;
-
-        totalBreakMs += Math.max(
+  
+        currentBreakMs = Math.max(
           0,
           Date.now() - start.getTime()
         );
+  
+        totalBreakMs += currentBreakMs;
       }
     });
-
+  
     return {
       breaks,
+      breakCount: breaks.length,
       activeBreak,
+      currentBreakMs,
       totalBreakMs
     };
   }
@@ -476,6 +479,8 @@
       setText("tsBreakStarted", "-");
       setText("tsBreakDuration", "0 mins");
       setText("tsDashBreakTotal", "0 mins");
+      setText("tsDashBreakCount", "0");
+      setText("tsCurrentBreakDuration", "0 mins");
 
       details?.classList.add("hidden");
       panel?.classList.remove("active-break");
@@ -496,10 +501,22 @@
 
     const info = getBreakInformation(currentSession);
     const isOnBreak = !!info.activeBreak;
-
+    
     setText(
       "tsDashBreakTotal",
       formatDuration(info.totalBreakMs)
+    );
+    
+    setText(
+      "tsDashBreakCount",
+      String(info.breakCount)
+    );
+    
+    setText(
+      "tsCurrentBreakDuration",
+      isOnBreak
+        ? formatDuration(info.currentBreakMs)
+        : "0 mins"
     );
 
     panel?.classList.toggle("active-break", isOnBreak);
@@ -508,9 +525,7 @@
 
     if (isOnBreak) {
       const breakStarted = toDate(info.activeBreak.start);
-      const breakDuration = breakStarted
-        ? Date.now() - breakStarted.getTime()
-        : 0;
+      const breakDuration = info.currentBreakMs;
 
       setText("tsBreakStatusLabel", "BREAK ACTIVE");
 
@@ -982,13 +997,14 @@
   /************************************************************
    * SESSION RENDERING
    ************************************************************/
-
+  
   function renderSession() {
     if (!currentSession) {
       setText("tsSessionLabel", "No active session");
       setText("tsDashVenue", "-");
       setText("tsDashStarted", "-");
       setText("tsDashElapsed", "0 mins");
+      setText("tsDashElapsedExcludingBreaks", "0 mins");
   
       renderBreakStatus();
       renderSessionNotes();
@@ -1006,6 +1022,16 @@
     );
   
     const started = toDate(currentSession.startedAt);
+    const breakInfo = getBreakInformation(currentSession);
+  
+    const elapsedIncludingBreaks = started
+      ? Math.max(0, Date.now() - started.getTime())
+      : 0;
+  
+    const elapsedExcludingBreaks = Math.max(
+      0,
+      elapsedIncludingBreaks - breakInfo.totalBreakMs
+    );
   
     setText(
       "tsDashStarted",
@@ -1014,9 +1040,12 @@
   
     setText(
       "tsDashElapsed",
-      started
-        ? formatDuration(Date.now() - started.getTime())
-        : "0 mins"
+      formatDuration(elapsedIncludingBreaks)
+    );
+  
+    setText(
+      "tsDashElapsedExcludingBreaks",
+      formatDuration(elapsedExcludingBreaks)
     );
   
     renderBreakStatus();
