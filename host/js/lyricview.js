@@ -12,6 +12,8 @@
   let sectionElements = [];
   let activeSectionIndex = 0;
   let legacyMarkerMigrationAttempted = false;
+  let myNotesSaveTimer = null;
+  let lastSavedMyNotes = "";
 
   if (!songId) {
     $("hostLyricsContent").innerHTML = '<div class="error-state">No song selected.</div>';
@@ -147,6 +149,8 @@
       // Also clean the current snapshot locally so the old marker never flashes.
       const locallyCleanedSong = cleanLegacyMarkersFromSongData(rawSong).data;
       song = LyricsCommon.normalizeSong(locallyCleanedSong, doc.id);
+      // Preserve the private sidebar note field even if normalizeSong only returns known fields.
+      song.myNotes = locallyCleanedSong.myNotes || "";
       capoDisplay = Number(String(song.capo || "0").match(/-?\d+/)?.[0] || 0);
       renderSong();
     }, error => {
@@ -182,6 +186,133 @@
     return block;
   }
 
+  function bpmNumber(value) {
+    const number = Number(String(value || "").match(/\d+(?:\.\d+)?/)?.[0]);
+    return Number.isFinite(number) ? number : null;
+  }
+
+  function updateTempoStyling() {
+    const tempoEl = $("summaryTempo");
+    const originalEl = $("summaryOriginalBpm");
+    const tempo = bpmNumber(song.userBpm);
+    const original = bpmNumber(song.originalBpm);
+
+    tempoEl.classList.remove("tempo-match", "tempo-different");
+    originalEl.classList.remove("original-bpm-different");
+
+    if (tempo !== null && original !== null) {
+      if (tempo === original) {
+        tempoEl.classList.add("tempo-match");
+      } else {
+        tempoEl.classList.add("tempo-different");
+        originalEl.classList.add("original-bpm-different");
+      }
+    }
+  }
+
+  function htmlToPlainText(value) {
+    const holder = document.createElement("div");
+    holder.innerHTML = String(value || "");
+    return holder.innerText.trim();
+  }
+
+  function renderHostLyricNotes() {
+    const notes = (song.sections || [])
+      .filter(section => section.type === "hostNote" || section.type === "host-note")
+      .map(section => ({
+        title: section.title || "Host Note",
+        text: htmlToPlainText(section.text || section.html || "")
+      }))
+      .filter(note => note.text || note.title);
+
+    $("hostNotes").innerHTML = notes.length
+      ? notes.map(note => `
+          <div class="host-lyric-note-item">
+            <strong>${LyricsCommon.escapeHTML(note.title)}</strong>
+            <span>${LyricsCommon.escapeHTML(note.text || "—")}</span>
+          </div>`).join("")
+      : '<span class="muted">No Host Note sections saved in these lyrics.</span>';
+  }
+
+  function syncMyNotesInput() {
+    const input = $("myNotesInput");
+    if (!input || document.activeElement === input || input.dataset.dirty === "true") return;
+    input.value = song.myNotes || "";
+    lastSavedMyNotes = input.value;
+  }
+
+  async function getActivePerformanceSessionId() {
+    try {
+      const snap = await db.collection("karaokeControl").doc("currentSession").get();
+      if (!snap.exists) return null;
+      const data = snap.data() || {};
+      if (data.active === false) return null;
+      return data.sessionId || data.activeSessionId || null;
+    } catch (error) {
+      console.warn("Could not read the current performance session:", error);
+      return null;
+    }
+  }
+
+  async function saveMyNotes() {
+    const input = $("myNotesInput");
+    const status = $("myNotesSaveStatus");
+    if (!input || !song) return;
+
+    const note = input.value;
+    if (note === lastSavedMyNotes) {
+      input.dataset.dirty = "false";
+      return;
+    }
+
+    status.textContent = "Saving…";
+
+    try {
+      await db.collection("lyrics").doc(song.firebaseId).set({
+        myNotes: note,
+        myNotesUpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+
+      const sessionId = await getActivePerformanceSessionId();
+      if (sessionId) {
+        const entry = {
+          type: "songMyNotesEdited",
+          message: `Edited Note in ${song.title || "Untitled"} - ${song.artist || "Unknown Artist"}`,
+          songId: song.firebaseId,
+          songTitle: song.title || "",
+          songArtist: song.artist || "",
+          note,
+          editedAt: firebase.firestore.Timestamp.now()
+        };
+
+        await db.collection("performanceSessions").doc(sessionId).set({
+          activityLog: firebase.firestore.FieldValue.arrayUnion(entry),
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+      }
+
+      song.myNotes = note;
+      lastSavedMyNotes = note;
+      input.dataset.dirty = "false";
+      status.textContent = sessionId ? "Saved and logged in the active session." : "Saved.";
+      setTimeout(() => {
+        if (status.textContent.startsWith("Saved")) status.textContent = "";
+      }, 2600);
+    } catch (error) {
+      console.error("Could not save My Notes:", error);
+      status.textContent = `Save failed: ${error.message}`;
+    }
+  }
+
+  function queueMyNotesSave() {
+    const input = $("myNotesInput");
+    if (!input) return;
+    input.dataset.dirty = "true";
+    $("myNotesSaveStatus").textContent = "Unsaved changes…";
+    clearTimeout(myNotesSaveTimer);
+    myNotesSaveTimer = setTimeout(saveMyNotes, 900);
+  }
+
   function renderSong() {
     $("topTitle").textContent = song.title;
     $("topArtist").textContent = song.artist;
@@ -190,6 +321,7 @@
     $("summaryTempo").textContent = song.userBpm ? `${song.userBpm} BPM` : "—";
     $("summaryCapo").textContent = capoDisplay;
     $("summaryOriginalBpm").textContent = song.originalBpm ? `${song.originalBpm} BPM` : "—";
+    updateTempoStyling();
     $("summaryYear").textContent = song.year || "—";
     $("summaryNote").textContent = song.note || "No song notes.";
     $("chordTransposeValue").textContent = chordShift;
@@ -198,7 +330,8 @@
     $("chordKeyLabel").textContent = song.key ? `${LyricsCommon.transposeRoot(song.key, chordShift)} ${chordShift ? `(from ${song.key})` : "(Original)"}` : "Original key";
     $("youtubeLink").classList.toggle("hidden", !song.youtubeLink);
     if (song.youtubeLink) $("youtubeLink").href = song.youtubeLink;
-    $("hostNotes").textContent = song.note || "No host-only notes saved.";
+    renderHostLyricNotes();
+    syncMyNotesInput();
     $("editSongBtn").onclick = () => location.href = `lyricscreator.html?firebaseId=${encodeURIComponent(song.firebaseId)}`;
 
     const content = $("hostLyricsContent");
@@ -336,12 +469,9 @@
 
   function setSidebarOpen(open) {
     const sidebar = $("hostSidebar");
-    const backdrop = $("sidebarBackdrop");
     const toggle = $("sidebarToggleBtn");
     sidebar.classList.toggle("open", open);
     sidebar.setAttribute("aria-hidden", open ? "false" : "true");
-    backdrop.classList.toggle("hidden", !open);
-    document.body.classList.toggle("host-sidebar-open", open);
     toggle.setAttribute("aria-expanded", open ? "true" : "false");
     toggle.classList.toggle("active", open);
     toggle.textContent = open ? "✕ CLOSE INFO" : "☰ SONG INFO";
@@ -389,19 +519,18 @@
   $("resetKaraokeBtn").onclick = resetKaraoke;
   $("sidebarToggleBtn").onclick = toggleSidebar;
   $("sidebarCloseBtn").onclick = () => setSidebarOpen(false);
-  $("sidebarBackdrop").onclick = () => setSidebarOpen(false);
   $("singerPreviewBtn").onclick = () => window.open("karaoke-lyric-view.html", "karaokeSingerView");
   $("fontDownBtn").onclick = () => { fontScale = Math.max(.75, fontScale - .1); renderSong(); };
   $("fontUpBtn").onclick = () => { fontScale = Math.min(1.8, fontScale + .1); renderSong(); };
   $("fullscreenBtn").onclick = () => document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen();
+  $("adminShortcutBtn").onclick = () => window.open("../admin-new/admin.html", "_blank", "noopener");
+  $("myNotesInput").addEventListener("input", queueMyNotesSave);
   $("playScrollBtn").onclick = toggleScroll;
   $("scrollToggleBtn").onclick = toggleScroll;
   $("speedDownBtn").onclick = () => { scrollSpeed = Math.max(.25, scrollSpeed - .25); $("speedLabel").textContent = `${scrollSpeed.toFixed(2)}×`; };
   $("speedUpBtn").onclick = () => { scrollSpeed = Math.min(3, scrollSpeed + .25); $("speedLabel").textContent = `${scrollSpeed.toFixed(2)}×`; };
   $("prevSectionBtn").onclick = () => { activeSectionIndex = Math.max(0, activeSectionIndex - 1); sectionElements[activeSectionIndex]?.scrollIntoView({ behavior: "smooth", block: "center" }); };
   $("nextSectionBtn").onclick = () => { activeSectionIndex = Math.min(sectionElements.length - 1, activeSectionIndex + 1); sectionElements[activeSectionIndex]?.scrollIntoView({ behavior: "smooth", block: "center" }); };
-  $("favouriteBtn").onclick = () => { const key = `fav:${songId}`; const on = localStorage.getItem(key) === "1"; localStorage.setItem(key, on ? "0" : "1"); $("favouriteBtn").textContent = on ? "☆" : "★"; };
-  $("liveSessionBtn").onclick = () => window.open("../../admin-new/admin.html", "_blank");
 
   document.addEventListener("click", event => {
     if (!event.target.closest(".send-karaoke-split")) setSendMenuOpen(false);
