@@ -2215,3 +2215,273 @@ body.host-sidebar-open {
     order: 10;
   }
 }
+
+/* ========================================================================== */
+/* KARAOKE SEND SPLIT BUTTON + IDLE/LOADING DISPLAY UPDATE                     */
+/* ========================================================================== */
+
+.send-karaoke-split {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 42px;
+  width: 100%;
+  gap: 2px;
+}
+
+.send-karaoke-split .split-main {
+  width: 100%;
+  border-radius: 8px 0 0 8px;
+}
+
+.send-karaoke-split .split-arrow {
+  min-width: 42px;
+  padding-inline: 0;
+  border-radius: 0 8px 8px 0;
+}
+
+.split-menu {
+  position: absolute;
+  z-index: 80;
+  top: calc(100% + 7px);
+  right: 0;
+  min-width: 220px;
+  padding: 7px;
+  background: #111;
+  border: 1px solid #e31a1a;
+  border-radius: 9px;
+  box-shadow: 0 16px 42px rgba(0, 0, 0, .72);
+}
+
+.split-menu button {
+  width: 100%;
+  padding: 12px 14px;
+  color: #fff;
+  background: #240606;
+  border: 1px solid #7b1414;
+  border-radius: 7px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.split-menu button:hover,
+.split-menu button:focus-visible {
+  background: #a50000;
+  border-color: #ff3a3a;
+}
+
+.singer-topbar button:disabled {
+  opacity: .35;
+  cursor: not-allowed;
+  filter: grayscale(1);
+}
+
+/* Standby screen */
+.singer-standby-mode {
+  overflow: hidden;
+  background: #020202;
+}
+
+.standby-view {
+  position: fixed;
+  inset: 70px 0 0;
+  display: grid;
+  place-items: center;
+  min-height: calc(100vh - 70px);
+  overflow: hidden;
+  isolation: isolate;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(95, 0, 0, .16), transparent 48%),
+    #020202;
+}
+
+.standby-noise {
+  position: absolute;
+  z-index: -1;
+  inset: -60%;
+  opacity: .11;
+  pointer-events: none;
+  background-image:
+    repeating-radial-gradient(circle at 20% 30%, rgba(255,255,255,.32) 0 1px, transparent 1px 3px),
+    repeating-linear-gradient(0deg, rgba(255,255,255,.08) 0 1px, transparent 1px 4px);
+  background-size: 7px 7px, 100% 4px;
+  animation: karaokeStaticNoise .18s steps(2, end) infinite;
+  mix-blend-mode: screen;
+}
+
+.standby-content {
+  width: min(1000px, 92vw);
+  max-height: calc(100vh - 100px);
+  padding: 18px 24px 34px;
+  text-align: center;
+}
+
+.standby-logo {
+  display: block;
+  width: min(920px, 88vw);
+  max-height: 62vh;
+  object-fit: contain;
+  margin: 0 auto 8px;
+  filter: drop-shadow(0 0 18px rgba(255, 20, 20, .2));
+}
+
+.standby-content .standby-icon {
+  margin-top: -2px;
+  font-size: clamp(32px, 4vw, 56px);
+  animation: standbyMicPulse 2s ease-in-out infinite;
+}
+
+.standby-content h1 {
+  margin: 10px 0 5px;
+  color: #fff;
+  font-size: clamp(25px, 3vw, 48px);
+  letter-spacing: .11em;
+}
+
+.standby-content p {
+  margin: 0;
+  color: #b7b7b7;
+  font-size: clamp(15px, 1.5vw, 23px);
+}
+
+/* Five-second song transition */
+.song-loading-view {
+  position: fixed;
+  z-index: 45;
+  inset: 70px 0 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 36px;
+  text-align: center;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at center, rgba(174, 0, 0, .24), transparent 45%),
+    linear-gradient(135deg, #020202, #0b0000 50%, #020202);
+}
+
+.song-loading-view::before,
+.song-loading-view::after {
+  content: "";
+  position: absolute;
+  width: 65vmax;
+  height: 65vmax;
+  border: 1px solid rgba(255, 40, 40, .11);
+  border-radius: 50%;
+  animation: loadingOrbit 5s linear infinite;
+}
+
+.song-loading-view::after {
+  width: 45vmax;
+  height: 45vmax;
+  animation-direction: reverse;
+  animation-duration: 3.6s;
+}
+
+.loading-pulse-ring {
+  width: 76px;
+  height: 76px;
+  margin-bottom: 28px;
+  border: 4px solid rgba(255,255,255,.12);
+  border-top-color: #ff2020;
+  border-radius: 50%;
+  animation: loadingSpin .85s linear infinite;
+}
+
+.song-loading-view p {
+  z-index: 1;
+  margin: 0 0 20px;
+  color: #ff4545;
+  font-weight: 900;
+  font-size: clamp(16px, 1.8vw, 25px);
+  letter-spacing: .16em;
+}
+
+.song-loading-view h1 {
+  z-index: 1;
+  max-width: 95vw;
+  margin: 0;
+  color: #fff;
+  font-size: clamp(38px, 6vw, 88px);
+  line-height: 1.05;
+  text-wrap: balance;
+}
+
+.song-loading-view h2 {
+  z-index: 1;
+  margin: 12px 0 28px;
+  color: #c2c2c2;
+  font-size: clamp(22px, 3vw, 42px);
+  font-weight: 500;
+}
+
+.loading-countdown {
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: clamp(105px, 14vw, 180px);
+  aspect-ratio: 1;
+  color: #fff;
+  background: linear-gradient(145deg, #d40000, #700000);
+  border: 3px solid #ff4040;
+  border-radius: 50%;
+  box-shadow: 0 0 55px rgba(255, 0, 0, .42);
+  font-size: clamp(58px, 8vw, 110px);
+  font-weight: 900;
+  animation: countdownBreath 1s ease-in-out infinite;
+}
+
+.loading-countdown.countdown-pop {
+  animation: countdownPop .35s ease-out;
+}
+
+@keyframes karaokeStaticNoise {
+  0% { transform: translate3d(-1%, 1%, 0) rotate(0deg); }
+  25% { transform: translate3d(1.5%, -.5%, 0) rotate(.1deg); }
+  50% { transform: translate3d(-.5%, -1.5%, 0) rotate(-.1deg); }
+  75% { transform: translate3d(1%, 1.5%, 0) rotate(.08deg); }
+  100% { transform: translate3d(-1%, 1%, 0) rotate(0deg); }
+}
+
+@keyframes standbyMicPulse {
+  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 0 rgba(255,0,0,0)); }
+  50% { transform: scale(1.08); filter: drop-shadow(0 0 15px rgba(255,0,0,.6)); }
+}
+
+@keyframes loadingSpin { to { transform: rotate(360deg); } }
+@keyframes loadingOrbit { to { transform: rotate(360deg); } }
+@keyframes countdownBreath {
+  0%, 100% { transform: scale(.94); }
+  50% { transform: scale(1); }
+}
+@keyframes countdownPop {
+  0% { transform: scale(.55); opacity: .35; }
+  75% { transform: scale(1.12); opacity: 1; }
+  100% { transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .standby-noise,
+  .standby-content .standby-icon,
+  .song-loading-view::before,
+  .song-loading-view::after,
+  .loading-pulse-ring,
+  .loading-countdown {
+    animation: none !important;
+  }
+}
+
+@media (max-width: 720px) {
+  .singer-topbar {
+    grid-template-columns: auto 1fr auto;
+  }
+
+  .standby-view,
+  .song-loading-view {
+    top: 62px;
+  }
+
+  .standby-logo {
+    max-height: 47vh;
+  }
+}
