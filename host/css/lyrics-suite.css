@@ -3245,3 +3245,125 @@ body[data-guidance="pro"] .singer-section-body {
     animation-duration: 2.4s !important;
   }
 }
+
+/* ========================================================================== */
+/* JULY 2026 — KARAOKE STANDBY BALANCE + HOST TEMPO VALUE FIX                 */
+/* ========================================================================== */
+
+/* Keep the animated snow present but stop it overpowering the standby logo. */
+.singer-standby-mode .standby-static-canvas {
+  opacity: .50 !important;
+  filter: contrast(1.28) brightness(.64) !important;
+  animation: standbyStaticBreath 10s ease-in-out infinite !important;
+}
+
+/* The PNG is now only a very faint texture underneath the live canvas. */
+.singer-standby-mode .standby-noise::before {
+  opacity: .055 !important;
+  filter: grayscale(1) contrast(1.15) brightness(.52) !important;
+}
+
+/* Scanlines/tracking remain visible without washing out the page. */
+.singer-standby-mode .standby-noise::after {
+  opacity: .20 !important;
+}
+
+/* Slow analogue signal breathing: subtle, not a flashing effect. */
+@keyframes standbyStaticBreath {
+  0%, 100% { opacity: .40; filter: contrast(1.22) brightness(.58); }
+  42%      { opacity: .50; filter: contrast(1.32) brightness(.67); }
+  58%      { opacity: .46; filter: contrast(1.28) brightness(.62); }
+}
+
+/* Added and removed at random intervals by karaoke-lyric-view.js. */
+.singer-standby-mode .standby-noise.standby-sync-roll::after {
+  animation: standbyOneOffSyncRoll .9s cubic-bezier(.2,.75,.25,1) 1 !important;
+  opacity: .34 !important;
+}
+
+.singer-standby-mode .standby-noise.standby-glitch-frame .standby-static-canvas {
+  transform: translate3d(10px, -2px, 0) scaleX(1.025) !important;
+  opacity: .62 !important;
+  filter: contrast(1.65) brightness(.72) !important;
+}
+
+.singer-standby-mode .standby-noise.standby-glitch-frame::after {
+  opacity: .40 !important;
+  transform: translate3d(-12px, 0, 0) !important;
+}
+
+@keyframes standbyOneOffSyncRoll {
+  0%   { transform: translate3d(0, -75%, 0); }
+  55%  { transform: translate3d(0, 8%, 0); }
+  72%  { transform: translate3d(0, 14%, 0); }
+  100% { transform: translate3d(0, 75%, 0); }
+}
+
+/* A restrained red pulse keeps the artwork feeling alive between singers. */
+.singer-standby-mode .standby-logo-frame {
+  animation: standbyLogoSignalPulse 4.8s ease-in-out infinite !important;
+}
+
+@keyframes standbyLogoSignalPulse {
+  0%, 100% {
+    box-shadow:
+      0 0 5px #ff3030,
+      0 0 14px rgba(255, 0, 0, .72),
+      0 0 30px rgba(255, 0, 0, .30),
+      inset 0 0 12px rgba(255, 0, 0, .18);
+  }
+  50% {
+    box-shadow:
+      0 0 8px #ff4545,
+      0 0 22px rgba(255, 0, 0, .88),
+      0 0 46px rgba(255, 0, 0, .42),
+      inset 0 0 18px rgba(255, 0, 0, .24);
+  }
+}
+
+/* Host view: style VALUE elements only. !important prevents older generic
+   summary-card rules later in the cascade from overriding these states. */
+.host-view-page #summaryTempo,
+.host-view-page #summaryCapo {
+  font-size: 23px !important;
+  line-height: 1 !important;
+  font-weight: 900 !important;
+}
+
+.host-view-page #summaryOriginalBpm {
+  font-size: 18px !important;
+  font-weight: 900 !important;
+}
+
+.host-view-page #summaryTempo.tempo-match {
+  color: #52ef70 !important;
+  text-shadow: 0 0 10px rgba(82, 239, 112, .20);
+}
+
+.host-view-page #summaryTempo.tempo-different {
+  color: #ffd43b !important;
+  text-shadow: 0 0 10px rgba(255, 212, 59, .18);
+}
+
+.host-view-page #summaryTempo.tempo-unknown {
+  color: inherit !important;
+  text-shadow: none;
+}
+
+.host-view-page #summaryOriginalBpm.original-bpm-different {
+  color: #ff4e58 !important;
+}
+
+.host-view-page #summaryOriginalBpm.original-bpm-match {
+  color: inherit !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .singer-standby-mode .standby-static-canvas {
+    animation-duration: 16s !important;
+  }
+
+  .singer-standby-mode .standby-logo-frame {
+    animation-duration: 8s !important;
+  }
+}
