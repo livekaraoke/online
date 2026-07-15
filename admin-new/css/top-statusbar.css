@@ -714,6 +714,85 @@ body {
   text-align: right;
 }
 
+/* Included and excluded session timers */
+
+.elapsed-metric {
+  margin-top: 12px;
+}
+
+.elapsed-metric > span {
+  display: block;
+  color: #9eafbf;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.25px;
+  text-transform: uppercase;
+}
+
+.elapsed-metric .large-status-value {
+  margin-top: 7px;
+}
+
+.elapsed-excluding {
+  margin-top: 15px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(140, 160, 180, 0.16);
+}
+
+.secondary-time-value {
+  display: block;
+  margin-top: 6px;
+  color: #ffd02c;
+  font-size: 18px;
+  line-height: 1.1;
+}
+
+
+/* Break summary information */
+
+.break-summary-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px;
+  margin-top: 12px;
+  padding-top: 11px;
+  border-top: 1px solid rgba(140, 160, 180, 0.18);
+}
+
+.break-summary-item {
+  min-width: 0;
+}
+
+.break-summary-item.full-width {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(140, 160, 180, 0.12);
+}
+
+.break-summary-item span {
+  display: block;
+  color: #9eafbf;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.break-summary-item strong {
+  display: block;
+  margin-top: 4px;
+  color: #ffc21d;
+  font-size: 14px;
+}
+
+.break-summary-item.full-width strong {
+  flex: 0 0 auto;
+  margin-top: 0;
+}
+
 /* =========================================================
    TABLET
    ========================================================= */
@@ -997,3 +1076,123 @@ body {
     top: 58px !important;
   }
 }
+
+@media (min-width: 700px) and (max-width: 1100px) {
+  #topStatusContainer {
+    height: auto !important;
+    max-height: 100dvh !important;
+    overflow: hidden !important;
+  }
+
+  .top-statusbar.expanded {
+    height: 100dvh;
+    max-height: 100dvh;
+    overflow: hidden;
+  }
+
+  .top-status-expanded {
+    height: calc(100dvh - 62px);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto minmax(0, 1fr);
+    gap: 9px;
+    padding: 9px 11px 11px;
+    overflow: hidden;
+  }
+
+  .top-performance-grid {
+    grid-column: 1 / -1;
+    grid-template-columns:
+      minmax(120px, 0.8fr)
+      minmax(180px, 1.15fr)
+      minmax(210px, 1.35fr)
+      minmax(140px, 0.9fr);
+    gap: 8px;
+  }
+
+  .performance-info-card {
+    min-height: 0;
+    height: 215px;
+    padding: 11px;
+  }
+
+  .timing-card .large-status-value {
+    font-size: 18px;
+  }
+
+  .secondary-time-value {
+    font-size: 14px;
+  }
+
+  .break-status-panel {
+    margin-top: 8px;
+    padding: 9px;
+  }
+
+  .break-status-label {
+    font-size: 14px;
+  }
+
+  .break-summary-grid {
+    gap: 6px;
+    margin-top: 8px;
+    padding-top: 7px;
+  }
+
+  .break-summary-item span {
+    font-size: 8px;
+  }
+
+  .break-summary-item strong {
+    font-size: 12px;
+  }
+
+  .break-action-btn {
+    min-height: 31px;
+    margin-top: 6px;
+    font-size: 10px;
+  }
+
+  .top-status-session-notes {
+    min-height: 135px;
+    height: 135px;
+    margin-top: 8px;
+  }
+
+  .notifications-card {
+    grid-column: auto;
+    min-height: 0;
+    height: auto;
+  }
+
+  .top-status-notifications {
+    grid-column: 1;
+    min-height: 0;
+    height: 100%;
+    margin-top: 0;
+  }
+
+  .top-status-notifications-list {
+    max-height: none;
+    height: calc(100% - 62px);
+  }
+
+  .top-status-queue-card {
+    grid-column: 2;
+    min-height: 0;
+    height: 100%;
+    margin-top: 0;
+    overflow: hidden;
+  }
+
+  .top-status-queue-list {
+    max-height: none;
+    height: calc(100% - 42px);
+    overflow-y: auto;
+  }
+
+  .top-status-queue-row {
+    min-height: 55px;
+  }
+}
+
