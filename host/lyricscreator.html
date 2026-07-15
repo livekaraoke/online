@@ -1,8 +1,114 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Lyrics & Chords Creator</title><link rel="stylesheet" href="css/lyrics-suite.css"></head>
-<body class="creator-page">
-<header class="app-topbar"><a class="btn ghost" href="lyricsviewer.html">‹ LYRICS VIEWER</a><div class="brand-block"><strong id="creatorHeading">✎ LYRICS &amp; CHORDS CREATOR</strong><span id="creatorStatus">New songs are hidden from the Public Song List by default</span></div><button id="saveSongBtn" class="btn red">SAVE SONG</button></header>
-<main class="creator-shell">
-<section class="panel creator-meta"><h3>SONG DETAILS</h3><div class="creator-meta-grid"><label>Title *<input id="songTitleInput"></label><label>Artist *<input id="artistInput"></label><label>User BPM<input id="userBpmInput" type="number"></label><label>Original BPM<input id="originalBpmInput" type="number"></label><label>Key<input id="keyInput" placeholder="G, Am, F#..."></label><label>Capo<input id="capoInput"></label><label>Year<input id="yearInput" type="number"></label><label>Time Signature<input id="timeSignatureInput" value="4/4"></label><label class="wide">YouTube Link<input id="youtubeInput"></label><label class="wide">Host Notes<textarea id="hostNoteInput"></textarea></label></div><label class="public-default-note"><input id="publicVisibleInput" type="checkbox"> Show this song in the Public Song List</label></section>
-<section class="panel creator-section-tools"><div class="panel-title-row"><h3>SECTIONS</h3><div><button id="addLyricsSectionBtn" class="btn ghost">＋ LYRICS / CHORDS</button><button id="addTabSectionBtn" class="btn ghost">＋ TAB</button><button id="addPerformanceNoteBtn" class="btn green">＋ PERFORMANCE NOTE</button><button id="addSeparatorBtn" class="btn ghost">＋ SEPARATOR</button></div></div><div id="sectionEditorList" class="creator-sections"></div></section>
-</main>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script><script src="js/firebase-config.js"></script><script src="js/lyrics-common.js"></script><script src="js/lyricscreator.js"></script></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lyrics & Chords Creator</title>
+  <link rel="stylesheet" href="css/lyrics-suite.css">
+</head>
+<body class="creator-page advanced-creator-page">
+  <header class="app-topbar creator-topbar">
+    <button id="backToViewerBtn" class="btn ghost" type="button">‹ LYRICS VIEWER</button>
+
+    <div class="brand-block creator-brand-block">
+      <strong id="creatorHeading">✎ EDIT LYRICS &amp; CHORDS</strong>
+      <span id="creatorStatus">Editing: New Song</span>
+    </div>
+
+    <div class="save-split-wrap">
+      <button id="saveSongBtn" class="btn red save-main-btn" type="button">SAVE SONG</button>
+      <button id="saveMenuBtn" class="btn red save-menu-btn" type="button" aria-expanded="false" aria-controls="saveDropdown">▼</button>
+      <div id="saveDropdown" class="save-dropdown hidden">
+        <button id="cancelChangesBtn" type="button">CANCEL CHANGES</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="creator-shell">
+    <section class="panel creator-meta">
+      <h3>SONG DETAILS</h3>
+      <div class="creator-meta-grid">
+        <label>Title *<input id="songTitleInput"></label>
+        <label>Artist *<input id="artistInput"></label>
+        <label>User BPM<input id="userBpmInput" type="number"></label>
+        <label>Original BPM<input id="originalBpmInput" type="number"></label>
+        <label>Key<input id="keyInput" placeholder="G, Am, F#..."></label>
+        <label>Capo<input id="capoInput"></label>
+        <label>Year<input id="yearInput" type="number"></label>
+        <label>Time Signature<input id="timeSignatureInput" value="4/4"></label>
+        <label class="wide">YouTube Link<input id="youtubeInput"></label>
+        <label class="wide">Song Notes / Host Notes<textarea id="hostNoteInput"></textarea></label>
+      </div>
+      <label class="public-default-note"><input id="publicVisibleInput" type="checkbox"> Show this song in the Public Song List</label>
+    </section>
+
+    <section class="panel creator-section-tools">
+      <div class="panel-title-row creator-section-title-row">
+        <h3>SECTIONS</h3>
+        <div class="creator-add-toolbar">
+          <button id="addLyricsSectionBtn" class="btn ghost" type="button">＋ LYRICS / CHORDS</button>
+          <button id="addTabSectionBtn" class="btn ghost" type="button">＋ TAB</button>
+          <button id="addPerformanceNoteBtn" class="btn green" type="button">＋ PERFORMANCE NOTE</button>
+          <button id="addHostNoteBtn" class="btn teal" type="button">＋ HOST NOTE</button>
+          <button id="addSeparatorBtn" class="btn ghost" type="button">＋ SEPARATOR</button>
+          <button id="openTemplatesBtn" class="btn gold" type="button">＋ SECTION TEMPLATE</button>
+        </div>
+      </div>
+      <div id="sectionEditorList" class="creator-sections"></div>
+    </section>
+  </main>
+
+  <div id="confirmModal" class="creator-modal hidden" role="dialog" aria-modal="true">
+    <div class="creator-modal-box compact">
+      <h3 id="confirmTitle">Confirm</h3>
+      <p id="confirmMessage"></p>
+      <div class="creator-modal-actions">
+        <button id="confirmOkBtn" class="btn red" type="button">CONFIRM</button>
+        <button id="confirmCancelBtn" class="btn ghost" type="button">CANCEL</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="chordModal" class="creator-modal hidden" role="dialog" aria-modal="true">
+    <div class="creator-modal-box">
+      <h3>INSERT CHORD</h3>
+      <label>Chord
+        <input id="chordInput" placeholder="e.g. G, Am7, C#m7/G#">
+      </label>
+      <div class="chord-quick-grid" id="chordQuickGrid"></div>
+      <div class="chord-preview">Preview: <strong id="chordPreview">G</strong></div>
+      <div class="creator-modal-actions">
+        <button id="insertChordConfirmBtn" class="btn green" type="button">INSERT</button>
+        <button id="insertChordCancelBtn" class="btn ghost" type="button">CANCEL</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="colourModal" class="creator-modal hidden" role="dialog" aria-modal="true">
+    <div class="creator-modal-box compact">
+      <h3>TEXT COLOUR</h3>
+      <div id="colourPalette" class="colour-palette"></div>
+      <div class="creator-modal-actions">
+        <button id="colourCancelBtn" class="btn ghost" type="button">CANCEL</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="templatesModal" class="creator-modal hidden" role="dialog" aria-modal="true">
+    <div class="creator-modal-box templates-box">
+      <h3>INSERT SECTION TEMPLATE</h3>
+      <p>Choose a ready-made section. You can edit everything after it is inserted.</p>
+      <div id="templateGrid" class="template-grid"></div>
+      <div class="creator-modal-actions">
+        <button id="templatesCancelBtn" class="btn ghost" type="button">CANCEL</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="js/firebase-config.js"></script>
+  <script src="js/lyrics-common.js"></script>
+  <script src="js/lyricscreator.js"></script>
+</body>
+</html>
