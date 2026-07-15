@@ -6,15 +6,34 @@
   <title>Karaoke Lyric View</title>
   <link rel="stylesheet" href="css/lyrics-suite.css">
 </head>
-<body class="singer-page">
+<body class="singer-page singer-standby-mode">
   <header class="singer-topbar">
-    <!--<button id="backBtn" class="btn ghost" type="button">‹ BACK</button>-->
     <button id="fullscreenSingerBtn" class="btn ghost" type="button">⛶ FULLSCREEN</button>
-    <div class="song-heading"><strong id="singerTitle">KARAOKE LYRIC VIEW</strong><span id="singerArtist">Waiting for the host…</span></div>
-    <button id="singerSettingsBtn" class="btn ghost" type="button">⚙ SETTINGS</button>
+    <div class="song-heading">
+      <strong id="singerTitle">KARAOKE LYRIC VIEW</strong>
+      <span id="singerArtist">Ready for the next singer</span>
+    </div>
+    <button id="singerSettingsBtn" class="btn ghost" type="button" disabled>⚙ SETTINGS</button>
   </header>
 
-  <div id="standbyView" class="standby-view"><div class="standby-icon">🎤</div><h1>READY FOR THE NEXT SINGER</h1><p>The lyrics will appear automatically when the host sends a song.</p></div>
+  <div id="standbyView" class="standby-view">
+    <div class="standby-noise" aria-hidden="true"></div>
+    <div class="standby-content">
+      <img class="standby-logo" src="img/karaokelyricdisplay_idle.png" alt="Live Karaoke — You Sing, I Play">
+      <div class="standby-icon">🎤</div>
+      <h1>READY FOR THE NEXT SINGER</h1>
+      <p>The lyrics will appear automatically when the host sends a song.</p>
+    </div>
+  </div>
+
+  <div id="songLoadingView" class="song-loading-view hidden" aria-live="assertive">
+    <div class="loading-pulse-ring"></div>
+    <p>CURRENTLY LOADING SONG…</p>
+    <h1 id="loadingSongTitle">Song Title</h1>
+    <h2 id="loadingSongArtist">Artist</h2>
+    <div id="loadingCountdown" class="loading-countdown">5</div>
+  </div>
+
   <main id="singerLyrics" class="singer-lyrics hidden"></main>
 
   <aside id="singerSettings" class="singer-settings hidden">
