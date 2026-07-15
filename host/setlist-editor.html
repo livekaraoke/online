@@ -53,17 +53,15 @@
 </head>
 <body class="setlist-page">
 
-  <div id="setlistAuthGate" class="setlist-auth-gate">
+  <div id="setlistLoadingGate" class="setlist-auth-gate">
     <div class="setlist-auth-box">
-      <h2>Admin Login Required</h2>
-      <p>Sign in with the same Firebase account used by the Admin page to create and edit setlists.</p>
-      <input id="setlistEmailInput" type="email" placeholder="Email" autocomplete="email">
-      <input id="setlistPasswordInput" type="password" placeholder="Password" autocomplete="current-password">
-      <div class="setlist-auth-actions">
-        <button id="setlistLoginBtn" class="btn red" type="button">LOGIN</button>
-        <a class="btn ghost" href="admin.html">ADMIN PAGE</a>
-      </div>
+      <h2>Loading Setlist Editor</h2>
+      <p id="setlistLoadingMessage">Checking your existing Admin login...</p>
       <div id="setlistAuthError" class="setlist-auth-error"></div>
+      <div id="setlistLoginFallback" class="setlist-auth-actions hidden">
+        <a class="btn red" href="admin.html">GO TO ADMIN LOGIN</a>
+        <button id="retryAuthBtn" class="btn ghost" type="button">RETRY</button>
+      </div>
     </div>
   </div>
 
@@ -74,7 +72,6 @@
       <span>Create, order and manage performance setlists</span>
     </div>
     <span id="setlistAuthState" class="setlist-auth-state"></span>
-    <button id="setlistLogoutBtn" class="btn ghost hidden" type="button">LOG OUT</button>
     <button id="newSetlistBtn" class="btn red" type="button" disabled>＋ NEW SETLIST</button>
   </header>
 
@@ -88,7 +85,7 @@
     </aside>
 
     <section class="setlist-editor-panel panel">
-      <div id="setlistEmpty" class="empty-state">Sign in, then select a setlist or create a new one.</div>
+      <div id="setlistEmpty" class="empty-state">Select a setlist or create a new one.</div>
 
       <div id="setlistEditor" class="hidden">
         <div class="setlist-header-fields">
