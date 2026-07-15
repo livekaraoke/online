@@ -49,130 +49,135 @@
 
     <div class="top-performance-grid">
 
-      <!-- STARTED / ELAPSED -->
-      <section class="performance-info-card timing-card">
-        <div class="status-card-heading">
-          <span class="status-card-icon">◷</span>
-          <span>Started</span>
-        </div>
-      
-        <strong id="tsDashStarted" class="large-status-value">-</strong>
-      
-        <div class="status-card-divider"></div>
-      
-        <div class="elapsed-metric">
-          <span>Elapsed</span>
-          <strong id="tsDashElapsed" class="large-status-value green-value">
-            0 mins
-          </strong>
-        </div>
-      
-        <div class="elapsed-metric elapsed-excluding">
-          <span>Elapsed x/breaks</span>
-          <strong id="tsDashElapsedExcludingBreaks" class="secondary-time-value">
-            0 mins
-          </strong>
-        </div>
-      </section>
-
-      <!-- BREAK STATUS -->
-      <section id="tsBreakCard" class="performance-info-card break-card">
-        <div class="status-card-heading">
-          <span class="status-card-icon">☕</span>
-          <span>Break Status</span>
-        </div>
-      
-        <div id="tsBreakPanel" class="break-status-panel">
-          <strong id="tsBreakStatusLabel" class="break-status-label">
-            Not on break
-          </strong>
-      
-          <div id="tsBreakDetails" class="break-details hidden">
-            <span>
-              Started:
-              <strong id="tsBreakStarted">-</strong>
-            </span>
-      
-            <span>
-              Current:
-              <strong id="tsBreakDuration">0 mins</strong>
-            </span>
+        <!-- STARTED / ELAPSED -->
+        <section class="performance-info-card timing-card">
+          <div class="status-card-heading">
+            <span class="status-card-icon">◷</span>
+            <span>Started</span>
           </div>
-      
-          <!-- ADDED: total accumulated break time -->
-          <div class="break-summary-grid">
-            <div class="break-summary-item">
-              <span>Total break time</span>
-              <strong id="tsDashBreakTotal">0 mins</strong>
-            </div>
-          
-            <div class="break-summary-item">
-              <span>Total breaks</span>
-              <strong id="tsDashBreakCount">0</strong>
-            </div>
-          
-            <div class="break-summary-item full-width">
-              <span>Current elapsed break time</span>
-              <strong id="tsCurrentBreakDuration">0 mins</strong>
-            </div>
+        
+          <strong id="tsDashStarted" class="large-status-value">-</strong>
+        
+          <div class="status-card-divider"></div>
+        
+          <div class="elapsed-metric">
+            <span>Elapsed</span>
+            <strong id="tsDashElapsed" class="large-status-value green-value">
+              0 mins
+            </strong>
           </div>
-          
-        </div>
-      
-        <button
-          id="tsBreakActionBtn"
-          class="break-action-btn start"
-          type="button"
-          onclick="event.stopPropagation(); LK.topStatus.toggleBreak();"
-          disabled
-        >
-          ☕ Start Break
-        </button>
-      
-        <p id="tsBreakActionMessage" class="break-action-message"></p>
-      </section>
+        
+          <div class="elapsed-metric elapsed-excluding">
+            <span>Elapsed x/breaks</span>
+            <strong id="tsDashElapsedExcludingBreaks" class="secondary-time-value">
+              0 mins
+            </strong>
+          </div>
+        </section>
+  
+        <!-- BREAK STATUS -->
+        <section id="tsBreakCard" class="performance-info-card break-card">
+          <div class="status-card-heading">
+            <span class="status-card-icon">☕</span>
+            <span>Break Status</span>
+          </div>
+        
+          <div id="tsBreakPanel" class="break-status-panel">
+            <strong id="tsBreakStatusLabel" class="break-status-label">
+              Not on break
+            </strong>
+        
+            <div id="tsBreakDetails" class="break-details hidden">
+              <span>
+                Started:
+                <strong id="tsBreakStarted">-</strong>
+              </span>
+        
+              <span>
+                Current:
+                <strong id="tsBreakDuration">0 mins</strong>
+              </span>
+            </div>
+        
+            <!-- ADDED: total accumulated break time -->
+            <div class="break-summary-grid">
+              <div class="break-summary-item">
+                <span>Total break time</span>
+                <strong id="tsDashBreakTotal">0 mins</strong>
+              </div>
+            
+              <div class="break-summary-item">
+                <span>Total breaks</span>
+                <strong id="tsDashBreakCount">0</strong>
+              </div>
+            
+              <div class="break-summary-item full-width">
+                <span>Current elapsed break time</span>
+                <strong id="tsCurrentBreakDuration">0 mins</strong>
+              </div>
+            </div>
+            
+          </div>
+        
+          <button
+            id="tsBreakActionBtn"
+            class="break-action-btn start"
+            type="button"
+            onclick="event.stopPropagation(); LK.topStatus.toggleBreak();"
+            disabled
+          >
+            ☕ Start Break
+          </button>
+        
+          <p id="tsBreakActionMessage" class="break-action-message"></p>
+        </section>
+  
+        <section class="performance-info-card session-notes-card">
+          <div class="status-card-heading">
+            <span class="status-card-icon">📝</span>
+            <span>Session Notes</span>
+          </div>
+        
+          <textarea
+            id="tsSessionNotes"
+            class="top-status-session-notes"
+            placeholder="Type session notes..."
+            aria-label="Session notes"
+            disabled
+          ></textarea>
+        
+          <div class="session-notes-footer">
+            <span id="tsNotesSaveStatus">No active session</span>
+          </div>
+        </section>
+  
+        <!-- VENUE / SONG LIST -->
+        <section class="performance-info-card venue-card">
+          <div class="status-card-heading">
+            <span class="status-card-icon">📍</span>
+            <span>Venue</span>
+          </div>
+  
+          <strong id="tsDashVenue" class="large-status-value">-</strong>
+  
+          <div class="status-card-divider dashed"></div>
+  
+          <div class="status-card-heading compact-heading">
+            <span class="status-card-icon">🔒</span>
+            <span>Public Song List</span>
+          </div>
+  
+          <strong id="tsDashSongs" class="large-status-value song-list-locked">
+            Locked
+          </strong>
+        </section>
+      </div>
+      <!-- END top-performance-grid -->
 
-      <section class="performance-info-card session-notes-card">
-        <div class="status-card-heading">
-          <span class="status-card-icon">📝</span>
-          <span>Session Notes</span>
-        </div>
-      
-        <textarea
-          id="tsSessionNotes"
-          class="top-status-session-notes"
-          placeholder="Type session notes..."
-          aria-label="Session notes"
-          disabled
-        ></textarea>
-      
-        <div class="session-notes-footer">
-          <span id="tsNotesSaveStatus">No active session</span>
-        </div>
-      </section>
+          <!-- LOWER DASHBOARD ROW -->
+    <div class="top-status-lower-grid">
 
-      <!-- VENUE / SONG LIST -->
-      <section class="performance-info-card venue-card">
-        <div class="status-card-heading">
-          <span class="status-card-icon">📍</span>
-          <span>Venue</span>
-        </div>
-
-        <strong id="tsDashVenue" class="large-status-value">-</strong>
-
-        <div class="status-card-divider dashed"></div>
-
-        <div class="status-card-heading compact-heading">
-          <span class="status-card-icon">🔒</span>
-          <span>Public Song List</span>
-        </div>
-
-        <strong id="tsDashSongs" class="large-status-value song-list-locked">
-          Locked
-        </strong>
-      </section>
-
-      <!-- NOTIFICATIONS -->
+      <!-- NOTIFICATIONS: under Started -->
       <section class="performance-info-card notifications-card">
         <div class="status-card-heading">
           <span class="status-card-icon">🔔</span>
@@ -183,19 +188,58 @@
           id="tsNotificationsList"
           class="top-status-notifications-list"
         >
-          <div class="top-status-empty">No notifications yet.</div>
+          <div class="top-status-empty">
+            No notifications yet.
+          </div>
         </div>
 
         <a
           class="top-status-admin-link"
-          href="../../admin-new/admin.html"
+          href="../admin.html"
           onclick="event.stopPropagation();"
         >
           Go to Admin →
         </a>
       </section>
 
-      <!-- LIVE QUEUE -->
+      <!-- SHORTCUTS: under Break Status -->
+      <section class="performance-info-card top-status-shortcuts-card">
+        <div class="status-card-heading">
+          <span class="status-card-icon">⚡</span>
+          <span>Shortcuts</span>
+        </div>
+
+        <div class="top-status-shortcuts">
+          <button
+            type="button"
+            class="top-status-shortcut-btn admin-shortcut"
+            onclick="event.stopPropagation(); window.location.href='../admin.html';"
+          >
+            <span>🎛️</span>
+            <strong>Admin Dashboard</strong>
+          </button>
+
+          <button
+            type="button"
+            class="top-status-shortcut-btn lyrics-shortcut"
+            onclick="event.stopPropagation(); window.location.href='lyricsviewer.html';"
+          >
+            <span>🎸</span>
+            <strong>Lyrics Viewer</strong>
+          </button>
+
+          <button
+            type="button"
+            class="top-status-shortcut-btn songs-shortcut"
+            onclick="event.stopPropagation(); window.location.href='songlist.html';"
+          >
+            <span>📋</span>
+            <strong>Song List</strong>
+          </button>
+        </div>
+      </section>
+
+      <!-- QUEUE: full remaining width under Notes and Venue -->
       <section class="top-status-queue-card">
         <div class="queue-heading-row">
           <h3>
@@ -203,12 +247,12 @@
             Live Performance Queue
             <span id="tsQueueCount">(0)</span>
           </h3>
-  
+
           <span class="queue-scroll-hint">
             Scroll to view all requests ↓
           </span>
         </div>
-  
+
         <div id="tsQueueList" class="top-status-queue-list">
           <div class="top-status-queue-empty">
             No active song requests.
@@ -217,6 +261,7 @@
       </section>
 
     </div>
+    <!-- END top-status-lower-grid -->
 
    
 
