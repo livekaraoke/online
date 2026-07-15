@@ -194,19 +194,25 @@
   function updateTempoStyling() {
     const tempoEl = $("summaryTempo");
     const originalEl = $("summaryOriginalBpm");
+    if (!tempoEl || !originalEl || !song) return;
+
     const tempo = bpmNumber(song.userBpm);
     const original = bpmNumber(song.originalBpm);
 
-    tempoEl.classList.remove("tempo-match", "tempo-different");
-    originalEl.classList.remove("original-bpm-different");
+    tempoEl.classList.remove("tempo-match", "tempo-different", "tempo-unknown");
+    originalEl.classList.remove("original-bpm-different", "original-bpm-match");
 
-    if (tempo !== null && original !== null) {
-      if (tempo === original) {
-        tempoEl.classList.add("tempo-match");
-      } else {
-        tempoEl.classList.add("tempo-different");
-        originalEl.classList.add("original-bpm-different");
-      }
+    if (tempo === null || original === null) {
+      tempoEl.classList.add("tempo-unknown");
+      return;
+    }
+
+    if (Math.abs(tempo - original) < 0.001) {
+      tempoEl.classList.add("tempo-match");
+      originalEl.classList.add("original-bpm-match");
+    } else {
+      tempoEl.classList.add("tempo-different");
+      originalEl.classList.add("original-bpm-different");
     }
   }
 
