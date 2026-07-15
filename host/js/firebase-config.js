@@ -1,4 +1,4 @@
-/* Shared Firebase configuration for the Live Karaoke lyrics suite. */
+/* Firebase configuration shared by the Live Karaoke lyrics tools. */
 const firebaseConfig = {
   apiKey: "AIzaSyC4gSodXM35E2ZdYaz6mrCvTUYzW75ZCBk",
   authDomain: "livekaraokemt.firebaseapp.com",
@@ -8,5 +8,10 @@ const firebaseConfig = {
   appId: "1:425980659562:web:892ddcd53fb209d1114713"
 };
 
-if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+if (!firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
+}
+
+/* Expose these globally because the existing suite uses db directly. */
+window.db = firebase.firestore();
+window.auth = firebase.auth();
