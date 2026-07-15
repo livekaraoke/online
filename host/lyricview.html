@@ -5,11 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Lyrics & Chords View</title>
   <link rel="stylesheet" href="css/lyrics-suite.css">
+  <link rel="stylesheet" href="../admin-new/css/top-statusbar.css">
 </head>
 <body class="host-view-page">
   <header class="host-topbar">
     <div class="topbar-left">
-      <button id="favouriteBtn" class="icon-btn" type="button" title="Favourite">☆</button>
+      <a class="btn ghost topbar-exit-btn" href="lyricsviewer.html">← EXIT</a>
     </div>
 
     <div class="song-heading">
@@ -19,10 +20,11 @@
 
     <div class="topbar-right">
       <button id="sidebarToggleBtn" class="btn ghost sidebar-toggle-btn" type="button" aria-expanded="false" aria-controls="hostSidebar">☰ SONG INFO</button>
-      <button id="liveSessionBtn" class="btn red" type="button">◉ LIVE SESSION</button>
-      <a class="btn red" href="lyricsviewer.html">EXIT</a>
     </div>
   </header>
+
+  <!-- TOP STATUS BAR / DASHBOARD -->
+  <div id="topStatusContainer"></div>
 
   <section class="song-summary-card extended-summary-card">
     <div><small>Key</small><strong id="summaryKey">—</strong></div>
@@ -84,8 +86,6 @@
     </article>
   </main>
 
-  <div id="sidebarBackdrop" class="host-sidebar-backdrop hidden"></div>
-
   <aside id="hostSidebar" class="host-sidebar host-sidebar-overlay" aria-hidden="true">
     <div class="host-sidebar-header">
       <div>
@@ -97,9 +97,14 @@
 
     <div class="host-sidebar-scroll">
       <section class="panel"><h3>PERFORMANCE NOTES <small>(Visible to Singers)</small></h3><div id="performanceNotesList" class="notes-list"></div></section>
-      <section class="panel"><h3>MY NOTES <small>(Host Only)</small></h3><div id="hostNotes" class="host-note-text">—</div></section>
+      <section class="panel"><h3>HOST LYRIC NOTES <small>(Host-only sections)</small></h3><div id="hostNotes" class="host-note-text">—</div></section>
+      <section class="panel my-notes-panel">
+        <h3>MY NOTES <small>(Auto-saved)</small></h3>
+        <textarea id="myNotesInput" class="my-notes-textarea" rows="10" placeholder="Type private notes for this song..."></textarea>
+        <div id="myNotesSaveStatus" class="my-notes-save-status" aria-live="polite"></div>
+      </section>
       <section class="panel"><h3>SONG STRUCTURE</h3><div id="songStructure" class="structure-list"></div></section>
-      <section class="panel"><h3>SHORTCUTS</h3><div class="shortcut-grid"><button id="fontDownBtn">A− FONT SIZE</button><button id="fontUpBtn">A＋ FONT SIZE</button><button id="scrollToggleBtn">◷ AUTO SCROLL</button><button id="fullscreenBtn">⛶ FULLSCREEN</button></div></section>
+      <section class="panel"><h3>SHORTCUTS</h3><div class="shortcut-grid"><button id="fontDownBtn">A− FONT SIZE</button><button id="fontUpBtn">A＋ FONT SIZE</button><button id="scrollToggleBtn">◷ AUTO SCROLL</button><button id="fullscreenBtn">⛶ FULLSCREEN</button><button id="adminShortcutBtn">⚙ ADMIN</button></div></section>
     </div>
   </aside>
 
@@ -116,5 +121,13 @@
   <script src="js/firebase-config.js"></script>
   <script src="js/lyrics-common.js"></script>
   <script src="js/lyricview.js"></script>
+  <script src="../admin-new/js/top-statusbar.js" data-include="../admin-new/includes/top-statusbar.html"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      if (window.LK?.topStatus?.loadTopStatusBar) {
+        LK.topStatus.loadTopStatusBar();
+      }
+    });
+  </script>
 </body>
 </html>
