@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Setlist Editor</title><link rel="stylesheet" href="css/lyrics-suite.css"></head>
+<body class="setlist-page">
+<header class="app-topbar"><a class="btn ghost" href="lyricsviewer.html">‹ LYRICS VIEWER</a><div class="brand-block"><strong>☷ SETLIST EDITOR</strong><span>Create, order and manage performance setlists</span></div><button id="newSetlistBtn" class="btn red">＋ NEW SETLIST</button></header>
+<main class="setlist-shell">
+  <aside class="setlist-list-panel panel"><div class="panel-title-row"><h3>SETLISTS</h3><span id="setlistCount">0</span></div><div id="setlistList" class="setlist-list"></div></aside>
+  <section class="setlist-editor-panel panel">
+    <div id="setlistEmpty" class="empty-state">Select a setlist or create a new one.</div>
+    <div id="setlistEditor" class="hidden">
+      <div class="setlist-header-fields"><input id="setlistNameInput" placeholder="Setlist name"><textarea id="setlistNotesInput" placeholder="Setlist notes"></textarea><div><button id="saveSetlistBtn" class="btn red">SAVE SETLIST</button><button id="deleteSetlistBtn" class="btn ghost">DELETE</button></div></div>
+      <div class="setlist-columns">
+        <section><div class="panel-title-row"><h3>SONGS IN SETLIST</h3><span id="selectedSongCount">0</span></div><div id="selectedSongs" class="setlist-song-list"></div></section>
+        <section><div class="panel-title-row"><h3>AVAILABLE SONGS</h3><input id="availableSearch" placeholder="Search songs..."></div><div id="availableSongs" class="setlist-song-list"></div></section>
+      </div>
+    </div>
+  </section>
+</main>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script><script src="js/firebase-config.js"></script><script src="js/lyrics-common.js"></script><script src="js/setlist-editor.js"></script>
+</body></html>
