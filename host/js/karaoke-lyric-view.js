@@ -36,7 +36,7 @@
     $("singerArtist").textContent = song.artist;
     const content = $("singerLyrics"); content.innerHTML = "";
     (song.sections || []).forEach(section => {
-      if (section.type === "separator" || section.type === "tab") return;
+      if (section.type === "separator" || section.type === "tab" || section.type === "hostNote" || section.type === "host-note") return;
       const html = LyricsCommon.singerHTMLFromSection(section);
       if (!html) return;
       if (section.type === "performanceNote" || section.type === "performance-note") {
