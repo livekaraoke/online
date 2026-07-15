@@ -25,6 +25,32 @@
   let staticImageData = null;
   let staticWidth = 0;
   let staticHeight = 0;
+  let syncRollTimer = null;
+  let glitchTimer = null;
+
+  function scheduleStandbySyncRoll() {
+    clearTimeout(syncRollTimer);
+    syncRollTimer = setTimeout(() => {
+      const noise = $("standbyView")?.querySelector(".standby-noise");
+      if (noise && document.body.classList.contains("singer-standby-mode")) {
+        noise.classList.add("standby-sync-roll");
+        setTimeout(() => noise.classList.remove("standby-sync-roll"), 900);
+      }
+      scheduleStandbySyncRoll();
+    }, 10000 + Math.random() * 10000);
+  }
+
+  function scheduleStandbyGlitch() {
+    clearTimeout(glitchTimer);
+    glitchTimer = setTimeout(() => {
+      const noise = $("standbyView")?.querySelector(".standby-noise");
+      if (noise && document.body.classList.contains("singer-standby-mode")) {
+        noise.classList.add("standby-glitch-frame");
+        setTimeout(() => noise.classList.remove("standby-glitch-frame"), 90);
+      }
+      scheduleStandbyGlitch();
+    }, 15000 + Math.random() * 15000);
+  }
 
   function resizeStaticCanvas() {
     const canvas = $("standbyStaticCanvas");
@@ -118,6 +144,8 @@
     // setInterval is used deliberately: some tablet browsers heavily throttle
     // requestAnimationFrame for visually subtle canvases.
     staticTimer = setInterval(paintStaticFrame, 42); // about 24 FPS
+    scheduleStandbySyncRoll();
+    scheduleStandbyGlitch();
     window.addEventListener("resize", resizeStaticCanvas);
     document.addEventListener("visibilitychange", () => {
       if (!document.hidden) paintStaticFrame();
