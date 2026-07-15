@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Karaoke Lyric View</title>
+  <link rel="stylesheet" href="css/lyrics-suite.css">
+</head>
+<body class="singer-page">
+  <header class="singer-topbar">
+    <button id="backBtn" class="btn ghost" type="button">‹ BACK</button>
+    <button id="fullscreenSingerBtn" class="btn ghost" type="button">⛶ FULLSCREEN</button>
+    <div class="song-heading"><strong id="singerTitle">KARAOKE LYRIC VIEW</strong><span id="singerArtist">Waiting for the host…</span></div>
+    <button id="singerSettingsBtn" class="btn ghost" type="button">⚙ SETTINGS</button>
+  </header>
+
+  <div id="standbyView" class="standby-view"><div class="standby-icon">🎤</div><h1>READY FOR THE NEXT SINGER</h1><p>The lyrics will appear automatically when the host sends a song.</p></div>
+  <main id="singerLyrics" class="singer-lyrics hidden"></main>
+
+  <aside id="singerSettings" class="singer-settings hidden">
+    <div class="settings-title"><h2>VIEW SETTINGS</h2><button id="closeSingerSettings" type="button">✕</button></div>
+    <label>THEME<div class="settings-options"><button data-theme="default" class="active">Default</button><button data-theme="warm">Warm</button><button data-theme="contrast">High Contrast</button></div></label>
+    <label>FONT<div class="settings-options"><button data-font="default" class="active">Default</button><button data-font="arial">Arial</button><button data-font="dyslexic">OpenDyslexic</button></div></label>
+    <label>TEXT SIZE<div class="settings-options"><button data-size="small">A−</button><button data-size="normal" class="active">A</button><button data-size="large">A＋</button><button data-size="xlarge">A＋＋</button></div></label>
+    <label>LINE SPACING<div class="settings-options"><button data-spacing="normal" class="active">Default</button><button data-spacing="loose">Loose</button><button data-spacing="looser">Looser</button></div></label>
+    <label class="inline-setting">AUTO-SCROLL <input id="singerAutoScroll" type="checkbox"></label>
+    <label>SCROLL SPEED<div class="stepper"><button id="singerSpeedDown">−</button><strong id="singerSpeedLabel">1.00×</strong><button id="singerSpeedUp">＋</button></div></label>
+    <div class="tip-box"><h3>SINGING TIPS</h3><p>🎤 Sing out and have fun.</p><p>👥 Watch the host for cues.</p><p>★ You are doing great.</p></div>
+  </aside>
+
+  <footer id="singerControls" class="singer-controls hidden"><button id="singerPlayBtn" class="play">▶</button><button id="singerMinusBtn">−</button><strong id="singerBottomSpeed">1.00×</strong><button id="singerPlusBtn">＋</button></footer>
+
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="js/firebase-config.js"></script>
+  <script src="js/lyrics-common.js"></script>
+  <script src="js/karaoke-lyric-view.js"></script>
+</body>
+</html>

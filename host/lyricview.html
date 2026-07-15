@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lyrics & Chords View</title>
+  <link rel="stylesheet" href="css/lyrics-suite.css">
+</head>
+<body class="host-view-page">
+  <header class="host-topbar">
+    <div class="topbar-left"><a class="btn ghost" href="lyricsviewer.html">‹ BACK</a><button id="favouriteBtn" class="icon-btn" type="button">☆</button></div>
+    <div class="song-heading"><strong id="topTitle">Loading…</strong><span id="topArtist"></span></div>
+    <div class="topbar-right"><button id="liveSessionBtn" class="btn red" type="button">◉ LIVE SESSION</button><a class="btn red" href="lyricsviewer.html">EXIT</a></div>
+  </header>
+
+  <section class="song-summary-card">
+    <div><small>Key</small><strong id="summaryKey">—</strong></div><div><small>Time</small><strong id="summaryTime">4/4</strong></div><div><small>Tempo</small><strong id="summaryTempo">—</strong></div><div><small>Capo</small><strong id="summaryCapo">0</strong></div><a id="youtubeLink" class="youtube-link hidden" target="_blank" rel="noopener">▶ YouTube</a>
+  </section>
+
+  <section class="control-grid">
+    <div class="control-card"><h3>CHORD TRANSPOSE</h3><div class="stepper"><button data-action="chord-minus">−</button><strong id="chordTransposeValue">0</strong><button data-action="chord-plus">＋</button></div><p id="chordKeyLabel">Original key</p></div>
+    <div class="control-card"><h3>TAB TRANSPOSE</h3><div class="stepper"><button data-action="tab-minus">−</button><strong id="tabTransposeValue">0</strong><button data-action="tab-plus">＋</button></div><p>Fret shift</p></div>
+    <div class="control-card"><h3>CAPO</h3><div class="stepper"><button data-action="capo-minus">−</button><strong id="capoValue">0</strong><button data-action="capo-plus">＋</button></div><p>Display only</p></div>
+    <div class="control-card"><h3>VIEW</h3><div class="segmented"><button id="hostViewBtn" class="active" type="button">▣ Host View</button><button id="singerPreviewBtn" type="button">♟ Singer Preview</button></div></div>
+    <div class="control-card tools-card"><h3>TOOLS</h3><button id="sendSingerBtn" class="btn green full" type="button">➤ SEND TO SINGER TABLET</button><button id="editSongBtn" class="btn green full" type="button">▣ EDIT SONG</button></div>
+  </section>
+
+  <main class="host-layout">
+    <article class="lyrics-document">
+      <div id="tabOverview" class="tab-overview hidden"></div>
+      <div id="hostLyricsContent" class="host-lyrics-content"><div class="loading-state">Loading song…</div></div>
+      <div class="end-marker">[ END ]</div>
+    </article>
+    <aside class="host-sidebar">
+      <section class="panel"><h3>PERFORMANCE NOTES <small>(Visible to Singers)</small></h3><div id="performanceNotesList" class="notes-list"></div></section>
+      <section class="panel"><h3>MY NOTES <small>(Host Only)</small></h3><div id="hostNotes" class="host-note-text">—</div></section>
+      <section class="panel"><h3>SONG STRUCTURE</h3><div id="songStructure" class="structure-list"></div></section>
+      <section class="panel"><h3>SHORTCUTS</h3><div class="shortcut-grid"><button id="fontDownBtn">A− FONT SIZE</button><button id="fontUpBtn">A＋ FONT SIZE</button><button id="scrollToggleBtn">◷ AUTO SCROLL</button><button id="fullscreenBtn">⛶ FULLSCREEN</button></div></section>
+    </aside>
+  </main>
+
+  <footer class="host-player-bar"><button id="prevSectionBtn">◀◀</button><button id="playScrollBtn" class="play">▶</button><button id="nextSectionBtn">▶▶</button><div class="speed-control"><button id="speedDownBtn">−</button><strong id="speedLabel">1.00×</strong><button id="speedUpBtn">＋</button></div><span id="sendStatus"></span></footer>
+
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="js/firebase-config.js"></script>
+  <script src="js/lyrics-common.js"></script>
+  <script src="js/lyricview.js"></script>
+</body>
+</html>
