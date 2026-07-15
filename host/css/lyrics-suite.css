@@ -3252,7 +3252,7 @@ body[data-guidance="pro"] .singer-section-body {
 
 /* Keep the animated snow present but stop it overpowering the standby logo. */
 .singer-standby-mode .standby-static-canvas {
-  opacity: .25 !important;
+  opacity: .20 !important;
   filter: contrast(1.28) brightness(.64) !important;
   animation: standbyStaticBreath 10s ease-in-out infinite !important;
 }
@@ -3265,19 +3265,19 @@ body[data-guidance="pro"] .singer-section-body {
 
 /* Scanlines/tracking remain visible without washing out the page. */
 .singer-standby-mode .standby-noise::after {
-  opacity: .20 !important;
+  opacity: .15 !important;
 }
 
 /* Slow analogue signal breathing: subtle, not a flashing effect. */
 @keyframes standbyStaticBreath {
-  0%, 100% { opacity: .40; filter: contrast(1.22) brightness(.58); }
-  42%      { opacity: .50; filter: contrast(1.32) brightness(.67); }
-  58%      { opacity: .46; filter: contrast(1.28) brightness(.62); }
+  0%, 100% { opacity: .30; filter: contrast(1.22) brightness(.48); }
+  42%      { opacity: .40; filter: contrast(1.32) brightness(.57); }
+  58%      { opacity: .36; filter: contrast(1.28) brightness(.52); }
 }
 
 /* Added and removed at random intervals by karaoke-lyric-view.js. */
 .singer-standby-mode .standby-noise.standby-sync-roll::after {
-  animation: standbyOneOffSyncRoll .9s cubic-bezier(.2,.75,.25,1) 1 !important;
+  animation: standbyOneOffSyncRoll .9s cubic-bezier(.2,.65,.25,1) 1 !important;
   opacity: .34 !important;
 }
 
