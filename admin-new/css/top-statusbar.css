@@ -1196,3 +1196,252 @@ body {
   }
 }
 
+/* =========================================================
+   FINAL TABLET TYPOGRAPHY FIX
+   Keep this at the very bottom of top-statusbar.css
+   ========================================================= */
+
+@media (min-width: 700px) and (max-width: 1100px) {
+
+  /* Use a consistent available font on tablets */
+  #topStatusBar,
+  #topStatusBar button,
+  #topStatusBar textarea,
+  #topStatusBar input,
+  #topStatusBar select {
+    font-family:
+      Bahnschrift,
+      "Arial Narrow",
+      Arial,
+      Helvetica,
+      sans-serif !important;
+  }
+
+  /* ---------------------------------------------------------
+     STARTED / ELAPSED CARD
+     --------------------------------------------------------- */
+
+  #topStatusBar .timing-card {
+    display: flex;
+    flex-direction: column;
+  }
+
+  #topStatusBar .timing-card .status-card-heading {
+    color: #a9b9c9 !important;
+    font-size: 10px !important;
+    font-weight: 900 !important;
+    line-height: 1.15 !important;
+    letter-spacing: 0.45px !important;
+    text-transform: uppercase !important;
+  }
+
+  #topStatusBar .timing-card #tsDashStarted {
+    margin-top: 14px !important;
+    color: #fff !important;
+    font-size: 20px !important;
+    font-weight: 900 !important;
+    line-height: 1 !important;
+  }
+
+  #topStatusBar .timing-card .status-card-divider {
+    flex: 0 0 auto;
+    width: 100%;
+    margin: 16px 0 12px !important;
+  }
+
+  #topStatusBar .timing-card .elapsed-metric {
+    display: block !important;
+    margin: 0 !important;
+  }
+
+  /* Fixes the large plain labels visible in the screenshot */
+  #topStatusBar .timing-card .elapsed-metric > span {
+    display: block !important;
+    margin: 0 0 5px !important;
+    padding: 0 !important;
+    color: #9eafbf !important;
+    font-family:
+      Bahnschrift,
+      "Arial Narrow",
+      Arial,
+      sans-serif !important;
+    font-size: 9px !important;
+    font-weight: 900 !important;
+    line-height: 1.2 !important;
+    letter-spacing: 0.45px !important;
+    text-transform: uppercase !important;
+  }
+
+  #topStatusBar .timing-card #tsDashElapsed {
+    display: block !important;
+    margin: 0 !important;
+    color: #1ce47a !important;
+    font-size: 20px !important;
+    font-weight: 900 !important;
+    line-height: 1.08 !important;
+    letter-spacing: 0 !important;
+    text-transform: none !important;
+  }
+
+  #topStatusBar .timing-card .elapsed-excluding {
+    display: block !important;
+    margin-top: 11px !important;
+    padding-top: 10px !important;
+    border-top: 1px solid rgba(140, 160, 180, 0.16) !important;
+  }
+
+  #topStatusBar .timing-card #tsDashElapsedExcludingBreaks {
+    display: block !important;
+    margin: 0 !important;
+    color: #ffd02c !important;
+    font-size: 14px !important;
+    font-weight: 900 !important;
+    line-height: 1.12 !important;
+    letter-spacing: 0 !important;
+    text-transform: none !important;
+  }
+
+  /* ---------------------------------------------------------
+     BREAK CARD
+     --------------------------------------------------------- */
+
+  #topStatusBar .break-card .status-card-heading {
+    color: #a9b9c9 !important;
+    font-size: 10px !important;
+    font-weight: 900 !important;
+    line-height: 1.15 !important;
+    letter-spacing: 0.45px !important;
+    text-transform: uppercase !important;
+  }
+
+  #topStatusBar .break-status-panel {
+    padding: 10px !important;
+  }
+
+  #topStatusBar .break-status-label {
+    display: block !important;
+    margin: 0 !important;
+    color: #dbe6f0 !important;
+    font-size: 14px !important;
+    font-weight: 900 !important;
+    line-height: 1.15 !important;
+    letter-spacing: 0.25px !important;
+    text-transform: uppercase !important;
+  }
+
+  #topStatusBar .active-break .break-status-label {
+    color: #ffc21d !important;
+  }
+
+  #topStatusBar .break-details {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 4px 12px !important;
+    margin-top: 8px !important;
+    color: #aebdca !important;
+    font-size: 9px !important;
+    font-weight: 700 !important;
+    line-height: 1.2 !important;
+  }
+
+  #topStatusBar .break-details.hidden {
+    display: none !important;
+  }
+
+  #topStatusBar .break-details span {
+    color: #aebdca !important;
+    font-size: 9px !important;
+    font-weight: 700 !important;
+  }
+
+  #topStatusBar .break-details strong {
+    color: #fff !important;
+    font-size: 10px !important;
+    font-weight: 900 !important;
+  }
+
+  /*
+    Put the three break statistics on separate clean rows.
+    This prevents:
+    "Total break time 2 mins Total breaks 3..."
+    from appearing like unstyled paragraph text.
+  */
+  #topStatusBar .break-summary-grid {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 0 !important;
+    margin-top: 8px !important;
+    padding-top: 6px !important;
+    border-top: 1px solid rgba(140, 160, 180, 0.18) !important;
+  }
+
+  #topStatusBar .break-summary-item,
+  #topStatusBar .break-summary-item.full-width {
+    grid-column: auto !important;
+    min-width: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 8px !important;
+    margin: 0 !important;
+    padding: 5px 0 !important;
+    border: 0 !important;
+    border-bottom: 1px solid rgba(140, 160, 180, 0.09) !important;
+  }
+
+  #topStatusBar .break-summary-item:last-child {
+    border-bottom: 0 !important;
+  }
+
+  #topStatusBar .break-summary-item span,
+  #topStatusBar .break-summary-item.full-width span {
+    display: block !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    color: #9eafbf !important;
+    font-family:
+      Bahnschrift,
+      "Arial Narrow",
+      Arial,
+      sans-serif !important;
+    font-size: 8px !important;
+    font-weight: 900 !important;
+    line-height: 1.15 !important;
+    letter-spacing: 0.3px !important;
+    text-transform: uppercase !important;
+  }
+
+  #topStatusBar .break-summary-item strong,
+  #topStatusBar .break-summary-item.full-width strong {
+    flex: 0 0 auto !important;
+    display: block !important;
+    margin: 0 !important;
+    color: #ffc21d !important;
+    font-family:
+      Bahnschrift,
+      "Arial Narrow",
+      Arial,
+      sans-serif !important;
+    font-size: 11px !important;
+    font-weight: 900 !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+  }
+
+  #topStatusBar .break-action-btn {
+    min-height: 32px !important;
+    margin-top: 7px !important;
+    padding: 6px 8px !important;
+    font-size: 10px !important;
+    font-weight: 900 !important;
+    line-height: 1.1 !important;
+  }
+
+  #topStatusBar .break-action-message {
+    min-height: 8px !important;
+    margin-top: 2px !important;
+    font-size: 8px !important;
+  }
+}
