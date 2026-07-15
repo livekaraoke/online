@@ -48,53 +48,31 @@
     }
   }
 
-  function showAuthGate(show) {
-    $("setlistAuthGate")?.classList.toggle("hidden", !show);
+  function showLoadingGate(show, message = "Checking your existing Admin login...") {
+    $("setlistLoadingGate")?.classList.toggle("hidden", !show);
+    if ($("setlistLoadingMessage")) $("setlistLoadingMessage").textContent = message;
   }
 
   function updateAuthUi(user) {
     const state = $("setlistAuthState");
-    const logout = $("setlistLogoutBtn");
     const newButton = $("newSetlistBtn");
 
     if (user) {
       if (state) state.textContent = `● ${user.email || "SIGNED IN"}`;
-      logout?.classList.remove("hidden");
       if (newButton) newButton.disabled = false;
     } else {
-      if (state) state.textContent = "NOT SIGNED IN";
-      logout?.classList.add("hidden");
+      if (state) state.textContent = "ADMIN LOGIN REQUIRED";
       if (newButton) newButton.disabled = true;
     }
   }
 
-  async function login() {
-    const email = $("setlistEmailInput")?.value.trim() || "";
-    const password = $("setlistPasswordInput")?.value || "";
-    const error = $("setlistAuthError");
-    const button = $("setlistLoginBtn");
-
-    if (!email || !password) {
-      if (error) error.textContent = "Enter your email and password.";
-      return;
+  function showLoginFallback(message) {
+    showLoadingGate(true, "No existing Admin login was found.");
+    if ($("setlistAuthError")) {
+      $("setlistAuthError").textContent = message ||
+        "Open the Admin page, sign in once, then return here. Firebase keeps the login for pages on the same website origin.";
     }
-
-    if (error) error.textContent = "Signing in...";
-    setBusy(button, true, "SIGNING IN...");
-
-    try {
-      await auth.signInWithEmailAndPassword(email, password);
-      if (error) error.textContent = "";
-    } catch (err) {
-      console.error("Setlist login failed:", err);
-      if (error) error.textContent = err.message || "Could not sign in.";
-    } finally {
-      setBusy(button, false);
-    }
-  }
-
-  async function logout() {
-    await auth.signOut();
+    $("setlistLoginFallback")?.classList.remove("hidden");
   }
 
   function startEditorListeners() {
@@ -233,8 +211,7 @@
     const button = $("newSetlistBtn");
 
     if (!user) {
-      showAuthGate(true);
-      $("setlistAuthError").textContent = "Sign in before creating a setlist.";
+      showLoginFallback("Your Admin login is not available on this page yet.");
       return;
     }
 
@@ -280,7 +257,7 @@
   async function saveCurrentSetlist() {
     if (!current) return;
     if (!auth.currentUser) {
-      showAuthGate(true);
+      showLoginFallback("Your Admin login is not available on this page yet.");
       return;
     }
 
@@ -406,29 +383,32 @@
     }
   });
 
-  $("setlistLoginBtn")?.addEventListener("click", login);
-  $("setlistLogoutBtn")?.addEventListener("click", logout);
   $("newSetlistBtn")?.addEventListener("click", createNewSetlist);
   $("saveSetlistBtn")?.addEventListener("click", saveCurrentSetlist);
   $("deleteSetlistBtn")?.addEventListener("click", deleteCurrentSetlist);
   $("availableSearch")?.addEventListener("input", renderAvailable);
+  $("retryAuthBtn")?.addEventListener("click", () => window.location.reload());
 
-  $("setlistPasswordInput")?.addEventListener("keydown", event => {
-    if (event.key === "Enter") login();
-  });
-
+  /*
+   * Firebase Auth persists the Admin login in IndexedDB/local storage.
+   * No second login form is used here. We simply wait for Firebase to
+   * restore the existing session created on admin.html.
+   */
   auth.onAuthStateChanged(user => {
     updateAuthUi(user);
 
     if (user) {
-      showAuthGate(false);
-      $("setlistAuthError").textContent = "";
+      showLoadingGate(false);
+      if ($("setlistAuthError")) $("setlistAuthError").textContent = "";
+      $("setlistLoginFallback")?.classList.add("hidden");
       startEditorListeners();
     } else {
       stopEditorListeners();
-      showAuthGate(true);
+      showLoginFallback(
+        "You are not currently signed in on this website. Sign in through the Admin page once, then return to Setlists."
+      );
       if ($("setlistEmpty")) {
-        $("setlistEmpty").textContent = "Sign in, then select a setlist or create a new one.";
+        $("setlistEmpty").textContent = "Admin login required.";
       }
     }
   });
