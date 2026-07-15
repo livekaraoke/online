@@ -32,6 +32,33 @@
     });
   }
 
+  function sectionTitle(section, isTab, fallback) {
+    return section.title || (isTab ? "GUITAR TAB" : fallback);
+  }
+
+  function createCollapsibleSection(section, index, contentHTML, extraClass = "") {
+    const block = document.createElement("section");
+    const collapsed = section.collapsed === true;
+    block.className = `host-section collapsible-host-section ${extraClass} ${collapsed ? "is-collapsed" : ""}`;
+    block.dataset.sectionIndex = index;
+    const title = sectionTitle(section, extraClass.includes("host-tab-section"), `SECTION ${index + 1}`);
+    block.innerHTML = `
+      <button class="host-section-toggle" type="button" aria-expanded="${collapsed ? "false" : "true"}">
+        <span>${LyricsCommon.escapeHTML(title)}${extraClass.includes("host-tab-section") ? " (TAB)" : ""}</span>
+        <small>${collapsed ? "▼ OPEN" : "▲ HIDE"}</small>
+      </button>
+      <div class="host-section-body" ${collapsed ? "hidden" : ""}>${contentHTML}</div>`;
+    const toggle = block.querySelector(".host-section-toggle");
+    const body = block.querySelector(".host-section-body");
+    toggle.onclick = () => {
+      const isCollapsed = block.classList.toggle("is-collapsed");
+      body.hidden = isCollapsed;
+      toggle.setAttribute("aria-expanded", isCollapsed ? "false" : "true");
+      toggle.querySelector("small").textContent = isCollapsed ? "▼ OPEN" : "▲ HIDE";
+    };
+    return block;
+  }
+
   function renderSong() {
     $("topTitle").textContent = song.title;
     $("topArtist").textContent = song.artist;
@@ -54,25 +81,43 @@
     const content = $("hostLyricsContent");
     content.innerHTML = "";
     sectionElements = [];
+
     (song.sections || []).forEach((section, index) => {
       if (section.type === "separator") {
-        const hr = document.createElement("hr"); hr.className = "host-separator"; content.appendChild(hr); return;
+        const hr = document.createElement("hr");
+        hr.className = "host-separator";
+        content.appendChild(hr);
+        return;
       }
+
       if (section.type === "performanceNote" || section.type === "performance-note") {
-        const cue = document.createElement("div"); cue.className="performance-cue host-cue"; cue.textContent=section.text||section.title||section.html||"Performance cue"; content.appendChild(cue); sectionElements.push(cue); return;
+        const cueHTML = `<div class="performance-cue host-cue">${LyricsCommon.escapeHTML(section.text || section.title || "Performance cue")}</div>`;
+        const block = createCollapsibleSection(section, index, cueHTML, "host-performance-note-section");
+        content.appendChild(block);
+        sectionElements.push(block);
+        return;
       }
+
+      if (section.type === "hostNote" || section.type === "host-note") {
+        const noteHTML = `<div class="host-only-section-note">${LyricsCommon.escapeHTML(section.text || section.html || "Host note")}</div>`;
+        const block = createCollapsibleSection(section, index, noteHTML, "host-only-note-section");
+        content.appendChild(block);
+        sectionElements.push(block);
+        return;
+      }
+
       const isTab = section.type === "tab" || /tab-block/.test(section.html || "");
-      const block = document.createElement("section");
-      block.className = `host-section ${isTab ? "host-tab-section" : ""}`;
-      block.dataset.sectionIndex = index;
       const raw = LyricsCommon.stripEditorControls(section.html || "");
       const chorded = LyricsCommon.transposeChordHTML(raw, chordShift);
       const finalHtml = isTab ? LyricsCommon.transposeTabHTML(chorded, tabShift) : chorded;
-      block.innerHTML = `${section.title ? `<h2>${LyricsCommon.escapeHTML(section.title)}${isTab ? " (TAB)" : ""}</h2>` : ""}<div class="host-section-body">${finalHtml}</div>`;
+      const block = createCollapsibleSection(section, index, finalHtml, isTab ? "host-tab-section" : "");
       block.style.fontFamily = section.style?.fontFamily || "inherit";
+      block.style.fontSize = section.style?.fontSize ? `${section.style.fontSize}px` : "";
+      block.style.color = section.style?.color || "";
       content.appendChild(block);
       sectionElements.push(block);
     });
+
     content.style.setProperty("--host-font-scale", fontScale);
     renderPerformanceNotes();
     renderStructure();
@@ -81,19 +126,27 @@
 
   function renderPerformanceNotes() {
     const notes = LyricsCommon.getPerformanceNotes(song);
-    $("performanceNotesList").innerHTML = notes.length ? notes.map(n=>`<div>♫ ${LyricsCommon.escapeHTML(n)}</div>`).join("") : '<span class="muted">No singer-visible performance notes.</span>';
+    $("performanceNotesList").innerHTML = notes.length
+      ? notes.map(note => `<div>♫ ${LyricsCommon.escapeHTML(note)}</div>`).join("")
+      : '<span class="muted">No singer-visible performance notes.</span>';
   }
 
   function renderStructure() {
-    $("songStructure").innerHTML = (song.sections || []).filter(s=>s.type!=="separator").map((section,i)=>`<button data-jump="${i}" type="button"><span>${LyricsCommon.escapeHTML(section.title || section.type || `Section ${i+1}`)}</span><small>${section.type || "lyrics"}</small></button>`).join("");
+    $("songStructure").innerHTML = (song.sections || [])
+      .filter(section => section.type !== "separator")
+      .map((section, index) => `<button data-jump="${index}" type="button"><span>${LyricsCommon.escapeHTML(section.title || section.type || `Section ${index + 1}`)}</span><small>${section.type || "lyrics"}</small></button>`)
+      .join("");
   }
 
   function renderTabOverview() {
-    const tabs = (song.sections || []).filter(s=>s.type==="tab" || /tab-block/.test(s.html||""));
+    const tabs = (song.sections || []).filter(section => section.type === "tab" || /tab-block/.test(section.html || ""));
     const wrap = $("tabOverview");
-    if (!tabs.length) { wrap.classList.add("hidden"); return; }
+    if (!tabs.length) {
+      wrap.classList.add("hidden");
+      return;
+    }
     wrap.classList.remove("hidden");
-    wrap.innerHTML = `<h3>GUITAR TABS · TAB SHIFT ${tabShift >= 0 ? "+" : ""}${tabShift}</h3>${tabs.slice(0,1).map(s=>LyricsCommon.transposeTabHTML(LyricsCommon.stripEditorControls(s.html||""),tabShift)).join("")}`;
+    wrap.innerHTML = `<h3>GUITAR TABS · TAB SHIFT ${tabShift >= 0 ? "+" : ""}${tabShift}</h3>${tabs.slice(0, 1).map(section => LyricsCommon.transposeTabHTML(LyricsCommon.stripEditorControls(section.html || ""), tabShift)).join("")}`;
   }
 
   async function sendToSinger() {
@@ -112,19 +165,19 @@
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       }, { merge: true });
       $("sendStatus").textContent = "Sent to karaoke ✓";
-      setTimeout(()=>$("sendStatus").textContent="",3000);
+      setTimeout(() => $("sendStatus").textContent = "", 3000);
     } catch (error) {
       console.error(error);
       $("sendStatus").textContent = `Send failed: ${error.message}`;
-    } finally { button.disabled = false; }
+    } finally {
+      button.disabled = false;
+    }
   }
-
 
   function setSidebarOpen(open) {
     const sidebar = $("hostSidebar");
     const backdrop = $("sidebarBackdrop");
     const toggle = $("sidebarToggleBtn");
-
     sidebar.classList.toggle("open", open);
     sidebar.setAttribute("aria-hidden", open ? "false" : "true");
     backdrop.classList.toggle("hidden", !open);
@@ -138,28 +191,34 @@
     setSidebarOpen(!$("hostSidebar").classList.contains("open"));
   }
 
-  function changeChord(delta) { chordShift += delta; renderSong(); }
-  function changeTab(delta) { tabShift += delta; renderSong(); }
-  function changeCapo(delta) { capoDisplay = Math.max(0, capoDisplay + delta); renderSong(); }
-
   function autoScrollLoop() {
     if (!scrolling) return;
     window.scrollBy(0, 0.35 * scrollSpeed);
-    if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2) { scrolling=false; $("playScrollBtn").textContent="▶"; return; }
+    if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2) {
+      scrolling = false;
+      $("playScrollBtn").textContent = "▶";
+      return;
+    }
     scrollFrame = requestAnimationFrame(autoScrollLoop);
   }
-  function toggleScroll() { scrolling=!scrolling; $("playScrollBtn").textContent=scrolling?"Ⅱ":"▶"; if(scrolling) autoScrollLoop(); else cancelAnimationFrame(scrollFrame); }
 
-  document.addEventListener("click", e => {
-    const action = e.target.closest("[data-action]")?.dataset.action;
-    if (action === "chord-minus") changeChord(-1);
-    if (action === "chord-plus") changeChord(1);
-    if (action === "tab-minus") changeTab(-1);
-    if (action === "tab-plus") changeTab(1);
-    if (action === "capo-minus") changeCapo(-1);
-    if (action === "capo-plus") changeCapo(1);
-    const jump = e.target.closest("[data-jump]");
-    if (jump) document.querySelector(`[data-section-index="${jump.dataset.jump}"]`)?.scrollIntoView({behavior:"smooth",block:"start"});
+  function toggleScroll() {
+    scrolling = !scrolling;
+    $("playScrollBtn").textContent = scrolling ? "Ⅱ" : "▶";
+    if (scrolling) autoScrollLoop();
+    else cancelAnimationFrame(scrollFrame);
+  }
+
+  document.addEventListener("click", event => {
+    const action = event.target.closest("[data-action]")?.dataset.action;
+    if (action === "chord-minus") { chordShift--; renderSong(); }
+    if (action === "chord-plus") { chordShift++; renderSong(); }
+    if (action === "tab-minus") { tabShift--; renderSong(); }
+    if (action === "tab-plus") { tabShift++; renderSong(); }
+    if (action === "capo-minus") { capoDisplay = Math.max(0, capoDisplay - 1); renderSong(); }
+    if (action === "capo-plus") { capoDisplay++; renderSong(); }
+    const jump = event.target.closest("[data-jump]");
+    if (jump) document.querySelector(`[data-section-index="${jump.dataset.jump}"]`)?.scrollIntoView({ behavior: "smooth", block: "start" });
   });
 
   $("sendSingerBtn").onclick = sendToSinger;
@@ -167,16 +226,16 @@
   $("sidebarCloseBtn").onclick = () => setSidebarOpen(false);
   $("sidebarBackdrop").onclick = () => setSidebarOpen(false);
   $("singerPreviewBtn").onclick = () => window.open("karaoke-lyric-view.html", "karaokeSingerView");
-  $("fontDownBtn").onclick = () => { fontScale=Math.max(.75,fontScale-.1); renderSong(); };
-  $("fontUpBtn").onclick = () => { fontScale=Math.min(1.8,fontScale+.1); renderSong(); };
+  $("fontDownBtn").onclick = () => { fontScale = Math.max(.75, fontScale - .1); renderSong(); };
+  $("fontUpBtn").onclick = () => { fontScale = Math.min(1.8, fontScale + .1); renderSong(); };
   $("fullscreenBtn").onclick = () => document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen();
   $("playScrollBtn").onclick = toggleScroll;
   $("scrollToggleBtn").onclick = toggleScroll;
-  $("speedDownBtn").onclick = () => {scrollSpeed=Math.max(.25,scrollSpeed-.25);$("speedLabel").textContent=`${scrollSpeed.toFixed(2)}×`;};
-  $("speedUpBtn").onclick = () => {scrollSpeed=Math.min(3,scrollSpeed+.25);$("speedLabel").textContent=`${scrollSpeed.toFixed(2)}×`;};
-  $("prevSectionBtn").onclick = () => {activeSectionIndex=Math.max(0,activeSectionIndex-1);sectionElements[activeSectionIndex]?.scrollIntoView({behavior:"smooth",block:"center"});};
-  $("nextSectionBtn").onclick = () => {activeSectionIndex=Math.min(sectionElements.length-1,activeSectionIndex+1);sectionElements[activeSectionIndex]?.scrollIntoView({behavior:"smooth",block:"center"});};
-  $("favouriteBtn").onclick = () => { const key=`fav:${songId}`; const on=localStorage.getItem(key)==="1"; localStorage.setItem(key,on?"0":"1"); $("favouriteBtn").textContent=on?"☆":"★"; };
+  $("speedDownBtn").onclick = () => { scrollSpeed = Math.max(.25, scrollSpeed - .25); $("speedLabel").textContent = `${scrollSpeed.toFixed(2)}×`; };
+  $("speedUpBtn").onclick = () => { scrollSpeed = Math.min(3, scrollSpeed + .25); $("speedLabel").textContent = `${scrollSpeed.toFixed(2)}×`; };
+  $("prevSectionBtn").onclick = () => { activeSectionIndex = Math.max(0, activeSectionIndex - 1); sectionElements[activeSectionIndex]?.scrollIntoView({ behavior: "smooth", block: "center" }); };
+  $("nextSectionBtn").onclick = () => { activeSectionIndex = Math.min(sectionElements.length - 1, activeSectionIndex + 1); sectionElements[activeSectionIndex]?.scrollIntoView({ behavior: "smooth", block: "center" }); };
+  $("favouriteBtn").onclick = () => { const key = `fav:${songId}`; const on = localStorage.getItem(key) === "1"; localStorage.setItem(key, on ? "0" : "1"); $("favouriteBtn").textContent = on ? "☆" : "★"; };
   $("liveSessionBtn").onclick = () => window.open("../../admin-new/admin.html", "_blank");
 
   document.addEventListener("keydown", event => {
