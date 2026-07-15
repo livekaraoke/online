@@ -39,6 +39,9 @@
     $("summaryTime").textContent = song.timeSignature || "4/4";
     $("summaryTempo").textContent = song.userBpm ? `${song.userBpm} BPM` : "—";
     $("summaryCapo").textContent = capoDisplay;
+    $("summaryOriginalBpm").textContent = song.originalBpm ? `${song.originalBpm} BPM` : "—";
+    $("summaryYear").textContent = song.year || "—";
+    $("summaryNote").textContent = song.note || "No song notes.";
     $("chordTransposeValue").textContent = chordShift;
     $("tabTransposeValue").textContent = tabShift;
     $("capoValue").textContent = capoDisplay;
@@ -108,12 +111,31 @@
         sentAt: firebase.firestore.FieldValue.serverTimestamp(),
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       }, { merge: true });
-      $("sendStatus").textContent = "Sent to singer tablet ✓";
+      $("sendStatus").textContent = "Sent to karaoke ✓";
       setTimeout(()=>$("sendStatus").textContent="",3000);
     } catch (error) {
       console.error(error);
       $("sendStatus").textContent = `Send failed: ${error.message}`;
     } finally { button.disabled = false; }
+  }
+
+
+  function setSidebarOpen(open) {
+    const sidebar = $("hostSidebar");
+    const backdrop = $("sidebarBackdrop");
+    const toggle = $("sidebarToggleBtn");
+
+    sidebar.classList.toggle("open", open);
+    sidebar.setAttribute("aria-hidden", open ? "false" : "true");
+    backdrop.classList.toggle("hidden", !open);
+    document.body.classList.toggle("host-sidebar-open", open);
+    toggle.setAttribute("aria-expanded", open ? "true" : "false");
+    toggle.classList.toggle("active", open);
+    toggle.textContent = open ? "✕ CLOSE INFO" : "☰ SONG INFO";
+  }
+
+  function toggleSidebar() {
+    setSidebarOpen(!$("hostSidebar").classList.contains("open"));
   }
 
   function changeChord(delta) { chordShift += delta; renderSong(); }
@@ -141,6 +163,9 @@
   });
 
   $("sendSingerBtn").onclick = sendToSinger;
+  $("sidebarToggleBtn").onclick = toggleSidebar;
+  $("sidebarCloseBtn").onclick = () => setSidebarOpen(false);
+  $("sidebarBackdrop").onclick = () => setSidebarOpen(false);
   $("singerPreviewBtn").onclick = () => window.open("karaoke-lyric-view.html", "karaokeSingerView");
   $("fontDownBtn").onclick = () => { fontScale=Math.max(.75,fontScale-.1); renderSong(); };
   $("fontUpBtn").onclick = () => { fontScale=Math.min(1.8,fontScale+.1); renderSong(); };
@@ -153,6 +178,10 @@
   $("nextSectionBtn").onclick = () => {activeSectionIndex=Math.min(sectionElements.length-1,activeSectionIndex+1);sectionElements[activeSectionIndex]?.scrollIntoView({behavior:"smooth",block:"center"});};
   $("favouriteBtn").onclick = () => { const key=`fav:${songId}`; const on=localStorage.getItem(key)==="1"; localStorage.setItem(key,on?"0":"1"); $("favouriteBtn").textContent=on?"☆":"★"; };
   $("liveSessionBtn").onclick = () => window.open("../../admin-new/admin.html", "_blank");
+
+  document.addEventListener("keydown", event => {
+    if (event.key === "Escape") setSidebarOpen(false);
+  });
 
   loadSong();
 })();
