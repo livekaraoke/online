@@ -65,7 +65,13 @@
 
     <div class="control-card compact-control-card tools-card compact-tools-card">
       <h3>TOOLS</h3>
-      <button id="sendSingerBtn" class="btn green full compact-tool-btn" type="button">➤ SEND TO KARAOKE</button>
+      <div class="split-action send-karaoke-split">
+        <button id="sendSingerBtn" class="btn green compact-tool-btn split-main" type="button">➤ SEND TO KARAOKE</button>
+        <button id="sendKaraokeMenuBtn" class="btn green compact-tool-btn split-arrow" type="button" aria-expanded="false" aria-controls="sendKaraokeMenu" title="Karaoke options">▼</button>
+        <div id="sendKaraokeMenu" class="split-menu hidden">
+          <button id="resetKaraokeBtn" type="button">↻ RESET KARAOKE</button>
+        </div>
+      </div>
       <button id="editSongBtn" class="btn green full compact-tool-btn" type="button">▣ EDIT SONG</button>
     </div>
   </section>
