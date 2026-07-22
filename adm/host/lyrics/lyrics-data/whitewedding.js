@@ -91,32 +91,6 @@ window.songData = {
     {
       "type": "verse",
       "lines": [
-        "Hey little sister, what have you done?",
-        "Hey little sister, who's the only one?",
-        "I've been away for so long",
-        "I've been away for so long",
-        "I let you go for so long"
-      ]
-    },
-    {
-      "type": "section",
-      "text": "CHORUS"
-    },
-    {
-      "type": "chorus",
-      "lines": [
-        "It's a nice day to start again",
-        "It's a nice day for a white wedding",
-        "It's a nice day to start again"
-      ]
-    },
-    {
-      "type": "section",
-      "text": "VERSE 4"
-    },
-    {
-      "type": "verse",
-      "lines": [
         "There is nothin' fair in this world, girl",
         "There is nothin' safe in this world",
         "And there's nothin' sure in this world",
