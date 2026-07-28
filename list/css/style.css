@@ -2354,3 +2354,45 @@ margin-right: 5px;
     grid-template-columns: 1fr !important;
   }
 }
+/* ========================================================================== */
+/* EDITOR: FULL SONG LIST SETLIST SOURCE                                       */
+/* ========================================================================== */
+.full-list-heading-row {
+  margin-bottom: 14px;
+}
+
+.full-list-source-box {
+  margin: 0 0 18px;
+  padding: 15px;
+  border: 1px solid rgba(255, 212, 0, .42);
+  border-radius: 11px;
+  background: rgba(255, 212, 0, .035);
+}
+
+.full-list-source-box label {
+  display: block;
+  margin: 0 0 7px;
+  color: #ffd400;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: .8px;
+  text-transform: uppercase;
+}
+
+.full-list-source-box select {
+  width: 100%;
+  min-height: 46px;
+  color: #fff;
+  border-color: rgba(255, 212, 0, .58);
+}
+
+.full-list-source-help {
+  margin: 9px 0 0 !important;
+  color: #aaa;
+}
+
+.full-list-source-warning {
+  margin-bottom: 12px;
+  color: #ffd400;
+  border-color: rgba(255, 212, 0, .35);
+}
