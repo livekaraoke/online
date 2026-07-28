@@ -40,8 +40,24 @@
     </section>
 
     <section class="editor-panel">
-      <h2>★ Full Song List ★</h2>
-      <p class="editor-help">This is loaded from the Firebase <strong>lyrics</strong> collection. Songs cannot be added or deleted here. Use Show/Hide only.</p>
+      <div class="panel-heading-row full-list-heading-row">
+        <h2>★ Full Song List ★</h2>
+        <span class="small-muted">Public A–Z list source</span>
+      </div>
+
+      <!-- ADDED: choose one of the setlists created in host/lyricsviewer.html. -->
+      <div class="full-list-source-box">
+        <label for="fullListSetlistSelect">Full Song List Setlist</label>
+        <select id="fullListSetlistSelect" onchange="selectFullSongSetlist(this.value)">
+          <option value="">Loading saved setlists...</option>
+        </select>
+        <p id="fullListSetlistHelp" class="editor-help full-list-source-help">
+          Choose a Lyrics Viewer setlist. Its songs will populate this editor list and the public Full Song List automatically. The setlist name is not shown publicly.
+        </p>
+      </div>
+      <!-- END ADDED -->
+
+      <p class="editor-help">Songs still come from the Firebase <strong>lyrics</strong> collection and cannot be added or deleted here. Use Show/Hide only.</p>
       <div id="fullSongCount" class="editor-count">Total songs: 0</div>
       <div id="fullSongList"></div>
     </section>
