@@ -12,7 +12,7 @@
   let confirmResolver = null;
 
   const FONTS = ["Verdana", "Arial", "Tahoma", "Trebuchet MS", "Georgia", "Times New Roman", "Courier New", "Consolas"];
-  const FONT_SIZES = ["12", "14", "16", "18", "20", "24", "28", "32", "40", "48"];
+  const FONT_SIZES = ["12", "14", "16", "18", "20", "22", "24", "26", "28", "30", "32", "40", "48"];
   const COLOURS = [
     ["White", "#ffffff"], ["Light Gray", "#cfcfcf"], ["Red", "#ff4f5e"],
     ["Orange", "#ff982f"], ["Yellow", "#ffd400"], ["Green", "#42f35c"],
@@ -45,7 +45,7 @@
   function defaultStyle(type = "lyrics") {
     return {
       fontFamily: type === "tab" ? "Consolas" : "Verdana",
-      fontSize: type === "tab" ? 16 : 18,
+      fontSize: type === "tab" ? 20 : 22,
       color: type === "tab" ? "#ffd400" : "#ffffff"
     };
   }
