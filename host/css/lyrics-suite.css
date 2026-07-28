@@ -3367,3 +3367,169 @@ body[data-guidance="pro"] .singer-section-body {
     animation-duration: 8s !important;
   }
 }
+/* ========================================================================== */
+/* LYRIC VIEW — STICKY HEADER/STATUS ORDER, LEGACY TOOLS, EXACT CHORD LAYOUT   */
+/* ========================================================================== */
+
+/* Keep the song header first and the shared status dashboard directly below
+   it. Both remain visible as one sticky stack while the lyrics scroll. */
+.host-sticky-stack {
+  position: sticky;
+  top: 0;
+  z-index: 80;
+  width: 100%;
+  background: #050505;
+  box-shadow: 0 7px 18px rgba(0,0,0,.54);
+}
+
+.host-sticky-stack .host-topbar {
+  position: relative;
+  top: auto;
+  z-index: 2;
+}
+
+/* The imported top-status stylesheet may position its component independently.
+   These scoped overrides keep it inside the sticky stack and inside the screen. */
+#topStatusContainer {
+  position: relative !important;
+  inset: auto !important;
+  z-index: 1 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow: visible !important;
+  padding: 0 12px 6px !important;
+  background: #050505;
+}
+
+#topStatusContainer > * {
+  position: relative !important;
+  inset: auto !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+}
+
+#topStatusContainer button,
+#topStatusContainer [role="button"] {
+  max-width: calc(100vw - 24px);
+}
+
+/* Keep the status expansion/collapse control comfortably inside the viewport. */
+#topStatusContainer button:last-child,
+#topStatusContainer [data-status-toggle],
+#topStatusContainer .top-status-toggle,
+#topStatusContainer .status-toggle {
+  right: 8px !important;
+  margin-right: 0 !important;
+}
+
+/* Song Info remains usable without dimming, blurring, or locking the lyrics. */
+.host-sidebar-backdrop {
+  display: none !important;
+  pointer-events: none !important;
+  backdrop-filter: none !important;
+}
+
+body.host-sidebar-open {
+  overflow: auto !important;
+}
+
+.host-sidebar-overlay {
+  z-index: 120 !important;
+}
+
+.host-sidebar-header {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: #0b0b0b;
+  border-bottom: 1px solid #333;
+}
+
+#sidebarCloseBtn {
+  flex: 0 0 42px;
+  position: relative;
+  z-index: 6;
+  border-color: #c32027;
+  background: #190809;
+}
+
+/* Second tools card for the older slave-lyrics display. */
+.legacy-lyrics-tool-card {
+  min-width: 0;
+}
+
+.legacy-lyrics-select {
+  width: 100%;
+  min-width: 0;
+  height: 38px;
+  padding: 7px 32px 7px 9px;
+  color: #f3f3f3;
+  background: #080808;
+  border: 1px solid #343434;
+  border-radius: 7px;
+  text-overflow: ellipsis;
+}
+
+.legacy-lyrics-status {
+  min-height: 14px;
+  margin: 0 !important;
+  color: #7ee889 !important;
+  font-size: 10px !important;
+}
+
+/* Preserve every space and line break created in lyricscreator.html. This stops
+   the browser from reflowing chord spacing differently on PC and tablet.
+   Long lines scroll horizontally rather than moving a chord away from its word. */
+.creator-rich-editor,
+.host-section-body {
+  white-space: pre !important;
+  overflow-x: auto !important;
+  overflow-y: visible;
+  overflow-wrap: normal !important;
+  word-break: normal !important;
+  tab-size: 4;
+  font-variant-ligatures: none;
+  font-kerning: none;
+  text-rendering: geometricPrecision;
+}
+
+.creator-rich-editor * ,
+.host-section-body * {
+  white-space: inherit;
+  font-variant-ligatures: none;
+}
+
+/* Do not let tablet-only rules silently reduce the saved section font size. */
+.host-lyrics-content {
+  font-size: calc(17px * var(--host-font-scale,1));
+}
+
+@media (max-width: 900px) {
+  .compact-control-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .legacy-lyrics-tool-card {
+    grid-column: auto;
+  }
+}
+
+@media (max-width: 699px) {
+  #topStatusContainer {
+    padding-inline: 6px !important;
+  }
+
+  .compact-control-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .compact-tools-card,
+  .legacy-lyrics-tool-card {
+    grid-column: auto;
+  }
+
+  .host-lyrics-content {
+    font-size: calc(17px * var(--host-font-scale,1));
+  }
+}
