@@ -473,6 +473,85 @@
     arrow.textContent = open ? "▲" : "▼";
   }
 
+  /**********************************************************************
+   * LEGACY SLAVE-LYRICS TOOL
+   * Loads songs from ../files/song-data.js where hasLyrics === true,
+   * then writes currentSongId for adm/host/lyrics/song.html.
+   **********************************************************************/
+  function legacySongCatalogue() {
+    if (typeof songs !== "undefined" && Array.isArray(songs)) return songs;
+    if (Array.isArray(window.songs)) return window.songs;
+    return [];
+  }
+
+  function legacySongIdFromUrl(url) {
+    const text = String(url || "");
+    try {
+      const parsed = new URL(text, window.location.href);
+      return parsed.searchParams.get("id") || "";
+    } catch (_) {
+      const match = text.match(/[?&]id=([^&#]+)/i);
+      return match ? decodeURIComponent(match[1]) : "";
+    }
+  }
+
+  function populateLegacyLyricsSongs() {
+    const select = $("legacyLyricsSongSelect");
+    if (!select) return;
+
+    const list = legacySongCatalogue()
+      .filter(item => item && item.hasLyrics === true)
+      .map(item => ({
+        id: legacySongIdFromUrl(item.url),
+        title: String(item.title || "Untitled"),
+        artist: String(item.artist || "Unknown Artist")
+      }))
+      .filter(item => item.id)
+      .sort((a, b) => a.title.localeCompare(b.title, undefined, { sensitivity: "base" }));
+
+    select.innerHTML = '<option value="">Choose lyrics to send…</option>' +
+      list.map(item => `<option value="${LyricsCommon.escapeHTML(item.id)}">${LyricsCommon.escapeHTML(item.title)} - ${LyricsCommon.escapeHTML(item.artist)}</option>`).join("");
+
+    if (!list.length) {
+      select.innerHTML = '<option value="">No hasLyrics songs found</option>';
+    }
+  }
+
+  async function sendLegacyLyrics() {
+    const select = $("legacyLyricsSongSelect");
+    const status = $("legacyLyricsStatus");
+    const button = $("sendLegacyLyricsBtn");
+    const selectedId = select?.value || "";
+
+    if (!selectedId) {
+      if (status) status.textContent = "Choose a song first.";
+      return;
+    }
+
+    const selectedOption = select.options[select.selectedIndex];
+    button.disabled = true;
+    if (status) status.textContent = "Sending lyrics…";
+
+    try {
+      await db.collection("karaokeControl").doc("liveLyrics").set({
+        currentSongId: selectedId,
+        legacySongLabel: selectedOption?.textContent || selectedId,
+        legacyLyricsUpdatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+
+      if (status) status.textContent = "Lyrics sent ✓";
+      setTimeout(() => {
+        if (status?.textContent === "Lyrics sent ✓") status.textContent = "";
+      }, 2600);
+    } catch (error) {
+      console.error("Could not send legacy lyrics:", error);
+      if (status) status.textContent = `Send failed: ${error.message}`;
+    } finally {
+      button.disabled = false;
+    }
+  }
+
   function setSidebarOpen(open) {
     const sidebar = $("hostSidebar");
     const toggle = $("sidebarToggleBtn");
@@ -518,6 +597,7 @@
   });
 
   $("sendSingerBtn").onclick = sendToSinger;
+  $("sendLegacyLyricsBtn").onclick = sendLegacyLyrics;
   $("sendKaraokeMenuBtn").onclick = event => {
     event.stopPropagation();
     setSendMenuOpen($("sendKaraokeMenu").classList.contains("hidden"));
@@ -549,5 +629,6 @@
     }
   });
 
+  populateLegacyLyricsSongs();
   loadSong();
 })();
