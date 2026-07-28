@@ -8,23 +8,26 @@
   <link rel="stylesheet" href="../admin-new/css/top-statusbar.css">
 </head>
 <body class="host-view-page">
-  <header class="host-topbar">
-    <div class="topbar-left">
-      <a class="btn ghost topbar-exit-btn" href="lyricsviewer.html">← EXIT</a>
-    </div>
+  <!-- STICKY HOST HEADER + STATUS DASHBOARD -->
+  <div class="host-sticky-stack">
+    <header class="host-topbar">
+      <div class="topbar-left">
+        <a class="btn ghost topbar-exit-btn" href="lyricsviewer.html">← EXIT</a>
+      </div>
 
-    <div class="song-heading">
-      <strong id="topTitle">Loading…</strong>
-      <span id="topArtist"></span>
-    </div>
+      <div class="song-heading">
+        <strong id="topTitle">Loading…</strong>
+        <span id="topArtist"></span>
+      </div>
 
-    <div class="topbar-right">
-      <button id="sidebarToggleBtn" class="btn ghost sidebar-toggle-btn" type="button" aria-expanded="false" aria-controls="hostSidebar">☰ SONG INFO</button>
-    </div>
-  </header>
+      <div class="topbar-right">
+        <button id="sidebarToggleBtn" class="btn ghost sidebar-toggle-btn" type="button" aria-expanded="false" aria-controls="hostSidebar">☰ SONG INFO</button>
+      </div>
+    </header>
 
-  <!-- TOP STATUS BAR / DASHBOARD -->
-  <div id="topStatusContainer"></div>
+    <!-- TOP STATUS BAR / DASHBOARD -->
+    <div id="topStatusContainer"></div>
+  </div>
 
   <section class="song-summary-card extended-summary-card">
     <div><small>Key</small><strong id="summaryKey">—</strong></div>
@@ -76,6 +79,17 @@
       </div>
       <button id="editSongBtn" class="btn green full compact-tool-btn" type="button">▣ EDIT SONG</button>
     </div>
+
+
+    <!-- LEGACY SLAVE-LYRICS TOOL -->
+    <div class="control-card compact-control-card tools-card legacy-lyrics-tool-card">
+      <h3>TOOLS · SLAVE LYRICS</h3>
+      <select id="legacyLyricsSongSelect" class="legacy-lyrics-select" aria-label="Choose legacy karaoke lyrics">
+        <option value="">Loading songs…</option>
+      </select>
+      <button id="sendLegacyLyricsBtn" class="btn green full compact-tool-btn" type="button">➤ SEND LYRICS</button>
+      <p id="legacyLyricsStatus" class="legacy-lyrics-status" aria-live="polite"></p>
+    </div>
   </section>
 
   <main class="host-layout host-layout-fullwidth">
@@ -120,6 +134,8 @@
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
   <script src="js/firebase-config.js"></script>
   <script src="js/lyrics-common.js"></script>
+  <!-- Legacy karaoke lyric catalogue used by the SLAVE LYRICS tool. -->
+  <script src="../files/song-data.js"></script>
   <script src="js/lyricview.js"></script>
   <script src="../admin-new/js/top-statusbar.js" data-include="../admin-new/includes/top-statusbar.html"></script>
   <script>
