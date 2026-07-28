@@ -475,12 +475,16 @@
 
   /**********************************************************************
    * LEGACY SLAVE-LYRICS TOOL
-   * Loads songs from ../files/song-data.js where hasLyrics === true,
+   * Loads songs from ../adm/files/song-data.js where hasLyrics === true,
    * then writes currentSongId for adm/host/lyrics/song.html.
    **********************************************************************/
   function legacySongCatalogue() {
+    // song-data.js has used both a global `songs` variable and window.songs
+    // in different versions of the project. Support both without fetching.
     if (typeof songs !== "undefined" && Array.isArray(songs)) return songs;
     if (Array.isArray(window.songs)) return window.songs;
+    if (Array.isArray(window.songData)) return window.songData;
+    if (Array.isArray(window.karaokeSongs)) return window.karaokeSongs;
     return [];
   }
 
@@ -514,6 +518,9 @@
 
     if (!list.length) {
       select.innerHTML = '<option value="">No hasLyrics songs found</option>';
+      console.error(
+        "SLAVE LYRICS catalogue is empty. Confirm ../adm/files/song-data.js exists and exposes songs, window.songs, window.songData, or window.karaokeSongs."
+      );
     }
   }
 
