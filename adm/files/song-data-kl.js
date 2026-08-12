@@ -1618,7 +1618,7 @@ window.songs = [
     setFrequency: "rare",
     hostKaraokePage: "1",
     livePage: "1",
-    hasLyrics: false
+    hasLyrics: true
   },
   {
     title: "Learn to fly",
