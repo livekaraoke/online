@@ -1,0 +1,288 @@
+/* =========================================================
+   LYRIC VIEW — FINAL HEADER STACK + TABLET GUIDANCE OVERRIDES
+   Loaded AFTER both lyrics-suite.css and top-statusbar.css.
+   Keeping this separate prevents Lyric View fixes from breaking
+   lyricsviewer.html or the rest of the shared Lyrics Suite.
+   ========================================================= */
+
+:root {
+  --lv-title-h: 58px;
+  --lv-stack-h: 126px;
+}
+
+html,
+body.host-lyric-view-page {
+  margin: 0 !important;
+  padding-top: var(--lv-stack-h) !important;
+  overflow-x: hidden !important;
+}
+
+/* One fixed stack containing BOTH visible rows. */
+#hostStickyStack.host-sticky-stack {
+  display: flex !important;
+  flex-direction: column !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: auto !important;
+  width: 100vw !important;
+  height: auto !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: #050505 !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  transform: none !important;
+  z-index: 2147483000 !important;
+  isolation: isolate !important;
+}
+
+/* ROW 1 — ALWAYS VISIBLE SONG TITLE BAR */
+#hostStickyStack > .host-view-topbar {
+  display: grid !important;
+  grid-template-columns: auto minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  gap: 10px !important;
+  order: 1 !important;
+  position: relative !important;
+  inset: auto !important;
+  width: 100% !important;
+  height: var(--lv-title-h) !important;
+  min-height: var(--lv-title-h) !important;
+  max-height: var(--lv-title-h) !important;
+  flex: 0 0 var(--lv-title-h) !important;
+  margin: 0 !important;
+  padding: 6px 14px !important;
+  background: rgba(4, 4, 4, .995) !important;
+  border-bottom: 1px solid #292929 !important;
+  box-sizing: border-box !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  overflow: visible !important;
+  transform: none !important;
+  z-index: 20 !important;
+}
+
+#hostStickyStack .host-song-heading {
+  display: block !important;
+  min-width: 0 !important;
+  text-align: center !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+#hostStickyStack .host-song-heading strong {
+  display: block !important;
+  color: #fff !important;
+  font-size: 18px !important;
+  line-height: 1.08 !important;
+  font-weight: 800 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+#hostStickyStack .host-song-heading span {
+  display: block !important;
+  color: #9c9c9c !important;
+  font-size: 11px !important;
+  line-height: 1.12 !important;
+  margin-top: 2px !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+#hostStickyStack .host-top-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: 40px !important;
+  min-height: 40px !important;
+  padding: 0 13px !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  white-space: nowrap !important;
+}
+
+/* ROW 2 — TOP STATUS BAR, ALWAYS BELOW THE TITLE BAR. */
+#hostStickyStack > #topStatusContainer.host-status-wrap {
+  display: block !important;
+  order: 2 !important;
+  position: relative !important;
+  inset: auto !important;
+  top: auto !important;
+  left: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  width: 100% !important;
+  max-width: none !important;
+  min-width: 0 !important;
+  min-height: 52px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: #050505 !important;
+  border-bottom: 1px solid #541318 !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  overflow: hidden !important;
+  transform: none !important;
+  z-index: 10 !important;
+}
+
+/* top-statusbar.css is loaded before this file. Force its root back into
+   normal flow so it cannot jump to top:0 and cover the title row. */
+#topStatusContainer > *,
+#topStatusContainer [class*="top-status"],
+#topStatusContainer [class*="status-bar"],
+#topStatusContainer [class*="statusbar"],
+#topStatusContainer [id*="topStatus"] {
+  position: relative !important;
+  top: auto !important;
+  left: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  inset: auto !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+  transform: none !important;
+  box-sizing: border-box !important;
+}
+
+/* Lyrics begin below the measured two-row stack. */
+.host-lyric-view-page .host-lyrics-stage {
+  padding-top: 12px !important;
+  scroll-margin-top: calc(var(--lv-stack-h) + 8px) !important;
+}
+
+.host-lyric-view-page .host-section {
+  scroll-margin-top: calc(var(--lv-stack-h) + 10px) !important;
+}
+
+/* SONG INFO stays below both bars. The title/button remains clickable. */
+#songInfoDrawer.song-info-drawer {
+  top: var(--lv-stack-h) !important;
+  height: calc(100dvh - var(--lv-stack-h)) !important;
+  max-height: calc(100dvh - var(--lv-stack-h)) !important;
+  z-index: 2147482000 !important;
+}
+
+#songInfoBtn.active {
+  border-color: #c81b22 !important;
+  background: #25090b !important;
+}
+
+/* =========================================================
+   BOTTOM PLAYER + SECTION GUIDANCE — NEVER HIDE ON TABLETS
+   ========================================================= */
+.host-bottom-dock {
+  display: grid !important;
+  grid-template-columns: minmax(280px, 430px) minmax(0, 1fr) !important;
+  align-items: stretch !important;
+  left: 10px !important;
+  right: 10px !important;
+  bottom: calc(8px + env(safe-area-inset-bottom, 0px)) !important;
+  gap: 8px !important;
+  width: auto !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  z-index: 2147481000 !important;
+}
+
+.host-scroll-player,
+#sectionProgress.host-section-progress {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  min-width: 0 !important;
+}
+
+#sectionProgress.host-section-progress {
+  align-items: stretch !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  scrollbar-width: thin !important;
+  min-height: 58px !important;
+}
+
+#sectionProgress .progress-section {
+  display: flex !important;
+  min-width: 74px !important;
+  flex: 1 0 74px !important;
+}
+
+/* Keep the floating D-pad above the dock. */
+.host-nav-pad {
+  bottom: calc(82px + env(safe-area-inset-bottom, 0px)) !important;
+  z-index: 2147481500 !important;
+}
+
+/* Tablet layout: player and guidance BOTH visible side by side. */
+@media (max-width: 980px) and (min-width: 701px) {
+  .host-bottom-dock {
+    grid-template-columns: minmax(270px, 40%) minmax(0, 60%) !important;
+  }
+
+  #sectionProgress.host-section-progress {
+    display: flex !important;
+  }
+
+  .host-nav-pad {
+    right: 10px !important;
+    bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important;
+    transform: scale(.82) !important;
+    transform-origin: bottom right !important;
+  }
+}
+
+/* Narrow phones: guidance becomes its own strip ABOVE the transport. */
+@media (max-width: 700px) {
+  :root { --lv-title-h: 56px; }
+
+  #hostStickyStack > .host-view-topbar {
+    height: var(--lv-title-h) !important;
+    min-height: var(--lv-title-h) !important;
+    max-height: var(--lv-title-h) !important;
+    flex-basis: var(--lv-title-h) !important;
+    padding: 5px 8px !important;
+    gap: 6px !important;
+  }
+
+  #hostStickyStack .host-top-btn {
+    height: 38px !important;
+    min-height: 38px !important;
+    padding: 0 9px !important;
+    font-size: 11px !important;
+  }
+
+  #hostStickyStack .host-song-heading strong { font-size: 16px !important; }
+  #hostStickyStack .host-song-heading span { font-size: 10px !important; }
+
+  .host-bottom-dock {
+    grid-template-columns: 1fr !important;
+    grid-template-rows: 50px 56px !important;
+    gap: 6px !important;
+  }
+
+  #sectionProgress.host-section-progress {
+    display: flex !important;
+    grid-row: 1 !important;
+    min-height: 50px !important;
+    padding: 5px 8px !important;
+  }
+
+  .host-scroll-player {
+    grid-row: 2 !important;
+    min-height: 56px !important;
+  }
+
+  .host-nav-pad {
+    bottom: calc(122px + env(safe-area-inset-bottom, 0px)) !important;
+    transform: scale(.74) !important;
+    transform-origin: bottom right !important;
+  }
+}
