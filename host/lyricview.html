@@ -6,12 +6,14 @@
   <title>Lyric View</title>
   <link rel="stylesheet" href="css/lyrics-suite.css">
   <link rel="stylesheet" href="../admin-new/css/top-statusbar.css">
+  <!-- Lyric View-only overrides MUST load last -->
+  <link rel="stylesheet" href="css/lyricview-fixes.css">
 </head>
 <body class="host-lyric-view-page">
   <!-- FIXED TWO-ROW HEADER STACK: song title first, status bar second -->
   <div id="hostStickyStack" class="host-sticky-stack">
     <header class="host-view-topbar">
-      <button id="exitBtn" class="host-top-btn" type="button">← EXITT</button>
+      <button id="exitBtn" class="host-top-btn" type="button">← EXIT</button>
       <div id="topbarSongTitle" class="host-song-heading">
         <strong>Loading…</strong>
         <span></span>
