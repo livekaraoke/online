@@ -8,16 +8,20 @@
   <link rel="stylesheet" href="../admin-new/css/top-statusbar.css">
 </head>
 <body class="host-lyric-view-page">
-  <header class="host-view-topbar">
-    <button id="exitBtn" class="host-top-btn" type="button">← EXIT</button>
-    <div id="topbarSongTitle" class="host-song-heading">
-      <strong>Loading…</strong>
-      <span></span>
-    </div>
-    <button id="songInfoBtn" class="host-top-btn" type="button">ⓘ SONG INFO</button>
-  </header>
+  <!-- FIXED TWO-ROW HEADER STACK: song title first, status bar second -->
+  <div id="hostStickyStack" class="host-sticky-stack">
+    <header class="host-view-topbar">
+      <button id="exitBtn" class="host-top-btn" type="button">← EXIT</button>
+      <div id="topbarSongTitle" class="host-song-heading">
+        <strong>Loading…</strong>
+        <span></span>
+      </div>
+      <button id="songInfoBtn" class="host-top-btn" type="button">ⓘ SONG INFO</button>
+    </header>
 
-  <div id="topStatusContainer" class="host-status-wrap"></div>
+    <div id="topStatusContainer" class="host-status-wrap"></div>
+  </div>
+  <!-- END FIXED TWO-ROW HEADER STACK -->
 
   <main id="hostLyricsStage" class="host-lyrics-stage">
     <div id="lyricsContent" class="host-lyrics-content"></div>
