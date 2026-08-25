@@ -462,6 +462,7 @@
     const h = Math.ceil(stack.getBoundingClientRect().height || 0);
     const safeHeight = Math.max(h, 58);
     document.documentElement.style.setProperty("--host-sticky-stack-height", safeHeight + "px");
+    document.documentElement.style.setProperty("--lv-stack-h", safeHeight + "px");
   }
 
   window.syncHostStickyStack = syncHostStickyStack;
