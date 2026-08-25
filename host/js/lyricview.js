@@ -200,27 +200,87 @@
       b.onclick = () => scrollToSection(i);
       progress.appendChild(b);
     });
+
+    // Keep the currently active section visible even when the song
+    // contains more sections than can fit across the tablet screen.
+    requestAnimationFrame(() => centerActiveProgressSection(false));
+  }
+
+  /************************************************************
+   * SECTION NAVIGATION AUTO-FOLLOW
+   * Horizontally scrolls ONLY the bottom section guide.
+   * It does not move the lyrics vertically.
+   ************************************************************/
+  function centerActiveProgressSection(smooth = true) {
+    const progress = $("sectionProgress");
+    if (!progress) return;
+
+    const items = [...progress.querySelectorAll(".progress-section")];
+    const active = items[currentSectionIndex];
+    if (!active) return;
+
+    const target =
+      active.offsetLeft -
+      ((progress.clientWidth - active.offsetWidth) / 2);
+
+    const maxScroll = Math.max(0, progress.scrollWidth - progress.clientWidth);
+    const left = Math.max(0, Math.min(maxScroll, target));
+
+    progress.scrollTo({
+      left,
+      top: 0,
+      behavior: smooth ? "smooth" : "auto"
+    });
   }
 
   function scrollToSection(index) {
     if (!sectionEls.length) return;
     currentSectionIndex = Math.max(0, Math.min(sectionEls.length - 1, index));
-    sectionEls[currentSectionIndex].scrollIntoView({behavior:"smooth", block:"start"});
+
+    // Update/centre the guide immediately when Prev/Next or a guide item is used.
+    [...$("sectionProgress").children]
+      .forEach((el, i) => el.classList.toggle("active", i === currentSectionIndex));
+    centerActiveProgressSection(true);
+
+    sectionEls[currentSectionIndex].scrollIntoView({
+      behavior: "smooth",
+      block: "start"
+    });
+
     setTimeout(updateSectionProgress, 350);
   }
 
   function updateSectionProgress() {
     if (!sectionEls.length) return;
+
     const anchor = Math.max(120, window.innerHeight * .27);
     let bestIndex = 0;
     let best = Infinity;
-    sectionEls.forEach((el,i) => {
+
+    sectionEls.forEach((el, i) => {
       const d = Math.abs(el.getBoundingClientRect().top - anchor);
-      if (d < best) { best = d; bestIndex = i; }
+      if (d < best) {
+        best = d;
+        bestIndex = i;
+      }
     });
+
+    const changed = bestIndex !== currentSectionIndex;
     currentSectionIndex = bestIndex;
-    [...$("sectionProgress").children].forEach((el,i) => el.classList.toggle("active", i === currentSectionIndex));
+
+    [...$("sectionProgress").children]
+      .forEach((el, i) => el.classList.toggle("active", i === currentSectionIndex));
+
+    // As the performer scrolls through the song, automatically bring the
+    // current section marker into view and keep it roughly centred.
+    if (changed) {
+      centerActiveProgressSection(true);
+    }
   }
+
+  window.addEventListener("resize", () => {
+    requestAnimationFrame(() => centerActiveProgressSection(false));
+  });
 
   function smoothRelativeScroll(direction) {
     const amount = window.innerHeight * .5 * direction;
