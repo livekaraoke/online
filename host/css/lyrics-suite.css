@@ -479,3 +479,154 @@
   }
 }
 
+
+/* =========================================================
+   HOST LYRIC VIEW — TABLET DOUBLE-HEADER + BOTTOM GUIDANCE FIX
+   This block intentionally comes LAST so it wins over the older
+   host-view rules and over the responsive rule that hid guidance.
+   ========================================================= */
+:root{
+  --host-sticky-stack-height: 126px;
+}
+
+/* One fixed parent owns BOTH rows. This prevents the imported
+   top-statusbar stylesheet from pushing either row behind the other. */
+.host-sticky-stack{
+  position:fixed !important;
+  inset:0 0 auto 0 !important;
+  width:100% !important;
+  z-index:5000 !important;
+  display:flex !important;
+  flex-direction:column !important;
+  background:#050505 !important;
+  margin:0 !important;
+  padding:0 !important;
+  isolation:isolate;
+}
+
+.host-sticky-stack .host-view-topbar{
+  position:relative !important;
+  inset:auto !important;
+  top:auto !important;
+  left:auto !important;
+  right:auto !important;
+  width:100% !important;
+  height:58px !important;
+  min-height:58px !important;
+  flex:0 0 58px !important;
+  z-index:2 !important;
+  margin:0 !important;
+  padding:6px 14px !important;
+  background:rgba(4,4,4,.985) !important;
+  border-bottom:1px solid #242424 !important;
+}
+
+.host-sticky-stack .host-song-heading strong{
+  font-size:18px !important;
+  line-height:1.1 !important;
+}
+.host-sticky-stack .host-song-heading span{
+  font-size:11px !important;
+  line-height:1.15 !important;
+  margin-top:2px !important;
+}
+.host-sticky-stack .host-top-btn{
+  height:40px !important;
+  padding:0 13px !important;
+}
+
+/* Status container is now simply the second row INSIDE the fixed stack. */
+.host-sticky-stack .host-status-wrap{
+  position:relative !important;
+  inset:auto !important;
+  top:auto !important;
+  left:auto !important;
+  right:auto !important;
+  bottom:auto !important;
+  width:100% !important;
+  max-width:100% !important;
+  min-width:0 !important;
+  z-index:1 !important;
+  margin:0 !important;
+  padding:0 !important;
+  overflow:hidden !important;
+  background:#050505 !important;
+  border-bottom:1px solid #451015 !important;
+  transform:none !important;
+}
+
+/* The included top-status component must stay in normal flow inside row 2. */
+.host-sticky-stack .host-status-wrap *,
+.host-sticky-stack .host-status-wrap > *{
+  position:relative !important;
+  top:auto !important;
+  right:auto !important;
+  bottom:auto !important;
+  left:auto !important;
+  max-width:100% !important;
+  box-sizing:border-box !important;
+  transform:none !important;
+}
+
+.host-lyric-view-page{
+  padding-top:var(--host-sticky-stack-height) !important;
+}
+
+/* Drawer starts below BOTH visible rows. */
+.song-info-drawer{
+  top:var(--host-sticky-stack-height) !important;
+  height:calc(100dvh - var(--host-sticky-stack-height)) !important;
+  max-height:calc(100dvh - var(--host-sticky-stack-height)) !important;
+  z-index:4200 !important;
+}
+
+/* Keep title/status stack above the drawer, so SONG INFO remains tappable. */
+.host-sticky-stack{z-index:5000 !important;}
+
+/* Tablet: DO NOT hide the section guidance anymore. */
+@media (max-width:900px){
+  .host-bottom-dock{
+    grid-template-columns:minmax(260px, 410px) minmax(0,1fr) !important;
+    gap:8px !important;
+    left:8px !important;
+    right:8px !important;
+    bottom:8px !important;
+  }
+  .host-section-progress{
+    display:flex !important;
+    min-width:0 !important;
+    overflow-x:auto !important;
+  }
+  .progress-section{
+    min-width:76px !important;
+  }
+  .progress-section span{
+    font-size:9px !important;
+  }
+  .host-nav-pad{
+    bottom:82px !important;
+  }
+}
+
+@media (max-width:650px){
+  .host-bottom-dock{
+    grid-template-columns:1fr !important;
+  }
+  .host-section-progress{
+    display:flex !important;
+    min-height:50px !important;
+    max-height:58px !important;
+  }
+  .host-scroll-player{
+    min-height:52px !important;
+  }
+  .host-nav-pad{
+    bottom:126px !important;
+  }
+}
+
+/* Anchored section jumps should land below the complete fixed stack. */
+.host-section,
+.host-lyrics-stage{
+  scroll-margin-top:calc(var(--host-sticky-stack-height) + 8px) !important;
+}
