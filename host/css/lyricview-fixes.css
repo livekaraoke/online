@@ -286,3 +286,30 @@ body.host-lyric-view-page {
     transform-origin: bottom right !important;
   }
 }
+
+
+/* =========================================================
+   SECTION GUIDE AUTO-FOLLOW — 2026-08-26
+   The guide can contain unlimited sections. It remains
+   horizontally scrollable in JS, but the native scrollbar
+   is hidden because the active section automatically follows.
+   ========================================================= */
+#sectionProgress.host-section-progress {
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+  scroll-behavior: smooth !important;
+  overscroll-behavior-x: contain !important;
+}
+
+#sectionProgress.host-section-progress::-webkit-scrollbar {
+  width: 0 !important;
+  height: 0 !important;
+  display: none !important;
+}
+
+#sectionProgress .progress-section {
+  flex: 0 0 auto !important;
+  min-width: 74px !important;
+}
