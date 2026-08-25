@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Lyric View</title>
+  <link rel="stylesheet" href="../css/lyrics-suite.css">
+  <link rel="stylesheet" href="../../admin-new/css/top-statusbar.css">
+</head>
+<body class="host-lyric-view-page">
+  <header class="host-view-topbar">
+    <button id="exitBtn" class="host-top-btn" type="button">← EXIT</button>
+    <div id="topbarSongTitle" class="host-song-heading">
+      <strong>Loading…</strong>
+      <span></span>
+    </div>
+    <button id="songInfoBtn" class="host-top-btn" type="button">ⓘ SONG INFO</button>
+  </header>
+
+  <div id="topStatusContainer" class="host-status-wrap"></div>
+
+  <main id="hostLyricsStage" class="host-lyrics-stage">
+    <div id="lyricsContent" class="host-lyrics-content"></div>
+    <div id="endMarker" class="host-end-marker">[ END ]</div>
+  </main>
+
+  <div class="host-nav-pad" aria-label="Lyric navigation">
+    <button id="navUpBtn" class="host-nav-btn nav-up" type="button" aria-label="Scroll up">⌃</button>
+    <button id="navPrevBtn" class="host-nav-btn nav-left" type="button" aria-label="Previous section">←</button>
+    <button id="navNextBtn" class="host-nav-btn nav-right" type="button" aria-label="Next section">→</button>
+    <button id="navDownBtn" class="host-nav-btn nav-down" type="button" aria-label="Scroll down">⌄</button>
+  </div>
+
+  <div class="host-bottom-dock">
+    <div class="host-scroll-player">
+      <button id="jumpTopBtn" type="button">◀◀</button>
+      <button id="autoScrollBtn" class="play" type="button">▶</button>
+      <button id="jumpBottomBtn" type="button">▶▶</button>
+      <button id="scrollSpeedDown" type="button">−</button>
+      <strong id="scrollSpeedLabel">1.00×</strong>
+      <button id="scrollSpeedUp" type="button">＋</button>
+    </div>
+    <div id="sectionProgress" class="host-section-progress"></div>
+  </div>
+
+  <aside id="songInfoDrawer" class="song-info-drawer" aria-hidden="true">
+    <div class="song-info-head">
+      <div>
+        <strong>SONG INFO</strong>
+        <span id="infoSongTitle"></span>
+      </div>
+      <button id="closeSongInfoBtn" type="button">✕</button>
+    </div>
+
+    <div class="song-info-scroll">
+      <section class="song-info-card info-meta-grid">
+        <div><small>KEY</small><strong id="infoKey">–</strong></div>
+        <div><small>TIME</small><strong id="infoTime">–</strong></div>
+        <div><small>TEMPO</small><strong id="infoTempo">–</strong></div>
+        <div><small>CAPO</small><strong id="infoCapo">–</strong></div>
+        <div><small>ORIGINAL BPM</small><strong id="infoOriginalBpm">–</strong></div>
+        <div><small>YEAR</small><strong id="infoYear">–</strong></div>
+      </section>
+
+      <section class="song-info-card">
+        <h3>SONG NOTES</h3>
+        <div id="infoSongNotes" class="info-note-copy">No song notes.</div>
+      </section>
+
+      <section class="song-info-card">
+        <h3>TRANSPOSE</h3>
+        <div class="info-step-row"><span>Chords</span><button id="chordMinus">−</button><strong id="chordTransposeValue">0</strong><button id="chordPlus">＋</button></div>
+        <div class="info-step-row"><span>Tabs</span><button id="tabMinus">−</button><strong id="tabTransposeValue">0</strong><button id="tabPlus">＋</button></div>
+        <div class="info-step-row"><span>Capo display</span><button id="capoMinus">−</button><strong id="capoDisplayValue">0</strong><button id="capoPlus">＋</button></div>
+      </section>
+
+      <section class="song-info-card">
+        <h3>KARAOKE TOOLS</h3>
+        <div class="info-action-grid">
+          <div class="split-action">
+            <button id="sendToKaraokeBtn" type="button">▶ SEND TO KARAOKE</button>
+            <button id="karaokeMenuBtn" type="button">▼</button>
+            <div id="karaokeMenu" class="mini-menu hidden">
+              <button id="resetKaraokeBtn" type="button">RESET KARAOKE</button>
+            </div>
+          </div>
+          <button id="editSongBtn" type="button">✎ EDIT SONG</button>
+        </div>
+        <div class="slave-lyrics-tools">
+          <label>TOOLS · SLAVE LYRICS</label>
+          <select id="slaveLyricsSelect"><option value="">Choose lyrics to send…</option></select>
+          <button id="sendSlaveLyricsBtn" type="button">▶ SEND LYRICS</button>
+        </div>
+      </section>
+
+      <section class="song-info-card">
+        <h3>HOST LYRIC NOTES</h3>
+        <div id="hostLyricNotes" class="host-lyric-notes">No host-note sections.</div>
+      </section>
+
+      <section class="song-info-card">
+        <h3>MY NOTES</h3>
+        <textarea id="myNotesInput" rows="10" placeholder="Private notes for this song…"></textarea>
+        <small id="myNotesSaveStatus">Saved automatically</small>
+      </section>
+
+      <section class="song-info-card">
+        <h3>SHORTCUTS</h3>
+        <button id="adminShortcutBtn" class="drawer-wide-btn" type="button">ADMIN ↗</button>
+      </section>
+    </div>
+  </aside>
+
+  <div id="confirmModal" class="suite-modal hidden">
+    <div class="suite-modal-box">
+      <h3 id="confirmTitle">Confirm</h3>
+      <p id="confirmMessage"></p>
+      <div class="suite-modal-actions">
+        <button id="confirmOk" type="button" class="danger">Confirm</button>
+        <button id="confirmCancel" type="button">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyC4gSodXM35E2ZdYaz6mrCvTUYzW75ZCBk",
+      authDomain: "livekaraokemt.firebaseapp.com",
+      projectId: "livekaraokemt",
+      storageBucket: "livekaraokemt.firebasestorage.app",
+      messagingSenderId: "425980659562",
+      appId: "1:425980659562:web:892ddcd53fb209d1114713"
+    };
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    window.db = firebase.firestore();
+    window.LK = window.LK || {};
+    window.LK.db = window.db;
+  </script>
+  <script src="../js/lyricview.js"></script>
+  <script src="../../admin-new/js/top-statusbar.js" data-include="../../admin-new/includes/top-statusbar.html"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      if (window.LK && LK.topStatus && typeof LK.topStatus.loadTopStatusBar === "function") {
+        LK.topStatus.loadTopStatusBar();
+      }
+    });
+  </script>
+</body>
+</html>
