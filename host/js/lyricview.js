@@ -375,8 +375,23 @@
 
   function bindUi() {
     $("exitBtn").onclick = () => location.href = "lyricsviewer.html";
-    $("songInfoBtn").onclick = () => $("songInfoDrawer").classList.add("open");
-    $("closeSongInfoBtn").onclick = () => $("songInfoDrawer").classList.remove("open");
+    // SONG INFO button now toggles the drawer open/closed.
+    // This keeps the same top-bar button usable as the close control.
+    $("songInfoBtn").onclick = () => {
+      const drawer = $("songInfoDrawer");
+      if (!drawer) return;
+      const willOpen = !drawer.classList.contains("open");
+      drawer.classList.toggle("open", willOpen);
+      drawer.setAttribute("aria-hidden", willOpen ? "false" : "true");
+      $("songInfoBtn").classList.toggle("active", willOpen);
+    };
+    $("closeSongInfoBtn").onclick = () => {
+      const drawer = $("songInfoDrawer");
+      if (!drawer) return;
+      drawer.classList.remove("open");
+      drawer.setAttribute("aria-hidden", "true");
+      $("songInfoBtn").classList.remove("active");
+    };
     $("navUpBtn").onclick = () => smoothRelativeScroll(-1);
     $("navDownBtn").onclick = () => smoothRelativeScroll(1);
     $("navPrevBtn").onclick = () => scrollToSection(currentSectionIndex-1);
@@ -431,4 +446,45 @@
   }
 
   document.addEventListener("DOMContentLoaded", init);
+})();
+
+
+/************************************************************
+ * DOUBLE FIXED/STICKY HEADER LAYOUT SYNC
+ * Keeps the Song Title bar first, Top Status bar second,
+ * and offsets the page/drawer by their real rendered heights.
+ ************************************************************/
+(function initHostStickyStack(){
+  function syncHostStickyStack(){
+    const titleBar = document.querySelector(".host-view-topbar");
+    const statusWrap = document.querySelector(".host-status-wrap");
+    const titleH = titleBar ? Math.ceil(titleBar.getBoundingClientRect().height) : 0;
+    const statusH = statusWrap ? Math.ceil(statusWrap.getBoundingClientRect().height) : 0;
+    document.documentElement.style.setProperty("--host-titlebar-height", titleH + "px");
+    document.documentElement.style.setProperty("--host-statusbar-height", statusH + "px");
+    document.documentElement.style.setProperty("--host-sticky-stack-height", (titleH + statusH) + "px");
+  }
+
+  window.syncHostStickyStack = syncHostStickyStack;
+  window.addEventListener("resize", syncHostStickyStack);
+  window.addEventListener("load", () => {
+    syncHostStickyStack();
+    setTimeout(syncHostStickyStack, 120);
+    setTimeout(syncHostStickyStack, 500);
+  });
+
+  document.addEventListener("DOMContentLoaded", () => {
+    syncHostStickyStack();
+    const statusWrap = document.querySelector(".host-status-wrap");
+    if (statusWrap && "MutationObserver" in window) {
+      const observer = new MutationObserver(() => requestAnimationFrame(syncHostStickyStack));
+      observer.observe(statusWrap, { childList:true, subtree:true, attributes:true });
+    }
+    if ("ResizeObserver" in window) {
+      const ro = new ResizeObserver(() => requestAnimationFrame(syncHostStickyStack));
+      const titleBar = document.querySelector(".host-view-topbar");
+      if (titleBar) ro.observe(titleBar);
+      if (statusWrap) ro.observe(statusWrap);
+    }
+  });
 })();
