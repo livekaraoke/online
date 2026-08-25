@@ -448,43 +448,49 @@
   document.addEventListener("DOMContentLoaded", init);
 })();
 
-
 /************************************************************
- * DOUBLE FIXED/STICKY HEADER LAYOUT SYNC
- * Keeps the Song Title bar first, Top Status bar second,
- * and offsets the page/drawer by their real rendered heights.
+ * FIXED TWO-ROW HEADER STACK SYNC
+ * Measures the wrapper containing BOTH the song-title bar and
+ * the loaded top-status bar. The page and drawer are offset by
+ * that exact height. Keep this block after the main lyric code.
  ************************************************************/
 (function initHostStickyStack(){
   function syncHostStickyStack(){
-    const titleBar = document.querySelector(".host-view-topbar");
-    const statusWrap = document.querySelector(".host-status-wrap");
-    const titleH = titleBar ? Math.ceil(titleBar.getBoundingClientRect().height) : 0;
-    const statusH = statusWrap ? Math.ceil(statusWrap.getBoundingClientRect().height) : 0;
-    document.documentElement.style.setProperty("--host-titlebar-height", titleH + "px");
-    document.documentElement.style.setProperty("--host-statusbar-height", statusH + "px");
-    document.documentElement.style.setProperty("--host-sticky-stack-height", (titleH + statusH) + "px");
+    const stack = document.getElementById("hostStickyStack");
+    if (!stack) return;
+
+    const h = Math.ceil(stack.getBoundingClientRect().height || 0);
+    const safeHeight = Math.max(h, 58);
+    document.documentElement.style.setProperty("--host-sticky-stack-height", safeHeight + "px");
   }
 
   window.syncHostStickyStack = syncHostStickyStack;
-  window.addEventListener("resize", syncHostStickyStack);
-  window.addEventListener("load", () => {
-    syncHostStickyStack();
-    setTimeout(syncHostStickyStack, 120);
-    setTimeout(syncHostStickyStack, 500);
-  });
 
-  document.addEventListener("DOMContentLoaded", () => {
+  function bindObservers(){
+    const stack = document.getElementById("hostStickyStack");
+    const status = document.getElementById("topStatusContainer");
+    if (!stack) return;
+
     syncHostStickyStack();
-    const statusWrap = document.querySelector(".host-status-wrap");
-    if (statusWrap && "MutationObserver" in window) {
-      const observer = new MutationObserver(() => requestAnimationFrame(syncHostStickyStack));
-      observer.observe(statusWrap, { childList:true, subtree:true, attributes:true });
-    }
+    requestAnimationFrame(syncHostStickyStack);
+    setTimeout(syncHostStickyStack, 100);
+    setTimeout(syncHostStickyStack, 350);
+    setTimeout(syncHostStickyStack, 900);
+
     if ("ResizeObserver" in window) {
       const ro = new ResizeObserver(() => requestAnimationFrame(syncHostStickyStack));
-      const titleBar = document.querySelector(".host-view-topbar");
-      if (titleBar) ro.observe(titleBar);
-      if (statusWrap) ro.observe(statusWrap);
+      ro.observe(stack);
+      if (status) ro.observe(status);
     }
-  });
+
+    if (status && "MutationObserver" in window) {
+      const mo = new MutationObserver(() => requestAnimationFrame(syncHostStickyStack));
+      mo.observe(status, {childList:true, subtree:true, attributes:true, characterData:true});
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", bindObservers);
+  window.addEventListener("load", syncHostStickyStack);
+  window.addEventListener("resize", syncHostStickyStack);
+  window.addEventListener("orientationchange", () => setTimeout(syncHostStickyStack, 120));
 })();
