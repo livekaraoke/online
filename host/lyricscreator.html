@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Lyrics & Chords Creator</title>
-  <link rel="stylesheet" href="css/lyrics-suite_OLDER.css">
   <link rel="stylesheet" href="css/lyrics-suite.css">
   <link rel="stylesheet" href="css/lyricscreator-fixes.css">
 </head>
@@ -15,6 +14,11 @@
     <div class="brand-block creator-brand-block">
       <strong id="creatorHeading">✎ EDIT LYRICS &amp; CHORDS</strong>
       <span id="creatorStatus">Editing: New Song</span>
+    </div>
+
+    <div class="creator-history-controls">
+      <button id="undoBtn" class="btn ghost" type="button" title="Undo">↶ UNDO</button>
+      <button id="redoBtn" class="btn ghost" type="button" title="Redo">↷ REDO</button>
     </div>
 
     <div class="save-split-wrap">
@@ -58,6 +62,23 @@
       </div>
     </section>
 
+    <section class="panel section-defaults-panel">
+      <div class="section-defaults-head">
+        <div>
+          <h3>SECTION TITLE DEFAULTS</h3>
+          <p>System defaults apply when a section does not have its own custom title colour.</p>
+        </div>
+        <button id="saveSectionDefaultsBtn" class="btn ghost" type="button">SAVE DEFAULTS</button>
+      </div>
+      <div class="section-defaults-grid">
+        <label><span>VERSE</span><input id="defaultVerseColor" type="color" value="#ffffff"></label>
+        <label><span>PRE-CHORUS</span><input id="defaultPreChorusColor" type="color" value="#ffb45c"></label>
+        <label><span>CHORUS</span><input id="defaultChorusColor" type="color" value="#42f35c"></label>
+        <label><span>ENDING</span><input id="defaultEndingColor" type="color" value="#ffd400"></label>
+        <button id="resetSectionDefaultsBtn" class="btn ghost" type="button">RESET SYSTEM DEFAULTS</button>
+      </div>
+    </section>
+
     <section class="panel creator-section-tools">
       <div class="panel-title-row creator-section-title-row">
         <h3>SECTIONS</h3>
@@ -96,6 +117,28 @@
       <div class="creator-modal-actions">
         <button id="insertChordConfirmBtn" class="btn green" type="button">INSERT</button>
         <button id="insertChordCancelBtn" class="btn ghost" type="button">CANCEL</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="linkModal" class="creator-modal hidden" role="dialog" aria-modal="true">
+    <div class="creator-modal-box">
+      <h3>INSERT SONG LINK</h3>
+      <p class="creator-modal-help">Insert an inline link to another song in the lyrics database.</p>
+
+      <label>Song
+        <select id="linkSongSelect">
+          <option value="">Choose a song...</option>
+        </select>
+      </label>
+
+      <label>Link label
+        <input id="linkLabelInput" placeholder="Uses Song Title - Artist by default">
+      </label>
+
+      <div class="creator-modal-actions">
+        <button id="insertLinkConfirmBtn" class="btn green" type="button">INSERT LINK</button>
+        <button id="insertLinkCancelBtn" class="btn ghost" type="button">CANCEL</button>
       </div>
     </div>
   </div>
