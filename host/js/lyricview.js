@@ -760,7 +760,7 @@
     // This is the actual file location from lyricview.html:
     // root/adm/host/lyrics/lyrics-data/<filename>.js
     const relativeFilePath =
-      `lyrics/lyrics-data/${fileName}`;
+      `../../adm/host/lyrics/lyrics-data/${fileName}`;
 
     await db.collection("karaokeControl").doc("liveLyrics").set({
       // Keep old compatibility fields.
