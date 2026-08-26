@@ -6,11 +6,23 @@
 
   let currentSong = null;
   let currentSongId = songId;
+  let sectionTitleDefaults = {
+    verse: "#ffffff",
+    preChorus: "#ffb45c",
+    chorus: "#42f35c",
+    ending: "#ffd400",
+    fallback: "#ffffff"
+  };
   let sectionEls = [];
   let currentSectionIndex = 0;
   let scrollTimer = null;
   let autoScrollOn = false;
-  let scrollSpeed = Number(localStorage.getItem("lkHostScrollSpeed") || 1);
+
+  // AUTOSCROLL:
+  // 1.00× is now physically one-sixth of the old 1.00× pace.
+  // The multiplier is stored separately for every song in Firestore.
+  let scrollSpeed = 1;
+  const AUTO_SCROLL_BASE_PX_PER_MS = 0.003; // old base was 0.018
   let chordShift = 0;
   let tabShift = 0;
   let capoDisplayShift = 0;
@@ -117,6 +129,28 @@
     holder.querySelectorAll(".tab-block-controls,.tab-insert-row,.delete-tab-line-btn,.delete-tab-time-btn,.delete-tab-btn,.delete-tab-btn-bottom,.move-tab-up-btn,.move-tab-down-btn,.duplicate-tab-btn").forEach(n => n.remove());
     holder.querySelectorAll("[contenteditable]").forEach(n => n.removeAttribute("contenteditable"));
     return holder.innerHTML;
+  }
+
+  function normaliseSectionTitleKey(title) {
+    const clean = String(title || "").trim().toUpperCase().replace(/\s+/g, " ");
+    if (clean === "VERSE" || /^VERSE \d+$/.test(clean)) return "verse";
+    if (clean === "PRE-CHORUS" || clean === "PRE CHORUS") return "preChorus";
+    if (clean === "CHORUS" || /^CHORUS \d+$/.test(clean) || clean === "CHORUS REPEAT") return "chorus";
+    if (clean === "ENDING" || clean === "END" || clean === "OUTRO") return "ending";
+    return "fallback";
+  }
+
+  function getSystemSectionTitleColour(title) {
+    return sectionTitleDefaults[normaliseSectionTitleKey(title)] || sectionTitleDefaults.fallback || "#ffffff";
+  }
+
+  async function loadSectionTitleDefaultsForView() {
+    try {
+      const snap = await db.collection("noteSettings").doc("lyricsCreatorSectionTitleDefaults").get();
+      if (snap.exists) sectionTitleDefaults = { ...sectionTitleDefaults, ...(snap.data() || {}) };
+    } catch (error) {
+      console.warn("Section title defaults unavailable:", error);
+    }
   }
 
 
@@ -233,11 +267,9 @@
       header.innerHTML = `<span class="collapse-arrow">${card.classList.contains("collapsed") ? "▸" : "▾"}</span><strong>${esc(section.title || section.type || "SECTION")}</strong><span class="header-spacer"></span><span class="collapse-hint">${card.classList.contains("collapsed") ? "SHOW" : "HIDE"}</span>`;
 
       // Optional per-section title colour from Lyrics Creator.
-      const titleColour = section.style?.titleColor || "";
-      if (titleColour) {
-        const titleEl = header.querySelector("strong");
-        if (titleEl) titleEl.style.color = titleColour;
-      }
+      const titleColour = section.style?.titleColor || getSystemSectionTitleColour(section.title);
+      const titleEl = header.querySelector("strong");
+      if (titleEl) titleEl.style.color = titleColour;
 
       const body = document.createElement("div");
       body.className = "host-section-body";
@@ -484,8 +516,21 @@
 
       selects.forEach(select => {
         select.innerHTML = options;
-        if (currentSong?.karaokeLyrics && currentSong.karaokeLyrics !== "No") {
+
+        const currentOptionExists =
+          currentSongId &&
+          [...select.options].some(opt => opt.value === currentSongId);
+
+        if (currentOptionExists) {
+          select.value = currentSongId;
+        } else if (
+          currentSong?.karaokeLyrics &&
+          currentSong.karaokeLyrics !== "No" &&
+          [...select.options].some(opt => opt.value === currentSong.karaokeLyrics)
+        ) {
           select.value = currentSong.karaokeLyrics;
+        } else {
+          select.value = "";
         }
       });
     } catch (e) {
@@ -541,6 +586,31 @@
     } catch (e) { console.warn("Session note logging skipped",e); }
   }
 
+  function loadSongScrollSpeed(songData) {
+    const saved = Number(songData?.hostScrollSpeed);
+
+    // Songs that do not have a saved value yet start at 1.00×.
+    // Because the base rate itself is now 1/6, this is already much slower.
+    scrollSpeed = Number.isFinite(saved)
+      ? Math.max(0.25, Math.min(3, saved))
+      : 1;
+
+    updateSpeed();
+  }
+
+  async function saveSongScrollSpeed() {
+    if (!currentSongId) return;
+
+    try {
+      await db.collection("lyrics").doc(currentSongId).set({
+        hostScrollSpeed: scrollSpeed,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+    } catch (error) {
+      console.error("Could not save this song's autoscroll speed:", error);
+    }
+  }
+
   function startAutoScroll() {
     autoScrollOn = !autoScrollOn;
     $("autoScrollBtn").classList.toggle("active", autoScrollOn);
@@ -550,7 +620,8 @@
       const tick = now => {
         if (!autoScrollOn) return;
         const dt = now-last; last=now;
-        scrollBy(0, dt * .018 * scrollSpeed);
+        // Deliberately 1/6 of the old physical scroll speed.
+        scrollBy(0, dt * AUTO_SCROLL_BASE_PX_PER_MS * scrollSpeed);
         scrollTimer = requestAnimationFrame(tick);
       };
       scrollTimer = requestAnimationFrame(tick);
@@ -583,8 +654,17 @@
     $("jumpTopBtn").onclick = () => scrollTo({top:0,behavior:"smooth"});
     $("jumpBottomBtn").onclick = () => scrollTo({top:document.documentElement.scrollHeight,behavior:"smooth"});
     $("autoScrollBtn").onclick = startAutoScroll;
-    $("scrollSpeedDown").onclick = () => {scrollSpeed=Math.max(.25, +(scrollSpeed-.25).toFixed(2)); localStorage.setItem("lkHostScrollSpeed",scrollSpeed); updateSpeed();};
-    $("scrollSpeedUp").onclick = () => {scrollSpeed=Math.min(3, +(scrollSpeed+.25).toFixed(2)); localStorage.setItem("lkHostScrollSpeed",scrollSpeed); updateSpeed();};
+    $("scrollSpeedDown").onclick = async () => {
+      scrollSpeed = Math.max(.25, +(scrollSpeed - .25).toFixed(2));
+      updateSpeed();
+      await saveSongScrollSpeed();
+    };
+
+    $("scrollSpeedUp").onclick = async () => {
+      scrollSpeed = Math.min(3, +(scrollSpeed + .25).toFixed(2));
+      updateSpeed();
+      await saveSongScrollSpeed();
+    };
     $("chordMinus").onclick = () => { chordShift--; applyChordTranspose(); };
     $("chordPlus").onclick = () => { chordShift++; applyChordTranspose(); };
     $("tabMinus").onclick = () => { tabShift--; applyTabTranspose(); };
@@ -630,6 +710,7 @@
   function updateSpeed(){ $("scrollSpeedLabel").textContent = `${scrollSpeed.toFixed(2)}×`; }
 
   async function init() {
+    await loadSectionTitleDefaultsForView();
     bindUi();
     if (!songId) {
       $("lyricsContent").innerHTML = `<div class="host-load-error">No song selected.</div>`;
@@ -638,6 +719,10 @@
     db.collection("lyrics").doc(songId).onSnapshot(doc => {
       if (!doc.exists) { $("lyricsContent").innerHTML = `<div class="host-load-error">Could not load song data.</div>`; return; }
       currentSong = {id:doc.id,...doc.data()};
+
+      // Restore this song's own saved autoscroll multiplier.
+      loadSongScrollSpeed(currentSong);
+
       setTopTitle(currentSong);
       setInfo(currentSong);
       renderSections(currentSong);
