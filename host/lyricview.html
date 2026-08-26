@@ -32,13 +32,14 @@
          The original SONG INFO sidebar remains unchanged. -->
     <section id="performanceQuickInfo" class="performance-quick-info" aria-label="Performance quick song information">
       <div class="performance-quick-meta">
-        <div><small>KEY</small><strong id="quickKey">–</strong></div>
-        <div><small>TIME</small><strong id="quickTime">–</strong></div>
+        <!-- Requested performance order:
+             TEMPO · ORIGINAL BPM · KEY · CAPO · TIME · EDIT SONG -->
         <div><small>TEMPO</small><strong id="quickTempo">–</strong></div>
         <div><small>ORIGINAL BPM</small><strong id="quickOriginalBpm">–</strong></div>
+        <div><small>KEY</small><strong id="quickKey">–</strong></div>
         <div><small>CAPO</small><strong id="quickCapo">–</strong></div>
+        <div><small>TIME</small><strong id="quickTime">–</strong></div>
 
-        <!-- EDIT SONG stays on the same compact row as CAPO -->
         <div class="performance-quick-edit-cell">
           <small>EDIT</small>
           <button id="quickEditSongBtn" type="button">✎ EDIT SONG</button>
@@ -115,11 +116,11 @@
       <button id="editSongBtn" class="drawer-top-edit-btn" type="button">✎ EDIT SONG</button>
 
       <section class="song-info-card info-meta-grid">
-        <div><small>KEY</small><strong id="infoKey">–</strong></div>
-        <div><small>TIME</small><strong id="infoTime">–</strong></div>
         <div><small>TEMPO</small><strong id="infoTempo">–</strong></div>
-        <div><small>CAPO</small><strong id="infoCapo">–</strong></div>
         <div><small>ORIGINAL BPM</small><strong id="infoOriginalBpm">–</strong></div>
+        <div><small>KEY</small><strong id="infoKey">–</strong></div>
+        <div><small>CAPO</small><strong id="infoCapo">–</strong></div>
+        <div><small>TIME</small><strong id="infoTime">–</strong></div>
         <div><small>YEAR</small><strong id="infoYear">–</strong></div>
       </section>
 
