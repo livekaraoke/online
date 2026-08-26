@@ -119,6 +119,53 @@
     return holder.innerHTML;
   }
 
+
+  // Colour every literal "-" character without changing fret numbers/chords.
+  // The colour is saved per-section by lyricscreator.html.
+  function applySectionDashColour(root, colour) {
+    if (!root) return;
+    const dashColour = colour || "#777777";
+
+    // Avoid wrapping dashes twice.
+    root.querySelectorAll("span.section-dash-char").forEach(span => {
+      span.replaceWith(document.createTextNode(span.textContent || "-"));
+    });
+
+    const walker = document.createTreeWalker(
+      root,
+      NodeFilter.SHOW_TEXT,
+      {
+        acceptNode(node) {
+          if (!node.nodeValue || !node.nodeValue.includes("-")) return NodeFilter.FILTER_REJECT;
+          const parent = node.parentElement;
+          if (!parent || parent.closest("script,style,button,select,option")) return NodeFilter.FILTER_REJECT;
+          return NodeFilter.FILTER_ACCEPT;
+        }
+      }
+    );
+
+    const nodes = [];
+    while (walker.nextNode()) nodes.push(walker.currentNode);
+
+    nodes.forEach(node => {
+      const parts = node.nodeValue.split("-");
+      if (parts.length < 2) return;
+
+      const frag = document.createDocumentFragment();
+      parts.forEach((part, index) => {
+        if (part) frag.appendChild(document.createTextNode(part));
+        if (index < parts.length - 1) {
+          const dash = document.createElement("span");
+          dash.className = "section-dash-char";
+          dash.style.color = dashColour;
+          dash.textContent = "-";
+          frag.appendChild(dash);
+        }
+      });
+      node.replaceWith(frag);
+    });
+  }
+
   function buildBeatGridTab(section, wrapper) {
     const html = section.html || "";
     const holder = document.createElement("div");
@@ -185,6 +232,13 @@
       header.type = "button";
       header.innerHTML = `<span class="collapse-arrow">${card.classList.contains("collapsed") ? "▸" : "▾"}</span><strong>${esc(section.title || section.type || "SECTION")}</strong><span class="header-spacer"></span><span class="collapse-hint">${card.classList.contains("collapsed") ? "SHOW" : "HIDE"}</span>`;
 
+      // Optional per-section title colour from Lyrics Creator.
+      const titleColour = section.style?.titleColor || "";
+      if (titleColour) {
+        const titleEl = header.querySelector("strong");
+        if (titleEl) titleEl.style.color = titleColour;
+      }
+
       const body = document.createElement("div");
       body.className = "host-section-body";
       body.style.fontFamily = section.style?.fontFamily || "Verdana, Arial, sans-serif";
@@ -193,6 +247,9 @@
 
       if (sectionTypeClass(section) === "is-tab") buildBeatGridTab(section, body);
       else body.innerHTML = cleanSectionHtml(section.html || section.text || "");
+
+      // Apply saved per-section dash colour. Default is gray.
+      applySectionDashColour(body, section.style?.dashColor || "#777777");
 
       header.addEventListener("click", () => {
         card.classList.toggle("collapsed");
