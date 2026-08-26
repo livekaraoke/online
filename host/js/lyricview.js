@@ -500,22 +500,43 @@
   }
 
   /************************************************************
+   * DOCUMENT-RELATIVE PATHS
+   *
+   * Current page:
+   *   root/host/lyricview.html
+   *
+   * Song index:
+   *   root/adm/files/song-data.js
+   * Browser path:
+   *   ../adm/files/song-data.js
+   *
+   * Legacy lyric JS files:
+   *   root/adm/host/lyrics/lyrics-data/<filename>.js
+   * Browser path:
+   *   ../adm/host/lyrics/lyrics-data/<filename>.js
+   *
+   * IMPORTANT:
+   * Relative URLs created inside lyricview.js are still resolved from
+   * lyricview.html's URL, NOT from root/host/js/.
+   ************************************************************/
+
+  /************************************************************
    * SLAVE / KARAOKE LYRICS DROPDOWN
    *
    * IMPORTANT:
    * The dropdown is populated from:
-   *   root/adm/files/song-data-kl.js
+   *   root
    *
    * lyricview.html loads that file as:
-   *   ../files/song-data-kl.js
+   *   
    *
-   * song-data-kl.js exposes window.songs.
+   * song-data.js exposes window.songs.
    *
    * We deliberately DO NOT build the target from:
    *   Song Title + Artist
    *
    * Instead we take the ID/filename directly from each song's
-   * saved URL in song-data-kl.js. This restores the old behaviour
+   * saved URL in song-data.js. This restores the old behaviour
    * for files such as:
    *   allthesmallthings.js
    ************************************************************/
@@ -576,7 +597,7 @@
     source.forEach(song => {
       if (!song) return;
 
-      // song-data-kl.js is the authoritative mapping.
+      // song-data.js is the authoritative mapping.
       // Some older rows use url, while a few builds may use one of the
       // alternate URL field names below, so support all of them safely.
       const sourceUrl =
@@ -626,7 +647,7 @@
       if (match) return match.id;
     }
 
-    // Second preference: match current song title against song-data-kl.js title.
+    // Second preference: match current song title against song-data.js title.
     // We do NOT append the artist to create a filename.
     const currentTitle = String(currentSong?.title || "")
       .toLowerCase()
@@ -658,17 +679,17 @@
         `<option value="">Loading lyrics list…</option>`;
     });
 
-    // song-data-kl.js is loaded by lyricview.html BEFORE lyricview.js.
+    // song-data.js is loaded by lyricview.html BEFORE lyricview.js.
     // Do not dynamically guess paths here; use the original working source.
     if (!Array.isArray(window.songs) || !window.songs.length) {
       console.error(
-        "song-data-kl.js did not expose window.songs. Expected HTML source: ../files/song-data-kl.js"
+        "song-data.js did not expose window.songs. Expected HTML source: ../adm/files/song-data.js"
       );
 
       selects.forEach(select => {
         select.disabled = false;
         select.innerHTML =
-          `<option value="">Could not load song-data-kl.js</option>`;
+          `<option value="">Could not load song-data.js</option>`;
       });
       return;
     }
@@ -684,7 +705,7 @@
       selects.forEach(select => {
         select.disabled = false;
         select.innerHTML =
-          `<option value="">No lyric JS files found in song-data-kl.js</option>`;
+          `<option value="">No lyric JS files found in song-data.js</option>`;
       });
       return;
     }
@@ -712,7 +733,7 @@
     });
 
     console.log(
-      `Loaded ${entries.length} slave lyric file entries from song-data-kl.js`,
+      `Loaded ${entries.length} slave lyric file entries from song-data.js`,
       entries
     );
   }
@@ -737,7 +758,7 @@
     // This is the actual file location from lyricview.html:
     // root/adm/host/lyrics/lyrics-data/<filename>.js
     const relativeFilePath =
-      `../../adm/host/lyrics/lyrics-data/${fileName}`;
+      `${fileName}`;
 
     await db.collection("karaokeControl").doc("liveLyrics").set({
       // Keep old compatibility fields.
