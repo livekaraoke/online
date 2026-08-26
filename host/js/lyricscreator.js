@@ -230,10 +230,10 @@
     if(!currentFirebaseId) payload.createdAt=firebase.firestore.FieldValue.serverTimestamp();
     await db.collection("lyrics").doc(docId).set(payload,{merge:false});
     currentFirebaseId=docId; songData.id=docId; originalSnapshot=snapshot(); dirty=false; updateEditingLabel();
-    location.href=`lyricsview.html?id=${encodeURIComponent(docId)}`;
+    location.href=`lyricview.html?id=${encodeURIComponent(docId)}`;
   }
 
-  async function cancelAndLeave(){ if(isDirty()){const ok=await confirmCustom("Discard Changes?","Are you sure you want to leave? All unsaved changes will be lost.");if(!ok)return;} location.href=currentFirebaseId?`lyricsview.html?id=${encodeURIComponent(currentFirebaseId)}`:"lyricsviewer.html"; }
+  async function cancelAndLeave(){ if(isDirty()){const ok=await confirmCustom("Discard Changes?","Are you sure you want to leave? All unsaved changes will be lost.");if(!ok)return;} location.href=currentFirebaseId?`lyricview.html?id=${encodeURIComponent(currentFirebaseId)}`:"lyricsviewer.html"; }
 
   async function loadSong(){
     if(!currentFirebaseId){ await populateKaraokeLyrics(); loadMetaToInputs(); renderSections(); originalSnapshot=snapshot(); dirty=false; updateEditingLabel(); return; }
