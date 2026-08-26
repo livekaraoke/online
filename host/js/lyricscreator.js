@@ -1,263 +1,792 @@
 (() => {
-  const db = window.db;
-  const params = new URLSearchParams(location.search);
-  let currentFirebaseId = params.get("firebaseId") || params.get("id") || null;
-  let songData = {title:"",artist:"",userBpm:"",originalBpm:"",capo:"",key:"",year:"",timeSignature:"4/4",note:"",youtubeLink:"",karaokeLyrics:"No",publicSongListVisible:false,myNotes:"",sections:[]};
-  let originalSnapshot = "";
-  let dirty = false;
-  let draggedSectionIndex = null;
-  let activeEditor = null;
+  "use strict";
 
   const $ = id => document.getElementById(id);
-  const esc = value => String(value ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
-  const sectionTemplates = [
-    ["VERSE","lyrics"],["CHORUS","lyrics"],["PRE-CHORUS","lyrics"],["BRIDGE","lyrics"],["INTRO","lyrics"],["OUTRO","lyrics"],["INSTRUMENTAL","lyrics"],["SOLO","lyrics"],["GUITAR TAB","tab"],["PERFORMANCE NOTE","performance-note"],["HOST NOTE","host-note"],["ENDING","lyrics"],["SEPARATOR","separator"]
+  const firebaseId = new URLSearchParams(location.search).get("firebaseId");
+
+  let sections = [];
+  let loadedSong = null;
+  let dirty = false;
+  let activeEditor = null;
+  let savedRange = null;
+  let confirmResolver = null;
+
+  const FONTS = ["Verdana", "Arial", "Tahoma", "Trebuchet MS", "Georgia", "Times New Roman", "Courier New", "Consolas"];
+  const FONT_SIZES = ["12", "14", "16", "18", "20", "24", "28", "32", "40", "48"];
+  const COLOURS = [
+    ["White", "#ffffff"], ["Light Gray", "#cfcfcf"], ["Red", "#ff4f5e"],
+    ["Orange", "#ff982f"], ["Yellow", "#ffd400"], ["Green", "#42f35c"],
+    ["Teal", "#19e3c5"], ["Blue", "#4fa3ff"], ["Purple", "#ac70ff"], ["Pink", "#ff66ad"]
   ];
 
-  function sectionDefaults(type,title="") {
+  const TEMPLATES = [
+    { label: "Verse", type: "lyrics", title: "VERSE", html: "Enter verse lyrics here..." },
+    { label: "Chorus", type: "lyrics", title: "CHORUS", html: "Enter chorus lyrics here...", colour: "#ffd400" },
+    { label: "Pre-Chorus", type: "lyrics", title: "PRE-CHORUS", html: "Enter pre-chorus lyrics here..." },
+    { label: "Bridge", type: "lyrics", title: "BRIDGE", html: "Enter bridge lyrics here..." },
+    { label: "Intro", type: "performanceNote", title: "INTRO", text: "Short instrumental (wait for signal)" },
+    { label: "Outro", type: "performanceNote", title: "OUTRO", text: "Ending cue (wait for signal)" },
+    { label: "Instrumental", type: "performanceNote", title: "INSTRUMENTAL", text: "Instrumental section (wait for signal)" },
+    { label: "Solo", type: "performanceNote", title: "SOLO", text: "Solo section (wait for signal)" },
+    { label: "Guitar Tab", type: "tab", title: "GUITAR TAB" },
+    { label: "Host Note", type: "hostNote", title: "HOST NOTE", text: "Private reminder for the host..." },
+    { label: "Ending", type: "lyrics", title: "ENDING", html: "Enter final lyrics here...", colour: "#ff6675" },
+    { label: "Separator", type: "separator" }
+  ];
+
+  function esc(value) {
+    return LyricsCommon.escapeHTML(String(value ?? ""));
+  }
+
+  function blankTabHTML() {
+    return `<pre class="inserted-blank-tab">e|--------------------------------|\nB|--------------------------------|\nG|--------------------------------|\nD|--------------------------------|\nA|--------------------------------|\nE|--------------------------------|</pre>`;
+  }
+
+  function defaultStyle(type = "lyrics") {
     return {
-      type,
-      title: title || ({lyrics:"VERSE",tab:"GUITAR TAB","performance-note":"PERFORMANCE NOTE","host-note":"HOST NOTE"}[type] || ""),
-      html: "",
-      collapsed: false,
-      singerVisible: type !== "host-note",
-      rhythmMode: type === "tab" ? "Beat Grid" : "None",
-      beatLabels: type === "tab" ? ["1","&","2","&","3","&","4","&"] : [],
-      style:{fontFamily:"Verdana",fontSize:18,color:"#ffffff"}
+      fontFamily: type === "tab" ? "Consolas" : "Verdana",
+      fontSize: type === "tab" ? 16 : 18,
+      color: type === "tab" ? "#ffd400" : "#ffffff",
+
+      // NEW: every "-" character defaults to gray. This is especially useful
+      // for guitar tabs so fret numbers stand out clearly.
+      dashColor: "#777777",
+
+      // NEW: empty string means use the normal/default section-title colour
+      // supplied by Lyric View. Set a hex colour to override it.
+      titleColor: ""
     };
   }
 
-  function markDirty(){ dirty = true; updateEditingLabel(); }
-  function snapshot(){ return JSON.stringify(songData); }
-  function isDirty(){ return dirty || snapshot() !== originalSnapshot; }
-
-  function updateEditingLabel(){
-    const t = $("songTitle").value.trim();
-    const a = $("artistName").value.trim();
-    $("creatorEditingLabel").textContent = `Editing: ${t || "New Song"}${a ? " - " + a : ""}${isDirty() ? " • Unsaved" : ""}`;
-  }
-
-  function syncMetaFromInputs(){
-    songData.title = $("songTitle").value.trim();
-    songData.artist = $("artistName").value.trim();
-    songData.userBpm = $("userBpm").value.trim();
-    songData.originalBpm = $("originalBpm").value.trim();
-    songData.key = $("songKey").value.trim();
-    songData.capo = $("capoNote").value.trim();
-    songData.year = $("songYear").value.trim();
-    songData.timeSignature = $("timeSignature").value.trim() || "4/4";
-    songData.youtubeLink = $("youtubeLink").value.trim();
-    songData.note = $("songNote").value;
-    songData.karaokeLyrics = $("karaokeLyrics").value || "No";
-    songData.publicSongListVisible = $("publicSongListVisible").checked;
-  }
-
-  function loadMetaToInputs(){
-    $("songTitle").value = songData.title || "";
-    $("artistName").value = songData.artist || "";
-    $("userBpm").value = songData.userBpm || "";
-    $("originalBpm").value = songData.originalBpm || "";
-    $("songKey").value = songData.key || "";
-    $("capoNote").value = songData.capo || "";
-    $("songYear").value = songData.year || "";
-    $("timeSignature").value = songData.timeSignature || songData.time || "4/4";
-    $("youtubeLink").value = songData.youtubeLink || "";
-    $("songNote").value = songData.note || songData.songNote || "";
-    $("publicSongListVisible").checked = songData.publicSongListVisible === true;
-  }
-
-  async function populateKaraokeLyrics(){
-    const select = $("karaokeLyrics");
-    try {
-      const snap = await db.collection("lyrics").get();
-      const items = snap.docs.map(d=>({id:d.id,...d.data()})).filter(s=>s.title).sort((a,b)=>String(a.title).localeCompare(String(b.title)));
-      select.innerHTML = `<option value="No">No</option>` + items.map(s=>`<option value="${esc(s.id)}">${esc(s.title)} — ${esc(s.artist || "")}</option>`).join("");
-      if (songData.karaokeLyrics && ![...select.options].some(o=>o.value===songData.karaokeLyrics)) {
-        const opt=document.createElement("option"); opt.value=songData.karaokeLyrics; opt.textContent=songData.karaokeLyrics; select.appendChild(opt);
+  function normalizeSection(section) {
+    const type = section?.type || "lyrics";
+    if (type === "separator") return { type: "separator" };
+    return {
+      ...section,
+      type,
+      title: section.title || (type === "performanceNote" ? "PERFORMANCE NOTE" : type === "hostNote" ? "HOST NOTE" : type === "tab" ? "GUITAR TAB" : "VERSE"),
+      html: section.html || "",
+      text: section.text || "",
+      collapsed: section.collapsed === true,
+      editorCollapsed: section.editorCollapsed === true,
+      style: {
+        ...defaultStyle(type),
+        ...(section.style || {})
       }
-      select.value = songData.karaokeLyrics || "No";
-    } catch(e){ console.warn(e); }
+    };
   }
 
-  function formatButton(label, command, title=label){ return `<button type="button" data-cmd="${command}" title="${title}">${label}</button>`; }
-
-  function renderSections(){
-    const root = $("creatorSections");
-    root.innerHTML = "";
-    if (!songData.sections.length) root.innerHTML = `<div class="creator-empty-state">No sections yet. Choose a section template or add Lyrics / Chords.</div>`;
-
-    songData.sections.forEach((section,index)=>{
-      if (section.type === "separator") {
-        const row = document.createElement("div");
-        row.className="creator-separator-card";
-        row.draggable=true;
-        row.dataset.index=index;
-        row.innerHTML=`<span class="creator-drag">☰</span><strong>SEPARATOR</strong><button data-action="up">↑</button><button data-action="down">↓</button><button data-action="delete">✕</button>`;
-        attachSectionActions(row,index);
-        root.appendChild(row);
-        return;
-      }
-
-      const card = document.createElement("article");
-      card.className=`creator-section-card-v3 type-${section.type}`;
-      card.dataset.index=index;
-      card.draggable=true;
-      const collapsedEditor = section.editorCollapsed === true;
-      card.innerHTML = `
-        <div class="creator-section-card-head">
-          <span class="creator-drag" title="Drag section">☰</span>
-          <button class="editor-collapse-toggle" data-action="collapse-editor" type="button">${collapsedEditor ? "▸" : "▾"}</button>
-          <input class="section-title-input" value="${esc(section.title || "")}" placeholder="SECTION TITLE">
-          <span class="section-type-badge-v3">${esc(section.type.replace(/-/g," ").toUpperCase())}</span>
-          <label class="load-open-toggle"><input type="checkbox" class="section-load-open" ${section.collapsed !== true ? "checked" : ""}> Open by default</label>
-          <button data-action="duplicate" title="Duplicate">⧉</button>
-          <button data-action="up" title="Move up">↑</button>
-          <button data-action="down" title="Move down">↓</button>
-          <button data-action="delete" title="Delete">✕</button>
-        </div>
-        <div class="creator-section-card-body ${collapsedEditor ? "hidden" : ""}">
-          ${renderSectionToolbar(section,index)}
-          ${renderSectionEditor(section,index)}
-        </div>`;
-      attachSectionActions(card,index);
-      root.appendChild(card);
-    });
-    bindEditors();
-    bindDrag();
-  }
-
-  function renderSectionToolbar(section,index){
-    if (["performance-note","host-note"].includes(section.type)) {
-      return `<div class="section-config-strip"><label>Font <select class="section-font"><option>Verdana</option><option>Arial</option><option>Bahnschrift</option><option>Courier New</option></select></label><label>Size <select class="section-font-size">${[12,14,16,18,20,22,24,28,32,36,40].map(n=>`<option ${Number(section.style?.fontSize||18)===n?"selected":""}>${n}</option>`).join("")}</select></label></div>`;
+  function makeSection(type, template = null) {
+    if (type === "separator") return { type: "separator" };
+    if (type === "performanceNote") {
+      return normalizeSection({ type, title: template?.title || "PERFORMANCE NOTE", text: template?.text || "Short instrumental (wait for signal)" });
     }
-    return `<div class="rich-toolbar-v3">
-      ${formatButton("B","bold")}${formatButton("I","italic")}${formatButton("U","underline")}
-      <select class="section-font" title="Font name"><option>Verdana</option><option>Arial</option><option>Bahnschrift</option><option>Georgia</option><option>Courier New</option></select>
-      <select class="section-font-size" title="Font size">${[12,14,16,18,20,22,24,28,32,36,40,48].map(n=>`<option ${Number(section.style?.fontSize||18)===n?"selected":""}>${n}</option>`).join("")}</select>
-      <div class="text-colour-wrap"><button class="colour-menu-btn" type="button">TEXT COLOUR ▾</button><div class="colour-menu hidden">${["#ffffff","#bfc3c8","#ff4d55","#ff9e32","#ffd633","#5dff72","#21d6c7","#40a9ff","#a86cff","#ff72b7"].map(c=>`<button type="button" class="swatch" style="--swatch:${c}" data-colour="${c}"></button>`).join("")}</div></div>
-      <button type="button" class="quick-style green" data-quick="#57ff67">B GREEN</button>
-      <button type="button" class="quick-style yellow" data-quick="#ffd633">B YELLOW</button>
-      <button type="button" class="quick-style teal" data-quick="#21d6c7">B TEAL</button>
-      <button type="button" data-action="insert-chord" class="insert-chord-btn">INSERT CHORD</button>
-      <button type="button" data-action="insert-tab" class="insert-tab-btn">INSERT BLANK TAB</button>
-      ${section.type === "tab" ? `<label class="rhythm-mode">Rhythm <select class="section-rhythm"><option>None</option><option>Beats</option><option ${section.rhythmMode==="Beat Grid"?"selected":""}>Beat Grid</option></select></label>` : ""}
-    </div>`;
-  }
-
-  function renderSectionEditor(section,index){
-    const cls = section.type === "tab" ? " tab-mode" : "";
-    return `<div class="creator-rich-editor-v3${cls}" contenteditable="true" spellcheck="false" data-editor-index="${index}">${section.html || ""}</div>`;
-  }
-
-  function attachSectionActions(card,index){
-    card.addEventListener("click", async e=>{
-      const action=e.target.closest("[data-action]")?.dataset.action;
-      if (!action) return;
-      if (action==="delete") {
-        const ok=await confirmCustom("Delete Section?","This section will be removed from the song."); if(!ok)return;
-        songData.sections.splice(index,1); markDirty(); renderSections();
-      } else if(action==="duplicate") {
-        songData.sections.splice(index+1,0,JSON.parse(JSON.stringify(songData.sections[index]))); markDirty(); renderSections();
-      } else if(action==="up" && index>0) { [songData.sections[index-1],songData.sections[index]]=[songData.sections[index],songData.sections[index-1]]; markDirty(); renderSections(); }
-      else if(action==="down" && index<songData.sections.length-1) { [songData.sections[index+1],songData.sections[index]]=[songData.sections[index],songData.sections[index+1]]; markDirty(); renderSections(); }
-      else if(action==="collapse-editor") { songData.sections[index].editorCollapsed=!songData.sections[index].editorCollapsed; renderSections(); }
-      else if(action==="insert-chord") { activeEditor=card.querySelector("[contenteditable]"); openChordModal(); }
-      else if(action==="insert-tab") { activeEditor=card.querySelector("[contenteditable]"); insertBlankTabAtSelection(activeEditor); syncSectionHtml(index,activeEditor); }
-    });
-
-    const title=card.querySelector(".section-title-input"); if(title) title.addEventListener("input",()=>{songData.sections[index].title=title.value;markDirty();});
-    const open=card.querySelector(".section-load-open"); if(open) open.addEventListener("change",()=>{songData.sections[index].collapsed=!open.checked;markDirty();});
-    const font=card.querySelector(".section-font"); if(font){font.value=songData.sections[index].style?.fontFamily||"Verdana";font.addEventListener("change",()=>{songData.sections[index].style={...(songData.sections[index].style||{}),fontFamily:font.value};card.querySelector("[contenteditable]").style.fontFamily=font.value;markDirty();});}
-    const size=card.querySelector(".section-font-size"); if(size) size.addEventListener("change",()=>{songData.sections[index].style={...(songData.sections[index].style||{}),fontSize:Number(size.value)};card.querySelector("[contenteditable]").style.fontSize=size.value+"px";markDirty();});
-    const rhythm=card.querySelector(".section-rhythm"); if(rhythm) rhythm.addEventListener("change",()=>{songData.sections[index].rhythmMode=rhythm.value; songData.sections[index].beatLabels=rhythm.value==="Beat Grid"?["1","&","2","&","3","&","4","&"]:[];markDirty();});
-  }
-
-  function bindEditors(){
-    document.querySelectorAll(".creator-section-card-v3").forEach(card=>{
-      const index=Number(card.dataset.index); const editor=card.querySelector("[contenteditable]"); if(!editor)return;
-      const section=songData.sections[index];
-      editor.style.fontFamily=section.style?.fontFamily||"Verdana"; editor.style.fontSize=(section.style?.fontSize||18)+"px";
-      editor.addEventListener("input",()=>syncSectionHtml(index,editor));
-      editor.addEventListener("focus",()=>activeEditor=editor);
-      card.querySelectorAll("[data-cmd]").forEach(btn=>btn.onclick=()=>{editor.focus();document.execCommand(btn.dataset.cmd,false,null);syncSectionHtml(index,editor);});
-      const colourBtn=card.querySelector(".colour-menu-btn"); const colourMenu=card.querySelector(".colour-menu"); if(colourBtn) colourBtn.onclick=()=>colourMenu.classList.toggle("hidden");
-      card.querySelectorAll("[data-colour]").forEach(btn=>btn.onclick=()=>{editor.focus();document.execCommand("foreColor",false,btn.dataset.colour);colourMenu.classList.add("hidden");syncSectionHtml(index,editor);});
-      card.querySelectorAll("[data-quick]").forEach(btn=>btn.onclick=()=>{editor.focus();document.execCommand("bold",false,null);document.execCommand("foreColor",false,btn.dataset.quick);syncSectionHtml(index,editor);});
+    if (type === "hostNote") {
+      return normalizeSection({ type, title: template?.title || "HOST NOTE", text: template?.text || "Private reminder for the host..." });
+    }
+    if (type === "tab") {
+      return normalizeSection({ type, title: template?.title || "GUITAR TAB", html: blankTabHTML() });
+    }
+    return normalizeSection({
+      type: "lyrics",
+      title: template?.title || "VERSE",
+      html: template?.html || "Enter lyrics and chords here...",
+      style: { ...defaultStyle("lyrics"), color: template?.colour || "#ffffff" }
     });
   }
 
-  function syncSectionHtml(index,editor){ songData.sections[index].html=editor.innerHTML; markDirty(); }
-
-  function createTabHtml(){
-    const dash=`<span class="tab-cell dash">-</span>`.repeat(48);
-    const line=l=>`<div class="tab-line"><span class="tab-fixed">${l}|</span><span class="tab-dashes" contenteditable="true">${dash}</span><span class="tab-fixed">|</span></div>`;
-    return `<div class="tab-block" contenteditable="false"><div class="tab-line tab-note-line"><span class="tab-fixed">BEATS </span><span class="tab-note" contenteditable="true">1 &amp; 2 &amp; 3 &amp; 4 &amp;</span></div>${line("e")}${line("B")}${line("G")}${line("D")}${line("A")}${line("E")}</div>`;
+  function updateEditingStatus() {
+    const title = $("songTitleInput").value.trim() || "New Song";
+    const artist = $("artistInput").value.trim();
+    $("creatorStatus").textContent = `Editing: ${title}${artist ? ` - ${artist}` : ""}`;
   }
 
-  function insertBlankTabAtSelection(editor){
-    editor.focus();
-    const sel=window.getSelection(); const range=sel && sel.rangeCount ? sel.getRangeAt(0) : null;
-    const temp=document.createElement("div"); temp.innerHTML=createTabHtml(); const node=temp.firstElementChild;
-    if(range && editor.contains(range.commonAncestorContainer)){range.deleteContents();range.insertNode(node);range.setStartAfter(node);range.collapse(true);sel.removeAllRanges();sel.addRange(range);} else editor.appendChild(node);
+  function markDirty() {
+    dirty = true;
+    updateEditingStatus();
+  }
+
+  function captureSelection(editor) {
+    activeEditor = editor;
+    const selection = window.getSelection();
+    if (selection && selection.rangeCount && editor.contains(selection.anchorNode)) {
+      savedRange = selection.getRangeAt(0).cloneRange();
+    }
+  }
+
+  function restoreSelection() {
+    if (!activeEditor) return false;
+    activeEditor.focus();
+    if (!savedRange) return true;
+    const selection = window.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(savedRange);
+    return true;
+  }
+
+  function insertHTMLAtSelection(html) {
+    if (!restoreSelection()) return;
+    document.execCommand("insertHTML", false, html);
+    captureSelection(activeEditor);
+    syncSectionsFromDOM();
     markDirty();
   }
 
-  function openChordModal(){ $("chordInput").value=""; $("chordPreview").textContent="Chord preview"; $("chordModal").classList.remove("hidden"); $("chordInput").focus(); }
-  function insertChord(){ const value=$("chordInput").value.trim(); if(!value||!activeEditor)return; activeEditor.focus(); document.execCommand("insertHTML",false,`<span class="chord-token" style="color:#40a9ff;font-weight:bold">${esc(value)}</span>&nbsp;`); $("chordModal").classList.add("hidden"); const idx=Number(activeEditor.dataset.editorIndex); syncSectionHtml(idx,activeEditor); }
-
-  function addSection(type,title=""){
-    const s=sectionDefaults(type,title); if(type==="tab")s.html=createTabHtml(); if(type==="performance-note")s.style={fontFamily:"Verdana",fontSize:18,color:"#4bea78"}; if(type==="host-note")s.style={fontFamily:"Verdana",fontSize:18,color:"#ffcf54"}; songData.sections.push(s); markDirty(); renderSections(); setTimeout(()=>document.querySelector(`[data-index="${songData.sections.length-1}"]`)?.scrollIntoView({behavior:"smooth",block:"center"}),50);
+  function applyCommand(command, value = null) {
+    if (!restoreSelection()) return;
+    document.execCommand(command, false, value);
+    captureSelection(activeEditor);
+    syncSectionsFromDOM();
+    markDirty();
   }
 
-  function bindDrag(){
-    document.querySelectorAll("[data-index][draggable='true']").forEach(card=>{
-      card.addEventListener("dragstart",e=>{draggedSectionIndex=Number(card.dataset.index);card.classList.add("dragging");e.dataTransfer.effectAllowed="move";});
-      card.addEventListener("dragend",()=>{card.classList.remove("dragging");draggedSectionIndex=null;});
-      card.addEventListener("dragover",e=>e.preventDefault());
-      card.addEventListener("drop",e=>{e.preventDefault();const target=Number(card.dataset.index);if(draggedSectionIndex==null||target===draggedSectionIndex)return;const [moved]=songData.sections.splice(draggedSectionIndex,1);songData.sections.splice(target,0,moved);markDirty();renderSections();});
+  function applyQuickColour(colour) {
+    applyCommand("bold");
+    applyCommand("foreColor", colour);
+  }
+
+  function renderFontOptions(selected) {
+    return FONTS.map(font => `<option value="${esc(font)}" ${font === selected ? "selected" : ""}>${esc(font)}</option>`).join("");
+  }
+
+  function renderSizeOptions(selected) {
+    return FONT_SIZES.map(size => `<option value="${size}" ${String(size) === String(selected) ? "selected" : ""}>${size}px</option>`).join("");
+  }
+
+
+  function renderDashColourOptions(selected) {
+    const value = selected || "#777777";
+    const options = [
+      ["Gray (Default)", "#777777"],
+      ["Light Gray", "#b8b8b8"],
+      ["White", "#ffffff"],
+      ["Yellow", "#ffd400"],
+      ["Green", "#42f35c"],
+      ["Teal", "#19e3c5"],
+      ["Blue", "#4fa3ff"],
+      ["Red", "#ff4f5e"],
+      ["Orange", "#ff982f"],
+      ["Purple", "#ac70ff"]
+    ];
+    return options.map(([label, colour]) =>
+      `<option value="${colour}" ${colour.toLowerCase() === String(value).toLowerCase() ? "selected" : ""}>${label}</option>`
+    ).join("");
+  }
+
+  function renderTitleColourOptions(selected) {
+    const value = selected || "";
+    const options = [
+      ["Default", ""],
+      ["White", "#ffffff"],
+      ["Light Gray", "#cfcfcf"],
+      ["Red", "#ff4f5e"],
+      ["Orange", "#ff982f"],
+      ["Yellow", "#ffd400"],
+      ["Green", "#42f35c"],
+      ["Teal", "#19e3c5"],
+      ["Blue", "#4fa3ff"],
+      ["Purple", "#ac70ff"],
+      ["Pink", "#ff66ad"]
+    ];
+    return options.map(([label, colour]) =>
+      `<option value="${colour}" ${colour.toLowerCase() === String(value).toLowerCase() ? "selected" : ""}>${label}</option>`
+    ).join("");
+  }
+
+  function unwrapDashSpans(root) {
+    if (!root) return;
+    root.querySelectorAll("span.creator-dash-char").forEach(span => {
+      span.replaceWith(document.createTextNode(span.textContent || "-"));
     });
   }
 
-  function renderTemplateMenu(){ $("templateMenu").innerHTML=sectionTemplates.map(([name,type])=>`<button type="button" data-template-type="${type}" data-template-title="${esc(name)}">${esc(name)}</button>`).join(""); $("templateMenu").querySelectorAll("button").forEach(b=>b.onclick=()=>{$("templateMenu").classList.add("hidden");addSection(b.dataset.templateType,b.dataset.templateTitle);}); }
+  function applyDashColourToEditor(editor, colour) {
+    if (!editor) return;
+    const dashColour = colour || "#777777";
 
-  async function confirmCustom(title,message){ return new Promise(resolve=>{ $("creatorConfirmTitle").textContent=title;$("creatorConfirmMessage").textContent=message;$("creatorConfirmModal").classList.remove("hidden");$("creatorConfirmYes").onclick=()=>{$("creatorConfirmModal").classList.add("hidden");resolve(true);};$("creatorConfirmNo").onclick=()=>{$("creatorConfirmModal").classList.add("hidden");resolve(false);}; }); }
+    // Unwrap our own generated dash spans first so changing colour never nests.
+    unwrapDashSpans(editor);
 
-  async function saveSong(){
-    syncMetaFromInputs();
-    if(!songData.title||!songData.artist){await confirmCustom("Missing Details","Song title and artist are required.");return;}
-    const docId=currentFirebaseId || `${songData.title}${songData.artist}`.toLowerCase().replace(/[^a-z0-9]/g,"");
-    const payload={...songData,id:docId,updatedAt:firebase.firestore.FieldValue.serverTimestamp()};
-    if(!currentFirebaseId) payload.createdAt=firebase.firestore.FieldValue.serverTimestamp();
-    await db.collection("lyrics").doc(docId).set(payload,{merge:false});
-    currentFirebaseId=docId; songData.id=docId; originalSnapshot=snapshot(); dirty=false; updateEditingLabel();
-    location.href=`lyricview.html?id=${encodeURIComponent(docId)}`;
+    const walker = document.createTreeWalker(
+      editor,
+      NodeFilter.SHOW_TEXT,
+      {
+        acceptNode(node) {
+          if (!node.nodeValue || !node.nodeValue.includes("-")) return NodeFilter.FILTER_REJECT;
+          const parent = node.parentElement;
+          if (!parent || parent.closest("script,style,button,select,option")) return NodeFilter.FILTER_REJECT;
+          return NodeFilter.FILTER_ACCEPT;
+        }
+      }
+    );
+
+    const nodes = [];
+    while (walker.nextNode()) nodes.push(walker.currentNode);
+
+    nodes.forEach(node => {
+      const parts = node.nodeValue.split("-");
+      if (parts.length < 2) return;
+
+      const frag = document.createDocumentFragment();
+      parts.forEach((part, index) => {
+        if (part) frag.appendChild(document.createTextNode(part));
+        if (index < parts.length - 1) {
+          const span = document.createElement("span");
+          span.className = "creator-dash-char";
+          span.style.color = dashColour;
+          span.textContent = "-";
+          frag.appendChild(span);
+        }
+      });
+      node.replaceWith(frag);
+    });
   }
 
-  async function cancelAndLeave(){ if(isDirty()){const ok=await confirmCustom("Discard Changes?","Are you sure you want to leave? All unsaved changes will be lost.");if(!ok)return;} location.href=currentFirebaseId?`lyricview.html?id=${encodeURIComponent(currentFirebaseId)}`:"lyricsviewer.html"; }
-
-  async function loadSong(){
-    if(!currentFirebaseId){ await populateKaraokeLyrics(); loadMetaToInputs(); renderSections(); originalSnapshot=snapshot(); dirty=false; updateEditingLabel(); return; }
-    const snap=await db.collection("lyrics").doc(currentFirebaseId).get();
-    if(!snap.exists){await confirmCustom("Song Not Found","The selected song could not be loaded.");return;}
-    songData={...songData,...snap.data(),id:snap.id};
-    songData.sections=Array.isArray(songData.sections)?songData.sections.map(s=>({ ...sectionDefaults(s.type||"lyrics",s.title||""), ...s, style:{...sectionDefaults(s.type||"lyrics").style,...(s.style||{})} })) : [];
-    loadMetaToInputs(); await populateKaraokeLyrics(); renderSections(); originalSnapshot=snapshot(); dirty=false; updateEditingLabel();
+  function refreshAllDashColours() {
+    document.querySelectorAll("[data-html]").forEach(editor => {
+      const index = Number(editor.dataset.html);
+      const section = sections[index];
+      if (!section) return;
+      applyDashColourToEditor(editor, section.style?.dashColor || "#777777");
+    });
   }
 
-  function bindUi(){
-    ["songTitle","artistName","userBpm","originalBpm","songKey","capoNote","songYear","timeSignature","youtubeLink","songNote","karaokeLyrics","publicSongListVisible"].forEach(id=>$(id).addEventListener("input",()=>{syncMetaFromInputs();markDirty();}));
-    $("creatorBackBtn").onclick=cancelAndLeave;
-    $("creatorSaveBtn").onclick=saveSong;
-    $("creatorSaveMenuBtn").onclick=()=>$("creatorSaveMenu").classList.toggle("hidden");
-    $("creatorCancelChangesBtn").onclick=cancelAndLeave;
-    $("toggleSongDetailsBtn").onclick=()=>{$("songDetailsBody").classList.toggle("hidden");$("toggleSongDetailsBtn").textContent=$("songDetailsBody").classList.contains("hidden")?"▸":"▾";};
-    document.querySelectorAll("[data-add-type]").forEach(b=>b.onclick=()=>addSection(b.dataset.addType));
-    $("templateBtn").onclick=()=>$("templateMenu").classList.toggle("hidden");
-    $("chordInput").addEventListener("input",()=>$("chordPreview").textContent=$("chordInput").value||"Chord preview");
-    $("insertChordConfirm").onclick=insertChord; $("insertChordCancel").onclick=()=>$("chordModal").classList.add("hidden");
-    window.addEventListener("beforeunload",e=>{if(isDirty()){e.preventDefault();e.returnValue="";}});
-    renderTemplateMenu();
+  function sectionToolbar(index, section) {
+    const style = section.style || defaultStyle(section.type);
+    return `
+      <div class="rich-toolbar advanced-rich-toolbar">
+        <select class="toolbar-select" data-font="${index}" title="Font name">${renderFontOptions(style.fontFamily)}</select>
+        <select class="toolbar-select size-select" data-size="${index}" title="Font size">${renderSizeOptions(style.fontSize)}</select>
+        <button type="button" data-command="bold" title="Bold"><b>B</b></button>
+        <button type="button" data-command="italic" title="Italic"><i>I</i></button>
+        <button type="button" data-command="underline" title="Underline"><u>U</u></button>
+        <button type="button" data-colour="${index}" title="Text colour">🎨 TEXT COLOUR</button>
+        <label class="dash-colour-control" title="Colour every dash / hyphen character in this section">
+          DASHES
+          <select data-dash-colour="${index}">${renderDashColourOptions(style.dashColor)}</select>
+          <input type="color" data-dash-custom="${index}" value="${esc(style.dashColor || "#777777")}" title="Custom dash colour">
+        </label>
+        <button type="button" class="quick-green" data-quick-colour="#42f35c" title="Bold green">GREEN</button>
+        <button type="button" class="quick-yellow" data-quick-colour="#ffd400" title="Bold yellow">YELLOW</button>
+        <button type="button" class="quick-teal" data-quick-colour="#19e3c5" title="Bold teal">TEAL</button>
+        <button type="button" data-insert-chord="${index}">INSERT CHORD</button>
+        <button type="button" data-insert-tab="${index}">INSERT BLANK TAB</button>
+      </div>`;
   }
 
-  document.addEventListener("DOMContentLoaded",()=>{bindUi();loadSong().catch(async e=>{console.error(e);await confirmCustom("Load Error",e.message||"Could not load song.");});});
+  function render() {
+    const root = $("sectionEditorList");
+    root.innerHTML = "";
+
+    sections.forEach((section, index) => {
+      const s = normalizeSection(section);
+      sections[index] = s;
+      const card = document.createElement("article");
+      card.className = `creator-section-card type-${s.type} ${s.editorCollapsed ? "editor-collapsed" : ""}`;
+      card.draggable = true;
+      card.dataset.index = index;
+
+      if (s.type === "separator") {
+        card.innerHTML = `
+          <div class="creator-section-head">
+            <span class="drag" title="Drag section">☰</span>
+            <strong>SEPARATOR</strong>
+            <div class="creator-section-actions">
+              <button type="button" data-up="${index}">↑</button>
+              <button type="button" data-down="${index}">↓</button>
+              <button type="button" data-remove="${index}">×</button>
+            </div>
+          </div><hr>`;
+      } else {
+        const isTextNote = s.type === "performanceNote" || s.type === "hostNote";
+        card.innerHTML = `
+          <div class="creator-section-head">
+            <span class="drag" title="Drag section">☰</span>
+            <button class="editor-collapse-btn" type="button" data-editor-collapse="${index}" title="Collapse editor section">${s.editorCollapsed ? "▼" : "▲"}</button>
+            <input class="section-title-input" data-title="${index}" value="${esc(s.title)}" style="${s.style?.titleColor ? `color:${esc(s.style.titleColor)}` : ""}">
+            <label class="section-title-colour-control" title="Section title font colour">
+              TITLE
+              <select data-title-colour="${index}">${renderTitleColourOptions(s.style?.titleColor)}</select>
+              <input type="color" data-title-custom="${index}" value="${esc(s.style?.titleColor || "#ffffff")}" title="Custom title colour">
+            </label>
+            <span class="section-type-badge ${s.type === "hostNote" ? "host-note-badge" : ""}">${s.type === "tab" ? "TAB" : s.type === "performanceNote" ? "SINGER NOTE" : s.type === "hostNote" ? "HOST ONLY" : "LYRICS"}</span>
+            <label class="load-collapse-option"><input type="checkbox" data-load-collapsed="${index}" ${s.collapsed ? "checked" : ""}> Load collapsed</label>
+            <div class="creator-section-actions">
+              <button type="button" data-up="${index}">↑</button>
+              <button type="button" data-down="${index}">↓</button>
+              <button type="button" data-duplicate="${index}">⧉</button>
+              <button type="button" data-remove="${index}">×</button>
+            </div>
+          </div>
+          <div class="creator-section-body ${s.editorCollapsed ? "hidden" : ""}">
+            ${isTextNote ? "" : sectionToolbar(index, s)}
+            ${isTextNote
+              ? `<textarea class="${s.type === "hostNote" ? "host-note-editor" : "performance-note-editor"}" data-note="${index}">${esc(s.text)}</textarea>`
+              : `<div class="creator-rich-editor ${s.type === "tab" ? "tab-editor" : ""}" data-html="${index}" contenteditable="true" style="font-family:${esc(s.style.fontFamily)};font-size:${Number(s.style.fontSize) || 18}px;color:${esc(s.style.color)}">${s.html || ""}</div>`}
+          </div>`;
+      }
+      root.appendChild(card);
+    });
+
+    enableDrag();
+
+    // Preview each section's dash colour immediately in the creator.
+    requestAnimationFrame(refreshAllDashColours);
+  }
+
+  function syncSectionsFromDOM() {
+    document.querySelectorAll("[data-title]").forEach(el => {
+      const i = Number(el.dataset.title);
+      if (sections[i]) sections[i].title = el.value;
+    });
+    document.querySelectorAll("[data-note]").forEach(el => {
+      const i = Number(el.dataset.note);
+      if (sections[i]) sections[i].text = el.value;
+    });
+    document.querySelectorAll("[data-html]").forEach(el => {
+      const i = Number(el.dataset.html);
+      if (sections[i]) sections[i].html = el.innerHTML;
+    });
+    document.querySelectorAll("[data-load-collapsed]").forEach(el => {
+      const i = Number(el.dataset.loadCollapsed);
+      if (sections[i]) sections[i].collapsed = el.checked;
+    });
+
+    document.querySelectorAll("[data-dash-colour]").forEach(el => {
+      const i = Number(el.dataset.dashColour);
+      if (sections[i]) {
+        sections[i].style = { ...defaultStyle(sections[i].type), ...(sections[i].style || {}) };
+        sections[i].style.dashColor = el.value || "#777777";
+      }
+    });
+
+    document.querySelectorAll("[data-title-colour]").forEach(el => {
+      const i = Number(el.dataset.titleColour);
+      if (sections[i]) {
+        sections[i].style = { ...defaultStyle(sections[i].type), ...(sections[i].style || {}) };
+        sections[i].style.titleColor = el.value || "";
+      }
+    });
+  }
+
+  function showConfirm(title, message) {
+    $("confirmTitle").textContent = title;
+    $("confirmMessage").textContent = message;
+    $("confirmModal").classList.remove("hidden");
+    return new Promise(resolve => {
+      confirmResolver = resolve;
+    });
+  }
+
+  function closeConfirm(value) {
+    $("confirmModal").classList.add("hidden");
+    if (confirmResolver) confirmResolver(value);
+    confirmResolver = null;
+  }
+
+  async function leaveWithoutSaving() {
+    if (!dirty) {
+      history.back();
+      return;
+    }
+    const ok = await showConfirm("Discard Changes?", "Are you sure you want to cancel? All unsaved changes will be lost.");
+    if (ok) {
+      dirty = false;
+      history.back();
+    }
+  }
+
+  async function load() {
+    if (!firebaseId) {
+      sections = [makeSection("lyrics")];
+      updateEditingStatus();
+      render();
+      dirty = false;
+      return;
+    }
+
+    const doc = await db.collection("lyrics").doc(firebaseId).get();
+    if (!doc.exists) {
+      alert("Song not found");
+      return;
+    }
+
+    loadedSong = doc.data() || {};
+    sections = Array.isArray(loadedSong.sections)
+      ? loadedSong.sections.map(normalizeSection)
+      : [];
+
+    $("creatorHeading").textContent = "✎ EDIT LYRICS & CHORDS";
+    $("songTitleInput").value = loadedSong.title || "";
+    $("artistInput").value = loadedSong.artist || "";
+    $("userBpmInput").value = loadedSong.userBpm || "";
+    $("originalBpmInput").value = loadedSong.originalBpm || "";
+    $("keyInput").value = loadedSong.key || "";
+    $("capoInput").value = loadedSong.capo || "";
+    $("yearInput").value = loadedSong.year || "";
+    $("timeSignatureInput").value = loadedSong.timeSignature || "4/4";
+    $("youtubeInput").value = loadedSong.youtubeLink || "";
+    $("hostNoteInput").value = loadedSong.note || "";
+    $("publicVisibleInput").checked = loadedSong.publicSongListVisible === true;
+
+    updateEditingStatus();
+    render();
+    dirty = false;
+  }
+
+  async function save() {
+    syncSectionsFromDOM();
+    const title = $("songTitleInput").value.trim();
+    const artist = $("artistInput").value.trim();
+    if (!title || !artist) {
+      alert("Title and artist are required.");
+      return;
+    }
+
+    const id = firebaseId || `${title}${artist}`.toLowerCase().replace(/[^a-z0-9]/g, "");
+    const data = {
+      title,
+      artist,
+      userBpm: $("userBpmInput").value,
+      originalBpm: $("originalBpmInput").value,
+      key: $("keyInput").value.trim(),
+      capo: $("capoInput").value.trim(),
+      year: $("yearInput").value,
+      timeSignature: $("timeSignatureInput").value.trim() || "4/4",
+      youtubeLink: $("youtubeInput").value.trim(),
+      note: $("hostNoteInput").value,
+      sections: sections.map(normalizeSection),
+      publicSongListVisible: $("publicVisibleInput").checked,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    if (!firebaseId) data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+
+    $("saveSongBtn").disabled = true;
+    try {
+      await db.collection("lyrics").doc(id).set(data, { merge: false });
+      dirty = false;
+      location.href = `lyricview.html?id=${encodeURIComponent(id)}`;
+    } catch (error) {
+      console.error(error);
+      alert(`Could not save song: ${error.message}`);
+      $("saveSongBtn").disabled = false;
+    }
+  }
+
+  function enableDrag() {
+    let dragging = null;
+    document.querySelectorAll(".creator-section-card").forEach(card => {
+      card.addEventListener("dragstart", event => {
+        if (event.target.closest("input,textarea,button,select,[contenteditable='true']")) {
+          event.preventDefault();
+          return;
+        }
+        syncSectionsFromDOM();
+        dragging = card;
+        card.classList.add("dragging");
+      });
+      card.addEventListener("dragend", () => {
+        card.classList.remove("dragging");
+        if (!dragging) return;
+        const oldSections = [...sections];
+        sections = [...document.querySelectorAll(".creator-section-card")].map(node => oldSections[Number(node.dataset.index)]);
+        dragging = null;
+        markDirty();
+        render();
+      });
+      card.addEventListener("dragover", event => {
+        event.preventDefault();
+        if (!dragging || dragging === card) return;
+        const rect = card.getBoundingClientRect();
+        if (event.clientY > rect.top + rect.height / 2) card.after(dragging);
+        else card.before(dragging);
+      });
+    });
+  }
+
+  function moveSection(index, delta) {
+    syncSectionsFromDOM();
+    const target = index + delta;
+    if (target < 0 || target >= sections.length) return;
+    [sections[index], sections[target]] = [sections[target], sections[index]];
+    markDirty();
+    render();
+  }
+
+  function openChordModal(editor) {
+    captureSelection(editor);
+    $("chordInput").value = "G";
+    $("chordPreview").textContent = "G";
+    $("chordModal").classList.remove("hidden");
+    setTimeout(() => $("chordInput").select(), 30);
+  }
+
+  function openColourModal(editor) {
+    captureSelection(editor);
+    $("colourModal").classList.remove("hidden");
+  }
+
+  function renderModals() {
+    $("chordQuickGrid").innerHTML = ["C", "D", "E", "F", "G", "A", "B", "Am", "Em", "Dm", "G7", "Cmaj7", "F#m", "Bb"].map(chord => `<button type="button" data-chord-quick="${esc(chord)}">${esc(chord)}</button>`).join("");
+    $("colourPalette").innerHTML = COLOURS.map(([name, colour]) => `<button type="button" data-palette-colour="${colour}" title="${esc(name)}"><span style="background:${colour}"></span>${esc(name)}</button>`).join("");
+    $("templateGrid").innerHTML = TEMPLATES.map((template, index) => `<button type="button" data-template="${index}"><strong>${esc(template.label)}</strong><span>${esc(template.type)}</span></button>`).join("");
+  }
+
+  document.addEventListener("selectionchange", () => {
+    const selection = window.getSelection();
+    const node = selection?.anchorNode;
+    const editor = node && (node.nodeType === Node.TEXT_NODE ? node.parentElement : node)?.closest?.(".creator-rich-editor");
+    if (editor) captureSelection(editor);
+  });
+
+  document.addEventListener("input", event => {
+    if (event.target.matches("input, textarea, [contenteditable='true']")) markDirty();
+    if (event.target.id === "songTitleInput" || event.target.id === "artistInput") updateEditingStatus();
+    if (event.target.id === "chordInput") $("chordPreview").textContent = event.target.value || "—";
+    if (event.target.matches("[data-title],[data-note],[data-html],[data-load-collapsed]")) syncSectionsFromDOM();
+
+    // Colour inputs update live while the colour picker is dragged.
+    if (event.target.matches("[data-dash-custom],[data-title-custom]")) {
+      event.target.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+  });
+
+  document.addEventListener("change", event => {
+    const font = event.target.closest("[data-font]");
+    if (font) {
+      const index = Number(font.dataset.font);
+      const editor = document.querySelector(`[data-html="${index}"]`);
+      sections[index].style.fontFamily = font.value;
+      editor.style.fontFamily = font.value;
+      captureSelection(editor);
+      applyCommand("fontName", font.value);
+      markDirty();
+      return;
+    }
+
+    const size = event.target.closest("[data-size]");
+    if (size) {
+      const index = Number(size.dataset.size);
+      const editor = document.querySelector(`[data-html="${index}"]`);
+      sections[index].style.fontSize = Number(size.value);
+      editor.style.fontSize = `${size.value}px`;
+      captureSelection(editor);
+      markDirty();
+      return;
+    }
+
+    const dashColour = event.target.closest("[data-dash-colour]");
+    if (dashColour) {
+      const index = Number(dashColour.dataset.dashColour);
+      sections[index].style = { ...defaultStyle(sections[index].type), ...(sections[index].style || {}) };
+      sections[index].style.dashColor = dashColour.value || "#777777";
+
+      const custom = document.querySelector(`[data-dash-custom="${index}"]`);
+      if (custom) custom.value = sections[index].style.dashColor;
+
+      const editor = document.querySelector(`[data-html="${index}"]`);
+      applyDashColourToEditor(editor, sections[index].style.dashColor);
+      markDirty();
+      return;
+    }
+
+    const dashCustom = event.target.closest("[data-dash-custom]");
+    if (dashCustom) {
+      const index = Number(dashCustom.dataset.dashCustom);
+      sections[index].style = { ...defaultStyle(sections[index].type), ...(sections[index].style || {}) };
+      sections[index].style.dashColor = dashCustom.value || "#777777";
+
+      const select = document.querySelector(`[data-dash-colour="${index}"]`);
+      if (select) {
+        const matching = [...select.options].some(opt => opt.value.toLowerCase() === dashCustom.value.toLowerCase());
+        if (matching) select.value = dashCustom.value;
+      }
+
+      const editor = document.querySelector(`[data-html="${index}"]`);
+      applyDashColourToEditor(editor, sections[index].style.dashColor);
+      markDirty();
+      return;
+    }
+
+    const titleColour = event.target.closest("[data-title-colour]");
+    if (titleColour) {
+      const index = Number(titleColour.dataset.titleColour);
+      sections[index].style = { ...defaultStyle(sections[index].type), ...(sections[index].style || {}) };
+      sections[index].style.titleColor = titleColour.value || "";
+
+      const custom = document.querySelector(`[data-title-custom="${index}"]`);
+      if (custom && sections[index].style.titleColor) custom.value = sections[index].style.titleColor;
+
+      const titleInput = document.querySelector(`[data-title="${index}"]`);
+      if (titleInput) titleInput.style.color = sections[index].style.titleColor || "";
+
+      markDirty();
+      return;
+    }
+
+    const titleCustom = event.target.closest("[data-title-custom]");
+    if (titleCustom) {
+      const index = Number(titleCustom.dataset.titleCustom);
+      sections[index].style = { ...defaultStyle(sections[index].type), ...(sections[index].style || {}) };
+      sections[index].style.titleColor = titleCustom.value || "";
+
+      const select = document.querySelector(`[data-title-colour="${index}"]`);
+      if (select) {
+        const matching = [...select.options].some(opt => opt.value.toLowerCase() === titleCustom.value.toLowerCase());
+        if (matching) select.value = titleCustom.value;
+      }
+
+      const titleInput = document.querySelector(`[data-title="${index}"]`);
+      if (titleInput) titleInput.style.color = sections[index].style.titleColor || "";
+
+      markDirty();
+      return;
+    }
+
+    if (event.target.matches("[data-load-collapsed]")) {
+      syncSectionsFromDOM();
+      markDirty();
+    }
+  });
+
+  document.addEventListener("click", event => {
+    const remove = event.target.closest("[data-remove]");
+    if (remove) {
+      syncSectionsFromDOM();
+      sections.splice(Number(remove.dataset.remove), 1);
+      markDirty();
+      render();
+      return;
+    }
+
+    const duplicate = event.target.closest("[data-duplicate]");
+    if (duplicate) {
+      syncSectionsFromDOM();
+      const index = Number(duplicate.dataset.duplicate);
+      sections.splice(index + 1, 0, JSON.parse(JSON.stringify(sections[index])));
+      markDirty();
+      render();
+      return;
+    }
+
+    const up = event.target.closest("[data-up]");
+    if (up) return moveSection(Number(up.dataset.up), -1);
+    const down = event.target.closest("[data-down]");
+    if (down) return moveSection(Number(down.dataset.down), 1);
+
+    const collapse = event.target.closest("[data-editor-collapse]");
+    if (collapse) {
+      syncSectionsFromDOM();
+      const index = Number(collapse.dataset.editorCollapse);
+      sections[index].editorCollapsed = !sections[index].editorCollapsed;
+      render();
+      return;
+    }
+
+    const command = event.target.closest("[data-command]");
+    if (command) {
+      const editor = command.closest(".creator-section-body")?.querySelector(".creator-rich-editor");
+      captureSelection(editor);
+      applyCommand(command.dataset.command);
+      return;
+    }
+
+    const quickColour = event.target.closest("[data-quick-colour]");
+    if (quickColour) {
+      const editor = quickColour.closest(".creator-section-body")?.querySelector(".creator-rich-editor");
+      captureSelection(editor);
+      applyQuickColour(quickColour.dataset.quickColour);
+      return;
+    }
+
+    const colour = event.target.closest("[data-colour]");
+    if (colour) {
+      const editor = colour.closest(".creator-section-body")?.querySelector(".creator-rich-editor");
+      openColourModal(editor);
+      return;
+    }
+
+    const chord = event.target.closest("[data-insert-chord]");
+    if (chord) {
+      const editor = chord.closest(".creator-section-body")?.querySelector(".creator-rich-editor");
+      openChordModal(editor);
+      return;
+    }
+
+    const tab = event.target.closest("[data-insert-tab]");
+    if (tab) {
+      const editor = tab.closest(".creator-section-body")?.querySelector(".creator-rich-editor");
+      captureSelection(editor);
+      insertHTMLAtSelection(blankTabHTML());
+      return;
+    }
+
+    const quickChord = event.target.closest("[data-chord-quick]");
+    if (quickChord) {
+      $("chordInput").value = quickChord.dataset.chordQuick;
+      $("chordPreview").textContent = quickChord.dataset.chordQuick;
+      return;
+    }
+
+    const palette = event.target.closest("[data-palette-colour]");
+    if (palette) {
+      $("colourModal").classList.add("hidden");
+      applyCommand("foreColor", palette.dataset.paletteColour);
+      return;
+    }
+
+    const template = event.target.closest("[data-template]");
+    if (template) {
+      syncSectionsFromDOM();
+      const item = TEMPLATES[Number(template.dataset.template)];
+      sections.push(makeSection(item.type, item));
+      $("templatesModal").classList.add("hidden");
+      markDirty();
+      render();
+    }
+  });
+
+  $("addLyricsSectionBtn").onclick = () => { syncSectionsFromDOM(); sections.push(makeSection("lyrics")); markDirty(); render(); };
+  $("addTabSectionBtn").onclick = () => { syncSectionsFromDOM(); sections.push(makeSection("tab")); markDirty(); render(); };
+  $("addPerformanceNoteBtn").onclick = () => { syncSectionsFromDOM(); sections.push(makeSection("performanceNote")); markDirty(); render(); };
+  $("addHostNoteBtn").onclick = () => { syncSectionsFromDOM(); sections.push(makeSection("hostNote")); markDirty(); render(); };
+  $("addSeparatorBtn").onclick = () => { syncSectionsFromDOM(); sections.push(makeSection("separator")); markDirty(); render(); };
+  $("openTemplatesBtn").onclick = () => $("templatesModal").classList.remove("hidden");
+
+  $("saveSongBtn").onclick = save;
+  $("saveMenuBtn").onclick = () => {
+    const menu = $("saveDropdown");
+    menu.classList.toggle("hidden");
+    $("saveMenuBtn").setAttribute("aria-expanded", menu.classList.contains("hidden") ? "false" : "true");
+  };
+  $("cancelChangesBtn").onclick = leaveWithoutSaving;
+  $("backToViewerBtn").onclick = leaveWithoutSaving;
+
+  $("confirmOkBtn").onclick = () => closeConfirm(true);
+  $("confirmCancelBtn").onclick = () => closeConfirm(false);
+  $("insertChordCancelBtn").onclick = () => $("chordModal").classList.add("hidden");
+  $("insertChordConfirmBtn").onclick = () => {
+    const chord = $("chordInput").value.trim();
+    if (!chord) return;
+    $("chordModal").classList.add("hidden");
+    insertHTMLAtSelection(`<strong class="inserted-chord">${esc(chord)}</strong>`);
+  };
+  $("colourCancelBtn").onclick = () => $("colourModal").classList.add("hidden");
+  $("templatesCancelBtn").onclick = () => $("templatesModal").classList.add("hidden");
+
+  document.addEventListener("click", event => {
+    if (!event.target.closest(".save-split-wrap")) $("saveDropdown").classList.add("hidden");
+  });
+
+  window.addEventListener("beforeunload", event => {
+    if (!dirty) return;
+    event.preventDefault();
+    event.returnValue = "";
+  });
+
+  renderModals();
+  load().catch(error => {
+    console.error(error);
+    alert(`Could not load song: ${error.message}`);
+  });
 })();
