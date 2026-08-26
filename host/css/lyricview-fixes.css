@@ -1204,3 +1204,59 @@ body.host-lyric-view-page {
 .performance-quick-edit-cell {
   justify-content: center !important;
 }
+
+
+/* =========================================================
+   CURRENT LYRIC VIEW REFINEMENTS
+   ========================================================= */
+.performance-quick-meta #quickCapo,
+.song-info-drawer #infoCapo {
+  color: #ffffff !important;
+}
+
+.performance-quick-meta #quickTime,
+.song-info-drawer #infoTime {
+  font-size: 24px !important;
+  color: #b9b9b9 !important;
+}
+
+.performance-quick-edit-cell {
+  padding: 0 !important;
+  display: flex !important;
+  align-items: stretch !important;
+}
+
+.performance-quick-edit-cell #quickEditSongBtn {
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 58px !important;
+  margin: 0 !important;
+}
+
+.host-nav-btn.nav-up,
+.host-nav-btn.nav-down {
+  background: rgba(245,245,245,.18) !important;
+  border-color: rgba(255,255,255,.58) !important;
+  box-shadow: 0 0 15px rgba(80,235,112,.24), inset 0 0 16px rgba(255,255,255,.035) !important;
+}
+
+.host-nav-btn.nav-up .host-nav-icon,
+.host-nav-btn.nav-down .host-nav-icon {
+  filter: brightness(1.2) !important;
+}
+
+
+/* Inline links inserted from Lyrics Creator */
+.host-section-body .lyrics-song-link {
+  color: #66b8ff !important;
+  text-decoration: underline !important;
+  text-decoration-thickness: 2px !important;
+  text-underline-offset: 4px !important;
+  font-weight: 850 !important;
+  cursor: pointer !important;
+}
+
+.host-section-body .lyrics-song-link:hover {
+  color: #9fd4ff !important;
+  text-shadow: 0 0 10px rgba(70, 165, 255, .22);
+}
