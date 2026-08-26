@@ -617,3 +617,198 @@ body.host-lyric-view-page {
     justify-self: center !important;
   }
 }
+
+
+/* =========================================================
+   TIGHT LAYOUT + KARAOKE TOOL REARRANGEMENT — 2026-08-26
+   ========================================================= */
+
+/* Remove the accidental double vertical offset.
+   The fixed sticky stack needs ONE body offset, not padding on html + body. */
+html {
+  padding-top: 0 !important;
+}
+
+body.host-lyric-view-page {
+  padding-top: var(--lv-stack-h) !important;
+}
+
+/* The main stage itself should begin immediately after the fixed two-row
+   header stack. No extra blank performance-space before the quick details. */
+.host-lyric-view-page .host-lyrics-stage {
+  padding-top: 8px !important;
+  margin-top: 0 !important;
+}
+
+#performanceQuickInfo.performance-quick-info {
+  margin-top: 0 !important;
+}
+
+/* QUICK META: Key / Time / Tempo / Original / Capo / Edit all in one row. */
+.performance-quick-info {
+  grid-template-columns: 1fr !important;
+  gap: 8px !important;
+}
+
+.performance-quick-meta {
+  grid-template-columns:
+    minmax(70px, .75fr)
+    minmax(70px, .75fr)
+    minmax(110px, 1fr)
+    minmax(110px, 1fr)
+    minmax(70px, .7fr)
+    minmax(118px, .9fr) !important;
+}
+
+.performance-quick-edit-cell {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  gap: 4px !important;
+}
+
+.performance-quick-edit-cell #quickEditSongBtn {
+  min-height: 31px !important;
+  width: 100% !important;
+  border: 1px solid #2fa844 !important;
+  border-radius: 6px !important;
+  background: #0d190f !important;
+  color: #62ee73 !important;
+  font-size: 10px !important;
+  font-weight: 900 !important;
+  cursor: pointer !important;
+}
+
+/* KARAOKE TOOLS:
+   left = SEND TO KARAOKE
+   right = SLAVE LYRICS dropdown + SEND LYRICS */
+.performance-quick-karaoke {
+  grid-template-columns: minmax(260px, 1.05fr) minmax(300px, .95fr) !important;
+  grid-template-rows: auto auto !important;
+  column-gap: 12px !important;
+  row-gap: 6px !important;
+  padding: 8px 10px !important;
+}
+
+.performance-quick-label {
+  grid-column: 1 / -1 !important;
+}
+
+.performance-quick-primary {
+  grid-column: 1 !important;
+  min-width: 0 !important;
+}
+
+.performance-quick-primary .quick-split-action {
+  width: 100% !important;
+  margin: 0 !important;
+}
+
+.performance-quick-primary #quickSendToKaraokeBtn {
+  width: 100% !important;
+  min-height: 36px !important;
+}
+
+.performance-quick-slave {
+  grid-column: 2 !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  gap: 7px !important;
+  min-width: 0 !important;
+}
+
+.performance-quick-slave select,
+.performance-quick-slave button {
+  min-height: 36px !important;
+}
+
+/* Sidebar EDIT SONG goes above Key/Time as requested. */
+.drawer-top-edit-btn {
+  width: 100% !important;
+  min-height: 40px !important;
+  margin: 0 0 10px !important;
+  border: 1px solid #2fa844 !important;
+  border-radius: 7px !important;
+  background: #0d190f !important;
+  color: #62ee73 !important;
+  font-weight: 900 !important;
+  cursor: pointer !important;
+}
+
+/* Bottom dock: make the section guide narrower and preserve more guaranteed
+   width for transport controls. */
+.host-bottom-dock {
+  grid-template-columns: minmax(380px, 500px) minmax(0, 430px) !important;
+  justify-content: space-between !important;
+}
+
+#sectionProgress.host-section-progress {
+  width: min(100%, 430px) !important;
+  max-width: 430px !important;
+  justify-self: end !important;
+}
+
+/* Smaller autoscroll -/+ buttons. */
+.host-scroll-player #scrollSpeedDown,
+.host-scroll-player #scrollSpeedUp {
+  min-width: 42px !important;
+  width: 42px !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  font-size: 18px !important;
+}
+
+.host-scroll-player #scrollSpeedLabel {
+  min-width: 62px !important;
+}
+
+/* Tablet */
+@media (max-width: 1100px) {
+  .performance-quick-meta {
+    grid-template-columns:
+      minmax(60px, .7fr)
+      minmax(60px, .7fr)
+      minmax(95px, 1fr)
+      minmax(95px, 1fr)
+      minmax(58px, .65fr)
+      minmax(105px, .9fr) !important;
+  }
+
+  .performance-quick-karaoke {
+    grid-template-columns: minmax(240px, 1fr) minmax(290px, 1fr) !important;
+  }
+
+  .host-bottom-dock {
+    grid-template-columns: minmax(360px, 48%) minmax(0, 400px) !important;
+  }
+
+  #sectionProgress.host-section-progress {
+    width: min(100%, 400px) !important;
+    max-width: 400px !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .performance-quick-meta {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  .performance-quick-karaoke {
+    grid-template-columns: 1fr !important;
+  }
+
+  .performance-quick-primary,
+  .performance-quick-slave {
+    grid-column: 1 !important;
+  }
+
+  .host-bottom-dock {
+    grid-template-columns: 1fr !important;
+  }
+
+  #sectionProgress.host-section-progress {
+    width: calc(100% - 34px) !important;
+    max-width: none !important;
+    justify-self: center !important;
+  }
+}
