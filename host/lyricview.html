@@ -26,6 +26,45 @@
   <!-- END FIXED TWO-ROW HEADER STACK -->
 
   <main id="hostLyricsStage" class="host-lyrics-stage">
+
+    <!-- PERFORMANCE QUICK INFO
+         Copy of the most useful SONG INFO details/tools.
+         The original SONG INFO sidebar remains unchanged. -->
+    <section id="performanceQuickInfo" class="performance-quick-info" aria-label="Performance quick song information">
+      <div class="performance-quick-meta">
+        <div><small>KEY</small><strong id="quickKey">–</strong></div>
+        <div><small>TIME</small><strong id="quickTime">–</strong></div>
+        <div><small>TEMPO</small><strong id="quickTempo">–</strong></div>
+        <div><small>ORIGINAL BPM</small><strong id="quickOriginalBpm">–</strong></div>
+        <div><small>CAPO</small><strong id="quickCapo">–</strong></div>
+      </div>
+
+      <div class="performance-quick-karaoke">
+        <span class="performance-quick-label">KARAOKE TOOLS</span>
+
+        <div class="performance-quick-actions">
+          <div class="split-action quick-split-action">
+            <button id="quickSendToKaraokeBtn" type="button">▶ SEND TO KARAOKE</button>
+            <button id="quickKaraokeMenuBtn" type="button" aria-label="Karaoke menu">▼</button>
+
+            <div id="quickKaraokeMenu" class="mini-menu hidden">
+              <button id="quickResetKaraokeBtn" type="button">RESET KARAOKE</button>
+            </div>
+          </div>
+
+          <button id="quickEditSongBtn" type="button">✎ EDIT SONG</button>
+        </div>
+
+        <div class="performance-quick-slave">
+          <select id="quickSlaveLyricsSelect" aria-label="Choose slave lyrics">
+            <option value="">Choose lyrics to send…</option>
+          </select>
+          <button id="quickSendSlaveLyricsBtn" type="button">▶ SEND LYRICS</button>
+        </div>
+      </div>
+    </section>
+    <!-- END PERFORMANCE QUICK INFO -->
+
     <div id="lyricsContent" class="host-lyrics-content"></div>
     <div id="endMarker" class="host-end-marker">[ END ]</div>
   </main>
