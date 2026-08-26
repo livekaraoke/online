@@ -11,6 +11,10 @@
   let savedRange = null;
   let confirmResolver = null;
 
+  // Setlist membership for the song currently being edited.
+  let availableSetlists = [];
+  let selectedSetlistIds = new Set();
+
   const FONTS = ["Verdana", "Arial", "Tahoma", "Trebuchet MS", "Georgia", "Times New Roman", "Courier New", "Consolas"];
   const FONT_SIZES = ["12", "14", "16", "18", "20", "24", "28", "32", "40", "48"];
   const COLOURS = [
@@ -260,17 +264,21 @@
         <button type="button" data-command="bold" title="Bold"><b>B</b></button>
         <button type="button" data-command="italic" title="Italic"><i>I</i></button>
         <button type="button" data-command="underline" title="Underline"><u>U</u></button>
-        <button type="button" data-colour="${index}" title="Text colour">🎨 TEXT COLOUR</button>
+        <label class="text-colour-control" title="Apply a colour to the selected text">
+          <span class="text-colour-icon">🎨</span>
+          <input type="color" data-text-colour="${index}" value="${esc(style.color || "#ffffff")}" aria-label="Selected text colour">
+        </label>
         <label class="dash-colour-control" title="Colour every dash / hyphen character in this section">
           DASHES
           <select data-dash-colour="${index}">${renderDashColourOptions(style.dashColor)}</select>
           <input type="color" data-dash-custom="${index}" value="${esc(style.dashColor || "#777777")}" title="Custom dash colour">
         </label>
-        <button type="button" class="quick-green" data-quick-colour="#42f35c" title="Bold green">GREEN</button>
-        <button type="button" class="quick-yellow" data-quick-colour="#ffd400" title="Bold yellow">YELLOW</button>
-        <button type="button" class="quick-teal" data-quick-colour="#19e3c5" title="Bold teal">TEAL</button>
-        <button type="button" data-insert-chord="${index}">INSERT CHORD</button>
-        <button type="button" data-insert-tab="${index}">INSERT BLANK TAB</button>
+        <button type="button" class="beat-colour beat-1" data-quick-colour="#42f35c" title="Bold green timing marker">BEAT 1</button>
+        <button type="button" class="beat-colour beat-2" data-quick-colour="#19e3c5" title="Bold teal timing marker">BEAT 2</button>
+        <button type="button" class="beat-colour beat-3" data-quick-colour="#ffd400" title="Bold yellow timing marker">BEAT 3</button>
+        <button type="button" class="beat-colour beat-4" data-quick-colour="#ffb45c" title="Bold light-orange timing marker">BEAT 4</button>
+        <button type="button" data-insert-chord="${index}">＋ CHORD</button>
+        <button type="button" data-insert-tab="${index}">＋ BLANK TAB</button>
       </div>`;
   }
 
@@ -283,13 +291,11 @@
       sections[index] = s;
       const card = document.createElement("article");
       card.className = `creator-section-card type-${s.type} ${s.editorCollapsed ? "editor-collapsed" : ""}`;
-      card.draggable = true;
       card.dataset.index = index;
 
       if (s.type === "separator") {
         card.innerHTML = `
           <div class="creator-section-head">
-            <span class="drag" title="Drag section">☰</span>
             <strong>SEPARATOR</strong>
             <div class="creator-section-actions">
               <button type="button" data-up="${index}">↑</button>
@@ -301,7 +307,6 @@
         const isTextNote = s.type === "performanceNote" || s.type === "hostNote";
         card.innerHTML = `
           <div class="creator-section-head">
-            <span class="drag" title="Drag section">☰</span>
             <button class="editor-collapse-btn" type="button" data-editor-collapse="${index}" title="Collapse editor section">${s.editorCollapsed ? "▼" : "▲"}</button>
             <input class="section-title-input" data-title="${index}" value="${esc(s.title)}" style="${s.style?.titleColor ? `color:${esc(s.style.titleColor)}` : ""}">
             <label class="section-title-colour-control" title="Section title font colour">
@@ -327,8 +332,6 @@
       }
       root.appendChild(card);
     });
-
-    enableDrag();
 
     // Preview each section's dash colour immediately in the creator.
     requestAnimationFrame(refreshAllDashColours);
@@ -396,6 +399,106 @@
     }
   }
 
+
+  function renderSetlistMembership() {
+    const list = $("setlistMembershipList");
+    const summary = $("setlistMembershipSummary");
+    if (!list || !summary) return;
+
+    if (!availableSetlists.length) {
+      list.innerHTML = `<span class="setlist-membership-empty">No setlists found.</span>`;
+      summary.textContent = "Not in any setlist";
+      return;
+    }
+
+    const selectedCount = availableSetlists.filter(item => selectedSetlistIds.has(item.id)).length;
+    summary.textContent = selectedCount
+      ? `${selectedCount} setlist${selectedCount === 1 ? "" : "s"} selected`
+      : "Not in any setlist";
+
+    list.innerHTML = availableSetlists.map(setlist => {
+      const checked = selectedSetlistIds.has(setlist.id);
+      const songCount = Array.isArray(setlist.songIds) ? setlist.songIds.length : 0;
+      return `
+        <label class="creator-setlist-chip ${checked ? "selected" : ""}">
+          <input type="checkbox" data-setlist-membership="${esc(setlist.id)}" ${checked ? "checked" : ""}>
+          <span>
+            <strong>${esc(setlist.name || "Untitled Setlist")}</strong>
+            <small>${songCount} song${songCount === 1 ? "" : "s"}</small>
+          </span>
+        </label>
+      `;
+    }).join("");
+  }
+
+  async function loadSetlistMembership(songId = firebaseId) {
+    const list = $("setlistMembershipList");
+    const summary = $("setlistMembershipSummary");
+    if (list) list.innerHTML = `<span class="setlist-membership-empty">Loading...</span>`;
+    if (summary) summary.textContent = "Loading setlists...";
+
+    try {
+      const snap = await db.collection("lyricsSetlists").get();
+      availableSetlists = snap.docs.map(doc => {
+        const data = doc.data() || {};
+        return {
+          id: doc.id,
+          name: data.name || "Untitled Setlist",
+          songIds: Array.isArray(data.songIds) ? data.songIds : []
+        };
+      }).sort((a, b) =>
+        String(a.name).localeCompare(String(b.name), undefined, { sensitivity: "base" })
+      );
+
+      selectedSetlistIds = new Set(
+        songId
+          ? availableSetlists.filter(item => item.songIds.includes(songId)).map(item => item.id)
+          : []
+      );
+
+      renderSetlistMembership();
+    } catch (error) {
+      console.error("Could not load setlists:", error);
+      availableSetlists = [];
+      selectedSetlistIds = new Set();
+      if (list) list.innerHTML =
+        `<span class="setlist-membership-empty error">Could not load setlists.</span>`;
+      if (summary) summary.textContent = "Setlists unavailable";
+    }
+  }
+
+  async function saveSetlistMembership(songId) {
+    if (!availableSetlists.length) return;
+
+    // lyricsSetlists writes use the existing Firebase Admin authentication
+    // session. No second login is shown on this page.
+    if (window.auth && !auth.currentUser) {
+      console.warn("Song saved, but setlist membership was not changed because no Firebase Admin session is active.");
+      return;
+    }
+
+    const operations = [];
+
+    availableSetlists.forEach(setlist => {
+      const currentlyContains = setlist.songIds.includes(songId);
+      const shouldContain = selectedSetlistIds.has(setlist.id);
+
+      if (currentlyContains === shouldContain) return;
+
+      const ref = db.collection("lyricsSetlists").doc(setlist.id);
+      operations.push(
+        ref.set({
+          songIds: shouldContain
+            ? firebase.firestore.FieldValue.arrayUnion(songId)
+            : firebase.firestore.FieldValue.arrayRemove(songId),
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true })
+      );
+    });
+
+    await Promise.all(operations);
+  }
+
   async function load() {
     if (!firebaseId) {
       sections = [makeSection("lyrics")];
@@ -427,7 +530,7 @@
     $("timeSignatureInput").value = loadedSong.timeSignature || "4/4";
     $("youtubeInput").value = loadedSong.youtubeLink || "";
     $("hostNoteInput").value = loadedSong.note || "";
-    $("publicVisibleInput").checked = loadedSong.publicSongListVisible === true;
+    await loadSetlistMembership(firebaseId);
 
     updateEditingStatus();
     render();
@@ -456,7 +559,9 @@
       youtubeLink: $("youtubeInput").value.trim(),
       note: $("hostNoteInput").value,
       sections: sections.map(normalizeSection),
-      publicSongListVisible: $("publicVisibleInput").checked,
+      // Public Song List visibility is managed elsewhere.
+      // Preserve existing value; new songs stay hidden by default.
+      publicSongListVisible: firebaseId ? loadedSong?.publicSongListVisible === true : false,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     };
     if (!firebaseId) data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
@@ -464,6 +569,17 @@
     $("saveSongBtn").disabled = true;
     try {
       await db.collection("lyrics").doc(id).set(data, { merge: false });
+
+      try {
+        await saveSetlistMembership(id);
+      } catch (setlistError) {
+        console.error("Song saved but setlist membership update failed:", setlistError);
+        await showConfirm(
+          "Song Saved",
+          "The song was saved, but one or more setlist changes could not be saved. Check your Firebase Admin login and lyricsSetlists permissions."
+        );
+      }
+
       dirty = false;
       location.href = `lyricview.html?id=${encodeURIComponent(id)}`;
     } catch (error) {
@@ -471,37 +587,6 @@
       alert(`Could not save song: ${error.message}`);
       $("saveSongBtn").disabled = false;
     }
-  }
-
-  function enableDrag() {
-    let dragging = null;
-    document.querySelectorAll(".creator-section-card").forEach(card => {
-      card.addEventListener("dragstart", event => {
-        if (event.target.closest("input,textarea,button,select,[contenteditable='true']")) {
-          event.preventDefault();
-          return;
-        }
-        syncSectionsFromDOM();
-        dragging = card;
-        card.classList.add("dragging");
-      });
-      card.addEventListener("dragend", () => {
-        card.classList.remove("dragging");
-        if (!dragging) return;
-        const oldSections = [...sections];
-        sections = [...document.querySelectorAll(".creator-section-card")].map(node => oldSections[Number(node.dataset.index)]);
-        dragging = null;
-        markDirty();
-        render();
-      });
-      card.addEventListener("dragover", event => {
-        event.preventDefault();
-        if (!dragging || dragging === card) return;
-        const rect = card.getBoundingClientRect();
-        if (event.clientY > rect.top + rect.height / 2) card.after(dragging);
-        else card.before(dragging);
-      });
-    });
   }
 
   function moveSection(index, delta) {
@@ -575,6 +660,20 @@
       return;
     }
 
+    const textColour = event.target.closest("[data-text-colour]");
+    if (textColour) {
+      const index = Number(textColour.dataset.textColour);
+      const editor = textColour.closest(".creator-section-body")?.querySelector(".creator-rich-editor");
+      if (editor) {
+        captureSelection(editor);
+        applyCommand("foreColor", textColour.value);
+        sections[index].style = { ...defaultStyle(sections[index].type), ...(sections[index].style || {}) };
+        sections[index].style.color = textColour.value;
+      }
+      markDirty();
+      return;
+    }
+
     const dashColour = event.target.closest("[data-dash-colour]");
     if (dashColour) {
       const index = Number(dashColour.dataset.dashColour);
@@ -643,17 +742,40 @@
       return;
     }
 
+    const setlistMembership = event.target.closest("[data-setlist-membership]");
+    if (setlistMembership) {
+      const id = setlistMembership.dataset.setlistMembership;
+      if (setlistMembership.checked) selectedSetlistIds.add(id);
+      else selectedSetlistIds.delete(id);
+      renderSetlistMembership();
+      markDirty();
+      return;
+    }
+
     if (event.target.matches("[data-load-collapsed]")) {
       syncSectionsFromDOM();
       markDirty();
     }
   });
 
-  document.addEventListener("click", event => {
+  document.addEventListener("click", async event => {
     const remove = event.target.closest("[data-remove]");
     if (remove) {
+      const index = Number(remove.dataset.remove);
+      const section = sections[index];
+      const title = section?.type === "separator"
+        ? "separator"
+        : `"${section?.title || "this section"}"`;
+
+      const ok = await showConfirm(
+        "Delete Section?",
+        `Are you sure you want to permanently remove ${title} from this song?`
+      );
+
+      if (!ok) return;
+
       syncSectionsFromDOM();
-      sections.splice(Number(remove.dataset.remove), 1);
+      sections.splice(index, 1);
       markDirty();
       render();
       return;
@@ -752,6 +874,7 @@
   $("addHostNoteBtn").onclick = () => { syncSectionsFromDOM(); sections.push(makeSection("hostNote")); markDirty(); render(); };
   $("addSeparatorBtn").onclick = () => { syncSectionsFromDOM(); sections.push(makeSection("separator")); markDirty(); render(); };
   $("openTemplatesBtn").onclick = () => $("templatesModal").classList.remove("hidden");
+  $("refreshSetlistsBtn").onclick = () => loadSetlistMembership(firebaseId);
 
   $("saveSongBtn").onclick = save;
   $("saveMenuBtn").onclick = () => {
