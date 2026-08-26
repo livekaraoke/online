@@ -588,8 +588,38 @@
     return "";
   }
 
+  function getSongDataArray() {
+    // song-data.js may declare either:
+    //   window.songs = [...]
+    // OR:
+    //   const songs = [...]
+    //
+    // A top-level "const songs" from a classic <script> is available to
+    // later classic scripts, but it is NOT exposed as window.songs.
+    if (Array.isArray(window.songs)) {
+      return window.songs;
+    }
+
+    try {
+      if (typeof songs !== "undefined" && Array.isArray(songs)) {
+        return songs;
+      }
+    } catch (_) {
+      // Ignore lexical-global lookup errors.
+    }
+
+    // Support a few other common legacy names without changing song-data.js.
+    for (const key of ["songData", "karaokeSongs", "songList"]) {
+      if (Array.isArray(window[key])) {
+        return window[key];
+      }
+    }
+
+    return [];
+  }
+
   function getSlaveLyricsEntriesFromSongData() {
-    const source = Array.isArray(window.songs) ? window.songs : [];
+    const source = getSongDataArray();
 
     const entries = [];
     const seen = new Set();
@@ -680,16 +710,19 @@
     });
 
     // song-data.js is loaded by lyricview.html BEFORE lyricview.js.
-    // Do not dynamically guess paths here; use the original working source.
-    if (!Array.isArray(window.songs) || !window.songs.length) {
+    // It may expose the array as window.songs OR declare `const songs = [...]`.
+    // Both formats are supported here.
+    const songDataArray = getSongDataArray();
+
+    if (!songDataArray.length) {
       console.error(
-        "song-data.js did not expose window.songs. Expected HTML source: ../adm/files/song-data.js"
+        "song-data.js loaded, but no song array was found. Supported names: window.songs, const songs, window.songData, window.karaokeSongs, window.songList."
       );
 
       selects.forEach(select => {
         select.disabled = false;
         select.innerHTML =
-          `<option value="">Could not load song-data.js</option>`;
+          `<option value="">Could not read songs from song-data.js</option>`;
       });
       return;
     }
@@ -698,8 +731,8 @@
 
     if (!entries.length) {
       console.error(
-        "window.songs loaded, but no lyric IDs could be extracted from its URLs.",
-        window.songs
+        "song-data.js loaded, but no lyric IDs could be extracted from its URLs.",
+        songDataArray
       );
 
       selects.forEach(select => {
