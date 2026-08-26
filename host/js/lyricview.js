@@ -499,59 +499,314 @@
     $("karaokeMenu").classList.add("hidden");
   }
 
+  /************************************************************
+   * LEGACY / SLAVE LYRICS FILE LIST
+   *
+   * Source folder relative to lyricview.html:
+   *   lyrics/lyrics-data/
+   *
+   * On GitHub Pages the browser cannot request a normal directory listing,
+   * so this reads the repository folder through GitHub's public Contents API.
+   *
+   * Example file:
+   *   lyrics/lyrics-data/allthesmallthings.js
+   *
+   * Dropdown value:
+   *   allthesmallthings
+   ************************************************************/
+
+  function legacyLyricsBaseName(fileName) {
+    return String(fileName || "")
+      .replace(/\.js$/i, "")
+      .trim();
+  }
+
+  function normaliseLegacySongName(value) {
+    return String(value || "")
+      .toLowerCase()
+      .replace(/\.js$/i, "")
+      .replace(/[^a-z0-9]/g, "");
+  }
+
+  function getGitHubLyricsDirectoryInfo() {
+    const host = String(window.location.hostname || "").toLowerCase();
+
+    // GitHub Pages project site:
+    // https://OWNER.github.io/REPOSITORY/adm/host/lyricview.html
+    if (!host.endsWith(".github.io")) return null;
+
+    const owner = host.replace(/\.github\.io$/, "");
+    const parts = window.location.pathname
+      .split("/")
+      .filter(Boolean)
+      .map(part => decodeURIComponent(part));
+
+    if (!parts.length) return null;
+
+    // For an OWNER.github.io site there may be no repository prefix.
+    // For a project page the first URL segment is the repository.
+    const isUserSite =
+      parts.length &&
+      parts[0].toLowerCase() === `${owner}.github.io`.toLowerCase();
+
+    const repo = isUserSite ? `${owner}.github.io` : parts[0];
+
+    // Current page directory inside the repository.
+    const pathParts = isUserSite ? parts.slice(0, -1) : parts.slice(1, -1);
+    const currentDirectory = pathParts.join("/");
+
+    const lyricsDirectory =
+      [currentDirectory, "lyrics/lyrics-data"]
+        .filter(Boolean)
+        .join("/");
+
+    return {
+      owner,
+      repo,
+      lyricsDirectory
+    };
+  }
+
+  async function fetchLegacyLyricsFilesFromGitHub() {
+    const info = getGitHubLyricsDirectoryInfo();
+    if (!info) return [];
+
+    const apiUrl =
+      `https://api.github.com/repos/${encodeURIComponent(info.owner)}/` +
+      `${encodeURIComponent(info.repo)}/contents/` +
+      info.lyricsDirectory
+        .split("/")
+        .map(encodeURIComponent)
+        .join("/");
+
+    const response = await fetch(apiUrl, {
+      headers: {
+        "Accept": "application/vnd.github+json"
+      },
+      cache: "no-store"
+    });
+
+    if (!response.ok) {
+      throw new Error(
+        `GitHub lyrics directory request failed: ${response.status}`
+      );
+    }
+
+    const data = await response.json();
+
+    if (!Array.isArray(data)) return [];
+
+    return data
+      .filter(item =>
+        item &&
+        item.type === "file" &&
+        /\.js$/i.test(item.name || "")
+      )
+      .map(item => ({
+        fileName: item.name,
+        id: legacyLyricsBaseName(item.name),
+        path: item.path || "",
+        downloadUrl: item.download_url || ""
+      }))
+      .sort((a, b) =>
+        a.fileName.localeCompare(
+          b.fileName,
+          undefined,
+          { sensitivity: "base" }
+        )
+      );
+  }
+
+  async function fetchLegacyLyricsFilesFromManifest() {
+    // Optional fallback for non-GitHub hosting.
+    //
+    // If you ever move away from GitHub Pages, create:
+    // lyrics/lyrics-data/lyrics-data-index.json
+    //
+    // Example:
+    // ["allthesmallthings.js", "angels.js", "basketcase.js"]
+    try {
+      const response = await fetch(
+        "lyrics/lyrics-data/lyrics-data-index.json",
+        { cache: "no-store" }
+      );
+
+      if (!response.ok) return [];
+
+      const data = await response.json();
+      const names = Array.isArray(data)
+        ? data
+        : Array.isArray(data?.files)
+          ? data.files
+          : [];
+
+      return names
+        .map(item =>
+          typeof item === "string"
+            ? item
+            : item?.name || item?.fileName || ""
+        )
+        .filter(name => /\.js$/i.test(name))
+        .map(name => ({
+          fileName: name,
+          id: legacyLyricsBaseName(name),
+          path: `lyrics/lyrics-data/${name}`,
+          downloadUrl: ""
+        }))
+        .sort((a, b) =>
+          a.fileName.localeCompare(
+            b.fileName,
+            undefined,
+            { sensitivity: "base" }
+          )
+        );
+    } catch {
+      return [];
+    }
+  }
+
+  async function getLegacyLyricsFiles() {
+    // GitHub API is the primary source because GitHub Pages itself does not
+    // expose a browsable directory index.
+    try {
+      const githubFiles = await fetchLegacyLyricsFilesFromGitHub();
+      if (githubFiles.length) return githubFiles;
+    } catch (error) {
+      console.warn("GitHub lyrics-data folder lookup failed:", error);
+    }
+
+    // Optional static manifest fallback.
+    const manifestFiles = await fetchLegacyLyricsFilesFromManifest();
+    if (manifestFiles.length) return manifestFiles;
+
+    return [];
+  }
+
+  function findCurrentLegacyLyricsId(files) {
+    if (!Array.isArray(files) || !files.length) return "";
+
+    const candidates = [
+      currentSong?.karaokeLyrics,
+      currentSongId,
+      currentSong?.title,
+      `${currentSong?.title || ""}${currentSong?.artist || ""}`
+    ]
+      .filter(Boolean)
+      .map(normaliseLegacySongName);
+
+    for (const candidate of candidates) {
+      const match = files.find(file =>
+        normaliseLegacySongName(file.id) === candidate ||
+        normaliseLegacySongName(file.fileName) === candidate
+      );
+
+      if (match) return match.id;
+    }
+
+    return "";
+  }
+
   async function loadSlaveLyricsOptions() {
-    const selects = [$("slaveLyricsSelect"), $("quickSlaveLyricsSelect")].filter(Boolean);
+    const selects = [
+      $("slaveLyricsSelect"),
+      $("quickSlaveLyricsSelect")
+    ].filter(Boolean);
+
+    if (!selects.length) return;
+
+    selects.forEach(select => {
+      select.innerHTML =
+        `<option value="">Loading lyrics-data files…</option>`;
+      select.disabled = true;
+    });
 
     try {
-      const snap = await db.collection("lyrics").get();
-      const songs = snap.docs
-        .map(d => ({id:d.id,...d.data()}))
-        .sort((a,b)=>String(a.title||"").localeCompare(String(b.title||"")));
+      const files = await getLegacyLyricsFiles();
+
+      if (!files.length) {
+        selects.forEach(select => {
+          select.innerHTML =
+            `<option value="">No .js lyric files found</option>`;
+          select.disabled = false;
+        });
+
+        console.warn(
+          "No legacy lyrics files were found in lyrics/lyrics-data/"
+        );
+        return;
+      }
 
       const options =
         `<option value="">Choose lyrics to send…</option>` +
-        songs.map(s =>
-          `<option value="${esc(dVal(s.id))}">${esc(s.title || "Untitled")} — ${esc(s.artist || "")}</option>`
+        files.map(file =>
+          `<option value="${esc(dVal(file.id))}" ` +
+          `data-lyrics-file="${esc(dVal(file.fileName))}">` +
+          `${esc(file.fileName)}` +
+          `</option>`
         ).join("");
+
+      const selectedId = findCurrentLegacyLyricsId(files);
 
       selects.forEach(select => {
         select.innerHTML = options;
+        select.disabled = false;
 
-        const currentOptionExists =
-          currentSongId &&
-          [...select.options].some(opt => opt.value === currentSongId);
-
-        if (currentOptionExists) {
-          select.value = currentSongId;
-        } else if (
-          currentSong?.karaokeLyrics &&
-          currentSong.karaokeLyrics !== "No" &&
-          [...select.options].some(opt => opt.value === currentSong.karaokeLyrics)
-        ) {
-          select.value = currentSong.karaokeLyrics;
-        } else {
-          select.value = "";
-        }
+        // If the current song's title matches a filename such as
+        // "All The Small Things" -> "allthesmallthings.js",
+        // automatically position/select that option.
+        select.value = selectedId || "";
       });
-    } catch (e) {
-      console.warn("Slave lyrics list unavailable", e);
+
+    } catch (error) {
+      console.error("Slave lyrics list unavailable:", error);
+
+      selects.forEach(select => {
+        select.innerHTML =
+          `<option value="">Could not load lyrics-data files</option>`;
+        select.disabled = false;
+      });
     }
   }
-  function dVal(v){return String(v||"").replace(/"/g,"&quot;");}
+
+  function dVal(v) {
+    return String(v || "").replace(/"/g, "&quot;");
+  }
 
   async function sendSlaveLyrics(selectId = "slaveLyricsSelect") {
     const select = $(selectId);
     const id = select?.value || "";
-    if (!id) return showModal("Choose Lyrics", "Select a song first.");
+
+    if (!id) {
+      return showModal(
+        "Choose Lyrics",
+        "Select a lyrics-data .js file first."
+      );
+    }
+
+    const option = select.options[select.selectedIndex];
+    const fileName =
+      option?.dataset?.lyricsFile ||
+      `${id}.js`;
 
     await db.collection("karaokeControl").doc("liveLyrics").set({
-      currentSongId:id,
-      songId:id,
-      reset:false,
-      updatedAt:firebase.firestore.FieldValue.serverTimestamp()
-    }, {merge:true});
+      // Keep the existing fields for compatibility with your singer display.
+      currentSongId: id,
+      songId: id,
 
-    showModal("Singer Lyrics Updated", "The selected lyrics were sent.");
+      // Explicit legacy file information for the karaoke/slave lyric loader.
+      lyricsFileId: id,
+      lyricsFileName: fileName,
+      lyricsFilePath: `lyrics/lyrics-data/${fileName}`,
+      lyricsSource: "lyrics-data-js",
+
+      reset: false,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+
+    showModal(
+      "Singer Lyrics Updated",
+      `${fileName} was sent to the singer display.`
+    );
   }
 
   async function saveMyNotes() {
