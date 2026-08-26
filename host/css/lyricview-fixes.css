@@ -1146,3 +1146,61 @@ body.host-lyric-view-page {
     font-size: 11px !important;
   }
 }
+
+
+/* =========================================================
+   FINAL QUICK-META COLOUR REFINEMENTS
+   ========================================================= */
+
+/* BPM suffix uses the same dark-gray colour as its label, regardless of
+   tempo comparison state. Only the numeric value carries green/yellow/red. */
+.performance-quick-meta .bpm-suffix,
+.song-info-drawer .bpm-suffix {
+  color: #777 !important;
+}
+
+#quickTempo.tempo-match .bpm-number,
+#infoTempo.tempo-match .bpm-number {
+  color: #56e56c !important;
+}
+
+#quickTempo.tempo-different .bpm-number,
+#infoTempo.tempo-different .bpm-number {
+  color: #ffd24d !important;
+}
+
+#quickOriginalBpm.original-different .bpm-number,
+#infoOriginalBpm.original-different .bpm-number {
+  color: #ff4d55 !important;
+}
+
+/* Do NOT colour BPM suffix with match/difference status. */
+#quickTempo.tempo-match .bpm-suffix,
+#quickTempo.tempo-different .bpm-suffix,
+#quickOriginalBpm.original-different .bpm-suffix,
+#infoTempo.tempo-match .bpm-suffix,
+#infoTempo.tempo-different .bpm-suffix,
+#infoOriginalBpm.original-different .bpm-suffix {
+  color: #777 !important;
+}
+
+/* Requested value colours. */
+.performance-quick-meta #quickKey,
+.song-info-drawer #infoKey {
+  color: #4fa3ff !important;
+}
+
+.performance-quick-meta #quickCapo,
+.song-info-drawer #infoCapo {
+  color: #77e68a !important;
+}
+
+.performance-quick-meta #quickTime,
+.song-info-drawer #infoTime {
+  color: #b9b9b9 !important;
+}
+
+/* EDIT has no label above it now; vertically centre the button in its cell. */
+.performance-quick-edit-cell {
+  justify-content: center !important;
+}
