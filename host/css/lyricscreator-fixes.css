@@ -1,0 +1,91 @@
+/* =========================================================
+   LYRICS CREATOR — SECTION DASH + TITLE COLOUR CONTROLS
+   Loaded AFTER css/lyrics-suite.css
+   ========================================================= */
+
+.advanced-rich-toolbar {
+  flex-wrap: wrap;
+  row-gap: 7px;
+}
+
+.dash-colour-control,
+.section-title-colour-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+  color: #aaa;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: .05em;
+  white-space: nowrap;
+}
+
+.dash-colour-control {
+  padding: 0 7px;
+  border: 1px solid #343434;
+  border-radius: 6px;
+  background: #0c0c0c;
+}
+
+.dash-colour-control select,
+.section-title-colour-control select {
+  min-height: 30px;
+  max-width: 135px;
+  padding: 4px 7px;
+  border: 1px solid #3b3b3b;
+  border-radius: 5px;
+  background: #090909;
+  color: #ddd;
+  font: inherit;
+  letter-spacing: normal;
+}
+
+.dash-colour-control input[type="color"],
+.section-title-colour-control input[type="color"] {
+  width: 30px;
+  height: 28px;
+  padding: 2px;
+  border: 1px solid #3b3b3b;
+  border-radius: 5px;
+  background: #090909;
+  cursor: pointer;
+}
+
+.section-title-colour-control {
+  flex: 0 0 auto;
+  padding: 0 3px;
+}
+
+.creator-section-head .section-title-input {
+  min-width: 190px;
+}
+
+/* Each generated dash span inherits no bold/size changes; only colour. */
+.creator-dash-char {
+  font: inherit;
+  font-weight: inherit;
+  text-decoration: inherit;
+}
+
+/* Make tab editing comfortable while dash colouring is enabled. */
+.creator-rich-editor.tab-editor {
+  line-height: 1.5;
+  tab-size: 4;
+}
+
+@media (max-width: 900px) {
+  .creator-section-head {
+    flex-wrap: wrap;
+  }
+
+  .section-title-colour-control {
+    order: 4;
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .dash-colour-control {
+    width: auto;
+  }
+}
