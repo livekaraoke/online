@@ -313,3 +313,307 @@ body.host-lyric-view-page {
   flex: 0 0 auto !important;
   min-width: 74px !important;
 }
+
+
+/* =========================================================
+   PERFORMANCE VIEW REFINEMENTS — 2026-08-26
+   ========================================================= */
+
+/* 1) Bottom section guide: slightly narrower so it can never crowd the
+      transport speed value / plus button. It still auto-follows in JS. */
+.host-bottom-dock {
+  grid-template-columns: minmax(330px, 470px) minmax(0, 1fr) !important;
+}
+
+#sectionProgress.host-section-progress {
+  width: min(100%, 560px) !important;
+  max-width: 560px !important;
+  justify-self: end !important;
+}
+
+@media (max-width: 1180px) and (min-width: 701px) {
+  .host-bottom-dock {
+    grid-template-columns: minmax(330px, 46%) minmax(0, 54%) !important;
+  }
+
+  #sectionProgress.host-section-progress {
+    width: min(100%, 500px) !important;
+    max-width: 500px !important;
+  }
+}
+
+/* 2) Current section header follows the blue active section guide. */
+.host-section.current-section > .host-section-header {
+  border-color: rgba(24, 174, 248, .72) !important;
+  background:
+    linear-gradient(
+      90deg,
+      rgba(14, 74, 108, .72),
+      rgba(15, 43, 60, .58) 46%,
+      rgba(16, 20, 23, .84)
+    ) !important;
+  box-shadow:
+    inset 3px 0 0 #18aef8,
+    0 0 0 1px rgba(24, 174, 248, .12),
+    0 6px 22px rgba(0, 120, 195, .10) !important;
+}
+
+.host-section.current-section > .host-section-header strong,
+.host-section.current-section > .host-section-header .collapse-arrow {
+  color: #d9f3ff !important;
+}
+
+.host-section.current-section > .host-section-header .collapse-hint {
+  color: #75cbff !important;
+}
+
+/* 3) D-pad: UP/DOWN are intentionally larger than PREV/NEXT. */
+.host-nav-pad {
+  width: 204px !important;
+  height: 214px !important;
+}
+
+.host-nav-btn.nav-up,
+.host-nav-btn.nav-down {
+  width: 76px !important;
+  height: 76px !important;
+}
+
+.host-nav-btn.nav-left,
+.host-nav-btn.nav-right {
+  width: 60px !important;
+  height: 60px !important;
+}
+
+.host-nav-btn.nav-up {
+  left: 64px !important;
+  top: 0 !important;
+}
+
+.host-nav-btn.nav-left {
+  left: 0 !important;
+  top: 77px !important;
+}
+
+.host-nav-btn.nav-right {
+  right: 0 !important;
+  top: 77px !important;
+}
+
+.host-nav-btn.nav-down {
+  left: 64px !important;
+  bottom: 0 !important;
+}
+
+.host-nav-btn.nav-up .host-nav-icon,
+.host-nav-btn.nav-down .host-nav-icon {
+  width: 38px !important;
+  height: 38px !important;
+}
+
+.host-nav-btn.nav-left .host-nav-icon,
+.host-nav-btn.nav-right .host-nav-icon {
+  width: 31px !important;
+  height: 31px !important;
+}
+
+/* 4) Quick performance info / karaoke tools before the first section.
+      This is a compact duplicate; the full SONG INFO sidebar remains. */
+.performance-quick-info {
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(330px, .85fr);
+  gap: 10px;
+  margin: 0 0 12px;
+}
+
+.performance-quick-meta,
+.performance-quick-karaoke {
+  background: linear-gradient(145deg, rgba(18,18,18,.96), rgba(8,8,8,.96));
+  border: 1px solid #2c2c2c;
+  border-radius: 8px;
+}
+
+.performance-quick-meta {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(84px, 1fr));
+  min-width: 0;
+}
+
+.performance-quick-meta > div {
+  min-width: 0;
+  padding: 9px 11px;
+  border-right: 1px solid #262626;
+}
+
+.performance-quick-meta > div:last-child {
+  border-right: 0;
+}
+
+.performance-quick-meta small,
+.performance-quick-meta strong {
+  display: block;
+}
+
+.performance-quick-meta small {
+  color: #7e7e7e;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .07em;
+}
+
+.performance-quick-meta strong {
+  margin-top: 3px;
+  color: #f4f4f4;
+  font-size: 17px;
+  line-height: 1.1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.performance-quick-meta #quickTempo,
+.performance-quick-meta #quickCapo {
+  font-size: 20px;
+}
+
+.performance-quick-meta #quickTempo.tempo-match {
+  color: #56e56c !important;
+}
+
+.performance-quick-meta #quickTempo.tempo-different {
+  color: #ffd24d !important;
+}
+
+.performance-quick-meta #quickOriginalBpm.original-different {
+  color: #ff4d55 !important;
+}
+
+.performance-quick-karaoke {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto auto;
+  align-items: center;
+  gap: 7px 9px;
+  padding: 8px 10px;
+}
+
+.performance-quick-label {
+  grid-column: 1 / -1;
+  color: #8d8d8d;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: .08em;
+}
+
+.performance-quick-actions {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(190px, 1fr) auto;
+  gap: 7px;
+}
+
+.performance-quick-actions .split-action {
+  margin: 0;
+}
+
+.performance-quick-actions button,
+.performance-quick-slave button {
+  min-height: 34px;
+  background: #0d190f;
+  border: 1px solid #2fa844;
+  color: #62ee73;
+  border-radius: 6px;
+  padding: 7px 10px;
+  font-size: 10px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.quick-split-action > button:first-child {
+  border-radius: 6px 0 0 6px;
+}
+
+.quick-split-action > button:nth-child(2) {
+  width: 38px;
+  padding-left: 0;
+  padding-right: 0;
+  border-radius: 0 6px 6px 0;
+}
+
+.performance-quick-actions > #quickEditSongBtn {
+  min-width: 104px;
+}
+
+.performance-quick-slave {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(145px, 1fr) auto;
+  gap: 6px;
+}
+
+.performance-quick-slave select {
+  min-width: 0;
+  width: 100%;
+  height: 34px;
+  background: #090909;
+  color: #ddd;
+  border: 1px solid #333;
+  border-radius: 6px;
+  padding: 0 8px;
+  font-size: 10px;
+}
+
+.performance-quick-info .mini-menu {
+  top: 37px;
+}
+
+/* Keep quick info compact on tablets without sacrificing lyric width. */
+@media (max-width: 980px) {
+  .performance-quick-info {
+    grid-template-columns: 1fr !important;
+  }
+
+  .performance-quick-meta {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  .performance-quick-karaoke {
+    grid-template-columns: 1fr !important;
+  }
+
+  .performance-quick-actions {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .performance-quick-slave {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+}
+
+@media (max-width: 700px) {
+  .performance-quick-meta {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .performance-quick-meta > div {
+    border-bottom: 1px solid #262626;
+  }
+
+  .performance-quick-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .performance-quick-slave {
+    grid-template-columns: 1fr;
+  }
+
+  /* On narrow screens the bottom guide already has its own row; keep it
+     slightly inset so it does not touch the transport beneath it. */
+  #sectionProgress.host-section-progress {
+    width: calc(100% - 18px) !important;
+    max-width: none !important;
+    justify-self: center !important;
+  }
+}
