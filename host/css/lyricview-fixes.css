@@ -1018,3 +1018,131 @@ body.host-lyric-view-page {
     grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
   }
 }
+
+
+/* =========================================================
+   SIMPLE KARAOKE BUTTON + PERFORMANCE VALUE TYPOGRAPHY
+   ========================================================= */
+
+/* SEND TO KARAOKE — flat/simple like SEND LYRICS */
+.performance-quick-primary .quick-split-action {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) 42px !important;
+  gap: 6px !important;
+}
+
+.performance-quick-primary .quick-split-action > button {
+  background: #07190b !important;
+  border: 1px solid #24b94b !important;
+  color: #67f27d !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+  filter: none !important;
+  transform: none !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+}
+
+.performance-quick-primary #quickSendToKaraokeBtn {
+  border-radius: 6px !important;
+  font-size: 12px !important;
+  font-weight: 900 !important;
+}
+
+.performance-quick-primary #quickKaraokeMenuBtn {
+  width: 42px !important;
+  border-radius: 6px !important;
+}
+
+.performance-quick-primary #quickSendToKaraokeBtn:hover,
+.performance-quick-primary #quickKaraokeMenuBtn:hover {
+  background: #0b2511 !important;
+  border-color: #4bd96b !important;
+  box-shadow: none !important;
+}
+
+/* BPM number and suffix are separate for better live readability. */
+.performance-quick-meta #quickTempo,
+.performance-quick-meta #quickOriginalBpm,
+.song-info-drawer #infoTempo,
+.song-info-drawer #infoOriginalBpm {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  white-space: nowrap !important;
+}
+
+.bpm-number {
+  font-size: 31px !important;
+  line-height: 1 !important;
+  font-weight: 950 !important;
+}
+
+.bpm-suffix {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 13px !important;
+  line-height: 1 !important;
+  font-weight: 900 !important;
+  letter-spacing: .03em !important;
+}
+
+/* KEY / CAPO / TIME same visual size as BPM number. */
+.performance-quick-meta #quickKey,
+.performance-quick-meta #quickCapo,
+.performance-quick-meta #quickTime,
+.song-info-drawer #infoKey,
+.song-info-drawer #infoCapo,
+.song-info-drawer #infoTime {
+  font-size: 31px !important;
+  line-height: 1 !important;
+  font-weight: 950 !important;
+}
+
+/* Keep comparison colours working with nested BPM spans. */
+#quickTempo.tempo-match .bpm-number,
+#quickTempo.tempo-match .bpm-suffix,
+#infoTempo.tempo-match .bpm-number,
+#infoTempo.tempo-match .bpm-suffix {
+  color: #56e56c !important;
+}
+
+#quickTempo.tempo-different .bpm-number,
+#quickTempo.tempo-different .bpm-suffix,
+#infoTempo.tempo-different .bpm-number,
+#infoTempo.tempo-different .bpm-suffix {
+  color: #ffd24d !important;
+}
+
+#quickOriginalBpm.original-different .bpm-number,
+#quickOriginalBpm.original-different .bpm-suffix,
+#infoOriginalBpm.original-different .bpm-number,
+#infoOriginalBpm.original-different .bpm-suffix {
+  color: #ff4d55 !important;
+}
+
+/* EDIT keeps the same cell width but gets clearer/larger text. */
+.performance-quick-edit-cell #quickEditSongBtn {
+  width: 100% !important;
+  min-height: 44px !important;
+  font-size: 16px !important;
+  font-weight: 950 !important;
+  letter-spacing: .015em !important;
+}
+
+@media (max-width: 760px) {
+  .bpm-number,
+  .performance-quick-meta #quickKey,
+  .performance-quick-meta #quickCapo,
+  .performance-quick-meta #quickTime,
+  .song-info-drawer #infoKey,
+  .song-info-drawer #infoCapo,
+  .song-info-drawer #infoTime {
+    font-size: 27px !important;
+  }
+
+  .bpm-suffix {
+    font-size: 11px !important;
+  }
+}
