@@ -500,210 +500,171 @@
   }
 
   /************************************************************
-   * LEGACY / SLAVE LYRICS FILE LIST
+   * SLAVE / KARAOKE LYRICS DROPDOWN
    *
-   * Source folder relative to lyricview.html:
-   *   lyrics/lyrics-data/
+   * IMPORTANT:
+   * The dropdown is populated from:
+   *   root/adm/files/song-data.js
    *
-   * On GitHub Pages the browser cannot request a normal directory listing,
-   * so this reads the repository folder through GitHub's public Contents API.
+   * lyricview.html loads that file as:
+   *   ../files/song-data.js
    *
-   * Example file:
-   *   lyrics/lyrics-data/allthesmallthings.js
+   * song-data.js exposes window.songs.
    *
-   * Dropdown value:
-   *   allthesmallthings
+   * We deliberately DO NOT build the target from:
+   *   Song Title + Artist
+   *
+   * Instead we take the ID/filename directly from each song's
+   * saved URL in song-data.js. This restores the old behaviour
+   * for files such as:
+   *   allthesmallthings.js
    ************************************************************/
 
-  function legacyLyricsBaseName(fileName) {
-    return String(fileName || "")
-      .replace(/\.js$/i, "")
-      .trim();
+  function dVal(v) {
+    return String(v || "").replace(/"/g, "&quot;");
   }
 
-  function normaliseLegacySongName(value) {
+  function normaliseSlaveLyricsId(value) {
     return String(value || "")
-      .toLowerCase()
-      .replace(/\.js$/i, "")
-      .replace(/[^a-z0-9]/g, "");
+      .trim()
+      .replace(/^.*[\\/]/, "")
+      .replace(/\.js(?:[?#].*)?$/i, "")
+      .replace(/[?#].*$/, "");
   }
 
-  function getGitHubLyricsDirectoryInfo() {
-    const host = String(window.location.hostname || "").toLowerCase();
+  function extractSlaveLyricsIdFromUrl(url) {
+    const raw = String(url || "").trim();
+    if (!raw) return "";
 
-    // GitHub Pages project site:
-    // https://OWNER.github.io/REPOSITORY/adm/host/lyricview.html
-    if (!host.endsWith(".github.io")) return null;
+    // 1) Old karaoke URL format:
+    //    lyrics/song.html?id=allthesmallthings
+    //    song.html?id=allthesmallthings
+    try {
+      const absolute = new URL(raw, window.location.href);
+      const queryId = absolute.searchParams.get("id");
+      if (queryId) return normaliseSlaveLyricsId(queryId);
 
-    const owner = host.replace(/\.github\.io$/, "");
-    const parts = window.location.pathname
-      .split("/")
-      .filter(Boolean)
-      .map(part => decodeURIComponent(part));
+      // 2) Direct JS URL:
+      //    host/lyrics/lyrics-data/allthesmallthings.js
+      //    lyrics/lyrics-data/allthesmallthings.js
+      const pathname = decodeURIComponent(absolute.pathname || "");
+      const fileMatch = pathname.match(/([^/]+)\.js$/i);
+      if (fileMatch) return normaliseSlaveLyricsId(fileMatch[1]);
+    } catch (_) {
+      // Fall through to string parsing below.
+    }
 
-    if (!parts.length) return null;
+    const idMatch = raw.match(/[?&]id=([^&#]+)/i);
+    if (idMatch) {
+      return normaliseSlaveLyricsId(decodeURIComponent(idMatch[1]));
+    }
 
-    // For an OWNER.github.io site there may be no repository prefix.
-    // For a project page the first URL segment is the repository.
-    const isUserSite =
-      parts.length &&
-      parts[0].toLowerCase() === `${owner}.github.io`.toLowerCase();
+    const jsMatch = raw.match(/([^/?#]+)\.js(?:[?#].*)?$/i);
+    if (jsMatch) {
+      return normaliseSlaveLyricsId(decodeURIComponent(jsMatch[1]));
+    }
 
-    const repo = isUserSite ? `${owner}.github.io` : parts[0];
-
-    // Current page directory inside the repository.
-    const pathParts = isUserSite ? parts.slice(0, -1) : parts.slice(1, -1);
-    const currentDirectory = pathParts.join("/");
-
-    const lyricsDirectory =
-      [currentDirectory, "lyrics/lyrics-data"]
-        .filter(Boolean)
-        .join("/");
-
-    return {
-      owner,
-      repo,
-      lyricsDirectory
-    };
+    return "";
   }
 
-  async function fetchLegacyLyricsFilesFromGitHub() {
-    const info = getGitHubLyricsDirectoryInfo();
-    if (!info) return [];
+  function getSlaveLyricsEntriesFromSongData() {
+    const source = Array.isArray(window.songs) ? window.songs : [];
 
-    const apiUrl =
-      `https://api.github.com/repos/${encodeURIComponent(info.owner)}/` +
-      `${encodeURIComponent(info.repo)}/contents/` +
-      info.lyricsDirectory
-        .split("/")
-        .map(encodeURIComponent)
-        .join("/");
+    const entries = [];
+    const seen = new Set();
 
-    const response = await fetch(apiUrl, {
-      headers: {
-        "Accept": "application/vnd.github+json"
-      },
-      cache: "no-store"
+    source.forEach(song => {
+      if (!song) return;
+
+      // song-data.js is the authoritative mapping.
+      // Some older rows use url, while a few builds may use one of the
+      // alternate URL field names below, so support all of them safely.
+      const sourceUrl =
+        song.url ||
+        song.lyricsUrl ||
+        song.karaokeUrl ||
+        song.karaokeLyricsUrl ||
+        "";
+
+      const id = extractSlaveLyricsIdFromUrl(sourceUrl);
+
+      if (!id) return;
+
+      const key = id.toLowerCase();
+      if (seen.has(key)) return;
+      seen.add(key);
+
+      const fileName = `${id}.js`;
+
+      entries.push({
+        id,
+        fileName,
+        title: String(song.title || id),
+        artist: String(song.artist || ""),
+        sourceUrl
+      });
     });
 
-    if (!response.ok) {
-      throw new Error(
-        `GitHub lyrics directory request failed: ${response.status}`
-      );
-    }
-
-    const data = await response.json();
-
-    if (!Array.isArray(data)) return [];
-
-    return data
-      .filter(item =>
-        item &&
-        item.type === "file" &&
-        /\.js$/i.test(item.name || "")
+    return entries.sort((a, b) =>
+      String(a.title || a.fileName).localeCompare(
+        String(b.title || b.fileName),
+        undefined,
+        { sensitivity: "base" }
       )
-      .map(item => ({
-        fileName: item.name,
-        id: legacyLyricsBaseName(item.name),
-        path: item.path || "",
-        downloadUrl: item.download_url || ""
-      }))
-      .sort((a, b) =>
-        a.fileName.localeCompare(
-          b.fileName,
-          undefined,
-          { sensitivity: "base" }
-        )
-      );
+    );
   }
 
-  async function fetchLegacyLyricsFilesFromManifest() {
-    // Optional fallback for non-GitHub hosting.
-    //
-    // If you ever move away from GitHub Pages, create:
-    // lyrics/lyrics-data/lyrics-data-index.json
-    //
-    // Example:
-    // ["allthesmallthings.js", "angels.js", "basketcase.js"]
-    try {
-      const response = await fetch(
-        "lyrics/lyrics-data/lyrics-data-index.json",
-        { cache: "no-store" }
+  function findCurrentSlaveLyricsId(entries) {
+    if (!Array.isArray(entries) || !entries.length) return "";
+
+    // First preference: the saved karaokeLyrics value on the Firestore song.
+    const saved = normaliseSlaveLyricsId(currentSong?.karaokeLyrics);
+    if (saved) {
+      const match = entries.find(entry =>
+        entry.id.toLowerCase() === saved.toLowerCase()
       );
-
-      if (!response.ok) return [];
-
-      const data = await response.json();
-      const names = Array.isArray(data)
-        ? data
-        : Array.isArray(data?.files)
-          ? data.files
-          : [];
-
-      return names
-        .map(item =>
-          typeof item === "string"
-            ? item
-            : item?.name || item?.fileName || ""
-        )
-        .filter(name => /\.js$/i.test(name))
-        .map(name => ({
-          fileName: name,
-          id: legacyLyricsBaseName(name),
-          path: `lyrics/lyrics-data/${name}`,
-          downloadUrl: ""
-        }))
-        .sort((a, b) =>
-          a.fileName.localeCompare(
-            b.fileName,
-            undefined,
-            { sensitivity: "base" }
-          )
-        );
-    } catch {
-      return [];
-    }
-  }
-
-  async function getLegacyLyricsFiles() {
-    // GitHub API is the primary source because GitHub Pages itself does not
-    // expose a browsable directory index.
-    try {
-      const githubFiles = await fetchLegacyLyricsFilesFromGitHub();
-      if (githubFiles.length) return githubFiles;
-    } catch (error) {
-      console.warn("GitHub lyrics-data folder lookup failed:", error);
+      if (match) return match.id;
     }
 
-    // Optional static manifest fallback.
-    const manifestFiles = await fetchLegacyLyricsFilesFromManifest();
-    if (manifestFiles.length) return manifestFiles;
+    // Second preference: match current song title against song-data.js title.
+    // We do NOT append the artist to create a filename.
+    const currentTitle = String(currentSong?.title || "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, "");
 
-    return [];
-  }
-
-  function findCurrentLegacyLyricsId(files) {
-    if (!Array.isArray(files) || !files.length) return "";
-
-    const candidates = [
-      currentSong?.karaokeLyrics,
-      currentSongId,
-      currentSong?.title,
-      `${currentSong?.title || ""}${currentSong?.artist || ""}`
-    ]
-      .filter(Boolean)
-      .map(normaliseLegacySongName);
-
-    for (const candidate of candidates) {
-      const match = files.find(file =>
-        normaliseLegacySongName(file.id) === candidate ||
-        normaliseLegacySongName(file.fileName) === candidate
+    if (currentTitle) {
+      const match = entries.find(entry =>
+        String(entry.title || "")
+          .toLowerCase()
+          .replace(/[^a-z0-9]/g, "") === currentTitle
       );
-
       if (match) return match.id;
     }
 
     return "";
+  }
+
+  async function waitForSongData(timeoutMs = 4000) {
+    if (Array.isArray(window.songs) && window.songs.length) {
+      return true;
+    }
+
+    const start = Date.now();
+
+    return await new Promise(resolve => {
+      const timer = setInterval(() => {
+        if (Array.isArray(window.songs) && window.songs.length) {
+          clearInterval(timer);
+          resolve(true);
+          return;
+        }
+
+        if (Date.now() - start >= timeoutMs) {
+          clearInterval(timer);
+          resolve(false);
+        }
+      }, 50);
+    });
   }
 
   async function loadSlaveLyricsOptions() {
@@ -715,89 +676,103 @@
     if (!selects.length) return;
 
     selects.forEach(select => {
-      select.innerHTML =
-        `<option value="">Loading lyrics-data files…</option>`;
       select.disabled = true;
+      select.innerHTML =
+        `<option value="">Loading lyrics list…</option>`;
     });
 
-    try {
-      const files = await getLegacyLyricsFiles();
+    const loaded = await waitForSongData();
 
-      if (!files.length) {
-        selects.forEach(select => {
-          select.innerHTML =
-            `<option value="">No .js lyric files found</option>`;
-          select.disabled = false;
-        });
-
-        console.warn(
-          "No legacy lyrics files were found in lyrics/lyrics-data/"
-        );
-        return;
-      }
-
-      const options =
-        `<option value="">Choose lyrics to send…</option>` +
-        files.map(file =>
-          `<option value="${esc(dVal(file.id))}" ` +
-          `data-lyrics-file="${esc(dVal(file.fileName))}">` +
-          `${esc(file.fileName)}` +
-          `</option>`
-        ).join("");
-
-      const selectedId = findCurrentLegacyLyricsId(files);
+    if (!loaded) {
+      console.error(
+        "song-data.js did not load. Expected: ../files/song-data.js"
+      );
 
       selects.forEach(select => {
-        select.innerHTML = options;
         select.disabled = false;
-
-        // If the current song's title matches a filename such as
-        // "All The Small Things" -> "allthesmallthings.js",
-        // automatically position/select that option.
-        select.value = selectedId || "";
-      });
-
-    } catch (error) {
-      console.error("Slave lyrics list unavailable:", error);
-
-      selects.forEach(select => {
         select.innerHTML =
-          `<option value="">Could not load lyrics-data files</option>`;
-        select.disabled = false;
+          `<option value="">Could not load song-data.js</option>`;
       });
+      return;
     }
-  }
 
-  function dVal(v) {
-    return String(v || "").replace(/"/g, "&quot;");
+    const entries = getSlaveLyricsEntriesFromSongData();
+
+    if (!entries.length) {
+      console.error(
+        "window.songs loaded, but no lyric IDs could be extracted from its URLs.",
+        window.songs
+      );
+
+      selects.forEach(select => {
+        select.disabled = false;
+        select.innerHTML =
+          `<option value="">No lyric JS files found in song-data.js</option>`;
+      });
+      return;
+    }
+
+    const options =
+      `<option value="">Choose lyrics to send…</option>` +
+      entries.map(entry => {
+        const artistText = entry.artist ? ` — ${entry.artist}` : "";
+
+        return (
+          `<option value="${esc(dVal(entry.id))}" ` +
+          `data-lyrics-file="${esc(dVal(entry.fileName))}">` +
+          `${esc(entry.title)}${esc(artistText)} ` +
+          `(${esc(entry.fileName)})` +
+          `</option>`
+        );
+      }).join("");
+
+    const selectedId = findCurrentSlaveLyricsId(entries);
+
+    selects.forEach(select => {
+      select.innerHTML = options;
+      select.disabled = false;
+      select.value = selectedId || "";
+    });
+
+    console.log(
+      `Loaded ${entries.length} slave lyric file entries from song-data.js`,
+      entries
+    );
   }
 
   async function sendSlaveLyrics(selectId = "slaveLyricsSelect") {
     const select = $(selectId);
-    const id = select?.value || "";
+    const id = String(select?.value || "").trim();
 
     if (!id) {
       return showModal(
         "Choose Lyrics",
-        "Select a lyrics-data .js file first."
+        "Select a lyrics file first."
       );
     }
 
     const option = select.options[select.selectedIndex];
+
     const fileName =
       option?.dataset?.lyricsFile ||
-      `${id}.js`;
+      `${normaliseSlaveLyricsId(id)}.js`;
+
+    // This is the actual file location from lyricview.html:
+    // root/adm/host/lyrics/lyrics-data/<filename>.js
+    const relativeFilePath =
+      `lyrics/lyrics-data/${fileName}`;
 
     await db.collection("karaokeControl").doc("liveLyrics").set({
-      // Keep the existing fields for compatibility with your singer display.
+      // Keep old compatibility fields.
       currentSongId: id,
       songId: id,
 
-      // Explicit legacy file information for the karaoke/slave lyric loader.
+      // Explicit file mapping so the singer/slave page never has to invent
+      // a filename using song title + artist.
       lyricsFileId: id,
       lyricsFileName: fileName,
-      lyricsFilePath: `lyrics/lyrics-data/${fileName}`,
-      lyricsSource: "lyrics-data-js",
+      lyricsFilePath: relativeFilePath,
+      lyricsSource: "song-data-js",
 
       reset: false,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
