@@ -2,97 +2,114 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Lyrics & Chords Editor</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lyrics & Chords Creator</title>
   <link rel="stylesheet" href="css/lyrics-suite.css">
+  <link rel="stylesheet" href="css/lyricscreator-fixes.css">
 </head>
-<body class="creator-page-v3">
-  <header class="creator-v3-topbar">
-    <button id="creatorBackBtn" class="creator-nav-btn" type="button">‹ LYRICS VIEWER</button>
-    <div class="creator-v3-title">
-      <strong>✎ EDIT LYRICS & CHORDS</strong>
-      <span id="creatorEditingLabel">Editing: New Song</span>
+<body class="creator-page advanced-creator-page">
+  <header class="app-topbar creator-topbar">
+    <button id="backToViewerBtn" class="btn ghost" type="button">‹ LYRICS VIEWER</button>
+
+    <div class="brand-block creator-brand-block">
+      <strong id="creatorHeading">✎ EDIT LYRICS &amp; CHORDS</strong>
+      <span id="creatorStatus">Editing: New Song</span>
     </div>
-    <div class="creator-save-split">
-      <button id="creatorSaveBtn" type="button">SAVE SONG</button>
-      <button id="creatorSaveMenuBtn" type="button">▼</button>
-      <div id="creatorSaveMenu" class="creator-save-menu hidden">
-        <button id="creatorCancelChangesBtn" type="button">CANCEL CHANGES</button>
+
+    <div class="save-split-wrap">
+      <button id="saveSongBtn" class="btn red save-main-btn" type="button">SAVE SONG</button>
+      <button id="saveMenuBtn" class="btn red save-menu-btn" type="button" aria-expanded="false" aria-controls="saveDropdown">▼</button>
+      <div id="saveDropdown" class="save-dropdown hidden">
+        <button id="cancelChangesBtn" type="button">CANCEL CHANGES</button>
       </div>
     </div>
   </header>
 
-  <main class="creator-v3-shell">
-    <section class="creator-v3-panel song-details-panel">
-      <div class="creator-panel-head"><h2>SONG DETAILS</h2><button id="toggleSongDetailsBtn" type="button">▾</button></div>
-      <div id="songDetailsBody" class="creator-meta-grid-v3">
-        <label>Title *<input id="songTitle" placeholder="Song title"></label>
-        <label>Artist *<input id="artistName" placeholder="Artist"></label>
-        <label>User BPM<input id="userBpm" inputmode="numeric" placeholder="104"></label>
-        <label>Original BPM<input id="originalBpm" inputmode="numeric" placeholder="104"></label>
-        <label>Key<input id="songKey" placeholder="G"></label>
-        <label>Capo<input id="capoNote" inputmode="numeric" placeholder="0"></label>
-        <label>Year<input id="songYear" inputmode="numeric" placeholder="2026"></label>
-        <label>Time Signature<input id="timeSignature" placeholder="4/4"></label>
-        <label class="wide">YouTube Link<input id="youtubeLink" placeholder="https://youtube.com/..."></label>
-        <label class="wide">Song Notes<textarea id="songNote" rows="3" placeholder="General song notes…"></textarea></label>
-        <label>Karaoke Lyrics<select id="karaokeLyrics"><option value="No">No</option></select></label>
-        <label class="check-row"><input id="publicSongListVisible" type="checkbox"> Show in Public Song List</label>
+  <main class="creator-shell">
+    <section class="panel creator-meta">
+      <h3>SONG DETAILS</h3>
+      <div class="creator-meta-grid">
+        <label>Title *<input id="songTitleInput"></label>
+        <label>Artist *<input id="artistInput"></label>
+        <label>User BPM<input id="userBpmInput" type="number"></label>
+        <label>Original BPM<input id="originalBpmInput" type="number"></label>
+        <label>Key<input id="keyInput" placeholder="G, Am, F#..."></label>
+        <label>Capo<input id="capoInput"></label>
+        <label>Year<input id="yearInput" type="number"></label>
+        <label>Time Signature<input id="timeSignatureInput" value="4/4"></label>
+        <label class="wide">YouTube Link<input id="youtubeInput"></label>
+        <label class="wide">Song Notes / Host Notes<textarea id="hostNoteInput"></textarea></label>
       </div>
+      <label class="public-default-note"><input id="publicVisibleInput" type="checkbox"> Show this song in the Public Song List</label>
     </section>
 
-    <section class="creator-v3-panel sections-panel-v3">
-      <div class="creator-panel-head sections-head-v3">
-        <div><h2>SECTIONS</h2><p>Add, reorder and edit the song exactly as it will appear live.</p></div>
-      </div>
-
-      <div class="creator-add-bar">
-        <button data-add-type="lyrics">＋ LYRICS / CHORDS</button>
-        <button data-add-type="tab">＋ TAB</button>
-        <button data-add-type="performance-note" class="green">＋ PERFORMANCE NOTE</button>
-        <button data-add-type="host-note" class="blue">＋ HOST NOTE</button>
-        <button data-add-type="separator">＋ SEPARATOR</button>
-        <div class="template-split">
-          <button id="templateBtn" type="button">＋ SECTION TEMPLATE</button>
-          <div id="templateMenu" class="template-menu hidden"></div>
+    <section class="panel creator-section-tools">
+      <div class="panel-title-row creator-section-title-row">
+        <h3>SECTIONS</h3>
+        <div class="creator-add-toolbar">
+          <button id="addLyricsSectionBtn" class="btn ghost" type="button">＋ LYRICS / CHORDS</button>
+          <button id="addTabSectionBtn" class="btn ghost" type="button">＋ TAB</button>
+          <button id="addPerformanceNoteBtn" class="btn green" type="button">＋ PERFORMANCE NOTE</button>
+          <button id="addHostNoteBtn" class="btn teal" type="button">＋ HOST NOTE</button>
+          <button id="addSeparatorBtn" class="btn ghost" type="button">＋ SEPARATOR</button>
+          <button id="openTemplatesBtn" class="btn gold" type="button">＋ SECTION TEMPLATE</button>
         </div>
       </div>
-
-      <div id="creatorSections" class="creator-sections-v3"></div>
+      <div id="sectionEditorList" class="creator-sections"></div>
     </section>
   </main>
 
-  <div id="chordModal" class="suite-modal hidden">
-    <div class="suite-modal-box chord-dialog">
-      <h3>Insert Chord</h3>
-      <label>Chord<input id="chordInput" placeholder="e.g. C#m7/G#"></label>
-      <div id="chordPreview" class="chord-preview">C</div>
-      <div class="suite-modal-actions"><button id="insertChordConfirm" class="success" type="button">INSERT</button><button id="insertChordCancel" type="button">CANCEL</button></div>
+  <div id="confirmModal" class="creator-modal hidden" role="dialog" aria-modal="true">
+    <div class="creator-modal-box compact">
+      <h3 id="confirmTitle">Confirm</h3>
+      <p id="confirmMessage"></p>
+      <div class="creator-modal-actions">
+        <button id="confirmOkBtn" class="btn red" type="button">CONFIRM</button>
+        <button id="confirmCancelBtn" class="btn ghost" type="button">CANCEL</button>
+      </div>
     </div>
   </div>
 
-  <div id="creatorConfirmModal" class="suite-modal hidden">
-    <div class="suite-modal-box">
-      <h3 id="creatorConfirmTitle">Unsaved changes</h3>
-      <p id="creatorConfirmMessage">Are you sure?</p>
-      <div class="suite-modal-actions"><button id="creatorConfirmYes" class="danger" type="button">YES</button><button id="creatorConfirmNo" type="button">NO</button></div>
+  <div id="chordModal" class="creator-modal hidden" role="dialog" aria-modal="true">
+    <div class="creator-modal-box">
+      <h3>INSERT CHORD</h3>
+      <label>Chord
+        <input id="chordInput" placeholder="e.g. G, Am7, C#m7/G#">
+      </label>
+      <div class="chord-quick-grid" id="chordQuickGrid"></div>
+      <div class="chord-preview">Preview: <strong id="chordPreview">G</strong></div>
+      <div class="creator-modal-actions">
+        <button id="insertChordConfirmBtn" class="btn green" type="button">INSERT</button>
+        <button id="insertChordCancelBtn" class="btn ghost" type="button">CANCEL</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="colourModal" class="creator-modal hidden" role="dialog" aria-modal="true">
+    <div class="creator-modal-box compact">
+      <h3>TEXT COLOUR</h3>
+      <div id="colourPalette" class="colour-palette"></div>
+      <div class="creator-modal-actions">
+        <button id="colourCancelBtn" class="btn ghost" type="button">CANCEL</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="templatesModal" class="creator-modal hidden" role="dialog" aria-modal="true">
+    <div class="creator-modal-box templates-box">
+      <h3>INSERT SECTION TEMPLATE</h3>
+      <p>Choose a ready-made section. You can edit everything after it is inserted.</p>
+      <div id="templateGrid" class="template-grid"></div>
+      <div class="creator-modal-actions">
+        <button id="templatesCancelBtn" class="btn ghost" type="button">CANCEL</button>
+      </div>
     </div>
   </div>
 
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyC4gSodXM35E2ZdYaz6mrCvTUYzW75ZCBk",
-      authDomain: "livekaraokemt.firebaseapp.com",
-      projectId: "livekaraokemt",
-      storageBucket: "livekaraokemt.firebasestorage.app",
-      messagingSenderId: "425980659562",
-      appId: "1:425980659562:web:892ddcd53fb209d1114713"
-    };
-    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-    window.db = firebase.firestore();
-  </script>
+  <script src="js/firebase-config.js"></script>
+  <script src="js/lyrics-common.js"></script>
   <script src="js/lyricscreator.js"></script>
 </body>
 </html>
