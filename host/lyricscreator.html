@@ -41,7 +41,21 @@
         <label class="wide">YouTube Link<input id="youtubeInput"></label>
         <label class="wide">Song Notes / Host Notes<textarea id="hostNoteInput"></textarea></label>
       </div>
-      <label class="public-default-note"><input id="publicVisibleInput" type="checkbox"> Show this song in the Public Song List</label>
+      <!-- SETLIST MEMBERSHIP
+           Public Song List visibility is intentionally no longer edited here.
+           Existing visibility is preserved; new songs remain hidden by default. -->
+      <div class="creator-setlist-membership">
+        <div class="creator-setlist-membership-head">
+          <div>
+            <strong>SETLISTS</strong>
+            <span id="setlistMembershipSummary">Loading setlists...</span>
+          </div>
+          <button id="refreshSetlistsBtn" class="btn ghost compact-btn" type="button">↻ REFRESH</button>
+        </div>
+        <div id="setlistMembershipList" class="creator-setlist-membership-list">
+          <span class="setlist-membership-empty">Loading...</span>
+        </div>
+      </div>
     </section>
 
     <section class="panel creator-section-tools">
@@ -109,6 +123,7 @@
 
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
   <script src="js/firebase-config.js"></script>
   <script src="js/lyrics-common.js"></script>
   <script src="js/lyricscreator.js"></script>
