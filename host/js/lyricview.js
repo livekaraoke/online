@@ -49,18 +49,34 @@
     // SONG INFO sidebar
     $("infoKey").textContent = song.key || "–";
     $("infoTime").textContent = time;
-    $("infoTempo").textContent = tempo == null ? "–" : `${tempo} BPM`;
     $("infoCapo").textContent = capo;
-    $("infoOriginalBpm").textContent = original == null ? "–" : `${original} BPM`;
     $("infoYear").textContent = song.year || "–";
     $("infoSongNotes").textContent = song.note || song.songNote || "No song notes.";
     $("capoDisplayValue").textContent = String(toNumber(song.capo) || 0);
 
+    // Render BPM number and suffix separately so the number can be larger
+    // while the "BPM" label stays smaller and centred beside it.
+    function renderBpmValue(el, value) {
+      if (!el) return;
+
+      if (value == null) {
+        el.innerHTML = `<span class="bpm-number">–</span>`;
+        return;
+      }
+
+      el.innerHTML =
+        `<span class="bpm-number">${esc(String(value))}</span>` +
+        `<span class="bpm-suffix">BPM</span>`;
+    }
+
+    renderBpmValue($("infoTempo"), tempo);
+    renderBpmValue($("infoOriginalBpm"), original);
+
     // PERFORMANCE QUICK INFO above the first section
     if ($("quickKey")) $("quickKey").textContent = song.key || "–";
     if ($("quickTime")) $("quickTime").textContent = time;
-    if ($("quickTempo")) $("quickTempo").textContent = tempo == null ? "–" : `${tempo} BPM`;
-    if ($("quickOriginalBpm")) $("quickOriginalBpm").textContent = original == null ? "–" : `${original} BPM`;
+    renderBpmValue($("quickTempo"), tempo);
+    renderBpmValue($("quickOriginalBpm"), original);
     if ($("quickCapo")) $("quickCapo").textContent = capo;
 
     const tempoTargets = [$("infoTempo"), $("quickTempo")].filter(Boolean);
