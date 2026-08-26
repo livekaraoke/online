@@ -507,7 +507,7 @@
    *   root/adm/files/song-data.js
    *
    * lyricview.html loads that file as:
-   *   ../files/song-data.js
+   *   ../../adm/files/song-data.js
    *
    * song-data.js exposes window.songs.
    *
@@ -644,27 +644,74 @@
     return "";
   }
 
-  async function waitForSongData(timeoutMs = 4000) {
+  async function ensureSongDataLoaded() {
     if (Array.isArray(window.songs) && window.songs.length) {
       return true;
     }
 
-    const start = Date.now();
+    // IMPORTANT:
+    // Do not rely on a single HTML <script> path. Load song-data.js here as
+    // well so the dropdown still works even if the HTML reference is missing
+    // or an older cached lyricview.html is being used.
+    //
+    // The first path below is the path you specified for this project.
+    const candidates = [
+      "../../adm/files/song-data.js",
+      "../files/song-data.js",
+      "/adm/files/song-data.js"
+    ];
 
-    return await new Promise(resolve => {
-      const timer = setInterval(() => {
-        if (Array.isArray(window.songs) && window.songs.length) {
-          clearInterval(timer);
-          resolve(true);
-          return;
-        }
+    for (const src of candidates) {
+      try {
+        const loaded = await new Promise(resolve => {
+          const existing = [...document.scripts].find(script => {
+            try {
+              return new URL(script.src, window.location.href).href ===
+                new URL(src, window.location.href).href;
+            } catch {
+              return false;
+            }
+          });
 
-        if (Date.now() - start >= timeoutMs) {
-          clearInterval(timer);
-          resolve(false);
+          // If the exact script tag already exists, give it a brief chance to
+          // finish before trying another path.
+          if (existing) {
+            const started = Date.now();
+            const timer = setInterval(() => {
+              if (Array.isArray(window.songs) && window.songs.length) {
+                clearInterval(timer);
+                resolve(true);
+              } else if (Date.now() - started > 1200) {
+                clearInterval(timer);
+                resolve(false);
+              }
+            }, 50);
+            return;
+          }
+
+          const script = document.createElement("script");
+          script.src = src;
+          script.async = true;
+
+          script.onload = () => {
+            resolve(Array.isArray(window.songs) && window.songs.length > 0);
+          };
+
+          script.onerror = () => resolve(false);
+
+          document.head.appendChild(script);
+        });
+
+        if (loaded) {
+          console.log(`song-data.js loaded successfully from: ${src}`);
+          return true;
         }
-      }, 50);
-    });
+      } catch (error) {
+        console.warn(`Could not load song-data.js from ${src}`, error);
+      }
+    }
+
+    return Array.isArray(window.songs) && window.songs.length > 0;
   }
 
   async function loadSlaveLyricsOptions() {
@@ -681,11 +728,11 @@
         `<option value="">Loading lyrics list…</option>`;
     });
 
-    const loaded = await waitForSongData();
+    const loaded = await ensureSongDataLoaded();
 
     if (!loaded) {
       console.error(
-        "song-data.js did not load. Expected: ../../adm/files/song-data.js"
+        "song-data.js did not load. Tried: ../../adm/files/song-data.js, ../files/song-data.js, /adm/files/song-data.js"
       );
 
       selects.forEach(select => {
