@@ -685,7 +685,7 @@
 
     if (!loaded) {
       console.error(
-        "song-data.js did not load. Expected: ../adm/files/song-data.js"
+        "song-data.js did not load. Expected: ../../adm/files/song-data.js"
       );
 
       selects.forEach(select => {
