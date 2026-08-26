@@ -37,12 +37,19 @@
         <div><small>TEMPO</small><strong id="quickTempo">–</strong></div>
         <div><small>ORIGINAL BPM</small><strong id="quickOriginalBpm">–</strong></div>
         <div><small>CAPO</small><strong id="quickCapo">–</strong></div>
+
+        <!-- EDIT SONG stays on the same compact row as CAPO -->
+        <div class="performance-quick-edit-cell">
+          <small>EDIT</small>
+          <button id="quickEditSongBtn" type="button">✎ EDIT SONG</button>
+        </div>
       </div>
 
       <div class="performance-quick-karaoke">
         <span class="performance-quick-label">KARAOKE TOOLS</span>
 
-        <div class="performance-quick-actions">
+        <!-- LEFT: send/reset Karaoke -->
+        <div class="performance-quick-primary">
           <div class="split-action quick-split-action">
             <button id="quickSendToKaraokeBtn" type="button">▶ SEND TO KARAOKE</button>
             <button id="quickKaraokeMenuBtn" type="button" aria-label="Karaoke menu">▼</button>
@@ -51,10 +58,9 @@
               <button id="quickResetKaraokeBtn" type="button">RESET KARAOKE</button>
             </div>
           </div>
-
-          <button id="quickEditSongBtn" type="button">✎ EDIT SONG</button>
         </div>
 
+        <!-- RIGHT: Slave Lyrics -->
         <div class="performance-quick-slave">
           <select id="quickSlaveLyricsSelect" aria-label="Choose slave lyrics">
             <option value="">Choose lyrics to send…</option>
@@ -106,6 +112,8 @@
     </div>
 
     <div class="song-info-scroll">
+      <button id="editSongBtn" class="drawer-top-edit-btn" type="button">✎ EDIT SONG</button>
+
       <section class="song-info-card info-meta-grid">
         <div><small>KEY</small><strong id="infoKey">–</strong></div>
         <div><small>TIME</small><strong id="infoTime">–</strong></div>
@@ -137,7 +145,6 @@
               <button id="resetKaraokeBtn" type="button">RESET KARAOKE</button>
             </div>
           </div>
-          <button id="editSongBtn" type="button">✎ EDIT SONG</button>
         </div>
         <div class="slave-lyrics-tools">
           <label>TOOLS · SLAVE LYRICS</label>
