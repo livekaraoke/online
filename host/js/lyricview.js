@@ -43,22 +43,38 @@
   function setInfo(song) {
     const tempo = toNumber(song.userBpm);
     const original = toNumber(song.originalBpm);
+    const time = song.timeSignature || song.time || "4/4";
+    const capo = song.capo === "" || song.capo == null ? "0" : song.capo;
+
+    // SONG INFO sidebar
     $("infoKey").textContent = song.key || "–";
-    $("infoTime").textContent = song.timeSignature || song.time || "4/4";
+    $("infoTime").textContent = time;
     $("infoTempo").textContent = tempo == null ? "–" : `${tempo} BPM`;
-    $("infoCapo").textContent = song.capo === "" || song.capo == null ? "0" : song.capo;
+    $("infoCapo").textContent = capo;
     $("infoOriginalBpm").textContent = original == null ? "–" : `${original} BPM`;
     $("infoYear").textContent = song.year || "–";
     $("infoSongNotes").textContent = song.note || song.songNote || "No song notes.";
     $("capoDisplayValue").textContent = String(toNumber(song.capo) || 0);
 
-    $("infoTempo").classList.remove("tempo-match","tempo-different");
-    $("infoOriginalBpm").classList.remove("original-different");
+    // PERFORMANCE QUICK INFO above the first section
+    if ($("quickKey")) $("quickKey").textContent = song.key || "–";
+    if ($("quickTime")) $("quickTime").textContent = time;
+    if ($("quickTempo")) $("quickTempo").textContent = tempo == null ? "–" : `${tempo} BPM`;
+    if ($("quickOriginalBpm")) $("quickOriginalBpm").textContent = original == null ? "–" : `${original} BPM`;
+    if ($("quickCapo")) $("quickCapo").textContent = capo;
+
+    const tempoTargets = [$("infoTempo"), $("quickTempo")].filter(Boolean);
+    const originalTargets = [$("infoOriginalBpm"), $("quickOriginalBpm")].filter(Boolean);
+
+    tempoTargets.forEach(el => el.classList.remove("tempo-match", "tempo-different"));
+    originalTargets.forEach(el => el.classList.remove("original-different"));
+
     if (tempo != null && original != null) {
-      if (tempo === original) $("infoTempo").classList.add("tempo-match");
-      else {
-        $("infoTempo").classList.add("tempo-different");
-        $("infoOriginalBpm").classList.add("original-different");
+      if (tempo === original) {
+        tempoTargets.forEach(el => el.classList.add("tempo-match"));
+      } else {
+        tempoTargets.forEach(el => el.classList.add("tempo-different"));
+        originalTargets.forEach(el => el.classList.add("original-different"));
       }
     }
 
@@ -240,6 +256,11 @@
     // Update/centre the guide immediately when Prev/Next or a guide item is used.
     [...$("sectionProgress").children]
       .forEach((el, i) => el.classList.toggle("active", i === currentSectionIndex));
+
+    sectionEls.forEach((el, i) => {
+      el.classList.toggle("current-section", i === currentSectionIndex);
+    });
+
     centerActiveProgressSection(true);
 
     sectionEls[currentSectionIndex].scrollIntoView({
@@ -270,6 +291,12 @@
 
     [...$("sectionProgress").children]
       .forEach((el, i) => el.classList.toggle("active", i === currentSectionIndex));
+
+    // Match the bottom guide: tint the section header that is currently
+    // nearest the performance reading position.
+    sectionEls.forEach((el, i) => {
+      el.classList.toggle("current-section", i === currentSectionIndex);
+    });
 
     // As the performer scrolls through the song, automatically bring the
     // current section marker into view and keep it roughly centred.
@@ -368,20 +395,44 @@
   }
 
   async function loadSlaveLyricsOptions() {
-    const select = $("slaveLyricsSelect");
+    const selects = [$("slaveLyricsSelect"), $("quickSlaveLyricsSelect")].filter(Boolean);
+
     try {
       const snap = await db.collection("lyrics").get();
-      const songs = snap.docs.map(d => ({id:d.id,...d.data()})).sort((a,b)=>String(a.title||"").localeCompare(String(b.title||"")));
-      select.innerHTML = `<option value="">Choose lyrics to send…</option>` + songs.map(s => `<option value="${esc(dVal(s.id))}">${esc(s.title || "Untitled")} — ${esc(s.artist || "")}</option>`).join("");
-      if (currentSong?.karaokeLyrics && currentSong.karaokeLyrics !== "No") select.value = currentSong.karaokeLyrics;
-    } catch (e) { console.warn("Slave lyrics list unavailable",e); }
+      const songs = snap.docs
+        .map(d => ({id:d.id,...d.data()}))
+        .sort((a,b)=>String(a.title||"").localeCompare(String(b.title||"")));
+
+      const options =
+        `<option value="">Choose lyrics to send…</option>` +
+        songs.map(s =>
+          `<option value="${esc(dVal(s.id))}">${esc(s.title || "Untitled")} — ${esc(s.artist || "")}</option>`
+        ).join("");
+
+      selects.forEach(select => {
+        select.innerHTML = options;
+        if (currentSong?.karaokeLyrics && currentSong.karaokeLyrics !== "No") {
+          select.value = currentSong.karaokeLyrics;
+        }
+      });
+    } catch (e) {
+      console.warn("Slave lyrics list unavailable", e);
+    }
   }
   function dVal(v){return String(v||"").replace(/"/g,"&quot;");}
 
-  async function sendSlaveLyrics() {
-    const id = $("slaveLyricsSelect").value;
+  async function sendSlaveLyrics(selectId = "slaveLyricsSelect") {
+    const select = $(selectId);
+    const id = select?.value || "";
     if (!id) return showModal("Choose Lyrics", "Select a song first.");
-    await db.collection("karaokeControl").doc("liveLyrics").set({ currentSongId:id, songId:id, reset:false, updatedAt:firebase.firestore.FieldValue.serverTimestamp() }, {merge:true});
+
+    await db.collection("karaokeControl").doc("liveLyrics").set({
+      currentSongId:id,
+      songId:id,
+      reset:false,
+      updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+    }, {merge:true});
+
     showModal("Singer Lyrics Updated", "The selected lyrics were sent.");
   }
 
@@ -471,7 +522,26 @@
     $("karaokeMenuBtn").onclick = () => $("karaokeMenu").classList.toggle("hidden");
     $("resetKaraokeBtn").onclick = resetKaraoke;
     $("editSongBtn").onclick = () => location.href = `lyricscreator.html?firebaseId=${encodeURIComponent(currentSongId)}`;
-    $("sendSlaveLyricsBtn").onclick = sendSlaveLyrics;
+    $("sendSlaveLyricsBtn").onclick = () => sendSlaveLyrics("slaveLyricsSelect");
+
+    // Duplicate performance tools above the first lyric section.
+    if ($("quickSendToKaraokeBtn")) $("quickSendToKaraokeBtn").onclick = sendToKaraoke;
+    if ($("quickKaraokeMenuBtn")) {
+      $("quickKaraokeMenuBtn").onclick = () => $("quickKaraokeMenu").classList.toggle("hidden");
+    }
+    if ($("quickResetKaraokeBtn")) {
+      $("quickResetKaraokeBtn").onclick = async () => {
+        await resetKaraoke();
+        $("quickKaraokeMenu")?.classList.add("hidden");
+      };
+    }
+    if ($("quickEditSongBtn")) {
+      $("quickEditSongBtn").onclick = () =>
+        location.href = `lyricscreator.html?firebaseId=${encodeURIComponent(currentSongId)}`;
+    }
+    if ($("quickSendSlaveLyricsBtn")) {
+      $("quickSendSlaveLyricsBtn").onclick = () => sendSlaveLyrics("quickSlaveLyricsSelect");
+    }
     $("adminShortcutBtn").onclick = () => window.open("../../admin-new/admin.html","_blank","noopener");
     $("myNotesInput").addEventListener("input",() => { clearTimeout(notesSaveTimer); notesSaveTimer=setTimeout(saveMyNotes,700); });
     window.addEventListener("scroll",updateSectionProgress,{passive:true});
