@@ -19,10 +19,10 @@
   let autoScrollOn = false;
 
   // AUTOSCROLL:
-  // 1.00× is now physically one-sixth of the old 1.00× pace.
+  // 1.00× is now physically one-third of the old 1.00× pace.
   // The multiplier is stored separately for every song in Firestore.
   let scrollSpeed = 1;
-  const AUTO_SCROLL_BASE_PX_PER_MS = 0.003; // old base was 0.018
+  const AUTO_SCROLL_BASE_PX_PER_MS = 0.006; // one-third of old 0.018 base
   let chordShift = 0;
   let tabShift = 0;
   let capoDisplayShift = 0;
@@ -592,7 +592,7 @@
     // Songs that do not have a saved value yet start at 1.00×.
     // Because the base rate itself is now 1/6, this is already much slower.
     scrollSpeed = Number.isFinite(saved)
-      ? Math.max(0.25, Math.min(3, saved))
+      ? Math.max(0.1, Math.min(10, saved))
       : 1;
 
     updateSpeed();
@@ -615,17 +615,38 @@
     autoScrollOn = !autoScrollOn;
     $("autoScrollBtn").classList.toggle("active", autoScrollOn);
     $("autoScrollBtn").textContent = autoScrollOn ? "Ⅱ" : "▶";
+
     if (autoScrollOn) {
       let last = performance.now();
+      let fractionalY = 0;
+
       const tick = now => {
         if (!autoScrollOn) return;
-        const dt = now-last; last=now;
-        // Deliberately 1/6 of the old physical scroll speed.
-        scrollBy(0, dt * AUTO_SCROLL_BASE_PX_PER_MS * scrollSpeed);
+
+        // Keep scrolling tied to the browser's refresh cycle.
+        // Fractional accumulation avoids stop/start integer-pixel jumps
+        // at slower speeds while remaining stable at high speeds.
+        const dt = Math.min(50, Math.max(0, now - last));
+        last = now;
+
+        if (!document.hidden) {
+          fractionalY += dt * AUTO_SCROLL_BASE_PX_PER_MS * scrollSpeed;
+
+          const wholePixels = Math.floor(fractionalY);
+          if (wholePixels > 0) {
+            window.scrollBy(0, wholePixels);
+            fractionalY -= wholePixels;
+          }
+        }
+
         scrollTimer = requestAnimationFrame(tick);
       };
+
       scrollTimer = requestAnimationFrame(tick);
-    } else if (scrollTimer) cancelAnimationFrame(scrollTimer);
+    } else if (scrollTimer) {
+      cancelAnimationFrame(scrollTimer);
+      scrollTimer = null;
+    }
   }
 
   function bindUi() {
@@ -655,13 +676,13 @@
     $("jumpBottomBtn").onclick = () => scrollTo({top:document.documentElement.scrollHeight,behavior:"smooth"});
     $("autoScrollBtn").onclick = startAutoScroll;
     $("scrollSpeedDown").onclick = async () => {
-      scrollSpeed = Math.max(.25, +(scrollSpeed - .25).toFixed(2));
+      scrollSpeed = Math.max(0.1, +(scrollSpeed - 0.1).toFixed(1));
       updateSpeed();
       await saveSongScrollSpeed();
     };
 
     $("scrollSpeedUp").onclick = async () => {
-      scrollSpeed = Math.min(3, +(scrollSpeed + .25).toFixed(2));
+      scrollSpeed = Math.min(10, +(scrollSpeed + 0.1).toFixed(1));
       updateSpeed();
       await saveSongScrollSpeed();
     };
@@ -707,7 +728,7 @@
     });
     updateSpeed();
   }
-  function updateSpeed(){ $("scrollSpeedLabel").textContent = `${scrollSpeed.toFixed(2)}×`; }
+  function updateSpeed(){ $("scrollSpeedLabel").textContent = `${scrollSpeed.toFixed(1)}×`; }
 
   async function init() {
     await loadSectionTitleDefaultsForView();
