@@ -504,18 +504,18 @@
    *
    * IMPORTANT:
    * The dropdown is populated from:
-   *   root/adm/files/song-data.js
+   *   root/adm/files/song-data-kl.js
    *
    * lyricview.html loads that file as:
-   *   ../../adm/files/song-data.js
+   *   ../files/song-data-kl.js
    *
-   * song-data.js exposes window.songs.
+   * song-data-kl.js exposes window.songs.
    *
    * We deliberately DO NOT build the target from:
    *   Song Title + Artist
    *
    * Instead we take the ID/filename directly from each song's
-   * saved URL in song-data.js. This restores the old behaviour
+   * saved URL in song-data-kl.js. This restores the old behaviour
    * for files such as:
    *   allthesmallthings.js
    ************************************************************/
@@ -576,7 +576,7 @@
     source.forEach(song => {
       if (!song) return;
 
-      // song-data.js is the authoritative mapping.
+      // song-data-kl.js is the authoritative mapping.
       // Some older rows use url, while a few builds may use one of the
       // alternate URL field names below, so support all of them safely.
       const sourceUrl =
@@ -626,7 +626,7 @@
       if (match) return match.id;
     }
 
-    // Second preference: match current song title against song-data.js title.
+    // Second preference: match current song title against song-data-kl.js title.
     // We do NOT append the artist to create a filename.
     const currentTitle = String(currentSong?.title || "")
       .toLowerCase()
@@ -644,76 +644,6 @@
     return "";
   }
 
-  async function ensureSongDataLoaded() {
-    if (Array.isArray(window.songs) && window.songs.length) {
-      return true;
-    }
-
-    // IMPORTANT:
-    // Do not rely on a single HTML <script> path. Load song-data.js here as
-    // well so the dropdown still works even if the HTML reference is missing
-    // or an older cached lyricview.html is being used.
-    //
-    // The first path below is the path you specified for this project.
-    const candidates = [
-      "../../adm/files/song-data.js",
-      "../files/song-data.js",
-      "/adm/files/song-data.js"
-    ];
-
-    for (const src of candidates) {
-      try {
-        const loaded = await new Promise(resolve => {
-          const existing = [...document.scripts].find(script => {
-            try {
-              return new URL(script.src, window.location.href).href ===
-                new URL(src, window.location.href).href;
-            } catch {
-              return false;
-            }
-          });
-
-          // If the exact script tag already exists, give it a brief chance to
-          // finish before trying another path.
-          if (existing) {
-            const started = Date.now();
-            const timer = setInterval(() => {
-              if (Array.isArray(window.songs) && window.songs.length) {
-                clearInterval(timer);
-                resolve(true);
-              } else if (Date.now() - started > 1200) {
-                clearInterval(timer);
-                resolve(false);
-              }
-            }, 50);
-            return;
-          }
-
-          const script = document.createElement("script");
-          script.src = src;
-          script.async = true;
-
-          script.onload = () => {
-            resolve(Array.isArray(window.songs) && window.songs.length > 0);
-          };
-
-          script.onerror = () => resolve(false);
-
-          document.head.appendChild(script);
-        });
-
-        if (loaded) {
-          console.log(`song-data.js loaded successfully from: ${src}`);
-          return true;
-        }
-      } catch (error) {
-        console.warn(`Could not load song-data.js from ${src}`, error);
-      }
-    }
-
-    return Array.isArray(window.songs) && window.songs.length > 0;
-  }
-
   async function loadSlaveLyricsOptions() {
     const selects = [
       $("slaveLyricsSelect"),
@@ -728,17 +658,17 @@
         `<option value="">Loading lyrics list…</option>`;
     });
 
-    const loaded = await ensureSongDataLoaded();
-
-    if (!loaded) {
+    // song-data-kl.js is loaded by lyricview.html BEFORE lyricview.js.
+    // Do not dynamically guess paths here; use the original working source.
+    if (!Array.isArray(window.songs) || !window.songs.length) {
       console.error(
-        "song-data.js did not load. Tried: ../../adm/files/song-data.js, ../files/song-data.js, /adm/files/song-data.js"
+        "song-data-kl.js did not expose window.songs. Expected HTML source: ../files/song-data-kl.js"
       );
 
       selects.forEach(select => {
         select.disabled = false;
         select.innerHTML =
-          `<option value="">Could not load song-data.js</option>`;
+          `<option value="">Could not load song-data-kl.js</option>`;
       });
       return;
     }
@@ -754,7 +684,7 @@
       selects.forEach(select => {
         select.disabled = false;
         select.innerHTML =
-          `<option value="">No lyric JS files found in song-data.js</option>`;
+          `<option value="">No lyric JS files found in song-data-kl.js</option>`;
       });
       return;
     }
@@ -782,7 +712,7 @@
     });
 
     console.log(
-      `Loaded ${entries.length} slave lyric file entries from song-data.js`,
+      `Loaded ${entries.length} slave lyric file entries from song-data-kl.js`,
       entries
     );
   }
