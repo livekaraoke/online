@@ -8,6 +8,76 @@
   let songsUnsub = null;
   let setlistsUnsub = null;
 
+  const VIEW_STATE_KEY = "lyricsViewerUiStateV2";
+  let restoredState = null;
+  let initialScrollRestored = false;
+
+  function readViewState() {
+    try {
+      return JSON.parse(localStorage.getItem(VIEW_STATE_KEY) || "null") || {};
+    } catch {
+      return {};
+    }
+  }
+
+  function currentViewState() {
+    return {
+      sidebarCollapsed: $("libraryShell")?.classList.contains("sidebar-collapsed") || false,
+      search: filters.search?.value || "",
+      artist: filters.artist?.value || "",
+      key: filters.key?.value || "",
+      visibility: filters.visibility?.value || "",
+      content: filters.content?.value || "",
+      sort: filters.sort?.value || "title",
+      setlist: filters.setlist?.value || "",
+      stickyFavs: $("stickyFavToggle")?.checked || false,
+      scrollY: Math.max(0, window.scrollY || 0)
+    };
+  }
+
+  function saveViewState() {
+    try {
+      localStorage.setItem(VIEW_STATE_KEY, JSON.stringify(currentViewState()));
+    } catch (error) {
+      console.warn("Could not save Lyrics Viewer state:", error);
+    }
+  }
+
+  function applyImmediateRestoredState() {
+    restoredState = readViewState();
+
+    if (restoredState.sidebarCollapsed) {
+      $("libraryShell")?.classList.add("sidebar-collapsed");
+    }
+
+    if (filters.search) filters.search.value = restoredState.search || "";
+    if (filters.visibility) filters.visibility.value = restoredState.visibility || "";
+    if (filters.content) filters.content.value = restoredState.content || "";
+    if (filters.sort) filters.sort.value = restoredState.sort || "title";
+    if ($("stickyFavToggle")) $("stickyFavToggle").checked = !!restoredState.stickyFavs;
+  }
+
+  function restoreScrollWhenReady() {
+    if (initialScrollRestored || !restoredState) return;
+    initialScrollRestored = true;
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        window.scrollTo({
+          top: Number(restoredState.scrollY) || 0,
+          left: 0,
+          behavior: "auto"
+        });
+      });
+    });
+  }
+
+  function updateStickyOffsets() {
+    const topbar = document.querySelector(".lyricsviewer-topbar");
+    const height = topbar ? Math.ceil(topbar.getBoundingClientRect().height) : 0;
+    document.documentElement.style.setProperty("--lyricsviewer-topbar-h", `${height}px`);
+  }
+
   const favourites = new Set(
     JSON.parse(localStorage.getItem("lyricsViewerFavourites") || "[]")
   );
@@ -70,7 +140,7 @@
   }
 
   function populateSetlists() {
-    const current = filters.setlist.value;
+    const current = filters.setlist.value || restoredState?.setlist || "";
 
     const ordered = [...setlists].sort((a, b) =>
       String(a.name || "").localeCompare(String(b.name || ""))
@@ -85,13 +155,14 @@
         </option>
       `).join("");
 
-    filters.setlist.value = current;
+    const setlistExists = [...filters.setlist.options].some(option => option.value === current);
+    filters.setlist.value = setlistExists ? current : "";
     $("statSetlists").textContent = setlists.length.toLocaleString();
   }
 
   function populateFilters() {
-    const currentArtist = filters.artist.value;
-    const currentKey = filters.key.value;
+    const currentArtist = filters.artist.value || restoredState?.artist || "";
+    const currentKey = filters.key.value || restoredState?.key || "";
 
     const artists = [...new Set(songs.map(song => song.artist).filter(Boolean))]
       .sort((a, b) => a.localeCompare(b));
@@ -111,8 +182,12 @@
         `<option>${LyricsCommon.escapeHTML(value)}</option>`
       ).join("");
 
-    filters.artist.value = currentArtist;
-    filters.key.value = currentKey;
+    filters.artist.value = [...filters.artist.options].some(option => option.value === currentArtist)
+      ? currentArtist
+      : "";
+    filters.key.value = [...filters.key.options].some(option => option.value === currentKey)
+      ? currentKey
+      : "";
   }
 
   function filteredSongs() {
@@ -298,9 +373,12 @@
 
     renderAlphabetNav(groups);
     selectedIndex = Math.min(selectedIndex, visibleSongs.length - 1);
+
+    restoreScrollWhenReady();
   }
 
   function openSong(id) {
+    saveViewState();
     window.location.href = `lyricview.html?id=${encodeURIComponent(id)}`;
   }
 
@@ -392,11 +470,17 @@
   Object.values(filters).forEach(element => {
     element?.addEventListener(
       element.tagName === "INPUT" ? "input" : "change",
-      render
+      () => {
+        render();
+        saveViewState();
+      }
     );
   });
 
-  $("stickyFavToggle").addEventListener("change", render);
+  $("stickyFavToggle").addEventListener("change", () => {
+    render();
+    saveViewState();
+  });
 
   $("clearFiltersBtn").onclick = () => {
     filters.search.value = "";
@@ -407,6 +491,7 @@
     filters.setlist.value = "";
     filters.sort.value = "title";
     render();
+    saveViewState();
   };
 
   $("refreshBtn").onclick = loadData;
@@ -420,18 +505,20 @@
   };
 
   $("sidebarToggleBtn").onclick = () => {
-    const collapsed = $("libraryShell").classList.toggle("sidebar-collapsed");
-    localStorage.setItem(
-      "lyricsSidebarCollapsed",
-      collapsed ? "1" : "0"
-    );
+    $("libraryShell").classList.toggle("sidebar-collapsed");
     syncSidebarButton();
+    saveViewState();
   };
 
-  if (localStorage.getItem("lyricsSidebarCollapsed") === "1") {
-    $("libraryShell").classList.add("sidebar-collapsed");
-  }
-
+  // Restore the exact library context the user left:
+  // sidebar visibility, filters, setlist, sort, sticky favourites and scroll.
+  applyImmediateRestoredState();
   syncSidebarButton();
+
+  updateStickyOffsets();
+  window.addEventListener("resize", updateStickyOffsets);
+  window.addEventListener("pagehide", saveViewState);
+  window.addEventListener("beforeunload", saveViewState);
+
   loadData();
 })();
