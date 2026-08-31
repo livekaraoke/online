@@ -13,7 +13,7 @@
     <button id="backToViewerBtn" class="btn ghost" type="button">‹ LYRICS VIEWER</button>
 
     <div class="brand-block creator-brand-block">
-      <strong id="creatorHeading">✎ EDIT LYRICS &amp; CHORDS</strong>
+      <strong id="creatorHeading">✎ EDIT SONG</strong>
       <span id="creatorStatus">Editing: New Song</span>
     </div>
 
@@ -63,20 +63,35 @@
       </div>
     </section>
 
-    <section class="panel section-defaults-panel">
-      <div class="section-defaults-head">
-        <div>
-          <h3>SECTION TITLE DEFAULTS</h3>
-          <p>System defaults apply when a section does not have its own custom title colour.</p>
+    <section class="panel section-defaults-panel defaults-collapsed">
+      <button id="sectionDefaultsToggleBtn" class="section-defaults-toggle" type="button" aria-expanded="false">
+        <span>
+          <strong>SECTION TITLE DEFAULTS</strong>
+          <small>System colours used when a section has no song-specific override.</small>
+        </span>
+        <span id="sectionDefaultsToggleIcon" class="section-defaults-toggle-icon">▼</span>
+      </button>
+
+      <div id="sectionDefaultsBody" class="section-defaults-body hidden">
+        <div class="section-defaults-actions">
+          <button id="saveSectionDefaultsBtn" class="btn ghost" type="button">SAVE DEFAULTS</button>
+          <button id="resetSectionDefaultsBtn" class="btn ghost" type="button">RESET SYSTEM DEFAULTS</button>
         </div>
-        <button id="saveSectionDefaultsBtn" class="btn ghost" type="button">SAVE DEFAULTS</button>
-      </div>
-      <div class="section-defaults-grid">
-        <label><span>VERSE</span><input id="defaultVerseColor" type="color" value="#ffffff"></label>
-        <label><span>PRE-CHORUS</span><input id="defaultPreChorusColor" type="color" value="#ffb45c"></label>
-        <label><span>CHORUS</span><input id="defaultChorusColor" type="color" value="#42f35c"></label>
-        <label><span>ENDING</span><input id="defaultEndingColor" type="color" value="#ffd400"></label>
-        <button id="resetSectionDefaultsBtn" class="btn ghost" type="button">RESET SYSTEM DEFAULTS</button>
+
+        <div class="section-defaults-grid">
+          <label><span>VERSE</span><input id="defaultVerseColor" type="color" value="#ffffff"></label>
+          <label><span>PRE-CHORUS</span><input id="defaultPreChorusColor" type="color" value="#ffb45c"></label>
+          <label><span>CHORUS</span><input id="defaultChorusColor" type="color" value="#42f35c"></label>
+          <label><span>POST-CHORUS</span><input id="defaultPostChorusColor" type="color" value="#ffffff"></label>
+          <label><span>BRIDGE</span><input id="defaultBridgeColor" type="color" value="#ffffff"></label>
+          <label><span>INTRO</span><input id="defaultIntroColor" type="color" value="#ffffff"></label>
+          <label><span>OUTRO</span><input id="defaultOutroColor" type="color" value="#ffffff"></label>
+          <label><span>INSTRUMENTAL</span><input id="defaultInstrumentalColor" type="color" value="#ffffff"></label>
+          <label><span>SOLO</span><input id="defaultSoloColor" type="color" value="#ffffff"></label>
+          <label><span>GUITAR TAB</span><input id="defaultGuitarTabColor" type="color" value="#ffffff"></label>
+          <label><span>HOST NOTE</span><input id="defaultHostNoteColor" type="color" value="#ffffff"></label>
+          <label><span>ENDING</span><input id="defaultEndingColor" type="color" value="#ffd400"></label>
+        </div>
       </div>
     </section>
 
