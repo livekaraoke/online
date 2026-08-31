@@ -5,6 +5,25 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Live Karaoke Song List</title>
   <link rel="stylesheet" href="css/style.css">
+  <style>
+    .public-setlist-banner {
+      display:flex; align-items:center; justify-content:space-between;
+      gap:12px; margin:0 0 10px; padding:8px 12px;
+      border:1px solid rgba(54,201,90,.45); border-radius:8px;
+      background:rgba(4,23,9,.82);
+    }
+    .public-setlist-banner span {
+      color:#67dc78; font-size:9px; font-weight:900; letter-spacing:.09em;
+    }
+    .public-setlist-banner strong {
+      min-width:0; color:#f3f3f3; font-size:12px;
+      overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+    }
+    @media (max-width:600px) {
+      .public-setlist-banner { align-items:flex-start; flex-direction:column; gap:3px; }
+      .public-setlist-banner strong { width:100%; }
+    }
+  </style>
 </head>
 <body data-page="public-songlist">
   <main class="songbook">
@@ -28,6 +47,11 @@
     </section>
 
     <section class="song-list-title requests-open-only">
+      <div id="publicSetlistBanner" class="public-setlist-banner">
+        <span>PUBLIC SONG LIST</span>
+        <strong id="publicSetlistName">Loading selected list...</strong>
+      </div>
+
       <div class="search-row">
         <div class="search-wrap">
           <span class="search-icon">⌕</span>
