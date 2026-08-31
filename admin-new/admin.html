@@ -27,8 +27,56 @@
       display:block; min-height:12px; margin-top:3px;
       color:#6fbd79; font-size:9px;
     }
+    /* PERFORMANCE SESSION TYPE DROPDOWN */
     #sessionTypeInput {
-      width:100%; min-width:0; box-sizing:border-box;
+      width: 100%;
+      min-width: 0;
+      min-height: 38px;
+      box-sizing: border-box;
+      padding: 8px 34px 8px 10px;
+
+      border: 1px solid #3a3a3a;
+      border-radius: 7px;
+
+      background-color: #090909;
+      color: #eeeeee;
+
+      font: inherit;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .02em;
+
+      cursor: pointer;
+      outline: none;
+
+      /* Keep the dark Admin styling instead of the browser's white select. */
+      color-scheme: dark;
+      appearance: auto;
+      -webkit-appearance: menulist;
+
+      transition:
+        border-color .15s ease,
+        box-shadow .15s ease,
+        background-color .15s ease;
+    }
+
+    #sessionTypeInput:hover {
+      border-color: #5a5a5a;
+      background-color: #101010;
+    }
+
+    #sessionTypeInput:focus {
+      border-color: #b71f25;
+      background-color: #0d0d0d;
+      box-shadow:
+        0 0 0 1px rgba(183, 31, 37, .25),
+        0 0 12px rgba(183, 31, 37, .14);
+    }
+
+    #sessionTypeInput option {
+      background: #0b0b0b;
+      color: #eeeeee;
+      font-weight: 700;
     }
   </style>
 </head>
