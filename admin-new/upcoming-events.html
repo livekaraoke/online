@@ -143,7 +143,12 @@
 
         <label class="wide">
           <span>VENUE</span>
-          <input id="eventVenueInput" type="text" placeholder="Venue / location" />
+          <select id="eventVenueInput">
+            <option value="">Choose a saved venue...</option>
+          </select>
+          <small class="venue-source-hint">
+            Venue details are managed from <a href="venues.html">Venues</a>.
+          </small>
         </label>
 
         <label>
@@ -186,17 +191,17 @@
 
         <label class="wide">
           <span>ADDRESS / LOCATION DETAILS</span>
-          <input id="eventAddressInput" type="text" placeholder="Address, room, stage location…" />
+          <input id="eventAddressInput" type="text" placeholder="Choose a venue above" readonly />
         </label>
 
         <label>
           <span>CONTACT NAME</span>
-          <input id="eventContactNameInput" type="text" placeholder="Contact person" />
+          <input id="eventContactNameInput" type="text" placeholder="Choose a venue above" readonly />
         </label>
 
         <label>
           <span>CONTACT</span>
-          <input id="eventContactInput" type="text" placeholder="Phone / email" />
+          <input id="eventContactInput" type="text" placeholder="Choose a venue above" readonly />
         </label>
 
         <label class="wide">
