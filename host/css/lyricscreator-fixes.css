@@ -561,3 +561,123 @@
   text-underline-offset: 3px;
   font-weight: 800;
 }
+
+
+/* =========================================================
+   2026-08-31 — TITLE COLOUR / DEFAULTS COLLAPSE UPDATE
+   ========================================================= */
+
+.section-defaults-panel {
+  padding: 0 !important;
+  overflow: hidden !important;
+}
+
+.section-defaults-toggle {
+  width: 100%;
+  min-height: 58px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 11px 14px;
+  border: 0;
+  background: #111;
+  color: #eee;
+  text-align: left;
+  cursor: pointer;
+}
+
+.section-defaults-toggle:hover {
+  background: #171717;
+}
+
+.section-defaults-toggle > span:first-child {
+  display: grid;
+  gap: 3px;
+}
+
+.section-defaults-toggle strong {
+  font-size: 13px;
+  letter-spacing: .04em;
+}
+
+.section-defaults-toggle small {
+  color: #828282;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.section-defaults-toggle-icon {
+  flex: 0 0 auto;
+  color: #63df78;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.section-defaults-body {
+  padding: 13px 14px 15px;
+  border-top: 1px solid #303030;
+}
+
+.section-defaults-body.hidden {
+  display: none !important;
+}
+
+.section-defaults-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.section-defaults-grid {
+  grid-template-columns: repeat(4, minmax(105px, 1fr)) !important;
+}
+
+.section-defaults-grid input[type="color"] {
+  cursor: pointer !important;
+}
+
+/* The per-section title dropdown and colour strip are two synchronized
+   controls for the same exact titleColor value. */
+.section-title-colour-control input[type="color"] {
+  width: 34px !important;
+  min-width: 34px !important;
+  height: 30px !important;
+  padding: 2px !important;
+  cursor: pointer !important;
+}
+
+.section-title-colour-control select {
+  min-width: 116px !important;
+}
+
+/* Make the strip visually obvious as an editable control. */
+.section-title-colour-control input[type="color"]::-webkit-color-swatch-wrapper {
+  padding: 1px;
+}
+
+.section-title-colour-control input[type="color"]::-webkit-color-swatch {
+  border: 0;
+  border-radius: 3px;
+}
+
+@media (max-width: 980px) {
+  .section-defaults-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 720px) {
+  .section-defaults-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .section-defaults-actions {
+    justify-content: stretch;
+  }
+
+  .section-defaults-actions button {
+    flex: 1 1 0;
+  }
+}
