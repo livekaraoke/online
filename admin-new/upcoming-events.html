@@ -34,6 +34,7 @@
 
         <div class="events-topbar-actions">
           <button id="eventsBackBtn" class="events-btn ghost" type="button">← ADMIN</button>
+          <button id="manageEventTypesBtn" class="events-btn ghost" type="button">⚙ TYPES</button>
           <button id="newEventBtn" class="events-btn primary" type="button">＋ NEW EVENT</button>
         </div>
       </header>
@@ -78,6 +79,8 @@
               <option value="Live Karaoke">Live Karaoke</option>
               <option value="Roxanna">Roxanna</option>
               <option value="Solo">Solo</option>
+              <option value="Texanna">Texanna</option>
+              <option value="Other">Other</option>
             </select>
           </div>
 
@@ -157,6 +160,8 @@
             <option value="Live Karaoke">Live Karaoke</option>
             <option value="Roxanna">Roxanna</option>
             <option value="Solo">Solo</option>
+            <option value="Texanna">Texanna</option>
+            <option value="Other">Other</option>
           </select>
         </label>
 
@@ -228,6 +233,36 @@
       <div class="events-modal-actions">
         <button id="deleteEventCancelBtn" class="events-btn ghost" type="button">CANCEL</button>
         <button id="deleteEventConfirmBtn" class="events-btn danger" type="button">DELETE EVENT</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- EVENT TYPE MANAGER -->
+  <div id="eventTypesModal" class="events-modal hidden" role="dialog" aria-modal="true">
+    <div class="events-modal-card compact event-types-manager">
+      <div class="events-modal-head">
+        <div>
+          <span>EVENT / SESSION SETTINGS</span>
+          <h2>Manage Types</h2>
+        </div>
+        <button id="eventTypesCloseBtn" type="button" class="icon-close" aria-label="Close">×</button>
+      </div>
+
+      <p class="event-types-help">
+        These options are shared by Upcoming Events and the Admin Performance Session TYPE dropdown.
+      </p>
+
+      <div id="eventTypesList" class="event-types-list"></div>
+
+      <div class="event-type-add-row">
+        <input id="newEventTypeInput" type="text" placeholder="Add new type…" />
+        <button id="addEventTypeBtn" class="events-btn primary" type="button">＋ ADD</button>
+      </div>
+
+      <p id="eventTypesMessage" class="event-form-message"></p>
+
+      <div class="events-modal-actions">
+        <button id="eventTypesDoneBtn" class="events-btn ghost" type="button">DONE</button>
       </div>
     </div>
   </div>
