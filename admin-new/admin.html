@@ -78,7 +78,42 @@
       color: #eeeeee;
       font-weight: 700;
     }
-  </style>
+  
+    /* PERFORMANCE SESSION — GO TO LYRICS SUITE */
+    .session-lyrics-suite-row {
+      display: flex;
+      width: 100%;
+      margin-top: 8px;
+    }
+
+    .session-lyrics-suite-row .lyrics-suite-session-btn {
+      width: 100%;
+      min-height: 40px;
+      border: 1px solid #7b1e23;
+      border-radius: 7px;
+      background: linear-gradient(180deg, #1a1112, #0e090a);
+      color: #f2f2f2;
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: .04em;
+      cursor: pointer;
+      transition:
+        border-color .15s ease,
+        background .15s ease,
+        box-shadow .15s ease,
+        transform .1s ease;
+    }
+
+    .session-lyrics-suite-row .lyrics-suite-session-btn:hover {
+      border-color: #bd2a31;
+      background: linear-gradient(180deg, #271416, #140b0c);
+      box-shadow: 0 0 14px rgba(189, 42, 49, .14);
+    }
+
+    .session-lyrics-suite-row .lyrics-suite-session-btn:active {
+      transform: translateY(1px);
+    }
+</style>
 </head>
 <body class="admin-body">
 
@@ -226,6 +261,16 @@
               <button id="endBreakBtn" type="button" onclick="endBreak()" class="session-btn muted">End Break</button>
               <button id="endPerformanceBtn" type="button" onclick="confirmEndPerformance()" class="session-btn red">■ End Performance</button>
             </div>
+
+            <div class="session-lyrics-suite-row">
+              <button
+                type="button"
+                class="session-btn lyrics-suite-session-btn"
+                onclick="window.location.href='../host/lyricsviewer.html'">
+                🎸 GO TO LYRICS SUITE
+              </button>
+            </div>
+
             <div id="sessionDashboard" class="session-dashboard"></div>
           </div>
         </div>
