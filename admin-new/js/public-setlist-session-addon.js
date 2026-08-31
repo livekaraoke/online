@@ -3,6 +3,21 @@
 
   const $ = id => document.getElementById(id);
 
+  // Use the already-loaded Firebase compat SDK directly instead of assuming
+  // that another script created a global variable named `db`.
+  const db =
+    window.db ||
+    window.LK?.db ||
+    (window.firebase?.firestore ? firebase.firestore() : null);
+
+  if (!db) {
+    console.error(
+      "public-setlist-session-addon.js: Firestore is not available. " +
+      "Make sure firebase-firestore-compat.js and js/firebase.js load before this addon."
+    );
+    return;
+  }
+
   const PUBLIC_LIST_DOC = db.collection("karaokeControl").doc("publicSongList");
   let publicSetlists = [];
   let currentPublicSetlistId = "";
