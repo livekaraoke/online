@@ -113,6 +113,224 @@
     .session-lyrics-suite-row .lyrics-suite-session-btn:active {
       transform: translateY(1px);
     }
+
+    /* =====================================================
+       UPCOMING EVENTS / SESSION PREFILL / NEXT GIGS
+       ===================================================== */
+
+    .next-gigs-status-box {
+      min-width: 210px;
+    }
+
+    .status-next-gigs {
+      display: grid;
+      gap: 4px;
+      margin-top: 5px;
+    }
+
+    .status-next-gigs button {
+      width: 100%;
+      min-width: 0;
+      padding: 4px 6px;
+      border: 1px solid #303030;
+      border-radius: 5px;
+      background: #0c0c0c;
+      color: #bdbdbd;
+      font: inherit;
+      font-size: 9px;
+      text-align: left;
+      cursor: pointer;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .status-next-gigs button:hover {
+      border-color: #8d2429;
+      background: #160c0d;
+      color: #fff;
+    }
+
+    .status-next-gigs .status-next-gig-empty {
+      color: #696969;
+      cursor: default;
+    }
+
+    .session-event-suggestion {
+      grid-column: 1 / -1;
+      margin-bottom: 7px;
+      padding: 9px 10px;
+      border: 1px solid #333;
+      border-radius: 7px;
+      background: linear-gradient(180deg, #111, #0a0a0a);
+    }
+
+    .session-event-suggestion.has-event {
+      border-color: #71451d;
+      background: linear-gradient(180deg, #171108, #0d0a06);
+    }
+
+    .session-event-suggestion-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 9px;
+      margin-bottom: 5px;
+    }
+
+    .session-event-suggestion-head > span {
+      color: #a78655;
+      font-size: 9px;
+      font-weight: 950;
+      letter-spacing: .08em;
+    }
+
+    .session-event-suggestion-head button {
+      width: 23px;
+      height: 23px;
+      padding: 0;
+      border: 1px solid #343434;
+      border-radius: 5px;
+      background: #0b0b0b;
+      color: #777;
+      cursor: pointer;
+    }
+
+    #sessionEventSuggestionBody {
+      min-width: 0;
+    }
+
+    #sessionEventSuggestionBody button {
+      width: 100%;
+      padding: 7px 9px;
+      border: 0;
+      border-radius: 5px;
+      background: transparent;
+      color: #ddd;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    #sessionEventSuggestionBody button:hover {
+      background: rgba(255,255,255,.035);
+    }
+
+    #sessionEventSuggestionBody strong {
+      display: block;
+      color: #f0f0f0;
+      font-size: 11px;
+    }
+
+    #sessionEventSuggestionBody span {
+      display: block;
+      margin-top: 2px;
+      color: #8e8e8e;
+      font-size: 9px;
+    }
+
+    .dashboard-event-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .dashboard-upcoming-events-list {
+      display: grid;
+      gap: 6px;
+    }
+
+    .dashboard-event-row {
+      display: grid;
+      grid-template-columns: 72px minmax(180px,1fr) minmax(120px,.55fr) 105px auto;
+      gap: 9px;
+      align-items: center;
+      min-height: 54px;
+      padding: 7px 9px;
+      border: 1px solid #292929;
+      border-radius: 7px;
+      background: #0d0d0d;
+      cursor: pointer;
+    }
+
+    .dashboard-event-row:hover {
+      border-color: #713137;
+      background: #120d0e;
+    }
+
+    .dashboard-event-date {
+      color: #c9c9c9;
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    .dashboard-event-main {
+      min-width: 0;
+    }
+
+    .dashboard-event-main strong {
+      display: block;
+      overflow: hidden;
+      color: #efefef;
+      font-size: 12px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .dashboard-event-main small {
+      display: block;
+      margin-top: 3px;
+      overflow: hidden;
+      color: #777;
+      font-size: 9px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .dashboard-event-venue,
+    .dashboard-event-time {
+      overflow: hidden;
+      color: #aaa;
+      font-size: 10px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .dashboard-event-type {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 24px;
+      padding: 3px 7px;
+      border: 1px solid #454545;
+      border-radius: 999px;
+      color: #ccc;
+      font-size: 8px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .dashboard-event-empty {
+      padding: 22px 12px;
+      border: 1px dashed #303030;
+      border-radius: 7px;
+      color: #696969;
+      font-size: 10px;
+      text-align: center;
+    }
+
+    @media (max-width: 900px) {
+      .dashboard-event-row {
+        grid-template-columns: 62px minmax(0,1fr) auto;
+      }
+
+      .dashboard-event-venue,
+      .dashboard-event-time {
+        display: none;
+      }
+
+      .next-gigs-status-box {
+        min-width: 170px;
+      }
+    }
 </style>
 </head>
 <body class="admin-body">
@@ -212,7 +430,12 @@
           </div>
         </div>
         <div class="status-box"><span>Venue</span><strong id="statusVenueLabel">-</strong></div>
-        <div class="status-box"><span>Event End</span><strong id="statusEventEndLabel">-</strong></div>
+        <div class="status-box next-gigs-status-box">
+          <span>Next Gigs</span>
+          <div id="statusNextGigs" class="status-next-gigs">
+            <button type="button" class="status-next-gig-empty">No upcoming gigs</button>
+          </div>
+        </div>
         <div class="status-box public-song-status-box">
           <span>Public Song List</span>
           <div class="status-action-line">
@@ -234,15 +457,28 @@
         <div class="session-layout">
           <div class="session-details">
             <div id="sessionSetupFields" class="setup-fields">
+
+              <div id="sessionEventSuggestion" class="session-event-suggestion">
+                <div class="session-event-suggestion-head">
+                  <span>UPCOMING EVENT SUGGESTION</span>
+                  <button id="clearSessionEventSuggestionBtn" type="button" title="Clear event suggestion">×</button>
+                </div>
+                <div id="sessionEventSuggestionBody">
+                  <small>No upcoming event selected.</small>
+                </div>
+              </div>
+
               <label>Session Title</label><input id="sessionTitleInput" type="text" placeholder="Friday Night at Whyte Harte" />
               <label>Venue</label><input id="venueInput" list="venueOptions" placeholder="Whyte Harte" />
-              <datalist id="venueOptions"><option value="Whyte Harte"></option><option value="Smokehouse"></option></datalist>
+              <datalist id="venueOptions"></datalist>
 
               <label>Type</label>
               <select id="sessionTypeInput">
                 <option value="Live Karaoke">Live Karaoke</option>
                 <option value="Roxanna">Roxanna</option>
                 <option value="Solo">Solo</option>
+                <option value="Texanna">Texanna</option>
+                <option value="Other">Other</option>
               </select>
             </div>
             <div id="activeSessionLabels" class="active-session-labels hidden">
@@ -286,6 +522,24 @@
         </div>
         <div id="activeRequestsList" class="active-requests-list"></div>
         <button type="button" class="history-btn" onclick="scrollToConsole()">☰ View All Requests History</button>
+      </section>
+
+      <section id="upcomingEventsDashboardPanel" class="admin-card dashboard-events-card">
+        <div class="card-title-row split">
+          <h2>📅 Upcoming Gigs &amp; Events <span id="dashboardUpcomingEventCount">(0)</span></h2>
+          <div class="dashboard-event-actions">
+            <button type="button" class="small-outline" onclick="window.location.href='upcoming-events.html'">Manage Events</button>
+            <button type="button" class="small-outline" onclick="window.location.href='venues.html'">Venues</button>
+          </div>
+        </div>
+
+        <p class="admin-help-text">
+          Click an event to prefill the Performance Session details above.
+        </p>
+
+        <div id="dashboardUpcomingEventsList" class="dashboard-upcoming-events-list">
+          <div class="dashboard-event-empty">Loading upcoming events…</div>
+        </div>
       </section>
 
       <section id="membersPanel" class="admin-card members-card collapsed">
@@ -388,6 +642,7 @@
 <script src="js/members.js"></script>
 <script src="js/admin.js"></script>
 <script src="js/public-setlist-session-addon.js"></script>
+<script src="js/admin-events-integration.js"></script>
 
 
 </body>
