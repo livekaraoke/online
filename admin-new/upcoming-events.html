@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Upcoming Gigs & Events • Live Karaoke Admin</title>
+
+  <link rel="stylesheet" href="css/admin.css" />
+  <link rel="stylesheet" href="css/sidebar.css" />
+  <link rel="stylesheet" href="css/modal.css" />
+  <link rel="stylesheet" href="css/upcoming-events.css" />
+</head>
+
+<body class="admin-body events-page">
+
+  <div id="eventsAuthGate" class="events-auth-gate">
+    <div class="events-auth-card">
+      <div class="events-auth-spinner"></div>
+      <strong>Checking Admin Session…</strong>
+      <small>You will not be asked to log in again if your Admin session is still active.</small>
+    </div>
+  </div>
+
+  <div id="eventsApp" class="admin-shell" hidden>
+    <div id="sidebarContainer"></div>
+
+    <main class="admin-main events-main">
+      <header class="events-topbar">
+        <div>
+          <p class="events-eyebrow">LIVE KARAOKE ADMIN</p>
+          <h1>Upcoming Gigs &amp; Events</h1>
+          <p class="events-subtitle">Plan upcoming performances and keep Live Karaoke, Roxanna and Solo bookings in one place.</p>
+        </div>
+
+        <div class="events-topbar-actions">
+          <button id="eventsBackBtn" class="events-btn ghost" type="button">← ADMIN</button>
+          <button id="newEventBtn" class="events-btn primary" type="button">＋ NEW EVENT</button>
+        </div>
+      </header>
+
+      <section class="events-summary-grid">
+        <article class="events-summary-card">
+          <span>UPCOMING</span>
+          <strong id="upcomingCount">0</strong>
+          <small>Future events</small>
+        </article>
+
+        <article class="events-summary-card">
+          <span>NEXT GIG</span>
+          <strong id="nextGigDate">—</strong>
+          <small id="nextGigName">Nothing scheduled</small>
+        </article>
+
+        <article class="events-summary-card">
+          <span>THIS MONTH</span>
+          <strong id="thisMonthCount">0</strong>
+          <small>Scheduled events</small>
+        </article>
+
+        <article class="events-summary-card">
+          <span>LIVE KARAOKE</span>
+          <strong id="karaokeCount">0</strong>
+          <small>Upcoming bookings</small>
+        </article>
+      </section>
+
+      <section class="events-panel">
+        <div class="events-toolbar">
+          <div class="events-toolbar-group search-group">
+            <label for="eventsSearch">SEARCH</label>
+            <input id="eventsSearch" type="search" placeholder="Event, venue, notes…" autocomplete="off" />
+          </div>
+
+          <div class="events-toolbar-group">
+            <label for="eventsTypeFilter">TYPE</label>
+            <select id="eventsTypeFilter">
+              <option value="">All Types</option>
+              <option value="Live Karaoke">Live Karaoke</option>
+              <option value="Roxanna">Roxanna</option>
+              <option value="Solo">Solo</option>
+            </select>
+          </div>
+
+          <div class="events-toolbar-group">
+            <label for="eventsStatusFilter">STATUS</label>
+            <select id="eventsStatusFilter">
+              <option value="">All Statuses</option>
+              <option value="Confirmed">Confirmed</option>
+              <option value="Tentative">Tentative</option>
+              <option value="Cancelled">Cancelled</option>
+            </select>
+          </div>
+
+          <div class="events-toolbar-group">
+            <label for="eventsRangeFilter">SHOW</label>
+            <select id="eventsRangeFilter">
+              <option value="upcoming">Upcoming</option>
+              <option value="all">All Events</option>
+              <option value="past">Past Events</option>
+            </select>
+          </div>
+
+          <button id="refreshEventsBtn" class="events-btn ghost toolbar-refresh" type="button">↻ REFRESH</button>
+        </div>
+
+        <div class="events-list-heading">
+          <div>
+            <h2>Schedule</h2>
+            <span id="eventsResultCount">0 events</span>
+          </div>
+          <small>Events are ordered by date and time.</small>
+        </div>
+
+        <div id="eventsList" class="events-list">
+          <div class="events-loading">Loading events…</div>
+        </div>
+      </section>
+
+      <footer class="events-footer">
+        Live Karaoke Malta • Upcoming Gigs &amp; Events
+      </footer>
+    </main>
+  </div>
+
+  <!-- CREATE / EDIT -->
+  <div id="eventModal" class="events-modal hidden" role="dialog" aria-modal="true" aria-labelledby="eventModalTitle">
+    <div class="events-modal-card">
+      <div class="events-modal-head">
+        <div>
+          <span id="eventModalMode">NEW EVENT</span>
+          <h2 id="eventModalTitle">Create Event</h2>
+        </div>
+        <button id="eventModalCloseBtn" type="button" class="icon-close" aria-label="Close">×</button>
+      </div>
+
+      <input id="eventIdInput" type="hidden" />
+
+      <div class="event-form-grid">
+        <label class="wide">
+          <span>EVENT / GIG NAME</span>
+          <input id="eventNameInput" type="text" placeholder="e.g. Friday Night Karaoke" />
+        </label>
+
+        <label class="wide">
+          <span>VENUE</span>
+          <input id="eventVenueInput" type="text" placeholder="Venue / location" />
+        </label>
+
+        <label>
+          <span>TYPE</span>
+          <select id="eventTypeInput">
+            <option value="Live Karaoke">Live Karaoke</option>
+            <option value="Roxanna">Roxanna</option>
+            <option value="Solo">Solo</option>
+          </select>
+        </label>
+
+        <label>
+          <span>STATUS</span>
+          <select id="eventStatusInput">
+            <option value="Confirmed">Confirmed</option>
+            <option value="Tentative">Tentative</option>
+            <option value="Cancelled">Cancelled</option>
+          </select>
+        </label>
+
+        <label>
+          <span>DATE</span>
+          <input id="eventDateInput" type="date" />
+        </label>
+
+        <label>
+          <span>START TIME</span>
+          <input id="eventStartTimeInput" type="time" />
+        </label>
+
+        <label>
+          <span>END TIME</span>
+          <input id="eventEndTimeInput" type="time" />
+        </label>
+
+        <label>
+          <span>ARRIVAL / SETUP</span>
+          <input id="eventArrivalTimeInput" type="time" />
+        </label>
+
+        <label class="wide">
+          <span>ADDRESS / LOCATION DETAILS</span>
+          <input id="eventAddressInput" type="text" placeholder="Address, room, stage location…" />
+        </label>
+
+        <label>
+          <span>CONTACT NAME</span>
+          <input id="eventContactNameInput" type="text" placeholder="Contact person" />
+        </label>
+
+        <label>
+          <span>CONTACT</span>
+          <input id="eventContactInput" type="text" placeholder="Phone / email" />
+        </label>
+
+        <label class="wide">
+          <span>NOTES</span>
+          <textarea id="eventNotesInput" rows="5" placeholder="Equipment, dress code, requests, parking, payment notes, reminders…"></textarea>
+        </label>
+      </div>
+
+      <p id="eventFormMessage" class="event-form-message"></p>
+
+      <div class="events-modal-actions">
+        <button id="eventCancelBtn" class="events-btn ghost" type="button">CANCEL</button>
+        <button id="eventSaveBtn" class="events-btn primary" type="button">SAVE EVENT</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- DELETE CONFIRM -->
+  <div id="deleteEventModal" class="events-modal hidden" role="dialog" aria-modal="true">
+    <div class="events-modal-card compact">
+      <div class="delete-event-icon">!</div>
+      <h2>Delete Event?</h2>
+      <p id="deleteEventMessage">This event will be permanently removed.</p>
+      <div class="events-modal-actions">
+        <button id="deleteEventCancelBtn" class="events-btn ghost" type="button">CANCEL</button>
+        <button id="deleteEventConfirmBtn" class="events-btn danger" type="button">DELETE EVENT</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+
+  <script src="js/firebase.js"></script>
+  <script src="js/sidebar.js"></script>
+  <script src="js/profile.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/upcoming-events.js"></script>
+</body>
+</html>
