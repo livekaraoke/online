@@ -19,6 +19,14 @@
     verse: "#ffffff",
     preChorus: "#ffb45c",
     chorus: "#42f35c",
+    postChorus: "#ffffff",
+    bridge: "#ffffff",
+    intro: "#ffffff",
+    outro: "#ffffff",
+    instrumental: "#ffffff",
+    solo: "#ffffff",
+    guitarTab: "#ffffff",
+    hostNote: "#ffffff",
     ending: "#ffd400",
     fallback: "#ffffff"
   };
@@ -79,10 +87,20 @@
 
   function normaliseSectionTitleKey(title) {
     const clean = String(title || "").trim().toUpperCase().replace(/\s+/g, " ");
+
     if (clean === "VERSE" || /^VERSE \d+$/.test(clean)) return "verse";
     if (clean === "PRE-CHORUS" || clean === "PRE CHORUS") return "preChorus";
     if (clean === "CHORUS" || /^CHORUS \d+$/.test(clean) || clean === "CHORUS REPEAT") return "chorus";
-    if (clean === "ENDING" || clean === "END" || clean === "OUTRO") return "ending";
+    if (clean === "POST-CHORUS" || clean === "POST CHORUS") return "postChorus";
+    if (clean === "BRIDGE" || /^BRIDGE \d+$/.test(clean)) return "bridge";
+    if (clean === "INTRO") return "intro";
+    if (clean === "OUTRO") return "outro";
+    if (clean === "INSTRUMENTAL" || clean === "INSTRUMENTAL BREAK") return "instrumental";
+    if (clean === "SOLO" || clean === "GUITAR SOLO") return "solo";
+    if (clean === "GUITAR TAB" || clean === "TAB") return "guitarTab";
+    if (clean === "HOST NOTE" || clean === "HOST NOTES") return "hostNote";
+    if (clean === "ENDING" || clean === "END") return "ending";
+
     return "fallback";
   }
 
@@ -101,10 +119,24 @@
     } catch (error) {
       console.warn("Could not load section title defaults:", error);
     }
-    if ($("defaultVerseColor")) $("defaultVerseColor").value = sectionTitleDefaults.verse;
-    if ($("defaultPreChorusColor")) $("defaultPreChorusColor").value = sectionTitleDefaults.preChorus;
-    if ($("defaultChorusColor")) $("defaultChorusColor").value = sectionTitleDefaults.chorus;
-    if ($("defaultEndingColor")) $("defaultEndingColor").value = sectionTitleDefaults.ending;
+    const defaultInputs = {
+      defaultVerseColor: "verse",
+      defaultPreChorusColor: "preChorus",
+      defaultChorusColor: "chorus",
+      defaultPostChorusColor: "postChorus",
+      defaultBridgeColor: "bridge",
+      defaultIntroColor: "intro",
+      defaultOutroColor: "outro",
+      defaultInstrumentalColor: "instrumental",
+      defaultSoloColor: "solo",
+      defaultGuitarTabColor: "guitarTab",
+      defaultHostNoteColor: "hostNote",
+      defaultEndingColor: "ending"
+    };
+
+    Object.entries(defaultInputs).forEach(([id, key]) => {
+      if ($(id)) $(id).value = sectionTitleDefaults[key] || BUILTIN_SECTION_TITLE_DEFAULTS[key] || "#ffffff";
+    });
   }
 
   async function saveSectionTitleDefaults() {
@@ -112,6 +144,14 @@
       verse: $("defaultVerseColor")?.value || BUILTIN_SECTION_TITLE_DEFAULTS.verse,
       preChorus: $("defaultPreChorusColor")?.value || BUILTIN_SECTION_TITLE_DEFAULTS.preChorus,
       chorus: $("defaultChorusColor")?.value || BUILTIN_SECTION_TITLE_DEFAULTS.chorus,
+      postChorus: $("defaultPostChorusColor")?.value || BUILTIN_SECTION_TITLE_DEFAULTS.postChorus,
+      bridge: $("defaultBridgeColor")?.value || BUILTIN_SECTION_TITLE_DEFAULTS.bridge,
+      intro: $("defaultIntroColor")?.value || BUILTIN_SECTION_TITLE_DEFAULTS.intro,
+      outro: $("defaultOutroColor")?.value || BUILTIN_SECTION_TITLE_DEFAULTS.outro,
+      instrumental: $("defaultInstrumentalColor")?.value || BUILTIN_SECTION_TITLE_DEFAULTS.instrumental,
+      solo: $("defaultSoloColor")?.value || BUILTIN_SECTION_TITLE_DEFAULTS.solo,
+      guitarTab: $("defaultGuitarTabColor")?.value || BUILTIN_SECTION_TITLE_DEFAULTS.guitarTab,
+      hostNote: $("defaultHostNoteColor")?.value || BUILTIN_SECTION_TITLE_DEFAULTS.hostNote,
       ending: $("defaultEndingColor")?.value || BUILTIN_SECTION_TITLE_DEFAULTS.ending,
       fallback: "#ffffff"
     };
@@ -326,7 +366,7 @@
       ["White", "#ffffff"],
       ["Light Gray", "#cfcfcf"],
       ["Red", "#ff4f5e"],
-      ["Orange", "#ff982f"],
+      ["Light Orange", "#ffb45c"],
       ["Yellow", "#ffd400"],
       ["Green", "#42f35c"],
       ["Teal", "#19e3c5"],
@@ -665,7 +705,7 @@
       ? loadedSong.sections.map(normalizeSection)
       : [];
 
-    $("creatorHeading").textContent = "✎ EDIT LYRICS & CHORDS";
+    $("creatorHeading").textContent = "✎ EDIT SONG";
     $("songTitleInput").value = loadedSong.title || "";
     $("artistInput").value = loadedSong.artist || "";
     $("userBpmInput").value = loadedSong.userBpm || "";
@@ -852,9 +892,43 @@
       syncSectionsFromDOM();
     }
 
-    // Colour inputs update live while the colour picker is dragged.
-    if (event.target.matches("[data-dash-custom],[data-title-custom]")) {
+    // Colour strips update LIVE while the native colour picker is dragged.
+    if (event.target.matches("[data-dash-custom]")) {
       event.target.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+
+    if (event.target.matches("[data-title-custom]")) {
+      const colourInput = event.target;
+      const index = Number(colourInput.dataset.titleCustom);
+
+      if (sections[index]) {
+        sections[index].style = {
+          ...defaultStyle(sections[index].type),
+          ...(sections[index].style || {})
+        };
+
+        sections[index].style.titleColor = colourInput.value;
+
+        const titleInput = document.querySelector(`[data-title="${index}"]`);
+        if (titleInput) titleInput.style.color = colourInput.value;
+
+        // Keep the dropdown in sync only when it contains the EXACT same hex.
+        const select = document.querySelector(`[data-title-colour="${index}"]`);
+        if (select) {
+          const exactOption = [...select.options].find(
+            opt => String(opt.value).toLowerCase() === String(colourInput.value).toLowerCase()
+          );
+          if (exactOption) {
+            select.value = exactOption.value;
+          } else {
+            // A custom strip colour is a real per-song override even if it is
+            // not one of the named dropdown presets.
+            select.selectedIndex = -1;
+          }
+        }
+
+        markDirty();
+      }
     }
   });
 
@@ -936,10 +1010,18 @@
       sections[index].style.titleColor = titleColour.value || "";
 
       const custom = document.querySelector(`[data-title-custom="${index}"]`);
-      if (custom && sections[index].style.titleColor) custom.value = sections[index].style.titleColor;
+      if (custom) {
+        custom.value =
+          sections[index].style.titleColor ||
+          getSystemSectionTitleColour(sections[index].title);
+      }
 
       const titleInput = document.querySelector(`[data-title="${index}"]`);
-      if (titleInput) titleInput.style.color = sections[index].style.titleColor || getSystemSectionTitleColour(sections[index].title);
+      if (titleInput) {
+        titleInput.style.color =
+          sections[index].style.titleColor ||
+          getSystemSectionTitleColour(sections[index].title);
+      }
 
       markDirty();
       return;
@@ -948,17 +1030,24 @@
     const titleCustom = event.target.closest("[data-title-custom]");
     if (titleCustom) {
       const index = Number(titleCustom.dataset.titleCustom);
-      sections[index].style = { ...defaultStyle(sections[index].type), ...(sections[index].style || {}) };
-      sections[index].style.titleColor = titleCustom.value || "";
+
+      sections[index].style = {
+        ...defaultStyle(sections[index].type),
+        ...(sections[index].style || {})
+      };
+      sections[index].style.titleColor = titleCustom.value;
 
       const select = document.querySelector(`[data-title-colour="${index}"]`);
       if (select) {
-        const matching = [...select.options].some(opt => opt.value.toLowerCase() === titleCustom.value.toLowerCase());
-        if (matching) select.value = titleCustom.value;
+        const exactOption = [...select.options].find(
+          opt => String(opt.value).toLowerCase() === String(titleCustom.value).toLowerCase()
+        );
+        if (exactOption) select.value = exactOption.value;
+        else select.selectedIndex = -1;
       }
 
       const titleInput = document.querySelector(`[data-title="${index}"]`);
-      if (titleInput) titleInput.style.color = sections[index].style.titleColor || "";
+      if (titleInput) titleInput.style.color = titleCustom.value;
 
       markDirty();
       return;
@@ -1106,6 +1195,19 @@
   $("refreshSetlistsBtn").onclick = () => loadSetlistMembership(firebaseId);
   $("saveSectionDefaultsBtn").onclick = saveSectionTitleDefaults;
   $("resetSectionDefaultsBtn").onclick = resetSectionTitleDefaults;
+
+  $("sectionDefaultsToggleBtn").onclick = () => {
+    const body = $("sectionDefaultsBody");
+    const button = $("sectionDefaultsToggleBtn");
+    const icon = $("sectionDefaultsToggleIcon");
+
+    const opening = body.classList.contains("hidden");
+    body.classList.toggle("hidden", !opening);
+    button.setAttribute("aria-expanded", opening ? "true" : "false");
+    icon.textContent = opening ? "▲" : "▼";
+    $("sectionDefaultsToggleBtn").closest(".section-defaults-panel")
+      ?.classList.toggle("defaults-collapsed", !opening);
+  };
   $("undoBtn").onclick = performUndo;
   $("redoBtn").onclick = performRedo;
 
