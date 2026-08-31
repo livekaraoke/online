@@ -2,13 +2,21 @@
   "use strict";
 
   const COLLECTION = "upcomingEvents";
+  const VENUES_COLLECTION = "venues";
   const TYPE_OPTIONS = ["Live Karaoke", "Roxanna", "Solo"];
   const STATUS_OPTIONS = ["Confirmed", "Tentative", "Cancelled"];
 
   const $ = id => document.getElementById(id);
 
+  const db =
+    window.db ||
+    window.LK?.db ||
+    (window.firebase?.firestore ? firebase.firestore() : null);
+
   let events = [];
+  let venues = [];
   let unsubscribeEvents = null;
+  let unsubscribeVenues = null;
   let pendingDeleteId = "";
 
   function escapeHTML(value) {
@@ -208,9 +216,98 @@
     renderSummary();
   }
 
+  function venueCombinedContact(venue) {
+    const phone = String(venue?.contactPhone || "").trim();
+    const email = String(venue?.contactEmail || "").trim();
+    return [phone, email].filter(Boolean).join(" • ");
+  }
+
+  function populateVenueSelect(preferredVenueId = "") {
+    const select = $("eventVenueInput");
+    if (!select) return;
+
+    const current = preferredVenueId || select.value || "";
+
+    select.innerHTML =
+      `<option value="">Choose a saved venue...</option>` +
+      venues
+        .slice()
+        .sort((a,b) =>
+          String(a.name || "").localeCompare(String(b.name || ""), undefined, { sensitivity: "base" })
+        )
+        .map(venue =>
+          `<option value="${escapeHTML(venue.id)}">${escapeHTML(venue.name || "Untitled Venue")}</option>`
+        )
+        .join("");
+
+    if (current && venues.some(venue => venue.id === current)) {
+      select.value = current;
+    } else {
+      select.value = "";
+    }
+  }
+
+  function getSelectedVenue() {
+    const id = $("eventVenueInput")?.value || "";
+    return venues.find(venue => venue.id === id) || null;
+  }
+
+  function applyVenueToEventForm(venue, { fillArrival = true } = {}) {
+    const address = $("eventAddressInput");
+    const contactName = $("eventContactNameInput");
+    const contact = $("eventContactInput");
+
+    address.value = venue?.address || "";
+    contactName.value = venue?.contactName || "";
+    contact.value = venueCombinedContact(venue);
+
+    [address, contactName, contact].forEach(input => {
+      input.classList.toggle("venue-autofilled", !!input.value);
+    });
+
+    if (
+      fillArrival &&
+      venue?.defaultArrivalTime &&
+      !$("eventArrivalTimeInput").value
+    ) {
+      $("eventArrivalTimeInput").value = venue.defaultArrivalTime;
+    }
+  }
+
+  function handleVenueSelection() {
+    applyVenueToEventForm(getSelectedVenue());
+  }
+
+  function startVenueListener() {
+    if (!db) return;
+    if (unsubscribeVenues) unsubscribeVenues();
+
+    unsubscribeVenues = db.collection(VENUES_COLLECTION).onSnapshot(snapshot => {
+      const selected = $("eventVenueInput")?.value || "";
+
+      venues = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...(doc.data() || {})
+      }));
+
+      populateVenueSelect(selected);
+
+      if ($("eventVenueInput")?.value) {
+        applyVenueToEventForm(getSelectedVenue(), { fillArrival: false });
+      }
+    }, error => {
+      console.error("Could not load saved venues:", error);
+      const select = $("eventVenueInput");
+      if (select) {
+        select.innerHTML = `<option value="">Could not load venues</option>`;
+      }
+    });
+  }
+
   function resetForm() {
     $("eventIdInput").value = "";
     $("eventNameInput").value = "";
+    populateVenueSelect("");
     $("eventVenueInput").value = "";
     $("eventTypeInput").value = "Live Karaoke";
     $("eventStatusInput").value = "Confirmed";
@@ -243,16 +340,25 @@
 
     $("eventIdInput").value = event.id;
     $("eventNameInput").value = event.name || "";
-    $("eventVenueInput").value = event.venue || "";
+    populateVenueSelect(event.venueId || "");
+    $("eventVenueInput").value = event.venueId || "";
+
+    if (event.venueId && venues.some(venue => venue.id === event.venueId)) {
+      applyVenueToEventForm(getSelectedVenue(), { fillArrival: false });
+    } else {
+      // Backward compatibility for events created before the Venues page.
+      $("eventAddressInput").value = event.address || "";
+      $("eventContactNameInput").value = event.contactName || "";
+      $("eventContactInput").value = event.contact || "";
+      [$("eventAddressInput"), $("eventContactNameInput"), $("eventContactInput")]
+        .forEach(input => input.classList.toggle("venue-autofilled", !!input.value));
+    }
     $("eventTypeInput").value = TYPE_OPTIONS.includes(event.type) ? event.type : "Live Karaoke";
     $("eventStatusInput").value = STATUS_OPTIONS.includes(event.status) ? event.status : "Confirmed";
     $("eventDateInput").value = event.date || "";
     $("eventStartTimeInput").value = event.startTime || "";
     $("eventEndTimeInput").value = event.endTime || "";
     $("eventArrivalTimeInput").value = event.arrivalTime || "";
-    $("eventAddressInput").value = event.address || "";
-    $("eventContactNameInput").value = event.contactName || "";
-    $("eventContactInput").value = event.contact || "";
     $("eventNotesInput").value = event.notes || "";
 
     $("eventModalMode").textContent = "EDIT EVENT";
@@ -267,6 +373,7 @@
 
   function validateForm() {
     if (!$("eventNameInput").value.trim()) return "Enter an event / gig name.";
+    if (!$("eventVenueInput").value) return "Choose a saved venue.";
     if (!$("eventDateInput").value) return "Choose the event date.";
     if (!TYPE_OPTIONS.includes($("eventTypeInput").value)) return "Choose a valid event type.";
     return "";
@@ -284,18 +391,27 @@
     saveBtn.disabled = true;
     $("eventFormMessage").textContent = "Saving…";
 
+    const selectedVenue = getSelectedVenue();
+
     const payload = {
       name: $("eventNameInput").value.trim(),
-      venue: $("eventVenueInput").value.trim(),
+
+      // Save both the Venue document link and a snapshot of its display data.
+      // This keeps old event records readable even if the Venue is edited later.
+      venueId: selectedVenue?.id || "",
+      venue: selectedVenue?.name || "",
       type: $("eventTypeInput").value,
       status: $("eventStatusInput").value,
       date: $("eventDateInput").value,
       startTime: $("eventStartTimeInput").value,
       endTime: $("eventEndTimeInput").value,
       arrivalTime: $("eventArrivalTimeInput").value,
-      address: $("eventAddressInput").value.trim(),
-      contactName: $("eventContactNameInput").value.trim(),
-      contact: $("eventContactInput").value.trim(),
+      address: selectedVenue?.address || "",
+      contactName: selectedVenue?.contactName || "",
+      contact: venueCombinedContact(selectedVenue),
+      venueLocality: selectedVenue?.locality || "",
+      venueContactPhone: selectedVenue?.contactPhone || "",
+      venueContactEmail: selectedVenue?.contactEmail || "",
       notes: $("eventNotesInput").value.trim(),
       updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
       updatedBy: firebase.auth().currentUser?.email || ""
@@ -405,6 +521,7 @@
     $("eventModalCloseBtn").onclick = closeEventModal;
     $("eventCancelBtn").onclick = closeEventModal;
     $("eventSaveBtn").onclick = saveEvent;
+    $("eventVenueInput").addEventListener("change", handleVenueSelection);
 
     $("deleteEventCancelBtn").onclick = closeDeleteModal;
     $("deleteEventConfirmBtn").onclick = confirmDelete;
@@ -451,6 +568,7 @@
 
     loadSidebarFallback();
     markEventsSidebarLink();
+    startVenueListener();
     startEventListener();
   }
 
