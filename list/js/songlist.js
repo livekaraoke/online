@@ -5,14 +5,17 @@ let currentList = null;
 let sections = [];
 let sectionSongs = [];
 let lyricsSongs = [];
-
-// Saved setlists created by host/lyricsviewer.html.
-let lyricsSetlists = [];
 let selectedSignupSong = null;
 let requestCart = [];
 let requestsOpen = false;
 let currentSignupSession = null;
 let fullSongListOpen = false;
+
+// The Admin dashboard chooses which Lyrics Suite setlist is public.
+// Configuration is stored in karaokeControl/publicSongList.
+let selectedPublicSetlist = null;
+let selectedPublicSongIds = null;
+let publicSetlistUnsubscribe = null;
 
 let liveSessionRequests = [];
 let liveRequestsUnsubscribe = null;
@@ -120,9 +123,31 @@ function sortByOrderThenTitle(a, b) {
 }
 function getSongText(song) { return `${song.title || ""} ${song.artist || ""} ${song.year || ""}`.toLowerCase(); }
 function getLyricsSongById(id) { return lyricsSongs.find(song => song.id === id) || null; }
-function getVisibleFullSongs() { return lyricsSongs.filter(song => song.publicSongListVisible !== false).sort(sortByTitle); }
+function getVisibleFullSongs() {
+  // When a Lyrics Suite setlist has been selected in Admin, that setlist is
+  // authoritative. Individual publicSongListVisible flags do not hide songs
+  // that were deliberately placed into the selected public setlist.
+  if (selectedPublicSongIds instanceof Set) {
+    return lyricsSongs
+      .filter(song => selectedPublicSongIds.has(song.id))
+      .sort(sortByTitle);
+  }
+
+  // Backward-compatible fallback before a public setlist is selected.
+  return lyricsSongs
+    .filter(song => song.publicSongListVisible !== false)
+    .sort(sortByTitle);
+}
 function getFullSongCount() { return getVisibleFullSongs().length; }
-function getSectionSongs(sectionId) { return sectionSongs.filter(item => item.sectionId === sectionId).sort(sortByOrderThenTitle); }
+function getSectionSongs(sectionId) {
+  return sectionSongs
+    .filter(item => item.sectionId === sectionId)
+    .filter(item => {
+      if (!(selectedPublicSongIds instanceof Set)) return true;
+      return selectedPublicSongIds.has(item.lyricsId);
+    })
+    .sort(sortByOrderThenTitle);
+}
 function getSectionSongDisplay(item) {
   const source = getLyricsSongById(item.lyricsId);
   return {
@@ -156,6 +181,89 @@ function alphabetGroups(list) {
 function isAlreadyPlayedToday(song) {
   const title = String(song.title || "").toLowerCase().replace(/[’']/g, "'");
   return title.includes("don't stop believin") || title.includes("dont stop believin");
+}
+
+function getActiveRequestListId() {
+  return selectedPublicSetlist?.id || MAIN_LIST_ID;
+}
+
+function updatePublicSetlistBanner() {
+  const el = document.getElementById("publicSetlistName");
+  if (!el) return;
+
+  el.textContent =
+    selectedPublicSetlist?.name ||
+    "Venue Main Public Song List";
+}
+
+async function resolvePublicSetlist(configData) {
+  const setlistId = configData?.setlistId || "";
+
+  if (!setlistId) {
+    selectedPublicSetlist = null;
+    selectedPublicSongIds = null;
+    updatePublicSetlistBanner();
+    return;
+  }
+
+  try {
+    const snap = await db.collection("lyricsSetlists").doc(setlistId).get();
+
+    if (!snap.exists) {
+      console.warn("Selected public setlist no longer exists:", setlistId);
+      selectedPublicSetlist = null;
+      selectedPublicSongIds = new Set();
+      updatePublicSetlistBanner();
+      return;
+    }
+
+    const data = snap.data() || {};
+    const songIds = Array.isArray(data.songIds) ? data.songIds : [];
+
+    selectedPublicSetlist = {
+      id: snap.id,
+      name: data.name || configData?.setlistName || "Untitled Setlist",
+      songIds
+    };
+
+    selectedPublicSongIds = new Set(songIds);
+    updatePublicSetlistBanner();
+  } catch (error) {
+    console.error("Could not resolve selected public setlist:", error);
+    selectedPublicSetlist = null;
+    selectedPublicSongIds = null;
+    updatePublicSetlistBanner();
+  }
+}
+
+async function loadPublicSetlistConfig() {
+  try {
+    const snap = await db.collection("karaokeControl").doc("publicSongList").get();
+    await resolvePublicSetlist(snap.exists ? (snap.data() || {}) : {});
+  } catch (error) {
+    console.warn("Public setlist config unavailable; using legacy public list.", error);
+    selectedPublicSetlist = null;
+    selectedPublicSongIds = null;
+    updatePublicSetlistBanner();
+  }
+}
+
+function startPublicSetlistListener() {
+  if (publicSetlistUnsubscribe) return;
+
+  publicSetlistUnsubscribe = db
+    .collection("karaokeControl")
+    .doc("publicSongList")
+    .onSnapshot(async doc => {
+      await resolvePublicSetlist(doc.exists ? (doc.data() || {}) : {});
+
+      // No page reload required: changing the Admin dropdown immediately
+      // changes the public list for visitors who already have it open.
+      renderPublicSongList();
+      renderSearchResults();
+    }, error => {
+      console.warn("Could not listen for Public Song List selection:", error);
+    });
 }
 
 async function ensureMainList() {
@@ -337,7 +445,9 @@ async function submitSongSignup() {
   if (!sessionInfo) { submitBtn.disabled = false; submitBtn.innerText = "SIGN UP"; showRequestsClosedOnly(); return; }
   try {
     const shared = {
-      listId: MAIN_LIST_ID,
+      listId: getActiveRequestListId(),
+      publicSetlistId: selectedPublicSetlist?.id || "",
+      publicSetlistName: selectedPublicSetlist?.name || "",
       sessionId: sessionInfo.sessionId,
       isTestSession: sessionInfo.isTestSession,
       status: "active",
@@ -438,7 +548,9 @@ function toggleFullSongList(forceOpen = false) {
 window.toggleFullSongList = toggleFullSongList;
 
 async function initPublicSongList() {
+  await loadPublicSetlistConfig();
   await reloadAll();
+  startPublicSetlistListener();
   const sessionInfo = await getCurrentSignupSession(false);
   if (!sessionInfo) { showRequestsClosedOnly(); return; }
   showRequestsOpenPage();
@@ -681,7 +793,7 @@ async function addSection() {
   const title = cleanText(titleInput?.value);
   if (!title) return alert("Enter a section title.");
   await db.collection("songlistSections").add({
-    listId: MAIN_LIST_ID,
+    listId: getActiveRequestListId(), publicSetlistId: selectedPublicSetlist?.id || "", publicSetlistName: selectedPublicSetlist?.name || "",
     title,
     visible: true,
     openByDefault: !!openInput?.checked,
@@ -736,7 +848,7 @@ async function addExistingSongToSection(sectionId) {
   const existing = sectionSongs.some(item => item.sectionId === sectionId && item.lyricsId === lyricsId);
   if (existing) return alert("That song is already in this section.");
   await db.collection("songlistSongs").add({
-    listId: MAIN_LIST_ID,
+    listId: getActiveRequestListId(), publicSetlistId: selectedPublicSetlist?.id || "", publicSetlistName: selectedPublicSetlist?.name || "",
     sectionId,
     lyricsId,
     title: song.title || "",
@@ -1147,7 +1259,9 @@ async function submitSongSignup() {
 
   try {
     const shared = {
-      listId: MAIN_LIST_ID,
+      listId: getActiveRequestListId(),
+      publicSetlistId: selectedPublicSetlist?.id || "",
+      publicSetlistName: selectedPublicSetlist?.name || "",
       sessionId: sessionInfo.sessionId,
       isTestSession: sessionInfo.isTestSession,
       status: "active",
@@ -2066,210 +2180,3 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   }, 1200);
 });
-/************************************************************
- * FULL SONG LIST SOURCE: LYRICS VIEWER SETLIST
- *
- * The selected setlist ID is stored on:
- * songlists/venue-main-public-song-list.selectedLyricsSetlistId
- *
- * Songs are NOT copied into another collection. Both editor.html and
- * index.html resolve the selected setlist's songIds against /lyrics.
- * Therefore adding/removing songs in the Lyrics Viewer setlist keeps the
- * public Full Song List synchronised on its next data refresh/page load.
- ************************************************************/
-
-async function loadLyricsSetlists() {
-  const snapshot = await db.collection("lyricsSetlists").get();
-
-  lyricsSetlists = snapshot.docs.map(doc => {
-    const data = doc.data() || {};
-    return {
-      id: doc.id,
-      name: data.name || "Untitled Setlist",
-      songIds: Array.isArray(data.songIds) ? data.songIds : [],
-      createdAt: data.createdAt || null,
-      updatedAt: data.updatedAt || null
-    };
-  }).sort((a, b) =>
-    String(a.name).localeCompare(String(b.name), undefined, { sensitivity: "base" })
-  );
-}
-
-/* Final reloadAll override: includes the shared Lyrics Viewer setlists. */
-async function reloadAll() {
-  await ensureMainList();
-  await Promise.all([
-    loadSections(),
-    loadSectionSongs(),
-    loadLyricsSongs(),
-    loadLyricsSetlists()
-  ]);
-}
-
-function getSelectedLyricsSetlist() {
-  const selectedId = String(currentList?.selectedLyricsSetlistId || "").trim();
-  if (!selectedId) return null;
-  return lyricsSetlists.find(setlist => setlist.id === selectedId) || null;
-}
-
-function getFullSongSourceSongs() {
-  const selectedSetlist = getSelectedLyricsSetlist();
-
-  /* Backwards-compatible fallback until a setlist is selected. */
-  if (!selectedSetlist) {
-    return [...lyricsSongs].sort(sortByTitle);
-  }
-
-  const allowedIds = new Set(selectedSetlist.songIds.map(String));
-
-  return lyricsSongs
-    .filter(song => allowedIds.has(String(song.id)))
-    .sort(sortByTitle);
-}
-
-/* Final override used by public index.html. */
-function getVisibleFullSongs() {
-  return getFullSongSourceSongs()
-    .filter(song => song.publicSongListVisible !== false)
-    .sort(sortByTitle);
-}
-
-function getFullSongCount() {
-  return getVisibleFullSongs().length;
-}
-
-function populateFullListSetlistSelect() {
-  const select = document.getElementById("fullListSetlistSelect");
-  if (!select) return;
-
-  const selectedId = String(currentList?.selectedLyricsSetlistId || "");
-
-  const options = [
-    `<option value="">All lyrics songs (current/default source)</option>`,
-    ...lyricsSetlists.map(setlist => `
-      <option value="${escapeHTML(setlist.id)}">
-        ${escapeHTML(setlist.name)} (${setlist.songIds.length})
-      </option>
-    `)
-  ];
-
-  select.innerHTML = options.join("");
-  select.value = selectedId;
-
-  /* If a previously selected setlist was deleted, show the fallback clearly. */
-  if (selectedId && !lyricsSetlists.some(setlist => setlist.id === selectedId)) {
-    const missing = document.createElement("option");
-    missing.value = selectedId;
-    missing.textContent = "Previously selected setlist is missing";
-    select.insertBefore(missing, select.firstChild);
-    select.value = selectedId;
-  }
-
-  const help = document.getElementById("fullListSetlistHelp");
-  const selected = getSelectedLyricsSetlist();
-  if (help) {
-    help.innerText = selected
-      ? `Using “${selected.name}”. ${selected.songIds.length} saved song${selected.songIds.length === 1 ? "" : "s"} are linked to the Full Song List.`
-      : "No setlist selected. The Full Song List currently uses every song in the lyrics collection.";
-  }
-}
-
-async function selectFullSongSetlist(setlistId) {
-  const selected = lyricsSetlists.find(setlist => setlist.id === setlistId) || null;
-
-  await db.collection("songlists").doc(MAIN_LIST_ID).set({
-    selectedLyricsSetlistId: setlistId || "",
-    selectedLyricsSetlistName: selected?.name || "",
-    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-  }, { merge: true });
-
-  currentList = {
-    ...(currentList || { id: MAIN_LIST_ID, name: DEFAULT_LIST_NAME }),
-    selectedLyricsSetlistId: setlistId || "",
-    selectedLyricsSetlistName: selected?.name || ""
-  };
-
-  populateFullListSetlistSelect();
-  renderFullSongEditor();
-}
-
-/* Final editor renderer override: shows only songs belonging to the source setlist. */
-function renderFullSongEditor() {
-  populateFullListSetlistSelect();
-
-  const sourceSongs = getFullSongSourceSongs();
-  const visibleCount = sourceSongs.filter(song => song.publicSongListVisible !== false).length;
-  const selected = getSelectedLyricsSetlist();
-
-  const countEl = document.getElementById("fullSongCount");
-  if (countEl) {
-    countEl.innerText = selected
-      ? `Total songs: ${visibleCount} shown of ${sourceSongs.length} in “${selected.name}”`
-      : `Total songs: ${visibleCount} shown of ${sourceSongs.length}`;
-  }
-
-  const container = document.getElementById("fullSongList");
-  if (!container) return;
-  container.innerHTML = "";
-
-  if (!lyricsSetlists.length) {
-    const warning = document.createElement("div");
-    warning.className = "editor-section-empty full-list-source-warning";
-    warning.innerText = "No Lyrics Viewer setlists were found. Create one in host/lyricsviewer.html, or keep using all lyrics songs.";
-    container.appendChild(warning);
-  }
-
-  if (!sourceSongs.length) {
-    const empty = document.createElement("div");
-    empty.className = "editor-section-empty";
-    empty.innerText = selected
-      ? "This setlist contains no matching songs from the Firebase lyrics collection."
-      : "No songs found in Firebase collection: lyrics";
-    container.appendChild(empty);
-    return;
-  }
-
-  sourceSongs.forEach(song => {
-    const isVisible = song.publicSongListVisible !== false;
-    const row = document.createElement("div");
-    row.className = `editor-song-row full-song-row ${isVisible ? "" : "hidden-song"}`;
-    row.innerHTML = `
-      <div class="editor-song-main">
-        <strong>${escapeHTML(song.title)}</strong>
-        <span>${escapeHTML(song.artist)}</span>
-      </div>
-
-      <span class="song-year">${escapeHTML(song.year)}</span>
-
-      <div class="editor-song-buttons single">
-        <button onclick="toggleFullSongVisible('${song.id}', ${isVisible ? "false" : "true"})">
-          ${isVisible ? "Hide" : "Show"}
-        </button>
-      </div>
-    `;
-    container.appendChild(row);
-  });
-}
-
-/* Final save override: retains the selected shared setlist as a list setting. */
-async function saveListSettings() {
-  const input = document.getElementById("listNameInput");
-  const select = document.getElementById("fullListSetlistSelect");
-  const name = cleanText(input?.value) || DEFAULT_LIST_NAME;
-  const selectedId = select?.value || currentList?.selectedLyricsSetlistId || "";
-  const selected = lyricsSetlists.find(setlist => setlist.id === selectedId) || null;
-
-  await db.collection("songlists").doc(MAIN_LIST_ID).set({
-    name,
-    selectedLyricsSetlistId: selectedId,
-    selectedLyricsSetlistName: selected?.name || "",
-    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-  }, { merge: true });
-
-  await initEditor();
-  alert("List settings saved.");
-}
-
-window.selectFullSongSetlist = selectFullSongSetlist;
-
-/**************** END SETLIST-SOURCED FULL SONG LIST ****************/
