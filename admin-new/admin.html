@@ -11,6 +11,26 @@
   <link rel="stylesheet" href="css/requests.css" />
   <link rel="stylesheet" href="css/members.css" />
   <link rel="stylesheet" href="css/modal.css" />
+  <style>
+    .public-song-status-box { min-width: 220px; }
+    .public-setlist-picker-label {
+      display:block; margin-top:7px; color:#7f7f7f; font-size:9px;
+      font-weight:900; letter-spacing:.08em;
+    }
+    .public-setlist-picker {
+      width:100%; min-width:0; margin-top:3px; padding:6px 8px;
+      background:#090909; color:#ddd; border:1px solid #353535;
+      border-radius:6px; font-size:10px; box-sizing:border-box;
+    }
+    .public-setlist-picker:focus { border-color:#b71f25; outline:none; }
+    .public-setlist-save-status {
+      display:block; min-height:12px; margin-top:3px;
+      color:#6fbd79; font-size:9px;
+    }
+    #sessionTypeInput {
+      width:100%; min-width:0; box-sizing:border-box;
+    }
+  </style>
 </head>
 <body class="admin-body">
 
@@ -116,6 +136,12 @@
             <strong id="statusSongsLabel" class="songs-locked">LOCKED</strong>
             <button id="songsCircleBtn" type="button" class="circle-status-btn go" onclick="toggleSongsAuto()" title="Unlock public song list">🔓</button>
           </div>
+
+          <label class="public-setlist-picker-label" for="publicSetlistSelect">LIST</label>
+          <select id="publicSetlistSelect" class="public-setlist-picker" aria-label="Choose public song list setlist">
+            <option value="">Loading setlists...</option>
+          </select>
+          <small id="publicSetlistSaveStatus" class="public-setlist-save-status"></small>
         </div>
         <div class="status-box"><span>Last Updated</span><strong id="statusUpdatedLabel">-</strong></div>
       </section>
@@ -128,10 +154,18 @@
               <label>Session Title</label><input id="sessionTitleInput" type="text" placeholder="Friday Night at Whyte Harte" />
               <label>Venue</label><input id="venueInput" list="venueOptions" placeholder="Whyte Harte" />
               <datalist id="venueOptions"><option value="Whyte Harte"></option><option value="Smokehouse"></option></datalist>
+
+              <label>Type</label>
+              <select id="sessionTypeInput">
+                <option value="Live Karaoke">Live Karaoke</option>
+                <option value="Roxanna">Roxanna</option>
+                <option value="Solo">Solo</option>
+              </select>
             </div>
             <div id="activeSessionLabels" class="active-session-labels hidden">
               <div><span>Session Title</span><strong id="sessionTitleLabel"></strong><button type="button" onclick="editActiveSessionDetails()">✎</button></div>
               <div><span>Venue</span><strong id="venueLabel"></strong><button type="button" onclick="editActiveSessionDetails()">✎</button></div>
+              <div><span>Type</span><strong id="sessionTypeLabel">Live Karaoke</strong><button type="button" onclick="editActiveSessionDetails()">✎</button></div>
             </div>
             <label class="notes-label">Session Notes</label>
             <textarea id="sessionNotesInput" class="session-notes" placeholder="Session notes..."></textarea>
@@ -258,6 +292,7 @@
 <script src="js/requests.js"></script>
 <script src="js/members.js"></script>
 <script src="js/admin.js"></script>
+<script src="js/public-setlist-session-addon.js"></script>
 
 
 </body>
