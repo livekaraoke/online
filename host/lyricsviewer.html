@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lyrics Suite</title>
+  <title>Lyrics Viewer</title>
   <link rel="stylesheet" href="css/lyrics-suite_OLDER.css">
   <link rel="stylesheet" href="css/lyrics-suite.css">
   <link rel="stylesheet" href="../admin-new/css/top-statusbar.css">
@@ -16,12 +16,12 @@
     </button>
 
     <div class="brand-block">
-      <strong>▣ LYRICS SUITE</strong>
+      <strong>▣ LYRICS VIEWER</strong>
       <span>Browse, search and open any song</span>
     </div>
 
     <a class="btn red create-song-btn" href="lyricscreator.html">
-      ＋ NEW SONG
+      ＋ NEW LYRICS / CHORDS
     </a>
   </header>
 
@@ -30,7 +30,6 @@
 
   <div id="libraryShell" class="library-shell">
     <aside id="librarySidebar" class="library-sidebar">
-      <!--
       <section class="panel compact">
         <h3>VIEW MODE</h3>
         <div class="segmented">
@@ -38,7 +37,6 @@
           <button type="button" disabled>▦ Table</button>
         </div>
       </section>
-      -->
 
       <section class="panel compact sidebar-setlists-panel">
         <a class="sidebar-primary-link" href="setlist-editor.html">☷ SETLISTS</a>
@@ -113,7 +111,7 @@
         </select>
       </section>
 
-      <a class="btn full ghost sidebar-admin-btn" href="../admin-new/admin.html">‹ GO TO ADMIN</a>
+      <a class="btn full ghost sidebar-admin-btn" href="../admin.html">‹ GO TO ADMIN</a>
       <button id="exportBtn" class="btn full ghost" type="button">⇧ EXPORT SONG LIST</button>
     </aside>
 
@@ -168,7 +166,6 @@
     <nav id="alphabetNav" class="alphabet-nav" aria-label="Alphabet navigation"></nav>
   </div>
 
-  <!--
   <footer class="library-player-bar">
     <div>
       <strong>PLAY ANY SONG</strong>
@@ -179,7 +176,6 @@
     <button id="nextSongBtn" type="button">▶▶</button>
     <a class="btn ghost" href="karaoke-lyric-view.html" target="_blank">OPEN SINGER VIEW</a>
   </footer>
-  -->
 
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
