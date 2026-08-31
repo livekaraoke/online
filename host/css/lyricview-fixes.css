@@ -1260,3 +1260,165 @@ body.host-lyric-view-page {
   color: #9fd4ff !important;
   text-shadow: 0 0 10px rgba(70, 165, 255, .22);
 }
+
+
+/* =========================================================
+   2026-08-31 — PERFORMANCE NAV / STATUS / END SPACING UPDATE
+   ========================================================= */
+
+/* Keep the two-row sticky stack inside the tablet's real content width.
+   100vw can include the scrollbar/safe-area width and push controls offscreen. */
+#hostStickyStack.host-sticky-stack {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+#hostStickyStack > #topStatusContainer.host-status-wrap {
+  width: 100% !important;
+  max-width: 100% !important;
+  padding-left: max(3px, env(safe-area-inset-left, 0px)) !important;
+  padding-right: max(3px, env(safe-area-inset-right, 0px)) !important;
+  box-sizing: border-box !important;
+}
+
+#topStatusContainer,
+#topStatusContainer > *,
+#topStatusContainer [class*="top-status"],
+#topStatusContainer [class*="status-bar"],
+#topStatusContainer [class*="statusbar"] {
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
+
+/* If the injected status bar has its own 100vw sizing, neutralise it. */
+#topStatusContainer > * {
+  width: 100% !important;
+  overflow-x: clip !important;
+}
+
+/* Larger floating four-way navigation pad. */
+.host-nav-pad {
+  width: 228px !important;
+  height: 238px !important;
+}
+
+.host-nav-btn.nav-up,
+.host-nav-btn.nav-down {
+  width: 86px !important;
+  height: 86px !important;
+}
+
+.host-nav-btn.nav-left,
+.host-nav-btn.nav-right {
+  width: 70px !important;
+  height: 70px !important;
+}
+
+.host-nav-btn.nav-up {
+  left: 71px !important;
+  top: 0 !important;
+}
+
+.host-nav-btn.nav-left {
+  left: 0 !important;
+  top: 84px !important;
+}
+
+.host-nav-btn.nav-right {
+  right: 0 !important;
+  top: 84px !important;
+}
+
+.host-nav-btn.nav-down {
+  left: 71px !important;
+  bottom: 0 !important;
+}
+
+.host-nav-btn.nav-up .host-nav-icon,
+.host-nav-btn.nav-down .host-nav-icon {
+  width: 43px !important;
+  height: 43px !important;
+}
+
+.host-nav-btn.nav-left .host-nav-icon,
+.host-nav-btn.nav-right .host-nav-icon {
+  width: 36px !important;
+  height: 36px !important;
+}
+
+/* Bigger PLAY / PAUSE button. The << and >> buttons were removed from HTML. */
+.host-scroll-player #autoScrollBtn {
+  width: 58px !important;
+  min-width: 58px !important;
+  height: 48px !important;
+  min-height: 48px !important;
+  font-size: 20px !important;
+  border-radius: 8px !important;
+}
+
+/* Move -, speed, + closer to the left/player button now that jump buttons are gone. */
+.host-scroll-player {
+  justify-content: flex-start !important;
+  gap: 7px !important;
+  padding-left: 6px !important;
+}
+
+.host-scroll-player #scrollSpeedDown {
+  margin-left: 4px !important;
+}
+
+/* More breathing room before the final END marker. */
+.host-end-marker {
+  margin-top: 110px !important;
+  padding-top: 20px !important;
+}
+
+/* Bottom section navigator uses exactly the same title colour as the
+   section header resolved from Lyrics Creator/system defaults. */
+#sectionProgress .progress-section > span {
+  color: var(--progress-title-color, #ffffff) !important;
+}
+
+/* Active item keeps its section colour rather than being forced blue/white. */
+#sectionProgress .progress-section.active > span {
+  color: var(--progress-title-color, #ffffff) !important;
+  text-shadow: 0 0 9px color-mix(in srgb, var(--progress-title-color, #ffffff) 42%, transparent) !important;
+}
+
+/* Tablet-specific containment + make room for the larger D-pad. */
+@media (max-width: 1100px) {
+  #hostStickyStack > #topStatusContainer.host-status-wrap {
+    overflow: hidden !important;
+  }
+
+  #topStatusContainer > * {
+    transform: none !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+
+  .host-nav-pad {
+    right: 8px !important;
+  }
+}
+
+@media (max-width: 980px) and (min-width: 701px) {
+  .host-nav-pad {
+    transform: scale(.86) !important;
+    transform-origin: bottom right !important;
+    right: 6px !important;
+  }
+}
+
+@media (max-width: 700px) {
+  .host-nav-pad {
+    transform: scale(.78) !important;
+    transform-origin: bottom right !important;
+  }
+
+  .host-end-marker {
+    margin-top: 90px !important;
+  }
+}
