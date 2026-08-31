@@ -3,7 +3,15 @@
 
   const COLLECTION = "upcomingEvents";
   const VENUES_COLLECTION = "venues";
-  const TYPE_OPTIONS = ["Live Karaoke", "Roxanna", "Solo"];
+  const DEFAULT_TYPE_OPTIONS = [
+    "Live Karaoke",
+    "Roxanna",
+    "Solo",
+    "Texanna",
+    "Other"
+  ];
+
+  let typeOptions = [...DEFAULT_TYPE_OPTIONS];
   const STATUS_OPTIONS = ["Confirmed", "Tentative", "Cancelled"];
 
   const $ = id => document.getElementById(id);
@@ -12,6 +20,8 @@
     window.db ||
     window.LK?.db ||
     (window.firebase?.firestore ? firebase.firestore() : null);
+
+  const EVENT_TYPES_DOC = db ? db.collection("karaokeControl").doc("eventTypes") : null;
 
   let events = [];
   let venues = [];
@@ -80,6 +90,25 @@
     if (!start && !end) return "Time TBC";
     if (start && end) return `${start} – ${end}`;
     return start || end;
+  }
+
+
+  function formatEventLength(event) {
+    if (!event.startTime || !event.endTime) return "Length TBC";
+
+    const [sh, sm] = event.startTime.split(":").map(Number);
+    const [eh, em] = event.endTime.split(":").map(Number);
+    if (![sh,sm,eh,em].every(Number.isFinite)) return "Length TBC";
+
+    let minutes = (eh * 60 + em) - (sh * 60 + sm);
+    if (minutes < 0) minutes += 24 * 60;
+
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+
+    if (hours && mins) return `${hours}h ${mins}m`;
+    if (hours) return `${hours}h`;
+    return `${mins}m`;
   }
 
   function getFilteredEvents() {
@@ -187,7 +216,14 @@
 
           <div class="event-main">
             <strong>${escapeHTML(event.name || "Untitled Event")}</strong>
-            <span>${notesPreview}</span>
+
+            <div class="event-schedule-meta">
+              <span><b>Venue:</b> ${escapeHTML(event.venue || "TBC")}</span>
+              <span><b>Start:</b> ${escapeHTML(event.startTime || "TBC")}</span>
+              <span><b>Length:</b> ${escapeHTML(formatEventLength(event))}</span>
+            </div>
+
+            <span class="event-notes-preview">${notesPreview}</span>
           </div>
 
           <div class="event-venue">
@@ -304,12 +340,150 @@
     });
   }
 
+  function populateTypeControls(preferredType = "") {
+    const eventSelect = $("eventTypeInput");
+    const filterSelect = $("eventsTypeFilter");
+
+    if (eventSelect) {
+      const current = preferredType || eventSelect.value || typeOptions[0] || "";
+      eventSelect.innerHTML = typeOptions
+        .map(type => `<option value="${escapeHTML(type)}">${escapeHTML(type)}</option>`)
+        .join("");
+
+      eventSelect.value = typeOptions.includes(current)
+        ? current
+        : (typeOptions[0] || "");
+    }
+
+    if (filterSelect) {
+      const current = filterSelect.value || "";
+      filterSelect.innerHTML =
+        `<option value="">All Types</option>` +
+        typeOptions.map(type =>
+          `<option value="${escapeHTML(type)}">${escapeHTML(type)}</option>`
+        ).join("");
+
+      filterSelect.value = typeOptions.includes(current) ? current : "";
+    }
+  }
+
+  function renderEventTypeManager() {
+    const list = $("eventTypesList");
+    if (!list) return;
+
+    list.innerHTML = typeOptions.map(type => `
+      <div class="event-type-manager-row">
+        <strong>${escapeHTML(type)}</strong>
+        <button type="button" data-remove-event-type="${escapeHTML(type)}" title="Remove ${escapeHTML(type)}">×</button>
+      </div>
+    `).join("");
+  }
+
+  async function saveEventTypes(nextOptions) {
+    if (!EVENT_TYPES_DOC) return;
+
+    const clean = [...new Set(
+      nextOptions
+        .map(value => String(value || "").trim())
+        .filter(Boolean)
+    )];
+
+    if (!clean.length) {
+      $("eventTypesMessage").textContent = "Keep at least one type.";
+      return;
+    }
+
+    try {
+      await EVENT_TYPES_DOC.set({
+        options: clean,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge:true });
+
+      $("eventTypesMessage").textContent = "";
+    } catch (error) {
+      console.error("Could not save event types:", error);
+      $("eventTypesMessage").textContent = error.message || "Could not save types.";
+    }
+  }
+
+  async function addEventType() {
+    const input = $("newEventTypeInput");
+    const value = String(input?.value || "").trim();
+
+    if (!value) return;
+    if (typeOptions.some(type => type.toLowerCase() === value.toLowerCase())) {
+      $("eventTypesMessage").textContent = "That type already exists.";
+      return;
+    }
+
+    await saveEventTypes([...typeOptions, value]);
+    input.value = "";
+  }
+
+  async function removeEventType(value) {
+    if (typeOptions.length <= 1) {
+      $("eventTypesMessage").textContent = "Keep at least one type.";
+      return;
+    }
+
+    await saveEventTypes(typeOptions.filter(type => type !== value));
+  }
+
+  function openEventTypesModal() {
+    renderEventTypeManager();
+    $("eventTypesMessage").textContent = "";
+    $("newEventTypeInput").value = "";
+    $("eventTypesModal").classList.remove("hidden");
+  }
+
+  function closeEventTypesModal() {
+    $("eventTypesModal").classList.add("hidden");
+  }
+
+  async function startEventTypesListener() {
+    if (!EVENT_TYPES_DOC) return;
+
+    try {
+      const initial = await EVENT_TYPES_DOC.get();
+      const initialOptions = initial.exists && Array.isArray(initial.data()?.options)
+        ? initial.data().options.map(v => String(v || "").trim()).filter(Boolean)
+        : [];
+
+      if (!initialOptions.length) {
+        await EVENT_TYPES_DOC.set({
+          options: DEFAULT_TYPE_OPTIONS,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge:true });
+      }
+    } catch (error) {
+      console.warn("Could not initialise event types:", error);
+    }
+
+    EVENT_TYPES_DOC.onSnapshot(doc => {
+      const options = doc.exists && Array.isArray(doc.data()?.options)
+        ? doc.data().options.map(v => String(v || "").trim()).filter(Boolean)
+        : [];
+
+      typeOptions = options.length
+        ? [...new Set(options)]
+        : [...DEFAULT_TYPE_OPTIONS];
+
+      populateTypeControls();
+      renderEventTypeManager();
+      renderEvents();
+    }, error => {
+      console.warn("Event types listener unavailable:", error);
+      typeOptions = [...DEFAULT_TYPE_OPTIONS];
+      populateTypeControls();
+    });
+  }
+
   function resetForm() {
     $("eventIdInput").value = "";
     $("eventNameInput").value = "";
     populateVenueSelect("");
     $("eventVenueInput").value = "";
-    $("eventTypeInput").value = "Live Karaoke";
+    populateTypeControls("Live Karaoke");
     $("eventStatusInput").value = "Confirmed";
     $("eventDateInput").value = "";
     $("eventStartTimeInput").value = "";
@@ -353,7 +527,7 @@
       [$("eventAddressInput"), $("eventContactNameInput"), $("eventContactInput")]
         .forEach(input => input.classList.toggle("venue-autofilled", !!input.value));
     }
-    $("eventTypeInput").value = TYPE_OPTIONS.includes(event.type) ? event.type : "Live Karaoke";
+    populateTypeControls(typeOptions.includes(event.type) ? event.type : (typeOptions[0] || ""));
     $("eventStatusInput").value = STATUS_OPTIONS.includes(event.status) ? event.status : "Confirmed";
     $("eventDateInput").value = event.date || "";
     $("eventStartTimeInput").value = event.startTime || "";
@@ -375,7 +549,7 @@
     if (!$("eventNameInput").value.trim()) return "Enter an event / gig name.";
     if (!$("eventVenueInput").value) return "Choose a saved venue.";
     if (!$("eventDateInput").value) return "Choose the event date.";
-    if (!TYPE_OPTIONS.includes($("eventTypeInput").value)) return "Choose a valid event type.";
+    if (!typeOptions.includes($("eventTypeInput").value)) return "Choose a valid event type.";
     return "";
   }
 
@@ -518,6 +692,17 @@
     $("eventsBackBtn").onclick = () => { window.location.href = "admin.html"; };
     $("refreshEventsBtn").onclick = renderEvents;
 
+    $("manageEventTypesBtn").onclick = openEventTypesModal;
+    $("eventTypesCloseBtn").onclick = closeEventTypesModal;
+    $("eventTypesDoneBtn").onclick = closeEventTypesModal;
+    $("addEventTypeBtn").onclick = addEventType;
+    $("newEventTypeInput").addEventListener("keydown", event => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        addEventType();
+      }
+    });
+
     $("eventModalCloseBtn").onclick = closeEventModal;
     $("eventCancelBtn").onclick = closeEventModal;
     $("eventSaveBtn").onclick = saveEvent;
@@ -543,6 +728,12 @@
       const remove = event.target.closest("[data-delete-event]");
       if (remove) {
         askDelete(remove.dataset.deleteEvent);
+        return;
+      }
+
+      const removeType = event.target.closest("[data-remove-event-type]");
+      if (removeType) {
+        removeEventType(removeType.dataset.removeEventType);
       }
     });
 
@@ -554,10 +745,15 @@
       if (event.target === $("deleteEventModal")) closeDeleteModal();
     });
 
+    $("eventTypesModal").addEventListener("click", event => {
+      if (event.target === $("eventTypesModal")) closeEventTypesModal();
+    });
+
     document.addEventListener("keydown", event => {
       if (event.key === "Escape") {
         closeEventModal();
         closeDeleteModal();
+        closeEventTypesModal();
       }
     });
   }
@@ -568,6 +764,7 @@
 
     loadSidebarFallback();
     markEventsSidebarLink();
+    startEventTypesListener();
     startVenueListener();
     startEventListener();
   }
