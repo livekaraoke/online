@@ -674,3 +674,63 @@
     width: 100%;
   }
 }
+
+
+/* =========================================================
+   SAVED VENUE INTEGRATION
+   ========================================================= */
+
+.event-form-grid select#eventVenueInput {
+  width: 100%;
+  min-width: 0;
+  min-height: 39px;
+  box-sizing: border-box;
+  padding: 9px 10px;
+  border: 1px solid #363636;
+  border-radius: 6px;
+  background: #080808;
+  color: #eee;
+  font: inherit;
+  color-scheme: dark;
+}
+
+.event-form-grid select#eventVenueInput:focus {
+  border-color: #a91a20;
+  outline: none;
+}
+
+.venue-source-hint {
+  display: block;
+  margin-top: 5px;
+  color: #666;
+  font-size: 9px;
+}
+
+.venue-source-hint a {
+  color: #bf343a;
+  text-decoration: none;
+}
+
+.venue-source-hint a:hover {
+  text-decoration: underline;
+}
+
+.event-form-grid input[readonly] {
+  border-color: #292929 !important;
+  background: #0d0d0d !important;
+  color: #aaa !important;
+  cursor: default !important;
+  opacity: .9;
+}
+
+.event-form-grid input[readonly]:focus {
+  border-color: #292929 !important;
+  box-shadow: none !important;
+}
+
+/* A populated locked field gets a subtle green indicator. */
+.event-form-grid input[readonly].venue-autofilled {
+  border-color: #244a2c !important;
+  background: #0b130d !important;
+  color: #d3ddd5 !important;
+}
