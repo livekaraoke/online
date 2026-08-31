@@ -10,6 +10,14 @@
     verse: "#ffffff",
     preChorus: "#ffb45c",
     chorus: "#42f35c",
+    postChorus: "#ffffff",
+    bridge: "#ffffff",
+    intro: "#ffffff",
+    outro: "#ffffff",
+    instrumental: "#ffffff",
+    solo: "#ffffff",
+    guitarTab: "#ffffff",
+    hostNote: "#ffffff",
     ending: "#ffd400",
     fallback: "#ffffff"
   };
@@ -133,10 +141,20 @@
 
   function normaliseSectionTitleKey(title) {
     const clean = String(title || "").trim().toUpperCase().replace(/\s+/g, " ");
+
     if (clean === "VERSE" || /^VERSE \d+$/.test(clean)) return "verse";
     if (clean === "PRE-CHORUS" || clean === "PRE CHORUS") return "preChorus";
     if (clean === "CHORUS" || /^CHORUS \d+$/.test(clean) || clean === "CHORUS REPEAT") return "chorus";
-    if (clean === "ENDING" || clean === "END" || clean === "OUTRO") return "ending";
+    if (clean === "POST-CHORUS" || clean === "POST CHORUS") return "postChorus";
+    if (clean === "BRIDGE" || /^BRIDGE \d+$/.test(clean)) return "bridge";
+    if (clean === "INTRO") return "intro";
+    if (clean === "OUTRO") return "outro";
+    if (clean === "INSTRUMENTAL" || clean === "INSTRUMENTAL BREAK") return "instrumental";
+    if (clean === "SOLO" || clean === "GUITAR SOLO") return "solo";
+    if (clean === "GUITAR TAB" || clean === "TAB") return "guitarTab";
+    if (clean === "HOST NOTE" || clean === "HOST NOTES") return "hostNote";
+    if (clean === "ENDING" || clean === "END") return "ending";
+
     return "fallback";
   }
 
@@ -268,6 +286,8 @@
 
       // Optional per-section title colour from Lyrics Creator.
       const titleColour = section.style?.titleColor || getSystemSectionTitleColour(section.title);
+      card.dataset.sectionTitleColor = titleColour;
+
       const titleEl = header.querySelector("strong");
       if (titleEl) titleEl.style.color = titleColour;
 
@@ -317,6 +337,12 @@
       const b = document.createElement("button");
       b.type = "button";
       b.className = "progress-section";
+
+      const progressTitleColour =
+        el.dataset.sectionTitleColor ||
+        getSystemSectionTitleColour(el.dataset.sectionTitle || "");
+
+      b.style.setProperty("--progress-title-color", progressTitleColour);
       b.innerHTML = `<span>${esc(el.dataset.sectionTitle || `S${i+1}`)}</span><i></i>`;
       b.onclick = () => scrollToSection(i);
       progress.appendChild(b);
@@ -500,199 +526,96 @@
   }
 
   /************************************************************
-   * DOCUMENT-RELATIVE PATHS
+   * SEND LYRICS DROPDOWN
    *
-   * Current page:
-   *   root/host/lyricview.html
+   * RESTORED TO THE ORIGINAL WORKING song-data.js LOGIC.
    *
-   * Song index:
+   * song-data.js:
    *   root/adm/files/song-data.js
-   * Browser path:
+   *
+   * loaded by lyricview.html as:
    *   ../adm/files/song-data.js
    *
-   * Legacy lyric JS files:
-   *   root/adm/host/lyrics/lyrics-data/<filename>.js
-   * Browser path:
-   *   ../adm/host/lyrics/lyrics-data/<filename>.js
+   * It exposes:
+   *   window.songs = [...]
+   *
+   * The original working URL format is:
+   *   lyrics/song.html?id=allthesmallthings
    *
    * IMPORTANT:
-   * Relative URLs created inside lyricview.js are still resolved from
-   * lyricview.html's URL, NOT from root/host/js/.
-   ************************************************************/
-
-  /************************************************************
-   * SLAVE / KARAOKE LYRICS DROPDOWN
-   *
-   * IMPORTANT:
-   * The dropdown is populated from:
-   *   root
-   *
-   * lyricview.html loads that file as:
-   *   
-   *
-   * song-data.js exposes window.songs.
-   *
-   * We deliberately DO NOT build the target from:
-   *   Song Title + Artist
-   *
-   * Instead we take the ID/filename directly from each song's
-   * saved URL in song-data.js. This restores the old behaviour
-   * for files such as:
-   *   allthesmallthings.js
+   * We use the ID ALREADY STORED IN song.url.
+   * We DO NOT generate IDs from title + artist.
    ************************************************************/
 
   function dVal(v) {
     return String(v || "").replace(/"/g, "&quot;");
   }
 
-  function normaliseSlaveLyricsId(value) {
-    return String(value || "")
-      .trim()
-      .replace(/^.*[\\/]/, "")
-      .replace(/\.js(?:[?#].*)?$/i, "")
-      .replace(/[?#].*$/, "");
-  }
-
-  function extractSlaveLyricsIdFromUrl(url) {
-    const raw = String(url || "").trim();
-    if (!raw) return "";
-
-    // 1) Old karaoke URL format:
-    //    lyrics/song.html?id=allthesmallthings
-    //    song.html?id=allthesmallthings
-    try {
-      const absolute = new URL(raw, window.location.href);
-      const queryId = absolute.searchParams.get("id");
-      if (queryId) return normaliseSlaveLyricsId(queryId);
-
-      // 2) Direct JS URL:
-      //    host/lyrics/lyrics-data/allthesmallthings.js
-      //    lyrics/lyrics-data/allthesmallthings.js
-      const pathname = decodeURIComponent(absolute.pathname || "");
-      const fileMatch = pathname.match(/([^/]+)\.js$/i);
-      if (fileMatch) return normaliseSlaveLyricsId(fileMatch[1]);
-    } catch (_) {
-      // Fall through to string parsing below.
+  function getSlaveLyricsSongs() {
+    if (!Array.isArray(window.songs)) {
+      console.error(
+        "window.songs is missing. Check that ../adm/files/song-data.js loads before js/lyricview.js"
+      );
+      return [];
     }
 
-    const idMatch = raw.match(/[?&]id=([^&#]+)/i);
-    if (idMatch) {
-      return normaliseSlaveLyricsId(decodeURIComponent(idMatch[1]));
-    }
-
-    const jsMatch = raw.match(/([^/?#]+)\.js(?:[?#].*)?$/i);
-    if (jsMatch) {
-      return normaliseSlaveLyricsId(decodeURIComponent(jsMatch[1]));
-    }
-
-    return "";
-  }
-
-  function getSongDataArray() {
-    // song-data.js may declare either:
-    //   window.songs = [...]
-    // OR:
-    //   const songs = [...]
-    //
-    // A top-level "const songs" from a classic <script> is available to
-    // later classic scripts, but it is NOT exposed as window.songs.
-    if (Array.isArray(window.songs)) {
-      return window.songs;
-    }
-
-    try {
-      if (typeof songs !== "undefined" && Array.isArray(songs)) {
-        return songs;
-      }
-    } catch (_) {
-      // Ignore lexical-global lookup errors.
-    }
-
-    // Support a few other common legacy names without changing song-data.js.
-    for (const key of ["songData", "karaokeSongs", "songList"]) {
-      if (Array.isArray(window[key])) {
-        return window[key];
-      }
-    }
-
-    return [];
-  }
-
-  function getSlaveLyricsEntriesFromSongData() {
-    const source = getSongDataArray();
-
-    const entries = [];
-    const seen = new Set();
-
-    source.forEach(song => {
-      if (!song) return;
-
-      // song-data.js is the authoritative mapping.
-      // Some older rows use url, while a few builds may use one of the
-      // alternate URL field names below, so support all of them safely.
-      const sourceUrl =
-        song.url ||
-        song.lyricsUrl ||
-        song.karaokeUrl ||
-        song.karaokeLyricsUrl ||
-        "";
-
-      const id = extractSlaveLyricsIdFromUrl(sourceUrl);
-
-      if (!id) return;
-
-      const key = id.toLowerCase();
-      if (seen.has(key)) return;
-      seen.add(key);
-
-      const fileName = `${id}.js`;
-
-      entries.push({
-        id,
-        fileName,
-        title: String(song.title || id),
-        artist: String(song.artist || ""),
-        sourceUrl
-      });
-    });
-
-    return entries.sort((a, b) =>
-      String(a.title || a.fileName).localeCompare(
-        String(b.title || b.fileName),
-        undefined,
-        { sensitivity: "base" }
+    return window.songs
+      .filter(song =>
+        song &&
+        song.hasLyrics === true &&
+        typeof song.url === "string" &&
+        song.url.trim()
       )
-    );
+      .map(song => {
+        // EXACTLY the same ID extraction pattern used by the original code.
+        const id = String(song.url || "")
+          .replace(/^lyrics\/song\.html\?id=/i, "")
+          .trim();
+
+        return {
+          id,
+          title: song.title || id,
+          artist: song.artist || "",
+          url: song.url || "",
+          fileName: `${id}.js`
+        };
+      })
+      .filter(song => song.id)
+      .sort((a, b) =>
+        String(a.title).localeCompare(
+          String(b.title),
+          undefined,
+          { sensitivity: "base" }
+        )
+      );
   }
 
   function findCurrentSlaveLyricsId(entries) {
-    if (!Array.isArray(entries) || !entries.length) return "";
+    if (!entries.length) return "";
 
-    // First preference: the saved karaokeLyrics value on the Firestore song.
-    const saved = normaliseSlaveLyricsId(currentSong?.karaokeLyrics);
-    if (saved) {
-      const match = entries.find(entry =>
-        entry.id.toLowerCase() === saved.toLowerCase()
-      );
-      if (match) return match.id;
+    // First use the song's saved Karaoke Lyrics ID if it already has one.
+    const savedId = String(currentSong?.karaokeLyrics || "").trim();
+
+    if (savedId && savedId !== "No") {
+      const exact = entries.find(entry => entry.id === savedId);
+      if (exact) return exact.id;
     }
 
-    // Second preference: match current song title against song-data.js title.
-    // We do NOT append the artist to create a filename.
-    const currentTitle = String(currentSong?.title || "")
+    // Otherwise match by title only.
+    // Do NOT append artist to the ID.
+    const title = String(currentSong?.title || "")
       .toLowerCase()
       .replace(/[^a-z0-9]/g, "");
 
-    if (currentTitle) {
-      const match = entries.find(entry =>
-        String(entry.title || "")
-          .toLowerCase()
-          .replace(/[^a-z0-9]/g, "") === currentTitle
-      );
-      if (match) return match.id;
-    }
+    if (!title) return "";
 
-    return "";
+    const match = entries.find(entry =>
+      String(entry.title || "")
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, "") === title
+    );
+
+    return match?.id || "";
   }
 
   async function loadSlaveLyricsOptions() {
@@ -703,56 +626,31 @@
 
     if (!selects.length) return;
 
-    selects.forEach(select => {
-      select.disabled = true;
-      select.innerHTML =
-        `<option value="">Loading lyrics list…</option>`;
-    });
-
-    // song-data.js is loaded by lyricview.html BEFORE lyricview.js.
-    // It may expose the array as window.songs OR declare `const songs = [...]`.
-    // Both formats are supported here.
-    const songDataArray = getSongDataArray();
-
-    if (!songDataArray.length) {
-      console.error(
-        "song-data.js loaded, but no song array was found. Supported names: window.songs, const songs, window.songData, window.karaokeSongs, window.songList."
-      );
-
-      selects.forEach(select => {
-        select.disabled = false;
-        select.innerHTML =
-          `<option value="">Could not read songs from song-data.js</option>`;
-      });
-      return;
-    }
-
-    const entries = getSlaveLyricsEntriesFromSongData();
+    const entries = getSlaveLyricsSongs();
 
     if (!entries.length) {
       console.error(
-        "song-data.js loaded, but no lyric IDs could be extracted from its URLs.",
-        songDataArray
+        "No songs with hasLyrics:true were found in window.songs.",
+        window.songs
       );
 
       selects.forEach(select => {
         select.disabled = false;
         select.innerHTML =
-          `<option value="">No lyric JS files found in song-data.js</option>`;
+          `<option value="">No karaoke lyric songs found</option>`;
       });
       return;
     }
 
     const options =
       `<option value="">Choose lyrics to send…</option>` +
-      entries.map(entry => {
-        const artistText = entry.artist ? ` — ${entry.artist}` : "";
+      entries.map(song => {
+        const artist = song.artist ? ` — ${song.artist}` : "";
 
         return (
-          `<option value="${esc(dVal(entry.id))}" ` +
-          `data-lyrics-file="${esc(dVal(entry.fileName))}">` +
-          `${esc(entry.title)}${esc(artistText)} ` +
-          `(${esc(entry.fileName)})` +
+          `<option value="${esc(dVal(song.id))}" ` +
+          `data-lyrics-file="${esc(dVal(song.fileName))}">` +
+          `${esc(song.title)}${esc(artist)}` +
           `</option>`
         );
       }).join("");
@@ -766,8 +664,7 @@
     });
 
     console.log(
-      `Loaded ${entries.length} slave lyric file entries from song-data.js`,
-      entries
+      `SEND LYRICS dropdown loaded ${entries.length} songs from window.songs`
     );
   }
 
@@ -778,31 +675,20 @@
     if (!id) {
       return showModal(
         "Choose Lyrics",
-        "Select a lyrics file first."
+        "Select lyrics to send first."
       );
     }
 
-    const option = select.options[select.selectedIndex];
-
-    const fileName =
-      option?.dataset?.lyricsFile ||
-      `${normaliseSlaveLyricsId(id)}.js`;
-
-    // This is the actual file location from lyricview.html:
-    // root/adm/host/lyrics/lyrics-data/<filename>.js
-    const relativeFilePath =
-      `${fileName}`;
+    const fileName = `${id}.js`;
 
     await db.collection("karaokeControl").doc("liveLyrics").set({
-      // Keep old compatibility fields.
       currentSongId: id,
       songId: id,
 
-      // Explicit file mapping so the singer/slave page never has to invent
-      // a filename using song title + artist.
+      // Explicit legacy mapping. No artist is added to the filename.
       lyricsFileId: id,
       lyricsFileName: fileName,
-      lyricsFilePath: relativeFilePath,
+      lyricsFilePath: `../adm/host/lyrics/lyrics-data/${fileName}`,
       lyricsSource: "song-data-js",
 
       reset: false,
@@ -933,8 +819,6 @@
     $("navDownBtn").onclick = () => smoothRelativeScroll(1);
     $("navPrevBtn").onclick = () => scrollToSection(currentSectionIndex-1);
     $("navNextBtn").onclick = () => scrollToSection(currentSectionIndex+1);
-    $("jumpTopBtn").onclick = () => scrollTo({top:0,behavior:"smooth"});
-    $("jumpBottomBtn").onclick = () => scrollTo({top:document.documentElement.scrollHeight,behavior:"smooth"});
     $("autoScrollBtn").onclick = startAutoScroll;
     $("scrollSpeedDown").onclick = async () => {
       scrollSpeed = Math.max(0.1, +(scrollSpeed - 0.1).toFixed(1));
