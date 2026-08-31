@@ -734,3 +734,87 @@
   background: #0b130d !important;
   color: #d3ddd5 !important;
 }
+
+
+/* =========================================================
+   EVENT TYPE MANAGER + RICHER SCHEDULE ROW DETAILS
+   ========================================================= */
+
+.event-main .event-schedule-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px 10px;
+  margin-top: 5px;
+  color: #aaa;
+  font-size: 10px;
+}
+
+.event-main .event-schedule-meta b {
+  color: #d2d2d2;
+  font-weight: 850;
+}
+
+.event-main .event-notes-preview {
+  margin-top: 5px;
+  color: #666;
+  font-size: 9px;
+}
+
+.event-types-manager {
+  text-align: left !important;
+}
+
+.event-types-help {
+  margin: 0 0 12px;
+  color: #858585;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.event-types-list {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 11px;
+}
+
+.event-type-manager-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 9px;
+  padding: 7px 8px;
+  border: 1px solid #303030;
+  border-radius: 6px;
+  background: #0c0c0c;
+}
+
+.event-type-manager-row strong {
+  color: #ddd;
+  font-size: 11px;
+}
+
+.event-type-manager-row button {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid #562226;
+  border-radius: 5px;
+  background: #19090a;
+  color: #e75c63;
+  cursor: pointer;
+}
+
+.event-type-add-row {
+  display: grid;
+  grid-template-columns: minmax(0,1fr) auto;
+  gap: 7px;
+}
+
+.event-type-add-row input {
+  min-width: 0;
+  padding: 9px 10px;
+  border: 1px solid #363636;
+  border-radius: 6px;
+  background: #080808;
+  color: #eee;
+}
