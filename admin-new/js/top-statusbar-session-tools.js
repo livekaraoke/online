@@ -68,6 +68,13 @@
     return `${minutes}mins`;
   }
 
+  function setOverTimeState(elements, isOver) {
+    elements.forEach(el => {
+      if (!el) return;
+      el.classList.toggle("remaining-over-time", !!isOver);
+    });
+  }
+
   function scheduledDurationMs() {
     const explicit = Number(
       state.session?.scheduledDurationMs ??
@@ -166,6 +173,10 @@
       if (adjustedHint) adjustedHint.textContent = "No active session";
       if (legacyRemaining) legacyRemaining.textContent = "-";
       if (legacyWindow) legacyWindow.textContent = "No active session";
+      setOverTimeState(
+        [compactRemaining, compactEnd, adjustedRemaining, adjustedEnd, adjustedHint],
+        false
+      );
       return;
     }
 
@@ -211,9 +222,15 @@
 
       if (compactRemaining) compactRemaining.textContent = text;
       if (legacyRemaining) legacyRemaining.textContent = text;
+
+      setOverTimeState(
+        [compactRemaining, compactEnd],
+        officialMs <= 0
+      );
     } else {
       if (compactRemaining) compactRemaining.textContent = "-";
       if (legacyRemaining) legacyRemaining.textContent = "-";
+      setOverTimeState([compactRemaining, compactEnd], false);
     }
 
     /* ------------------------------------------------------
@@ -246,6 +263,11 @@
           `Adjusted end <strong>${formatClock(adjustedTarget)}</strong>`;
       }
 
+      setOverTimeState(
+        [adjustedRemaining, adjustedEnd, adjustedHint],
+        adjustedMs <= 0
+      );
+
       if (adjustedHint) {
         const delay =
           schedule.start && actualStart
@@ -268,6 +290,7 @@
       if (adjustedEnd) adjustedEnd.textContent = "Adjusted end —";
       if (adjustedHint) adjustedHint.textContent =
         "Scheduled duration unavailable";
+      setOverTimeState([adjustedRemaining, adjustedEnd, adjustedHint], false);
     }
   }
 
@@ -870,6 +893,52 @@
     syncStatusToggleUi();
   }
 
+  function setStatusDetailTab(tabName) {
+    const tab = tabName === "break" ? "break" : "session";
+
+    const sessionBtn = $("tsSessionStatusTab");
+    const breakBtn = $("tsBreakStatusTab");
+    const sessionPane = $("tsSessionStatusPane");
+    const breakPane = $("tsBreakStatusPane");
+
+    const showSession = tab === "session";
+
+    sessionBtn?.classList.toggle("active", showSession);
+    breakBtn?.classList.toggle("active", !showSession);
+
+    sessionBtn?.setAttribute("aria-selected", String(showSession));
+    breakBtn?.setAttribute("aria-selected", String(!showSession));
+
+    if (sessionPane) {
+      sessionPane.hidden = !showSession;
+      sessionPane.classList.toggle("active", showSession);
+    }
+
+    if (breakPane) {
+      breakPane.hidden = showSession;
+      breakPane.classList.toggle("active", !showSession);
+    }
+  }
+
+  function initialiseStatusDetailTabs() {
+    const bar = $("topStatusBar");
+    if (!bar || bar.dataset.statusTabsBound === "1") return;
+
+    bar.dataset.statusTabsBound = "1";
+
+    // User requested Session Status as the default.
+    setStatusDetailTab("session");
+
+    bar.addEventListener("click", event => {
+      const btn = event.target.closest("[data-ts-status-tab]");
+      if (!btn) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+      setStatusDetailTab(btn.dataset.tsStatusTab);
+    });
+  }
+
   function setInfoTab(tabName) {
     const tab = tabName === "notes" ? "notes" : "notifications";
 
@@ -953,6 +1022,7 @@
   function waitForInjectedMarkup() {
     if ($("topStatusBar")) {
       initialiseStatusToggle();
+      initialiseStatusDetailTabs();
       initialiseInfoTabs();
       bindUi();
       renderRemaining();
