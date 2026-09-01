@@ -58,11 +58,9 @@
           <small>Scheduled events</small>
         </article>
 
-        <article class="events-summary-card">
-          <span>LIVE KARAOKE</span>
-          <strong id="karaokeCount">0</strong>
-          <small>Upcoming bookings</small>
-        </article>
+        <!-- One summary card is generated here for EVERY configured event type.
+             Adding/removing a type from ⚙ TYPES automatically adds/removes its card. -->
+        <div id="eventTypeSummaryCards" class="event-type-summary-cards"></div>
       </section>
 
       <section class="events-panel">
