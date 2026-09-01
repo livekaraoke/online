@@ -638,8 +638,45 @@
     if (!$("eventNameInput").value.trim()) return "Enter an event / gig name.";
     if (!$("eventVenueInput").value) return "Choose a saved venue.";
     if (!$("eventDateInput").value) return "Choose the event date.";
+    if (!$("eventStartTimeInput").value) return "Choose the scheduled start time.";
+    if (!$("eventEndTimeInput").value) return "Choose the scheduled end time.";
     if (!typeOptions.includes($("eventTypeInput").value)) return "Choose a valid event type.";
     return "";
+  }
+
+  function buildScheduledTimes(dateString, startTime, endTime) {
+    if (!dateString || !startTime || !endTime) {
+      return {
+        scheduledStartAt: null,
+        scheduledEndAt: null,
+        scheduledDurationMs: null
+      };
+    }
+
+    const startDate = new Date(`${dateString}T${startTime}:00`);
+    let endDate = new Date(`${dateString}T${endTime}:00`);
+
+    if (
+      Number.isNaN(startDate.getTime()) ||
+      Number.isNaN(endDate.getTime())
+    ) {
+      return {
+        scheduledStartAt: null,
+        scheduledEndAt: null,
+        scheduledDurationMs: null
+      };
+    }
+
+    // Overnight performance, e.g. 22:00 -> 01:00.
+    if (endDate <= startDate) {
+      endDate = new Date(endDate.getTime() + 24 * 60 * 60 * 1000);
+    }
+
+    return {
+      scheduledStartAt: firebase.firestore.Timestamp.fromDate(startDate),
+      scheduledEndAt: firebase.firestore.Timestamp.fromDate(endDate),
+      scheduledDurationMs: endDate.getTime() - startDate.getTime()
+    };
   }
 
   async function saveEvent() {
@@ -656,6 +693,12 @@
 
     const selectedVenue = getSelectedVenue();
 
+    const schedule = buildScheduledTimes(
+      $("eventDateInput").value,
+      $("eventStartTimeInput").value,
+      $("eventEndTimeInput").value
+    );
+
     const payload = {
       name: $("eventNameInput").value.trim(),
 
@@ -668,6 +711,12 @@
       date: $("eventDateInput").value,
       startTime: $("eventStartTimeInput").value,
       endTime: $("eventEndTimeInput").value,
+
+      // Canonical schedule fields used by Performance Sessions and Top Status Bar.
+      scheduledStartAt: schedule.scheduledStartAt,
+      scheduledEndAt: schedule.scheduledEndAt,
+      scheduledDurationMs: schedule.scheduledDurationMs,
+
       arrivalTime: $("eventArrivalTimeInput").value,
       address: selectedVenue?.address || "",
       contactName: selectedVenue?.contactName || "",
