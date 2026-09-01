@@ -30,6 +30,13 @@
   let activeSessionUnsubscribe = null;
   let statusCountdownTimer = null;
 
+  // upcomingEvents is the authoritative gig source.
+  // karaoke/state.nextEvent is maintained ONLY as a compatibility mirror
+  // for older admin code that still reads it.
+  let legacyStateUnsubscribe = null;
+  let legacyMirrorWriteInFlight = false;
+  let lastMirroredNextEventKey = "";
+
   function esc(value) {
     return String(value || "")
       .replace(/&/g, "&amp;")
@@ -129,12 +136,135 @@
   }
 
   function eventStartDate(event) {
+    const scheduled = firestoreTimestampToDate(event?.scheduledStartAt);
+    if (scheduled) return scheduled;
+
     if (!event?.date) return null;
 
     const time = event.startTime || "00:00";
     const date = new Date(`${event.date}T${time}:00`);
 
     return Number.isNaN(date.getTime()) ? null : date;
+  }
+
+  function eventEndDate(event) {
+    const scheduled = firestoreTimestampToDate(event?.scheduledEndAt);
+    if (scheduled) return scheduled;
+
+    if (!event?.date || !event?.endTime) return null;
+
+    const start = eventStartDate(event);
+    let end = new Date(`${event.date}T${event.endTime}:00`);
+
+    if (Number.isNaN(end.getTime())) return null;
+
+    // Overnight event.
+    if (start && end <= start) {
+      end = new Date(end.getTime() + 24 * 60 * 60 * 1000);
+    }
+
+    return end;
+  }
+
+  function legacyNextEventFromUpcoming(event) {
+    if (!event) return null;
+
+    const start = eventStartDate(event);
+    const end = eventEndDate(event);
+
+    return {
+      source: "upcomingEvents",
+      eventId: event.id || "",
+      title: event.name || "",
+      type: event.type || "Other",
+      venue: event.venue || "",
+      venueLocation: event.address || "",
+      start: start ? start.toISOString() : "",
+      end: end ? end.toISOString() : "",
+      repeatWeekly: false
+    };
+  }
+
+  function legacyNextEventKey(value) {
+    if (!value) return "";
+    return [
+      value.source || "",
+      value.eventId || "",
+      value.title || "",
+      value.type || "",
+      value.venue || "",
+      value.venueLocation || "",
+      value.start || "",
+      value.end || "",
+      String(value.repeatWeekly === true)
+    ].join("|");
+  }
+
+  async function syncLegacyNextEventMirror(force = false) {
+    if (legacyMirrorWriteInFlight) return;
+
+    const next = sortedUpcoming()[0] || null;
+    const mirror = legacyNextEventFromUpcoming(next);
+    const key = legacyNextEventKey(mirror);
+
+    if (!force && key === lastMirroredNextEventKey) return;
+
+    legacyMirrorWriteInFlight = true;
+
+    try {
+      const stateRef = db.collection("karaoke").doc("state");
+
+      if (mirror) {
+        await stateRef.set({
+          nextEvent: mirror,
+          nextEventSource: "upcomingEvents",
+          nextEventUpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+      } else {
+        await stateRef.set({
+          nextEvent: firebase.firestore.FieldValue.delete(),
+          nextEventSource: "upcomingEvents",
+          nextEventUpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+      }
+
+      lastMirroredNextEventKey = key;
+    } catch (error) {
+      console.warn("Could not sync legacy karaoke/state.nextEvent mirror:", error);
+    } finally {
+      legacyMirrorWriteInFlight = false;
+    }
+  }
+
+  function listenForLegacyNextEventDrift() {
+    if (legacyStateUnsubscribe) {
+      legacyStateUnsubscribe();
+      legacyStateUnsubscribe = null;
+    }
+
+    legacyStateUnsubscribe = db
+      .collection("karaoke")
+      .doc("state")
+      .onSnapshot(doc => {
+        if (legacyMirrorWriteInFlight) return;
+
+        const state = doc.exists ? (doc.data() || {}) : {};
+        const expected = legacyNextEventFromUpcoming(sortedUpcoming()[0] || null);
+
+        const actualKey = legacyNextEventKey(state.nextEvent || null);
+        const expectedKey = legacyNextEventKey(expected);
+
+        // If old code or old data changes nextEvent back to Whyte Harte (or any
+        // other stale event), immediately restore the Upcoming Events version.
+        if (
+          actualKey !== expectedKey ||
+          state.nextEventSource !== "upcomingEvents"
+        ) {
+          syncLegacyNextEventMirror(true);
+        }
+      }, error => {
+        console.warn("Legacy nextEvent drift listener unavailable:", error);
+      });
   }
 
   function countdownText(target) {
@@ -590,11 +720,19 @@
 
     db.collection("upcomingEvents").onSnapshot(snapshot => {
       upcomingEvents = snapshot.docs.map(doc => ({ id:doc.id, ...(doc.data() || {}) }));
+
+      // IMPORTANT:
+      // All visible Upcoming Gig UI is rendered from upcomingEvents.
+      // The old karaoke/state.nextEvent object is only kept in sync so legacy
+      // code cannot overwrite the dashboard with a different/stale venue.
       renderAllEventSurfaces();
       renderVenueContextStatus();
+      syncLegacyNextEventMirror();
     }, error => {
       console.warn("Admin upcoming-events dashboard unavailable:", error);
     });
+
+    listenForLegacyNextEventDrift();
 
     db.collection("karaokeControl").doc("eventTypes").onSnapshot(doc => {
       const options = doc.exists && Array.isArray(doc.data()?.options)
