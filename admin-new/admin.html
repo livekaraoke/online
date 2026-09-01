@@ -450,6 +450,147 @@
         text-align: left;
       }
     }
+
+    /* =====================================================
+       RUN ORDER
+       ===================================================== */
+
+    .run-order-admin-card .card-title-row {
+      align-items: flex-end;
+    }
+
+    .run-order-add-controls {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-width: min(480px, 52%);
+    }
+
+    #adminRunOrderSongSelect {
+      flex: 1 1 auto;
+      min-width: 0;
+      min-height: 34px;
+      box-sizing: border-box;
+      padding: 6px 8px;
+      border: 1px solid #353535;
+      border-radius: 6px;
+      background: #090909;
+      color: #ddd;
+      color-scheme: dark;
+    }
+
+    .admin-run-order-list {
+      display: grid;
+      gap: 6px;
+    }
+
+    .admin-run-order-row {
+      display: grid;
+      grid-template-columns: 34px minmax(180px,1fr) minmax(120px,.55fr) auto;
+      gap: 8px;
+      align-items: center;
+      min-height: 48px;
+      padding: 6px 8px;
+      border: 1px solid #2d2d2d;
+      border-radius: 7px;
+      background: #0d0d0d;
+    }
+
+    .admin-run-order-row.played {
+      opacity: .58;
+      border-color: #244e2d;
+      background: #0b120d;
+    }
+
+    .admin-run-order-index {
+      display: grid;
+      place-items: center;
+      width: 28px;
+      height: 28px;
+      border: 1px solid #383838;
+      border-radius: 50%;
+      color: #aaa;
+      font-size: 10px;
+      font-weight: 900;
+    }
+
+    .admin-run-order-main {
+      min-width: 0;
+    }
+
+    .admin-run-order-main strong {
+      display: block;
+      overflow: hidden;
+      color: #eee;
+      font-size: 11px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .admin-run-order-main small {
+      display: block;
+      margin-top: 2px;
+      overflow: hidden;
+      color: #777;
+      font-size: 9px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .admin-run-order-singer {
+      overflow: hidden;
+      color: #aaa;
+      font-size: 10px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .admin-run-order-actions {
+      display: flex;
+      gap: 4px;
+    }
+
+    .admin-run-order-actions button {
+      min-width: 30px;
+      height: 30px;
+      padding: 0 7px;
+      border: 1px solid #383838;
+      border-radius: 5px;
+      background: #101010;
+      color: #ccc;
+      cursor: pointer;
+    }
+
+    .admin-run-order-actions button:hover {
+      border-color: #686868;
+      color: #fff;
+    }
+
+    .admin-run-order-actions button.remove:hover {
+      border-color: #8f262c;
+      background: #21090b;
+      color: #ff757b;
+    }
+
+    @media (max-width: 850px) {
+      .run-order-admin-card .card-title-row {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .run-order-add-controls {
+        width: 100%;
+        min-width: 0;
+      }
+
+      .admin-run-order-row {
+        grid-template-columns: 32px minmax(0,1fr) auto;
+      }
+
+      .admin-run-order-singer {
+        display: none;
+      }
+    }
 </style>
 </head>
 <body class="admin-body">
@@ -600,6 +741,7 @@
                 </div>
               </div>
 
+              <input id="sessionEventIdInput" type="hidden" value="" />
               <label>Session Title</label><input id="sessionTitleInput" type="text" placeholder="Friday Night at Whyte Harte" />
               <label>Venue</label><input id="venueInput" list="venueOptions" placeholder="Whyte Harte" />
               <datalist id="venueOptions"></datalist>
@@ -654,6 +796,28 @@
         </div>
         <div id="activeRequestsList" class="active-requests-list"></div>
         <button type="button" class="history-btn" onclick="scrollToConsole()">☰ View All Requests History</button>
+      </section>
+
+      
+      <section id="runOrderPanel" class="admin-card run-order-admin-card">
+        <div class="card-title-row split">
+          <h2>♫ RUN ORDER <span id="adminRunOrderCount">(0)</span></h2>
+          <div class="run-order-add-controls">
+            <select id="adminRunOrderSongSelect" aria-label="Add song to Run Order">
+              <option value="">Choose song to add…</option>
+            </select>
+            <button id="adminRunOrderAddBtn" type="button" class="small-outline">＋ Add Song</button>
+          </div>
+        </div>
+
+        <p class="admin-help-text">
+          Your live performance sequence. Accepted requests are added here automatically.
+          Reorder songs, remove them, or add songs yourself.
+        </p>
+
+        <div id="adminRunOrderList" class="admin-run-order-list">
+          <div class="dashboard-event-empty">No active session / no songs in Run Order.</div>
+        </div>
       </section>
 
       <section id="upcomingEventsDashboardPanel" class="admin-card dashboard-events-card">
@@ -775,6 +939,8 @@
 <script src="js/admin.js"></script>
 <script src="js/public-setlist-session-addon.js"></script>
 <script src="js/admin-events-integration.js"></script>
+<script src="js/run-order.js"></script>
+<script src="js/admin-session-lifecycle.js"></script>
 
 
 </body>
