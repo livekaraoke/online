@@ -787,4 +787,184 @@
   } else {
     init();
   }
+
+  function installActiveRequestsTabletStyles() {
+    if (document.getElementById("lkActiveRequestsTabletStyles")) return;
+
+    const style = document.createElement("style");
+    style.id = "lkActiveRequestsTabletStyles";
+    style.textContent = `
+      /* Scoped ONLY to the Admin Active Song Requests card. */
+      #requestsPanel {
+        min-width: 0;
+      }
+
+      #requestsPanel .active-requests-list {
+        width: 100%;
+        min-width: 0;
+        overflow-x: hidden;
+      }
+
+      #requestsPanel .active-request-row {
+        box-sizing: border-box;
+        width: 100%;
+        min-width: 0;
+      }
+
+      /* Original/legacy request row:
+         Song/Singer | BPM | Time | Complete | Abandon | Delete */
+      #requestsPanel .active-request-row:not(:has(.request-number)):not(:has(.request-index)) {
+        display: grid !important;
+        grid-template-columns:
+          minmax(180px, 1fr)
+          58px
+          78px
+          38px
+          38px
+          38px !important;
+        align-items: center !important;
+        gap: 7px !important;
+      }
+
+      #requestsPanel .request-main {
+        min-width: 0 !important;
+      }
+
+      #requestsPanel .request-main strong,
+      #requestsPanel .request-main span {
+        display: block !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+      }
+
+      #requestsPanel .request-main strong {
+        font-size: 14px !important;
+        line-height: 1.2 !important;
+      }
+
+      #requestsPanel .request-main span {
+        margin-top: 3px !important;
+        color: #9a9a9a !important;
+        font-size: 10px !important;
+      }
+
+      #requestsPanel .request-bpm,
+      #requestsPanel .request-time {
+        min-width: 0 !important;
+        text-align: center !important;
+        white-space: nowrap !important;
+      }
+
+      #requestsPanel .active-request-row > button {
+        width: 34px !important;
+        min-width: 34px !important;
+        height: 34px !important;
+        padding: 0 !important;
+      }
+
+      /* Newer table/card request renderer, if present. */
+      #requestsPanel .active-request-row:has(.request-number),
+      #requestsPanel .active-request-row:has(.request-index) {
+        display: grid !important;
+        grid-template-columns:
+          42px
+          minmax(165px, 1.35fr)
+          minmax(110px, .85fr)
+          62px
+          88px
+          118px !important;
+        align-items: center !important;
+        gap: 8px !important;
+      }
+
+      #requestsPanel .request-number,
+      #requestsPanel .request-index {
+        justify-self: center !important;
+      }
+
+      #requestsPanel .request-actions {
+        display: flex !important;
+        justify-content: flex-end !important;
+        gap: 6px !important;
+        flex-wrap: nowrap !important;
+      }
+
+      /* Header must follow the same columns instead of wrapping vertically. */
+      #requestsPanel .active-request-header,
+      #requestsPanel .requests-table-header,
+      #requestsPanel .request-list-header {
+        display: grid !important;
+        grid-template-columns:
+          42px
+          minmax(165px, 1.35fr)
+          minmax(110px, .85fr)
+          62px
+          88px
+          118px !important;
+        align-items: center !important;
+        gap: 8px !important;
+        min-width: 0 !important;
+      }
+
+      #requestsPanel .active-request-header > *,
+      #requestsPanel .requests-table-header > *,
+      #requestsPanel .request-list-header > * {
+        min-width: 0 !important;
+        overflow: hidden !important;
+        white-space: nowrap !important;
+        text-overflow: ellipsis !important;
+      }
+
+      @media (min-width: 700px) and (max-width: 1180px) {
+        #requestsPanel {
+          padding-left: 14px !important;
+          padding-right: 14px !important;
+        }
+
+        #requestsPanel .card-title-row.split {
+          gap: 10px !important;
+          align-items: center !important;
+        }
+
+        #requestsPanel .card-title-row h2 {
+          min-width: 0 !important;
+          font-size: clamp(20px, 2.4vw, 29px) !important;
+          line-height: 1.05 !important;
+        }
+
+        #requestsPanel .request-toolbar {
+          flex: 0 0 auto !important;
+          display: flex !important;
+          gap: 7px !important;
+          flex-wrap: nowrap !important;
+        }
+
+        #requestsPanel .request-toolbar select {
+          width: 145px !important;
+          min-width: 0 !important;
+        }
+
+        #requestsPanel .active-request-row:has(.request-number),
+        #requestsPanel .active-request-row:has(.request-index),
+        #requestsPanel .active-request-header,
+        #requestsPanel .requests-table-header,
+        #requestsPanel .request-list-header {
+          grid-template-columns:
+            38px
+            minmax(145px, 1.3fr)
+            minmax(90px, .78fr)
+            54px
+            76px
+            108px !important;
+          gap: 6px !important;
+        }
+      }
+    `;
+
+    document.head.appendChild(style);
+  }
+
+  installActiveRequestsTabletStyles();
+
 })();
