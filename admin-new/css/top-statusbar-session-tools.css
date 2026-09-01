@@ -207,12 +207,9 @@
 
 #topStatusBar .host-expanded-primary {
   display: grid;
-  grid-template-columns:
-    minmax(155px,.68fr)
-    minmax(230px,1fr)
-    minmax(165px,.72fr)
-    minmax(250px,1.15fr);
+  grid-template-columns: minmax(430px,1.7fr) minmax(220px,.8fr) minmax(250px,1fr);
   gap: 7px;
+  align-items: stretch;
 }
 
 #topStatusBar .host-expanded-workflow {
@@ -287,6 +284,46 @@
   color: #68757b;
   font-size: 7px;
   line-height: 1.25;
+}
+
+/* Combined Remaining / Public Song List / Notifications */
+#topStatusBar .host-combined-info-card {
+  min-width: 0;
+}
+
+#topStatusBar .host-combined-info-grid {
+  display: grid;
+  grid-template-columns: minmax(145px,.9fr) minmax(145px,.8fr) minmax(190px,1.2fr);
+  min-height: 100%;
+}
+
+#topStatusBar .host-info-segment {
+  min-width: 0;
+  padding: 2px 10px;
+}
+
+#topStatusBar .host-info-segment:first-child {
+  padding-left: 1px;
+}
+
+#topStatusBar .host-info-segment + .host-info-segment {
+  border-left: 1px solid #26333a;
+}
+
+#topStatusBar .public-list-segment .large-status-value {
+  font-size: 17px !important;
+}
+
+#topStatusBar .compact-notification-list {
+  max-height: 92px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+#topStatusBar .compact-notification-list .top-status-empty {
+  padding: 8px 3px !important;
+  color: #6f7a80;
+  font-size: 8px !important;
 }
 
 /* Break card */
@@ -434,7 +471,15 @@
   }
 
   #topStatusBar .host-expanded-primary {
-    grid-template-columns: repeat(2,minmax(0,1fr));
+    grid-template-columns: minmax(0,1.55fr) minmax(210px,.8fr);
+  }
+
+  #topStatusBar .compact-notes-card {
+    grid-column: 1 / -1;
+  }
+
+  #topStatusBar .host-combined-info-grid {
+    grid-template-columns: repeat(3,minmax(0,1fr));
   }
 }
 
@@ -481,6 +526,23 @@
   #topStatusBar .host-expanded-primary,
   #topStatusBar .host-expanded-workflow {
     grid-template-columns: 1fr;
+  }
+
+  #topStatusBar .compact-notes-card {
+    grid-column: auto;
+  }
+
+  #topStatusBar .host-combined-info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  #topStatusBar .host-info-segment {
+    padding: 8px 1px;
+  }
+
+  #topStatusBar .host-info-segment + .host-info-segment {
+    border-left: 0;
+    border-top: 1px solid #26333a;
   }
 
   #topStatusBar .host-status-expanded {
