@@ -8,6 +8,9 @@
     db: null,
     sessionId: "",
     session: null,
+    linkedEvent: null,
+    linkedEventId: "",
+    linkedEventUnsub: null,
     currentControl: null,
     requests: [],
     runOrder: { sessionId:"", items:[] },
@@ -68,18 +71,21 @@
   function scheduledDurationMs() {
     const explicit = Number(
       state.session?.scheduledDurationMs ??
-      state.currentControl?.scheduledDurationMs
+      state.currentControl?.scheduledDurationMs ??
+      state.linkedEvent?.scheduledDurationMs
     );
 
     if (Number.isFinite(explicit) && explicit > 0) return explicit;
 
     const start = tsDate(
       state.session?.scheduledStartAt ||
-      state.currentControl?.scheduledStartAt
+      state.currentControl?.scheduledStartAt ||
+      state.linkedEvent?.scheduledStartAt
     );
     const end = tsDate(
       state.session?.scheduledEndAt ||
-      state.currentControl?.scheduledEndAt
+      state.currentControl?.scheduledEndAt ||
+      state.linkedEvent?.scheduledEndAt
     );
 
     if (start && end && end > start) return end - start;
@@ -109,6 +115,7 @@
 
   function eventScheduleFallback() {
     const event =
+      state.linkedEvent ||
       state.session?.eventSnapshot ||
       state.currentControl?.eventSnapshot ||
       null;
@@ -537,6 +544,45 @@
     if (el) el.textContent = data?.setlistName || "Not selected";
   }
 
+  function clearLinkedEventSubscription() {
+    if (typeof state.linkedEventUnsub === "function") {
+      try { state.linkedEventUnsub(); } catch {}
+    }
+    state.linkedEventUnsub = null;
+    state.linkedEventId = "";
+    state.linkedEvent = null;
+  }
+
+  function subscribeLinkedEvent(eventId) {
+    const cleanId = String(eventId || "").trim();
+
+    if (!cleanId) {
+      clearLinkedEventSubscription();
+      renderRemaining();
+      return;
+    }
+
+    if (cleanId === state.linkedEventId && state.linkedEventUnsub) return;
+
+    clearLinkedEventSubscription();
+    state.linkedEventId = cleanId;
+
+    state.linkedEventUnsub = state.db
+      .collection("upcomingEvents")
+      .doc(cleanId)
+      .onSnapshot(doc => {
+        state.linkedEvent = doc.exists
+          ? { id:doc.id, ...(doc.data() || {}) }
+          : null;
+
+        renderRemaining();
+      }, error => {
+        console.warn("Could not load linked Upcoming Event:", error);
+        state.linkedEvent = null;
+        renderRemaining();
+      });
+  }
+
   function clearSessionSubscriptions() {
     state.sessionUnsubs.forEach(fn => {
       try { fn(); } catch {}
@@ -552,6 +598,7 @@
     state.requests = [];
 
     if (!sessionId) {
+      clearLinkedEventSubscription();
       renderRemaining();
       renderPending();
       renderRunOrder();
@@ -562,6 +609,13 @@
     state.sessionUnsubs.push(
       state.db.collection("performanceSessions").doc(sessionId).onSnapshot(doc => {
         state.session = doc.exists ? { id:doc.id, ...(doc.data() || {}) } : null;
+
+        subscribeLinkedEvent(
+          state.session?.eventId ||
+          state.currentControl?.eventId ||
+          ""
+        );
+
         renderRemaining();
         renderCompactHostStrip();
       }, console.warn)
@@ -591,6 +645,12 @@
 
         if (sessionId !== state.sessionId) {
           subscribeSession(sessionId);
+        } else if (sessionId) {
+          subscribeLinkedEvent(
+            state.session?.eventId ||
+            data.eventId ||
+            ""
+          );
         }
 
         renderRemaining();
