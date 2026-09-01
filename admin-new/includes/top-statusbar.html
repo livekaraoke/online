@@ -130,26 +130,6 @@
         </div>
       </section>
 
-      <!-- SESSION NOTES: moved into the former Notifications position -->
-      <section class="performance-info-card session-notes-card compact-notes-card host-primary-notes-card">
-        <div class="status-card-heading">
-          <span class="status-card-icon">📝</span>
-          <span>Session Notes</span>
-        </div>
-
-        <textarea
-          id="tsSessionNotes"
-          class="top-status-session-notes"
-          placeholder="Type session notes..."
-          aria-label="Session notes"
-          disabled
-        ></textarea>
-
-        <div class="session-notes-footer">
-          <span id="tsNotesSaveStatus">No active session</span>
-        </div>
-      </section>
-
       <!-- BREAK STATUS -->
       <section id="tsBreakCard" class="performance-info-card break-card host-break-card">
         <div class="status-card-heading">
@@ -213,15 +193,48 @@
          ===================================================== -->
     <div class="host-expanded-workflow host-three-column-workflow">
 
-      <!-- NOTIFICATIONS: moved into former Session Notes position -->
-      <section class="performance-info-card notifications-card host-workflow-notifications-card">
-        <div class="status-card-heading">
-          <span class="status-card-icon">🔔</span>
-          <span>Notifications</span>
+      <!-- NOTIFICATIONS / NOTES TABBED CARD -->
+      <section class="performance-info-card notifications-card host-workflow-notifications-card host-tabs-card">
+        <div class="host-card-tabs" role="tablist" aria-label="Notifications and session notes">
+          <button
+            id="tsNotificationsTab"
+            class="host-card-tab active"
+            type="button"
+            role="tab"
+            aria-selected="true"
+            aria-controls="tsNotificationsPane"
+            data-ts-info-tab="notifications"
+          >🔔 NOTIFICATIONS</button>
+
+          <button
+            id="tsNotesTab"
+            class="host-card-tab"
+            type="button"
+            role="tab"
+            aria-selected="false"
+            aria-controls="tsNotesPane"
+            data-ts-info-tab="notes"
+          >📝 NOTES</button>
         </div>
 
-        <div id="tsNotificationsList" class="top-status-notifications-list workflow-notification-list">
-          <div class="top-status-empty">No notifications yet.</div>
+        <div id="tsNotificationsPane" class="host-tab-pane active" role="tabpanel">
+          <div id="tsNotificationsList" class="top-status-notifications-list workflow-notification-list">
+            <div class="top-status-empty">No notifications yet.</div>
+          </div>
+        </div>
+
+        <div id="tsNotesPane" class="host-tab-pane" role="tabpanel" hidden>
+          <textarea
+            id="tsSessionNotes"
+            class="top-status-session-notes host-tab-notes"
+            placeholder="Type session notes..."
+            aria-label="Session notes"
+            disabled
+          ></textarea>
+
+          <div class="session-notes-footer">
+            <span id="tsNotesSaveStatus">No active session</span>
+          </div>
         </div>
       </section>
 
