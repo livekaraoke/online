@@ -83,115 +83,129 @@
 
     <!-- =====================================================
          ROW 1
-         Remaining/Public List | Session Notes | Break Status
+         Session Status / Break Status | Notifications / Notes
          ===================================================== -->
-    <div class="host-expanded-primary">
+    <div class="host-expanded-primary host-two-card-primary">
 
-      <!-- REMAINING + PUBLIC SONG LIST -->
-      <section class="performance-info-card host-combined-info-card host-schedule-card">
-        <div class="host-info-left-stack">
+      <!-- SESSION STATUS / BREAK STATUS TABBED CARD -->
+      <section class="performance-info-card host-session-break-tabs-card">
+        <div class="host-card-tabs host-session-tabs" role="tablist" aria-label="Session and break status">
+          <button
+            id="tsSessionStatusTab"
+            class="host-card-tab active"
+            type="button"
+            role="tab"
+            aria-selected="true"
+            aria-controls="tsSessionStatusPane"
+            data-ts-status-tab="session"
+          >⌛ SESSION STATUS</button>
 
-          <div class="host-info-segment adjusted-remaining-segment">
-            <div class="status-card-heading">
-              <span class="status-card-icon">⌛</span>
-              <span>Remaining</span>
+          <button
+            id="tsBreakStatusTab"
+            class="host-card-tab"
+            type="button"
+            role="tab"
+            aria-selected="false"
+            aria-controls="tsBreakStatusPane"
+            data-ts-status-tab="break"
+          >☕ BREAK STATUS</button>
+        </div>
+
+        <!-- DEFAULT: REMAINING + PUBLIC SONG LIST -->
+        <div id="tsSessionStatusPane" class="host-tab-pane host-status-tab-pane active" role="tabpanel">
+          <div class="host-info-left-stack">
+
+            <div class="host-info-segment adjusted-remaining-segment">
+              <div class="status-card-heading">
+                <span class="status-card-icon">⌛</span>
+                <span>Remaining</span>
+              </div>
+
+              <strong id="tsAdjustedRemainingTime" class="adjusted-remaining-value">-</strong>
+
+              <span id="tsAdjustedEndTime" class="adjusted-end-time">
+                Adjusted end —
+              </span>
+
+              <small id="tsAdjustedRemainingHint" class="adjusted-remaining-hint">
+                Scheduled duration from actual start
+              </small>
+
+              <span id="tsScheduledWindow" class="hidden">No scheduled time</span>
+              <strong id="tsRemainingTime" class="hidden">-</strong>
             </div>
 
-            <strong id="tsAdjustedRemainingTime" class="adjusted-remaining-value">-</strong>
+            <div class="host-info-segment public-list-segment">
+              <div class="status-card-heading">
+                <span class="status-card-icon">🔒</span>
+                <span>Public Song List</span>
+              </div>
 
-            <span id="tsAdjustedEndTime" class="adjusted-end-time">
-              Adjusted end —
-            </span>
+              <strong id="tsDashSongs" class="large-status-value song-list-locked">
+                Locked
+              </strong>
 
-            <small id="tsAdjustedRemainingHint" class="adjusted-remaining-hint">
-              Scheduled duration from actual start
-            </small>
+              <div class="top-status-public-list-name">
+                <span class="public-list-caption">Selected list</span>
+                <strong id="tsDashPublicSetlist">Not selected</strong>
+              </div>
+            </div>
 
-            <span id="tsScheduledWindow" class="hidden">No scheduled time</span>
-            <strong id="tsRemainingTime" class="hidden">-</strong>
           </div>
+        </div>
 
-          <div class="host-info-segment public-list-segment">
-            <div class="status-card-heading">
-              <span class="status-card-icon">🔒</span>
-              <span>Public Song List</span>
+        <!-- BREAK STATUS -->
+        <div id="tsBreakStatusPane" class="host-tab-pane host-status-tab-pane" role="tabpanel" hidden>
+          <div id="tsBreakCard" class="break-card host-break-card host-break-tab-content">
+            <div id="tsBreakPanel" class="break-status-panel">
+              <strong id="tsBreakStatusLabel" class="break-status-label">
+                Not on break
+              </strong>
+
+              <div id="tsBreakDetails" class="break-details hidden">
+                <span>
+                  Started:
+                  <strong id="tsBreakStarted">-</strong>
+                </span>
+
+                <span>
+                  Current:
+                  <strong id="tsBreakDuration">0 mins</strong>
+                </span>
+              </div>
+
+              <div class="break-summary-grid">
+                <div class="break-summary-item">
+                  <span>Total break time</span>
+                  <strong id="tsDashBreakTotal">0 mins</strong>
+                </div>
+
+                <div class="break-summary-item">
+                  <span>Total breaks</span>
+                  <strong id="tsDashBreakCount">0</strong>
+                </div>
+
+                <div class="break-summary-item">
+                  <span>Current break</span>
+                  <strong id="tsCurrentBreakDuration">0 mins</strong>
+                </div>
+              </div>
             </div>
 
-            <strong id="tsDashSongs" class="large-status-value song-list-locked">
-              Locked
-            </strong>
+            <button
+              id="tsBreakActionBtn"
+              class="break-action-btn start"
+              type="button"
+              onclick="event.stopPropagation(); LK.topStatus.toggleBreak();"
+              disabled
+            >
+              ☕ Start Break
+            </button>
 
-            <div class="top-status-public-list-name">
-              <span class="public-list-caption">Selected list</span>
-              <strong id="tsDashPublicSetlist">Not selected</strong>
-            </div>
+            <p id="tsBreakActionMessage" class="break-action-message"></p>
           </div>
-
         </div>
       </section>
-
-      <!-- BREAK STATUS -->
-      <section id="tsBreakCard" class="performance-info-card break-card host-break-card">
-        <div class="status-card-heading">
-          <span class="status-card-icon">☕</span>
-          <span>Break Status</span>
-        </div>
-
-        <div id="tsBreakPanel" class="break-status-panel">
-          <strong id="tsBreakStatusLabel" class="break-status-label">
-            Not on break
-          </strong>
-
-          <div id="tsBreakDetails" class="break-details hidden">
-            <span>
-              Started:
-              <strong id="tsBreakStarted">-</strong>
-            </span>
-
-            <span>
-              Current:
-              <strong id="tsBreakDuration">0 mins</strong>
-            </span>
-          </div>
-
-          <div class="break-summary-grid">
-            <div class="break-summary-item">
-              <span>Total break time</span>
-              <strong id="tsDashBreakTotal">0 mins</strong>
-            </div>
-
-            <div class="break-summary-item">
-              <span>Total breaks</span>
-              <strong id="tsDashBreakCount">0</strong>
-            </div>
-
-            <div class="break-summary-item full-width">
-              <span>Current break</span>
-              <strong id="tsCurrentBreakDuration">0 mins</strong>
-            </div>
-          </div>
-        </div>
-
-        <button
-          id="tsBreakActionBtn"
-          class="break-action-btn start"
-          type="button"
-          onclick="event.stopPropagation(); LK.topStatus.toggleBreak();"
-          disabled
-        >
-          ☕ Start Break
-        </button>
-
-        <p id="tsBreakActionMessage" class="break-action-message"></p>
-      </section>
-
-    </div>
-
-    <!-- =====================================================
-         ROW 2
-         Notifications | Pending Requests | Run Order
-         ===================================================== -->
-    <div class="host-expanded-workflow host-three-column-workflow">
 
       <!-- NOTIFICATIONS / NOTES TABBED CARD -->
       <section class="performance-info-card notifications-card host-workflow-notifications-card host-tabs-card">
@@ -238,6 +252,14 @@
         </div>
       </section>
 
+    </div>
+
+    <!-- =====================================================
+         ROW 2
+         Pending Requests | Run Order
+         ===================================================== -->
+    <div class="host-expanded-workflow host-two-column-workflow">
+
       <!-- PENDING REQUESTS -->
       <section class="top-status-pending-card host-pending-card">
         <div class="queue-heading-row">
@@ -279,6 +301,8 @@
         <span id="tsQueueCount" hidden>(0)</span>
         <div id="tsQueueList" hidden></div>
       </section>
+
+    </div>
 
     </div>
 
