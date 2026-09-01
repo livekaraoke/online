@@ -870,6 +870,52 @@
     syncStatusToggleUi();
   }
 
+  function setInfoTab(tabName) {
+    const tab = tabName === "notes" ? "notes" : "notifications";
+
+    const notificationsBtn = $("tsNotificationsTab");
+    const notesBtn = $("tsNotesTab");
+    const notificationsPane = $("tsNotificationsPane");
+    const notesPane = $("tsNotesPane");
+
+    const showNotifications = tab === "notifications";
+
+    notificationsBtn?.classList.toggle("active", showNotifications);
+    notesBtn?.classList.toggle("active", !showNotifications);
+
+    notificationsBtn?.setAttribute("aria-selected", String(showNotifications));
+    notesBtn?.setAttribute("aria-selected", String(!showNotifications));
+
+    if (notificationsPane) {
+      notificationsPane.hidden = !showNotifications;
+      notificationsPane.classList.toggle("active", showNotifications);
+    }
+
+    if (notesPane) {
+      notesPane.hidden = showNotifications;
+      notesPane.classList.toggle("active", !showNotifications);
+    }
+  }
+
+  function initialiseInfoTabs() {
+    const bar = $("topStatusBar");
+    if (!bar || bar.dataset.infoTabsBound === "1") return;
+
+    bar.dataset.infoTabsBound = "1";
+
+    // User requested Notifications as the default.
+    setInfoTab("notifications");
+
+    bar.addEventListener("click", event => {
+      const btn = event.target.closest("[data-ts-info-tab]");
+      if (!btn) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+      setInfoTab(btn.dataset.tsInfoTab);
+    });
+  }
+
   function bindUi() {
     if (state.uiBound) return;
     state.uiBound = true;
@@ -907,6 +953,7 @@
   function waitForInjectedMarkup() {
     if ($("topStatusBar")) {
       initialiseStatusToggle();
+      initialiseInfoTabs();
       bindUi();
       renderRemaining();
       renderPending();
