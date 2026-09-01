@@ -943,3 +943,277 @@
     min-height: 160px !important;
   }
 }
+
+
+/* ========================================================================
+   FINAL HOST STATUS BAR LAYOUT/STYLING OVERRIDE
+   This block intentionally comes LAST so older responsive rules cannot
+   make Session Notes span the whole row or break the tablet grid.
+   ======================================================================== */
+
+#topStatusBar.host-statusbar,
+#topStatusBar .host-status-expanded,
+#topStatusBar .host-expanded-primary,
+#topStatusBar .host-three-column-workflow,
+#topStatusBar .performance-info-card,
+#topStatusBar .top-status-pending-card,
+#topStatusBar .top-status-queue-card {
+  box-sizing: border-box !important;
+}
+
+/* ----- EXPANDED ROW 1 ----- */
+#topStatusBar .host-expanded-primary {
+  display: grid !important;
+  grid-template-columns:
+    minmax(230px, .82fr)
+    minmax(330px, 1.18fr)
+    minmax(260px, .95fr) !important;
+  gap: 8px !important;
+  align-items: stretch !important;
+  width: 100% !important;
+}
+
+#topStatusBar .host-schedule-card,
+#topStatusBar .host-primary-notes-card,
+#topStatusBar .host-break-card {
+  grid-column: auto !important;
+  grid-row: auto !important;
+  min-width: 0 !important;
+  width: auto !important;
+  min-height: 170px !important;
+  height: auto !important;
+  margin: 0 !important;
+}
+
+#topStatusBar .host-primary-notes-card {
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+#topStatusBar .host-primary-notes-card .top-status-session-notes {
+  flex: 1 1 auto !important;
+  width: 100% !important;
+  min-height: 112px !important;
+  max-height: 145px !important;
+  margin: 0 !important;
+  resize: none !important;
+}
+
+#topStatusBar .session-notes-footer {
+  margin-top: 4px !important;
+  font-size: 7px !important;
+}
+
+/* ----- EXPANDED ROW 2 ----- */
+#topStatusBar .host-three-column-workflow {
+  display: grid !important;
+  grid-template-columns:
+    minmax(230px, .78fr)
+    minmax(300px, .95fr)
+    minmax(430px, 1.55fr) !important;
+  gap: 8px !important;
+  align-items: stretch !important;
+  width: 100% !important;
+  margin-top: 8px !important;
+}
+
+#topStatusBar .host-workflow-notifications-card,
+#topStatusBar .host-pending-card,
+#topStatusBar .host-run-order-card {
+  grid-column: auto !important;
+  grid-row: auto !important;
+  min-width: 0 !important;
+  width: auto !important;
+  min-height: 165px !important;
+  height: 165px !important;
+  margin: 0 !important;
+  overflow: hidden !important;
+}
+
+#topStatusBar .workflow-notification-list,
+#topStatusBar .host-pending-card .top-status-pending-list,
+#topStatusBar .host-run-order-card #tsRunOrderList {
+  max-height: 122px !important;
+  overflow-y: auto !important;
+  scrollbar-width: thin !important;
+}
+
+/* Compact headings again */
+#topStatusBar .queue-heading-row {
+  min-height: 24px !important;
+  margin: 0 0 6px !important;
+}
+
+#topStatusBar .queue-heading-row h3 {
+  font-size: 9px !important;
+  line-height: 1.2 !important;
+}
+
+#topStatusBar .queue-scroll-hint {
+  font-size: 6px !important;
+}
+
+/* Pending rows */
+#topStatusBar .ts-pending-row {
+  grid-template-columns: minmax(0,1fr) auto !important;
+  min-height: 42px !important;
+  padding: 5px 6px !important;
+}
+
+#topStatusBar .ts-request-main strong {
+  font-size: 11px !important;
+}
+
+#topStatusBar .ts-request-main small {
+  font-size: 8px !important;
+}
+
+/* Run Order rows */
+#topStatusBar .ts-run-order-row {
+  grid-template-columns: 25px minmax(0,1fr) auto !important;
+  min-height: 42px !important;
+  padding: 5px 6px !important;
+}
+
+#topStatusBar .ts-run-index {
+  width: 22px !important;
+  height: 22px !important;
+  font-size: 9px !important;
+}
+
+#topStatusBar .ts-run-main strong {
+  font-size: 12px !important;
+}
+
+#topStatusBar .ts-run-main small {
+  font-size: 8px !important;
+}
+
+/* Action buttons: consistent explicit styling */
+#topStatusBar .ts-pending-actions,
+#topStatusBar .ts-run-actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  flex-wrap: nowrap !important;
+}
+
+#topStatusBar .ts-pending-actions button,
+#topStatusBar .ts-run-actions button {
+  display: inline-grid !important;
+  place-items: center !important;
+  width: 27px !important;
+  min-width: 27px !important;
+  height: 27px !important;
+  min-height: 27px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 1px solid #34444d !important;
+  border-radius: 5px !important;
+  background: #122027 !important;
+  color: #f4f7f8 !important;
+  box-shadow: none !important;
+  font-size: 12px !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+}
+
+#topStatusBar .ts-pending-actions .accept {
+  border-color: #18884a !important;
+  background: #086232 !important;
+  color: #ffffff !important;
+}
+
+#topStatusBar .ts-pending-actions .abandon,
+#topStatusBar .ts-run-actions .abandon {
+  border-color: #a06b1e !important;
+  background: #594014 !important;
+  color: #ffd76d !important;
+}
+
+#topStatusBar .ts-pending-actions .decline,
+#topStatusBar .ts-run-actions .remove {
+  border-color: #8e3038 !important;
+  background: #641f28 !important;
+  color: #ffffff !important;
+}
+
+/* Run Order add controls */
+#topStatusBar .ts-run-order-add {
+  display: grid !important;
+  grid-template-columns: minmax(0,1fr) auto !important;
+  gap: 5px !important;
+  margin: 0 0 6px !important;
+}
+
+#topStatusBar #tsRunOrderSongSelect,
+#topStatusBar #tsRunOrderAddBtn {
+  height: 29px !important;
+  min-height: 29px !important;
+}
+
+/* Schedule/Public List card */
+#topStatusBar .host-schedule-card {
+  overflow: hidden !important;
+}
+
+#topStatusBar .host-schedule-card .adjusted-remaining-segment {
+  padding: 8px 10px 10px !important;
+}
+
+#topStatusBar .host-schedule-card .public-list-segment {
+  padding: 9px 10px !important;
+}
+
+#topStatusBar .adjusted-remaining-value {
+  font-size: 24px !important;
+}
+
+#topStatusBar #tsDashPublicSetlist {
+  font-size: 12px !important;
+}
+
+/* Landscape tablet: preserve all 3 columns and NEVER let notes span full width. */
+@media (min-width: 761px) and (max-width: 1180px) {
+  #topStatusBar .host-expanded-primary {
+    grid-template-columns:
+      minmax(210px, .82fr)
+      minmax(300px, 1.15fr)
+      minmax(235px, .92fr) !important;
+  }
+
+  #topStatusBar .host-three-column-workflow {
+    grid-template-columns:
+      minmax(210px, .75fr)
+      minmax(280px, .92fr)
+      minmax(390px, 1.48fr) !important;
+  }
+
+  #topStatusBar .host-primary-notes-card {
+    grid-column: auto !important;
+  }
+}
+
+/* Phone/very narrow portrait only: stack cleanly. */
+@media (max-width: 760px) {
+  #topStatusBar .host-expanded-primary,
+  #topStatusBar .host-three-column-workflow {
+    grid-template-columns: 1fr !important;
+  }
+
+  #topStatusBar .host-schedule-card,
+  #topStatusBar .host-primary-notes-card,
+  #topStatusBar .host-break-card,
+  #topStatusBar .host-workflow-notifications-card,
+  #topStatusBar .host-pending-card,
+  #topStatusBar .host-run-order-card {
+    grid-column: auto !important;
+    height: auto !important;
+    min-height: 140px !important;
+  }
+
+  #topStatusBar .ts-request-main,
+  #topStatusBar .ts-run-main {
+    display: block !important;
+  }
+}
