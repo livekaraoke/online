@@ -782,6 +782,94 @@
     }).catch(console.warn);
   }
 
+  function isStatusExpanded() {
+    const bar = $("topStatusBar");
+    return !!bar && !bar.classList.contains("collapsed");
+  }
+
+  function syncStatusToggleUi() {
+    const bar = $("topStatusBar");
+    if (!bar) return;
+
+    const expanded = !bar.classList.contains("collapsed");
+    const strip = bar.querySelector("[data-ts-toggle-strip]") || bar.querySelector(".top-status-strip");
+    const btn = $("tsToggleBtn");
+
+    strip?.setAttribute("aria-expanded", String(expanded));
+
+    if (btn) {
+      btn.textContent = expanded ? "▲" : "▼";
+      btn.setAttribute(
+        "aria-label",
+        expanded ? "Collapse status dashboard" : "Expand status dashboard"
+      );
+      btn.setAttribute("aria-expanded", String(expanded));
+    }
+  }
+
+  function setStatusExpanded(expanded) {
+    const bar = $("topStatusBar");
+    if (!bar) return;
+
+    bar.classList.toggle("collapsed", !expanded);
+    bar.classList.toggle("expanded", expanded);
+
+    syncStatusToggleUi();
+  }
+
+  function toggleStatusExpanded() {
+    setStatusExpanded(!isStatusExpanded());
+  }
+
+  function initialiseStatusToggle() {
+    const bar = $("topStatusBar");
+    if (!bar || bar.dataset.toggleBound === "1") return;
+
+    bar.dataset.toggleBound = "1";
+
+    // Always load collapsed. Expansion is a deliberate host action.
+    setStatusExpanded(false);
+
+    const strip =
+      bar.querySelector("[data-ts-toggle-strip]") ||
+      bar.querySelector(".top-status-strip");
+
+    const button =
+      bar.querySelector("[data-ts-toggle-button]") ||
+      $("tsToggleBtn");
+
+    if (strip) {
+      strip.addEventListener("click", event => {
+        // The dedicated button has its own listener; avoid a double toggle.
+        if (event.target.closest("[data-ts-toggle-button], #tsToggleBtn")) return;
+        toggleStatusExpanded();
+      });
+
+      strip.addEventListener("keydown", event => {
+        if (event.key !== "Enter" && event.key !== " ") return;
+        event.preventDefault();
+        toggleStatusExpanded();
+      });
+    }
+
+    if (button) {
+      button.addEventListener("click", event => {
+        event.preventDefault();
+        event.stopPropagation();
+        toggleStatusExpanded();
+      });
+    }
+
+    // Keep compatibility with pages/older code that call LK.topStatus.toggle().
+    window.LK = window.LK || {};
+    window.LK.topStatus = window.LK.topStatus || {};
+    window.LK.topStatus.toggle = toggleStatusExpanded;
+    window.LK.topStatus.expand = () => setStatusExpanded(true);
+    window.LK.topStatus.collapse = () => setStatusExpanded(false);
+
+    syncStatusToggleUi();
+  }
+
   function bindUi() {
     if (state.uiBound) return;
     state.uiBound = true;
@@ -818,6 +906,7 @@
 
   function waitForInjectedMarkup() {
     if ($("topStatusBar")) {
+      initialiseStatusToggle();
       bindUi();
       renderRemaining();
       renderPending();
