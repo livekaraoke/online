@@ -331,6 +331,125 @@
         min-width: 170px;
       }
     }
+
+    /* =====================================================
+       SYSTEM STATUS — CURRENT SESSION / NEXT GIG CONTEXT
+       ===================================================== */
+
+    .status-venue-context-box {
+      min-width: 220px;
+      align-items: stretch !important;
+    }
+
+    .status-venue-datetime {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 4px;
+      padding-bottom: 4px;
+      border-bottom: 1px solid #292929;
+    }
+
+    .status-venue-datetime > strong {
+      color: #dadada;
+      font-size: 13px !important;
+      line-height: 1;
+      letter-spacing: .04em;
+    }
+
+    .status-venue-datetime > span {
+      color: #9b9b9b !important;
+      font-size: 11px !important;
+      font-weight: 900;
+    }
+
+    .status-venue-caption {
+      margin-top: 1px;
+    }
+
+    .status-venue-context-box #statusVenueLabel {
+      display: block;
+      max-width: 100%;
+      overflow: hidden;
+      color: #f0f0f0;
+      font-size: 13px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .status-venue-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 7px;
+      margin-top: 5px;
+    }
+
+    .status-venue-type {
+      display: inline-flex !important;
+      align-items: center;
+      min-height: 19px;
+      max-width: 115px;
+      padding: 2px 6px;
+      border: 1px solid #3b3b3b;
+      border-radius: 999px;
+      background: #101010;
+      color: #c7c7c7 !important;
+      font-size: 8px !important;
+      font-weight: 950 !important;
+      letter-spacing: .03em;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .status-venue-countdown {
+      min-width: 0;
+      color: #be9c59 !important;
+      font-size: 9px !important;
+      font-weight: 900 !important;
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .status-venue-context-box.session-active {
+      border-color: #276c37 !important;
+      box-shadow: inset 0 0 18px rgba(38, 130, 57, .07);
+    }
+
+    .status-venue-context-box.session-active .status-venue-countdown {
+      color: #67df7b !important;
+    }
+
+    .status-venue-context-box.session-active .status-venue-type {
+      border-color: #295d34;
+      background: #0d1a10;
+      color: #75e58a !important;
+    }
+
+    .status-live-box.session-forced-live {
+      border-color: #9d2026 !important;
+      box-shadow:
+        inset 0 0 18px rgba(179, 31, 39, .08),
+        0 0 12px rgba(179, 31, 39, .07);
+    }
+
+    @media (max-width: 1000px) {
+      .status-venue-context-box {
+        min-width: 180px;
+      }
+
+      .status-venue-meta {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 3px;
+      }
+
+      .status-venue-countdown {
+        text-align: left;
+      }
+    }
 </style>
 </head>
 <body class="admin-body">
@@ -429,7 +548,20 @@
             <button id="liveCircleBtn" type="button" class="circle-status-btn go" onclick="toggleLive()" title="Go live">▶</button>
           </div>
         </div>
-        <div class="status-box"><span>Venue</span><strong id="statusVenueLabel">-</strong></div>
+        <div class="status-box status-venue-context-box">
+          <div class="status-venue-datetime">
+            <strong id="statusVenueDate">-- ---</strong>
+            <span id="statusVenueTime">--:--</span>
+          </div>
+
+          <span class="status-venue-caption">Venue</span>
+          <strong id="statusVenueLabel">-</strong>
+
+          <div class="status-venue-meta">
+            <span id="statusVenueType" class="status-venue-type">—</span>
+            <strong id="statusVenueCountdown" class="status-venue-countdown">No upcoming event</strong>
+          </div>
+        </div>
         <div class="status-box next-gigs-status-box">
           <span>Next Gigs</span>
           <div id="statusNextGigs" class="status-next-gigs">
