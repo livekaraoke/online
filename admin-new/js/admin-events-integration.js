@@ -29,6 +29,7 @@
   let activeSessionData = null;
   let activeSessionUnsubscribe = null;
   let statusCountdownTimer = null;
+  let lastActiveSessionForCompletion = null;
 
   // upcomingEvents is the authoritative gig source.
   // karaoke/state.nextEvent is maintained ONLY as a compatibility mirror
@@ -531,6 +532,59 @@
     }
   }
 
+  async function completeEventForEndedSession(sessionSnapshot) {
+    if (!sessionSnapshot?.id) return;
+
+    try {
+      const fresh = await db.collection("performanceSessions")
+        .doc(sessionSnapshot.id)
+        .get();
+
+      const data = fresh.exists
+        ? { id:fresh.id, ...(fresh.data() || {}) }
+        : sessionSnapshot;
+
+      const status = String(data.status || "").toLowerCase();
+      const ended =
+        status === "ended" ||
+        !!data.endedAt ||
+        data.isActive === false;
+
+      if (!ended) return;
+
+      const eventId =
+        data.eventId ||
+        sessionSnapshot.eventId ||
+        lastActiveSessionForCompletion?.eventId ||
+        "";
+
+      if (eventId) {
+        await markEventCompleted(eventId, data.id);
+        return;
+      }
+
+      const title = String(data.title || "").trim().toLowerCase();
+      const venue = String(data.venue || "").trim().toLowerCase();
+
+      const candidates = upcomingEvents.filter(event => {
+        if (!eventStillUpcoming(event)) return false;
+        const eventTitle = String(event.name || "").trim().toLowerCase();
+        const eventVenue = String(event.venue || "").trim().toLowerCase();
+
+        return (
+          (title && eventTitle === title) ||
+          (venue && eventVenue === venue && title && eventTitle.includes(title))
+        );
+      });
+
+      if (candidates.length === 1) {
+        await markEventCompleted(candidates[0].id, data.id);
+      }
+    } catch (error) {
+      console.warn("Could not retire Upcoming Event after session ended:", error);
+    }
+  }
+
   function listenForActiveSessionStatus() {
     db.collection("karaokeControl").doc("currentSession").onSnapshot(doc => {
       activeSessionControl = doc.exists ? (doc.data() || {}) : null;
@@ -557,6 +611,10 @@
               ? { id: sessionDoc.id, ...(sessionDoc.data() || {}) }
               : null;
 
+            if (activeSessionData) {
+              lastActiveSessionForCompletion = { ...activeSessionData };
+            }
+
             renderVenueContextStatus();
 
             // A genuinely active Performance Session should always appear
@@ -568,8 +626,18 @@
             renderVenueContextStatus();
           });
       } else {
+        const sessionToFinish =
+          activeSessionData ||
+          lastActiveSessionForCompletion;
+
         activeSessionData = null;
         renderVenueContextStatus();
+
+        if (sessionToFinish?.id) {
+          setTimeout(() => {
+            completeEventForEndedSession(sessionToFinish);
+          }, 350);
+        }
       }
     }, error => {
       console.warn("Current Session status unavailable:", error);
