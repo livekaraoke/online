@@ -103,20 +103,18 @@
     $("songRows").innerHTML =
       '<div class="loading-state">Loading songs…</div>';
 
-    if (songsUnsub) songsUnsub();
-    if (setlistsUnsub) setlistsUnsub();
-
-    songsUnsub = db.collection("lyrics").onSnapshot(snapshot => {
-      songs = snapshot.docs.map(doc =>
+    // The song library is large and does not need a permanent realtime listener.
+    // One-time reads avoid re-reading the entire collection whenever a listener
+    // reconnects, which can consume Firestore daily read quota very quickly.
+    Promise.all([
+      db.collection("lyrics").get(),
+      db.collection("lyricsSetlists").get()
+    ]).then(([songSnapshot, setlistSnapshot]) => {
+      songs = songSnapshot.docs.map(doc =>
         LyricsCommon.normalizeSong(doc.data(), doc.id)
       );
 
-      populateFilters();
-      render();
-    }, showError);
-
-    setlistsUnsub = db.collection("lyricsSetlists").onSnapshot(snapshot => {
-      setlists = snapshot.docs.map(doc => {
+      setlists = setlistSnapshot.docs.map(doc => {
         const data = doc.data() || {};
         return {
           id: doc.id,
@@ -125,9 +123,10 @@
         };
       });
 
+      populateFilters();
       populateSetlists();
       render();
-    }, showError);
+    }).catch(showError);
   }
 
   function showError(error) {
