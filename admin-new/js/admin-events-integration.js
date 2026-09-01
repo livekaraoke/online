@@ -626,18 +626,8 @@
             renderVenueContextStatus();
           });
       } else {
-        const sessionToFinish =
-          activeSessionData ||
-          lastActiveSessionForCompletion;
-
         activeSessionData = null;
         renderVenueContextStatus();
-
-        if (sessionToFinish?.id) {
-          setTimeout(() => {
-            completeEventForEndedSession(sessionToFinish);
-          }, 350);
-        }
       }
     }, error => {
       console.warn("Current Session status unavailable:", error);
@@ -1030,13 +1020,9 @@
 
   async function init() {
     bindUI();
-    watchActiveRequestRows();
     await seedEventTypesIfNeeded();
 
-    // Keep the existing session functions, but add the event lifecycle around them.
-    wrapPerformanceLifecycle();
-    setTimeout(wrapPerformanceLifecycle, 250);
-    setTimeout(wrapPerformanceLifecycle, 1000);
+    // admin-session-lifecycle.js is the single owner of start/end lifecycle.
 
     startListeners();
     listenForActiveSessionStatus();
