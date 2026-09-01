@@ -1802,3 +1802,240 @@
     border-bottom: 1px solid #26343b !important;
   }
 }
+
+
+/* ========================================================================
+   COMPACT STRIP SPACING + BREAK CARD SIZE REFINEMENT
+   Final override only — no data / JS behaviour changed.
+   ======================================================================== */
+
+/* ---------------------------------------------------------
+   COLLAPSED STRIP
+   Remove the unused ALERTS column and use the freed width.
+   Columns:
+   LIVE | VENUE | STARTED | ELAPSED | REMAINING | REQUESTS | TOGGLE
+   --------------------------------------------------------- */
+#topStatusBar .host-compact-strip {
+  display: grid !important;
+  grid-template-columns:
+    112px
+    minmax(190px, 1.35fr)
+    112px
+    132px
+    minmax(170px, 1.05fr)
+    88px
+    48px !important;
+  column-gap: 0 !important;
+  gap: 0 !important;
+  padding-left: 8px !important;
+  padding-right: 8px !important;
+}
+
+/* There is no visible Alerts item anymore. */
+#topStatusBar .alerts-metric {
+  display: none !important;
+}
+
+/* Remove the visual "empty slots" between compact metrics. */
+#topStatusBar .host-strip-metric {
+  min-width: 0 !important;
+  margin: 0 !important;
+  padding-left: 11px !important;
+  padding-right: 11px !important;
+}
+
+#topStatusBar .host-strip-live {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+/* STARTED clock slightly larger as requested. */
+#topStatusBar #tsCompactStarted {
+  font-size: 19px !important;
+  line-height: 1 !important;
+  letter-spacing: -.015em !important;
+}
+
+/* Keep compact divider lines tight to the content. */
+#topStatusBar .host-strip-live,
+#topStatusBar .host-strip-metric,
+#topStatusBar .host-status-toggle {
+  box-sizing: border-box !important;
+}
+
+/* ---------------------------------------------------------
+   EXPANDED — SHORTER FIRST ROW
+   --------------------------------------------------------- */
+#topStatusBar .host-session-break-tabs-card,
+#topStatusBar .host-workflow-notifications-card.host-tabs-card {
+  height: 154px !important;
+  min-height: 154px !important;
+}
+
+/* Tab header a touch shorter as well. */
+#topStatusBar .host-card-tabs,
+#topStatusBar .host-session-tabs {
+  flex-basis: 29px !important;
+  min-height: 29px !important;
+  height: 29px !important;
+}
+
+#topStatusBar .host-card-tab {
+  height: 29px !important;
+  min-height: 29px !important;
+}
+
+/* Session Status pane tightened vertically. */
+#topStatusBar #tsSessionStatusPane .host-info-segment {
+  padding-top: 8px !important;
+  padding-bottom: 8px !important;
+}
+
+#topStatusBar #tsSessionStatusPane .adjusted-remaining-value {
+  font-size: 22px !important;
+}
+
+#topStatusBar #tsSessionStatusPane .adjusted-end-time {
+  margin-top: 4px !important;
+}
+
+#topStatusBar #tsSessionStatusPane .adjusted-remaining-hint {
+  margin-top: 3px !important;
+}
+
+/* ---------------------------------------------------------
+   BREAK STATUS TAB
+   --------------------------------------------------------- */
+
+/* Slightly smaller BREAK ACTIVE / NOT ON BREAK label. */
+#topStatusBar .host-break-tab-content .break-status-label {
+  font-size: 10px !important;
+  line-height: 1 !important;
+  padding-bottom: 4px !important;
+}
+
+/* Compact the shell so the summary above END BREAK remains visible. */
+#topStatusBar .host-break-tab-content {
+  padding: 6px 9px !important;
+}
+
+#topStatusBar .host-break-tab-content .break-status-panel {
+  padding: 6px 8px !important;
+  overflow: visible !important;
+}
+
+/* STARTED / CURRENT values two font steps larger. */
+#topStatusBar .host-break-tab-content .break-details:not(.hidden) {
+  gap: 5px !important;
+  margin-top: 5px !important;
+}
+
+#topStatusBar .host-break-tab-content .break-details > span {
+  padding: 3px 6px !important;
+  min-height: 30px !important;
+}
+
+#topStatusBar .host-break-tab-content .break-details > span {
+  font-size: 6px !important;
+}
+
+#topStatusBar .host-break-tab-content .break-details > span strong {
+  margin-top: 1px !important;
+  font-size: 13px !important;
+  line-height: 1 !important;
+}
+
+/* Make the summary labels/values above END BREAK clearly visible. */
+#topStatusBar .host-break-tab-content .break-summary-grid {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0,1fr)) !important;
+  gap: 4px !important;
+  margin-top: 5px !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+#topStatusBar .host-break-tab-content .break-summary-item,
+#topStatusBar .host-break-tab-content .break-summary-item.full-width {
+  display: block !important;
+  min-width: 0 !important;
+  padding: 2px 4px !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+#topStatusBar .host-break-tab-content .break-summary-item span {
+  display: block !important;
+  color: #88979e !important;
+  font-size: 6px !important;
+  font-weight: 900 !important;
+  line-height: 1.05 !important;
+  white-space: nowrap !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+#topStatusBar .host-break-tab-content .break-summary-item strong {
+  display: block !important;
+  margin-top: 2px !important;
+  color: #f2c94c !important;
+  font-size: 9px !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* End Break stays visible but consumes less vertical height. */
+#topStatusBar .host-break-tab-content .break-action-btn {
+  height: 27px !important;
+  min-height: 27px !important;
+  margin-top: 5px !important;
+}
+
+/* ---------------------------------------------------------
+   SECOND ROW
+   Give Pending Requests / Run Order a little more visible area.
+   --------------------------------------------------------- */
+#topStatusBar .host-two-column-workflow .host-pending-card,
+#topStatusBar .host-two-column-workflow .host-run-order-card {
+  height: 178px !important;
+  min-height: 178px !important;
+}
+
+#topStatusBar .host-two-column-workflow .top-status-pending-list,
+#topStatusBar .host-two-column-workflow #tsRunOrderList {
+  max-height: 128px !important;
+}
+
+/* ---------------------------------------------------------
+   LANDSCAPE TABLET
+   --------------------------------------------------------- */
+@media (min-width: 761px) and (max-width: 1180px) {
+  #topStatusBar .host-compact-strip {
+    grid-template-columns:
+      108px
+      minmax(175px, 1.34fr)
+      108px
+      124px
+      minmax(160px, 1.02fr)
+      80px
+      46px !important;
+  }
+
+  #topStatusBar #tsCompactStarted {
+    font-size: 18px !important;
+  }
+
+  #topStatusBar .host-session-break-tabs-card,
+  #topStatusBar .host-workflow-notifications-card.host-tabs-card {
+    height: 150px !important;
+    min-height: 150px !important;
+  }
+
+  #topStatusBar .host-two-column-workflow .host-pending-card,
+  #topStatusBar .host-two-column-workflow .host-run-order-card {
+    height: 180px !important;
+    min-height: 180px !important;
+  }
+}
