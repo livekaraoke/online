@@ -1006,6 +1006,85 @@
         flex: 1 1 0;
       }
     }
+
+
+    /* =====================================================
+       ACTIVE SONG REQUESTS — FORCE ONE HORIZONTAL ROW
+       Loaded here AFTER requests.css so tablet media rules cannot stack it.
+       ===================================================== */
+    #requestsPanel #activeRequestsList {
+      width: 100% !important;
+      min-width: 0 !important;
+      overflow-x: auto !important;
+      overflow-y: visible !important;
+    }
+
+    /* New table-style renderer: header and request rows. */
+    #requestsPanel #activeRequestsList .lk-request-table-head,
+    #requestsPanel #activeRequestsList .lk-request-table-row,
+    #requestsPanel #activeRequestsList > .request-table-head,
+    #requestsPanel #activeRequestsList > .request-header,
+    #requestsPanel #activeRequestsList > .requests-header,
+    #requestsPanel #activeRequestsList > .request-row:not(:has(.request-main)),
+    #requestsPanel #activeRequestsList > .active-request-row:not(:has(.request-main)) {
+      box-sizing: border-box !important;
+      display: grid !important;
+      grid-template-columns: 34px minmax(118px,1.35fr) minmax(88px,.9fr) 44px 70px 100px !important;
+      align-items: center !important;
+      gap: 5px !important;
+      width: 100% !important;
+      min-width: 480px !important;
+    }
+
+    /* Original requests.js renderer: Song/Singer | BPM | Time | 3 actions. */
+    #requestsPanel #activeRequestsList .active-request-row:has(.request-main),
+    #requestsPanel #activeRequestsList .lk-request-old-row {
+      box-sizing: border-box !important;
+      display: grid !important;
+      grid-template-columns: minmax(150px,1fr) 46px 70px 30px 30px 30px !important;
+      align-items: center !important;
+      gap: 5px !important;
+      width: 100% !important;
+      min-width: 390px !important;
+    }
+
+    #requestsPanel #activeRequestsList .active-request-row:has(.request-main) .request-main,
+    #requestsPanel #activeRequestsList .lk-request-old-row .request-main {
+      min-width: 0 !important;
+    }
+
+    #requestsPanel #activeRequestsList .request-main strong,
+    #requestsPanel #activeRequestsList .request-main span {
+      display: block !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+      white-space: nowrap !important;
+    }
+
+    #requestsPanel #activeRequestsList .active-request-row:has(.request-main) > button,
+    #requestsPanel #activeRequestsList .lk-request-old-row > button {
+      width: 30px !important;
+      min-width: 30px !important;
+      height: 30px !important;
+      min-height: 30px !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+
+    /* Never let request table rows flip back to block/column on tablet. */
+    @media (max-width: 1000px) {
+      #requestsPanel #activeRequestsList .lk-request-table-head,
+      #requestsPanel #activeRequestsList .lk-request-table-row,
+      #requestsPanel #activeRequestsList > .request-table-head,
+      #requestsPanel #activeRequestsList > .request-header,
+      #requestsPanel #activeRequestsList > .requests-header,
+      #requestsPanel #activeRequestsList > .request-row:not(:has(.request-main)),
+      #requestsPanel #activeRequestsList > .active-request-row:not(:has(.request-main)) {
+        display: grid !important;
+        grid-template-columns: 32px minmax(105px,1.25fr) minmax(78px,.85fr) 40px 64px 94px !important;
+        gap: 4px !important;
+      }
+    }
 </style>
 </head>
 <body class="admin-body">
