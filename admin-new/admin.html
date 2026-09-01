@@ -1006,124 +1006,6 @@
         flex: 1 1 0;
       }
     }
-
-
-    /* =====================================================
-       ACTIVE SONG REQUESTS — FORCE ONE HORIZONTAL ROW
-       Loaded here AFTER requests.css so tablet media rules cannot stack it.
-       ===================================================== */
-    #requestsPanel #activeRequestsList {
-      width: 100% !important;
-      min-width: 0 !important;
-      overflow-x: auto !important;
-      overflow-y: visible !important;
-    }
-
-    /* New table-style renderer: header and request rows. */
-    #requestsPanel #activeRequestsList .lk-request-table-head,
-    #requestsPanel #activeRequestsList .lk-request-table-row,
-    #requestsPanel #activeRequestsList > .request-table-head,
-    #requestsPanel #activeRequestsList > .request-header,
-    #requestsPanel #activeRequestsList > .requests-header,
-    #requestsPanel #activeRequestsList > .request-row:not(:has(.request-main)),
-    #requestsPanel #activeRequestsList > .active-request-row:not(:has(.request-main)) {
-      box-sizing: border-box !important;
-      display: grid !important;
-      grid-template-columns: 34px minmax(118px,1.35fr) minmax(88px,.9fr) 44px 70px 100px !important;
-      align-items: center !important;
-      gap: 5px !important;
-      width: 100% !important;
-      min-width: 480px !important;
-    }
-
-    /* Original requests.js renderer: Song/Singer | BPM | Time | 3 actions. */
-    #requestsPanel #activeRequestsList .active-request-row:has(.request-main),
-    #requestsPanel #activeRequestsList .lk-request-old-row {
-      box-sizing: border-box !important;
-      display: grid !important;
-      grid-template-columns: minmax(150px,1fr) 46px 70px 30px 30px 30px !important;
-      align-items: center !important;
-      gap: 5px !important;
-      width: 100% !important;
-      min-width: 390px !important;
-    }
-
-    #requestsPanel #activeRequestsList .active-request-row:has(.request-main) .request-main,
-    #requestsPanel #activeRequestsList .lk-request-old-row .request-main {
-      min-width: 0 !important;
-    }
-
-    #requestsPanel #activeRequestsList .request-main strong,
-    #requestsPanel #activeRequestsList .request-main span {
-      display: block !important;
-      overflow: hidden !important;
-      text-overflow: ellipsis !important;
-      white-space: nowrap !important;
-    }
-
-    #requestsPanel #activeRequestsList .active-request-row:has(.request-main) > button,
-    #requestsPanel #activeRequestsList .lk-request-old-row > button {
-      width: 30px !important;
-      min-width: 30px !important;
-      height: 30px !important;
-      min-height: 30px !important;
-      margin: 0 !important;
-      padding: 0 !important;
-    }
-
-    /* Never let request table rows flip back to block/column on tablet. */
-    @media (max-width: 1000px) {
-      #requestsPanel #activeRequestsList .lk-request-table-head,
-      #requestsPanel #activeRequestsList .lk-request-table-row,
-      #requestsPanel #activeRequestsList > .request-table-head,
-      #requestsPanel #activeRequestsList > .request-header,
-      #requestsPanel #activeRequestsList > .requests-header,
-      #requestsPanel #activeRequestsList > .request-row:not(:has(.request-main)),
-      #requestsPanel #activeRequestsList > .active-request-row:not(:has(.request-main)) {
-        display: grid !important;
-        grid-template-columns: 32px minmax(105px,1.25fr) minmax(78px,.85fr) 40px 64px 94px !important;
-        gap: 4px !important;
-      }
-    }
-</style>
-
-<style id="lk-active-requests-final-row-fix">
-#requestsPanel #activeRequestsList{
-  width:100%!important;min-width:0!important;overflow-x:auto!important;overflow-y:visible!important
-}
-#requestsPanel #activeRequestsList>*:has(>:nth-child(6)),
-#requestsPanel #activeRequestsList>*>*:has(>:nth-child(6)){
-  box-sizing:border-box!important;
-  display:grid!important;
-  grid-template-columns:38px minmax(150px,1.35fr) minmax(105px,.9fr) 48px 78px 112px!important;
-  align-items:center!important;
-  column-gap:7px!important;
-  width:100%!important;
-  min-width:540px!important
-}
-#requestsPanel #activeRequestsList .active-request-row:has(.request-main){
-  grid-template-columns:minmax(180px,1fr) 52px 76px 32px 32px 32px!important;
-  min-width:430px!important
-}
-#requestsPanel #activeRequestsList>*:has(>:nth-child(6))>*,
-#requestsPanel #activeRequestsList>*>*:has(>:nth-child(6))>*{
-  min-width:0!important;margin:0!important;align-self:center!important
-}
-#requestsPanel #activeRequestsList .request-main{min-width:0!important}
-#requestsPanel #activeRequestsList .request-main strong,
-#requestsPanel #activeRequestsList .request-main span{
-  display:block!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important
-}
-@media(max-width:1100px){
-  #requestsPanel #activeRequestsList>*:has(>:nth-child(6)),
-  #requestsPanel #activeRequestsList>*>*:has(>:nth-child(6)){
-    grid-template-columns:34px minmax(130px,1.3fr) minmax(90px,.82fr) 44px 70px 104px!important;
-    column-gap:5px!important
-  }
-  #requestsPanel #activeRequestsList .active-request-row:has(.request-main){
-    grid-template-columns:minmax(160px,1fr) 48px 68px 30px 30px 30px!important
-  }
-}
 </style>
 
 </head>
@@ -1350,9 +1232,9 @@
           <div class="session-controls-and-dashboard">
             <div class="session-button-row">
               <button id="startPerformanceBtn" type="button" onclick="confirmStartPerformance()" class="session-btn green">▶ Start Performance</button>
-              <button id="startBreakBtn" type="button" onclick="startBreak()" class="session-btn amber">☕ Start Break</button>
-              <button id="endBreakBtn" type="button" onclick="endBreak()" class="session-btn muted">End Break</button>
-              <button id="endPerformanceBtn" type="button" onclick="confirmEndPerformance()" class="session-btn red">■ End Performance</button>
+              <button id="startBreakBtn" type="button" onclick="startBreak()" class="session-btn amber" disabled>☕ Start Break</button>
+              <button id="endBreakBtn" type="button" onclick="endBreak()" class="session-btn muted" disabled>End Break</button>
+              <button id="endPerformanceBtn" type="button" onclick="confirmEndPerformance()" class="session-btn red" disabled>■ End Performance</button>
             </div>
 
             <div class="session-lyrics-suite-row">
