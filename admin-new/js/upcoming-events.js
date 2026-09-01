@@ -153,6 +153,31 @@
       });
   }
 
+  function renderTypeSummaryCards(upcomingEvents) {
+    const container = $("eventTypeSummaryCards");
+    if (!container) return;
+
+    const configuredTypes = Array.isArray(typeOptions) && typeOptions.length
+      ? typeOptions
+      : DEFAULT_TYPE_OPTIONS;
+
+    container.innerHTML = configuredTypes.map(type => {
+      const count = upcomingEvents.filter(event => event.type === type).length;
+      const cssType = slugClass(type);
+
+      return `
+        <article
+          class="events-summary-card event-type-summary-card type-card-${escapeHTML(cssType)}"
+          data-summary-type="${escapeHTML(type)}"
+          title="Show ${escapeHTML(type)} events">
+          <span>${escapeHTML(String(type).toUpperCase())}</span>
+          <strong>${count}</strong>
+          <small>Upcoming booking${count === 1 ? "" : "s"}</small>
+        </article>
+      `;
+    }).join("");
+  }
+
   function renderSummary() {
     const now = new Date();
     const today = localDateKey(now);
@@ -168,9 +193,10 @@
     $("thisMonthCount").textContent = String(
       events.filter(event => String(event.date || "").startsWith(monthPrefix)).length
     );
-    $("karaokeCount").textContent = String(
-      upcoming.filter(event => event.type === "Live Karaoke").length
-    );
+    // Build one card for every configured event/session type.
+    // This automatically includes Live Karaoke, Roxanna, Solo, Texanna,
+    // Other, and any future types added through the ⚙ TYPES manager.
+    renderTypeSummaryCards(upcoming);
 
     if (next) {
       const date = formatDate(next.date);
@@ -722,6 +748,17 @@
       const edit = event.target.closest("[data-edit-event]");
       if (edit) {
         openEditModal(edit.dataset.editEvent);
+        return;
+      }
+
+      const summaryType = event.target.closest("[data-summary-type]");
+      if (summaryType) {
+        const type = summaryType.dataset.summaryType || "";
+        if ($("eventsTypeFilter")) {
+          $("eventsTypeFilter").value = type;
+          renderEvents();
+          $("eventsList")?.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
         return;
       }
 
