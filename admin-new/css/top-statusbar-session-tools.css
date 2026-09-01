@@ -1986,3 +1986,413 @@
     width: 100% !important;
   }
 }
+
+
+/* ========================================================================
+   FINAL TABBED COMPACT HOST WORKSPACE
+   Requested layout:
+   ROW 1: [SESSION STATUS / BREAK STATUS] [NOTIFICATIONS / SESSION NOTES]
+   ROW 2: [PENDING REQUESTS] [RUN ORDER] — taller
+   ======================================================================== */
+
+#topStatusBar .host-dashboard-top-row {
+  display: grid !important;
+  grid-template-columns: minmax(510px, 1.25fr) minmax(360px, .85fr) !important;
+  gap: 8px !important;
+  align-items: stretch !important;
+  width: 100% !important;
+  margin: 0 !important;
+}
+
+#topStatusBar .host-main-status-tabs-card,
+#topStatusBar .host-info-tabs-card {
+  display: flex !important;
+  flex-direction: column !important;
+  min-width: 0 !important;
+  width: auto !important;
+  height: 122px !important;
+  min-height: 122px !important;
+  max-height: 122px !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+}
+
+#topStatusBar .host-card-tabs {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  flex: 0 0 31px !important;
+  height: 31px !important;
+  border-bottom: 1px solid #26343b !important;
+  background: #050b0f !important;
+}
+
+#topStatusBar .host-card-tab {
+  display: grid !important;
+  place-items: center !important;
+  min-width: 0 !important;
+  height: 31px !important;
+  padding: 0 7px !important;
+  border: 0 !important;
+  border-right: 1px solid #26343b !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  color: #718189 !important;
+  font-size: 7px !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
+  cursor: pointer !important;
+}
+
+#topStatusBar .host-card-tab:last-child { border-right: 0 !important; }
+#topStatusBar .host-card-tab.active {
+  background: #0b1b22 !important;
+  color: #75c9f3 !important;
+  box-shadow: inset 0 -2px 0 #3aaee8 !important;
+}
+
+#topStatusBar .host-tab-pane {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  padding: 8px 10px !important;
+  overflow: hidden !important;
+}
+#topStatusBar .host-tab-pane[hidden] { display: none !important; }
+
+/* SESSION STATUS: Remaining + Public List truly side-by-side */
+#topStatusBar .host-session-status-grid {
+  display: grid !important;
+  grid-template-columns: minmax(250px, 1.1fr) 1px minmax(190px, .85fr) !important;
+  align-items: center !important;
+  gap: 10px !important;
+  height: 100% !important;
+  min-width: 0 !important;
+}
+
+#topStatusBar .host-session-divider {
+  width: 1px !important;
+  height: 66px !important;
+  background: #26343b !important;
+}
+
+#topStatusBar .host-session-remaining-block,
+#topStatusBar .host-public-list-block { min-width: 0 !important; }
+
+#topStatusBar .host-session-status-grid .status-card-heading {
+  margin: 0 0 4px !important;
+}
+
+#topStatusBar .host-remaining-compact-value {
+  display: flex !important;
+  align-items: baseline !important;
+  gap: 7px !important;
+  min-width: 0 !important;
+}
+
+#topStatusBar .host-over-label {
+  flex: 0 0 auto !important;
+  padding: 2px 4px !important;
+  border: 1px solid #58491b !important;
+  border-radius: 3px !important;
+  background: #171207 !important;
+  color: #e4bd3d !important;
+  font-size: 6px !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+  text-transform: uppercase !important;
+}
+
+#topStatusBar .host-session-status-grid .adjusted-remaining-value {
+  margin: 0 !important;
+  overflow: hidden !important;
+  color: #f2cf4d !important;
+  font-size: 16px !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+#topStatusBar .host-session-status-grid .adjusted-end-time {
+  display: block !important;
+  margin: 5px 0 0 !important;
+  color: #d9dde0 !important;
+  font-size: 7px !important;
+  font-weight: 900 !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
+}
+
+#topStatusBar .host-session-status-grid .adjusted-remaining-hint {
+  display: block !important;
+  margin-top: 3px !important;
+  overflow: hidden !important;
+  color: #66747b !important;
+  font-size: 5px !important;
+  line-height: 1 !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+#topStatusBar .host-public-list-status-row {
+  display: flex !important;
+  align-items: center !important;
+  min-width: 0 !important;
+}
+
+#topStatusBar .host-public-list-block #tsDashSongs {
+  margin: 0 !important;
+  font-size: 14px !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
+}
+
+#topStatusBar .host-public-list-name-compact {
+  display: flex !important;
+  align-items: baseline !important;
+  gap: 7px !important;
+  min-width: 0 !important;
+  margin: 6px 0 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+}
+
+#topStatusBar .host-public-list-name-compact .public-list-caption {
+  flex: 0 0 auto !important;
+  color: #718087 !important;
+  font-size: 5px !important;
+  font-weight: 900 !important;
+  text-transform: uppercase !important;
+}
+
+#topStatusBar .host-public-list-name-compact #tsDashPublicSetlist {
+  min-width: 0 !important;
+  overflow: hidden !important;
+  color: #eef3f5 !important;
+  font-size: 9px !important;
+  font-weight: 900 !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+/* BREAK STATUS: all useful data across one compact row */
+#topStatusBar .host-break-tab-layout {
+  display: grid !important;
+  grid-template-columns: minmax(150px, .8fr) minmax(230px, 1.2fr) 106px !important;
+  align-items: center !important;
+  gap: 9px !important;
+  height: 100% !important;
+  min-width: 0 !important;
+}
+
+#topStatusBar .host-break-state-block { min-width: 0 !important; }
+#topStatusBar .host-break-state-block .status-card-heading { margin: 0 0 4px !important; }
+
+#topStatusBar .host-break-tab-layout .break-status-label {
+  display: block !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  overflow: hidden !important;
+  color: #f0f4f5 !important;
+  font-size: 11px !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+  text-transform: uppercase !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+#topStatusBar .host-break-tab-layout .break-details:not(.hidden) {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  margin: 5px 0 0 !important;
+}
+
+#topStatusBar .host-break-tab-layout .break-details > span {
+  display: inline-flex !important;
+  align-items: baseline !important;
+  gap: 3px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  color: #718087 !important;
+  font-size: 5px !important;
+  text-transform: uppercase !important;
+}
+
+#topStatusBar .host-break-tab-layout .break-details > span strong {
+  color: #eef3f5 !important;
+  font-size: 7px !important;
+}
+
+#topStatusBar .host-break-tab-metrics {
+  min-width: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+}
+
+#topStatusBar .host-break-tab-layout .break-summary-grid {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0,1fr)) !important;
+  gap: 5px !important;
+  margin: 0 !important;
+}
+
+#topStatusBar .host-break-tab-layout .break-summary-item,
+#topStatusBar .host-break-tab-layout .break-summary-item.full-width {
+  min-width: 0 !important;
+  padding: 5px 5px !important;
+  border: 1px solid #213039 !important;
+  border-radius: 5px !important;
+  background: #061015 !important;
+  text-align: center !important;
+}
+
+#topStatusBar .host-break-tab-layout .break-summary-item span {
+  display: block !important;
+  overflow: hidden !important;
+  color: #718087 !important;
+  font-size: 5px !important;
+  font-weight: 900 !important;
+  line-height: 1 !important;
+  text-transform: uppercase !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+#topStatusBar .host-break-tab-layout .break-summary-item strong {
+  display: block !important;
+  margin-top: 3px !important;
+  color: #f2cf4d !important;
+  font-size: 8px !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
+}
+
+#topStatusBar .host-break-tab-layout .break-action-btn {
+  width: 106px !important;
+  min-width: 106px !important;
+  height: 30px !important;
+  min-height: 30px !important;
+  margin: 0 !important;
+  padding: 0 7px !important;
+  font-size: 7px !important;
+  border-radius: 5px !important;
+}
+#topStatusBar .host-break-tab-layout .break-action-message { display: none !important; }
+
+/* RIGHT card intentionally narrower and short */
+#topStatusBar .host-info-tabs-card .host-tab-pane {
+  padding: 7px 9px !important;
+}
+
+#topStatusBar .host-info-tabs-card .workflow-notification-list {
+  width: 100% !important;
+  height: 100% !important;
+  max-height: none !important;
+  overflow-y: auto !important;
+}
+
+#topStatusBar .host-info-tabs-card .host-tab-notes {
+  width: 100% !important;
+  height: calc(100% - 15px) !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  resize: none !important;
+  padding: 6px !important;
+  font-size: 8px !important;
+  line-height: 1.25 !important;
+}
+
+#topStatusBar .host-info-tabs-card .session-notes-footer {
+  margin-top: 2px !important;
+  font-size: 5px !important;
+}
+
+/* ROW 2: taller because row 1 is shorter */
+#topStatusBar .host-live-workflow-row {
+  display: grid !important;
+  grid-template-columns: minmax(275px, .82fr) minmax(500px, 1.8fr) !important;
+  gap: 8px !important;
+  align-items: stretch !important;
+  width: 100% !important;
+  margin-top: 8px !important;
+}
+
+#topStatusBar .host-live-workflow-row .host-pending-card,
+#topStatusBar .host-live-workflow-row .host-run-order-card {
+  width: auto !important;
+  min-width: 0 !important;
+  height: 205px !important;
+  min-height: 205px !important;
+  max-height: 205px !important;
+  overflow: hidden !important;
+}
+
+#topStatusBar .host-live-workflow-row .top-status-pending-list,
+#topStatusBar .host-live-workflow-row #tsRunOrderList {
+  max-height: 155px !important;
+  overflow-y: auto !important;
+}
+
+#topStatusBar .host-live-workflow-row .host-run-order-card #tsRunOrderList {
+  max-height: 127px !important;
+}
+
+@media (min-width: 761px) and (max-width: 1180px) {
+  #topStatusBar .host-dashboard-top-row {
+    grid-template-columns: minmax(470px, 1.25fr) minmax(315px, .78fr) !important;
+  }
+
+  #topStatusBar .host-main-status-tabs-card,
+  #topStatusBar .host-info-tabs-card {
+    height: 116px !important;
+    min-height: 116px !important;
+    max-height: 116px !important;
+  }
+
+  #topStatusBar .host-session-status-grid {
+    grid-template-columns: minmax(220px, 1fr) 1px minmax(170px, .78fr) !important;
+    gap: 8px !important;
+  }
+
+  #topStatusBar .host-break-tab-layout {
+    grid-template-columns: minmax(125px, .7fr) minmax(205px, 1.18fr) 94px !important;
+    gap: 6px !important;
+  }
+
+  #topStatusBar .host-break-tab-layout .break-action-btn {
+    width: 94px !important;
+    min-width: 94px !important;
+  }
+
+  #topStatusBar .host-live-workflow-row {
+    grid-template-columns: minmax(245px, .77fr) minmax(430px, 1.65fr) !important;
+  }
+
+  #topStatusBar .host-live-workflow-row .host-pending-card,
+  #topStatusBar .host-live-workflow-row .host-run-order-card {
+    height: 210px !important;
+    min-height: 210px !important;
+    max-height: 210px !important;
+  }
+}
+
+@media (max-width: 760px) {
+  #topStatusBar .host-dashboard-top-row,
+  #topStatusBar .host-live-workflow-row {
+    grid-template-columns: 1fr !important;
+  }
+
+  #topStatusBar .host-main-status-tabs-card,
+  #topStatusBar .host-info-tabs-card,
+  #topStatusBar .host-live-workflow-row .host-pending-card,
+  #topStatusBar .host-live-workflow-row .host-run-order-card {
+    height: auto !important;
+    min-height: 140px !important;
+    max-height: none !important;
+  }
+}
