@@ -791,107 +791,130 @@
 
 
 
+
   /* ============================================================
-     ACTIVE SONG REQUESTS — SAFE TABLET LAYOUT FIX
+     ACTIVE SONG REQUESTS — DETERMINISTIC SINGLE-ROW TABLE FIX
      ------------------------------------------------------------
-     IMPORTANT:
-     - NO MutationObserver.
-     - NO DOM wrapping.
-     - NO repeated child insertion.
-     - NO interval.
-     - We only add CSS and harmless class names after the existing
-       renderActiveRequests() has finished.
+     This does NOT add/move/remove request DOM nodes.
+     It only tags the DIRECT children that requests.js already renders.
+     No MutationObserver, no interval, no recursive DOM updates.
      ============================================================ */
 
-  function installSafeActiveRequestsLayout() {
-    if (document.getElementById("lkSafeActiveRequestsCss")) return;
+  function installActiveRequestSingleRowCss() {
+    if (document.getElementById("lkActiveRequestSingleRowCss")) return;
 
     const style = document.createElement("style");
-    style.id = "lkSafeActiveRequestsCss";
+    style.id = "lkActiveRequestSingleRowCss";
     style.textContent = `
-      #requestsPanel {
-        min-width: 0 !important;
-      }
-
       #requestsPanel #activeRequestsList {
         width: 100% !important;
         min-width: 0 !important;
-        max-height: none !important;
         height: auto !important;
-        overflow-x: hidden !important;
-        overflow-y: visible !important;
+        max-height: none !important;
+        overflow: visible !important;
       }
 
-      #requestsPanel .lk-safe-request-header,
-      #requestsPanel .lk-safe-request-row {
+      #requestsPanel .lk-active-request-head,
+      #requestsPanel .lk-active-request-row {
         box-sizing: border-box !important;
-        width: 100% !important;
-        min-width: 0 !important;
         display: grid !important;
         grid-template-columns:
-          44px
-          minmax(160px, 1.35fr)
-          minmax(105px, .82fr)
-          58px
-          88px
+          42px
+          minmax(150px, 1.45fr)
+          minmax(105px, .9fr)
+          52px
+          84px
           116px !important;
         align-items: center !important;
-        column-gap: 8px !important;
+        gap: 8px !important;
+        width: 100% !important;
+        min-width: 0 !important;
       }
 
-      #requestsPanel .lk-safe-request-header {
+      #requestsPanel .lk-active-request-head {
         min-height: 42px !important;
         padding: 8px 10px !important;
+        border-bottom: 1px solid #303030 !important;
+        background: #171717 !important;
       }
 
-      #requestsPanel .lk-safe-request-row {
+      #requestsPanel .lk-active-request-head > * {
+        display: block !important;
+        min-width: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: hidden !important;
+        color: #a7a7a7 !important;
+        font-size: 9px !important;
+        font-weight: 900 !important;
+        line-height: 1 !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+      }
+
+      #requestsPanel .lk-active-request-row {
         min-height: 62px !important;
         padding: 8px 10px !important;
+        border-bottom: 1px solid #252525 !important;
       }
 
-      #requestsPanel .lk-safe-request-header > *,
-      #requestsPanel .lk-safe-request-row > * {
+      #requestsPanel .lk-active-request-row > * {
         min-width: 0 !important;
         margin: 0 !important;
       }
 
-      #requestsPanel .lk-safe-request-header > * {
+      #requestsPanel .lk-active-request-row > *:nth-child(1) {
+        justify-self: center !important;
+      }
+
+      #requestsPanel .lk-active-request-row > *:nth-child(2),
+      #requestsPanel .lk-active-request-row > *:nth-child(3) {
         overflow: hidden !important;
-        color: #a7a7a7 !important;
+      }
+
+      #requestsPanel .lk-active-request-row > *:nth-child(2) strong,
+      #requestsPanel .lk-active-request-row > *:nth-child(3) strong {
+        display: block !important;
+        overflow: hidden !important;
+        font-size: 12px !important;
+        line-height: 1.15 !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+      }
+
+      #requestsPanel .lk-active-request-row > *:nth-child(2) span,
+      #requestsPanel .lk-active-request-row > *:nth-child(3) span,
+      #requestsPanel .lk-active-request-row > *:nth-child(2) small,
+      #requestsPanel .lk-active-request-row > *:nth-child(3) small {
+        display: block !important;
+        margin-top: 2px !important;
+        overflow: hidden !important;
+        color: #999 !important;
+        font-size: 9px !important;
+        line-height: 1.15 !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+      }
+
+      #requestsPanel .lk-active-request-row > *:nth-child(4),
+      #requestsPanel .lk-active-request-row > *:nth-child(5) {
+        overflow: hidden !important;
         font-size: 10px !important;
-        font-weight: 900 !important;
-        line-height: 1.15 !important;
-        white-space: nowrap !important;
+        text-align: center !important;
         text-overflow: ellipsis !important;
+        white-space: nowrap !important;
       }
 
-      #requestsPanel .lk-safe-request-row strong {
-        display: block !important;
-        overflow: hidden !important;
-        font-size: 14px !important;
-        line-height: 1.15 !important;
-        white-space: nowrap !important;
-        text-overflow: ellipsis !important;
-      }
-
-      #requestsPanel .lk-safe-request-row span,
-      #requestsPanel .lk-safe-request-row small {
-        display: block !important;
-        overflow: hidden !important;
-        white-space: nowrap !important;
-        text-overflow: ellipsis !important;
-      }
-
-      #requestsPanel .lk-safe-request-actions {
+      #requestsPanel .lk-active-request-actions {
         display: flex !important;
         align-items: center !important;
         justify-content: flex-end !important;
         gap: 5px !important;
+        min-width: 0 !important;
         flex-wrap: nowrap !important;
-        overflow: visible !important;
       }
 
-      #requestsPanel .lk-safe-request-actions button {
+      #requestsPanel .lk-active-request-actions button {
         display: inline-grid !important;
         place-items: center !important;
         flex: 0 0 32px !important;
@@ -903,41 +926,39 @@
         padding: 0 !important;
       }
 
-      /* Legacy renderer:
-         request-main | bpm | time | completed | abandoned | delete
-         It has no separate number / requested-by columns, so keep its
-         original compact six-cell layout. */
-      #requestsPanel .active-request-row.lk-safe-legacy-row {
-        grid-template-columns:
-          minmax(190px, 1fr)
-          58px
-          84px
-          34px
-          34px
-          34px !important;
-      }
-
+      /* Tablet landscape: still one row, just slightly tighter. */
       @media (min-width: 700px) and (max-width: 1180px) {
-        #requestsPanel .lk-safe-request-header,
-        #requestsPanel .lk-safe-request-row {
+        #requestsPanel .lk-active-request-head,
+        #requestsPanel .lk-active-request-row {
           grid-template-columns:
-            40px
-            minmax(140px, 1.3fr)
-            minmax(90px, .76fr)
-            50px
-            76px
+            38px
+            minmax(128px, 1.4fr)
+            minmax(88px, .82fr)
+            44px
+            72px
             108px !important;
-          column-gap: 6px !important;
+          gap: 6px !important;
         }
 
-        #requestsPanel .active-request-row.lk-safe-legacy-row {
-          grid-template-columns:
-            minmax(165px, 1fr)
-            52px
-            76px
-            32px
-            32px
-            32px !important;
+        #requestsPanel .lk-active-request-head {
+          padding: 7px 8px !important;
+        }
+
+        #requestsPanel .lk-active-request-row {
+          min-height: 58px !important;
+          padding: 7px 8px !important;
+        }
+
+        #requestsPanel .lk-active-request-actions {
+          gap: 4px !important;
+        }
+
+        #requestsPanel .lk-active-request-actions button {
+          flex-basis: 30px !important;
+          width: 30px !important;
+          min-width: 30px !important;
+          height: 30px !important;
+          min-height: 30px !important;
         }
       }
     `;
@@ -945,104 +966,98 @@
     document.head.appendChild(style);
   }
 
-  function applySafeActiveRequestsLayout() {
+  function tagActiveRequestDirectRows() {
     const box = document.getElementById("activeRequestsList");
     if (!box) return;
 
-    installSafeActiveRequestsLayout();
+    installActiveRequestSingleRowCss();
 
-    /* Clean up classes left by the broken previous update. */
-    box.querySelectorAll(
-      ".lk-request-grid-header, .lk-request-grid-row, .lk-request-actions"
-    ).forEach(el => {
-      el.classList.remove(
-        "lk-request-grid-header",
-        "lk-request-grid-row",
-        "lk-request-actions"
-      );
-    });
+    const children = Array.from(box.children);
 
-    /* Find request rows by existing renderer classes first. */
-    const rows = Array.from(box.querySelectorAll(".active-request-row"));
+    children.forEach(child => {
+      child.classList.remove("lk-active-request-head", "lk-active-request-row");
 
-    rows.forEach(row => {
-      row.classList.add("lk-safe-request-row");
-
-      const children = Array.from(row.children);
-      const directButtons = children.filter(el => el.tagName === "BUTTON");
-
-      /* Old renderer has request-main + bpm + time + 3 direct buttons. */
-      if (directButtons.length >= 3) {
-        row.classList.add("lk-safe-legacy-row");
-        return;
-      }
-
-      /* New renderer normally has an actions wrapper as its final cell. */
-      const actionCell = children.find(el =>
-        el.classList?.contains("request-actions") ||
-        el.querySelectorAll?.("button").length >= 3
-      );
-
-      if (actionCell) actionCell.classList.add("lk-safe-request-actions");
-    });
-
-    /*
-      Current newer renderer places a six-label header immediately before
-      the request rows. Tag it WITHOUT modifying its children.
-    */
-    const directChildren = Array.from(box.children);
-    const firstRowIndex = directChildren.findIndex(el =>
-      el.classList.contains("active-request-row")
-    );
-
-    if (firstRowIndex > 0) {
-      const candidate = directChildren[firstRowIndex - 1];
-      const text = String(candidate.textContent || "")
+      const text = String(child.textContent || "")
         .replace(/\s+/g, " ")
         .trim()
         .toUpperCase();
 
-      if (
+      const buttons = Array.from(child.querySelectorAll("button"));
+
+      const isHeader =
         text.includes("SONG") &&
         text.includes("REQUESTED BY") &&
         text.includes("BPM") &&
         text.includes("TIME") &&
-        text.includes("ACTIONS")
-      ) {
-        candidate.classList.add("lk-safe-request-header");
+        text.includes("ACTIONS");
+
+      if (isHeader) {
+        child.classList.add("lk-active-request-head");
+        return;
       }
-    }
+
+      /* Current request rows have the 3 action buttons in the same direct row. */
+      if (buttons.length >= 3) {
+        child.classList.add("lk-active-request-row");
+
+        /*
+          If actions are already inside a wrapper, style that wrapper.
+          If buttons are direct children, keep them untouched; the row still
+          remains horizontal and their existing CSS continues to apply.
+        */
+        const directChildren = Array.from(child.children);
+        const actionWrapper = directChildren.find(el => {
+          if (el.tagName === "BUTTON") return false;
+          return el.querySelectorAll?.("button").length >= 3;
+        });
+
+        if (actionWrapper) {
+          actionWrapper.classList.add("lk-active-request-actions");
+        } else {
+          /*
+            Current screenshot renderer uses a dedicated final Actions cell.
+            If it does not, do NOT create/wrap anything — avoiding the old crash.
+          */
+          const last = directChildren[directChildren.length - 1];
+          if (last && last.tagName !== "BUTTON" && last.querySelector("button")) {
+            last.classList.add("lk-active-request-actions");
+          }
+        }
+      }
+    });
   }
 
-  function hookActiveRequestsRendererSafely() {
-    installSafeActiveRequestsLayout();
-
-    const original = window.renderActiveRequests;
+  function hookActiveRequestRenderOnce() {
+    installActiveRequestSingleRowCss();
 
     if (
-      typeof original === "function" &&
-      !original.__lkSafeLayoutWrapped
+      typeof window.renderActiveRequests === "function" &&
+      !window.renderActiveRequests.__lkSingleRowWrapped
     ) {
+      const original = window.renderActiveRequests;
+
       const wrapped = function (...args) {
         const result = original.apply(this, args);
-        requestAnimationFrame(applySafeActiveRequestsLayout);
+        requestAnimationFrame(tagActiveRequestDirectRows);
         return result;
       };
 
-      wrapped.__lkSafeLayoutWrapped = true;
+      wrapped.__lkSingleRowWrapped = true;
       window.renderActiveRequests = wrapped;
     }
 
-    /* One initial pass only. No observer and no repeating timer. */
-    requestAnimationFrame(applySafeActiveRequestsLayout);
+    /* Apply once to anything already rendered. */
+    requestAnimationFrame(tagActiveRequestDirectRows);
   }
 
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", () => {
-      setTimeout(hookActiveRequestsRendererSafely, 0);
-    }, { once:true });
+    document.addEventListener(
+      "DOMContentLoaded",
+      () => setTimeout(hookActiveRequestRenderOnce, 0),
+      { once:true }
+    );
   } else {
-    setTimeout(hookActiveRequestsRendererSafely, 0);
+    setTimeout(hookActiveRequestRenderOnce, 0);
   }
 
 })();
