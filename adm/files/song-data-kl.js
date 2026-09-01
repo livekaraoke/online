@@ -610,7 +610,7 @@ window.songs = [
     setFrequency: "rare",
     hostKaraokePage: "1",
     livePage: "1",
-    hasLyrics: false
+    hasLyrics: true
   },
   {
     title: "Cocaine",
@@ -2815,7 +2815,7 @@ window.songs = [
     setFrequency: "rare",
     hostKaraokePage: "1",
     livePage: "1",
-    hasLyrics: false
+    hasLyrics: true
   },
   {
     title: "Teenage Dirtbag",
