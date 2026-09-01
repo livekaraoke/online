@@ -144,8 +144,8 @@
       songsLabel.innerText = songs ? "UNLOCKED" : "LOCKED";
     }
 
-    if ($("statusVenueLabel")) $("statusVenueLabel").innerText = LK.state.currentSessionData?.venue || currentState?.nextEvent?.venue || "-";
-    if ($("statusEventEndLabel")) $("statusEventEndLabel").innerText = end ? `${formatTime(end)} (${formatDuration(remainingMs)} left)` : "-";
+    // Upcoming-event venue/date/type/countdown are owned by
+    // admin-events-integration.js. Do not overwrite them from legacy nextEvent.
     if ($("statusUpdatedLabel")) $("statusUpdatedLabel").innerText = new Date().toLocaleTimeString();
   }
 
@@ -196,8 +196,7 @@
     updateClock();
     setInterval(() => {
       updateClock();
-      if (LK.state.currentSessionData) LK.sessions.updateDashboard(LK.state.currentSessionData);
-      updateStatusStrip();
+      LK.sessions.updateDashboard(LK.state.currentSessionData || null);
     }, 1000);
   }
 
