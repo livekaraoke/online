@@ -886,3 +886,11 @@
 .event-type-summary-card:hover > strong {
   color: #fff;
 }
+
+
+.event-title-auto-hint {
+  display: block;
+  margin-top: 5px;
+  color: #666;
+  font-size: 9px;
+}
