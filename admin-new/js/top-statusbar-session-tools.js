@@ -326,6 +326,19 @@
     }
   }
 
+  function trackBreakStateNotification() {
+    const b = getBreakState();
+
+    if (state.lastBreakOpen !== null && state.lastBreakOpen !== b.open) {
+      pushNotification(
+        b.open ? "☕ Break started" : "▶ Break ended",
+        `break:${Date.now()}`
+      );
+    }
+
+    state.lastBreakOpen = b.open;
+  }
+
   function renderBreakControls() {
     const b = getBreakState();
     const btn = $("tsBreakActionBtn");
@@ -354,10 +367,7 @@
     if (current) current.textContent = formatDuration(b.currentMs);
     if (message && !active) message.textContent = "";
 
-    if (state.lastBreakOpen !== null && state.lastBreakOpen !== b.open) {
-      pushNotification(b.open ? "☕ Break started" : "▶ Break ended", `break:${Date.now()}`);
-    }
-    state.lastBreakOpen = b.open;
+
   }
 
   async function toggleBreak() {
@@ -884,8 +894,6 @@
       renderPending();
       renderRunOrder();
       renderCompactHostStrip();
-      renderBreakControls();
-      renderSessionNotes();
       renderNotifications();
       return;
     }
@@ -894,6 +902,7 @@
       state.db.collection("performanceSessions").doc(sessionId).onSnapshot(doc => {
         state.session = doc.exists ? { id:doc.id, ...(doc.data() || {}) } : null;
         publishSharedSession();
+        trackBreakStateNotification();
 
         subscribeLinkedEvent(
           state.session?.eventId ||
@@ -903,9 +912,7 @@
 
         renderRemaining();
         renderCompactHostStrip();
-        renderBreakControls();
-        renderSessionNotes();
-        renderNotifications();
+            renderNotifications();
       }, console.warn)
     );
 
@@ -952,9 +959,7 @@
 
         renderRemaining();
         renderCompactHostStrip();
-        renderBreakControls();
-        renderSessionNotes();
-        renderNotifications();
+            renderNotifications();
       }, console.warn)
     );
 
@@ -1218,8 +1223,6 @@
       renderRunOrder();
       renderSongSelect();
       renderCompactHostStrip();
-      renderBreakControls();
-      renderSessionNotes();
       renderNotifications();
       return true;
     }
@@ -1247,9 +1250,6 @@
     setInterval(() => {
       renderRemaining();
       renderCompactHostStrip();
-      renderBreakControls();
-      renderSessionNotes();
-      renderNotifications();
     },1000);
   }
 
