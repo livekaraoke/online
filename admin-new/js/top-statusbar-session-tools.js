@@ -68,13 +68,6 @@
     return `${minutes}mins`;
   }
 
-  function setOverTimeState(elements, isOver) {
-    elements.forEach(el => {
-      if (!el) return;
-      el.classList.toggle("remaining-over-time", !!isOver);
-    });
-  }
-
   function scheduledDurationMs() {
     const explicit = Number(
       state.session?.scheduledDurationMs ??
@@ -173,10 +166,6 @@
       if (adjustedHint) adjustedHint.textContent = "No active session";
       if (legacyRemaining) legacyRemaining.textContent = "-";
       if (legacyWindow) legacyWindow.textContent = "No active session";
-      setOverTimeState(
-        [compactRemaining, compactEnd, adjustedRemaining, adjustedEnd, adjustedHint],
-        false
-      );
       return;
     }
 
@@ -222,15 +211,9 @@
 
       if (compactRemaining) compactRemaining.textContent = text;
       if (legacyRemaining) legacyRemaining.textContent = text;
-
-      setOverTimeState(
-        [compactRemaining, compactEnd],
-        officialMs <= 0
-      );
     } else {
       if (compactRemaining) compactRemaining.textContent = "-";
       if (legacyRemaining) legacyRemaining.textContent = "-";
-      setOverTimeState([compactRemaining, compactEnd], false);
     }
 
     /* ------------------------------------------------------
@@ -263,11 +246,6 @@
           `Adjusted end <strong>${formatClock(adjustedTarget)}</strong>`;
       }
 
-      setOverTimeState(
-        [adjustedRemaining, adjustedEnd, adjustedHint],
-        adjustedMs <= 0
-      );
-
       if (adjustedHint) {
         const delay =
           schedule.start && actualStart
@@ -290,7 +268,6 @@
       if (adjustedEnd) adjustedEnd.textContent = "Adjusted end —";
       if (adjustedHint) adjustedHint.textContent =
         "Scheduled duration unavailable";
-      setOverTimeState([adjustedRemaining, adjustedEnd, adjustedHint], false);
     }
   }
 
@@ -675,12 +652,33 @@
   }
 
   function subscribeLinkedEvent(eventId) {
-    // Do not read upcomingEvents from the host/lyrics pages. Those pages may
-    // intentionally be denied access by Firestore rules, and the live session
-    // already carries the eventSnapshot/scheduled fields needed by this bar.
-    // This also removes an unnecessary realtime listener/read source.
+    const cleanId = String(eventId || "").trim();
+
+    if (!cleanId) {
+      clearLinkedEventSubscription();
+      renderRemaining();
+      return;
+    }
+
+    if (cleanId === state.linkedEventId && state.linkedEventUnsub) return;
+
     clearLinkedEventSubscription();
-    renderRemaining();
+    state.linkedEventId = cleanId;
+
+    state.linkedEventUnsub = state.db
+      .collection("upcomingEvents")
+      .doc(cleanId)
+      .onSnapshot(doc => {
+        state.linkedEvent = doc.exists
+          ? { id:doc.id, ...(doc.data() || {}) }
+          : null;
+
+        renderRemaining();
+      }, error => {
+        console.warn("Could not load linked Upcoming Event:", error);
+        state.linkedEvent = null;
+        renderRemaining();
+      });
   }
 
   function clearSessionSubscriptions() {
@@ -703,7 +701,6 @@
       renderPending();
       renderRunOrder();
       renderCompactHostStrip();
-      window.dispatchEvent(new CustomEvent("lk:session-updated", { detail:{ session:null } }));
       return;
     }
 
@@ -719,10 +716,6 @@
 
         renderRemaining();
         renderCompactHostStrip();
-
-        window.dispatchEvent(new CustomEvent("lk:session-updated", {
-          detail: { session: state.session ? { ...state.session } : null }
-        }));
       }, console.warn)
     );
 
@@ -779,9 +772,14 @@
       }, console.warn)
     );
 
-    // Do not load the entire lyrics collection on every page load. Songs are
-    // fetched lazily only if the host actually opens the Add Song selector.
-    renderSongSelect();
+    state.db.collection("lyrics").get().then(snapshot => {
+      state.songs = snapshot.docs
+        .map(doc => ({id:doc.id,...(doc.data() || {})}))
+        .sort((a,b) =>
+          String(a.title || "").localeCompare(String(b.title || ""), undefined, {sensitivity:"base"})
+        );
+      renderSongSelect();
+    }).catch(console.warn);
   }
 
   function isStatusExpanded() {
@@ -872,7 +870,7 @@
     syncStatusToggleUi();
   }
 
-  function setStatusDetailTab(tabName) {
+  function setStatusTab(tabName) {
     const tab = tabName === "break" ? "break" : "session";
 
     const sessionBtn = $("tsSessionStatusTab");
@@ -884,7 +882,6 @@
 
     sessionBtn?.classList.toggle("active", showSession);
     breakBtn?.classList.toggle("active", !showSession);
-
     sessionBtn?.setAttribute("aria-selected", String(showSession));
     breakBtn?.setAttribute("aria-selected", String(!showSession));
 
@@ -899,22 +896,19 @@
     }
   }
 
-  function initialiseStatusDetailTabs() {
+  function initialiseStatusTabs() {
     const bar = $("topStatusBar");
     if (!bar || bar.dataset.statusTabsBound === "1") return;
 
     bar.dataset.statusTabsBound = "1";
-
-    // User requested Session Status as the default.
-    setStatusDetailTab("session");
+    setStatusTab("session");
 
     bar.addEventListener("click", event => {
       const btn = event.target.closest("[data-ts-status-tab]");
       if (!btn) return;
-
       event.preventDefault();
       event.stopPropagation();
-      setStatusDetailTab(btn.dataset.tsStatusTab);
+      setStatusTab(btn.dataset.tsStatusTab);
     });
   }
 
@@ -964,29 +958,6 @@
     });
   }
 
-  let songsLoadPromise = null;
-
-  function ensureSongsLoaded() {
-    if (state.songs.length) return Promise.resolve(state.songs);
-    if (songsLoadPromise) return songsLoadPromise;
-
-    songsLoadPromise = state.db.collection("lyrics").get().then(snapshot => {
-      state.songs = snapshot.docs
-        .map(doc => ({id:doc.id,...(doc.data() || {})}))
-        .sort((a,b) =>
-          String(a.title || "").localeCompare(String(b.title || ""), undefined, {sensitivity:"base"})
-        );
-      renderSongSelect();
-      return state.songs;
-    }).catch(error => {
-      songsLoadPromise = null;
-      console.warn("Could not load songs for Run Order selector:", error);
-      return [];
-    });
-
-    return songsLoadPromise;
-  }
-
   function bindUi() {
     if (state.uiBound) return;
     state.uiBound = true;
@@ -1019,16 +990,12 @@
     });
 
     $("tsRunOrderAddBtn")?.addEventListener("click",addManualSong);
-
-    const songSelect = $("tsRunOrderSongSelect");
-    songSelect?.addEventListener("focus", ensureSongsLoaded, { once:true });
-    songSelect?.addEventListener("pointerdown", ensureSongsLoaded, { once:true });
   }
 
   function waitForInjectedMarkup() {
     if ($("topStatusBar")) {
       initialiseStatusToggle();
-      initialiseStatusDetailTabs();
+      initialiseStatusTabs();
       initialiseInfoTabs();
       bindUi();
       renderRemaining();
@@ -1067,7 +1034,6 @@
 
   LK.sessionTools.getRunOrder = () => queueItems().map(item => ({...item}));
   LK.sessionTools.getSessionId = () => state.sessionId;
-  LK.sessionTools.getSession = () => state.session ? ({...state.session}) : null;
 
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded",init);
