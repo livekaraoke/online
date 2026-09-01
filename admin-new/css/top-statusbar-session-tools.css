@@ -1217,3 +1217,52 @@
     display: block !important;
   }
 }
+
+
+/* ========================================================================
+   RELIABLE EXPAND / COLLAPSE
+   These rules are intentionally last so older responsive/status-bar rules
+   cannot force the expanded workspace to remain visible.
+   ======================================================================== */
+
+#topStatusBar.top-statusbar.collapsed > .top-status-expanded,
+#topStatusBar.host-statusbar.collapsed > .host-status-expanded {
+  display: none !important;
+  visibility: hidden !important;
+  max-height: 0 !important;
+  height: 0 !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  overflow: hidden !important;
+  pointer-events: none !important;
+}
+
+#topStatusBar.top-statusbar:not(.collapsed) > .top-status-expanded,
+#topStatusBar.host-statusbar:not(.collapsed) > .host-status-expanded {
+  display: block !important;
+  visibility: visible !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: min(73dvh, 720px) !important;
+  margin: 0 !important;
+  padding: 9px !important;
+  overflow-y: auto !important;
+  pointer-events: auto !important;
+}
+
+#topStatusBar #tsToggleBtn {
+  cursor: pointer !important;
+  pointer-events: auto !important;
+  user-select: none !important;
+  touch-action: manipulation !important;
+}
+
+#topStatusBar .host-compact-strip {
+  cursor: pointer !important;
+}
+
+#topStatusBar:not(.collapsed) #tsToggleBtn {
+  color: #ffffff !important;
+}
