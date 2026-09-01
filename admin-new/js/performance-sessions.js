@@ -1,509 +1,681 @@
-/************************************************************
- * PERFORMANCE SESSIONS VIEWER
- ************************************************************/
+(() => {
+  "use strict";
 
-// Firebase is initialized in js/firebase.js.
-// This file expects global `db` and `auth` from firebase.js.
+  const $ = id => document.getElementById(id);
 
-const db = LK.db;
-const auth = LK.auth;
-// THIS IS A NEW FUCKING LINE
+  const db =
+    window.db ||
+    window.LK?.db ||
+    (window.firebase?.firestore ? firebase.firestore() : null);
 
-let sessions = [];
-let requests = [];
-let filteredSessions = [];
-let currentSessionPointer = null;
-let page = 1;
-let pageSize = 8;
-let unsubscribeSessions = null;
-let unsubscribeRequests = null;
-let unsubscribeCurrent = null;
+  const auth =
+    window.auth ||
+    (window.firebase?.auth ? firebase.auth() : null);
 
-function $(id) { return document.getElementById(id); }
-function escapeHTML(v) { return String(v || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
-function toDate(v) { if (!v) return null; if (v.toDate) return v.toDate(); return new Date(v); }
-function msToMinutes(ms) { return Math.max(0, Math.floor(ms / 60000)); }
-function formatTime(d) { return d ? d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "–"; }
-function formatDate(d) { return d ? d.toLocaleDateString("en-GB") : "–"; }
-function slug(v) { return String(v || "").toLowerCase(); }
+  let sessions = [];
+  let filtered = [];
+  let currentPage = 1;
+  let pageSize = 8;
+  let pendingDeleteId = "";
 
-function showToast(message, type = "success") {
-  const box = $("toastBox");
-  if (!box) {
-    console[type === "error" ? "error" : "log"](message);
-    return;
+  function esc(value) {
+    return String(value || "")
+      .replace(/&/g,"&amp;")
+      .replace(/</g,"&lt;")
+      .replace(/>/g,"&gt;")
+      .replace(/"/g,"&quot;");
   }
 
-  box.className = `toast-box ${type}`;
-  box.innerText = message;
-  box.classList.remove("hidden");
-
-  clearTimeout(box._timer);
-  box._timer = setTimeout(() => {
-    box.classList.add("hidden");
-  }, 3200);
-}
-
-function adminLogin() {
-  const email = $("emailInput")?.value.trim() || "";
-  const pass = $("passwordInput")?.value || "";
-  const err = $("passwordError");
-  if (err) err.textContent = "Checking...";
-  auth.signInWithEmailAndPassword(email, pass).catch(error => {
-    console.error(error);
-    if (err) err.textContent = "Incorrect email or password";
-  });
-}
-
-function adminLogout() { auth.signOut(); }
-window.adminLogin = adminLogin;
-window.adminLogout = adminLogout;
-
-let initialized = false;
-
-auth.onAuthStateChanged(async user => {
-  if (user) {
-    $("passwordGate").style.display = "none";
-    $("appShell").style.display = "grid";
-
-    await LK.profile.ensureMyProfile(user);
-    await initPage();
-
-  } else {
-    $("passwordGate").style.display = "flex";
-    $("appShell").style.display = "none";
+  function tsDate(value) {
+    if (!value) return null;
+    if (typeof value.toDate === "function") return value.toDate();
+    if (value instanceof Date) return value;
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? null : date;
   }
-});
 
-document.addEventListener("keydown", e => {
-  if (e.key === "Enter" && $("passwordGate")?.style.display !== "none") adminLogin();
-});
+  function formatDate(date) {
+    if (!date) return "-";
+    return date.toLocaleDateString(undefined, {
+      day:"2-digit",
+      month:"short",
+      year:"numeric"
+    });
+  }
 
-let deleteSessionPending = null;
+  function formatTime(date) {
+    if (!date) return "-";
+    return date.toLocaleTimeString(undefined, {
+      hour:"2-digit",
+      minute:"2-digit",
+      hour12:false
+    });
+  }
 
-function showDeleteDialog(sessionId){
+  function formatHours(ms) {
+    if (!Number.isFinite(ms) || ms < 0) return "-";
 
-    deleteSessionPending=sessionId;
+    const mins = Math.floor(ms / 60000);
+    const hours = Math.floor(mins / 60);
+    const rem = mins % 60;
 
+    if (hours && rem) return `${hours}hr${hours === 1 ? "" : "s"} ${rem}mins`;
+    if (hours) return `${hours}hr${hours === 1 ? "" : "s"}`;
+    return `${mins}mins`;
+  }
+
+  function getBreakMs(session) {
+    const now = new Date();
+    let total = 0;
+
+    (session.breaks || []).forEach(br => {
+      const start = tsDate(br.startedAt || br.start);
+      const end = tsDate(br.endedAt || br.end) || now;
+      if (start && end && end >= start) total += end - start;
+    });
+
+    return total;
+  }
+
+  function actualStart(session) {
+    return tsDate(session.actualStartedAt || session.startedAt);
+  }
+
+  function actualEnd(session) {
+    return tsDate(session.actualEndedAt || session.endedAt);
+  }
+
+  function scheduledStart(session) {
+    return tsDate(session.scheduledStartAt);
+  }
+
+  function scheduledEnd(session) {
+    return tsDate(session.scheduledEndAt);
+  }
+
+  function durationValues(session) {
+    const start = actualStart(session);
+    const end = actualEnd(session) || (session.status === "active" ? new Date() : null);
+
+    if (!start || !end) return {totalMs:null,activeMs:null};
+
+    const totalMs = Math.max(0,end-start);
+    const activeMs = Math.max(0,totalMs-getBreakMs(session));
+
+    return {totalMs,activeMs};
+  }
+
+  function requestStatusBucket(status) {
+    const value = String(status || "").toLowerCase();
+
+    if (["completed","played"].includes(value)) return "completed";
+    if (["abandoned","singerleft","singer_left"].includes(value)) return "abandoned";
+    if (["deletedbyhost","deleted","declined"].includes(value)) return "deleted";
+    return "left";
+  }
+
+  function getRequestSnapshot(session) {
+    return Array.isArray(session.requestSnapshot) ? session.requestSnapshot : [];
+  }
+
+  function countsFor(session) {
+    if (session.requestSummary && typeof session.requestSummary === "object") {
+      return {
+        total:Number(session.requestSummary.total || 0),
+        completed:Number(session.requestSummary.completed || 0),
+        left:Number(session.requestSummary.left || 0),
+        abandoned:Number(session.requestSummary.abandoned || 0),
+        deleted:Number(session.requestSummary.deleted || 0)
+      };
+    }
+
+    const requests = getRequestSnapshot(session);
+    const counts = {
+      total:requests.length,
+      completed:0,
+      left:0,
+      abandoned:0,
+      deleted:0
+    };
+
+    requests.forEach(req => counts[requestStatusBucket(req.status)]++);
+    return counts;
+  }
+
+  function playedSnapshot(session) {
+    const performed = Array.isArray(session.playedSongsSnapshot)
+      ? session.playedSongsSnapshot
+      : [];
+
+    const logs = Array.isArray(session.performanceLogSnapshot)
+      ? session.performanceLogSnapshot
+      : [];
+
+    const seen = new Set();
+    const merged = [];
+
+    [...performed,...logs].forEach(item => {
+      const key = [
+        item.songId || item.songTitle || "",
+        item.requestId || "",
+        tsDate(item.playedAt || item.createdAt)?.getTime() || ""
+      ].join("|");
+
+      if (seen.has(key)) return;
+      seen.add(key);
+      merged.push(item);
+    });
+
+    return merged;
+  }
+
+  function averageBpm(session) {
+    const values = playedSnapshot(session)
+      .map(item => Number(item.userBpm || item.bpm))
+      .filter(Number.isFinite);
+
+    if (!values.length) return "-";
+    return Math.round(values.reduce((a,b)=>a+b,0)/values.length);
+  }
+
+  function sessionSearchText(session) {
+    return [
+      session.title,
+      session.venue,
+      session.type,
+      session.sessionType,
+      session.notes,
+      session.eventSnapshot?.name
+    ].join(" ").toLowerCase();
+  }
+
+  function populateVenueFilter() {
+    const select = $("venueFilter");
+    if (!select) return;
+
+    const current = select.value || "all";
+    const venues = [...new Set(
+      sessions.map(session => String(session.venue || "").trim()).filter(Boolean)
+    )].sort((a,b)=>a.localeCompare(b));
+
+    select.innerHTML =
+      `<option value="all">All Venues</option>` +
+      venues.map(venue => `<option value="${esc(venue)}">${esc(venue)}</option>`).join("");
+
+    select.value = venues.includes(current) ? current : "all";
+  }
+
+  function renderCurrentSession() {
+    const panel = $("currentSessionPanel");
+    if (!panel) return;
+
+    const active = sessions.find(session => session.status === "active");
+    if (!active) {
+      panel.innerHTML = "";
+      return;
+    }
+
+    const duration = durationValues(active);
+    const counts = countsFor(active);
+
+    panel.innerHTML = `
+      <div class="current-session-grid">
+        <div class="session-metric"><span>ACTIVE SESSION</span><strong>${esc(active.title || "Untitled")}</strong></div>
+        <div class="session-metric"><span>VENUE</span><strong>${esc(active.venue || "-")}</strong></div>
+        <div class="session-metric"><span>TYPE</span><strong>${esc(active.sessionType || active.type || "-")}</strong></div>
+        <div class="session-metric"><span>SCHEDULED</span><strong>${formatTime(scheduledStart(active))}–${formatTime(scheduledEnd(active))}</strong></div>
+        <div class="session-metric"><span>ACTUAL START</span><strong>${formatTime(actualStart(active))}</strong></div>
+        <div class="session-metric"><span>ELAPSED X/BREAKS</span><strong>${formatHours(duration.activeMs)}</strong></div>
+        <div class="session-metric"><span>REQUESTS</span><strong>${counts.total}</strong></div>
+        <div class="session-metric"><span>PLAYED</span><strong>${playedSnapshot(active).length}</strong></div>
+      </div>
+    `;
+  }
+
+  function renderAnalytics() {
+    const grid = $("analyticsGrid");
+    if (!grid) return;
+
+    const total = filtered.length;
+    const ended = filtered.filter(s => s.status === "ended").length;
+    const requests = filtered.reduce((sum,s)=>sum+countsFor(s).total,0);
+    const completed = filtered.reduce((sum,s)=>sum+countsFor(s).completed,0);
+    const played = filtered.reduce((sum,s)=>sum+playedSnapshot(s).length,0);
+
+    const durationMs = filtered.reduce((sum,s)=>{
+      const d = durationValues(s).activeMs;
+      return sum + (Number.isFinite(d) ? d : 0);
+    },0);
+
+    grid.innerHTML = `
+      <div class="analytics-item"><span>SESSIONS</span><strong>${total}</strong></div>
+      <div class="analytics-item"><span>ENDED</span><strong>${ended}</strong></div>
+      <div class="analytics-item"><span>REQUESTS</span><strong>${requests}</strong></div>
+      <div class="analytics-item"><span>COMPLETED</span><strong>${completed}</strong></div>
+      <div class="analytics-item"><span>SONGS PLAYED</span><strong>${played}</strong></div>
+      <div class="analytics-item"><span>ACTIVE TIME</span><strong>${formatHours(durationMs)}</strong></div>
+    `;
+  }
+
+  function renderTable() {
+    const body = $("sessionsTableBody");
+    if (!body) return;
+
+    const start = (currentPage-1)*pageSize;
+    const page = filtered.slice(start,start+pageSize);
+
+    if (!page.length) {
+      body.innerHTML = `<tr><td colspan="17">No sessions found.</td></tr>`;
+    } else {
+      body.innerHTML = page.map((session,index) => {
+        const counts = countsFor(session);
+        const duration = durationValues(session);
+        const actualS = actualStart(session);
+        const actualE = actualEnd(session);
+        const scheduledS = scheduledStart(session);
+        const scheduledE = scheduledEnd(session);
+
+        return `
+          <tr>
+            <td>${start + index + 1}</td>
+            <td>${esc(session.title || "Untitled")}</td>
+            <td>${esc(session.venue || "-")}</td>
+            <td>${formatDate(scheduledS || actualS)}</td>
+            <td>${formatTime(scheduledS)}</td>
+            <td>${formatTime(scheduledE)}</td>
+            <td>${formatTime(actualS)}</td>
+            <td>${formatTime(actualE)}</td>
+            <td title="Excluding breaks; total elapsed in brackets">
+              ${formatHours(duration.activeMs)}
+              ${Number.isFinite(duration.totalMs) ? ` (${formatHours(duration.totalMs)})` : ""}
+            </td>
+            <td>${counts.completed}</td>
+            <td>${counts.left}</td>
+            <td>${counts.abandoned}</td>
+            <td>${counts.deleted}</td>
+            <td>${counts.total}</td>
+            <td>${averageBpm(session)}</td>
+            <td class="status-${esc(session.status || "")}">${esc(session.status || "-")}</td>
+            <td>
+              <button class="table-action-btn" onclick="viewSessionDetails('${esc(session.id)}')">View</button>
+              <button class="table-action-btn delete" onclick="openDeleteDialog('${esc(session.id)}')">Delete</button>
+            </td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    const totalPages = Math.max(1,Math.ceil(filtered.length/pageSize));
+    currentPage = Math.min(currentPage,totalPages);
+
+    $("pageLabel").textContent = `${currentPage} / ${totalPages}`;
+    $("tableShowingLabel").textContent =
+      `Showing ${filtered.length ? start + 1 : 0}–${Math.min(start+pageSize,filtered.length)} of ${filtered.length} sessions`;
+  }
+
+  window.applyFilters = function applyFilters() {
+    const fromValue = $("dateFromInput")?.value || "";
+    const toValue = $("dateToInput")?.value || "";
+    const venue = $("venueFilter")?.value || "all";
+    const status = $("statusFilter")?.value || "all";
+    const search = String($("sessionSearchInput")?.value || "").trim().toLowerCase();
+    const sort = $("sortSelect")?.value || "newest";
+
+    filtered = sessions.filter(session => {
+      const date = scheduledStart(session) || actualStart(session);
+      const key = date
+        ? `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,"0")}-${String(date.getDate()).padStart(2,"0")}`
+        : "";
+
+      if (fromValue && key && key < fromValue) return false;
+      if (toValue && key && key > toValue) return false;
+      if (venue !== "all" && session.venue !== venue) return false;
+      if (status !== "all" && session.status !== status) return false;
+      if (search && !sessionSearchText(session).includes(search)) return false;
+
+      return true;
+    });
+
+    filtered.sort((a,b) => {
+      if (sort === "oldest") {
+        return (scheduledStart(a) || actualStart(a) || new Date(0)) -
+               (scheduledStart(b) || actualStart(b) || new Date(0));
+      }
+
+      if (sort === "duration") {
+        return (durationValues(b).activeMs || 0) - (durationValues(a).activeMs || 0);
+      }
+
+      if (sort === "requests") {
+        return countsFor(b).total - countsFor(a).total;
+      }
+
+      if (sort === "completion") {
+        return countsFor(b).completed - countsFor(a).completed;
+      }
+
+      return (scheduledStart(b) || actualStart(b) || new Date(0)) -
+             (scheduledStart(a) || actualStart(a) || new Date(0));
+    });
+
+    currentPage = 1;
+    renderAnalytics();
+    renderTable();
+  };
+
+  async function loadLiveFallback(session) {
+    const result = {
+      requests:getRequestSnapshot(session),
+      played:playedSnapshot(session),
+      runOrder:Array.isArray(session.runOrderSnapshot) ? session.runOrderSnapshot : []
+    };
+
+    if (result.requests.length && result.played.length) return result;
+
+    try {
+      const [requestsSnap,logsSnap,performedSnap] = await Promise.all([
+        db.collection("publicSongRequests").where("sessionId","==",session.id).get(),
+        db.collection("performanceLogs").where("sessionId","==",session.id).get(),
+        db.collection("performanceSessions").doc(session.id).collection("performedSongs").get()
+      ]);
+
+      if (!result.requests.length) {
+        result.requests = requestsSnap.docs.map(doc => ({id:doc.id,...(doc.data() || {})}));
+      }
+
+      if (!result.played.length) {
+        const logs = logsSnap.docs.map(doc => ({id:doc.id,...(doc.data() || {})}));
+        const performed = performedSnap.docs.map(doc => ({id:doc.id,...(doc.data() || {})}));
+        result.played = [...performed,...logs];
+      }
+    } catch (error) {
+      console.warn("Could not load live fallback session detail:",error);
+    }
+
+    return result;
+  }
+
+  function requestStatusLabel(status) {
+    const value = String(status || "").toLowerCase();
+
+    if (["completed","played"].includes(value)) return "Played";
+    if (["abandoned","singerleft","singer_left"].includes(value)) return "Singer Left";
+    if (["deletedbyhost","deleted","declined"].includes(value)) return "Deleted / Declined";
+    if (["queued","accepted"].includes(value)) return "Queued";
+    return "Left / Not Played";
+  }
+
+  window.viewSessionDetails = async function viewSessionDetails(id) {
+    const session = sessions.find(item => item.id === id);
+    if (!session) return;
+
+    const detail = await loadLiveFallback(session);
+    const counts = countsFor({...session,requestSnapshot:detail.requests,requestSummary:null});
+    const duration = durationValues(session);
+
+    const requestRows = detail.requests.length
+      ? detail.requests.map(req => `
+          <div class="detail-row">
+            <strong>${esc(req.songTitle || req.title || "Untitled Song")} — ${esc(req.artist || req.songArtist || "")}</strong>
+            <span>${esc(req.singerName || req.name || "Singer")}</span>
+            <span class="status-chip ${esc(requestStatusBucket(req.status))}">${esc(requestStatusLabel(req.status))}</span>
+          </div>
+        `).join("")
+      : `<div class="detail-row"><span>No song requests recorded.</span></div>`;
+
+    const playedRows = detail.played.length
+      ? detail.played.map(item => `
+          <div class="detail-row">
+            <strong>${esc(item.songTitle || item.title || item.songId || "Untitled Song")} — ${esc(item.songArtist || item.artist || "")}</strong>
+            <span>${formatTime(tsDate(item.playedAt || item.createdAt))}</span>
+            <span class="status-chip played">Played</span>
+          </div>
+        `).join("")
+      : `<div class="detail-row"><span>No played songs recorded.</span></div>`;
+
+    const runRows = detail.runOrder.length
+      ? detail.runOrder.map((item,index) => `
+          <div class="detail-row">
+            <strong>${index+1}. ${esc(item.songTitle || item.songId || "Untitled Song")}</strong>
+            <span>${esc(item.singerName || item.source || "")}</span>
+            <span class="status-chip ${item.status === "played" ? "played" : ""}">${esc(item.status || "queued")}</span>
+          </div>
+        `).join("")
+      : `<div class="detail-row"><span>No Run Order snapshot.</span></div>`;
+
+    $("sessionModalContent").innerHTML = `
+      <div class="session-detail-header">
+        <h2>${esc(session.title || "Untitled Session")}</h2>
+        <p>${esc(session.sessionType || session.type || "")}${session.venue ? ` • ${esc(session.venue)}` : ""}</p>
+      </div>
+
+      <div class="detail-grid">
+        <div class="detail-card"><span>SCHEDULED START</span><strong>${formatDate(scheduledStart(session))} ${formatTime(scheduledStart(session))}</strong></div>
+        <div class="detail-card"><span>SCHEDULED END</span><strong>${formatDate(scheduledEnd(session))} ${formatTime(scheduledEnd(session))}</strong></div>
+        <div class="detail-card"><span>ACTUAL START</span><strong>${formatDate(actualStart(session))} ${formatTime(actualStart(session))}</strong></div>
+        <div class="detail-card"><span>ACTUAL END</span><strong>${formatDate(actualEnd(session))} ${formatTime(actualEnd(session))}</strong></div>
+        <div class="detail-card"><span>DURATION X/BREAKS</span><strong>${formatHours(duration.activeMs)}</strong></div>
+        <div class="detail-card"><span>TOTAL ELAPSED</span><strong>${formatHours(duration.totalMs)}</strong></div>
+        <div class="detail-card"><span>BREAKS</span><strong>${(session.breaks || []).length} • ${formatHours(getBreakMs(session))}</strong></div>
+        <div class="detail-card"><span>EVENT ID</span><strong>${esc(session.eventId || "—")}</strong></div>
+        <div class="detail-card"><span>REQUESTS</span><strong>${counts.total}</strong></div>
+        <div class="detail-card"><span>PLAYED REQUESTS</span><strong>${counts.completed}</strong></div>
+        <div class="detail-card"><span>LEFT / NOT PLAYED</span><strong>${counts.left}</strong></div>
+        <div class="detail-card"><span>SINGER LEFT</span><strong>${counts.abandoned}</strong></div>
+      </div>
+
+      <div class="detail-section">
+        <h3>SESSION NOTES</h3>
+        <div class="detail-card">${esc(session.notes || "No notes.")}</div>
+      </div>
+
+      <div class="detail-section">
+        <h3>SONG REQUESTS (${detail.requests.length})</h3>
+        <div class="detail-list">${requestRows}</div>
+      </div>
+
+      <div class="detail-section">
+        <h3>PLAYED SONGS (${detail.played.length})</h3>
+        <div class="detail-list">${playedRows}</div>
+      </div>
+
+      <div class="detail-section">
+        <h3>RUN ORDER (${detail.runOrder.length})</h3>
+        <div class="detail-list">${runRows}</div>
+      </div>
+    `;
+
+    $("sessionDetailModal").classList.remove("hidden");
+  };
+
+  window.closeSessionModal = function closeSessionModal() {
+    $("sessionDetailModal").classList.add("hidden");
+  };
+
+  window.openDeleteDialog = function openDeleteDialog(id) {
+    pendingDeleteId = id;
     $("deleteSessionDialog").classList.remove("hidden");
+  };
 
-}
-
-function closeDeleteDialog(){
-
-    deleteSessionPending=null;
-
+  window.closeDeleteDialog = function closeDeleteDialog() {
+    pendingDeleteId = "";
     $("deleteSessionDialog").classList.add("hidden");
+  };
 
-}
+  async function deleteSession(id) {
+    if (!id) return;
 
-window.closeDeleteDialog=closeDeleteDialog;
+    const requestSnap = await db.collection("publicSongRequests").where("sessionId","==",id).get();
+    const logSnap = await db.collection("performanceLogs").where("sessionId","==",id).get();
+    const performedSnap = await db.collection("performanceSessions").doc(id).collection("performedSongs").get();
 
-async function initPage() {
+    const batch = db.batch();
+    requestSnap.docs.forEach(doc => batch.delete(doc.ref));
+    logSnap.docs.forEach(doc => batch.delete(doc.ref));
+    performedSnap.docs.forEach(doc => batch.delete(doc.ref));
+    batch.delete(db.collection("performanceSessions").doc(id));
 
-    await LK.sidebar.loadSidebar();
-
-    setDefaultDates();
-
-    listenCurrentSessionPointer();
-    listenSessions();
-    listenRequests();
-}
-
-
-function deleteSession(sessionId) {
-  if (!sessionId) return;
-  showDeleteDialog(sessionId);
-}
-
-window.deleteSession = deleteSession;
-
-function setDefaultDates() {
-  const now = new Date();
-  const from = new Date(now);
-  from.setDate(now.getDate() - 31);
-  $("dateFromInput").value = from.toISOString().slice(0, 10);
-  $("dateToInput").value = now.toISOString().slice(0, 10);
-}
-
-async function reallyDeleteSession(){
-
-    const sessionId=deleteSessionPending;
-
-    if(!sessionId) return;
-
-    closeDeleteDialog();
-
-    try{
-        const batch = db.batch();
-
-        // Delete session document
-        const sessionRef = db.collection("performanceSessions").doc(sessionId);
-        batch.delete(sessionRef);
-    
-        // Delete public song requests linked to this session
-        const requestsSnap = await db.collection("publicSongRequests")
-          .where("sessionId", "==", sessionId)
-          .get();
-    
-        requestsSnap.forEach(doc => {
-          batch.delete(doc.ref);
-        });
-    
-        // Delete performance logs linked to this session
-        const logsSnap = await db.collection("performanceLogs")
-          .where("sessionId", "==", sessionId)
-          .get();
-    
-        logsSnap.forEach(doc => {
-          batch.delete(doc.ref);
-        });
-    
-        // If deleted session is current active session, clear it
-        const currentSnap = await db.collection("karaokeControl")
-          .doc("currentSession")
-          .get();
-    
-        const current = currentSnap.exists ? currentSnap.data() : null;
-    
-        if (current && current.sessionId === sessionId) {
-          batch.set(
-            db.collection("karaokeControl").doc("currentSession"),
-            {
-              active: false,
-              sessionId: null,
-              title: "",
-              venue: "",
-              updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-            },
-            { merge: true }
-          );
-        }
-    
-        await batch.commit();
-    
-        showToast("Session deleted.", "success");
-    }
-    catch(error){
-        console.error(error);
-        showToast("Could not delete session: " + error.message, "error");
-    }
-}
-
-
-
-function listenCurrentSessionPointer() {
-  if (unsubscribeCurrent) unsubscribeCurrent();
-  unsubscribeCurrent = db.collection("karaokeControl").doc("currentSession").onSnapshot(doc => {
-    currentSessionPointer = doc.exists ? doc.data() : null;
-    applyFilters();
-  });
-}
-
-function listenSessions() {
-  if (unsubscribeSessions) unsubscribeSessions();
-  unsubscribeSessions = db.collection("performanceSessions").onSnapshot(snapshot => {
-    sessions = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    applyFilters();
-  }, error => {
-    console.error(error);
-    showToast("Could not load performance sessions. Check Firebase permissions.", "error");
-  });
-}
-
-function listenRequests() {
-  if (unsubscribeRequests) unsubscribeRequests();
-  unsubscribeRequests = db.collection("publicSongRequests").onSnapshot(snapshot => {
-    requests = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    applyFilters();
-  }, error => {
-    console.error(error);
-    showToast("Could not load song requests. Check Firebase permissions.", "error");
-  });
-}
-
-function getSessionRequests(sessionId) {
-  return requests.filter(r => r.sessionId === sessionId);
-}
-
-function requestStats(sessionId) {
-  const list = getSessionRequests(sessionId);
-  const completed = list.filter(r => r.status === "completed").length;
-  const abandoned = list.filter(r => r.status === "abandoned").length;
-  const deleted = list.filter(r => r.status === "deleted").length;
-  const left = list.filter(r => !r.status || r.status === "active" || r.status === "pending" || r.status === "waiting").length;
-  const total = list.length;
-  const bpms = list.map(r => Number(r.userBpm || r.songUserBpm || r.bpm)).filter(Boolean);
-  const avgBpm = bpms.length ? Math.round(bpms.reduce((a, b) => a + b, 0) / bpms.length) : 0;
-  return { list, completed, abandoned, deleted, left, total, avgBpm };
-}
-
-function breakMs(session) {
-  return (session.breaks || []).reduce((sum, b) => {
-    const start = toDate(b.start);
-    const end = toDate(b.end) || new Date();
-    return start ? sum + Math.max(0, end - start) : sum;
-  }, 0);
-}
-
-function durationMs(session) {
-  const start = toDate(session.startedAt || session.createdAt);
-  const end = toDate(session.endedAt) || new Date();
-  return start ? Math.max(0, end - start) : 0;
-}
-
-function enrichedSession(session) {
-  const stats = requestStats(session.id);
-  const totalMs = durationMs(session);
-  const noBreakMs = Math.max(0, totalMs - breakMs(session));
-  const completionRate = stats.total ? Math.round((stats.completed / stats.total) * 100) : 0;
-  const startedAt = toDate(session.startedAt || session.createdAt);
-  const endedAt = toDate(session.endedAt);
-  const active = session.isActive === true || session.status === "active" || (currentSessionPointer?.active && currentSessionPointer?.sessionId === session.id);
-  return { ...session, ...stats, totalMs, noBreakMs, completionRate, startedAt, endedAt, active };
-}
-
-function applyFilters() {
-  const fromVal = $("dateFromInput")?.value;
-  const toVal = $("dateToInput")?.value;
-  const venue = $("venueFilter")?.value || "all";
-  const status = $("statusFilter")?.value || "all";
-  const q = slug($("sessionSearchInput")?.value || "");
-  const sort = $("sortSelect")?.value || "newest";
-
-  const from = fromVal ? new Date(fromVal + "T00:00:00") : null;
-  const to = toVal ? new Date(toVal + "T23:59:59") : null;
-
-  filteredSessions = sessions.map(enrichedSession).filter(s => {
-    const d = s.startedAt || toDate(s.createdAt);
-    if (from && d && d < from) return false;
-    if (to && d && d > to) return false;
-    if (venue !== "all" && s.venue !== venue) return false;
-    if (status !== "all") {
-      const st = s.active ? "active" : (s.status || "ended");
-      if (st !== status) return false;
-    }
-    if (q) {
-      const hay = slug(`${s.title || ""} ${s.venue || ""} ${s.notes || ""}`);
-      if (!hay.includes(q)) return false;
-    }
-    return true;
-  });
-
-  filteredSessions.sort((a, b) => {
-    if (sort === "oldest") return (a.startedAt?.getTime() || 0) - (b.startedAt?.getTime() || 0);
-    if (sort === "duration") return b.noBreakMs - a.noBreakMs;
-    if (sort === "requests") return b.total - a.total;
-    if (sort === "completion") return b.completionRate - a.completionRate;
-    return (b.startedAt?.getTime() || 0) - (a.startedAt?.getTime() || 0);
-  });
-
-  renderCurrentSession();
-  renderAnalytics();
-  renderTable();
-}
-
-function renderCurrentSession() {
-  const panel = $("currentSessionPanel");
-  if (!panel) return;
-  const active = sessions.map(enrichedSession).find(s => s.active) || filteredSessions[0] || null;
-  if (!active) {
-    panel.innerHTML = `<div class="current-title"><span class="live-dot" style="background:#777;box-shadow:none;"></span>No sessions found</div>`;
-    return;
+    await batch.commit();
   }
 
-  const completedPct = active.total ? Math.round(active.completed / active.total * 100) : 0;
-  const leftPct = active.total ? Math.round(active.left / active.total * 100) : 0;
-  const abandonedPct = active.total ? Math.round(active.abandoned / active.total * 100) : 0;
-  const deletedPct = active.total ? Math.round(active.deleted / active.total * 100) : 0;
-  const donut = `conic-gradient(var(--green) 0 ${completedPct}%, #ffb04d ${completedPct}% ${completedPct + abandonedPct}%, #e83b3b ${completedPct + abandonedPct}% ${completedPct + abandonedPct + deletedPct}%, #bdbdbd ${completedPct + abandonedPct + deletedPct}% 100%)`;
+  function showToast(message) {
+    const box = $("toastBox");
+    box.textContent = message;
+    box.classList.remove("hidden");
+    setTimeout(()=>box.classList.add("hidden"),2200);
+  }
 
-  panel.innerHTML = `
-    <div class="current-grid">
-      <div>
-        <div class="current-title"><span class="live-dot"></span> Current Session <span class="live-text">(${active.active ? "LIVE" : "Latest"})</span></div>
-        <div class="session-name">${escapeHTML(active.title || "Untitled Session")}</div>
-        <div class="session-venue">${escapeHTML(active.venue || "Unknown Venue")}</div>
-        <div class="session-stats-line">
-          <div class="mini-stat"><span>Started</span><strong>${formatTime(active.startedAt)}</strong></div>
-          <div class="mini-stat"><span>Elapsed</span><strong>${msToMinutes(active.totalMs)}m</strong></div>
-          <div class="mini-stat"><span>Breaks</span><strong>${(active.breaks || []).length} (${msToMinutes(breakMs(active))}m)</strong></div>
-          <div class="mini-stat"><span>Status</span><strong>${active.active ? "Active" : escapeHTML(active.status || "Ended")}</strong></div>
-        </div>
-        <div class="notes-box"><small>Session Notes</small><br>${escapeHTML(active.notes || "No notes yet.")}</div>
-      </div>
-      <div>
-        <div class="metrics-row">
-          <div class="metric-box"><span>Songs Completed</span><b class="icon">✓</b><strong>${active.completed}</strong><small>${completedPct}%</small></div>
-          <div class="metric-box"><span>Songs Left</span><b class="icon">♫</b><strong>${active.left}</strong><small>${leftPct}%</small></div>
-          <div class="metric-box"><span>Total Requests</span><b class="icon">♚</b><strong>${active.total}</strong></div>
-          <div class="metric-box"><span>Average BPM</span><b class="icon">⌁</b><strong>${active.avgBpm || "–"}</strong></div>
-        </div>
-        <div class="progress-panel">
-          <strong>Progress</strong>
-          <div class="progress-bar"><div class="progress-fill" style="width:${completedPct}%"></div></div>
-          <div class="progress-footer"><span>${completedPct}% Completed</span><span>${active.total} Total</span></div>
-        </div>
-      </div>
-      <div class="outcomes-wrap">
-        <div class="donut" style="background:${donut}"></div>
-        <div class="legend">
-          <div class="legend-row"><span class="legend-color completed"></span><span>Completed</span><strong>${completedPct}% (${active.completed})</strong></div>
-          <div class="legend-row"><span class="legend-color abandoned"></span><span>Abandoned</span><strong>${abandonedPct}% (${active.abandoned})</strong></div>
-          <div class="legend-row"><span class="legend-color deleted"></span><span>Deleted</span><strong>${deletedPct}% (${active.deleted})</strong></div>
-          <div class="legend-row"><span class="legend-color left"></span><span>Left</span><strong>${leftPct}% (${active.left})</strong></div>
-        </div>
-      </div>
-    </div>`;
-}
-
-function renderAnalytics() {
-  const grid = $("analyticsGrid");
-  if (!grid) return;
-  const totalSessions = filteredSessions.length;
-  const totalSongs = filteredSessions.reduce((s, x) => s + x.completed, 0);
-  const totalRequests = filteredSessions.reduce((s, x) => s + x.total, 0);
-  const avgLength = totalSessions ? Math.round(filteredSessions.reduce((s, x) => s + x.noBreakMs, 0) / totalSessions / 60000) : 0;
-  const completion = totalRequests ? Math.round(totalSongs / totalRequests * 100) : 0;
-  const bpmArr = filteredSessions.map(x => x.avgBpm).filter(Boolean);
-  const avgBpm = bpmArr.length ? Math.round(bpmArr.reduce((a, b) => a + b, 0) / bpmArr.length) : 0;
-
-  const boxes = [
-    ["Total Sessions", totalSessions, "▲ selected period"],
-    ["Total Songs", totalSongs, "▲ completed"],
-    ["Avg. Session Length", `${Math.floor(avgLength / 60)}h ${avgLength % 60}m`, "▲ play time"],
-    ["Completion Rate", `${completion}%`, "▲ request outcome"],
-    ["Total Requests", totalRequests, "▲ signups"],
-    ["Average BPM", avgBpm || "–", "▲ session average"]
-  ];
-
-  grid.innerHTML = boxes.map((b, i) => `
-    <div class="analytics-box">
-      <span>${b[0]}</span>
-      <strong>${b[1]}</strong>
-      <div class="analytics-delta">${b[2]}</div>
-      ${sparkline(i)}
-    </div>`).join("");
-}
-
-function sparkline(seed) {
-  const points = Array.from({ length: 18 }, (_, i) => {
-    const x = i * 6;
-    const y = 20 - Math.abs(Math.sin((i + seed) * 1.3) * 15);
-    return `${x},${Math.max(2, y)}`;
-  }).join(" ");
-  return `<svg class="sparkline" viewBox="0 0 102 26" preserveAspectRatio="none"><polyline points="${points}" fill="none" stroke="#ff3333" stroke-width="2"/></svg>`;
-}
-
-function renderTable() {
-  const tbody = $("sessionsTableBody");
-  if (!tbody) return;
-  const start = (page - 1) * pageSize;
-  const visible = filteredSessions.slice(start, start + pageSize);
-  tbody.innerHTML = "";
-
-  visible.forEach((s, i) => {
-    const tr = document.createElement("tr");
-    const statusClass = s.active ? "live" : (s.status === "test" ? "test" : "ended");
-    const statusText = s.active ? "Active" : (s.status || "Ended");
-    tr.innerHTML = `
-      <td>${start + i + 1}</td>
-      <td>${s.active ? '<span class="badge live">LIVE</span> ' : ''}${escapeHTML(s.title || "Untitled")}</td>
-      <td>${escapeHTML(s.venue || "-")}</td>
-      <td>${formatDate(s.startedAt)}</td>
-      <td>${formatTime(s.startedAt)}</td>
-      <td>${formatTime(s.endedAt)}</td>
-      <td>${msToMinutes(s.noBreakMs)}m<br><small>(${msToMinutes(s.totalMs)}m)</small></td>
-      <td class="comp">${s.completed}</td>
-      <td class="left">${s.left}</td>
-      <td class="aban">${s.abandoned}</td>
-      <td class="del">${s.deleted}</td>
-      <td>${s.total}</td>
-      <td>${s.avgBpm || "–"}</td>
-      <td><span class="badge ${statusClass}">${escapeHTML(statusText)}</span></td>
-      <td>
-  <div class="actions">
-    <button title="View" onclick="openSessionModal('${s.id}')">👁</button>
-
-    <button title="Analytics" onclick="openSessionModal('${s.id}')">▥</button>
-
-    <button
-      class="delete-btn"
-      title="Delete Session"
-      onclick="deleteSession('${s.id}')">
-      🗑
-    </button>
-  </div>
-</td>`;
-    tbody.appendChild(tr);
-  });
-
-  const totalPages = Math.max(1, Math.ceil(filteredSessions.length / pageSize));
-  if (page > totalPages) { page = totalPages; renderTable(); return; }
-  $("pageLabel").innerText = `${page}`;
-  $("tableShowingLabel").innerText = `Showing ${visible.length ? start + 1 : 0} to ${Math.min(start + visible.length, filteredSessions.length)} of ${filteredSessions.length} sessions`;
-}
-
-function changePageSize() { pageSize = Number($("pageSizeSelect").value || 8); page = 1; renderTable(); }
-function prevPage() { if (page > 1) { page--; renderTable(); } }
-function nextPage() { if (page < Math.ceil(filteredSessions.length / pageSize)) { page++; renderTable(); } }
-window.changePageSize = changePageSize; window.prevPage = prevPage; window.nextPage = nextPage;
-const realApplyFilters = applyFilters;
-window.applyFilters = () => {
-  page = 1;
-  realApplyFilters();
-};
-
-function openSessionModal(id) {
-  const s = sessions.map(enrichedSession).find(x => x.id === id);
-  if (!s) return;
-  const reqs = getSessionRequests(id);
-  $("sessionModalContent").innerHTML = `
-    <h2>${escapeHTML(s.title || "Untitled Session")}</h2>
-    <p>${escapeHTML(s.venue || "-")} · ${formatDate(s.startedAt)} · ${escapeHTML(s.status || (s.active ? "active" : "ended"))}</p>
-    <div class="detail-grid">
-      <div class="detail-card"><span>Started</span><strong>${formatTime(s.startedAt)}</strong></div>
-      <div class="detail-card"><span>Ended</span><strong>${formatTime(s.endedAt)}</strong></div>
-      <div class="detail-card"><span>Duration</span><strong>${msToMinutes(s.noBreakMs)}m</strong></div>
-      <div class="detail-card"><span>Breaks</span><strong>${(s.breaks || []).length} (${msToMinutes(breakMs(s))}m)</strong></div>
-      <div class="detail-card"><span>Completed</span><strong>${s.completed}</strong></div>
-      <div class="detail-card"><span>Left</span><strong>${s.left}</strong></div>
-      <div class="detail-card"><span>Abandoned</span><strong>${s.abandoned}</strong></div>
-      <div class="detail-card"><span>Deleted</span><strong>${s.deleted}</strong></div>
-    </div>
-    <h3>Session Notes</h3>
-    <div class="notes-box">${escapeHTML(s.notes || "No notes.")}</div>
-    <h3>Song Requests</h3>
-    <div class="detail-requests">
-      ${reqs.length ? reqs.map(r => `<div class="detail-request-row"><div><strong>${escapeHTML(r.songTitle || r.title || "Untitled")}</strong><span>${escapeHTML(r.artist || r.songArtist || "")}</span></div><div>${escapeHTML(r.singerName || r.name || "Unknown")}</div><div>${escapeHTML(r.status || "active")}</div><div>${formatTime(toDate(r.createdAt))}</div></div>`).join("") : `<div class="detail-request-row"><div>No requests found</div></div>`}
-    </div>`;
-  $("sessionDetailModal").classList.remove("hidden");
-}
-function closeSessionModal() { $("sessionDetailModal").classList.add("hidden"); }
-window.openSessionModal = openSessionModal;
-window.closeSessionModal = closeSessionModal;
-
-function exportSessionsCsv() {
-  const header = ["Session", "Venue", "Date", "Started", "Ended", "DurationMinutes", "Completed", "Left", "Abandoned", "Deleted", "TotalRequests", "AvgBPM", "Status"];
-  const rows = filteredSessions.map(s => [
-    s.title || "", s.venue || "", formatDate(s.startedAt), formatTime(s.startedAt), formatTime(s.endedAt), msToMinutes(s.noBreakMs), s.completed, s.left, s.abandoned, s.deleted, s.total, s.avgBpm || "", s.active ? "active" : (s.status || "ended")
-  ]);
-  const csv = [header, ...rows].map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(",")).join("\n");
-  const blob = new Blob([csv], { type: "text/csv" });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = `performance-sessions-${Date.now()}.csv`;
-  a.click();
-  URL.revokeObjectURL(a.href);
-}
-
-window.exportSessionsCsv = exportSessionsCsv;
-
-document.addEventListener("DOMContentLoaded",()=>{
-    const btn=$("confirmDeleteBtn");
-    if(btn){
-        btn.onclick=reallyDeleteSession;
+  window.prevPage = function prevPage() {
+    if (currentPage > 1) {
+      currentPage--;
+      renderTable();
     }
-});
+  };
 
-window.showToast = showToast;
+  window.nextPage = function nextPage() {
+    const pages = Math.max(1,Math.ceil(filtered.length/pageSize));
+    if (currentPage < pages) {
+      currentPage++;
+      renderTable();
+    }
+  };
+
+  window.changePageSize = function changePageSize() {
+    pageSize = Number($("pageSizeSelect").value) || 8;
+    currentPage = 1;
+    renderTable();
+  };
+
+  window.exportSessionsCsv = function exportSessionsCsv() {
+    const rows = [[
+      "Session","Venue","Type","Scheduled Start","Scheduled End",
+      "Actual Start","Actual End","Duration Excl Breaks","Total Elapsed",
+      "Requests","Completed","Left","Abandoned","Deleted","Songs Played","Status"
+    ]];
+
+    filtered.forEach(session => {
+      const counts = countsFor(session);
+      const duration = durationValues(session);
+
+      rows.push([
+        session.title || "",
+        session.venue || "",
+        session.sessionType || session.type || "",
+        scheduledStart(session)?.toISOString() || "",
+        scheduledEnd(session)?.toISOString() || "",
+        actualStart(session)?.toISOString() || "",
+        actualEnd(session)?.toISOString() || "",
+        formatHours(duration.activeMs),
+        formatHours(duration.totalMs),
+        counts.total,
+        counts.completed,
+        counts.left,
+        counts.abandoned,
+        counts.deleted,
+        playedSnapshot(session).length,
+        session.status || ""
+      ]);
+    });
+
+    const csv = rows
+      .map(row => row.map(value => `"${String(value).replace(/"/g,'""')}"`).join(","))
+      .join("\n");
+
+    const blob = new Blob([csv],{type:"text/csv"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `performance-sessions-${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  window.adminLogin = async function adminLogin() {
+    if (!auth) return;
+
+    $("passwordError").textContent = "";
+
+    try {
+      await auth.signInWithEmailAndPassword(
+        $("emailInput").value.trim(),
+        $("passwordInput").value
+      );
+    } catch (error) {
+      $("passwordError").textContent = error.message || "Login failed.";
+    }
+  };
+
+  async function loadSidebar() {
+    const container = $("sidebarContainer");
+    if (!container) return;
+
+    try {
+      const response = await fetch("includes/sidebar.html",{cache:"no-store"});
+      if (!response.ok) throw new Error(String(response.status));
+      container.innerHTML = await response.text();
+      container.querySelector('[data-page="sessions"]')?.classList.add("active");
+    } catch (error) {
+      console.warn("Could not load sidebar:",error);
+    }
+  }
+
+  function startSessionListener() {
+    db.collection("performanceSessions").onSnapshot(snapshot => {
+      sessions = snapshot.docs.map(doc => ({id:doc.id,...(doc.data() || {})}));
+
+      populateVenueFilter();
+      renderCurrentSession();
+      applyFilters();
+    }, error => {
+      console.error("Could not load performance sessions:",error);
+      showToast(error.message || "Could not load sessions.");
+    });
+  }
+
+  function showApp() {
+    $("passwordGate").classList.add("hidden");
+    $("appShell").style.display = "";
+    loadSidebar();
+    startSessionListener();
+  }
+
+  function init() {
+    if (!db || !auth) {
+      $("passwordError").textContent = "Firebase is unavailable.";
+      return;
+    }
+
+    $("confirmDeleteBtn").onclick = async () => {
+      if (!pendingDeleteId) return;
+
+      const id = pendingDeleteId;
+      $("confirmDeleteBtn").disabled = true;
+
+      try {
+        await deleteSession(id);
+        closeDeleteDialog();
+        showToast("Session deleted.");
+      } catch (error) {
+        console.error(error);
+        showToast(error.message || "Could not delete session.");
+      } finally {
+        $("confirmDeleteBtn").disabled = false;
+      }
+    };
+
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        showApp();
+      } else {
+        $("passwordGate").classList.remove("hidden");
+        $("appShell").style.display = "none";
+      }
+    });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded",init);
+  } else {
+    init();
+  }
+})();
