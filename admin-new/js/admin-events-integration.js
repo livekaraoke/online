@@ -1060,4 +1060,215 @@
     setTimeout(hookActiveRequestRenderOnce, 0);
   }
 
+
+  /* ============================================================
+     ACTIVE SONG REQUESTS — FINAL SINGLE-ROW TABLET LAYOUT
+     ------------------------------------------------------------
+     This is CSS-only. It does not alter the request DOM tree.
+     No MutationObserver, no wrappers, no intervals.
+     ============================================================ */
+
+  function installFinalActiveRequestRowStyles() {
+    if (document.getElementById("lkFinalActiveRequestRowStyles")) return;
+
+    const style = document.createElement("style");
+    style.id = "lkFinalActiveRequestRowStyles";
+    style.textContent = `
+      #requestsPanel {
+        min-width: 0 !important;
+      }
+
+      #requestsPanel #activeRequestsList {
+        width: 100% !important;
+        min-width: 0 !important;
+        overflow-x: hidden !important;
+      }
+
+      /*
+       * Current renderer:
+       * direct children of #activeRequestsList are the header and request rows.
+       * Force every non-empty direct row into the same six-column grid:
+       * # | Song | Requested By | BPM | Time | Actions
+       */
+      #requestsPanel #activeRequestsList > *:not(.dash-empty) {
+        box-sizing: border-box !important;
+        display: grid !important;
+        grid-template-columns:
+          40px
+          minmax(0, 1.35fr)
+          minmax(0, .95fr)
+          48px
+          82px
+          112px !important;
+        align-items: center !important;
+        column-gap: 7px !important;
+        width: 100% !important;
+        min-width: 0 !important;
+      }
+
+      #requestsPanel #activeRequestsList > *:not(.dash-empty) > * {
+        min-width: 0 !important;
+        margin: 0 !important;
+      }
+
+      /*
+       * Header labels: keep all six labels on ONE row.
+       * The header is the direct child containing all column labels.
+       */
+      #requestsPanel #activeRequestsList > *:has(
+        :is(*):nth-child(1)
+      ) {
+        box-sizing: border-box !important;
+      }
+
+      #requestsPanel #activeRequestsList > *:not(.dash-empty)
+        > :is(div,span,strong,small,p) {
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+      }
+
+      /* Prevent nested label/text blocks from forcing vertical stretching. */
+      #requestsPanel #activeRequestsList > *:not(.dash-empty)
+        > :is(div,span,p) {
+        align-self: center !important;
+      }
+
+      /* Song and requested-by cells can contain title + subtitle, but the cell itself
+         stays within a single horizontal request row. */
+      #requestsPanel #activeRequestsList > *:not(.dash-empty)
+        > :nth-child(2),
+      #requestsPanel #activeRequestsList > *:not(.dash-empty)
+        > :nth-child(3) {
+        min-width: 0 !important;
+      }
+
+      #requestsPanel #activeRequestsList > *:not(.dash-empty)
+        > :nth-child(2) strong,
+      #requestsPanel #activeRequestsList > *:not(.dash-empty)
+        > :nth-child(3) strong {
+        display: block !important;
+        overflow: hidden !important;
+        font-size: 13px !important;
+        line-height: 1.12 !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+      }
+
+      #requestsPanel #activeRequestsList > *:not(.dash-empty)
+        > :nth-child(2) span,
+      #requestsPanel #activeRequestsList > *:not(.dash-empty)
+        > :nth-child(3) span,
+      #requestsPanel #activeRequestsList > *:not(.dash-empty)
+        > :nth-child(2) small,
+      #requestsPanel #activeRequestsList > *:not(.dash-empty)
+        > :nth-child(3) small {
+        display: block !important;
+        margin-top: 2px !important;
+        overflow: hidden !important;
+        color: #989898 !important;
+        font-size: 9px !important;
+        line-height: 1.1 !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+      }
+
+      /* BPM and Time stay compact. */
+      #requestsPanel #activeRequestsList > *:not(.dash-empty)
+        > :nth-child(4),
+      #requestsPanel #activeRequestsList > *:not(.dash-empty)
+        > :nth-child(5) {
+        text-align: center !important;
+        white-space: nowrap !important;
+      }
+
+      /* Actions cell must remain a horizontal button group. */
+      #requestsPanel #activeRequestsList > *:not(.dash-empty)
+        > :nth-child(6) {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-end !important;
+        gap: 5px !important;
+        flex-wrap: nowrap !important;
+        overflow: visible !important;
+      }
+
+      #requestsPanel #activeRequestsList > *:not(.dash-empty)
+        > :nth-child(6) button {
+        flex: 0 0 31px !important;
+        width: 31px !important;
+        min-width: 31px !important;
+        height: 31px !important;
+        min-height: 31px !important;
+        padding: 0 !important;
+        margin: 0 !important;
+      }
+
+      /*
+       * Older request renderer fallback:
+       * .active-request-row = request-main | bpm | time | three buttons.
+       * Keep it horizontal too without changing its DOM.
+       */
+      #requestsPanel .active-request-row {
+        display: grid !important;
+        grid-template-columns:
+          minmax(0, 1fr)
+          50px
+          78px
+          32px
+          32px
+          32px !important;
+        align-items: center !important;
+        gap: 6px !important;
+        width: 100% !important;
+        min-width: 0 !important;
+      }
+
+      #requestsPanel .active-request-row .request-main {
+        min-width: 0 !important;
+      }
+
+      #requestsPanel .active-request-row .request-main strong,
+      #requestsPanel .active-request-row .request-main span {
+        display: block !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+      }
+
+      /*
+       * Tablet: tighten columns, but NEVER stack them vertically.
+       */
+      @media (max-width: 1100px) {
+        #requestsPanel #activeRequestsList > *:not(.dash-empty) {
+          grid-template-columns:
+            36px
+            minmax(0, 1.3fr)
+            minmax(0, .88fr)
+            44px
+            72px
+            102px !important;
+          column-gap: 5px !important;
+        }
+
+        #requestsPanel #activeRequestsList > *:not(.dash-empty)
+          > :nth-child(6) {
+          gap: 4px !important;
+        }
+
+        #requestsPanel #activeRequestsList > *:not(.dash-empty)
+          > :nth-child(6) button {
+          flex-basis: 29px !important;
+          width: 29px !important;
+          min-width: 29px !important;
+          height: 29px !important;
+          min-height: 29px !important;
+        }
+      }
+    `;
+
+    document.head.appendChild(style);
+  }
+
+  installFinalActiveRequestRowStyles();
+
 })();
