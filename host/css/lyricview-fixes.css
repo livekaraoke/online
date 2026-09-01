@@ -1422,3 +1422,35 @@ body.host-lyric-view-page {
     margin-top: 90px !important;
   }
 }
+
+
+/* =========================================================
+   RUN ORDER — NEXT SONG
+   ========================================================= */
+
+.host-scroll-player .next-run-order-song-btn {
+  width: auto !important;
+  min-width: 86px !important;
+  height: 34px !important;
+  padding: 0 9px !important;
+  border-color: #345d3c !important;
+  background: rgba(10, 28, 14, .86) !important;
+  color: #83e494 !important;
+  font-size: 9px !important;
+  font-weight: 950 !important;
+  letter-spacing: .04em !important;
+  white-space: nowrap !important;
+}
+
+.host-scroll-player .next-run-order-song-btn:hover {
+  border-color: #56a466 !important;
+  box-shadow: 0 0 10px rgba(80, 190, 101, .15) !important;
+}
+
+@media (max-width: 780px) {
+  .host-scroll-player .next-run-order-song-btn {
+    min-width: 74px !important;
+    padding: 0 6px !important;
+    font-size: 8px !important;
+  }
+}
