@@ -967,4 +967,296 @@
 
   installActiveRequestsTabletStyles();
 
+
+  /* ============================================================
+     ACTIVE SONG REQUESTS — RUNTIME TABLET GRID REPAIR
+     The request renderer exists in requests.js and can use different class
+     names across versions. Instead of guessing those names, identify the
+     actual header and request rows after they are rendered, tag them, and
+     apply one consistent six-column layout.
+     ============================================================ */
+
+  function installActiveRequestsRuntimeGridFix() {
+    const panel = document.getElementById("requestsPanel");
+    const box = document.getElementById("activeRequestsList");
+
+    if (!panel || !box) return;
+
+    if (!document.getElementById("lkActiveRequestRuntimeGridCss")) {
+      const style = document.createElement("style");
+      style.id = "lkActiveRequestRuntimeGridCss";
+      style.textContent = `
+        #requestsPanel {
+          min-width: 0 !important;
+        }
+
+        #requestsPanel #activeRequestsList {
+          width: 100% !important;
+          min-width: 0 !important;
+          overflow-x: hidden !important;
+        }
+
+        #requestsPanel .lk-request-grid-header,
+        #requestsPanel .lk-request-grid-row {
+          box-sizing: border-box !important;
+          width: 100% !important;
+          min-width: 0 !important;
+          display: grid !important;
+          grid-template-columns:
+            46px
+            minmax(170px, 1.35fr)
+            minmax(120px, .82fr)
+            62px
+            98px
+            126px !important;
+          align-items: center !important;
+          column-gap: 10px !important;
+        }
+
+        #requestsPanel .lk-request-grid-header {
+          min-height: 48px !important;
+          padding: 9px 12px !important;
+        }
+
+        #requestsPanel .lk-request-grid-row {
+          min-height: 64px !important;
+          padding: 9px 12px !important;
+        }
+
+        #requestsPanel .lk-request-grid-header > *,
+        #requestsPanel .lk-request-grid-row > * {
+          min-width: 0 !important;
+          margin: 0 !important;
+        }
+
+        #requestsPanel .lk-request-grid-header > * {
+          display: block !important;
+          overflow: hidden !important;
+          color: #a9a9a9 !important;
+          font-size: 10px !important;
+          font-weight: 900 !important;
+          line-height: 1.15 !important;
+          white-space: nowrap !important;
+          text-overflow: ellipsis !important;
+        }
+
+        #requestsPanel .lk-request-grid-row > *:not(.request-actions):not(.lk-request-actions) {
+          overflow: hidden !important;
+          text-overflow: ellipsis !important;
+        }
+
+        #requestsPanel .lk-request-grid-row strong {
+          overflow: hidden !important;
+          font-size: 14px !important;
+          line-height: 1.15 !important;
+          white-space: nowrap !important;
+          text-overflow: ellipsis !important;
+        }
+
+        #requestsPanel .lk-request-grid-row span,
+        #requestsPanel .lk-request-grid-row small {
+          overflow: hidden !important;
+          white-space: nowrap !important;
+          text-overflow: ellipsis !important;
+        }
+
+        #requestsPanel .lk-request-actions {
+          display: flex !important;
+          align-items: center !important;
+          justify-content: flex-end !important;
+          gap: 6px !important;
+          flex-wrap: nowrap !important;
+          overflow: visible !important;
+        }
+
+        #requestsPanel .lk-request-actions button {
+          display: inline-grid !important;
+          place-items: center !important;
+          flex: 0 0 34px !important;
+          width: 34px !important;
+          min-width: 34px !important;
+          height: 34px !important;
+          min-height: 34px !important;
+          margin: 0 !important;
+          padding: 0 !important;
+        }
+
+        @media (min-width: 700px) and (max-width: 1180px) {
+          #requestsPanel .lk-request-grid-header,
+          #requestsPanel .lk-request-grid-row {
+            grid-template-columns:
+              42px
+              minmax(145px, 1.28fr)
+              minmax(95px, .76fr)
+              50px
+              82px
+              116px !important;
+            column-gap: 7px !important;
+          }
+
+          #requestsPanel .lk-request-grid-header {
+            min-height: 44px !important;
+            padding: 8px 10px !important;
+          }
+
+          #requestsPanel .lk-request-grid-row {
+            min-height: 60px !important;
+            padding: 8px 10px !important;
+          }
+
+          #requestsPanel .lk-request-actions {
+            gap: 5px !important;
+          }
+
+          #requestsPanel .lk-request-actions button {
+            flex-basis: 32px !important;
+            width: 32px !important;
+            min-width: 32px !important;
+            height: 32px !important;
+            min-height: 32px !important;
+          }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+
+    const cleanText = el =>
+      String(el?.textContent || "")
+        .replace(/\s+/g, " ")
+        .trim()
+        .toUpperCase();
+
+    const labels = ["#", "SONG", "REQUESTED BY", "BPM", "TIME", "ACTIONS"];
+
+    function nearestCommonHeader() {
+      const all = Array.from(box.querySelectorAll("*"));
+
+      const labelNodes = labels.map(label =>
+        all.find(el => cleanText(el) === label)
+      );
+
+      if (labelNodes.some(node => !node)) return null;
+
+      let candidate = labelNodes[0];
+
+      while (candidate && candidate !== box) {
+        if (labelNodes.every(node => candidate.contains(node))) {
+          // Prefer the smallest common ancestor that visually represents
+          // the header rather than the entire list.
+          const txt = cleanText(candidate);
+          if (labels.every(label => txt.includes(label))) return candidate;
+        }
+        candidate = candidate.parentElement;
+      }
+
+      return null;
+    }
+
+    function tagRequestRowFromButton(button) {
+      let row = button.parentElement;
+
+      while (row && row !== box) {
+        const buttons = row.querySelectorAll("button");
+        const txt = cleanText(row);
+
+        // A live request row contains the action controls and song/singer data.
+        if (
+          buttons.length >= 3 &&
+          (
+            txt.includes("★") ||
+            txt.includes("ABANDON") ||
+            Array.from(buttons).some(btn =>
+              /complete|abandon|delete/i.test(
+                `${btn.title || ""} ${btn.getAttribute("aria-label") || ""}`
+              )
+            )
+          )
+        ) {
+          row.classList.add("lk-request-grid-row");
+
+          // The button wrapper is the last logical grid cell.
+          let actionCell = button.parentElement;
+          if (actionCell !== row) {
+            actionCell.classList.add("lk-request-actions");
+          } else {
+            // Older renderer places buttons directly in the row.
+            // Wrap only the final action buttons so they occupy one grid cell.
+            const actionButtons = Array.from(row.children).filter(child =>
+              child.tagName === "BUTTON"
+            );
+
+            if (actionButtons.length >= 3) {
+              const actionWrap = document.createElement("div");
+              actionWrap.className = "lk-request-actions";
+
+              actionButtons[0].before(actionWrap);
+              actionButtons.forEach(btn => actionWrap.appendChild(btn));
+            }
+          }
+
+          return row;
+        }
+
+        row = row.parentElement;
+      }
+
+      return null;
+    }
+
+    function normalise() {
+      const header = nearestCommonHeader();
+
+      if (header && header !== box) {
+        header.classList.add("lk-request-grid-header");
+
+        // If the six labels are inside one unnecessary wrapper per label,
+        // leave those wrappers intact; CSS grids the header's direct cells.
+      }
+
+      const actionButtons = Array.from(
+        box.querySelectorAll(
+          'button[title*="Completed" i], button[title*="Abandoned" i], button[title*="Delete" i], ' +
+          'button[aria-label*="complete" i], button[aria-label*="abandon" i], button[aria-label*="delete" i]'
+        )
+      );
+
+      actionButtons.forEach(tagRequestRowFromButton);
+
+      // Fallback for the current newer renderer: rows may have a three-button
+      // action block but no titles on the buttons.
+      Array.from(box.querySelectorAll("div")).forEach(el => {
+        if (el.classList.contains("lk-request-grid-row")) return;
+
+        const directButtons = Array.from(el.children).filter(child =>
+          child.tagName === "BUTTON"
+        );
+
+        if (directButtons.length >= 3) {
+          tagRequestRowFromButton(directButtons[0]);
+        }
+      });
+    }
+
+    normalise();
+
+    if (box.dataset.lkRequestGridObserver !== "1") {
+      box.dataset.lkRequestGridObserver = "1";
+
+      const observer = new MutationObserver(() => {
+        requestAnimationFrame(normalise);
+      });
+
+      observer.observe(box, {
+        childList: true,
+        subtree: true
+      });
+    }
+  }
+
+  // requests.js may render after this integration file, so run immediately,
+  // again after the page settles, and keep the MutationObserver attached.
+  installActiveRequestsRuntimeGridFix();
+  setTimeout(installActiveRequestsRuntimeGridFix, 250);
+  setTimeout(installActiveRequestsRuntimeGridFix, 1000);
+
 })();
