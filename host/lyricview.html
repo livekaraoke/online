@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="css/lyrics-suite_OLDER.css">
   <link rel="stylesheet" href="css/lyrics-suite.css">
   <link rel="stylesheet" href="../admin-new/css/top-statusbar.css">
+  <link rel="stylesheet" href="../admin-new/css/top-statusbar-session-tools.css">
   <!-- Lyric View-only overrides MUST load last -->
   <link rel="stylesheet" href="css/lyricview-fixes.css">
 </head>
@@ -97,6 +98,7 @@
       <button id="scrollSpeedDown" type="button">−</button>
       <strong id="scrollSpeedLabel">1.0×</strong>
       <button id="scrollSpeedUp" type="button">＋</button>
+      <button id="nextRunOrderSongBtn" class="next-run-order-song-btn" type="button">NEXT SONG</button>
     </div>
     <div id="sectionProgress" class="host-section-progress"></div>
   </div>
@@ -201,6 +203,7 @@
   <script src="../adm/files/song-data.js"></script>
   <script src="js/lyricview.js"></script>
   <script src="../admin-new/js/top-statusbar.js" data-include="../admin-new/includes/top-statusbar.html"></script>
+  <script src="../admin-new/js/top-statusbar-session-tools.js"></script>
   <script>
     document.addEventListener("DOMContentLoaded", function () {
       if (window.LK && LK.topStatus && typeof LK.topStatus.loadTopStatusBar === "function") {
