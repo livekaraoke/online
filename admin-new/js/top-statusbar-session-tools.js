@@ -141,48 +141,196 @@
   }
 
   function renderRemaining() {
-    const remainingEl = $("tsRemainingTime");
-    const windowEl = $("tsScheduledWindow");
-    if (!remainingEl || !windowEl) return;
+    const compactRemaining = $("tsCompactRemaining");
+    const compactEnd = $("tsCompactScheduledEnd");
+    const adjustedRemaining = $("tsAdjustedRemainingTime");
+    const adjustedEnd = $("tsAdjustedEndTime");
+    const adjustedHint = $("tsAdjustedRemainingHint");
+
+    // Compatibility targets retained for older code.
+    const legacyRemaining = $("tsRemainingTime");
+    const legacyWindow = $("tsScheduledWindow");
 
     if (!state.sessionId || !state.session) {
-      remainingEl.textContent = "-";
-      windowEl.textContent = "No active session";
+      if (compactRemaining) compactRemaining.textContent = "-";
+      if (compactEnd) compactEnd.textContent = "No scheduled end";
+      if (adjustedRemaining) adjustedRemaining.textContent = "-";
+      if (adjustedEnd) adjustedEnd.textContent = "Adjusted end —";
+      if (adjustedHint) adjustedHint.textContent = "No active session";
+      if (legacyRemaining) legacyRemaining.textContent = "-";
+      if (legacyWindow) legacyWindow.textContent = "No active session";
       return;
     }
 
     const actualStart = actualStartDate();
     const schedule = resolvedSchedule();
 
-    windowEl.textContent =
-      schedule.start && schedule.end
-        ? `Scheduled ${formatClock(schedule.start)}–${formatClock(schedule.end)}`
-        : "No scheduled time";
+    let duration = scheduledDurationMs();
 
-    // The host needs the real clock-time remaining until the event's end.
-    // This is intentionally based on scheduledEndAt, not "actual start + duration":
-    // if the performance starts late, the displayed end time still remains correct.
-    let target = schedule.end;
-
-    // Backward-compatible fallback for older sessions that only stored duration.
-    if (!target) {
-      const duration = scheduledDurationMs();
-      if (duration && actualStart) {
-        target = new Date(actualStart.getTime() + duration);
-      }
+    // If the duration itself wasn't persisted, derive it from the
+    // resolved scheduled start/end (including eventSnapshot fallback).
+    if (
+      (!Number.isFinite(duration) || duration <= 0) &&
+      schedule.start &&
+      schedule.end &&
+      schedule.end > schedule.start
+    ) {
+      duration = schedule.end - schedule.start;
     }
 
-    if (!target) {
-      remainingEl.textContent = "-";
+    /* ------------------------------------------------------
+       COLLAPSED REMAINING = OFFICIAL / SCHEDULED END
+       ------------------------------------------------------ */
+    const officialTarget = schedule.end;
+
+    if (compactEnd) {
+      compactEnd.textContent = officialTarget
+        ? `ENDS ${formatClock(officialTarget)}`
+        : "No scheduled end";
+    }
+
+    if (legacyWindow) {
+      legacyWindow.textContent =
+        schedule.start && schedule.end
+          ? `Scheduled ${formatClock(schedule.start)}–${formatClock(schedule.end)}`
+          : "No scheduled time";
+    }
+
+    if (officialTarget) {
+      const officialMs = officialTarget.getTime() - Date.now();
+      const text = officialMs > 0
+        ? formatDuration(officialMs)
+        : `Over ${formatDuration(Math.abs(officialMs))}`;
+
+      if (compactRemaining) compactRemaining.textContent = text;
+      if (legacyRemaining) legacyRemaining.textContent = text;
+    } else {
+      if (compactRemaining) compactRemaining.textContent = "-";
+      if (legacyRemaining) legacyRemaining.textContent = "-";
+    }
+
+    /* ------------------------------------------------------
+       EXPANDED REMAINING = ADJUSTED END
+       The original scheduled duration is applied from the
+       ACTUAL session start.
+
+       Example:
+       scheduled 20:00–23:00 = 3hrs
+       actual start 20:10
+       adjusted finish 23:10
+       ------------------------------------------------------ */
+    let adjustedTarget = null;
+
+    if (actualStart && Number.isFinite(duration) && duration > 0) {
+      adjustedTarget = new Date(actualStart.getTime() + duration);
+    }
+
+    if (adjustedTarget) {
+      const adjustedMs = adjustedTarget.getTime() - Date.now();
+
+      if (adjustedRemaining) {
+        adjustedRemaining.textContent = adjustedMs > 0
+          ? formatDuration(adjustedMs)
+          : `Over ${formatDuration(Math.abs(adjustedMs))}`;
+      }
+
+      if (adjustedEnd) {
+        adjustedEnd.innerHTML =
+          `Adjusted end <strong>${formatClock(adjustedTarget)}</strong>`;
+      }
+
+      if (adjustedHint) {
+        const delay =
+          schedule.start && actualStart
+            ? Math.round((actualStart - schedule.start) / 60000)
+            : 0;
+
+        if (delay > 0) {
+          adjustedHint.textContent =
+            `Started ${delay} min${delay === 1 ? "" : "s"} late • finish shifted by ${delay} min${delay === 1 ? "" : "s"}`;
+        } else if (delay < 0) {
+          const early = Math.abs(delay);
+          adjustedHint.textContent =
+            `Started ${early} min${early === 1 ? "" : "s"} early • finish shifted earlier`;
+        } else {
+          adjustedHint.textContent = "Started on schedule";
+        }
+      }
+    } else {
+      if (adjustedRemaining) adjustedRemaining.textContent = "-";
+      if (adjustedEnd) adjustedEnd.textContent = "Adjusted end —";
+      if (adjustedHint) adjustedHint.textContent =
+        "Scheduled duration unavailable";
+    }
+  }
+
+  function renderCompactHostStrip() {
+    const venueEl = $("tsCompactVenue");
+    const typeEl = $("tsCompactType");
+    const startedEl = $("tsCompactStarted");
+    const elapsedEl = $("tsCompactElapsed");
+    const requestsEl = $("tsCompactRequests");
+    const alertsEl = $("tsCompactAlerts");
+
+    const session = state.session;
+    const control = state.currentControl || {};
+
+    if (!state.sessionId || !session) {
+      if (venueEl) venueEl.textContent = "No active session";
+      if (typeEl) typeEl.textContent = "—";
+      if (startedEl) startedEl.textContent = "--:--";
+      if (elapsedEl) elapsedEl.textContent = "0 mins";
+      if (requestsEl) requestsEl.textContent = "0";
+      if (alertsEl) alertsEl.textContent = "0";
       return;
     }
 
-    const remaining = target.getTime() - Date.now();
+    const actualStart = actualStartDate();
 
-    remainingEl.textContent =
-      remaining > 0
-        ? formatDuration(remaining)
-        : `Over ${formatDuration(Math.abs(remaining))}`;
+    if (venueEl) {
+      venueEl.textContent =
+        session.venue ||
+        control.venue ||
+        session.eventSnapshot?.venue ||
+        "Venue TBC";
+    }
+
+    if (typeEl) {
+      typeEl.textContent =
+        session.sessionType ||
+        session.type ||
+        control.sessionType ||
+        control.type ||
+        session.eventSnapshot?.type ||
+        "Performance";
+    }
+
+    if (startedEl) {
+      startedEl.textContent = actualStart ? formatClock(actualStart) : "--:--";
+    }
+
+    if (elapsedEl) {
+      elapsedEl.textContent =
+        actualStart
+          ? formatDuration(Math.max(0, Date.now() - actualStart.getTime()))
+          : "0 mins";
+    }
+
+    if (requestsEl) {
+      requestsEl.textContent = String(
+        state.requests.filter(request => {
+          const status = String(request?.status || "").toLowerCase();
+          return !status || ["active","pending","waiting","queued"].includes(status);
+        }).length
+      );
+    }
+
+    // Existing top-statusbar.js owns notifications. Read its badge if present.
+    if (alertsEl) {
+      const badge = $("tsNotificationBadge");
+      const count = Number(badge?.textContent || 0);
+      alertsEl.textContent = Number.isFinite(count) ? String(count) : "0";
+    }
   }
 
   function isPendingRequest(request) {
@@ -402,6 +550,7 @@
       renderRemaining();
       renderPending();
       renderRunOrder();
+      renderCompactHostStrip();
       return;
     }
 
@@ -409,6 +558,7 @@
       state.db.collection("performanceSessions").doc(sessionId).onSnapshot(doc => {
         state.session = doc.exists ? { id:doc.id, ...(doc.data() || {}) } : null;
         renderRemaining();
+        renderCompactHostStrip();
       }, console.warn)
     );
 
@@ -418,6 +568,7 @@
         .onSnapshot(snapshot => {
           state.requests = snapshot.docs.map(doc => ({id:doc.id,...(doc.data() || {})}));
           renderPending();
+          renderCompactHostStrip();
         }, console.warn)
     );
   }
@@ -438,6 +589,7 @@
         }
 
         renderRemaining();
+        renderCompactHostStrip();
       }, console.warn)
     );
 
@@ -498,6 +650,7 @@
       renderPending();
       renderRunOrder();
       renderSongSelect();
+      renderCompactHostStrip();
       return true;
     }
     return false;
@@ -521,7 +674,10 @@
       observer.observe(document.documentElement,{childList:true,subtree:true});
     }
 
-    setInterval(renderRemaining,1000);
+    setInterval(() => {
+      renderRemaining();
+      renderCompactHostStrip();
+    },1000);
   }
 
   LK.sessionTools.getRunOrder = () => queueItems().map(item => ({...item}));
