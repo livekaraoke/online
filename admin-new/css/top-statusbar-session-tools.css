@@ -1586,456 +1586,63 @@
 
 
 /* ========================================================================
-   SESSION/BREAK TABS + TWO-ROW LIVE WORKFLOW
+   FINAL COMPACT-STRIP SPACING FIX
+   ONLY the collapsed/always-visible row is changed here.
+   Expanded cards, Break Status, tabs and workflow layout are untouched.
    ======================================================================== */
 
-/* Row 1 = 2 equal live-information cards */
-#topStatusBar .host-expanded-primary.host-two-card-primary {
-  display: grid !important;
-  grid-template-columns: minmax(360px, 1fr) minmax(360px, 1fr) !important;
-  gap: 8px !important;
-  align-items: stretch !important;
-  width: 100% !important;
-}
-
-/* Shared tab-card dimensions */
-#topStatusBar .host-session-break-tabs-card,
-#topStatusBar .host-workflow-notifications-card.host-tabs-card {
-  display: flex !important;
-  flex-direction: column !important;
-  min-width: 0 !important;
-  width: auto !important;
-  height: 176px !important;
-  min-height: 176px !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  overflow: hidden !important;
-}
-
-/* Session / Break tab header uses same language as Notes / Notifications */
-#topStatusBar .host-session-tabs {
-  flex: 0 0 32px !important;
-}
-
-#topStatusBar .host-status-tab-pane {
-  flex: 1 1 auto !important;
-  min-height: 0 !important;
-  padding: 0 !important;
-  overflow: hidden !important;
-}
-
-#topStatusBar .host-status-tab-pane[hidden] {
-  display: none !important;
-}
-
-/* Remaining + Public List share the available card height cleanly. */
-#topStatusBar #tsSessionStatusPane .host-info-left-stack {
-  display: grid !important;
-  grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr) !important;
-  height: 100% !important;
-  min-height: 0 !important;
-}
-
-#topStatusBar #tsSessionStatusPane .host-info-segment {
-  min-width: 0 !important;
-  min-height: 0 !important;
-  height: 100% !important;
-  padding: 10px 12px !important;
-  border-bottom: 0 !important;
-}
-
-#topStatusBar #tsSessionStatusPane .adjusted-remaining-segment {
-  border-right: 1px solid #26343b !important;
-}
-
-#topStatusBar #tsSessionStatusPane .adjusted-remaining-value {
-  font-size: 24px !important;
-  line-height: 1 !important;
-}
-
-#topStatusBar #tsSessionStatusPane .adjusted-end-time {
-  margin-top: 6px !important;
-  font-size: 9px !important;
-}
-
-#topStatusBar #tsSessionStatusPane .adjusted-remaining-hint {
-  margin-top: 5px !important;
-  font-size: 7px !important;
-  line-height: 1.2 !important;
-}
-
-#topStatusBar #tsSessionStatusPane .large-status-value {
-  font-size: 19px !important;
-}
-
-#topStatusBar #tsSessionStatusPane .top-status-public-list-name {
-  margin-top: 10px !important;
-}
-
-/* Break content now fills the SAME card rather than being a separate card. */
-#topStatusBar .host-break-tab-content {
-  display: flex !important;
-  flex-direction: column !important;
-  width: 100% !important;
-  height: 100% !important;
-  min-height: 0 !important;
-  padding: 9px 11px !important;
-  margin: 0 !important;
-  border: 0 !important;
-  border-radius: 0 !important;
-  background: transparent !important;
-  box-shadow: none !important;
-  overflow: hidden !important;
-}
-
-#topStatusBar .host-break-tab-content .break-status-panel {
-  flex: 1 1 auto !important;
-  min-height: 0 !important;
-  padding: 8px 10px !important;
-}
-
-#topStatusBar .host-break-tab-content .break-status-label {
-  font-size: 12px !important;
-}
-
-#topStatusBar .host-break-tab-content .break-details:not(.hidden) {
-  display: grid !important;
-  grid-template-columns: repeat(2, minmax(0,1fr)) !important;
-  gap: 6px !important;
-}
-
-#topStatusBar .host-break-tab-content .break-summary-grid {
-  display: grid !important;
-  grid-template-columns: repeat(3, minmax(0,1fr)) !important;
-  gap: 5px !important;
-}
-
-#topStatusBar .host-break-tab-content .break-action-btn {
-  width: 100% !important;
-  height: 29px !important;
-  min-height: 29px !important;
-  margin-top: 6px !important;
-}
-
-/* Row 2 = Pending + Run Order, with Run Order given more width. */
-#topStatusBar .host-expanded-workflow.host-two-column-workflow {
-  display: grid !important;
-  grid-template-columns: minmax(330px, .82fr) minmax(520px, 1.45fr) !important;
-  gap: 8px !important;
-  align-items: stretch !important;
-  width: 100% !important;
-  margin-top: 8px !important;
-}
-
-#topStatusBar .host-two-column-workflow .host-pending-card,
-#topStatusBar .host-two-column-workflow .host-run-order-card {
-  min-width: 0 !important;
-  width: auto !important;
-  height: 170px !important;
-  min-height: 170px !important;
-  margin: 0 !important;
-}
-
-/* Over-time status becomes RED only while actually over target time. */
-#topStatusBar .remaining-over-time {
-  color: #ff3b47 !important;
-  text-shadow: 0 0 8px rgba(255, 45, 58, .18) !important;
-}
-
-#topStatusBar #tsCompactRemaining.remaining-over-time {
-  color: #ff3b47 !important;
-}
-
-#topStatusBar #tsCompactScheduledEnd.remaining-over-time {
-  color: #ff6a72 !important;
-}
-
-#topStatusBar #tsAdjustedRemainingTime.remaining-over-time {
-  color: #ff3b47 !important;
-}
-
-#topStatusBar #tsAdjustedEndTime.remaining-over-time,
-#topStatusBar #tsAdjustedEndTime.remaining-over-time strong {
-  color: #ff5e68 !important;
-}
-
-#topStatusBar #tsAdjustedRemainingHint.remaining-over-time {
-  color: #d94a52 !important;
-}
-
-/* Tablet landscape keeps both cards in row 1 and both workflow cards in row 2. */
-@media (min-width: 761px) and (max-width: 1180px) {
-  #topStatusBar .host-expanded-primary.host-two-card-primary {
-    grid-template-columns: minmax(335px, 1fr) minmax(335px, 1fr) !important;
-  }
-
-  #topStatusBar .host-expanded-workflow.host-two-column-workflow {
-    grid-template-columns: minmax(300px, .8fr) minmax(470px, 1.42fr) !important;
-  }
-
-  #topStatusBar #tsSessionStatusPane .host-info-left-stack {
-    grid-template-columns: minmax(0, 1fr) minmax(0, .9fr) !important;
-  }
-}
-
-/* Narrow phones only stack. */
-@media (max-width: 760px) {
-  #topStatusBar .host-expanded-primary.host-two-card-primary,
-  #topStatusBar .host-expanded-workflow.host-two-column-workflow {
-    grid-template-columns: 1fr !important;
-  }
-
-  #topStatusBar .host-session-break-tabs-card,
-  #topStatusBar .host-workflow-notifications-card.host-tabs-card,
-  #topStatusBar .host-two-column-workflow .host-pending-card,
-  #topStatusBar .host-two-column-workflow .host-run-order-card {
-    height: auto !important;
-    min-height: 155px !important;
-  }
-
-  #topStatusBar #tsSessionStatusPane .host-info-left-stack {
-    grid-template-columns: 1fr !important;
-  }
-
-  #topStatusBar #tsSessionStatusPane .adjusted-remaining-segment {
-    border-right: 0 !important;
-    border-bottom: 1px solid #26343b !important;
-  }
-}
-
-
-/* ========================================================================
-   COMPACT STRIP SPACING + BREAK CARD SIZE REFINEMENT
-   Final override only — no data / JS behaviour changed.
-   ======================================================================== */
-
-/* ---------------------------------------------------------
-   COLLAPSED STRIP
-   Remove the unused ALERTS column and use the freed width.
-   Columns:
-   LIVE | VENUE | STARTED | ELAPSED | REMAINING | REQUESTS | TOGGLE
-   --------------------------------------------------------- */
 #topStatusBar .host-compact-strip {
-  display: grid !important;
+  /* Live | Venue (takes spare room) | Started | Elapsed | Remaining | Requests | Toggle
+     Alerts is already hidden by the existing tablet breakpoint. */
   grid-template-columns:
-    112px
-    minmax(190px, 1.35fr)
-    112px
-    132px
-    minmax(170px, 1.05fr)
-    88px
-    48px !important;
-  column-gap: 0 !important;
-  gap: 0 !important;
+    116px
+    minmax(175px, 1fr)
+    96px
+    126px
+    178px
+    72px
+    46px !important;
+}
+
+#topStatusBar .host-strip-metric {
   padding-left: 8px !important;
   padding-right: 8px !important;
 }
 
-/* There is no visible Alerts item anymore. */
-#topStatusBar .alerts-metric {
-  display: none !important;
+#topStatusBar .host-strip-metric:not(.venue-metric) {
+  align-items: flex-start !important;
 }
 
-/* Remove the visual "empty slots" between compact metrics. */
-#topStatusBar .host-strip-metric {
-  min-width: 0 !important;
-  margin: 0 !important;
-  padding-left: 11px !important;
-  padding-right: 11px !important;
+#topStatusBar .venue-metric {
+  padding-left: 10px !important;
+  padding-right: 10px !important;
 }
 
-#topStatusBar .host-strip-live {
-  margin-left: 0 !important;
-  margin-right: 0 !important;
+#topStatusBar .requests-metric {
+  align-items: center !important;
+  text-align: center !important;
 }
 
-/* STARTED clock slightly larger as requested. */
-#topStatusBar #tsCompactStarted {
-  font-size: 19px !important;
-  line-height: 1 !important;
-  letter-spacing: -.015em !important;
-}
-
-/* Keep compact divider lines tight to the content. */
-#topStatusBar .host-strip-live,
-#topStatusBar .host-strip-metric,
-#topStatusBar .host-status-toggle {
-  box-sizing: border-box !important;
-}
-
-/* ---------------------------------------------------------
-   EXPANDED — SHORTER FIRST ROW
-   --------------------------------------------------------- */
-#topStatusBar .host-session-break-tabs-card,
-#topStatusBar .host-workflow-notifications-card.host-tabs-card {
-  height: 154px !important;
-  min-height: 154px !important;
-}
-
-/* Tab header a touch shorter as well. */
-#topStatusBar .host-card-tabs,
-#topStatusBar .host-session-tabs {
-  flex-basis: 29px !important;
-  min-height: 29px !important;
-  height: 29px !important;
-}
-
-#topStatusBar .host-card-tab {
-  height: 29px !important;
-  min-height: 29px !important;
-}
-
-/* Session Status pane tightened vertically. */
-#topStatusBar #tsSessionStatusPane .host-info-segment {
-  padding-top: 8px !important;
-  padding-bottom: 8px !important;
-}
-
-#topStatusBar #tsSessionStatusPane .adjusted-remaining-value {
-  font-size: 22px !important;
-}
-
-#topStatusBar #tsSessionStatusPane .adjusted-end-time {
-  margin-top: 4px !important;
-}
-
-#topStatusBar #tsSessionStatusPane .adjusted-remaining-hint {
-  margin-top: 3px !important;
-}
-
-/* ---------------------------------------------------------
-   BREAK STATUS TAB
-   --------------------------------------------------------- */
-
-/* Slightly smaller BREAK ACTIVE / NOT ON BREAK label. */
-#topStatusBar .host-break-tab-content .break-status-label {
-  font-size: 10px !important;
-  line-height: 1 !important;
-  padding-bottom: 4px !important;
-}
-
-/* Compact the shell so the summary above END BREAK remains visible. */
-#topStatusBar .host-break-tab-content {
-  padding: 6px 9px !important;
-}
-
-#topStatusBar .host-break-tab-content .break-status-panel {
-  padding: 6px 8px !important;
-  overflow: visible !important;
-}
-
-/* STARTED / CURRENT values two font steps larger. */
-#topStatusBar .host-break-tab-content .break-details:not(.hidden) {
-  gap: 5px !important;
-  margin-top: 5px !important;
-}
-
-#topStatusBar .host-break-tab-content .break-details > span {
-  padding: 3px 6px !important;
-  min-height: 30px !important;
-}
-
-#topStatusBar .host-break-tab-content .break-details > span {
-  font-size: 6px !important;
-}
-
-#topStatusBar .host-break-tab-content .break-details > span strong {
-  margin-top: 1px !important;
-  font-size: 13px !important;
-  line-height: 1 !important;
-}
-
-/* Make the summary labels/values above END BREAK clearly visible. */
-#topStatusBar .host-break-tab-content .break-summary-grid {
-  display: grid !important;
-  grid-template-columns: repeat(3, minmax(0,1fr)) !important;
-  gap: 4px !important;
-  margin-top: 5px !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-}
-
-#topStatusBar .host-break-tab-content .break-summary-item,
-#topStatusBar .host-break-tab-content .break-summary-item.full-width {
-  display: block !important;
-  min-width: 0 !important;
-  padding: 2px 4px !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-}
-
-#topStatusBar .host-break-tab-content .break-summary-item span {
-  display: block !important;
-  color: #88979e !important;
-  font-size: 6px !important;
-  font-weight: 900 !important;
-  line-height: 1.05 !important;
-  white-space: nowrap !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-}
-
-#topStatusBar .host-break-tab-content .break-summary-item strong {
-  display: block !important;
-  margin-top: 2px !important;
-  color: #f2c94c !important;
-  font-size: 9px !important;
-  font-weight: 950 !important;
-  line-height: 1 !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-}
-
-/* End Break stays visible but consumes less vertical height. */
-#topStatusBar .host-break-tab-content .break-action-btn {
-  height: 27px !important;
-  min-height: 27px !important;
-  margin-top: 5px !important;
-}
-
-/* ---------------------------------------------------------
-   SECOND ROW
-   Give Pending Requests / Run Order a little more visible area.
-   --------------------------------------------------------- */
-#topStatusBar .host-two-column-workflow .host-pending-card,
-#topStatusBar .host-two-column-workflow .host-run-order-card {
-  height: 178px !important;
-  min-height: 178px !important;
-}
-
-#topStatusBar .host-two-column-workflow .top-status-pending-list,
-#topStatusBar .host-two-column-workflow #tsRunOrderList {
-  max-height: 128px !important;
-}
-
-/* ---------------------------------------------------------
-   LANDSCAPE TABLET
-   --------------------------------------------------------- */
+/* Landscape tablet: keep Started / Elapsed / Remaining compact instead of
+   stretching each metric across a fractional column. */
 @media (min-width: 761px) and (max-width: 1180px) {
   #topStatusBar .host-compact-strip {
     grid-template-columns:
-      108px
-      minmax(175px, 1.34fr)
-      108px
-      124px
-      minmax(160px, 1.02fr)
-      80px
-      46px !important;
+      112px
+      minmax(160px, 1fr)
+      92px
+      122px
+      172px
+      68px
+      44px !important;
   }
 
-  #topStatusBar #tsCompactStarted {
-    font-size: 18px !important;
+  #topStatusBar .host-strip-metric {
+    padding-left: 7px !important;
+    padding-right: 7px !important;
   }
 
-  #topStatusBar .host-session-break-tabs-card,
-  #topStatusBar .host-workflow-notifications-card.host-tabs-card {
-    height: 150px !important;
-    min-height: 150px !important;
-  }
-
-  #topStatusBar .host-two-column-workflow .host-pending-card,
-  #topStatusBar .host-two-column-workflow .host-run-order-card {
-    height: 180px !important;
-    min-height: 180px !important;
+  #topStatusBar .host-strip-metric strong {
+    width: 100% !important;
   }
 }
