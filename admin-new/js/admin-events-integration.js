@@ -45,9 +45,19 @@
     return !Number.isNaN(date.getTime()) && date.getTime() < Date.now();
   }
 
+  function eventStillUpcoming(event) {
+    // An event remains UPCOMING even after its scheduled clock time passes.
+    // It is removed only when its associated Performance Session has ended.
+    if (!event) return false;
+    if (event.status === "Cancelled") return false;
+    if (event.sessionStatus === "ended") return false;
+    if (event.completedAt) return false;
+    return true;
+  }
+
   function sortedUpcoming() {
     return upcomingEvents
-      .filter(event => !isPast(event) && event.status !== "Cancelled")
+      .filter(eventStillUpcoming)
       .sort((a,b) =>
         `${a.date || "9999-12-31"}T${a.startTime || "23:59"}`
           .localeCompare(`${b.date || "9999-12-31"}T${b.startTime || "23:59"}`)
@@ -404,6 +414,10 @@
     const event = upcomingEvents.find(item => item.id === eventId);
     if (!event) return;
 
+    if ($("sessionEventIdInput")) {
+      $("sessionEventIdInput").value = event.id || "";
+    }
+
     if ($("sessionTitleInput")) {
       $("sessionTitleInput").value =
         event.name ||
@@ -598,6 +612,7 @@
     });
 
     $("clearSessionEventSuggestionBtn")?.addEventListener("click", () => {
+      if ($("sessionEventIdInput")) $("sessionEventIdInput").value = "";
       if ($("sessionTitleInput")) $("sessionTitleInput").value = "";
       if ($("venueInput")) $("venueInput").value = "";
       if ($("sessionNotesInput")) $("sessionNotesInput").value = "";
