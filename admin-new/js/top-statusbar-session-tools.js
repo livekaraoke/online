@@ -10,11 +10,17 @@
     session: null,
     linkedEvent: null,
     linkedEventId: "",
+    upcomingEvents: [],
     linkedEventUnsub: null,
     currentControl: null,
     requests: [],
     runOrder: { sessionId:"", items:[] },
     songs: [],
+    notifications: [],
+    requestSnapshotReady: false,
+    knownRequestIds: new Set(),
+    lastBreakOpen: null,
+    notesSaveTimer: null,
     globalUnsubs: [],
     sessionUnsubs: [],
     uiBound: false
@@ -93,10 +99,12 @@
   }
 
   function actualStartDate() {
+    // performanceSessions.startedAt is the authoritative start used by Admin.
+    // Prefer it over addon/legacy fields so ELAPSED cannot jump to a stale time.
     return tsDate(
-      state.session?.actualStartedAt ||
       state.session?.startedAt ||
-      state.currentControl?.startedAt
+      state.currentControl?.startedAt ||
+      state.session?.actualStartedAt
     );
   }
 
@@ -153,150 +161,248 @@
     const adjustedRemaining = $("tsAdjustedRemainingTime");
     const adjustedEnd = $("tsAdjustedEndTime");
     const adjustedHint = $("tsAdjustedRemainingHint");
-
-    // Compatibility targets retained for older code.
     const legacyRemaining = $("tsRemainingTime");
     const legacyWindow = $("tsScheduledWindow");
 
+    const setValueState = (el, ms) => {
+      if (!el) return;
+      if (!Number.isFinite(ms)) {
+        el.textContent = "-";
+        el.classList.remove("is-overdue", "is-remaining");
+        return;
+      }
+      const overdue = ms <= 0;
+      el.textContent = formatDuration(Math.abs(ms));
+      el.classList.toggle("is-overdue", overdue);
+      el.classList.toggle("is-remaining", !overdue);
+    };
+
     if (!state.sessionId || !state.session) {
-      if (compactRemaining) {
-        compactRemaining.textContent = "-";
-        compactRemaining.classList.remove("is-overdue", "is-remaining");
-      }
+      setValueState(compactRemaining, NaN);
+      setValueState(adjustedRemaining, NaN);
+      setValueState(legacyRemaining, NaN);
       if (compactEnd) compactEnd.textContent = "No scheduled end";
-      if (adjustedRemaining) {
-        adjustedRemaining.textContent = "-";
-        adjustedRemaining.classList.remove("is-overdue", "is-remaining");
-      }
       if (adjustedEnd) adjustedEnd.textContent = "Adjusted end —";
       if (adjustedHint) adjustedHint.textContent = "No active session";
-      if (legacyRemaining) legacyRemaining.textContent = "-";
       if (legacyWindow) legacyWindow.textContent = "No active session";
       return;
     }
 
     const actualStart = actualStartDate();
     const schedule = resolvedSchedule();
-
     let duration = scheduledDurationMs();
 
-    // If the duration itself wasn't persisted, derive it from the
-    // resolved scheduled start/end (including eventSnapshot fallback).
-    if (
-      (!Number.isFinite(duration) || duration <= 0) &&
-      schedule.start &&
-      schedule.end &&
-      schedule.end > schedule.start
-    ) {
+    if ((!Number.isFinite(duration) || duration <= 0) && schedule.start && schedule.end && schedule.end > schedule.start) {
       duration = schedule.end - schedule.start;
     }
 
-    /* ------------------------------------------------------
-       COLLAPSED REMAINING = OFFICIAL / SCHEDULED END
-       ------------------------------------------------------ */
-    const officialTarget = schedule.end;
+    // REMAINING is based on the actual performance start plus the booked
+    // duration. This keeps the compact and expanded values consistent.
+    // If no booked duration is available, fall back to the explicit end time.
+    let target = null;
+    if (actualStart && Number.isFinite(duration) && duration > 0) {
+      target = new Date(actualStart.getTime() + duration);
+    } else if (schedule.end) {
+      target = schedule.end;
+    }
+
+    const remainingMs = target ? target.getTime() - Date.now() : NaN;
+    setValueState(compactRemaining, remainingMs);
+    setValueState(adjustedRemaining, remainingMs);
+    setValueState(legacyRemaining, remainingMs);
 
     if (compactEnd) {
-      compactEnd.textContent = officialTarget
-        ? `ENDS ${formatClock(officialTarget)}`
-        : "No scheduled end";
+      compactEnd.textContent = target ? `ENDS ${formatClock(target)}` : "No scheduled end";
+    }
+
+    if (adjustedEnd) {
+      adjustedEnd.innerHTML = target
+        ? `Adjusted end <strong>${formatClock(target)}</strong>`
+        : "Adjusted end —";
     }
 
     if (legacyWindow) {
-      legacyWindow.textContent =
-        schedule.start && schedule.end
-          ? `Scheduled ${formatClock(schedule.start)}–${formatClock(schedule.end)}`
-          : "No scheduled time";
+      legacyWindow.textContent = schedule.start && schedule.end
+        ? `Scheduled ${formatClock(schedule.start)}–${formatClock(schedule.end)}`
+        : "No scheduled time";
     }
 
-    if (officialTarget) {
-      const officialMs = officialTarget.getTime() - Date.now();
-      const isOverdue = officialMs <= 0;
-      const text = formatDuration(Math.abs(officialMs));
-
-      if (compactRemaining) {
-        compactRemaining.textContent = text;
-        compactRemaining.classList.toggle("is-overdue", isOverdue);
-        compactRemaining.classList.toggle("is-remaining", !isOverdue);
+    if (adjustedHint) {
+      if (!target) {
+        adjustedHint.textContent = "Scheduled duration unavailable";
+      } else if (schedule.start && actualStart) {
+        const delay = Math.round((actualStart - schedule.start) / 60000);
+        if (delay > 0) adjustedHint.textContent = `Started ${delay} min${delay === 1 ? "" : "s"} late • finish shifted by ${delay} min${delay === 1 ? "" : "s"}`;
+        else if (delay < 0) adjustedHint.textContent = `Started ${Math.abs(delay)} min${Math.abs(delay) === 1 ? "" : "s"} early • finish shifted earlier`;
+        else adjustedHint.textContent = "Started on schedule";
+      } else {
+        adjustedHint.textContent = "Remaining from active session schedule";
       }
+    }
+  }
 
-      if (legacyRemaining) {
-        legacyRemaining.textContent = text;
-        legacyRemaining.classList.toggle("is-overdue", isOverdue);
-        legacyRemaining.classList.toggle("is-remaining", !isOverdue);
+  function breakStartDate(br) {
+    return tsDate(br?.startedAt || br?.start || null);
+  }
+
+  function breakEndDate(br) {
+    return tsDate(br?.endedAt || br?.end || null);
+  }
+
+  function getBreakState() {
+    const breaks = Array.isArray(state.session?.breaks) ? state.session.breaks : [];
+    const last = breaks[breaks.length - 1] || null;
+    const start = breakStartDate(last);
+    const end = breakEndDate(last);
+    const open = !!last && !!start && !end;
+    let totalMs = 0;
+    const now = Date.now();
+    for (const br of breaks) {
+      const s = breakStartDate(br);
+      if (!s) continue;
+      const e = breakEndDate(br);
+      totalMs += Math.max(0, (e ? e.getTime() : now) - s.getTime());
+    }
+    return { breaks, last, start, end, open, totalMs, currentMs: open && start ? Math.max(0, now - start.getTime()) : 0 };
+  }
+
+  function pushNotification(text, key = "") {
+    const clean = String(text || "").trim();
+    if (!clean) return;
+    if (key && state.notifications.some(item => item.key === key)) return;
+    state.notifications.unshift({ text: clean, key, at: Date.now() });
+    state.notifications = state.notifications.slice(0, 20);
+  }
+
+  function renderNotifications() {
+    const list = $("tsNotificationsList");
+    const badge = $("tsNotificationBadge");
+    const label = $("tsNotificationLabel");
+    const alerts = $("tsCompactAlerts");
+
+    const pending = state.requests.filter(isPendingRequest);
+    const entries = [];
+
+    pending.forEach(req => entries.push({
+      text: `🎤 ${req.songTitle || req.title || "Song request"} — ${req.singerName || req.name || "Singer"}`,
+      key: `pending:${req.id}`
+    }));
+
+    state.notifications.forEach(item => {
+      if (!entries.some(entry => entry.key === item.key)) entries.push(item);
+    });
+
+    const count = entries.length;
+    if (badge) {
+      badge.textContent = String(count);
+      badge.classList.toggle("hidden", count === 0);
+    }
+    if (alerts) alerts.textContent = String(count);
+    if (label) label.textContent = count ? `${count} alert${count === 1 ? "" : "s"}` : "No new alerts";
+
+    if (list) {
+      list.innerHTML = count
+        ? entries.slice(0, 12).map(entry => `<div class="top-status-live-notification">${esc(entry.text)}</div>`).join("")
+        : `<div class="top-status-empty">No notifications yet.</div>`;
+    }
+  }
+
+  function renderBreakControls() {
+    const b = getBreakState();
+    const btn = $("tsBreakActionBtn");
+    const status = $("tsBreakStatusLabel");
+    const details = $("tsBreakDetails");
+    const started = $("tsBreakStarted");
+    const duration = $("tsBreakDuration");
+    const total = $("tsDashBreakTotal");
+    const count = $("tsDashBreakCount");
+    const current = $("tsCurrentBreakDuration");
+    const message = $("tsBreakActionMessage");
+
+    const active = !!state.sessionId && !!state.session && String(state.session.status || "active").toLowerCase() !== "ended";
+    if (btn) {
+      btn.disabled = !active;
+      btn.textContent = b.open ? "▶ End Break" : "☕ Start Break";
+      btn.classList.toggle("start", !b.open);
+      btn.classList.toggle("end", b.open);
+    }
+    if (status) status.textContent = !active ? "No active session" : (b.open ? "Break in progress" : "Not on break");
+    if (details) details.classList.toggle("hidden", !b.open);
+    if (started) started.textContent = b.start ? formatClock(b.start) : "-";
+    if (duration) duration.textContent = formatDuration(b.currentMs);
+    if (total) total.textContent = formatDuration(b.totalMs);
+    if (count) count.textContent = String(b.breaks.length);
+    if (current) current.textContent = formatDuration(b.currentMs);
+    if (message && !active) message.textContent = "";
+
+    if (state.lastBreakOpen !== null && state.lastBreakOpen !== b.open) {
+      pushNotification(b.open ? "☕ Break started" : "▶ Break ended", `break:${Date.now()}`);
+    }
+    state.lastBreakOpen = b.open;
+  }
+
+  async function toggleBreak() {
+    if (!state.db || !state.sessionId || !state.session) return;
+    const b = getBreakState();
+    const breaks = b.breaks.map(item => ({ ...item }));
+    const now = firebase.firestore.Timestamp.now();
+
+    if (b.open) {
+      const last = breaks[breaks.length - 1];
+      if (Object.prototype.hasOwnProperty.call(last, "start") && !Object.prototype.hasOwnProperty.call(last, "startedAt")) {
+        last.end = now;
+      } else {
+        last.endedAt = now;
       }
+      await state.db.collection("performanceSessions").doc(state.sessionId).set({
+        breaks,
+        breakOpen: false,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge:true });
     } else {
-      if (compactRemaining) {
-        compactRemaining.textContent = "-";
-        compactRemaining.classList.remove("is-overdue", "is-remaining");
-      }
-
-      if (legacyRemaining) {
-        legacyRemaining.textContent = "-";
-        legacyRemaining.classList.remove("is-overdue", "is-remaining");
-      }
+      breaks.push({ startedAt: now, endedAt: null });
+      await state.db.collection("performanceSessions").doc(state.sessionId).set({
+        breaks,
+        breakOpen: true,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge:true });
     }
+  }
 
-    /* ------------------------------------------------------
-       EXPANDED REMAINING = ADJUSTED END
-       The original scheduled duration is applied from the
-       ACTUAL session start.
-
-       Example:
-       scheduled 20:00–23:00 = 3hrs
-       actual start 20:10
-       adjusted finish 23:10
-       ------------------------------------------------------ */
-    let adjustedTarget = null;
-
-    if (actualStart && Number.isFinite(duration) && duration > 0) {
-      adjustedTarget = new Date(actualStart.getTime() + duration);
+  function renderSessionNotes() {
+    const notes = $("tsSessionNotes");
+    const status = $("tsNotesSaveStatus");
+    if (!notes) return;
+    const active = !!state.sessionId && !!state.session && String(state.session.status || "active").toLowerCase() !== "ended";
+    notes.disabled = !active;
+    if (!active) {
+      if (document.activeElement !== notes) notes.value = "";
+      if (status) status.textContent = "No active session";
+      return;
     }
+    const serverValue = String(state.session.notes || "");
+    if (document.activeElement !== notes && notes.value !== serverValue) notes.value = serverValue;
+    if (status && document.activeElement !== notes) status.textContent = "Autosaves to this session";
+  }
 
-    if (adjustedTarget) {
-      const adjustedMs = adjustedTarget.getTime() - Date.now();
-
-      if (adjustedRemaining) {
-        const isOverdue = adjustedMs <= 0;
-
-        adjustedRemaining.textContent =
-          formatDuration(Math.abs(adjustedMs));
-
-        adjustedRemaining.classList.toggle("is-overdue", isOverdue);
-        adjustedRemaining.classList.toggle("is-remaining", !isOverdue);
+  function saveTopbarNotes() {
+    const notes = $("tsSessionNotes");
+    const status = $("tsNotesSaveStatus");
+    if (!notes || !state.sessionId || !state.db) return;
+    clearTimeout(state.notesSaveTimer);
+    if (status) status.textContent = "Saving…";
+    state.notesSaveTimer = setTimeout(async () => {
+      try {
+        await state.db.collection("performanceSessions").doc(state.sessionId).set({
+          notes: notes.value,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge:true });
+        if (status) status.textContent = "Saved";
+      } catch (error) {
+        console.warn("Could not save session notes:", error);
+        if (status) status.textContent = "Save failed";
       }
-
-      if (adjustedEnd) {
-        adjustedEnd.innerHTML =
-          `Adjusted end <strong>${formatClock(adjustedTarget)}</strong>`;
-      }
-
-      if (adjustedHint) {
-        const delay =
-          schedule.start && actualStart
-            ? Math.round((actualStart - schedule.start) / 60000)
-            : 0;
-
-        if (delay > 0) {
-          adjustedHint.textContent =
-            `Started ${delay} min${delay === 1 ? "" : "s"} late • finish shifted by ${delay} min${delay === 1 ? "" : "s"}`;
-        } else if (delay < 0) {
-          const early = Math.abs(delay);
-          adjustedHint.textContent =
-            `Started ${early} min${early === 1 ? "" : "s"} early • finish shifted earlier`;
-        } else {
-          adjustedHint.textContent = "Started on schedule";
-        }
-      }
-    } else {
-      if (adjustedRemaining) {
-        adjustedRemaining.textContent = "-";
-        adjustedRemaining.classList.remove("is-overdue", "is-remaining");
-      }
-      if (adjustedEnd) adjustedEnd.textContent = "Adjusted end —";
-      if (adjustedHint) adjustedHint.textContent =
-        "Scheduled duration unavailable";
-    }
+    }, 450);
   }
 
   function renderCompactHostStrip() {
@@ -360,11 +466,9 @@
       );
     }
 
-    // Existing top-statusbar.js owns notifications. Read its badge if present.
     if (alertsEl) {
-      const badge = $("tsNotificationBadge");
-      const count = Number(badge?.textContent || 0);
-      alertsEl.textContent = Number.isFinite(count) ? String(count) : "0";
+      const pendingCount = state.requests.filter(isPendingRequest).length;
+      alertsEl.textContent = String(Math.max(pendingCount, state.notifications.length));
     }
   }
 
@@ -679,10 +783,38 @@
     state.linkedEvent = null;
   }
 
+  function inferLinkedEvent() {
+    if (!state.session || !Array.isArray(state.upcomingEvents)) return null;
+    const venue = String(state.session.venue || state.currentControl?.venue || "").trim().toLowerCase();
+    const title = String(state.session.title || state.currentControl?.title || "").trim().toLowerCase();
+    const started = actualStartDate();
+    const candidates = state.upcomingEvents.filter(event => {
+      const eventVenue = String(event.venue || "").trim().toLowerCase();
+      const eventTitle = String(event.name || event.title || "").trim().toLowerCase();
+      const venueMatch = venue && eventVenue === venue;
+      const titleMatch = title && (eventTitle === title || title.includes(eventTitle) || eventTitle.includes(title));
+      if (!venueMatch && !titleMatch) return false;
+      if (!started || !event.date) return true;
+      const eventDay = new Date(`${event.date}T12:00:00`);
+      return !Number.isNaN(eventDay.getTime()) && Math.abs(eventDay.getTime() - started.getTime()) < 36 * 60 * 60 * 1000;
+    });
+    if (candidates.length === 1) return candidates[0];
+    const exact = candidates.filter(event => String(event.venue || "").trim().toLowerCase() === venue && String(event.name || event.title || "").trim().toLowerCase() === title);
+    return exact.length === 1 ? exact[0] : null;
+  }
+
   function subscribeLinkedEvent(eventId) {
-    const cleanId = String(eventId || "").trim();
+    let cleanId = String(eventId || "").trim();
 
     if (!cleanId) {
+      const inferred = inferLinkedEvent();
+      if (inferred) {
+        clearLinkedEventSubscription();
+        state.linkedEventId = inferred.id || "inferred";
+        state.linkedEvent = inferred;
+        renderRemaining();
+        return;
+      }
       clearLinkedEventSubscription();
       renderRemaining();
       return;
@@ -725,10 +857,16 @@
 
     if (!sessionId) {
       clearLinkedEventSubscription();
+      state.requestSnapshotReady = false;
+      state.knownRequestIds = new Set();
+      state.lastBreakOpen = null;
       renderRemaining();
       renderPending();
       renderRunOrder();
       renderCompactHostStrip();
+      renderBreakControls();
+      renderSessionNotes();
+      renderNotifications();
       return;
     }
 
@@ -744,6 +882,9 @@
 
         renderRemaining();
         renderCompactHostStrip();
+        renderBreakControls();
+        renderSessionNotes();
+        renderNotifications();
       }, console.warn)
     );
 
@@ -751,9 +892,20 @@
       state.db.collection("publicSongRequests")
         .where("sessionId","==",sessionId)
         .onSnapshot(snapshot => {
-          state.requests = snapshot.docs.map(doc => ({id:doc.id,...(doc.data() || {})}));
+          const nextRequests = snapshot.docs.map(doc => ({id:doc.id,...(doc.data() || {})}));
+          if (state.requestSnapshotReady) {
+            nextRequests.forEach(req => {
+              if (!state.knownRequestIds.has(req.id) && isPendingRequest(req)) {
+                pushNotification(`🎤 New request: ${req.songTitle || req.title || "Song"} — ${req.singerName || req.name || "Singer"}`, `request:${req.id}`);
+              }
+            });
+          }
+          state.requests = nextRequests;
+          state.knownRequestIds = new Set(nextRequests.map(req => req.id));
+          state.requestSnapshotReady = true;
           renderPending();
           renderCompactHostStrip();
+          renderNotifications();
         }, console.warn)
     );
   }
@@ -764,10 +916,8 @@
         const data = doc.exists ? (doc.data() || {}) : {};
         state.currentControl = data;
 
-        const sessionId =
-          data.active === true
-            ? (data.sessionId || data.activeSessionId || "")
-            : "";
+        const candidateSessionId = data.sessionId || data.activeSessionId || "";
+        const sessionId = (data.active === false && !data.activeSessionId) ? "" : candidateSessionId;
 
         if (sessionId !== state.sessionId) {
           subscribeSession(sessionId);
@@ -781,6 +931,9 @@
 
         renderRemaining();
         renderCompactHostStrip();
+        renderBreakControls();
+        renderSessionNotes();
+        renderNotifications();
       }, console.warn)
     );
 
@@ -798,6 +951,15 @@
       state.db.collection("karaokeControl").doc("publicSongList").onSnapshot(doc => {
         renderPublicSetlistName(doc.exists ? (doc.data() || {}) : {});
       }, console.warn)
+    );
+
+    state.globalUnsubs.push(
+      state.db.collection("upcomingEvents").onSnapshot(snapshot => {
+        state.upcomingEvents = snapshot.docs.map(doc => ({ id:doc.id, ...(doc.data() || {}) }));
+        if (state.sessionId && !state.session?.eventId && !state.currentControl?.eventId) {
+          subscribeLinkedEvent("");
+        }
+      }, error => console.warn("Could not load upcoming events for schedule fallback:", error))
     );
 
     state.db.collection("lyrics").get().then(snapshot => {
@@ -1018,6 +1180,12 @@
     });
 
     $("tsRunOrderAddBtn")?.addEventListener("click",addManualSong);
+    $("tsSessionNotes")?.addEventListener("input", saveTopbarNotes);
+
+    window.LK = window.LK || {};
+    window.LK.topStatus = window.LK.topStatus || {};
+    // Own these two controls here instead of relying on the old top-statusbar.js.
+    window.LK.topStatus.toggleBreak = toggleBreak;
   }
 
   function waitForInjectedMarkup() {
@@ -1031,6 +1199,9 @@
       renderRunOrder();
       renderSongSelect();
       renderCompactHostStrip();
+      renderBreakControls();
+      renderSessionNotes();
+      renderNotifications();
       return true;
     }
     return false;
@@ -1057,6 +1228,9 @@
     setInterval(() => {
       renderRemaining();
       renderCompactHostStrip();
+      renderBreakControls();
+      renderSessionNotes();
+      renderNotifications();
     },1000);
   }
 
