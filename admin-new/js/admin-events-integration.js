@@ -98,13 +98,11 @@
       return { date: "-- ---", time: "--:--" };
     }
 
-    const months = [
-      "JAN", "FEB", "MAR", "APR", "MAY", "JUN",
-      "JUL", "AUG", "SEPT", "OCT", "NOV", "DEC"
-    ];
-
     return {
-      date: `${String(date.getDate()).padStart(2, "0")} ${months[date.getMonth()]}`,
+      date: date
+        .toLocaleDateString(undefined, { day: "2-digit", month: "short" })
+        .replace(",", "")
+        .toUpperCase(),
       time: date.toLocaleTimeString(undefined, {
         hour: "2-digit",
         minute: "2-digit",
@@ -191,7 +189,6 @@
     const venueEl = $("statusVenueLabel");
     const typeEl = $("statusVenueType");
     const countdownEl = $("statusVenueCountdown");
-    const contextLabelEl = $("statusVenueContextLabel");
 
     if (!dateEl || !timeEl || !venueEl || !typeEl || !countdownEl) return;
 
@@ -200,8 +197,6 @@
       !!(activeSessionControl?.sessionId || activeSessionData?.id);
 
     if (hasActiveSession) {
-      if (contextLabelEl) contextLabelEl.textContent = "CURRENT SESSION:";
-
       const started = getActiveSessionStartDate();
       const parts = datePartsFromDate(started || new Date());
 
@@ -219,7 +214,6 @@
     }
 
     box?.classList.remove("session-active");
-    if (contextLabelEl) contextLabelEl.textContent = "UPCOMING GIG:";
 
     const next = sortedUpcoming()[0] || null;
 
@@ -424,6 +418,13 @@
       $("sessionEventIdInput").value = event.id || "";
     }
 
+    // Keep the event link outside the form too. This survives DOM/UI changes
+    // and gives the session lifecycle a reliable event ID when START PERFORMANCE
+    // is pressed.
+    try {
+      sessionStorage.setItem("lkSelectedUpcomingEventId", event.id || "");
+    } catch {}
+
     if ($("sessionTitleInput")) {
       $("sessionTitleInput").value =
         event.name ||
@@ -502,44 +503,29 @@
     const box = $("statusNextGigs");
     if (!box) return;
 
-    const next = sortedUpcoming().slice(0, 3);
+    const next = sortedUpcoming().slice(0, 2);
 
     if (!next.length) {
-      box.innerHTML = `
-        <button type="button" class="status-next-gig-empty">No upcoming gigs</button>
-        <button type="button" class="view-all-gigs-btn" data-scroll-upcoming-gigs>VIEW ALL GIGS</button>
-      `;
+      box.innerHTML = `<button type="button" class="status-next-gig-empty">No upcoming gigs</button>`;
       return;
     }
 
-    box.innerHTML =
-      next.map(event => {
-        const start = eventStartDate(event);
-        const parts = start
-          ? datePartsFromDate(start)
-          : { date: event.date || "TBC", time: event.startTime || "TBC" };
-
-        return `
-          <button type="button" class="status-next-gig-row"
-            data-prefill-session="${esc(event.id)}"
-            title="Prefill Performance Session from this event">
-            <span class="status-next-gig-when">${esc(parts.date)}<br>${esc(event.startTime || parts.time)}</span>
-            <span class="status-next-gig-name">${esc(event.name || "Untitled Event")}</span>
-          </button>
-        `;
-      }).join("") +
-      `<button type="button" class="view-all-gigs-btn" data-scroll-upcoming-gigs>VIEW ALL GIGS</button>`;
+    box.innerHTML = next.map(event => `
+      <button type="button" data-prefill-session="${esc(event.id)}"
+        title="Prefill Performance Session from this event">
+        ${esc(formatDate(event.date))}${event.startTime ? ` ${esc(event.startTime)}` : ""}
+        • ${esc(event.name || "Untitled Event")}
+      </button>
+    `).join("");
   }
 
   function renderDashboardEvents() {
     const list = $("dashboardUpcomingEventsList");
     if (!list) return;
 
-    const allUpcoming = sortedUpcoming();
-    const next = allUpcoming.slice(0, 10);
-
+    const next = sortedUpcoming().slice(0, 6);
     if ($("dashboardUpcomingEventCount")) {
-      $("dashboardUpcomingEventCount").textContent = `(${allUpcoming.length})`;
+      $("dashboardUpcomingEventCount").textContent = `(${sortedUpcoming().length})`;
     }
 
     if (!next.length) {
@@ -548,11 +534,8 @@
     }
 
     list.innerHTML = next.map(event => `
-      <article
-        class="dashboard-event-row"
-        data-view-upcoming-event="${esc(event.id)}"
-        title="Click to view event details">
-
+      <article class="dashboard-event-row" data-prefill-session="${esc(event.id)}"
+        title="Click to use this event for the next Performance Session">
         <div class="dashboard-event-date">${esc(formatDate(event.date))}</div>
 
         <div class="dashboard-event-main">
@@ -567,23 +550,9 @@
         <div class="dashboard-event-venue">${esc(event.venue || "Venue TBC")}</div>
         <div class="dashboard-event-time">${esc(event.startTime || "Time TBC")}</div>
         <div><span class="dashboard-event-type">${esc(event.type || "Other")}</span></div>
-
-        <button
-          type="button"
-          class="dashboard-event-prefill-btn"
-          data-prefill-session="${esc(event.id)}"
-          title="Use this event for Performance Session">＋</button>
       </article>
     `).join("");
   }
-
-  window.LKAdminEvents = window.LKAdminEvents || {};
-  window.LKAdminEvents.getUpcomingEvent = function (eventId) {
-    return upcomingEvents.find(event => event.id === eventId) || null;
-  };
-  window.LKAdminEvents.getUpcomingEvents = function () {
-    return sortedUpcoming().map(event => ({ ...event }));
-  };
 
   function renderAllEventSurfaces() {
     renderNextGigsStatus();
@@ -643,25 +612,15 @@
 
   function bindUI() {
     document.addEventListener("click", event => {
-      const scrollUpcoming = event.target.closest("[data-scroll-upcoming-gigs]");
-      if (scrollUpcoming) {
-        event.stopPropagation();
-        $("upcomingEventsDashboardPanel")?.scrollIntoView({
-          behavior: "smooth",
-          block: "start"
-        });
-        return;
-      }
-
       const target = event.target.closest("[data-prefill-session]");
       if (target) {
-        event.stopPropagation();
         prefillSessionFromEvent(target.dataset.prefillSession);
       }
     });
 
     $("clearSessionEventSuggestionBtn")?.addEventListener("click", () => {
       if ($("sessionEventIdInput")) $("sessionEventIdInput").value = "";
+      try { sessionStorage.removeItem("lkSelectedUpcomingEventId"); } catch {}
       if ($("sessionTitleInput")) $("sessionTitleInput").value = "";
       if ($("venueInput")) $("venueInput").value = "";
       if ($("sessionNotesInput")) $("sessionNotesInput").value = "";
