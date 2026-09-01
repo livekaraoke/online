@@ -28,6 +28,21 @@
 
   const $ = id => document.getElementById(id);
 
+  function publishSharedSession() {
+    window.LK = window.LK || {};
+    window.LK.sessionTools = window.LK.sessionTools || {};
+    window.LK.sessionTools.getSession = () =>
+      state.session ? { ...state.session } : null;
+
+    window.dispatchEvent(new CustomEvent("lk:session-updated", {
+      detail: {
+        session: state.session ? { ...state.session } : null,
+        sessionId: state.sessionId || ""
+      }
+    }));
+  }
+
+
   function dbRef() {
     return (
       window.LK?.db ||
@@ -126,12 +141,16 @@
       state.linkedEvent ||
       state.session?.eventSnapshot ||
       state.currentControl?.eventSnapshot ||
+      inferLinkedEvent() ||
       null;
 
     if (!event) return { start:null, end:null };
 
-    const start = localDateTime(event.date, event.startTime);
-    const end = localDateTime(event.date, event.endTime, start);
+    let start = tsDate(event.scheduledStartAt);
+    let end = tsDate(event.scheduledEndAt);
+
+    if (!start) start = localDateTime(event.date, event.startTime);
+    if (!end) end = localDateTime(event.date, event.endTime, start);
 
     return { start, end };
   }
@@ -854,6 +873,7 @@
     state.sessionId = sessionId || "";
     state.session = null;
     state.requests = [];
+    publishSharedSession();
 
     if (!sessionId) {
       clearLinkedEventSubscription();
@@ -873,6 +893,7 @@
     state.sessionUnsubs.push(
       state.db.collection("performanceSessions").doc(sessionId).onSnapshot(doc => {
         state.session = doc.exists ? { id:doc.id, ...(doc.data() || {}) } : null;
+        publishSharedSession();
 
         subscribeLinkedEvent(
           state.session?.eventId ||
@@ -1180,12 +1201,10 @@
     });
 
     $("tsRunOrderAddBtn")?.addEventListener("click",addManualSong);
-    $("tsSessionNotes")?.addEventListener("input", saveTopbarNotes);
 
     window.LK = window.LK || {};
     window.LK.topStatus = window.LK.topStatus || {};
-    // Own these two controls here instead of relying on the old top-statusbar.js.
-    window.LK.topStatus.toggleBreak = toggleBreak;
+    // top-statusbar.js remains the single writer for Break actions and Session Notes.
   }
 
   function waitForInjectedMarkup() {
@@ -1236,6 +1255,7 @@
 
   LK.sessionTools.getRunOrder = () => queueItems().map(item => ({...item}));
   LK.sessionTools.getSessionId = () => state.sessionId;
+  LK.sessionTools.getSession = () => state.session ? { ...state.session } : null;
 
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded",init);
