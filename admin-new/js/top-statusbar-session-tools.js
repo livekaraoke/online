@@ -369,8 +369,29 @@
           <small>${esc(request.singerName || request.name || "Singer")}${request.artist || request.songArtist ? ` • ${esc(request.artist || request.songArtist)}` : ""}</small>
         </div>
         <div class="ts-pending-actions">
-          <button type="button" class="accept" data-ts-accept="${esc(request.id)}">✓</button>
-          <button type="button" class="decline" data-ts-decline="${esc(request.id)}">✕</button>
+          <button
+            type="button"
+            class="accept"
+            data-ts-accept="${esc(request.id)}"
+            title="Accept request"
+            aria-label="Accept request"
+          >✓</button>
+
+          <button
+            type="button"
+            class="abandon"
+            data-ts-abandon-request="${esc(request.id)}"
+            title="Singer left / request abandoned"
+            aria-label="Mark request abandoned"
+          >⊘</button>
+
+          <button
+            type="button"
+            class="decline"
+            data-ts-delete-request="${esc(request.id)}"
+            title="Delete / decline request"
+            aria-label="Delete request"
+          >✕</button>
         </div>
       </div>
     `).join("");
@@ -394,8 +415,17 @@
 
     // Played entries remain stored in Firestore/session history, but are no
     // longer displayed in the live Run Order. The host only sees what is left.
+    const terminalStatuses = new Set([
+      "played",
+      "abandoned",
+      "left",
+      "deleted",
+      "deletedbyhost",
+      "declined"
+    ]);
+
     const items = queueItems().filter(item =>
-      String(item?.status || "").toLowerCase() !== "played"
+      !terminalStatuses.has(String(item?.status || "").toLowerCase())
     );
 
     if ($("tsRunOrderCount")) $("tsRunOrderCount").textContent = `(${items.length})`;
@@ -418,9 +448,35 @@
           <small>${esc(item.singerName || (item.source === "manual" ? "Host choice" : item.artist || ""))}</small>
         </div>
         <div class="ts-run-actions">
-          <button type="button" data-ts-up="${esc(item.id)}">↑</button>
-          <button type="button" data-ts-down="${esc(item.id)}">↓</button>
-          <button type="button" class="remove" data-ts-remove="${esc(item.id)}">✕</button>
+          <button
+            type="button"
+            data-ts-up="${esc(item.id)}"
+            title="Move up"
+            aria-label="Move song up"
+          >↑</button>
+
+          <button
+            type="button"
+            data-ts-down="${esc(item.id)}"
+            title="Move down"
+            aria-label="Move song down"
+          >↓</button>
+
+          <button
+            type="button"
+            class="abandon"
+            data-ts-abandon-run="${esc(item.id)}"
+            title="Singer left / song abandoned"
+            aria-label="Mark song abandoned"
+          >⊘</button>
+
+          <button
+            type="button"
+            class="remove"
+            data-ts-remove="${esc(item.id)}"
+            title="Remove from Run Order"
+            aria-label="Remove song from Run Order"
+          >✕</button>
         </div>
       </div>
     `).join("");
@@ -482,10 +538,22 @@
     }, { merge:true });
   }
 
-  async function declineRequest(requestId) {
+  async function abandonRequest(requestId) {
+    if (!requestId || !state.db) return;
+
     await state.db.collection("publicSongRequests").doc(requestId).set({
-      status: "declined",
-      declinedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      status: "abandoned",
+      abandonedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge:true });
+  }
+
+  async function deleteRequest(requestId) {
+    if (!requestId || !state.db) return;
+
+    await state.db.collection("publicSongRequests").doc(requestId).set({
+      status: "deletedByHost",
+      deletedByHostAt: firebase.firestore.FieldValue.serverTimestamp(),
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     }, { merge:true });
   }
@@ -500,6 +568,36 @@
 
     [items[index],items[target]] = [items[target],items[index]];
     await saveRunOrder(items);
+  }
+
+  async function abandonRunOrder(itemId) {
+    const items = queueItems().map(item => ({...item}));
+    const item = items.find(entry => entry.id === itemId);
+    if (!item) return;
+
+    const now = firebase.firestore.FieldValue.serverTimestamp();
+
+    // Keep the row in Firestore/session history, but mark it terminal so it
+    // immediately disappears from the live Run Order display.
+    const updatedItems = items.map(entry =>
+      entry.id === itemId
+        ? {
+            ...entry,
+            status: "abandoned",
+            abandonedAtMs: Date.now()
+          }
+        : entry
+    );
+
+    await saveRunOrder(updatedItems);
+
+    if (item.requestId) {
+      await state.db.collection("publicSongRequests").doc(item.requestId).set({
+        status: "abandoned",
+        abandonedAt: now,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge:true });
+    }
   }
 
   async function removeRunOrder(itemId) {
@@ -692,14 +790,24 @@
       const accept = event.target.closest("[data-ts-accept]");
       if (accept) return acceptRequest(accept.dataset.tsAccept);
 
-      const decline = event.target.closest("[data-ts-decline]");
-      if (decline) return declineRequest(decline.dataset.tsDecline);
+      const abandonRequestBtn = event.target.closest("[data-ts-abandon-request]");
+      if (abandonRequestBtn) {
+        return abandonRequest(abandonRequestBtn.dataset.tsAbandonRequest);
+      }
+
+      const deleteRequestBtn = event.target.closest("[data-ts-delete-request]");
+      if (deleteRequestBtn) {
+        return deleteRequest(deleteRequestBtn.dataset.tsDeleteRequest);
+      }
 
       const up = event.target.closest("[data-ts-up]");
       if (up) return moveRunOrder(up.dataset.tsUp,-1);
 
       const down = event.target.closest("[data-ts-down]");
       if (down) return moveRunOrder(down.dataset.tsDown,1);
+
+      const abandonRun = event.target.closest("[data-ts-abandon-run]");
+      if (abandonRun) return abandonRunOrder(abandonRun.dataset.tsAbandonRun);
 
       const remove = event.target.closest("[data-ts-remove]");
       if (remove) return removeRunOrder(remove.dataset.tsRemove);
