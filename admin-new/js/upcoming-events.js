@@ -26,6 +26,8 @@
   let events = [];
   let venues = [];
   let unsubscribeEvents = null;
+  let eventNameManuallyEdited = false;
+  let lastAutoEventName = "";
   let unsubscribeVenues = null;
   let pendingDeleteId = "";
 
@@ -62,6 +64,24 @@
     const endTime = event.endTime || event.startTime || "23:59";
     const end = new Date(`${event.date}T${endTime}:00`);
     return end.getTime() < now.getTime();
+  }
+
+
+  function eventStillUpcoming(event) {
+    // Scheduled time passing does NOT remove an event from Upcoming.
+    // It remains until an associated Performance Session is ended.
+    if (!event) return false;
+    if (event.status === "Cancelled") return false;
+    if (event.sessionStatus === "ended") return false;
+    if (event.completedAt) return false;
+    return true;
+  }
+
+  function eventIsCompleted(event) {
+    return !!event && (
+      event.sessionStatus === "ended" ||
+      !!event.completedAt
+    );
   }
 
   function formatDate(dateString) {
@@ -122,9 +142,11 @@
         if (type && event.type !== type) return false;
         if (status && event.status !== status) return false;
 
-        const past = isPast(event);
-        if (range === "upcoming" && past) return false;
-        if (range === "past" && !past) return false;
+        const upcoming = eventStillUpcoming(event);
+        const completed = eventIsCompleted(event);
+
+        if (range === "upcoming" && !upcoming) return false;
+        if (range === "past" && !completed) return false;
 
         if (search) {
           const haystack = [
@@ -184,7 +206,7 @@
     const monthPrefix = today.slice(0, 7);
 
     const upcoming = events
-      .filter(event => !isPast(event) && event.status !== "Cancelled")
+      .filter(eventStillUpcoming)
       .sort((a, b) => eventSortValue(a).localeCompare(eventSortValue(b)));
 
     const next = upcoming[0] || null;
@@ -338,6 +360,7 @@
 
   function handleVenueSelection() {
     applyVenueToEventForm(getSelectedVenue());
+    updateAutomaticEventName();
   }
 
   function startVenueListener() {
@@ -356,6 +379,7 @@
 
       if ($("eventVenueInput")?.value) {
         applyVenueToEventForm(getSelectedVenue(), { fillArrival: false });
+        updateAutomaticEventName();
       }
     }, error => {
       console.error("Could not load saved venues:", error);
@@ -504,7 +528,44 @@
     });
   }
 
+  function formatEventNameDate(dateString) {
+    if (!dateString) return "";
+    const parts = String(dateString).split("-");
+    if (parts.length !== 3) return "";
+    return `${parts[2]}/${parts[1]}`;
+  }
+
+  function buildAutomaticEventName() {
+    const type = $("eventTypeInput")?.value || "";
+    const venue = getSelectedVenue();
+    const date = formatEventNameDate($("eventDateInput")?.value || "");
+
+    if (!type || !venue?.name || !date) return "";
+    return `${type} @ ${venue.name} ${date}`;
+  }
+
+  function updateAutomaticEventName(force = false) {
+    const input = $("eventNameInput");
+    if (!input) return;
+
+    const next = buildAutomaticEventName();
+    if (!next) return;
+
+    if (
+      force ||
+      !eventNameManuallyEdited ||
+      !input.value.trim() ||
+      input.value === lastAutoEventName
+    ) {
+      input.value = next;
+      lastAutoEventName = next;
+      eventNameManuallyEdited = false;
+    }
+  }
+
   function resetForm() {
+    eventNameManuallyEdited = false;
+    lastAutoEventName = "";
     $("eventIdInput").value = "";
     $("eventNameInput").value = "";
     populateVenueSelect("");
@@ -533,6 +594,8 @@
   }
 
   function openEditModal(id) {
+    eventNameManuallyEdited = true;
+    lastAutoEventName = "";
     const event = events.find(item => item.id === id);
     if (!event) return;
 
@@ -733,6 +796,13 @@
     $("eventCancelBtn").onclick = closeEventModal;
     $("eventSaveBtn").onclick = saveEvent;
     $("eventVenueInput").addEventListener("change", handleVenueSelection);
+    $("eventTypeInput").addEventListener("change", () => updateAutomaticEventName());
+    $("eventDateInput").addEventListener("change", () => updateAutomaticEventName());
+
+    $("eventNameInput").addEventListener("input", () => {
+      const value = $("eventNameInput").value;
+      eventNameManuallyEdited = value !== lastAutoEventName;
+    });
 
     $("deleteEventCancelBtn").onclick = closeDeleteModal;
     $("deleteEventConfirmBtn").onclick = confirmDelete;
