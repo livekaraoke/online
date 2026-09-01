@@ -1327,6 +1327,27 @@ const songs = [
     hasLyrics: true
   },
   {
+    title: "I Don't Want to Talk About It",
+    artist: "Rod Stewart",
+    url: "lyrics/song.html?id=idontwanttotalkaboutit",
+    year: 1975,
+    bpm: 67,
+    gender: "Male",
+    genre: "Rock",
+    vibe: "Rock",
+    energy: "Very Low",
+    energyPeak: "Steady",
+    crowdFunction: "Singalong",
+    vocalDemand: "Hard",
+    setPosition: "Opening",
+    reliabilityScore: "Safe",
+    venueFit: "Outdoor",
+    setFrequency: "normal",
+    hostKaraokePage: "1",
+    livePage: "1",
+    hasLyrics: true
+  },
+  {
     title: "I see fire",
     artist: "Ed Sheeran",
     url: "lyrics/song.html?id=iseefire",
