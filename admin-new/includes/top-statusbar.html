@@ -6,12 +6,10 @@
        kept HERE so they are always visible to the host.
        ===================================================== -->
   <div
-    class="top-status-strip host-compact-strip"
+    class="top-status-strip host-compact-strip" data-ts-toggle-strip
     role="button"
     tabindex="0"
     aria-expanded="false"
-    onclick="LK.topStatus.toggle()"
-    onkeydown="if(event.key === 'Enter' || event.key === ' '){ event.preventDefault(); LK.topStatus.toggle(); }"
   >
     <div class="host-strip-live">
       <span id="tsLiveDot" class="dot blue"></span>
@@ -54,11 +52,10 @@
     </div>
 
     <button
-      id="tsToggleBtn"
+      id="tsToggleBtn" data-ts-toggle-button
       class="top-status-toggle host-status-toggle"
       type="button"
       aria-label="Expand status dashboard"
-      onclick="event.stopPropagation(); LK.topStatus.toggle();"
     >
       ▼
     </button>
