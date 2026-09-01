@@ -56,8 +56,10 @@
     // An event remains UPCOMING even after its scheduled clock time passes.
     // It is removed only when its associated Performance Session has ended.
     if (!event) return false;
-    if (event.status === "Cancelled") return false;
-    if (event.sessionStatus === "ended") return false;
+    const eventStatus = String(event.status || "").toLowerCase();
+    const sessionStatus = String(event.sessionStatus || "").toLowerCase();
+    if (["cancelled","canceled","ended","completed","done"].includes(eventStatus)) return false;
+    if (["ended","completed","done"].includes(sessionStatus)) return false;
     if (event.completedAt) return false;
     return true;
   }
@@ -412,20 +414,121 @@
     }
   }
 
-  function wrapStartPerformanceForLiveStatus() {
-    if (typeof window.startPerformance !== "function") return;
-    if (window.startPerformance.__autoLiveWrapped) return;
+  function selectedUpcomingEventId() {
+    const field = $("sessionEventIdInput")?.value || "";
+    if (field) return field;
+    try { return sessionStorage.getItem("lkSelectedUpcomingEventId") || ""; } catch { return ""; }
+  }
 
-    const original = window.startPerformance;
-
-    const wrapped = async function (...args) {
-      const result = await original.apply(this, args);
-      await forceSystemLiveForPerformance();
-      return result;
+  function eventSnapshotForSession(event) {
+    if (!event) return null;
+    return {
+      id: event.id || "",
+      name: event.name || "",
+      title: event.name || "",
+      type: event.type || "Other",
+      venue: event.venue || "",
+      address: event.address || "",
+      date: event.date || "",
+      startTime: event.startTime || "",
+      endTime: event.endTime || "",
+      arrivalTime: event.arrivalTime || "",
+      contactName: event.contactName || "",
+      contact: event.contact || "",
+      notes: event.notes || ""
     };
+  }
 
-    wrapped.__autoLiveWrapped = true;
-    window.startPerformance = wrapped;
+  async function linkCurrentSessionToEvent(eventId) {
+    if (!eventId) return;
+    const event = upcomingEvents.find(item => item.id === eventId);
+    if (!event) return;
+    const controlSnap = await db.collection("karaokeControl").doc("currentSession").get();
+    const control = controlSnap.exists ? (controlSnap.data() || {}) : {};
+    const sessionId = control.sessionId || control.activeSessionId || "";
+    if (!sessionId) return;
+    const scheduledStartAt = eventStartDate(event);
+    const scheduledEndAt = eventEndDate(event);
+    const scheduledDurationMs = scheduledStartAt && scheduledEndAt ? Math.max(0, scheduledEndAt - scheduledStartAt) : null;
+    const payload = {
+      eventId,
+      eventSnapshot: eventSnapshotForSession(event),
+      sessionType: event.type || "Live Karaoke",
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    if (scheduledStartAt) payload.scheduledStartAt = firebase.firestore.Timestamp.fromDate(scheduledStartAt);
+    if (scheduledEndAt) payload.scheduledEndAt = firebase.firestore.Timestamp.fromDate(scheduledEndAt);
+    if (scheduledDurationMs) payload.scheduledDurationMs = scheduledDurationMs;
+    await db.collection("performanceSessions").doc(sessionId).set(payload, { merge:true });
+    await db.collection("karaokeControl").doc("currentSession").set({
+      ...payload,
+      sessionId,
+      active: true
+    }, { merge:true });
+    await db.collection("upcomingEvents").doc(eventId).set({
+      sessionId,
+      sessionStatus: "active",
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge:true });
+  }
+
+  function resolveActiveEventId() {
+    const explicit = activeSessionData?.eventId || activeSessionControl?.eventId || selectedUpcomingEventId();
+    if (explicit) return explicit;
+    const title = String(activeSessionData?.title || activeSessionControl?.title || "").trim().toLowerCase();
+    const venue = String(activeSessionData?.venue || activeSessionControl?.venue || "").trim().toLowerCase();
+    const matches = upcomingEvents.filter(event => {
+      const eventTitle = String(event.name || "").trim().toLowerCase();
+      const eventVenue = String(event.venue || "").trim().toLowerCase();
+      return (title && eventTitle === title) || (venue && eventVenue === venue && title && eventTitle.includes(title));
+    });
+    return matches.length === 1 ? matches[0].id : "";
+  }
+
+  async function markEventCompleted(eventId, sessionId) {
+    if (!eventId) return;
+    await db.collection("upcomingEvents").doc(eventId).set({
+      sessionStatus: "ended",
+      completedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      completedSessionId: sessionId || null,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge:true });
+    try { sessionStorage.removeItem("lkSelectedUpcomingEventId"); } catch {}
+    if ($("sessionEventIdInput")) $("sessionEventIdInput").value = "";
+  }
+
+  function wrapPerformanceLifecycle() {
+    if (typeof window.startPerformance === "function" && !window.startPerformance.__eventLifecycleWrapped) {
+      const originalStart = window.startPerformance;
+      const wrappedStart = async function (...args) {
+        const eventId = selectedUpcomingEventId();
+        const result = await originalStart.apply(this, args);
+        if (eventId) {
+          try { await linkCurrentSessionToEvent(eventId); }
+          catch (error) { console.warn("Could not link performance to upcoming event:", error); }
+        }
+        await forceSystemLiveForPerformance();
+        return result;
+      };
+      wrappedStart.__eventLifecycleWrapped = true;
+      window.startPerformance = wrappedStart;
+    }
+
+    if (typeof window.endPerformance === "function" && !window.endPerformance.__eventLifecycleWrapped) {
+      const originalEnd = window.endPerformance;
+      const wrappedEnd = async function (...args) {
+        const sessionId = activeSessionData?.id || activeSessionControl?.sessionId || activeSessionControl?.activeSessionId || "";
+        const eventId = resolveActiveEventId();
+        const result = await originalEnd.apply(this, args);
+        if (eventId) {
+          try { await markEventCompleted(eventId, sessionId); }
+          catch (error) { console.warn("Could not complete linked upcoming event:", error); }
+        }
+        return result;
+      };
+      wrappedEnd.__eventLifecycleWrapped = true;
+      window.endPerformance = wrappedEnd;
+    }
   }
 
   function listenForActiveSessionStatus() {
@@ -632,17 +735,13 @@
   function renderNextGigsStatus() {
     const box = $("statusNextGigs");
     if (!box) return;
-
-    const next = sortedUpcoming().slice(0, 2);
-
+    const next = sortedUpcoming().slice(0, 3);
     if (!next.length) {
       box.innerHTML = `<button type="button" class="status-next-gig-empty">No upcoming gigs</button>`;
       return;
     }
-
     box.innerHTML = next.map(event => `
-      <button type="button" data-prefill-session="${esc(event.id)}"
-        title="Prefill Performance Session from this event">
+      <button type="button" data-event-detail="${esc(event.id)}" title="View event details">
         ${esc(formatDate(event.date))}${event.startTime ? ` ${esc(event.startTime)}` : ""}
         • ${esc(event.name || "Untitled Event")}
       </button>
@@ -652,36 +751,58 @@
   function renderDashboardEvents() {
     const list = $("dashboardUpcomingEventsList");
     if (!list) return;
-
-    const next = sortedUpcoming().slice(0, 6);
-    if ($("dashboardUpcomingEventCount")) {
-      $("dashboardUpcomingEventCount").textContent = `(${sortedUpcoming().length})`;
-    }
-
+    const next = sortedUpcoming().slice(0, 10);
+    if ($("dashboardUpcomingEventCount")) $("dashboardUpcomingEventCount").textContent = `(${sortedUpcoming().length})`;
     if (!next.length) {
       list.innerHTML = `<div class="dashboard-event-empty">No upcoming gigs or events.</div>`;
       return;
     }
-
     list.innerHTML = next.map(event => `
-      <article class="dashboard-event-row" data-prefill-session="${esc(event.id)}"
-        title="Click to use this event for the next Performance Session">
+      <article class="dashboard-event-row" data-event-detail="${esc(event.id)}" title="Click to view event details">
         <div class="dashboard-event-date">${esc(formatDate(event.date))}</div>
-
         <div class="dashboard-event-main">
           <strong>${esc(event.name || "Untitled Event")}</strong>
-          <small>
-            ${esc(event.venue || "Venue TBC")}
-            ${event.startTime ? ` • ${esc(event.startTime)}` : ""}
-            • ${esc(formatEventLength(event))}
-          </small>
+          <small>${esc(event.venue || "Venue TBC")}${event.startTime ? ` • ${esc(event.startTime)}` : ""} • ${esc(formatEventLength(event))}</small>
         </div>
-
         <div class="dashboard-event-venue">${esc(event.venue || "Venue TBC")}</div>
         <div class="dashboard-event-time">${esc(event.startTime || "Time TBC")}</div>
         <div><span class="dashboard-event-type">${esc(event.type || "Other")}</span></div>
+        <button type="button" class="dashboard-event-prefill-btn" data-prefill-session="${esc(event.id)}" title="Prefill Performance Session">＋</button>
       </article>
     `).join("");
+  }
+
+  function openUpcomingEventDetail(eventId) {
+    const event = upcomingEvents.find(item => item.id === eventId);
+    const modal = $("dashboardDetailModal");
+    const content = $("dashboardDetailModalContent");
+    if (!event || !modal || !content) return;
+    const contact = [event.contactName, event.contact].filter(Boolean).join(" • ") || "—";
+    content.innerHTML = `
+      <div class="dashboard-detail-head">
+        <span>UPCOMING GIG / EVENT</span>
+        <h2>${esc(event.name || "Untitled Event")}</h2>
+        <p>${esc(event.type || "Other")}</p>
+      </div>
+      <div class="dashboard-detail-grid">
+        <div class="dashboard-detail-cell"><span>DATE</span><strong>${esc(formatDate(event.date))}</strong></div>
+        <div class="dashboard-detail-cell"><span>TIME</span><strong>${esc(event.startTime || "TBC")}${event.endTime ? ` – ${esc(event.endTime)}` : ""}</strong></div>
+        <div class="dashboard-detail-cell"><span>VENUE</span><strong>${esc(event.venue || "TBC")}</strong></div>
+        <div class="dashboard-detail-cell"><span>LENGTH</span><strong>${esc(formatEventLength(event))}</strong></div>
+        <div class="dashboard-detail-cell"><span>ARRIVAL / SETUP</span><strong>${esc(event.arrivalTime || "—")}</strong></div>
+        <div class="dashboard-detail-cell"><span>CONTACT</span><strong>${esc(contact)}</strong></div>
+        <div class="dashboard-detail-cell"><span>ADDRESS</span><strong>${esc(event.address || "—")}</strong></div>
+        <div class="dashboard-detail-cell"><span>STATUS</span><strong>${esc(event.status || "Upcoming")}</strong></div>
+      </div>
+      <div class="dashboard-detail-section">
+        <h3>NOTES</h3>
+        <div class="dashboard-detail-copy">${esc(event.notes || "No notes.")}</div>
+      </div>`;
+    modal.classList.remove("hidden");
+  }
+
+  function closeUpcomingEventDetail() {
+    $("dashboardDetailModal")?.classList.add("hidden");
   }
 
   function renderAllEventSurfaces() {
@@ -750,10 +871,24 @@
 
   function bindUI() {
     document.addEventListener("click", event => {
-      const target = event.target.closest("[data-prefill-session]");
-      if (target) {
-        prefillSessionFromEvent(target.dataset.prefillSession);
+      const prefill = event.target.closest("[data-prefill-session]");
+      if (prefill) {
+        event.preventDefault();
+        event.stopPropagation();
+        prefillSessionFromEvent(prefill.dataset.prefillSession);
+        return;
       }
+
+      const detail = event.target.closest("[data-event-detail]");
+      if (detail) {
+        event.preventDefault();
+        openUpcomingEventDetail(detail.dataset.eventDetail);
+      }
+    });
+
+    $("dashboardDetailCloseBtn")?.addEventListener("click", closeUpcomingEventDetail);
+    $("dashboardDetailModal")?.addEventListener("click", event => {
+      if (event.target === $("dashboardDetailModal")) closeUpcomingEventDetail();
     });
 
     $("clearSessionEventSuggestionBtn")?.addEventListener("click", () => {
@@ -767,15 +902,73 @@
     });
   }
 
+  function classifyActiveRequestRows() {
+    const box = $("activeRequestsList");
+    if (!box) return;
+
+    // Only add CSS classes. No wrapping, moving, cloning or replacing nodes.
+    const nodes = [box, ...box.querySelectorAll("div,section,article")];
+    nodes.forEach(node => {
+      if (node === box) return;
+      const direct = Array.from(node.children);
+      const directText = direct.map(el => String(el.textContent || "").replace(/\s+/g," ").trim().toUpperCase());
+      const allText = directText.join(" | ");
+      const buttons = node.querySelectorAll("button");
+
+      const looksLikeHeader =
+        direct.length >= 5 &&
+        allText.includes("SONG") &&
+        allText.includes("REQUESTED BY") &&
+        allText.includes("BPM") &&
+        allText.includes("TIME") &&
+        allText.includes("ACTIONS") &&
+        !Array.from(node.children).some(child =>
+          String(child.textContent || "").toUpperCase().includes("REQUESTED BY") &&
+          child.children.length >= 5
+        );
+
+      if (looksLikeHeader) node.classList.add("lk-request-table-head");
+
+      if (node.classList.contains("active-request-row") && node.querySelector(":scope > .request-main")) {
+        node.classList.add("lk-request-old-row");
+        return;
+      }
+
+      const directActionCell = direct.find(el => el.querySelectorAll?.("button").length >= 3);
+      const directButtons = direct.filter(el => el.tagName === "BUTTON").length;
+      if ((directActionCell || directButtons >= 3) && direct.length >= 5) {
+        node.classList.add("lk-request-table-row");
+      }
+    });
+  }
+
+  function watchActiveRequestRows() {
+    const box = $("activeRequestsList");
+    if (!box || box.dataset.lkRowWatch === "1") return;
+    box.dataset.lkRowWatch = "1";
+    classifyActiveRequestRows();
+    let queued = false;
+    const observer = new MutationObserver(() => {
+      if (queued) return;
+      queued = true;
+      requestAnimationFrame(() => {
+        queued = false;
+        classifyActiveRequestRows();
+      });
+    });
+    // childList only: adding CSS classes cannot retrigger this observer.
+    observer.observe(box, { childList:true, subtree:true });
+  }
+
   async function init() {
     bindUI();
+    watchActiveRequestRows();
     await seedEventTypesIfNeeded();
 
-    // Existing Admin session code is loaded before this addon.
-    // Wrap it so START PERFORMANCE automatically makes System Status LIVE.
-    wrapStartPerformanceForLiveStatus();
-    setTimeout(wrapStartPerformanceForLiveStatus, 250);
-    setTimeout(wrapStartPerformanceForLiveStatus, 1000);
+    // Keep the existing session functions, but add the event lifecycle around them.
+    wrapPerformanceLifecycle();
+    setTimeout(wrapPerformanceLifecycle, 250);
+    setTimeout(wrapPerformanceLifecycle, 1000);
 
     startListeners();
     listenForActiveSessionStatus();
@@ -792,483 +985,8 @@
 
 
 
-  /* ============================================================
-     ACTIVE SONG REQUESTS — DETERMINISTIC SINGLE-ROW TABLE FIX
-     ------------------------------------------------------------
-     This does NOT add/move/remove request DOM nodes.
-     It only tags the DIRECT children that requests.js already renders.
-     No MutationObserver, no interval, no recursive DOM updates.
-     ============================================================ */
 
-  function installActiveRequestSingleRowCss() {
-    if (document.getElementById("lkActiveRequestSingleRowCss")) return;
-
-    const style = document.createElement("style");
-    style.id = "lkActiveRequestSingleRowCss";
-    style.textContent = `
-      #requestsPanel #activeRequestsList {
-        width: 100% !important;
-        min-width: 0 !important;
-        height: auto !important;
-        max-height: none !important;
-        overflow: visible !important;
-      }
-
-      #requestsPanel .lk-active-request-head,
-      #requestsPanel .lk-active-request-row {
-        box-sizing: border-box !important;
-        display: grid !important;
-        grid-template-columns:
-          42px
-          minmax(150px, 1.45fr)
-          minmax(105px, .9fr)
-          52px
-          84px
-          116px !important;
-        align-items: center !important;
-        gap: 8px !important;
-        width: 100% !important;
-        min-width: 0 !important;
-      }
-
-      #requestsPanel .lk-active-request-head {
-        min-height: 42px !important;
-        padding: 8px 10px !important;
-        border-bottom: 1px solid #303030 !important;
-        background: #171717 !important;
-      }
-
-      #requestsPanel .lk-active-request-head > * {
-        display: block !important;
-        min-width: 0 !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        overflow: hidden !important;
-        color: #a7a7a7 !important;
-        font-size: 9px !important;
-        font-weight: 900 !important;
-        line-height: 1 !important;
-        text-overflow: ellipsis !important;
-        white-space: nowrap !important;
-      }
-
-      #requestsPanel .lk-active-request-row {
-        min-height: 62px !important;
-        padding: 8px 10px !important;
-        border-bottom: 1px solid #252525 !important;
-      }
-
-      #requestsPanel .lk-active-request-row > * {
-        min-width: 0 !important;
-        margin: 0 !important;
-      }
-
-      #requestsPanel .lk-active-request-row > *:nth-child(1) {
-        justify-self: center !important;
-      }
-
-      #requestsPanel .lk-active-request-row > *:nth-child(2),
-      #requestsPanel .lk-active-request-row > *:nth-child(3) {
-        overflow: hidden !important;
-      }
-
-      #requestsPanel .lk-active-request-row > *:nth-child(2) strong,
-      #requestsPanel .lk-active-request-row > *:nth-child(3) strong {
-        display: block !important;
-        overflow: hidden !important;
-        font-size: 12px !important;
-        line-height: 1.15 !important;
-        text-overflow: ellipsis !important;
-        white-space: nowrap !important;
-      }
-
-      #requestsPanel .lk-active-request-row > *:nth-child(2) span,
-      #requestsPanel .lk-active-request-row > *:nth-child(3) span,
-      #requestsPanel .lk-active-request-row > *:nth-child(2) small,
-      #requestsPanel .lk-active-request-row > *:nth-child(3) small {
-        display: block !important;
-        margin-top: 2px !important;
-        overflow: hidden !important;
-        color: #999 !important;
-        font-size: 9px !important;
-        line-height: 1.15 !important;
-        text-overflow: ellipsis !important;
-        white-space: nowrap !important;
-      }
-
-      #requestsPanel .lk-active-request-row > *:nth-child(4),
-      #requestsPanel .lk-active-request-row > *:nth-child(5) {
-        overflow: hidden !important;
-        font-size: 10px !important;
-        text-align: center !important;
-        text-overflow: ellipsis !important;
-        white-space: nowrap !important;
-      }
-
-      #requestsPanel .lk-active-request-actions {
-        display: flex !important;
-        align-items: center !important;
-        justify-content: flex-end !important;
-        gap: 5px !important;
-        min-width: 0 !important;
-        flex-wrap: nowrap !important;
-      }
-
-      #requestsPanel .lk-active-request-actions button {
-        display: inline-grid !important;
-        place-items: center !important;
-        flex: 0 0 32px !important;
-        width: 32px !important;
-        min-width: 32px !important;
-        height: 32px !important;
-        min-height: 32px !important;
-        margin: 0 !important;
-        padding: 0 !important;
-      }
-
-      /* Tablet landscape: still one row, just slightly tighter. */
-      @media (min-width: 700px) and (max-width: 1180px) {
-        #requestsPanel .lk-active-request-head,
-        #requestsPanel .lk-active-request-row {
-          grid-template-columns:
-            38px
-            minmax(128px, 1.4fr)
-            minmax(88px, .82fr)
-            44px
-            72px
-            108px !important;
-          gap: 6px !important;
-        }
-
-        #requestsPanel .lk-active-request-head {
-          padding: 7px 8px !important;
-        }
-
-        #requestsPanel .lk-active-request-row {
-          min-height: 58px !important;
-          padding: 7px 8px !important;
-        }
-
-        #requestsPanel .lk-active-request-actions {
-          gap: 4px !important;
-        }
-
-        #requestsPanel .lk-active-request-actions button {
-          flex-basis: 30px !important;
-          width: 30px !important;
-          min-width: 30px !important;
-          height: 30px !important;
-          min-height: 30px !important;
-        }
-      }
-    `;
-
-    document.head.appendChild(style);
-  }
-
-  function tagActiveRequestDirectRows() {
-    const box = document.getElementById("activeRequestsList");
-    if (!box) return;
-
-    installActiveRequestSingleRowCss();
-
-    const children = Array.from(box.children);
-
-    children.forEach(child => {
-      child.classList.remove("lk-active-request-head", "lk-active-request-row");
-
-      const text = String(child.textContent || "")
-        .replace(/\s+/g, " ")
-        .trim()
-        .toUpperCase();
-
-      const buttons = Array.from(child.querySelectorAll("button"));
-
-      const isHeader =
-        text.includes("SONG") &&
-        text.includes("REQUESTED BY") &&
-        text.includes("BPM") &&
-        text.includes("TIME") &&
-        text.includes("ACTIONS");
-
-      if (isHeader) {
-        child.classList.add("lk-active-request-head");
-        return;
-      }
-
-      /* Current request rows have the 3 action buttons in the same direct row. */
-      if (buttons.length >= 3) {
-        child.classList.add("lk-active-request-row");
-
-        /*
-          If actions are already inside a wrapper, style that wrapper.
-          If buttons are direct children, keep them untouched; the row still
-          remains horizontal and their existing CSS continues to apply.
-        */
-        const directChildren = Array.from(child.children);
-        const actionWrapper = directChildren.find(el => {
-          if (el.tagName === "BUTTON") return false;
-          return el.querySelectorAll?.("button").length >= 3;
-        });
-
-        if (actionWrapper) {
-          actionWrapper.classList.add("lk-active-request-actions");
-        } else {
-          /*
-            Current screenshot renderer uses a dedicated final Actions cell.
-            If it does not, do NOT create/wrap anything — avoiding the old crash.
-          */
-          const last = directChildren[directChildren.length - 1];
-          if (last && last.tagName !== "BUTTON" && last.querySelector("button")) {
-            last.classList.add("lk-active-request-actions");
-          }
-        }
-      }
-    });
-  }
-
-  function hookActiveRequestRenderOnce() {
-    installActiveRequestSingleRowCss();
-
-    if (
-      typeof window.renderActiveRequests === "function" &&
-      !window.renderActiveRequests.__lkSingleRowWrapped
-    ) {
-      const original = window.renderActiveRequests;
-
-      const wrapped = function (...args) {
-        const result = original.apply(this, args);
-        requestAnimationFrame(tagActiveRequestDirectRows);
-        return result;
-      };
-
-      wrapped.__lkSingleRowWrapped = true;
-      window.renderActiveRequests = wrapped;
-    }
-
-    /* Apply once to anything already rendered. */
-    requestAnimationFrame(tagActiveRequestDirectRows);
-  }
-
-  if (document.readyState === "loading") {
-    document.addEventListener(
-      "DOMContentLoaded",
-      () => setTimeout(hookActiveRequestRenderOnce, 0),
-      { once:true }
-    );
-  } else {
-    setTimeout(hookActiveRequestRenderOnce, 0);
-  }
-
-
-  /* ============================================================
-     ACTIVE SONG REQUESTS — FINAL SINGLE-ROW TABLET LAYOUT
-     ------------------------------------------------------------
-     This is CSS-only. It does not alter the request DOM tree.
-     No MutationObserver, no wrappers, no intervals.
-     ============================================================ */
-
-  function installFinalActiveRequestRowStyles() {
-    if (document.getElementById("lkFinalActiveRequestRowStyles")) return;
-
-    const style = document.createElement("style");
-    style.id = "lkFinalActiveRequestRowStyles";
-    style.textContent = `
-      #requestsPanel {
-        min-width: 0 !important;
-      }
-
-      #requestsPanel #activeRequestsList {
-        width: 100% !important;
-        min-width: 0 !important;
-        overflow-x: hidden !important;
-      }
-
-      /*
-       * Current renderer:
-       * direct children of #activeRequestsList are the header and request rows.
-       * Force every non-empty direct row into the same six-column grid:
-       * # | Song | Requested By | BPM | Time | Actions
-       */
-      #requestsPanel #activeRequestsList > *:not(.dash-empty) {
-        box-sizing: border-box !important;
-        display: grid !important;
-        grid-template-columns:
-          40px
-          minmax(0, 1.35fr)
-          minmax(0, .95fr)
-          48px
-          82px
-          112px !important;
-        align-items: center !important;
-        column-gap: 7px !important;
-        width: 100% !important;
-        min-width: 0 !important;
-      }
-
-      #requestsPanel #activeRequestsList > *:not(.dash-empty) > * {
-        min-width: 0 !important;
-        margin: 0 !important;
-      }
-
-      /*
-       * Header labels: keep all six labels on ONE row.
-       * The header is the direct child containing all column labels.
-       */
-      #requestsPanel #activeRequestsList > *:has(
-        :is(*):nth-child(1)
-      ) {
-        box-sizing: border-box !important;
-      }
-
-      #requestsPanel #activeRequestsList > *:not(.dash-empty)
-        > :is(div,span,strong,small,p) {
-        overflow: hidden !important;
-        text-overflow: ellipsis !important;
-      }
-
-      /* Prevent nested label/text blocks from forcing vertical stretching. */
-      #requestsPanel #activeRequestsList > *:not(.dash-empty)
-        > :is(div,span,p) {
-        align-self: center !important;
-      }
-
-      /* Song and requested-by cells can contain title + subtitle, but the cell itself
-         stays within a single horizontal request row. */
-      #requestsPanel #activeRequestsList > *:not(.dash-empty)
-        > :nth-child(2),
-      #requestsPanel #activeRequestsList > *:not(.dash-empty)
-        > :nth-child(3) {
-        min-width: 0 !important;
-      }
-
-      #requestsPanel #activeRequestsList > *:not(.dash-empty)
-        > :nth-child(2) strong,
-      #requestsPanel #activeRequestsList > *:not(.dash-empty)
-        > :nth-child(3) strong {
-        display: block !important;
-        overflow: hidden !important;
-        font-size: 13px !important;
-        line-height: 1.12 !important;
-        text-overflow: ellipsis !important;
-        white-space: nowrap !important;
-      }
-
-      #requestsPanel #activeRequestsList > *:not(.dash-empty)
-        > :nth-child(2) span,
-      #requestsPanel #activeRequestsList > *:not(.dash-empty)
-        > :nth-child(3) span,
-      #requestsPanel #activeRequestsList > *:not(.dash-empty)
-        > :nth-child(2) small,
-      #requestsPanel #activeRequestsList > *:not(.dash-empty)
-        > :nth-child(3) small {
-        display: block !important;
-        margin-top: 2px !important;
-        overflow: hidden !important;
-        color: #989898 !important;
-        font-size: 9px !important;
-        line-height: 1.1 !important;
-        text-overflow: ellipsis !important;
-        white-space: nowrap !important;
-      }
-
-      /* BPM and Time stay compact. */
-      #requestsPanel #activeRequestsList > *:not(.dash-empty)
-        > :nth-child(4),
-      #requestsPanel #activeRequestsList > *:not(.dash-empty)
-        > :nth-child(5) {
-        text-align: center !important;
-        white-space: nowrap !important;
-      }
-
-      /* Actions cell must remain a horizontal button group. */
-      #requestsPanel #activeRequestsList > *:not(.dash-empty)
-        > :nth-child(6) {
-        display: flex !important;
-        align-items: center !important;
-        justify-content: flex-end !important;
-        gap: 5px !important;
-        flex-wrap: nowrap !important;
-        overflow: visible !important;
-      }
-
-      #requestsPanel #activeRequestsList > *:not(.dash-empty)
-        > :nth-child(6) button {
-        flex: 0 0 31px !important;
-        width: 31px !important;
-        min-width: 31px !important;
-        height: 31px !important;
-        min-height: 31px !important;
-        padding: 0 !important;
-        margin: 0 !important;
-      }
-
-      /*
-       * Older request renderer fallback:
-       * .active-request-row = request-main | bpm | time | three buttons.
-       * Keep it horizontal too without changing its DOM.
-       */
-      #requestsPanel .active-request-row {
-        display: grid !important;
-        grid-template-columns:
-          minmax(0, 1fr)
-          50px
-          78px
-          32px
-          32px
-          32px !important;
-        align-items: center !important;
-        gap: 6px !important;
-        width: 100% !important;
-        min-width: 0 !important;
-      }
-
-      #requestsPanel .active-request-row .request-main {
-        min-width: 0 !important;
-      }
-
-      #requestsPanel .active-request-row .request-main strong,
-      #requestsPanel .active-request-row .request-main span {
-        display: block !important;
-        overflow: hidden !important;
-        text-overflow: ellipsis !important;
-        white-space: nowrap !important;
-      }
-
-      /*
-       * Tablet: tighten columns, but NEVER stack them vertically.
-       */
-      @media (max-width: 1100px) {
-        #requestsPanel #activeRequestsList > *:not(.dash-empty) {
-          grid-template-columns:
-            36px
-            minmax(0, 1.3fr)
-            minmax(0, .88fr)
-            44px
-            72px
-            102px !important;
-          column-gap: 5px !important;
-        }
-
-        #requestsPanel #activeRequestsList > *:not(.dash-empty)
-          > :nth-child(6) {
-          gap: 4px !important;
-        }
-
-        #requestsPanel #activeRequestsList > *:not(.dash-empty)
-          > :nth-child(6) button {
-          flex-basis: 29px !important;
-          width: 29px !important;
-          min-width: 29px !important;
-          height: 29px !important;
-          min-height: 29px !important;
-        }
-      }
-    `;
-
-    document.head.appendChild(style);
-  }
-
-  installFinalActiveRequestRowStyles();
+  // ACTIVE SONG REQUESTS layout is fixed by admin.html CSS.
+  // No request DOM mutation or renderer wrapping is used here.
 
 })();
