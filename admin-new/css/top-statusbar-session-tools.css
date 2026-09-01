@@ -792,3 +792,154 @@
     display: block !important;
   }
 }
+
+
+/* =========================================================
+   TABLET WORKSPACE LAYOUT — SEPT 2026
+   Row 1: Remaining/Public | Session Notes | Break Status
+   Row 2: Notifications | Pending Requests | Run Order
+   ========================================================= */
+
+#topStatusBar .host-expanded-primary {
+  display: grid !important;
+  grid-template-columns:
+    minmax(250px, .85fr)
+    minmax(310px, 1.15fr)
+    minmax(250px, .9fr) !important;
+  gap: 8px !important;
+  align-items: stretch !important;
+}
+
+#topStatusBar .host-schedule-card,
+#topStatusBar .host-primary-notes-card,
+#topStatusBar .host-break-card {
+  min-width: 0 !important;
+  height: 100% !important;
+}
+
+/* The Remaining/Public card is now only a vertical stack. */
+#topStatusBar .host-schedule-card .host-info-left-stack {
+  display: grid !important;
+  grid-template-rows: auto auto !important;
+  min-width: 0 !important;
+  height: 100% !important;
+}
+
+#topStatusBar .host-schedule-card .adjusted-remaining-segment {
+  padding: 8px 10px 12px !important;
+}
+
+#topStatusBar .host-schedule-card .public-list-segment {
+  margin-top: 0 !important;
+  padding: 11px 10px 8px !important;
+  border-top: 1px solid #26343b !important;
+  border-left: 0 !important;
+}
+
+/* Session Notes fills the centre of the first row. */
+#topStatusBar .host-primary-notes-card {
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+#topStatusBar .host-primary-notes-card .top-status-session-notes {
+  flex: 1 1 auto !important;
+  width: 100% !important;
+  min-height: 130px !important;
+  max-height: none !important;
+  resize: none !important;
+  padding: 10px !important;
+  border: 1px solid #26343b !important;
+  border-radius: 7px !important;
+  background: #03090d !important;
+  color: #eef3f5 !important;
+  font-size: 10px !important;
+  line-height: 1.45 !important;
+}
+
+/* ---------------------------------------------------------
+   SECOND ROW
+   --------------------------------------------------------- */
+
+#topStatusBar .host-three-column-workflow {
+  display: grid !important;
+  grid-template-columns:
+    minmax(250px, .75fr)
+    minmax(300px, .9fr)
+    minmax(430px, 1.5fr) !important;
+  gap: 8px !important;
+  align-items: stretch !important;
+  margin-top: 8px !important;
+}
+
+#topStatusBar .host-workflow-notifications-card,
+#topStatusBar .host-pending-card,
+#topStatusBar .host-run-order-card {
+  min-width: 0 !important;
+  min-height: 210px !important;
+  height: 100% !important;
+}
+
+/* Notifications now occupy the lower-left card. */
+#topStatusBar .host-workflow-notifications-card {
+  padding: 9px !important;
+}
+
+#topStatusBar .workflow-notification-list {
+  max-height: 185px !important;
+  overflow-y: auto !important;
+  scrollbar-width: thin !important;
+}
+
+#topStatusBar .workflow-notification-list .top-status-empty {
+  display: grid !important;
+  place-items: center !important;
+  min-height: 145px !important;
+  color: #66747b !important;
+  font-size: 9px !important;
+}
+
+/* Pending Requests fills the middle card rather than being squeezed left. */
+#topStatusBar .host-pending-card .top-status-pending-list {
+  max-height: 175px !important;
+}
+
+/* Run Order deliberately receives the most horizontal room. */
+#topStatusBar .host-run-order-card #tsRunOrderList {
+  max-height: 175px !important;
+}
+
+/* Tablet: maintain the requested 3-column arrangement for landscape tablets. */
+@media (min-width: 761px) and (max-width: 1180px) {
+  #topStatusBar .host-expanded-primary {
+    grid-template-columns:
+      minmax(220px, .82fr)
+      minmax(285px, 1.12fr)
+      minmax(235px, .9fr) !important;
+  }
+
+  #topStatusBar .host-three-column-workflow {
+    grid-template-columns:
+      minmax(220px, .72fr)
+      minmax(275px, .88fr)
+      minmax(390px, 1.45fr) !important;
+  }
+}
+
+/* Narrow portrait layouts stack rather than becoming unreadable. */
+@media (max-width: 760px) {
+  #topStatusBar .host-expanded-primary,
+  #topStatusBar .host-three-column-workflow {
+    grid-template-columns: 1fr !important;
+  }
+
+  #topStatusBar .host-primary-notes-card .top-status-session-notes {
+    min-height: 100px !important;
+  }
+
+  #topStatusBar .host-workflow-notifications-card,
+  #topStatusBar .host-pending-card,
+  #topStatusBar .host-run-order-card {
+    min-height: 160px !important;
+  }
+}
