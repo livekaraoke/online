@@ -86,7 +86,7 @@
 
       connectSessionNotesInput();
       listenStatus();
-      listenCurrentSession();
+      connectSharedSessionState();
       
     } catch (error) {
       console.error("Could not load top status bar:", error);
@@ -288,6 +288,25 @@
           );
         }
       );
+  }
+
+  /************************************************************
+   * CURRENT SESSION - shared with top-statusbar-session-tools.js
+   *
+   * Do not create a second currentSession/performanceSessions/requests
+   * listener tree here. The session-tools file already owns those listeners.
+   ************************************************************/
+
+  function connectSharedSessionState() {
+    const applySharedSession = event => {
+      const session = event?.detail?.session || window.LK?.sessionTools?.getSession?.() || null;
+      currentSession = session ? { ...session } : null;
+      renderSession();
+      renderBreakStatus();
+    };
+
+    window.addEventListener("lk:session-updated", applySharedSession);
+    applySharedSession();
   }
 
   /************************************************************
