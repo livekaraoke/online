@@ -818,3 +818,71 @@
   background: #080808;
   color: #eee;
 }
+
+
+/* =========================================================
+   DYNAMIC EVENT TYPE SUMMARY CARDS
+   ========================================================= */
+
+/* The generated type cards behave as direct children of the existing
+   summary grid instead of creating a nested grid. */
+.event-type-summary-cards {
+  display: contents;
+}
+
+.event-type-summary-card {
+  position: relative;
+  cursor: pointer;
+  overflow: hidden;
+  transition:
+    border-color .15s ease,
+    background .15s ease,
+    transform .12s ease,
+    box-shadow .15s ease;
+}
+
+.event-type-summary-card::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  height: 2px;
+  background: #7c7c7c;
+  opacity: .65;
+}
+
+.event-type-summary-card:hover {
+  transform: translateY(-1px);
+  border-color: #454545;
+  background: linear-gradient(155deg, #181818, #0a0a0a);
+  box-shadow: 0 12px 30px rgba(0,0,0,.28);
+}
+
+/* Familiar types get a subtle identity colour. Unknown/new types
+   still receive the neutral styling above automatically. */
+.event-type-summary-card.type-card-live-karaoke::after {
+  background: #54d96c;
+}
+
+.event-type-summary-card.type-card-roxanna::after {
+  background: #c77cff;
+}
+
+.event-type-summary-card.type-card-solo::after {
+  background: #ffc65f;
+}
+
+.event-type-summary-card.type-card-texanna::after {
+  background: #5fb8ff;
+}
+
+.event-type-summary-card.type-card-other::after {
+  background: #a0a0a0;
+}
+
+.event-type-summary-card:hover > span {
+  color: #9b9b9b;
+}
+
+.event-type-summary-card:hover > strong {
+  color: #fff;
+}
