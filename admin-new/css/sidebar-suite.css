@@ -1,0 +1,286 @@
+/* =========================================================
+   LIVE KARAOKE SUITE — SIDEBAR REDESIGN
+   Add this stylesheet AFTER your existing admin sidebar/main CSS.
+   ========================================================= */
+
+.admin-sidebar.suite-sidebar {
+  --suite-bg: #050708;
+  --suite-panel: #071017;
+  --suite-line: #17242d;
+  --suite-text: #edf2f4;
+  --suite-muted: #7f8a90;
+  --suite-cyan: #45c8f3;
+  --suite-green: #1fdb71;
+  --suite-red: #d41421;
+  --suite-purple: #9b68ff;
+  --suite-yellow: #f2cf4d;
+
+  width: 100%;
+  min-height: 100%;
+  padding: 22px 18px 18px;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(25,92,122,.12), transparent 20rem),
+    linear-gradient(180deg, #071017 0%, #040607 75%);
+  color: var(--suite-text);
+  border-right: 1px solid #342027;
+}
+
+.suite-brand-block {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 4px 8px 19px;
+  border-bottom: 1px solid var(--suite-line);
+}
+
+.suite-brand-icon {
+  font-size: 44px;
+  filter: drop-shadow(0 0 10px rgba(255,51,64,.55));
+}
+
+.suite-brand-title {
+  color: #fff;
+  font-size: 21px;
+  font-weight: 950;
+  letter-spacing: .02em;
+}
+
+.suite-brand-subtitle {
+  margin-top: 3px;
+  color: var(--suite-cyan);
+  font-size: 18px;
+  font-weight: 950;
+  letter-spacing: .26em;
+}
+
+.admin-user-card.suite-user-card {
+  display: grid;
+  grid-template-columns: 58px minmax(0,1fr);
+  gap: 12px;
+  align-items: center;
+  width: 100%;
+  margin: 16px 0 17px;
+  padding: 10px 8px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.suite-user-card .avatar {
+  width: 54px;
+  height: 54px;
+}
+
+.suite-user-copy {
+  min-width: 0;
+}
+
+.suite-user-copy strong,
+.suite-user-copy span,
+.suite-user-copy small {
+  display: block;
+}
+
+.suite-user-copy strong {
+  overflow: hidden;
+  color: #fff;
+  font-size: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.suite-user-copy span {
+  margin-top: 2px;
+  color: #9ea9af;
+  font-size: 11px;
+}
+
+.suite-user-copy small {
+  margin-top: 4px;
+  color: var(--suite-green);
+  font-size: 10px;
+}
+
+.suite-nav-section-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 26px;
+  margin: 15px 8px 6px;
+  color: #8799ac;
+  font-size: 9px;
+  font-weight: 950;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+}
+
+.suite-nav-section-title.live-title {
+  color: #29dc79;
+}
+
+.suite-nav-section-title.music-title {
+  color: #b06bf3;
+}
+
+.suite-nav-section-title.karaoke-title {
+  color: #44bff0;
+}
+
+.suite-nav-section-title.records-title {
+  color: #a36af5;
+}
+
+.suite-nav-section-title.tools-title {
+  color: var(--suite-yellow);
+}
+
+.suite-nav-section-title.system-title {
+  color: #7c8b99;
+}
+
+.suite-live-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  padding: 3px 8px;
+  border: 1px solid #17783d;
+  border-radius: 999px;
+  background: rgba(12,69,34,.68);
+  box-shadow: 0 0 12px rgba(31,219,113,.16);
+  color: #3cf486;
+  font-size: 8px;
+  font-weight: 950;
+  letter-spacing: .04em;
+}
+
+.suite-nav {
+  display: grid;
+  gap: 3px;
+  margin-bottom: 3px;
+}
+
+.suite-nav a,
+.suite-nav button {
+  display: grid;
+  grid-template-columns: 29px minmax(0,1fr) auto auto;
+  align-items: center;
+  gap: 7px;
+  width: 100%;
+  min-height: 40px;
+  padding: 7px 9px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: transparent;
+  color: #e0e6e9;
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background .16s ease,
+    border-color .16s ease,
+    color .16s ease,
+    transform .16s ease;
+}
+
+.suite-nav a:hover,
+.suite-nav button:hover {
+  border-color: #24333d;
+  background: rgba(9,22,29,.74);
+  color: #fff;
+  transform: translateX(2px);
+}
+
+.suite-nav a.active,
+.suite-nav button.active {
+  border-color: #8d1520;
+  background:
+    linear-gradient(90deg, rgba(189,0,13,.93), rgba(79,10,18,.62));
+  box-shadow: 0 0 13px rgba(190,0,15,.13);
+  color: #fff;
+}
+
+.suite-nav-icon {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  min-width: 26px;
+  font-size: 17px;
+}
+
+.suite-nav-label {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 11px;
+  font-weight: 850;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.suite-nav-chevron {
+  color: #7391a2;
+  font-size: 19px;
+  line-height: 1;
+}
+
+.suite-nav-count {
+  display: grid;
+  place-items: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 6px;
+  border-radius: 999px;
+  font-size: 9px;
+  font-weight: 950;
+}
+
+.suite-nav-count.request-count {
+  background: #ef2431;
+  color: #fff;
+  box-shadow: 0 0 10px rgba(239,36,49,.22);
+}
+
+.suite-nav-count.run-order-count {
+  border: 1px solid #244058;
+  background: #0d2232;
+  color: #b9dbef;
+}
+
+.suite-hidden-request-list {
+  display: none !important;
+}
+
+.suite-sidebar-footer {
+  display: grid;
+  gap: 4px;
+  margin-top: 18px;
+  padding: 17px 8px 4px;
+  border-top: 1px solid var(--suite-line);
+  color: #6f7c84;
+  font-size: 9px;
+}
+
+.hidden {
+  display: none !important;
+}
+
+@media (max-width: 900px) {
+  .admin-sidebar.suite-sidebar {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  .suite-brand-title {
+    font-size: 18px;
+  }
+
+  .suite-brand-subtitle {
+    font-size: 15px;
+  }
+
+  .suite-nav-label {
+    font-size: 10px;
+  }
+}
