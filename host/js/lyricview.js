@@ -1041,21 +1041,25 @@
       $("lyricsContent").innerHTML = `<div class="host-load-error">No song selected.</div>`;
       return;
     }
-    db.collection("lyrics").doc(songId).onSnapshot(doc => {
-      if (!doc.exists) { $("lyricsContent").innerHTML = `<div class="host-load-error">Could not load song data.</div>`; return; }
+    // A displayed song is effectively static during a performance. Use one
+    // document read instead of a permanent realtime listener to reduce quota.
+    try {
+      const doc = await db.collection("lyrics").doc(songId).get();
+      if (!doc.exists) {
+        $("lyricsContent").innerHTML = `<div class="host-load-error">Could not load song data.</div>`;
+        return;
+      }
       currentSong = {id:doc.id,...doc.data()};
 
-      // Restore this song's own saved autoscroll multiplier.
       loadSongScrollSpeed(currentSong);
-
       setTopTitle(currentSong);
       setInfo(currentSong);
       renderSections(currentSong);
       loadSlaveLyricsOptions();
-    }, err => {
+    } catch (err) {
       console.error(err);
       $("lyricsContent").innerHTML = `<div class="host-load-error">${esc(err.message)}</div>`;
-    });
+    }
   }
 
   document.addEventListener("DOMContentLoaded", init);
