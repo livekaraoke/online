@@ -14,4 +14,8 @@ if (!firebase.apps.length) {
 
 /* Expose these globally because the existing suite uses db directly. */
 window.db = firebase.firestore();
-window.auth = firebase.auth();
+// Some host/viewer pages intentionally load only Firebase App + Firestore.
+window.auth =
+  typeof firebase.auth === "function"
+    ? firebase.auth()
+    : null;
