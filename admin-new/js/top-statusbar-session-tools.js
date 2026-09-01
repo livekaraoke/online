@@ -159,9 +159,15 @@
     const legacyWindow = $("tsScheduledWindow");
 
     if (!state.sessionId || !state.session) {
-      if (compactRemaining) compactRemaining.textContent = "-";
+      if (compactRemaining) {
+        compactRemaining.textContent = "-";
+        compactRemaining.classList.remove("is-overdue", "is-remaining");
+      }
       if (compactEnd) compactEnd.textContent = "No scheduled end";
-      if (adjustedRemaining) adjustedRemaining.textContent = "-";
+      if (adjustedRemaining) {
+        adjustedRemaining.textContent = "-";
+        adjustedRemaining.classList.remove("is-overdue", "is-remaining");
+      }
       if (adjustedEnd) adjustedEnd.textContent = "Adjusted end —";
       if (adjustedHint) adjustedHint.textContent = "No active session";
       if (legacyRemaining) legacyRemaining.textContent = "-";
@@ -205,15 +211,30 @@
 
     if (officialTarget) {
       const officialMs = officialTarget.getTime() - Date.now();
-      const text = officialMs > 0
-        ? formatDuration(officialMs)
-        : `Over ${formatDuration(Math.abs(officialMs))}`;
+      const isOverdue = officialMs <= 0;
+      const text = formatDuration(Math.abs(officialMs));
 
-      if (compactRemaining) compactRemaining.textContent = text;
-      if (legacyRemaining) legacyRemaining.textContent = text;
+      if (compactRemaining) {
+        compactRemaining.textContent = text;
+        compactRemaining.classList.toggle("is-overdue", isOverdue);
+        compactRemaining.classList.toggle("is-remaining", !isOverdue);
+      }
+
+      if (legacyRemaining) {
+        legacyRemaining.textContent = text;
+        legacyRemaining.classList.toggle("is-overdue", isOverdue);
+        legacyRemaining.classList.toggle("is-remaining", !isOverdue);
+      }
     } else {
-      if (compactRemaining) compactRemaining.textContent = "-";
-      if (legacyRemaining) legacyRemaining.textContent = "-";
+      if (compactRemaining) {
+        compactRemaining.textContent = "-";
+        compactRemaining.classList.remove("is-overdue", "is-remaining");
+      }
+
+      if (legacyRemaining) {
+        legacyRemaining.textContent = "-";
+        legacyRemaining.classList.remove("is-overdue", "is-remaining");
+      }
     }
 
     /* ------------------------------------------------------
@@ -236,9 +257,13 @@
       const adjustedMs = adjustedTarget.getTime() - Date.now();
 
       if (adjustedRemaining) {
-        adjustedRemaining.textContent = adjustedMs > 0
-          ? formatDuration(adjustedMs)
-          : `Over ${formatDuration(Math.abs(adjustedMs))}`;
+        const isOverdue = adjustedMs <= 0;
+
+        adjustedRemaining.textContent =
+          formatDuration(Math.abs(adjustedMs));
+
+        adjustedRemaining.classList.toggle("is-overdue", isOverdue);
+        adjustedRemaining.classList.toggle("is-remaining", !isOverdue);
       }
 
       if (adjustedEnd) {
@@ -264,7 +289,10 @@
         }
       }
     } else {
-      if (adjustedRemaining) adjustedRemaining.textContent = "-";
+      if (adjustedRemaining) {
+        adjustedRemaining.textContent = "-";
+        adjustedRemaining.classList.remove("is-overdue", "is-remaining");
+      }
       if (adjustedEnd) adjustedEnd.textContent = "Adjusted end —";
       if (adjustedHint) adjustedHint.textContent =
         "Scheduled duration unavailable";
