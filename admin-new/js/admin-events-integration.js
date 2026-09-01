@@ -25,6 +25,11 @@
   let upcomingEvents = [];
   let eventTypes = [...DEFAULT_EVENT_TYPES];
 
+  let activeSessionControl = null;
+  let activeSessionData = null;
+  let activeSessionUnsubscribe = null;
+  let statusCountdownTimer = null;
+
   function esc(value) {
     return String(value || "")
       .replace(/&/g, "&amp;")
@@ -76,6 +81,269 @@
     if (hours && minutes) return `${hours}h ${minutes}m`;
     if (hours) return `${hours}h`;
     return `${minutes}m`;
+  }
+
+  function datePartsFromDate(date) {
+    if (!(date instanceof Date) || Number.isNaN(date.getTime())) {
+      return { date: "-- ---", time: "--:--" };
+    }
+
+    return {
+      date: date
+        .toLocaleDateString(undefined, { day: "2-digit", month: "short" })
+        .replace(",", "")
+        .toUpperCase(),
+      time: date.toLocaleTimeString(undefined, {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false
+      })
+    };
+  }
+
+  function firestoreTimestampToDate(value) {
+    if (!value) return null;
+
+    if (typeof value.toDate === "function") {
+      return value.toDate();
+    }
+
+    if (value instanceof Date) return value;
+
+    if (typeof value === "string" || typeof value === "number") {
+      const parsed = new Date(value);
+      return Number.isNaN(parsed.getTime()) ? null : parsed;
+    }
+
+    return null;
+  }
+
+  function eventStartDate(event) {
+    if (!event?.date) return null;
+
+    const time = event.startTime || "00:00";
+    const date = new Date(`${event.date}T${time}:00`);
+
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
+
+  function countdownText(target) {
+    if (!(target instanceof Date) || Number.isNaN(target.getTime())) {
+      return "Time TBC";
+    }
+
+    const diff = target.getTime() - Date.now();
+
+    if (diff <= 0) {
+      return "Starting now";
+    }
+
+    const totalMinutes = Math.floor(diff / 60000);
+    const days = Math.floor(totalMinutes / 1440);
+    const hours = Math.floor((totalMinutes % 1440) / 60);
+    const minutes = totalMinutes % 60;
+
+    if (days > 0) {
+      return `${days}d ${hours}h ${minutes}m`;
+    }
+
+    if (hours > 0) {
+      return `${hours}h ${minutes}m`;
+    }
+
+    return `${Math.max(1, minutes)}m`;
+  }
+
+  function getActiveSessionStartDate() {
+    return (
+      firestoreTimestampToDate(activeSessionData?.startedAt) ||
+      firestoreTimestampToDate(activeSessionControl?.startedAt) ||
+      null
+    );
+  }
+
+  function getCurrentSessionType() {
+    return (
+      activeSessionData?.sessionType ||
+      activeSessionData?.type ||
+      activeSessionControl?.sessionType ||
+      activeSessionControl?.type ||
+      "Live Karaoke"
+    );
+  }
+
+  function renderVenueContextStatus() {
+    const box = document.querySelector(".status-venue-context-box");
+    const dateEl = $("statusVenueDate");
+    const timeEl = $("statusVenueTime");
+    const venueEl = $("statusVenueLabel");
+    const typeEl = $("statusVenueType");
+    const countdownEl = $("statusVenueCountdown");
+
+    if (!dateEl || !timeEl || !venueEl || !typeEl || !countdownEl) return;
+
+    const hasActiveSession =
+      !!activeSessionControl?.active &&
+      !!(activeSessionControl?.sessionId || activeSessionData?.id);
+
+    if (hasActiveSession) {
+      const started = getActiveSessionStartDate();
+      const parts = datePartsFromDate(started || new Date());
+
+      dateEl.textContent = parts.date;
+      timeEl.textContent = parts.time;
+      venueEl.textContent =
+        activeSessionData?.venue ||
+        activeSessionControl?.venue ||
+        "Unknown Venue";
+      typeEl.textContent = getCurrentSessionType();
+      countdownEl.textContent = "● LIVE NOW";
+
+      box?.classList.add("session-active");
+      return;
+    }
+
+    box?.classList.remove("session-active");
+
+    const next = sortedUpcoming()[0] || null;
+
+    if (!next) {
+      dateEl.textContent = "-- ---";
+      timeEl.textContent = "--:--";
+      venueEl.textContent = "No upcoming gig";
+      typeEl.textContent = "—";
+      countdownEl.textContent = "No upcoming event";
+      return;
+    }
+
+    const start = eventStartDate(next);
+    const parts = start
+      ? datePartsFromDate(start)
+      : {
+          date: next.date
+            ? formatDate(next.date).replace(/^[A-Za-z]{3},?\s*/, "").toUpperCase()
+            : "-- ---",
+          time: next.startTime || "--:--"
+        };
+
+    dateEl.textContent = parts.date;
+    timeEl.textContent = next.startTime || parts.time;
+    venueEl.textContent = next.venue || "Venue TBC";
+    typeEl.textContent = next.type || "Other";
+    countdownEl.textContent = countdownText(start);
+  }
+
+  function setSystemStatusLiveUi() {
+    const label = $("statusLiveLabel");
+    const box = document.querySelector(".status-live-box");
+    const button = $("liveCircleBtn");
+
+    if (label) {
+      label.textContent = "● Live";
+      label.classList.remove("offline-status");
+      label.classList.add("live-status");
+    }
+
+    box?.classList.add("session-forced-live");
+
+    if (button) {
+      button.title = "End live";
+      if (!button.textContent.trim() || button.textContent.trim() === "▶") {
+        button.textContent = "■";
+      }
+    }
+  }
+
+  async function forceSystemLiveForPerformance() {
+    try {
+      await db.collection("karaoke").doc("state").set({
+        isLive: true,
+        manualOverride: true,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+
+      setSystemStatusLiveUi();
+
+      if (typeof window.logAdmin === "function") {
+        window.logAdmin("System Status automatically set to LIVE for Performance Session");
+      }
+    } catch (error) {
+      console.error("Performance started, but System Status could not be set LIVE:", error);
+    }
+  }
+
+  function wrapStartPerformanceForLiveStatus() {
+    if (typeof window.startPerformance !== "function") return;
+    if (window.startPerformance.__autoLiveWrapped) return;
+
+    const original = window.startPerformance;
+
+    const wrapped = async function (...args) {
+      const result = await original.apply(this, args);
+      await forceSystemLiveForPerformance();
+      return result;
+    };
+
+    wrapped.__autoLiveWrapped = true;
+    window.startPerformance = wrapped;
+  }
+
+  function listenForActiveSessionStatus() {
+    db.collection("karaokeControl").doc("currentSession").onSnapshot(doc => {
+      activeSessionControl = doc.exists ? (doc.data() || {}) : null;
+
+      if (activeSessionUnsubscribe) {
+        activeSessionUnsubscribe();
+        activeSessionUnsubscribe = null;
+      }
+
+      const sessionId =
+        activeSessionControl?.sessionId ||
+        activeSessionControl?.activeSessionId ||
+        "";
+
+      if (
+        activeSessionControl?.active &&
+        sessionId
+      ) {
+        activeSessionUnsubscribe = db
+          .collection("performanceSessions")
+          .doc(sessionId)
+          .onSnapshot(sessionDoc => {
+            activeSessionData = sessionDoc.exists
+              ? { id: sessionDoc.id, ...(sessionDoc.data() || {}) }
+              : null;
+
+            renderVenueContextStatus();
+
+            // A genuinely active Performance Session should always appear
+            // LIVE in the Admin status strip.
+            setSystemStatusLiveUi();
+          }, error => {
+            console.warn("Active Performance Session status unavailable:", error);
+            activeSessionData = null;
+            renderVenueContextStatus();
+          });
+      } else {
+        activeSessionData = null;
+        renderVenueContextStatus();
+      }
+    }, error => {
+      console.warn("Current Session status unavailable:", error);
+      activeSessionControl = null;
+      activeSessionData = null;
+      renderVenueContextStatus();
+    });
+  }
+
+  function startVenueStatusCountdown() {
+    clearInterval(statusCountdownTimer);
+
+    renderVenueContextStatus();
+
+    statusCountdownTimer = setInterval(() => {
+      renderVenueContextStatus();
+    }, 1000);
   }
 
   function populateVenueDatalist() {
@@ -302,6 +570,7 @@
     db.collection("upcomingEvents").onSnapshot(snapshot => {
       upcomingEvents = snapshot.docs.map(doc => ({ id:doc.id, ...(doc.data() || {}) }));
       renderAllEventSurfaces();
+      renderVenueContextStatus();
     }, error => {
       console.warn("Admin upcoming-events dashboard unavailable:", error);
     });
@@ -340,7 +609,16 @@
   async function init() {
     bindUI();
     await seedEventTypesIfNeeded();
+
+    // Existing Admin session code is loaded before this addon.
+    // Wrap it so START PERFORMANCE automatically makes System Status LIVE.
+    wrapStartPerformanceForLiveStatus();
+    setTimeout(wrapStartPerformanceForLiveStatus, 250);
+    setTimeout(wrapStartPerformanceForLiveStatus, 1000);
+
     startListeners();
+    listenForActiveSessionStatus();
+    startVenueStatusCountdown();
   }
 
   if (document.readyState === "loading") {
