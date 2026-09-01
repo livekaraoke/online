@@ -1583,3 +1583,222 @@
     min-height: 145px !important;
   }
 }
+
+
+/* ========================================================================
+   SESSION/BREAK TABS + TWO-ROW LIVE WORKFLOW
+   ======================================================================== */
+
+/* Row 1 = 2 equal live-information cards */
+#topStatusBar .host-expanded-primary.host-two-card-primary {
+  display: grid !important;
+  grid-template-columns: minmax(360px, 1fr) minmax(360px, 1fr) !important;
+  gap: 8px !important;
+  align-items: stretch !important;
+  width: 100% !important;
+}
+
+/* Shared tab-card dimensions */
+#topStatusBar .host-session-break-tabs-card,
+#topStatusBar .host-workflow-notifications-card.host-tabs-card {
+  display: flex !important;
+  flex-direction: column !important;
+  min-width: 0 !important;
+  width: auto !important;
+  height: 176px !important;
+  min-height: 176px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+}
+
+/* Session / Break tab header uses same language as Notes / Notifications */
+#topStatusBar .host-session-tabs {
+  flex: 0 0 32px !important;
+}
+
+#topStatusBar .host-status-tab-pane {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+}
+
+#topStatusBar .host-status-tab-pane[hidden] {
+  display: none !important;
+}
+
+/* Remaining + Public List share the available card height cleanly. */
+#topStatusBar #tsSessionStatusPane .host-info-left-stack {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr) !important;
+  height: 100% !important;
+  min-height: 0 !important;
+}
+
+#topStatusBar #tsSessionStatusPane .host-info-segment {
+  min-width: 0 !important;
+  min-height: 0 !important;
+  height: 100% !important;
+  padding: 10px 12px !important;
+  border-bottom: 0 !important;
+}
+
+#topStatusBar #tsSessionStatusPane .adjusted-remaining-segment {
+  border-right: 1px solid #26343b !important;
+}
+
+#topStatusBar #tsSessionStatusPane .adjusted-remaining-value {
+  font-size: 24px !important;
+  line-height: 1 !important;
+}
+
+#topStatusBar #tsSessionStatusPane .adjusted-end-time {
+  margin-top: 6px !important;
+  font-size: 9px !important;
+}
+
+#topStatusBar #tsSessionStatusPane .adjusted-remaining-hint {
+  margin-top: 5px !important;
+  font-size: 7px !important;
+  line-height: 1.2 !important;
+}
+
+#topStatusBar #tsSessionStatusPane .large-status-value {
+  font-size: 19px !important;
+}
+
+#topStatusBar #tsSessionStatusPane .top-status-public-list-name {
+  margin-top: 10px !important;
+}
+
+/* Break content now fills the SAME card rather than being a separate card. */
+#topStatusBar .host-break-tab-content {
+  display: flex !important;
+  flex-direction: column !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  padding: 9px 11px !important;
+  margin: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  overflow: hidden !important;
+}
+
+#topStatusBar .host-break-tab-content .break-status-panel {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  padding: 8px 10px !important;
+}
+
+#topStatusBar .host-break-tab-content .break-status-label {
+  font-size: 12px !important;
+}
+
+#topStatusBar .host-break-tab-content .break-details:not(.hidden) {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0,1fr)) !important;
+  gap: 6px !important;
+}
+
+#topStatusBar .host-break-tab-content .break-summary-grid {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0,1fr)) !important;
+  gap: 5px !important;
+}
+
+#topStatusBar .host-break-tab-content .break-action-btn {
+  width: 100% !important;
+  height: 29px !important;
+  min-height: 29px !important;
+  margin-top: 6px !important;
+}
+
+/* Row 2 = Pending + Run Order, with Run Order given more width. */
+#topStatusBar .host-expanded-workflow.host-two-column-workflow {
+  display: grid !important;
+  grid-template-columns: minmax(330px, .82fr) minmax(520px, 1.45fr) !important;
+  gap: 8px !important;
+  align-items: stretch !important;
+  width: 100% !important;
+  margin-top: 8px !important;
+}
+
+#topStatusBar .host-two-column-workflow .host-pending-card,
+#topStatusBar .host-two-column-workflow .host-run-order-card {
+  min-width: 0 !important;
+  width: auto !important;
+  height: 170px !important;
+  min-height: 170px !important;
+  margin: 0 !important;
+}
+
+/* Over-time status becomes RED only while actually over target time. */
+#topStatusBar .remaining-over-time {
+  color: #ff3b47 !important;
+  text-shadow: 0 0 8px rgba(255, 45, 58, .18) !important;
+}
+
+#topStatusBar #tsCompactRemaining.remaining-over-time {
+  color: #ff3b47 !important;
+}
+
+#topStatusBar #tsCompactScheduledEnd.remaining-over-time {
+  color: #ff6a72 !important;
+}
+
+#topStatusBar #tsAdjustedRemainingTime.remaining-over-time {
+  color: #ff3b47 !important;
+}
+
+#topStatusBar #tsAdjustedEndTime.remaining-over-time,
+#topStatusBar #tsAdjustedEndTime.remaining-over-time strong {
+  color: #ff5e68 !important;
+}
+
+#topStatusBar #tsAdjustedRemainingHint.remaining-over-time {
+  color: #d94a52 !important;
+}
+
+/* Tablet landscape keeps both cards in row 1 and both workflow cards in row 2. */
+@media (min-width: 761px) and (max-width: 1180px) {
+  #topStatusBar .host-expanded-primary.host-two-card-primary {
+    grid-template-columns: minmax(335px, 1fr) minmax(335px, 1fr) !important;
+  }
+
+  #topStatusBar .host-expanded-workflow.host-two-column-workflow {
+    grid-template-columns: minmax(300px, .8fr) minmax(470px, 1.42fr) !important;
+  }
+
+  #topStatusBar #tsSessionStatusPane .host-info-left-stack {
+    grid-template-columns: minmax(0, 1fr) minmax(0, .9fr) !important;
+  }
+}
+
+/* Narrow phones only stack. */
+@media (max-width: 760px) {
+  #topStatusBar .host-expanded-primary.host-two-card-primary,
+  #topStatusBar .host-expanded-workflow.host-two-column-workflow {
+    grid-template-columns: 1fr !important;
+  }
+
+  #topStatusBar .host-session-break-tabs-card,
+  #topStatusBar .host-workflow-notifications-card.host-tabs-card,
+  #topStatusBar .host-two-column-workflow .host-pending-card,
+  #topStatusBar .host-two-column-workflow .host-run-order-card {
+    height: auto !important;
+    min-height: 155px !important;
+  }
+
+  #topStatusBar #tsSessionStatusPane .host-info-left-stack {
+    grid-template-columns: 1fr !important;
+  }
+
+  #topStatusBar #tsSessionStatusPane .adjusted-remaining-segment {
+    border-right: 0 !important;
+    border-bottom: 1px solid #26343b !important;
+  }
+}
