@@ -788,176 +788,156 @@
     init();
   }
 
-  function installActiveRequestsTabletStyles() {
-    if (document.getElementById("lkActiveRequestsTabletStyles")) return;
+
+
+
+  /* ============================================================
+     ACTIVE SONG REQUESTS — SAFE TABLET LAYOUT FIX
+     ------------------------------------------------------------
+     IMPORTANT:
+     - NO MutationObserver.
+     - NO DOM wrapping.
+     - NO repeated child insertion.
+     - NO interval.
+     - We only add CSS and harmless class names after the existing
+       renderActiveRequests() has finished.
+     ============================================================ */
+
+  function installSafeActiveRequestsLayout() {
+    if (document.getElementById("lkSafeActiveRequestsCss")) return;
 
     const style = document.createElement("style");
-    style.id = "lkActiveRequestsTabletStyles";
+    style.id = "lkSafeActiveRequestsCss";
     style.textContent = `
-      /* Scoped ONLY to the Admin Active Song Requests card. */
       #requestsPanel {
-        min-width: 0;
+        min-width: 0 !important;
       }
 
-      #requestsPanel .active-requests-list {
-        width: 100%;
-        min-width: 0;
-        overflow-x: hidden;
+      #requestsPanel #activeRequestsList {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-height: none !important;
+        height: auto !important;
+        overflow-x: hidden !important;
+        overflow-y: visible !important;
       }
 
-      #requestsPanel .active-request-row {
-        box-sizing: border-box;
-        width: 100%;
-        min-width: 0;
-      }
-
-      /* Original/legacy request row:
-         Song/Singer | BPM | Time | Complete | Abandon | Delete */
-      #requestsPanel .active-request-row:not(:has(.request-number)):not(:has(.request-index)) {
+      #requestsPanel .lk-safe-request-header,
+      #requestsPanel .lk-safe-request-row {
+        box-sizing: border-box !important;
+        width: 100% !important;
+        min-width: 0 !important;
         display: grid !important;
         grid-template-columns:
-          minmax(180px, 1fr)
+          44px
+          minmax(160px, 1.35fr)
+          minmax(105px, .82fr)
           58px
-          78px
-          38px
-          38px
-          38px !important;
+          88px
+          116px !important;
         align-items: center !important;
-        gap: 7px !important;
+        column-gap: 8px !important;
       }
 
-      #requestsPanel .request-main {
+      #requestsPanel .lk-safe-request-header {
+        min-height: 42px !important;
+        padding: 8px 10px !important;
+      }
+
+      #requestsPanel .lk-safe-request-row {
+        min-height: 62px !important;
+        padding: 8px 10px !important;
+      }
+
+      #requestsPanel .lk-safe-request-header > *,
+      #requestsPanel .lk-safe-request-row > * {
         min-width: 0 !important;
+        margin: 0 !important;
       }
 
-      #requestsPanel .request-main strong,
-      #requestsPanel .request-main span {
+      #requestsPanel .lk-safe-request-header > * {
+        overflow: hidden !important;
+        color: #a7a7a7 !important;
+        font-size: 10px !important;
+        font-weight: 900 !important;
+        line-height: 1.15 !important;
+        white-space: nowrap !important;
+        text-overflow: ellipsis !important;
+      }
+
+      #requestsPanel .lk-safe-request-row strong {
         display: block !important;
         overflow: hidden !important;
-        text-overflow: ellipsis !important;
-        white-space: nowrap !important;
-      }
-
-      #requestsPanel .request-main strong {
         font-size: 14px !important;
-        line-height: 1.2 !important;
-      }
-
-      #requestsPanel .request-main span {
-        margin-top: 3px !important;
-        color: #9a9a9a !important;
-        font-size: 10px !important;
-      }
-
-      #requestsPanel .request-bpm,
-      #requestsPanel .request-time {
-        min-width: 0 !important;
-        text-align: center !important;
+        line-height: 1.15 !important;
         white-space: nowrap !important;
+        text-overflow: ellipsis !important;
       }
 
-      #requestsPanel .active-request-row > button {
-        width: 34px !important;
-        min-width: 34px !important;
-        height: 34px !important;
+      #requestsPanel .lk-safe-request-row span,
+      #requestsPanel .lk-safe-request-row small {
+        display: block !important;
+        overflow: hidden !important;
+        white-space: nowrap !important;
+        text-overflow: ellipsis !important;
+      }
+
+      #requestsPanel .lk-safe-request-actions {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-end !important;
+        gap: 5px !important;
+        flex-wrap: nowrap !important;
+        overflow: visible !important;
+      }
+
+      #requestsPanel .lk-safe-request-actions button {
+        display: inline-grid !important;
+        place-items: center !important;
+        flex: 0 0 32px !important;
+        width: 32px !important;
+        min-width: 32px !important;
+        height: 32px !important;
+        min-height: 32px !important;
+        margin: 0 !important;
         padding: 0 !important;
       }
 
-      /* Newer table/card request renderer, if present. */
-      #requestsPanel .active-request-row:has(.request-number),
-      #requestsPanel .active-request-row:has(.request-index) {
-        display: grid !important;
+      /* Legacy renderer:
+         request-main | bpm | time | completed | abandoned | delete
+         It has no separate number / requested-by columns, so keep its
+         original compact six-cell layout. */
+      #requestsPanel .active-request-row.lk-safe-legacy-row {
         grid-template-columns:
-          42px
-          minmax(165px, 1.35fr)
-          minmax(110px, .85fr)
-          62px
-          88px
-          118px !important;
-        align-items: center !important;
-        gap: 8px !important;
-      }
-
-      #requestsPanel .request-number,
-      #requestsPanel .request-index {
-        justify-self: center !important;
-      }
-
-      #requestsPanel .request-actions {
-        display: flex !important;
-        justify-content: flex-end !important;
-        gap: 6px !important;
-        flex-wrap: nowrap !important;
-      }
-
-      /* Header must follow the same columns instead of wrapping vertically. */
-      #requestsPanel .active-request-header,
-      #requestsPanel .requests-table-header,
-      #requestsPanel .request-list-header {
-        display: grid !important;
-        grid-template-columns:
-          42px
-          minmax(165px, 1.35fr)
-          minmax(110px, .85fr)
-          62px
-          88px
-          118px !important;
-        align-items: center !important;
-        gap: 8px !important;
-        min-width: 0 !important;
-      }
-
-      #requestsPanel .active-request-header > *,
-      #requestsPanel .requests-table-header > *,
-      #requestsPanel .request-list-header > * {
-        min-width: 0 !important;
-        overflow: hidden !important;
-        white-space: nowrap !important;
-        text-overflow: ellipsis !important;
+          minmax(190px, 1fr)
+          58px
+          84px
+          34px
+          34px
+          34px !important;
       }
 
       @media (min-width: 700px) and (max-width: 1180px) {
-        #requestsPanel {
-          padding-left: 14px !important;
-          padding-right: 14px !important;
-        }
-
-        #requestsPanel .card-title-row.split {
-          gap: 10px !important;
-          align-items: center !important;
-        }
-
-        #requestsPanel .card-title-row h2 {
-          min-width: 0 !important;
-          font-size: clamp(20px, 2.4vw, 29px) !important;
-          line-height: 1.05 !important;
-        }
-
-        #requestsPanel .request-toolbar {
-          flex: 0 0 auto !important;
-          display: flex !important;
-          gap: 7px !important;
-          flex-wrap: nowrap !important;
-        }
-
-        #requestsPanel .request-toolbar select {
-          width: 145px !important;
-          min-width: 0 !important;
-        }
-
-        #requestsPanel .active-request-row:has(.request-number),
-        #requestsPanel .active-request-row:has(.request-index),
-        #requestsPanel .active-request-header,
-        #requestsPanel .requests-table-header,
-        #requestsPanel .request-list-header {
+        #requestsPanel .lk-safe-request-header,
+        #requestsPanel .lk-safe-request-row {
           grid-template-columns:
-            38px
-            minmax(145px, 1.3fr)
-            minmax(90px, .78fr)
-            54px
+            40px
+            minmax(140px, 1.3fr)
+            minmax(90px, .76fr)
+            50px
             76px
             108px !important;
-          gap: 6px !important;
+          column-gap: 6px !important;
+        }
+
+        #requestsPanel .active-request-row.lk-safe-legacy-row {
+          grid-template-columns:
+            minmax(165px, 1fr)
+            52px
+            76px
+            32px
+            32px
+            32px !important;
         }
       }
     `;
@@ -965,298 +945,104 @@
     document.head.appendChild(style);
   }
 
-  installActiveRequestsTabletStyles();
-
-
-  /* ============================================================
-     ACTIVE SONG REQUESTS — RUNTIME TABLET GRID REPAIR
-     The request renderer exists in requests.js and can use different class
-     names across versions. Instead of guessing those names, identify the
-     actual header and request rows after they are rendered, tag them, and
-     apply one consistent six-column layout.
-     ============================================================ */
-
-  function installActiveRequestsRuntimeGridFix() {
-    const panel = document.getElementById("requestsPanel");
+  function applySafeActiveRequestsLayout() {
     const box = document.getElementById("activeRequestsList");
+    if (!box) return;
 
-    if (!panel || !box) return;
+    installSafeActiveRequestsLayout();
 
-    if (!document.getElementById("lkActiveRequestRuntimeGridCss")) {
-      const style = document.createElement("style");
-      style.id = "lkActiveRequestRuntimeGridCss";
-      style.textContent = `
-        #requestsPanel {
-          min-width: 0 !important;
-        }
+    /* Clean up classes left by the broken previous update. */
+    box.querySelectorAll(
+      ".lk-request-grid-header, .lk-request-grid-row, .lk-request-actions"
+    ).forEach(el => {
+      el.classList.remove(
+        "lk-request-grid-header",
+        "lk-request-grid-row",
+        "lk-request-actions"
+      );
+    });
 
-        #requestsPanel #activeRequestsList {
-          width: 100% !important;
-          min-width: 0 !important;
-          overflow-x: hidden !important;
-        }
+    /* Find request rows by existing renderer classes first. */
+    const rows = Array.from(box.querySelectorAll(".active-request-row"));
 
-        #requestsPanel .lk-request-grid-header,
-        #requestsPanel .lk-request-grid-row {
-          box-sizing: border-box !important;
-          width: 100% !important;
-          min-width: 0 !important;
-          display: grid !important;
-          grid-template-columns:
-            46px
-            minmax(170px, 1.35fr)
-            minmax(120px, .82fr)
-            62px
-            98px
-            126px !important;
-          align-items: center !important;
-          column-gap: 10px !important;
-        }
+    rows.forEach(row => {
+      row.classList.add("lk-safe-request-row");
 
-        #requestsPanel .lk-request-grid-header {
-          min-height: 48px !important;
-          padding: 9px 12px !important;
-        }
+      const children = Array.from(row.children);
+      const directButtons = children.filter(el => el.tagName === "BUTTON");
 
-        #requestsPanel .lk-request-grid-row {
-          min-height: 64px !important;
-          padding: 9px 12px !important;
-        }
+      /* Old renderer has request-main + bpm + time + 3 direct buttons. */
+      if (directButtons.length >= 3) {
+        row.classList.add("lk-safe-legacy-row");
+        return;
+      }
 
-        #requestsPanel .lk-request-grid-header > *,
-        #requestsPanel .lk-request-grid-row > * {
-          min-width: 0 !important;
-          margin: 0 !important;
-        }
+      /* New renderer normally has an actions wrapper as its final cell. */
+      const actionCell = children.find(el =>
+        el.classList?.contains("request-actions") ||
+        el.querySelectorAll?.("button").length >= 3
+      );
 
-        #requestsPanel .lk-request-grid-header > * {
-          display: block !important;
-          overflow: hidden !important;
-          color: #a9a9a9 !important;
-          font-size: 10px !important;
-          font-weight: 900 !important;
-          line-height: 1.15 !important;
-          white-space: nowrap !important;
-          text-overflow: ellipsis !important;
-        }
+      if (actionCell) actionCell.classList.add("lk-safe-request-actions");
+    });
 
-        #requestsPanel .lk-request-grid-row > *:not(.request-actions):not(.lk-request-actions) {
-          overflow: hidden !important;
-          text-overflow: ellipsis !important;
-        }
+    /*
+      Current newer renderer places a six-label header immediately before
+      the request rows. Tag it WITHOUT modifying its children.
+    */
+    const directChildren = Array.from(box.children);
+    const firstRowIndex = directChildren.findIndex(el =>
+      el.classList.contains("active-request-row")
+    );
 
-        #requestsPanel .lk-request-grid-row strong {
-          overflow: hidden !important;
-          font-size: 14px !important;
-          line-height: 1.15 !important;
-          white-space: nowrap !important;
-          text-overflow: ellipsis !important;
-        }
-
-        #requestsPanel .lk-request-grid-row span,
-        #requestsPanel .lk-request-grid-row small {
-          overflow: hidden !important;
-          white-space: nowrap !important;
-          text-overflow: ellipsis !important;
-        }
-
-        #requestsPanel .lk-request-actions {
-          display: flex !important;
-          align-items: center !important;
-          justify-content: flex-end !important;
-          gap: 6px !important;
-          flex-wrap: nowrap !important;
-          overflow: visible !important;
-        }
-
-        #requestsPanel .lk-request-actions button {
-          display: inline-grid !important;
-          place-items: center !important;
-          flex: 0 0 34px !important;
-          width: 34px !important;
-          min-width: 34px !important;
-          height: 34px !important;
-          min-height: 34px !important;
-          margin: 0 !important;
-          padding: 0 !important;
-        }
-
-        @media (min-width: 700px) and (max-width: 1180px) {
-          #requestsPanel .lk-request-grid-header,
-          #requestsPanel .lk-request-grid-row {
-            grid-template-columns:
-              42px
-              minmax(145px, 1.28fr)
-              minmax(95px, .76fr)
-              50px
-              82px
-              116px !important;
-            column-gap: 7px !important;
-          }
-
-          #requestsPanel .lk-request-grid-header {
-            min-height: 44px !important;
-            padding: 8px 10px !important;
-          }
-
-          #requestsPanel .lk-request-grid-row {
-            min-height: 60px !important;
-            padding: 8px 10px !important;
-          }
-
-          #requestsPanel .lk-request-actions {
-            gap: 5px !important;
-          }
-
-          #requestsPanel .lk-request-actions button {
-            flex-basis: 32px !important;
-            width: 32px !important;
-            min-width: 32px !important;
-            height: 32px !important;
-            min-height: 32px !important;
-          }
-        }
-      `;
-      document.head.appendChild(style);
-    }
-
-    const cleanText = el =>
-      String(el?.textContent || "")
+    if (firstRowIndex > 0) {
+      const candidate = directChildren[firstRowIndex - 1];
+      const text = String(candidate.textContent || "")
         .replace(/\s+/g, " ")
         .trim()
         .toUpperCase();
 
-    const labels = ["#", "SONG", "REQUESTED BY", "BPM", "TIME", "ACTIONS"];
-
-    function nearestCommonHeader() {
-      const all = Array.from(box.querySelectorAll("*"));
-
-      const labelNodes = labels.map(label =>
-        all.find(el => cleanText(el) === label)
-      );
-
-      if (labelNodes.some(node => !node)) return null;
-
-      let candidate = labelNodes[0];
-
-      while (candidate && candidate !== box) {
-        if (labelNodes.every(node => candidate.contains(node))) {
-          // Prefer the smallest common ancestor that visually represents
-          // the header rather than the entire list.
-          const txt = cleanText(candidate);
-          if (labels.every(label => txt.includes(label))) return candidate;
-        }
-        candidate = candidate.parentElement;
+      if (
+        text.includes("SONG") &&
+        text.includes("REQUESTED BY") &&
+        text.includes("BPM") &&
+        text.includes("TIME") &&
+        text.includes("ACTIONS")
+      ) {
+        candidate.classList.add("lk-safe-request-header");
       }
-
-      return null;
-    }
-
-    function tagRequestRowFromButton(button) {
-      let row = button.parentElement;
-
-      while (row && row !== box) {
-        const buttons = row.querySelectorAll("button");
-        const txt = cleanText(row);
-
-        // A live request row contains the action controls and song/singer data.
-        if (
-          buttons.length >= 3 &&
-          (
-            txt.includes("★") ||
-            txt.includes("ABANDON") ||
-            Array.from(buttons).some(btn =>
-              /complete|abandon|delete/i.test(
-                `${btn.title || ""} ${btn.getAttribute("aria-label") || ""}`
-              )
-            )
-          )
-        ) {
-          row.classList.add("lk-request-grid-row");
-
-          // The button wrapper is the last logical grid cell.
-          let actionCell = button.parentElement;
-          if (actionCell !== row) {
-            actionCell.classList.add("lk-request-actions");
-          } else {
-            // Older renderer places buttons directly in the row.
-            // Wrap only the final action buttons so they occupy one grid cell.
-            const actionButtons = Array.from(row.children).filter(child =>
-              child.tagName === "BUTTON"
-            );
-
-            if (actionButtons.length >= 3) {
-              const actionWrap = document.createElement("div");
-              actionWrap.className = "lk-request-actions";
-
-              actionButtons[0].before(actionWrap);
-              actionButtons.forEach(btn => actionWrap.appendChild(btn));
-            }
-          }
-
-          return row;
-        }
-
-        row = row.parentElement;
-      }
-
-      return null;
-    }
-
-    function normalise() {
-      const header = nearestCommonHeader();
-
-      if (header && header !== box) {
-        header.classList.add("lk-request-grid-header");
-
-        // If the six labels are inside one unnecessary wrapper per label,
-        // leave those wrappers intact; CSS grids the header's direct cells.
-      }
-
-      const actionButtons = Array.from(
-        box.querySelectorAll(
-          'button[title*="Completed" i], button[title*="Abandoned" i], button[title*="Delete" i], ' +
-          'button[aria-label*="complete" i], button[aria-label*="abandon" i], button[aria-label*="delete" i]'
-        )
-      );
-
-      actionButtons.forEach(tagRequestRowFromButton);
-
-      // Fallback for the current newer renderer: rows may have a three-button
-      // action block but no titles on the buttons.
-      Array.from(box.querySelectorAll("div")).forEach(el => {
-        if (el.classList.contains("lk-request-grid-row")) return;
-
-        const directButtons = Array.from(el.children).filter(child =>
-          child.tagName === "BUTTON"
-        );
-
-        if (directButtons.length >= 3) {
-          tagRequestRowFromButton(directButtons[0]);
-        }
-      });
-    }
-
-    normalise();
-
-    if (box.dataset.lkRequestGridObserver !== "1") {
-      box.dataset.lkRequestGridObserver = "1";
-
-      const observer = new MutationObserver(() => {
-        requestAnimationFrame(normalise);
-      });
-
-      observer.observe(box, {
-        childList: true,
-        subtree: true
-      });
     }
   }
 
-  // requests.js may render after this integration file, so run immediately,
-  // again after the page settles, and keep the MutationObserver attached.
-  installActiveRequestsRuntimeGridFix();
-  setTimeout(installActiveRequestsRuntimeGridFix, 250);
-  setTimeout(installActiveRequestsRuntimeGridFix, 1000);
+  function hookActiveRequestsRendererSafely() {
+    installSafeActiveRequestsLayout();
+
+    const original = window.renderActiveRequests;
+
+    if (
+      typeof original === "function" &&
+      !original.__lkSafeLayoutWrapped
+    ) {
+      const wrapped = function (...args) {
+        const result = original.apply(this, args);
+        requestAnimationFrame(applySafeActiveRequestsLayout);
+        return result;
+      };
+
+      wrapped.__lkSafeLayoutWrapped = true;
+      window.renderActiveRequests = wrapped;
+    }
+
+    /* One initial pass only. No observer and no repeating timer. */
+    requestAnimationFrame(applySafeActiveRequestsLayout);
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", () => {
+      setTimeout(hookActiveRequestsRendererSafely, 0);
+    }, { once:true });
+  } else {
+    setTimeout(hookActiveRequestsRendererSafely, 0);
+  }
 
 })();
