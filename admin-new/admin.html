@@ -1086,6 +1086,46 @@
       }
     }
 </style>
+
+<style id="lk-active-requests-final-row-fix">
+#requestsPanel #activeRequestsList{
+  width:100%!important;min-width:0!important;overflow-x:auto!important;overflow-y:visible!important
+}
+#requestsPanel #activeRequestsList>*:has(>:nth-child(6)),
+#requestsPanel #activeRequestsList>*>*:has(>:nth-child(6)){
+  box-sizing:border-box!important;
+  display:grid!important;
+  grid-template-columns:38px minmax(150px,1.35fr) minmax(105px,.9fr) 48px 78px 112px!important;
+  align-items:center!important;
+  column-gap:7px!important;
+  width:100%!important;
+  min-width:540px!important
+}
+#requestsPanel #activeRequestsList .active-request-row:has(.request-main){
+  grid-template-columns:minmax(180px,1fr) 52px 76px 32px 32px 32px!important;
+  min-width:430px!important
+}
+#requestsPanel #activeRequestsList>*:has(>:nth-child(6))>*,
+#requestsPanel #activeRequestsList>*>*:has(>:nth-child(6))>*{
+  min-width:0!important;margin:0!important;align-self:center!important
+}
+#requestsPanel #activeRequestsList .request-main{min-width:0!important}
+#requestsPanel #activeRequestsList .request-main strong,
+#requestsPanel #activeRequestsList .request-main span{
+  display:block!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important
+}
+@media(max-width:1100px){
+  #requestsPanel #activeRequestsList>*:has(>:nth-child(6)),
+  #requestsPanel #activeRequestsList>*>*:has(>:nth-child(6)){
+    grid-template-columns:34px minmax(130px,1.3fr) minmax(90px,.82fr) 44px 70px 104px!important;
+    column-gap:5px!important
+  }
+  #requestsPanel #activeRequestsList .active-request-row:has(.request-main){
+    grid-template-columns:minmax(160px,1fr) 48px 68px 30px 30px 30px!important
+  }
+}
+</style>
+
 </head>
 <body class="admin-body">
 
