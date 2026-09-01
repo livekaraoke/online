@@ -570,7 +570,15 @@
       } catch {}
 
       const sessionId = before.sessionId || before.activeSessionId || "";
-      const eventId = before.eventId || "";
+      let eventId = before.eventId || "";
+
+      if (sessionId && !eventId) {
+        try {
+          eventId = await resolveEventIdForSession(sessionId, before);
+        } catch (error) {
+          console.warn("Could not resolve Upcoming Event before ending session:", error);
+        }
+      }
 
       const result = await original.apply(this,args);
 
