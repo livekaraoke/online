@@ -9,46 +9,99 @@
     return total;
   }
 
-  function updateDashboard(session) {
+  function ensureDashboardLayout() {
     const dash = $("sessionDashboard");
-    if (!dash) return;
+    if (!dash || dash.dataset.layoutReady === "1") return dash;
+
+    dash.innerHTML = `
+      <div class="dashboard-grid">
+        <div class="dashboard-card"><strong>Status</strong><span id="sdStatus">No active session</span></div>
+        <div class="dashboard-card"><strong>Started</strong><span id="sdStarted">-</span></div>
+        <div class="dashboard-card"><strong>Elapsed incl. breaks</strong><span id="sdElapsed">0 mins</span></div>
+        <div class="dashboard-card"><strong>Total Breaks</strong><span id="sdBreaks">0 (0 mins)</span></div>
+        <div class="dashboard-card"><strong>Play Time excl. breaks</strong><span id="sdPlayTime">0 mins</span></div>
+        <div class="dashboard-card"><strong>Completed</strong><span id="sdCompleted">0</span></div>
+        <div class="dashboard-card"><strong>Abandoned</strong><span id="sdAbandoned">0</span></div>
+        <div class="dashboard-card"><strong>Deleted</strong><span id="sdDeleted">0</span></div>
+        <div class="dashboard-card"><strong>Songs Left Active</strong><span id="sdLeft">0</span></div>
+        <div class="dashboard-card"><strong>Total Requests</strong><span id="sdTotal">0</span></div>
+        <div class="dashboard-card"><strong>Average BPM</strong><span id="sdAvgBpm">-</span></div>
+        <div class="dashboard-card"><strong>Date</strong><span id="sdDate">-</span></div>
+      </div>`;
+
+    dash.dataset.layoutReady = "1";
+    return dash;
+  }
+
+  function setDashValue(id, value) {
+    const el = $(id);
+    if (el && el.textContent !== String(value)) {
+      el.textContent = String(value);
+    }
+  }
+
+  function updateDashboard(session) {
+    ensureDashboardLayout();
 
     if (!session) {
-      dash.innerHTML = `
-        <div class="dashboard-grid">
-          <div class="dashboard-card"><strong>Status</strong><span>No active session</span></div>
-          <div class="dashboard-card"><strong>Breaks</strong><span>0 (0 mins)</span></div>
-        </div>`;
+      setDashValue("sdStatus", "No active session");
+      setDashValue("sdStarted", "-");
+      setDashValue("sdElapsed", "0 mins");
+      setDashValue("sdBreaks", "0 (0 mins)");
+      setDashValue("sdPlayTime", "0 mins");
+      setDashValue("sdCompleted", "0");
+      setDashValue("sdAbandoned", "0");
+      setDashValue("sdDeleted", "0");
+      setDashValue("sdLeft", "0");
+      setDashValue("sdTotal", "0");
+      setDashValue("sdAvgBpm", "-");
+      setDashValue("sdDate", "-");
       return;
     }
 
     const started = LK.dashboard.getDateFromTimestamp(session.startedAt);
     const breakMs = calculateBreakMs(session);
-    const elapsedMs = started ? Date.now() - started.getTime() : 0;
+    const elapsedMs = started ? Math.max(0, Date.now() - started.getTime()) : 0;
     const playingMs = Math.max(0, elapsedMs - breakMs);
     const requests = LK.state.currentRequests || [];
-    const completed = requests.filter(r => r.status === "completed").length;
-    const abandoned = requests.filter(r => r.status === "abandoned").length;
-    const deleted = requests.filter(r => r.status === "deleted").length;
-    const left = requests.filter(r => !r.status || r.status === "active" || r.status === "pending" || r.status === "waiting").length;
-    const avgBpmArr = requests.map(r => Number(r.userBpm || r.songUserBpm || r.bpm)).filter(Boolean);
-    const avgBpm = avgBpmArr.length ? Math.round(avgBpmArr.reduce((a, b) => a + b, 0) / avgBpmArr.length) : "-";
 
-    dash.innerHTML = `
-      <div class="dashboard-grid">
-        <div class="dashboard-card"><strong>Status</strong><span>Active Session</span></div>
-        <div class="dashboard-card"><strong>Started</strong><span>${LK.dashboard.formatTime(started)}</span></div>
-        <div class="dashboard-card"><strong>Elapsed incl. breaks</strong><span>${LK.dashboard.formatDuration(elapsedMs)}</span></div>
-        <div class="dashboard-card"><strong>Total Breaks</strong><span>${(session.breaks || []).length} (${LK.dashboard.formatDuration(breakMs)})</span></div>
-        <div class="dashboard-card"><strong>Play Time excl. breaks</strong><span>${LK.dashboard.formatDuration(playingMs)}</span></div>
-        <div class="dashboard-card"><strong>Completed</strong><span>${completed}</span></div>
-        <div class="dashboard-card"><strong>Abandoned</strong><span>${abandoned}</span></div>
-        <div class="dashboard-card"><strong>Deleted</strong><span>${deleted}</span></div>
-        <div class="dashboard-card"><strong>Songs Left Active</strong><span>${left}</span></div>
-        <div class="dashboard-card"><strong>Total Requests</strong><span>${requests.length}</span></div>
-        <div class="dashboard-card"><strong>Average BPM</strong><span>${avgBpm}</span></div>
-        <div class="dashboard-card"><strong>Date</strong><span>${LK.dashboard.formatDate(started)}</span></div>
-      </div>`;
+    const completed = requests.filter(r =>
+      ["completed","played"].includes(String(r.status || "").toLowerCase())
+    ).length;
+
+    const abandoned = requests.filter(r =>
+      String(r.status || "").toLowerCase() === "abandoned"
+    ).length;
+
+    const deleted = requests.filter(r =>
+      ["deleted","deletedbyhost","declined"].includes(String(r.status || "").toLowerCase())
+    ).length;
+
+    const left = requests.filter(r =>
+      !r.status ||
+      ["active","pending","waiting","queued","accepted"].includes(String(r.status).toLowerCase())
+    ).length;
+
+    const avgBpmArr = requests
+      .map(r => Number(r.userBpm || r.songUserBpm || r.bpm))
+      .filter(Boolean);
+
+    const avgBpm = avgBpmArr.length
+      ? Math.round(avgBpmArr.reduce((a,b) => a + b, 0) / avgBpmArr.length)
+      : "-";
+
+    setDashValue("sdStatus", "Active Session");
+    setDashValue("sdStarted", LK.dashboard.formatTime(started));
+    setDashValue("sdElapsed", LK.dashboard.formatDuration(elapsedMs));
+    setDashValue("sdBreaks", `${(session.breaks || []).length} (${LK.dashboard.formatDuration(breakMs)})`);
+    setDashValue("sdPlayTime", LK.dashboard.formatDuration(playingMs));
+    setDashValue("sdCompleted", completed);
+    setDashValue("sdAbandoned", abandoned);
+    setDashValue("sdDeleted", deleted);
+    setDashValue("sdLeft", left);
+    setDashValue("sdTotal", requests.length);
+    setDashValue("sdAvgBpm", avgBpm);
+    setDashValue("sdDate", LK.dashboard.formatDate(started));
   }
 
   function setSessionStatus(message) {
@@ -86,6 +139,8 @@ console.log("START session clicked", {
     const venue = $("venueInput")?.value.trim() || "Unknown Venue";
     const notes = $("sessionNotesInput")?.value || "";
 
+    const localStartedAt = nowTimestamp();
+
     const ref = await LK.db.collection("performanceSessions").add({
       title,
       venue,
@@ -101,6 +156,19 @@ console.log("START session clicked", {
     });
 
     LK.state.currentSessionId = ref.id;
+    LK.state.currentSessionData = {
+      id: ref.id,
+      title,
+      venue,
+      notes,
+      status: "active",
+      isActive: true,
+      breakOpen: false,
+      startedAt: localStartedAt,
+      endedAt: null,
+      breaks: []
+    };
+    updateSessionUi(LK.state.currentSessionData);
 
     await LK.db.collection("karaokeControl").doc("currentSession").set({
       active: true,
@@ -108,6 +176,7 @@ console.log("START session clicked", {
       activeSessionId: ref.id,
       title,
       venue,
+      startedAt: serverNow(),
       updatedAt: serverNow()
     }, { merge: true });
 
@@ -145,6 +214,8 @@ console.log("START session clicked", {
 
   LK.state.currentSessionId = null;
   LK.state.currentSessionData = null;
+  updateSessionUi(null);
+  LK.requests.listenRequestsForSession(null);
 
   setSessionStatus("Performance ended.");
 }
@@ -202,9 +273,23 @@ console.log("END break clicked", {
   }
 
   function listenCurrentSession() {
+    let boundSessionId = "";
+
     LK.db.collection("karaokeControl").doc("currentSession").onSnapshot(snap => {
       const data = snap.data() || {};
-      if (!data.active || !data.sessionId) {
+      const nextSessionId =
+        data.active === true
+          ? (data.sessionId || data.activeSessionId || "")
+          : "";
+
+      if (!nextSessionId) {
+        boundSessionId = "";
+
+        if (LK.state.sessionUnsubscribe) {
+          LK.state.sessionUnsubscribe();
+          LK.state.sessionUnsubscribe = null;
+        }
+
         LK.state.currentSessionId = null;
         LK.state.currentSessionData = null;
         updateSessionUi(null);
@@ -212,19 +297,38 @@ console.log("END break clicked", {
         return;
       }
 
-      LK.state.currentSessionId = data.sessionId;
-      if (LK.state.sessionUnsubscribe) LK.state.sessionUnsubscribe();
+      LK.state.currentSessionId = nextSessionId;
 
-      LK.state.sessionUnsubscribe = LK.db.collection("performanceSessions").doc(LK.state.currentSessionId).onSnapshot(s => {
-        if (!s.exists) {
-          updateSessionUi(null);
-          return;
-        }
-        LK.state.currentSessionData = { id: s.id, ...s.data() };
-        updateSessionUi(LK.state.currentSessionData);
-        LK.requests.listenRequestsForSession(LK.state.currentSessionId);
-        LK.dashboard.updateStatusStrip();
-      });
+      if (boundSessionId === nextSessionId && LK.state.sessionUnsubscribe) {
+        return;
+      }
+
+      boundSessionId = nextSessionId;
+
+      if (LK.state.sessionUnsubscribe) {
+        LK.state.sessionUnsubscribe();
+      }
+
+      LK.requests.listenRequestsForSession(nextSessionId);
+
+      LK.state.sessionUnsubscribe = LK.db
+        .collection("performanceSessions")
+        .doc(nextSessionId)
+        .onSnapshot(sessionSnap => {
+          if (!sessionSnap.exists) {
+            LK.state.currentSessionData = null;
+            updateSessionUi(null);
+            return;
+          }
+
+          LK.state.currentSessionData = {
+            id: sessionSnap.id,
+            ...sessionSnap.data()
+          };
+
+          updateSessionUi(LK.state.currentSessionData);
+          LK.dashboard.updateStatusStrip();
+        });
     });
   }
 
@@ -249,10 +353,10 @@ console.log("END break clicked", {
   }
 
   function initSessions() {
+    updateSessionUi(null);
     listenCurrentSession();
     $("sessionNotesInput")?.removeEventListener("input", saveSessionNotesLive);
     $("sessionNotesInput")?.addEventListener("input", saveSessionNotesLive);
-    updateDashboard(null);
   }
 
   LK.sessions = { initSessions, listenCurrentSession, updateDashboard, setSessionStatus };
