@@ -1,280 +1,222 @@
-<div id="topStatusBar" class="top-statusbar collapsed">
+<div id="topStatusBar" class="top-statusbar host-statusbar collapsed">
 
-  <!-- COLLAPSED STRIP -->
+  <!-- =====================================================
+       COMPACT LIVE STRIP
+       Venue / Started / Elapsed / Remaining are deliberately
+       kept HERE so they are always visible to the host.
+       ===================================================== -->
   <div
-    class="top-status-strip"
+    class="top-status-strip host-compact-strip"
     role="button"
     tabindex="0"
     aria-expanded="false"
     onclick="LK.topStatus.toggle()"
     onkeydown="if(event.key === 'Enter' || event.key === ' '){ event.preventDefault(); LK.topStatus.toggle(); }"
   >
-    <div class="status-pill">
+    <div class="host-strip-live">
       <span id="tsLiveDot" class="dot blue"></span>
       <strong id="tsLiveLabel">Offline</strong>
     </div>
 
-    <div class="status-pill">
-      <span>🎙️</span>
-      <strong id="tsSessionLabel">No active session</strong>
+    <div class="host-strip-metric venue-metric">
+      <span class="host-strip-icon">📍</span>
+      <div>
+        <small>VENUE</small>
+        <strong id="tsCompactVenue">No active session</strong>
+        <em id="tsCompactType">—</em>
+      </div>
     </div>
 
-    <div class="status-pill">
-      <span>🎤</span>
-      <strong id="tsRequestsLabel">0 requests left</strong>
+    <div class="host-strip-metric">
+      <small>STARTED</small>
+      <strong id="tsCompactStarted">--:--</strong>
     </div>
 
-    <div class="status-pill notification-pill">
-      <span class="notification-icon-wrap">
-        🔔
-        <span id="tsNotificationBadge" class="notification-badge hidden">0</span>
-      </span>
+    <div class="host-strip-metric">
+      <small>ELAPSED</small>
+      <strong id="tsCompactElapsed" class="host-elapsed-green">0 mins</strong>
+    </div>
 
-      <strong id="tsNotificationLabel">No new alerts</strong>
+    <div class="host-strip-metric remaining-metric">
+      <small>REMAINING</small>
+      <strong id="tsCompactRemaining">-</strong>
+      <em id="tsCompactScheduledEnd">No scheduled end</em>
+    </div>
+
+    <div class="host-strip-metric requests-metric">
+      <small>REQUESTS</small>
+      <strong id="tsCompactRequests">0</strong>
+    </div>
+
+    <div class="host-strip-metric alerts-metric">
+      <small>ALERTS</small>
+      <strong id="tsCompactAlerts">0</strong>
     </div>
 
     <button
       id="tsToggleBtn"
-      class="top-status-toggle"
+      class="top-status-toggle host-status-toggle"
       type="button"
       aria-label="Expand status dashboard"
       onclick="event.stopPropagation(); LK.topStatus.toggle();"
     >
       ▼
     </button>
+
+    <!-- Compatibility targets used by the existing top-statusbar.js.
+         They remain present but are not displayed. -->
+    <div class="top-status-compatibility" aria-hidden="true">
+      <strong id="tsSessionLabel">No active session</strong>
+      <strong id="tsRequestsLabel">0 requests left</strong>
+      <span id="tsNotificationBadge" class="notification-badge hidden">0</span>
+      <strong id="tsNotificationLabel">No new alerts</strong>
+
+      <strong id="tsDashStarted">-</strong>
+      <strong id="tsDashElapsed">0 mins</strong>
+      <strong id="tsDashVenue">-</strong>
+    </div>
   </div>
 
-  <!-- EXPANDED DASHBOARD -->
-  <div class="top-status-expanded">
+  <!-- =====================================================
+       EXPANDED HOST WORKSPACE
+       STARTED / ELAPSED / VENUE / official Remaining are NOT
+       duplicated here because they stay visible above.
+       ===================================================== -->
+  <div class="top-status-expanded host-status-expanded">
 
-    <div class="top-performance-grid">
+    <!-- PRIMARY HOST ROW -->
+    <div class="host-expanded-primary">
 
-        <!-- STARTED / ELAPSED -->
-        <section class="performance-info-card timing-card">
-          <div class="status-card-heading">
-            <span class="status-card-icon">◷</span>
-            <span>Started</span>
-          </div>
-        
-          <strong id="tsDashStarted" class="large-status-value">-</strong>
-        
-          <div class="status-card-divider"></div>
-        
-          <div class="elapsed-metric">
-            <span>Elapsed</span>
-            <strong id="tsDashElapsed" class="large-status-value green-value">
-              0 mins
-            </strong>
-          </div>
-        
-          <div class="elapsed-metric elapsed-excluding">
-            <span>Elapsed x/breaks</span>
-            <strong id="tsDashElapsedExcludingBreaks" class="secondary-time-value">
-              0 mins
-            </strong>
-          </div>
-        </section>
-  
-        <!-- REMAINING SCHEDULED DURATION -->
-        <section class="performance-info-card remaining-card">
-          <div class="status-card-heading">
-            <span class="status-card-icon">⌛</span>
-            <span>Remaining</span>
-          </div>
-
-          <strong id="tsRemainingTime" class="large-status-value remaining-time-value">
-            -
-          </strong>
-
-          <span id="tsScheduledWindow" class="remaining-window">
-            No scheduled time
-          </span>
-
-          <small class="remaining-help">
-            Uses the event's scheduled duration from the actual session start.
-          </small>
-        </section>
-
-        <!-- BREAK STATUS -->
-        <section id="tsBreakCard" class="performance-info-card break-card">
-          <div class="status-card-heading">
-            <span class="status-card-icon">☕</span>
-            <span>Break Status</span>
-          </div>
-        
-          <div id="tsBreakPanel" class="break-status-panel">
-            <strong id="tsBreakStatusLabel" class="break-status-label">
-              Not on break
-            </strong>
-        
-            <div id="tsBreakDetails" class="break-details hidden">
-              <span>
-                Started:
-                <strong id="tsBreakStarted">-</strong>
-              </span>
-        
-              <span>
-                Current:
-                <strong id="tsBreakDuration">0 mins</strong>
-              </span>
-            </div>
-        
-            <!-- ADDED: total accumulated break time -->
-            <div class="break-summary-grid">
-              <div class="break-summary-item">
-                <span>Total break time</span>
-                <strong id="tsDashBreakTotal">0 mins</strong>
-              </div>
-            
-              <div class="break-summary-item">
-                <span>Total breaks</span>
-                <strong id="tsDashBreakCount">0</strong>
-              </div>
-            
-              <div class="break-summary-item full-width">
-                <span>Current elapsed break time</span>
-                <strong id="tsCurrentBreakDuration">0 mins</strong>
-              </div>
-            </div>
-            
-          </div>
-        
-          <button
-            id="tsBreakActionBtn"
-            class="break-action-btn start"
-            type="button"
-            onclick="event.stopPropagation(); LK.topStatus.toggleBreak();"
-            disabled
-          >
-            ☕ Start Break
-          </button>
-        
-          <p id="tsBreakActionMessage" class="break-action-message"></p>
-        </section>
-  
-        <section class="performance-info-card session-notes-card">
-          <div class="status-card-heading">
-            <span class="status-card-icon">📝</span>
-            <span>Session Notes</span>
-          </div>
-        
-          <textarea
-            id="tsSessionNotes"
-            class="top-status-session-notes"
-            placeholder="Type session notes..."
-            aria-label="Session notes"
-            disabled
-          ></textarea>
-        
-          <div class="session-notes-footer">
-            <span id="tsNotesSaveStatus">No active session</span>
-          </div>
-        </section>
-  
-        <!-- VENUE / SONG LIST -->
-        <section class="performance-info-card venue-card">
-          <div class="status-card-heading">
-            <span class="status-card-icon">📍</span>
-            <span>Venue</span>
-          </div>
-  
-          <strong id="tsDashVenue" class="large-status-value">-</strong>
-  
-          <div class="status-card-divider dashed"></div>
-  
-          <div class="status-card-heading compact-heading">
-            <span class="status-card-icon">🔒</span>
-            <span>Public Song List</span>
-          </div>
-  
-          <strong id="tsDashSongs" class="large-status-value song-list-locked">
-            Locked
-          </strong>
-
-          <div class="top-status-public-list-name">
-            <span>Selected list</span>
-            <strong id="tsDashPublicSetlist">Not selected</strong>
-          </div>
-        </section>
-      </div>
-      <!-- END top-performance-grid -->
-
-          <!-- LOWER DASHBOARD ROW -->
-    <div class="top-status-lower-grid">
-
-      <!-- NOTIFICATIONS: under Started -->
-      <section class="performance-info-card notifications-card">
+      <!-- ADJUSTED REMAINING
+           Scheduled duration follows the ACTUAL start time.
+           Example: scheduled 20:00–23:00, actual 20:10 =>
+           adjusted finish 23:10. -->
+      <section class="performance-info-card adjusted-remaining-card">
         <div class="status-card-heading">
-          <span class="status-card-icon">🔔</span>
-          <span>Notifications</span>
+          <span class="status-card-icon">⌛</span>
+          <span>Remaining</span>
         </div>
 
-        <div
-          id="tsNotificationsList"
-          class="top-status-notifications-list"
-        >
-          <div class="top-status-empty">
-            No notifications yet.
-          </div>
-        </div>
+        <strong id="tsAdjustedRemainingTime" class="adjusted-remaining-value">-</strong>
 
-        <!--
-        <a
-          class="top-status-admin-link"
-          href="../admin.html"
-          onclick="event.stopPropagation();"
-        >
-          Go to Admin →
-        </a>
-        -->
+        <span id="tsAdjustedEndTime" class="adjusted-end-time">
+          Adjusted end —
+        </span>
+
+        <small id="tsAdjustedRemainingHint" class="adjusted-remaining-hint">
+          Scheduled duration from actual start
+        </small>
+
+        <!-- compatibility/fallback target retained -->
+        <span id="tsScheduledWindow" class="hidden">No scheduled time</span>
+        <strong id="tsRemainingTime" class="hidden">-</strong>
       </section>
 
-      <!-- SHORTCUTS: under Break Status -->
-      <section class="performance-info-card top-status-shortcuts-card">
+      <!-- BREAK STATUS -->
+      <section id="tsBreakCard" class="performance-info-card break-card host-break-card">
         <div class="status-card-heading">
-          <span class="status-card-icon">⚡</span>
-          <span>Shortcuts</span>
+          <span class="status-card-icon">☕</span>
+          <span>Break Status</span>
         </div>
 
-        <div class="top-status-shortcuts">
-          <button
-            type="button"
-            class="top-status-shortcut-btn admin-shortcut"
-            onclick="event.stopPropagation(); window.location.href='../admin-new/admin.html';"
-          >
-            <span>🎛️</span>
-            <strong>Admin Dashboard</strong>
-          </button>
+        <div id="tsBreakPanel" class="break-status-panel">
+          <strong id="tsBreakStatusLabel" class="break-status-label">
+            Not on break
+          </strong>
 
-          <button
-            type="button"
-            class="top-status-shortcut-btn lyrics-shortcut"
-            onclick="event.stopPropagation(); window.location.href='lyricsviewer.html';"
-          >
-            <span>🎸</span>
-            <strong>Lyrics Suite</strong>
-          </button>
+          <div id="tsBreakDetails" class="break-details hidden">
+            <span>
+              Started:
+              <strong id="tsBreakStarted">-</strong>
+            </span>
 
-          <button
-            type="button"
-            class="top-status-shortcut-btn songs-shortcut"
-            onclick="event.stopPropagation(); window.location.href='songlist.html';"
-          >
-            <span>📋</span>
-            <strong>Song List</strong>
-          </button>
+            <span>
+              Current:
+              <strong id="tsBreakDuration">0 mins</strong>
+            </span>
+          </div>
+
+          <div class="break-summary-grid">
+            <div class="break-summary-item">
+              <span>Total break time</span>
+              <strong id="tsDashBreakTotal">0 mins</strong>
+            </div>
+
+            <div class="break-summary-item">
+              <span>Total breaks</span>
+              <strong id="tsDashBreakCount">0</strong>
+            </div>
+
+            <div class="break-summary-item full-width">
+              <span>Current break</span>
+              <strong id="tsCurrentBreakDuration">0 mins</strong>
+            </div>
+          </div>
+        </div>
+
+        <button
+          id="tsBreakActionBtn"
+          class="break-action-btn start"
+          type="button"
+          onclick="event.stopPropagation(); LK.topStatus.toggleBreak();"
+          disabled
+        >
+          ☕ Start Break
+        </button>
+
+        <p id="tsBreakActionMessage" class="break-action-message"></p>
+      </section>
+
+      <!-- PUBLIC SONG LIST -->
+      <section class="performance-info-card compact-song-list-card">
+        <div class="status-card-heading">
+          <span class="status-card-icon">🔒</span>
+          <span>Public Song List</span>
+        </div>
+
+        <strong id="tsDashSongs" class="large-status-value song-list-locked">
+          Locked
+        </strong>
+
+        <div class="top-status-public-list-name">
+          <span>Selected list</span>
+          <strong id="tsDashPublicSetlist">Not selected</strong>
         </div>
       </section>
 
-      <!-- PENDING PUBLIC REQUESTS -->
-      <section class="top-status-pending-card">
+      <!-- SESSION NOTES -->
+      <section class="performance-info-card session-notes-card compact-notes-card">
+        <div class="status-card-heading">
+          <span class="status-card-icon">📝</span>
+          <span>Session Notes</span>
+        </div>
+
+        <textarea
+          id="tsSessionNotes"
+          class="top-status-session-notes"
+          placeholder="Type session notes..."
+          aria-label="Session notes"
+          disabled
+        ></textarea>
+
+        <div class="session-notes-footer">
+          <span id="tsNotesSaveStatus">No active session</span>
+        </div>
+      </section>
+    </div>
+
+    <!-- LIVE WORKFLOW ROW -->
+    <div class="host-expanded-workflow">
+
+      <!-- PENDING REQUESTS -->
+      <section class="top-status-pending-card host-pending-card">
         <div class="queue-heading-row">
           <h3>
             <span>🎤</span>
             Pending Requests
             <span id="tsPendingCount">(0)</span>
           </h3>
-          <span class="queue-scroll-hint">Accept or decline singer requests</span>
+          <span class="queue-scroll-hint">Accept or decline</span>
         </div>
 
         <div id="tsPendingRequestsList" class="top-status-pending-list">
@@ -283,14 +225,14 @@
       </section>
 
       <!-- RUN ORDER -->
-      <section class="top-status-queue-card run-order-card">
+      <section class="top-status-queue-card run-order-card host-run-order-card">
         <div class="queue-heading-row">
           <h3>
             <span>♫</span>
-            RUN ORDER
+            Run Order
             <span id="tsRunOrderCount">(0)</span>
           </h3>
-          <span class="queue-scroll-hint">Your live performance sequence</span>
+          <span class="queue-scroll-hint">Live performance sequence</span>
         </div>
 
         <div class="ts-run-order-add">
@@ -308,11 +250,21 @@
         <span id="tsQueueCount" hidden>(0)</span>
         <div id="tsQueueList" hidden></div>
       </section>
-
     </div>
-    <!-- END top-status-lower-grid -->
 
-   
+    <!-- LOW-PRIORITY FOOTER -->
+    <div class="host-expanded-footer">
+      <section class="performance-info-card notifications-card host-notifications-card">
+        <div class="status-card-heading">
+          <span class="status-card-icon">🔔</span>
+          <span>Notifications</span>
+        </div>
+
+        <div id="tsNotificationsList" class="top-status-notifications-list">
+          <div class="top-status-empty">No notifications yet.</div>
+        </div>
+      </section>
+    </div>
 
   </div>
 </div>
