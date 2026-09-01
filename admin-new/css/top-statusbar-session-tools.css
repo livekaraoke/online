@@ -1266,3 +1266,320 @@
 #topStatusBar:not(.collapsed) #tsToggleBtn {
   color: #ffffff !important;
 }
+
+
+/* ========================================================================
+   TABLET LIVE-HOST REFINEMENT — scoped final overrides
+   ======================================================================== */
+
+/* LIVE NOW: keep the complete label inside the green status pill. */
+#topStatusBar .host-compact-strip {
+  grid-template-columns:
+    118px
+    minmax(175px, 1.25fr)
+    124px
+    132px
+    minmax(150px, .95fr)
+    88px
+    52px !important;
+}
+
+#topStatusBar .host-strip-live {
+  min-width: 0 !important;
+  padding: 0 8px !important;
+  margin-right: 7px !important;
+}
+
+#topStatusBar .host-strip-live #tsLiveLabel {
+  max-width: 100% !important;
+  overflow: hidden !important;
+  font-size: 11px !important;
+  line-height: 1 !important;
+  letter-spacing: 0 !important;
+  white-space: nowrap !important;
+  text-overflow: clip !important;
+}
+
+/* Top expanded row now contains ONLY schedule/public-list + Break Status. */
+#topStatusBar .host-expanded-primary {
+  display: grid !important;
+  grid-template-columns: minmax(280px, .9fr) minmax(360px, 1.35fr) !important;
+  gap: 8px !important;
+  align-items: stretch !important;
+}
+
+#topStatusBar .host-schedule-card {
+  min-height: 166px !important;
+  height: 166px !important;
+}
+
+/* BREAK STATUS — restore a deliberate compact card layout. */
+#topStatusBar .host-break-card {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: flex-start !important;
+  min-width: 0 !important;
+  min-height: 166px !important;
+  height: 166px !important;
+  padding: 10px 12px !important;
+  overflow: hidden !important;
+}
+
+#topStatusBar .host-break-card .status-card-heading {
+  flex: 0 0 auto !important;
+  margin-bottom: 7px !important;
+}
+
+#topStatusBar .break-status-panel {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  padding: 8px 10px !important;
+  border: 1px solid #24333a !important;
+  border-radius: 7px !important;
+  background: #03090d !important;
+}
+
+#topStatusBar .host-break-card .break-status-label {
+  display: block !important;
+  margin: 0 !important;
+  padding: 0 0 6px !important;
+  border-bottom: 1px solid #253239 !important;
+  color: #f1f5f6 !important;
+  font-size: 12px !important;
+  font-weight: 950 !important;
+  line-height: 1.15 !important;
+  text-transform: uppercase !important;
+}
+
+#topStatusBar .break-details:not(.hidden) {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0,1fr)) !important;
+  gap: 5px !important;
+  margin-top: 6px !important;
+}
+
+#topStatusBar .break-details > span {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
+  min-width: 0 !important;
+  padding: 5px 6px !important;
+  border: 1px solid #202e34 !important;
+  border-radius: 5px !important;
+  background: #071116 !important;
+  color: #77868d !important;
+  font-size: 7px !important;
+  font-weight: 850 !important;
+  text-transform: uppercase !important;
+}
+
+#topStatusBar .break-details > span strong {
+  overflow: hidden !important;
+  color: #eef3f5 !important;
+  font-size: 10px !important;
+  font-weight: 950 !important;
+  line-height: 1.1 !important;
+  white-space: nowrap !important;
+  text-overflow: ellipsis !important;
+}
+
+#topStatusBar .break-summary-grid {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0,1fr)) !important;
+  gap: 5px !important;
+  margin-top: 6px !important;
+}
+
+#topStatusBar .break-summary-item,
+#topStatusBar .break-summary-item.full-width {
+  grid-column: auto !important;
+  min-width: 0 !important;
+  padding: 4px 5px !important;
+  border: 0 !important;
+}
+
+#topStatusBar .break-summary-item span {
+  display: block !important;
+  overflow: hidden !important;
+  color: #77868d !important;
+  font-size: 6px !important;
+  font-weight: 900 !important;
+  text-transform: uppercase !important;
+  white-space: nowrap !important;
+  text-overflow: ellipsis !important;
+}
+
+#topStatusBar .break-summary-item strong {
+  display: block !important;
+  margin-top: 2px !important;
+  color: #f2c94c !important;
+  font-size: 9px !important;
+  line-height: 1.1 !important;
+}
+
+#topStatusBar .break-action-btn {
+  flex: 0 0 auto !important;
+  width: 100% !important;
+  min-height: 30px !important;
+  height: 30px !important;
+  margin: 7px 0 0 !important;
+  padding: 0 10px !important;
+  border-radius: 6px !important;
+  font-size: 9px !important;
+  font-weight: 950 !important;
+}
+
+#topStatusBar .break-action-btn.start {
+  border-color: #168343 !important;
+  background: linear-gradient(180deg,#087c39,#045d2a) !important;
+  color: #fff !important;
+}
+
+#topStatusBar .break-action-btn.end {
+  border-color: #9c6c20 !important;
+  background: linear-gradient(180deg,#765016,#4b320e) !important;
+  color: #ffe7a6 !important;
+}
+
+#topStatusBar .break-action-message {
+  display: none !important;
+}
+
+/* Bottom live-workflow row stays one line on landscape tablet. */
+#topStatusBar .host-three-column-workflow {
+  display: grid !important;
+  grid-template-columns:
+    minmax(250px, .78fr)
+    minmax(315px, .96fr)
+    minmax(430px, 1.55fr) !important;
+  gap: 8px !important;
+  align-items: stretch !important;
+}
+
+/* Notifications / Notes tab card */
+#topStatusBar .host-tabs-card {
+  display: flex !important;
+  flex-direction: column !important;
+  height: 165px !important;
+  min-height: 165px !important;
+  padding: 0 !important;
+}
+
+#topStatusBar .host-card-tabs {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  flex: 0 0 31px !important;
+  border-bottom: 1px solid #26343b !important;
+  background: #050b0f !important;
+}
+
+#topStatusBar .host-card-tab {
+  min-width: 0 !important;
+  height: 31px !important;
+  padding: 0 8px !important;
+  border: 0 !important;
+  border-right: 1px solid #26343b !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  color: #718189 !important;
+  font-size: 8px !important;
+  font-weight: 950 !important;
+  letter-spacing: .025em !important;
+  cursor: pointer !important;
+}
+
+#topStatusBar .host-card-tab:last-child {
+  border-right: 0 !important;
+}
+
+#topStatusBar .host-card-tab.active {
+  background: #0b1b22 !important;
+  color: #75c9f3 !important;
+  box-shadow: inset 0 -2px 0 #3aaee8 !important;
+}
+
+#topStatusBar .host-tab-pane {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  padding: 8px !important;
+  overflow: hidden !important;
+}
+
+#topStatusBar .host-tab-pane[hidden] {
+  display: none !important;
+}
+
+#topStatusBar .workflow-notification-list {
+  height: 100% !important;
+  max-height: none !important;
+  overflow-y: auto !important;
+}
+
+#topStatusBar .host-tab-notes {
+  width: 100% !important;
+  height: calc(100% - 18px) !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  resize: none !important;
+  padding: 7px !important;
+  border: 1px solid #26343b !important;
+  border-radius: 5px !important;
+  background: #02070a !important;
+  color: #eef3f5 !important;
+  font-size: 9px !important;
+  line-height: 1.35 !important;
+}
+
+/* Keep workflow cards aligned and compact. */
+#topStatusBar .host-pending-card,
+#topStatusBar .host-run-order-card {
+  height: 165px !important;
+  min-height: 165px !important;
+}
+
+#topStatusBar .host-pending-card .top-status-pending-list,
+#topStatusBar .host-run-order-card #tsRunOrderList {
+  max-height: 115px !important;
+}
+
+/* Tablet-specific compact metrics; do not stack cards in landscape. */
+@media (min-width: 761px) and (max-width: 1180px) {
+  #topStatusBar .host-compact-strip {
+    grid-template-columns:
+      112px
+      minmax(165px,1.22fr)
+      118px
+      126px
+      minmax(142px,.94fr)
+      82px
+      48px !important;
+  }
+
+  #topStatusBar .host-expanded-primary {
+    grid-template-columns: minmax(245px,.86fr) minmax(350px,1.32fr) !important;
+  }
+
+  #topStatusBar .host-three-column-workflow {
+    grid-template-columns:
+      minmax(220px,.72fr)
+      minmax(285px,.92fr)
+      minmax(385px,1.46fr) !important;
+  }
+}
+
+/* Phones only may stack. */
+@media (max-width: 760px) {
+  #topStatusBar .host-expanded-primary,
+  #topStatusBar .host-three-column-workflow {
+    grid-template-columns: 1fr !important;
+  }
+
+  #topStatusBar .host-break-card,
+  #topStatusBar .host-schedule-card,
+  #topStatusBar .host-tabs-card,
+  #topStatusBar .host-pending-card,
+  #topStatusBar .host-run-order-card {
+    height: auto !important;
+    min-height: 145px !important;
+  }
+}
