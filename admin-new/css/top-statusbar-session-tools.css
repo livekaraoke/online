@@ -549,3 +549,246 @@
     max-height: 70dvh !important;
   }
 }
+
+
+/* =========================================================
+   HOST STATUS BAR VISUAL REFINEMENT
+   ========================================================= */
+
+/* Remaining + Public List live together vertically in one card. */
+#topStatusBar .host-combined-info-grid {
+  display: grid !important;
+  grid-template-columns: minmax(250px,.9fr) minmax(250px,1.1fr) !important;
+  min-height: 100% !important;
+}
+
+#topStatusBar .host-info-left-stack {
+  display: grid !important;
+  grid-template-rows: auto auto !important;
+  min-width: 0 !important;
+}
+
+#topStatusBar .host-info-left-stack .host-info-segment {
+  padding: 7px 10px !important;
+}
+
+#topStatusBar .host-info-left-stack .public-list-segment {
+  border-left: 0 !important;
+  border-top: 1px solid #26333a !important;
+  margin-top: 7px !important;
+  padding-top: 9px !important;
+}
+
+#topStatusBar .notification-segment {
+  border-left: 1px solid #26333a !important;
+  padding: 7px 12px !important;
+}
+
+#topStatusBar .public-list-segment #tsDashSongs {
+  display: inline-block !important;
+  margin: 0 0 7px !important;
+  font-size: 16px !important;
+  line-height: 1.1 !important;
+}
+
+#topStatusBar .top-status-public-list-name {
+  display: flex !important;
+  align-items: baseline !important;
+  gap: 8px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+}
+
+#topStatusBar .public-list-caption {
+  flex: 0 0 auto !important;
+  color: #78858c !important;
+  font-size: 8px !important;
+  font-weight: 900 !important;
+  letter-spacing: .06em !important;
+  text-transform: uppercase !important;
+}
+
+#topStatusBar #tsDashPublicSetlist {
+  min-width: 0 !important;
+  overflow: hidden !important;
+  color: #f2f5f6 !important;
+  font-size: 13px !important;
+  font-weight: 900 !important;
+  line-height: 1.2 !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+/* Pending Requests: readable, full-width, single-line action layout. */
+#topStatusBar .host-pending-card {
+  min-height: 205px !important;
+}
+
+#topStatusBar .ts-pending-row {
+  display: grid !important;
+  grid-template-columns: minmax(0,1fr) auto !important;
+  align-items: center !important;
+  gap: 10px !important;
+  min-height: 48px !important;
+  margin: 0 0 5px !important;
+  padding: 7px 8px !important;
+  border: 1px solid #26343b !important;
+  border-radius: 6px !important;
+  background: #071117 !important;
+}
+
+#topStatusBar .ts-request-main {
+  display: flex !important;
+  align-items: baseline !important;
+  min-width: 0 !important;
+  gap: 7px !important;
+}
+
+#topStatusBar .ts-request-main strong {
+  overflow: hidden !important;
+  color: #f4f6f7 !important;
+  font-size: 12px !important;
+  font-weight: 950 !important;
+  line-height: 1.2 !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+#topStatusBar .ts-request-main small {
+  overflow: hidden !important;
+  color: #9ca9af !important;
+  font-size: 9px !important;
+  font-weight: 750 !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+#topStatusBar .ts-pending-actions,
+#topStatusBar .ts-run-actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  flex-wrap: nowrap !important;
+}
+
+#topStatusBar .ts-pending-actions button,
+#topStatusBar .ts-run-actions button {
+  display: inline-grid !important;
+  place-items: center !important;
+  width: 29px !important;
+  min-width: 29px !important;
+  height: 29px !important;
+  padding: 0 !important;
+  border: 1px solid #394950 !important;
+  border-radius: 5px !important;
+  background: #182329 !important;
+  color: #e9eef0 !important;
+  font-size: 12px !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+  cursor: pointer !important;
+}
+
+#topStatusBar .ts-pending-actions .accept {
+  border-color: #147d42 !important;
+  background: #0b552c !important;
+  color: #eafff1 !important;
+}
+
+#topStatusBar .ts-pending-actions .decline,
+#topStatusBar .ts-run-actions .remove {
+  border-color: #8c3035 !important;
+  background: #541b20 !important;
+  color: #fff0f1 !important;
+}
+
+/* Run Order: number, title, singer and buttons all stay on one row. */
+#topStatusBar .ts-run-order-row {
+  display: grid !important;
+  grid-template-columns: 26px minmax(0,1fr) auto !important;
+  align-items: center !important;
+  gap: 9px !important;
+  min-height: 48px !important;
+  margin: 0 0 5px !important;
+  padding: 6px 8px !important;
+  border: 1px solid #26343b !important;
+  border-radius: 6px !important;
+  background: #071117 !important;
+}
+
+#topStatusBar .ts-run-index {
+  display: grid !important;
+  place-items: center !important;
+  width: 24px !important;
+  height: 24px !important;
+  border: 1px solid #33444c !important;
+  border-radius: 50% !important;
+  background: #0b171d !important;
+  color: #7bcaf4 !important;
+  font-size: 10px !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+}
+
+#topStatusBar .ts-run-main {
+  display: flex !important;
+  align-items: baseline !important;
+  min-width: 0 !important;
+  gap: 7px !important;
+}
+
+#topStatusBar .ts-run-main strong {
+  overflow: hidden !important;
+  color: #f5f7f8 !important;
+  font-size: 13px !important;
+  font-weight: 950 !important;
+  line-height: 1.2 !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+#topStatusBar .ts-run-main small {
+  overflow: hidden !important;
+  color: #8f9da4 !important;
+  font-size: 9px !important;
+  font-weight: 750 !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+#topStatusBar #tsRunOrderAddBtn {
+  height: 31px !important;
+  padding: 0 12px !important;
+  border: 1px solid #2b824d !important;
+  border-radius: 5px !important;
+  background: #0b5a31 !important;
+  color: #effff5 !important;
+  font-size: 9px !important;
+  font-weight: 950 !important;
+  cursor: pointer !important;
+}
+
+#topStatusBar #tsRunOrderSongSelect {
+  height: 31px !important;
+  border: 1px solid #34444b !important;
+  border-radius: 5px !important;
+  background: #10191e !important;
+  color: #eef2f3 !important;
+}
+
+@media (max-width: 760px) {
+  #topStatusBar .host-combined-info-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  #topStatusBar .notification-segment {
+    border-left: 0 !important;
+    border-top: 1px solid #26333a !important;
+  }
+
+  #topStatusBar .ts-request-main,
+  #topStatusBar .ts-run-main {
+    display: block !important;
+  }
+}
