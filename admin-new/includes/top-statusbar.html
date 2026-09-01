@@ -75,6 +75,26 @@
           </div>
         </section>
   
+        <!-- REMAINING SCHEDULED DURATION -->
+        <section class="performance-info-card remaining-card">
+          <div class="status-card-heading">
+            <span class="status-card-icon">⌛</span>
+            <span>Remaining</span>
+          </div>
+
+          <strong id="tsRemainingTime" class="large-status-value remaining-time-value">
+            -
+          </strong>
+
+          <span id="tsScheduledWindow" class="remaining-window">
+            No scheduled time
+          </span>
+
+          <small class="remaining-help">
+            Uses the event's scheduled duration from the actual session start.
+          </small>
+        </section>
+
         <!-- BREAK STATUS -->
         <section id="tsBreakCard" class="performance-info-card break-card">
           <div class="status-card-heading">
@@ -246,25 +266,47 @@
         </div>
       </section>
 
-      <!-- QUEUE: full remaining width under Notes and Venue -->
-      <section class="top-status-queue-card">
+      <!-- PENDING PUBLIC REQUESTS -->
+      <section class="top-status-pending-card">
+        <div class="queue-heading-row">
+          <h3>
+            <span>🎤</span>
+            Pending Requests
+            <span id="tsPendingCount">(0)</span>
+          </h3>
+          <span class="queue-scroll-hint">Accept or decline singer requests</span>
+        </div>
+
+        <div id="tsPendingRequestsList" class="top-status-pending-list">
+          <div class="top-status-queue-empty">No pending requests.</div>
+        </div>
+      </section>
+
+      <!-- RUN ORDER -->
+      <section class="top-status-queue-card run-order-card">
         <div class="queue-heading-row">
           <h3>
             <span>♫</span>
-            Live Performance Queue
-            <span id="tsQueueCount">(0)</span>
+            RUN ORDER
+            <span id="tsRunOrderCount">(0)</span>
           </h3>
-
-          <span class="queue-scroll-hint">
-            Scroll to view all requests ↓
-          </span>
+          <span class="queue-scroll-hint">Your live performance sequence</span>
         </div>
 
-        <div id="tsQueueList" class="top-status-queue-list">
-          <div class="top-status-queue-empty">
-            No active song requests.
-          </div>
+        <div class="ts-run-order-add">
+          <select id="tsRunOrderSongSelect" aria-label="Choose song to add">
+            <option value="">Add a song…</option>
+          </select>
+          <button id="tsRunOrderAddBtn" type="button">＋ ADD</button>
         </div>
+
+        <div id="tsRunOrderList" class="top-status-queue-list">
+          <div class="top-status-queue-empty">Run Order is empty.</div>
+        </div>
+
+        <!-- Compatibility targets for older top-statusbar.js builds. -->
+        <span id="tsQueueCount" hidden>(0)</span>
+        <div id="tsQueueList" hidden></div>
       </section>
 
     </div>
