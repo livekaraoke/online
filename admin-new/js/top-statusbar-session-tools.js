@@ -94,6 +94,52 @@
     );
   }
 
+  function localDateTime(dateString, timeString, addDayIfBefore = null) {
+    if (!dateString || !timeString) return null;
+
+    let date = new Date(`${dateString}T${timeString}:00`);
+    if (Number.isNaN(date.getTime())) return null;
+
+    if (addDayIfBefore instanceof Date && date < addDayIfBefore) {
+      date = new Date(date.getTime() + 24 * 60 * 60 * 1000);
+    }
+
+    return date;
+  }
+
+  function eventScheduleFallback() {
+    const event =
+      state.session?.eventSnapshot ||
+      state.currentControl?.eventSnapshot ||
+      null;
+
+    if (!event) return { start:null, end:null };
+
+    const start = localDateTime(event.date, event.startTime);
+    const end = localDateTime(event.date, event.endTime, start);
+
+    return { start, end };
+  }
+
+  function resolvedSchedule() {
+    let start = tsDate(
+      state.session?.scheduledStartAt ||
+      state.currentControl?.scheduledStartAt
+    );
+
+    let end = tsDate(
+      state.session?.scheduledEndAt ||
+      state.currentControl?.scheduledEndAt
+    );
+
+    const fallback = eventScheduleFallback();
+
+    if (!start) start = fallback.start;
+    if (!end) end = fallback.end;
+
+    return { start, end };
+  }
+
   function renderRemaining() {
     const remainingEl = $("tsRemainingTime");
     const windowEl = $("tsScheduledWindow");
@@ -105,24 +151,33 @@
       return;
     }
 
-    const duration = scheduledDurationMs();
     const actualStart = actualStartDate();
-
-    const scheduledStart = tsDate(state.session.scheduledStartAt);
-    const scheduledEnd = tsDate(state.session.scheduledEndAt);
+    const schedule = resolvedSchedule();
 
     windowEl.textContent =
-      scheduledStart && scheduledEnd
-        ? `Scheduled ${formatClock(scheduledStart)}–${formatClock(scheduledEnd)}`
+      schedule.start && schedule.end
+        ? `Scheduled ${formatClock(schedule.start)}–${formatClock(schedule.end)}`
         : "No scheduled time";
 
-    if (!duration || !actualStart) {
+    // The host needs the real clock-time remaining until the event's end.
+    // This is intentionally based on scheduledEndAt, not "actual start + duration":
+    // if the performance starts late, the displayed end time still remains correct.
+    let target = schedule.end;
+
+    // Backward-compatible fallback for older sessions that only stored duration.
+    if (!target) {
+      const duration = scheduledDurationMs();
+      if (duration && actualStart) {
+        target = new Date(actualStart.getTime() + duration);
+      }
+    }
+
+    if (!target) {
       remainingEl.textContent = "-";
       return;
     }
 
-    const target = actualStart.getTime() + duration;
-    const remaining = target - Date.now();
+    const remaining = target.getTime() - Date.now();
 
     remainingEl.textContent =
       remaining > 0
