@@ -385,7 +385,12 @@
     const list = $("tsRunOrderList");
     if (!list) return;
 
-    const items = queueItems();
+    // Played entries remain stored in Firestore/session history, but are no
+    // longer displayed in the live Run Order. The host only sees what is left.
+    const items = queueItems().filter(item =>
+      String(item?.status || "").toLowerCase() !== "played"
+    );
+
     if ($("tsRunOrderCount")) $("tsRunOrderCount").textContent = `(${items.length})`;
 
     if (!state.sessionId) {
@@ -399,11 +404,11 @@
     }
 
     list.innerHTML = items.map((item,index) => `
-      <div class="ts-run-order-row ${item.status === "played" ? "played" : ""}">
+      <div class="ts-run-order-row">
         <div class="ts-run-index">${index + 1}</div>
         <div class="ts-run-main">
           <strong>${esc(item.songTitle || item.title || item.songId || "Untitled Song")}</strong>
-          <small>${esc(item.singerName || (item.source === "manual" ? "Host choice" : item.artist || ""))}${item.status === "played" ? " • PLAYED" : ""}</small>
+          <small>${esc(item.singerName || (item.source === "manual" ? "Host choice" : item.artist || ""))}</small>
         </div>
         <div class="ts-run-actions">
           <button type="button" data-ts-up="${esc(item.id)}">↑</button>
