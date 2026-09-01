@@ -758,9 +758,165 @@
     }
   }
 
+  async function getActiveSessionContext() {
+    try {
+      const snap = await db.collection("karaokeControl").doc("currentSession").get();
+      const data = snap.exists ? (snap.data() || {}) : {};
+
+      const sessionId =
+        data.active === true
+          ? (data.sessionId || data.activeSessionId || "")
+          : "";
+
+      return { sessionId, control:data };
+    } catch (error) {
+      console.warn("Could not read current Performance Session:", error);
+      return { sessionId:"", control:{} };
+    }
+  }
+
+  async function recordCurrentSongPlayed() {
+    if (!currentSongId || !currentSong) return;
+
+    const { sessionId } = await getActiveSessionContext();
+    if (!sessionId) return;
+
+    const playedAt = firebase.firestore.Timestamp.now();
+    const performedId =
+      `${currentSongId}_${Date.now()}_${Math.random().toString(36).slice(2,6)}`;
+
+    const playedRecord = {
+      songId: currentSongId,
+      songTitle: currentSong.title || "",
+      songArtist: currentSong.artist || "",
+      artist: currentSong.artist || "",
+      requestId: requestId || "",
+      source: "lyricview-autoscroll",
+      playedAt,
+      createdAt: playedAt
+    };
+
+    try {
+      await db.collection("performanceSessions")
+        .doc(sessionId)
+        .collection("performedSongs")
+        .doc(performedId)
+        .set(playedRecord);
+
+      await db.collection("performanceLogs").add({
+        sessionId,
+        ...playedRecord,
+        performanceType: "Auto-scroll Play",
+        performedBy: "host"
+      });
+
+      const runRef = db.collection("karaokeControl").doc("runOrder");
+      const runSnap = await runRef.get();
+      const runData = runSnap.exists ? (runSnap.data() || {}) : {};
+
+      if (runData.sessionId === sessionId && Array.isArray(runData.items)) {
+        let matchedRequestId = "";
+
+        const items = runData.items.map(item => {
+          const sameRequest = requestId && item.requestId === requestId;
+          const sameSong =
+            !requestId &&
+            item.status !== "played" &&
+            item.songId === currentSongId;
+
+          if (sameRequest || sameSong) {
+            matchedRequestId = item.requestId || "";
+            return {
+              ...item,
+              status:"played",
+              playedAtMs:Date.now()
+            };
+          }
+
+          return item;
+        });
+
+        await runRef.set({
+          sessionId,
+          items,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge:true });
+
+        const linkedRequestId = requestId || matchedRequestId;
+        if (linkedRequestId) {
+          await db.collection("publicSongRequests").doc(linkedRequestId).set({
+            status:"completed",
+            playedAt,
+            updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+          }, { merge:true });
+        }
+      }
+    } catch (error) {
+      console.error("Could not record played song:", error);
+    }
+  }
+
+  async function goToNextRunOrderSong() {
+    const { sessionId } = await getActiveSessionContext();
+
+    if (!sessionId) {
+      await showModal("No Active Session", "Start a Performance Session first.");
+      return;
+    }
+
+    const snap = await db.collection("karaokeControl").doc("runOrder").get();
+    const data = snap.exists ? (snap.data() || {}) : {};
+
+    if (data.sessionId !== sessionId || !Array.isArray(data.items) || !data.items.length) {
+      await showModal("Run Order Empty", "There are no songs in the Run Order.");
+      return;
+    }
+
+    const items = data.items;
+    let currentIndex = -1;
+
+    if (requestId) {
+      currentIndex = items.findIndex(item => item.requestId === requestId);
+    }
+
+    if (currentIndex < 0) {
+      currentIndex = items.findIndex(item => item.songId === currentSongId);
+    }
+
+    let next = null;
+
+    for (let i = Math.max(0,currentIndex + 1); i < items.length; i++) {
+      if (items[i].status !== "played" && items[i].songId) {
+        next = items[i];
+        break;
+      }
+    }
+
+    if (!next && currentIndex < 0) {
+      next = items.find(item => item.status !== "played" && item.songId) || null;
+    }
+
+    if (!next) {
+      await showModal("End of Run Order", "There is no next unplayed song.");
+      return;
+    }
+
+    const params = new URLSearchParams();
+    params.set("id",next.songId);
+    if (next.requestId) params.set("requestId",next.requestId);
+
+    location.href = `lyricview.html?${params.toString()}`;
+  }
+
   function startAutoScroll() {
+    const wasOff = !autoScrollOn;
     autoScrollOn = !autoScrollOn;
     $("autoScrollBtn").classList.toggle("active", autoScrollOn);
+
+    if (wasOff && autoScrollOn) {
+      // PLAY means this song has been performed in the current session.
+      recordCurrentSongPlayed();
+    }
     $("autoScrollBtn").textContent = autoScrollOn ? "Ⅱ" : "▶";
 
     if (autoScrollOn) {
@@ -831,6 +987,9 @@
       updateSpeed();
       await saveSongScrollSpeed();
     };
+    if ($("nextRunOrderSongBtn")) {
+      $("nextRunOrderSongBtn").onclick = goToNextRunOrderSong;
+    }
     $("chordMinus").onclick = () => { chordShift--; applyChordTranspose(); };
     $("chordPlus").onclick = () => { chordShift++; applyChordTranspose(); };
     $("tabMinus").onclick = () => { tabShift--; applyTabTranspose(); };
