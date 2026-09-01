@@ -2396,3 +2396,339 @@
     max-height: none !important;
   }
 }
+
+
+/* ========================================================================
+   TIGHT TABLET ROW + OVERDUE STATE — FINAL OVERRIDE
+   ======================================================================== */
+
+/* ------------------------------------------------------------------------
+   OVERDUE VALUES
+   No "Over" text: RED value alone indicates that scheduled time has passed.
+   ------------------------------------------------------------------------ */
+
+#topStatusBar #tsCompactRemaining.is-overdue,
+#topStatusBar #tsAdjustedRemainingTime.is-overdue {
+  color: #ff4b55 !important;
+  text-shadow: 0 0 8px rgba(255,75,85,.14) !important;
+}
+
+#topStatusBar #tsCompactRemaining.is-remaining,
+#topStatusBar #tsAdjustedRemainingTime.is-remaining {
+  color: #f2cf4d !important;
+  text-shadow: none !important;
+}
+
+/* ------------------------------------------------------------------------
+   COLLAPSED STRIP
+   Tight content-sized metrics. Venue absorbs spare room.
+   ------------------------------------------------------------------------ */
+
+#topStatusBar .host-compact-strip {
+  grid-template-columns:
+    108px
+    minmax(145px, 1fr)
+    max-content
+    max-content
+    max-content
+    max-content
+    max-content
+    42px !important;
+  min-height: 66px !important;
+  padding: 5px 6px !important;
+}
+
+#topStatusBar .host-strip-metric {
+  width: auto !important;
+  min-width: 0 !important;
+  padding: 5px 8px !important;
+}
+
+#topStatusBar .host-strip-metric small {
+  margin-bottom: 3px !important;
+  font-size: 6px !important;
+  letter-spacing: .04em !important;
+}
+
+#topStatusBar .host-strip-metric strong {
+  font-size: 13px !important;
+  line-height: 1 !important;
+}
+
+#topStatusBar .remaining-metric strong {
+  font-size: 13px !important;
+}
+
+#topStatusBar .host-strip-metric em {
+  margin-top: 2px !important;
+  font-size: 6px !important;
+}
+
+#topStatusBar .requests-metric,
+#topStatusBar .alerts-metric {
+  padding-left: 9px !important;
+  padding-right: 9px !important;
+}
+
+#topStatusBar .venue-metric {
+  min-width: 0 !important;
+  padding-left: 7px !important;
+  padding-right: 9px !important;
+}
+
+#topStatusBar .venue-metric #tsCompactVenue {
+  font-size: 12px !important;
+}
+
+#topStatusBar .host-strip-live {
+  margin: 5px 7px 5px 2px !important;
+}
+
+#topStatusBar .host-strip-live #tsLiveLabel {
+  font-size: 10px !important;
+}
+
+/* ------------------------------------------------------------------------
+   TOP EXPANDED ROW
+   ALWAYS keep both tabbed cards beside each other on tablet landscape.
+   Remove the large dead spaces by using a compact 58/42 split.
+   ------------------------------------------------------------------------ */
+
+#topStatusBar .host-dashboard-top-row {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1.38fr) minmax(0, 1fr) !important;
+  gap: 7px !important;
+  align-items: stretch !important;
+  width: 100% !important;
+}
+
+#topStatusBar .host-main-status-tabs-card,
+#topStatusBar .host-info-tabs-card {
+  min-width: 0 !important;
+  width: 100% !important;
+  height: 102px !important;
+  min-height: 102px !important;
+  max-height: 102px !important;
+}
+
+/* Tab bar itself slightly shorter. */
+#topStatusBar .host-card-tabs {
+  flex-basis: 27px !important;
+  height: 27px !important;
+}
+
+#topStatusBar .host-card-tab {
+  height: 27px !important;
+  padding: 0 5px !important;
+  font-size: 6px !important;
+}
+
+/* Session pane: eliminate internal wasted space. */
+#topStatusBar .host-main-status-tabs-card .host-tab-pane {
+  padding: 6px 8px !important;
+}
+
+#topStatusBar .host-session-status-grid {
+  grid-template-columns: minmax(0, 1fr) 1px minmax(0, .92fr) !important;
+  gap: 7px !important;
+  height: 100% !important;
+}
+
+#topStatusBar .host-session-divider {
+  height: 54px !important;
+}
+
+#topStatusBar .host-session-status-grid .status-card-heading {
+  margin-bottom: 3px !important;
+}
+
+#topStatusBar .host-session-status-grid .status-card-heading > span:last-child {
+  font-size: 6px !important;
+}
+
+/* Remaining: smaller value; TIME badge is tiny and separate. */
+#topStatusBar .host-remaining-compact-value {
+  gap: 5px !important;
+}
+
+#topStatusBar .host-over-label {
+  padding: 2px 3px !important;
+  font-size: 5px !important;
+}
+
+#topStatusBar .host-session-status-grid .adjusted-remaining-value {
+  max-width: 100% !important;
+  font-size: 13px !important;
+}
+
+#topStatusBar .host-session-status-grid .adjusted-end-time {
+  margin-top: 4px !important;
+  font-size: 6px !important;
+}
+
+#topStatusBar .host-session-status-grid .adjusted-remaining-hint {
+  margin-top: 2px !important;
+  font-size: 4.5px !important;
+}
+
+/* Public list compact enough to use its half efficiently. */
+#topStatusBar .host-public-list-block #tsDashSongs {
+  font-size: 12px !important;
+}
+
+#topStatusBar .host-public-list-name-compact {
+  gap: 5px !important;
+  margin-top: 4px !important;
+}
+
+#topStatusBar .host-public-list-name-compact .public-list-caption {
+  font-size: 4.5px !important;
+}
+
+#topStatusBar .host-public-list-name-compact #tsDashPublicSetlist {
+  font-size: 8px !important;
+}
+
+/* ------------------------------------------------------------------------
+   BREAK STATUS TAB
+   Compact but still clear.
+   ------------------------------------------------------------------------ */
+
+#topStatusBar .host-break-tab-layout {
+  grid-template-columns: minmax(0,.85fr) minmax(0,1.35fr) 82px !important;
+  gap: 6px !important;
+}
+
+#topStatusBar .host-break-tab-layout .break-status-label {
+  font-size: 9px !important;
+}
+
+#topStatusBar .host-break-tab-layout .break-details:not(.hidden) {
+  gap: 5px !important;
+  margin-top: 4px !important;
+}
+
+#topStatusBar .host-break-tab-layout .break-details > span {
+  font-size: 4.5px !important;
+}
+
+#topStatusBar .host-break-tab-layout .break-details > span strong {
+  font-size: 6px !important;
+}
+
+#topStatusBar .host-break-tab-layout .break-summary-grid {
+  gap: 4px !important;
+}
+
+#topStatusBar .host-break-tab-layout .break-summary-item,
+#topStatusBar .host-break-tab-layout .break-summary-item.full-width {
+  padding: 4px 3px !important;
+}
+
+#topStatusBar .host-break-tab-layout .break-summary-item span {
+  font-size: 4.5px !important;
+}
+
+#topStatusBar .host-break-tab-layout .break-summary-item strong {
+  margin-top: 2px !important;
+  font-size: 7px !important;
+}
+
+#topStatusBar .host-break-tab-layout .break-action-btn {
+  width: 82px !important;
+  min-width: 82px !important;
+  height: 27px !important;
+  min-height: 27px !important;
+  padding: 0 4px !important;
+  font-size: 6px !important;
+}
+
+/* ------------------------------------------------------------------------
+   NOTIFICATIONS / SESSION NOTES
+   Same compact height and no giant empty band.
+   ------------------------------------------------------------------------ */
+
+#topStatusBar .host-info-tabs-card .host-tab-pane {
+  padding: 5px 7px !important;
+}
+
+#topStatusBar .host-info-tabs-card .workflow-notification-list {
+  height: 100% !important;
+  max-height: 64px !important;
+}
+
+#topStatusBar .host-info-tabs-card .workflow-notification-list .top-status-empty {
+  min-height: 54px !important;
+  padding: 0 !important;
+  font-size: 6px !important;
+}
+
+#topStatusBar .host-info-tabs-card .host-tab-notes {
+  height: calc(100% - 12px) !important;
+  padding: 5px !important;
+  font-size: 7px !important;
+}
+
+/* ------------------------------------------------------------------------
+   PENDING REQUESTS / RUN ORDER
+   Reclaim the vertical space removed above.
+   ------------------------------------------------------------------------ */
+
+#topStatusBar .host-live-workflow-row {
+  margin-top: 7px !important;
+}
+
+#topStatusBar .host-live-workflow-row .host-pending-card,
+#topStatusBar .host-live-workflow-row .host-run-order-card {
+  height: 226px !important;
+  min-height: 226px !important;
+  max-height: 226px !important;
+}
+
+#topStatusBar .host-live-workflow-row .top-status-pending-list {
+  max-height: 178px !important;
+}
+
+#topStatusBar .host-live-workflow-row .host-run-order-card #tsRunOrderList {
+  max-height: 148px !important;
+}
+
+/* Do not stack the top two cards at ordinary tablet widths. */
+@media (min-width: 521px) and (max-width: 1180px) {
+  #topStatusBar .host-dashboard-top-row {
+    grid-template-columns: minmax(0, 1.42fr) minmax(0, .98fr) !important;
+  }
+
+  #topStatusBar .host-main-status-tabs-card,
+  #topStatusBar .host-info-tabs-card {
+    height: 100px !important;
+    min-height: 100px !important;
+    max-height: 100px !important;
+  }
+
+  #topStatusBar .host-compact-strip {
+    grid-template-columns:
+      104px
+      minmax(128px, 1fr)
+      max-content
+      max-content
+      max-content
+      max-content
+      max-content
+      40px !important;
+  }
+}
+
+/* Only genuinely narrow phone layouts stack. */
+@media (max-width: 520px) {
+  #topStatusBar .host-dashboard-top-row {
+    grid-template-columns: 1fr !important;
+  }
+
+  #topStatusBar .host-main-status-tabs-card,
+  #topStatusBar .host-info-tabs-card {
+    height: auto !important;
+    min-height: 105px !important;
+    max-height: none !important;
+  }
+}
