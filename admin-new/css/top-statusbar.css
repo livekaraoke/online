@@ -1,1638 +1,945 @@
 /* =========================================================
-   TOP PERFORMANCE STATUS BAR
+   COMPACT HOST TOP STATUS BAR
+   This stylesheet is loaded AFTER the existing top-statusbar.css.
    ========================================================= */
 
-* {
-  box-sizing: border-box;
-}
+#topStatusBar.host-statusbar {
+  --host-line: #25333b;
+  --host-card: #071016;
+  --host-card-2: #090f13;
+  --host-muted: #7f8b92;
+  --host-text: #f1f4f5;
+  --host-blue: #67bff0;
+  --host-green: #41db72;
+  --host-yellow: #f2cf4d;
+  --host-red: #ef595f;
 
-.hidden {
-  display: none !important;
-}
-
-#topStatusContainer {
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
-  z-index: 999999 !important;
-}
-
-.top-statusbar {
-  position: relative;
   width: 100%;
-  color: #fff;
-  font-family: Bahnschrift, Arial, sans-serif;
-  background: rgba(4, 8, 13, 0.96);
-  border-bottom: 1px solid rgba(190, 30, 30, 0.65);
-  box-shadow: 0 10px 36px rgba(0, 0, 0, 0.65);
-  backdrop-filter: blur(14px);
-}
-
-.top-statusbar.collapsed {
-  height: 62px;
+  max-width: 100%;
   overflow: hidden;
+  background: #030608;
+  border-bottom: 1px solid #351419;
 }
 
-.top-statusbar.expanded {
-  max-height: calc(100vh - 12px);
-  overflow-y: auto;
-  background: rgba(3, 8, 13, 0.9);
-}
+/* ---------------------------------------------------------
+   COLLAPSED / ALWAYS VISIBLE
+   --------------------------------------------------------- */
 
-.top-statusbar.has-new {
-  animation: topStatusFlash 1.15s infinite;
-}
-
-@keyframes topStatusFlash {
-  0%,
-  100% {
-    border-bottom-color: rgba(190, 30, 30, 0.65);
-    box-shadow: 0 10px 36px rgba(0, 0, 0, 0.65);
-  }
-
-  50% {
-    border-bottom-color: #00e875;
-    box-shadow:
-      0 0 28px rgba(0, 232, 117, 0.58),
-      0 10px 36px rgba(0, 0, 0, 0.65);
-  }
-}
-
-/* =========================================================
-   COLLAPSED STRIP
-   ========================================================= */
-
-.top-status-strip {
-  min-height: 62px;
-  display: grid;
+#topStatusBar .host-compact-strip {
+  display: grid !important;
   grid-template-columns:
-    minmax(145px, 0.9fr)
-    minmax(190px, 1fr)
-    minmax(180px, 1fr)
-    minmax(190px, 1fr)
-    54px;
-  align-items: center;
-  gap: 14px;
-  padding: 8px 20px;
-  cursor: pointer;
+    minmax(92px,.62fr)
+    minmax(170px,1.35fr)
+    minmax(88px,.62fr)
+    minmax(96px,.7fr)
+    minmax(120px,.88fr)
+    minmax(76px,.52fr)
+    minmax(70px,.48fr)
+    48px;
+  align-items: stretch;
+  gap: 0 !important;
+  min-height: 72px !important;
+  padding: 7px 9px !important;
+  background:
+    linear-gradient(180deg, rgba(7,10,12,.98), rgba(3,5,6,.98)) !important;
+  border: 1px solid #2a3338 !important;
+  border-radius: 8px !important;
 }
 
-.status-pill {
+#topStatusBar .host-strip-live,
+#topStatusBar .host-strip-metric,
+#topStatusBar .host-status-toggle {
   min-width: 0;
-  height: 46px;
+  border-right: 1px solid #262c30;
+}
+
+#topStatusBar .host-strip-live {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 8px 15px;
-  background:
-    linear-gradient(
-      145deg,
-      rgba(12, 22, 32, 0.92),
-      rgba(4, 10, 16, 0.92)
-    );
-  border: 1px solid rgba(100, 140, 175, 0.19);
-  border-radius: 14px;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.035),
-    0 5px 12px rgba(0, 0, 0, 0.22);
-  white-space: nowrap;
-  overflow: hidden;
+  justify-content: center;
+  gap: 7px;
+  margin: 6px 9px 6px 3px;
+  border: 1px solid #1e8d44;
+  border-radius: 7px;
+  background: linear-gradient(180deg, rgba(7,46,19,.72), rgba(3,22,10,.75));
+  box-shadow: 0 0 16px rgba(45,216,98,.13);
 }
 
-.status-pill strong {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  font-size: 16px;
-  letter-spacing: 0.15px;
-}
-
-.notification-pill strong {
-  color: #00e875;
-}
-
-.notification-icon-wrap {
-  position: relative;
-  flex: 0 0 auto;
-  font-size: 20px;
-}
-
-.notification-badge {
-  position: absolute;
-  top: -8px;
-  right: -10px;
-  min-width: 20px;
-  height: 20px;
-  display: grid;
-  place-items: center;
-  padding: 0 5px;
-  border-radius: 999px;
-  background: #f22b2b;
-  color: #fff;
-  font-size: 11px;
-  font-weight: 900;
-  box-shadow: 0 0 12px rgba(242, 43, 43, 0.55);
-}
-
-.dot {
-  width: 12px;
-  height: 12px;
-  display: inline-block;
-  flex: 0 0 auto;
-  border-radius: 50%;
-}
-
-.dot.blue {
-  background: #18a7ff;
-  box-shadow: 0 0 14px #18a7ff;
-}
-
-.dot.green {
-  background: #12e879;
-  box-shadow: 0 0 16px #12e879;
-}
-
-.dot.red {
-  background: #ff3434;
-  box-shadow: 0 0 16px #ff3434;
-}
-
-.top-status-toggle {
-  width: 50px;
-  height: 46px;
-  border: 1px solid rgba(218, 37, 28, 0.72);
-  border-radius: 14px;
-  background:
-    linear-gradient(
-      145deg,
-      rgba(70, 9, 7, 0.88),
-      rgba(28, 3, 3, 0.92)
-    );
-  color: #fff;
-  font-size: 18px;
-  font-weight: 900;
-  cursor: pointer;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.04),
-    0 0 15px rgba(200, 30, 22, 0.16);
-}
-
-.top-status-toggle:hover {
-  border-color: #ff4a3e;
-  background: rgba(115, 12, 8, 0.95);
-}
-
-/* =========================================================
-   EXPANDED CONTENT
-   ========================================================= */
-
-.top-status-expanded {
-  padding: 18px 20px 22px;
-}
-
-.top-performance-grid {
-  display: grid;
-  grid-template-columns:
-    minmax(180px, 0.9fr)
-    minmax(240px, 1.25fr)
-    minmax(170px, 0.75fr)
-    minmax(180px, 0.85fr)
-    minmax(270px, 1.45fr);
-  gap: 14px;
-}
-
-.performance-info-card,
-.top-status-queue-card {
-  background:
-    linear-gradient(
-      145deg,
-      rgba(8, 17, 25, 0.94),
-      rgba(3, 9, 14, 0.94)
-    );
-  border: 1px solid rgba(72, 112, 145, 0.25);
-  border-radius: 15px;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.025),
-    0 8px 22px rgba(0, 0, 0, 0.3);
-}
-
-.performance-info-card {
-  min-height: 218px;
-  padding: 17px;
-}
-
-.status-card-heading {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  color: #a9b9c9;
+#topStatusBar .host-strip-live #tsLiveLabel {
+  color: #eaf9ee;
   font-size: 13px;
-  font-weight: 900;
-  letter-spacing: 0.35px;
+  font-weight: 950;
+  letter-spacing: .02em;
   text-transform: uppercase;
 }
 
-.status-card-icon {
-  font-size: 19px;
-}
-
-.compact-heading {
-  margin-top: 2px;
-}
-
-.large-status-value {
-  display: block;
-  margin-top: 23px;
-  color: #fff;
-  font-size: 27px;
-  line-height: 1.08;
-  overflow-wrap: anywhere;
-}
-
-.green-value {
-  color: #1ce47a;
-}
-
-.amber-value {
-  color: #ffc21d;
-}
-
-.status-card-note {
-  display: block;
-  margin-top: 16px;
-  color: #97a7b8;
-  font-size: 13px;
-}
-
-.status-card-divider {
-  height: 1px;
-  margin: 27px 0 19px;
-  background: rgba(140, 160, 180, 0.2);
-}
-
-.status-card-divider.dashed {
-  background: none;
-  border-top: 1px dashed rgba(140, 160, 180, 0.23);
-}
-
-.song-list-locked {
-  color: #ff4444;
-}
-
-.song-list-unlocked {
-  color: #16e477;
-}
-
-/* =========================================================
-   BREAK CARD
-   ========================================================= */
-
-.break-card {
-  transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease;
-}
-
-.break-card.break-is-active {
-  border-color: rgba(255, 167, 0, 0.72);
-  box-shadow:
-    inset 0 0 35px rgba(255, 128, 0, 0.075),
-    0 0 20px rgba(255, 157, 0, 0.13);
-}
-
-.break-status-panel {
-  margin-top: 15px;
-  padding: 16px;
-  border: 1px solid rgba(100, 140, 175, 0.19);
-  border-radius: 12px;
-  background: rgba(0, 0, 0, 0.22);
-}
-
-.break-status-panel.active-break {
-  border-color: rgba(255, 162, 0, 0.84);
-  background:
-    linear-gradient(
-      145deg,
-      rgba(92, 46, 0, 0.48),
-      rgba(23, 12, 0, 0.54)
-    );
-  box-shadow: 0 0 18px rgba(255, 157, 0, 0.13);
-}
-
-.break-status-label {
-  display: block;
-  color: #dbe6f0;
-  font-size: 20px;
-  text-transform: uppercase;
-}
-
-.active-break .break-status-label {
-  color: #ffc21d;
-  text-shadow: 0 0 10px rgba(255, 194, 29, 0.25);
-}
-
-.break-details {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-top: 14px;
-  color: #b9c5d1;
-  font-size: 14px;
-}
-
-.break-details strong {
-  color: #fff;
-}
-
-#tsBreakDuration {
-  color: #ffc21d;
-}
-
-.break-action-btn {
-  width: 100%;
-  min-height: 42px;
-  margin-top: 12px;
-  border-radius: 10px;
-  color: #fff;
-  font: inherit;
-  font-size: 14px;
-  font-weight: 900;
-  text-transform: uppercase;
-  cursor: pointer;
-}
-
-.break-action-btn.start {
-  border: 1px solid rgba(18, 217, 107, 0.62);
-  background:
-    linear-gradient(
-      180deg,
-      rgba(9, 116, 55, 0.82),
-      rgba(2, 65, 30, 0.9)
-    );
-}
-
-.break-action-btn.end {
-  border: 1px solid #ffa600;
-  background:
-    linear-gradient(
-      180deg,
-      #e28b00,
-      #a95700
-    );
-  box-shadow: 0 0 15px rgba(255, 153, 0, 0.23);
-}
-
-.break-action-btn:disabled {
-  opacity: 0.46;
-  cursor: not-allowed;
-}
-
-.break-action-message {
-  min-height: 16px;
-  margin: 7px 0 0;
-  color: #9cadbd;
-  font-size: 11px;
-  text-align: center;
-}
-
-/* =========================================================
-   NOTIFICATIONS
-   ========================================================= */
-
-.notifications-card {
-  display: flex;
-  flex-direction: column;
-}
-
-.top-status-notifications-list {
-  flex: 1;
-  max-height: 126px;
-  margin-top: 15px;
-  overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: #50687c rgba(0, 0, 0, 0.25);
-}
-
-.top-status-notification {
-  display: grid;
-  grid-template-columns: 9px minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 9px;
-  min-height: 34px;
-  padding: 7px 2px;
-  border-bottom: 1px solid rgba(135, 158, 180, 0.12);
-  color: #e2e9ef;
-  font-size: 13px;
-}
-
-.notification-state-dot {
+#topStatusBar .host-strip-live .dot {
   width: 8px;
   height: 8px;
-  border-radius: 50%;
-  background: #16df76;
-  box-shadow: 0 0 9px rgba(22, 223, 118, 0.58);
+  box-shadow: 0 0 9px currentColor;
 }
 
-.notification-text {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.top-status-notification time {
-  color: #8ea0b1;
-  font-size: 11px;
-}
-
-.top-status-empty {
-  padding: 20px 0;
-  color: #8191a0;
-  font-size: 13px;
-  text-align: center;
-}
-
-.top-status-admin-link {
-  display: block;
-  margin-top: 13px;
-  padding-top: 12px;
-  border-top: 1px solid rgba(135, 158, 180, 0.13);
-  color: #58adff;
-  font-size: 13px;
-  font-weight: 900;
-  text-align: center;
-  text-decoration: none;
-}
-
-.top-status-admin-link:hover {
-  color: #92caff;
-}
-
-/* =========================================================
-   LIVE QUEUE
-   ========================================================= */
-
-.top-status-queue-card {
-  margin-top: 15px;
-  padding: 15px 17px 14px;
-}
-
-.queue-heading-row {
+#topStatusBar .host-strip-metric {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 15px;
-  padding: 0 6px 13px;
-  border-bottom: 1px solid rgba(135, 158, 180, 0.18);
+  flex-direction: column;
+  justify-content: center;
+  padding: 7px 12px;
 }
 
-.queue-heading-row h3 {
-  margin: 0;
-  color: #63afff;
-  font-size: 17px;
-  letter-spacing: 0.45px;
+#topStatusBar .host-strip-metric small {
+  display: block;
+  margin-bottom: 4px;
+  color: #737d83;
+  font-size: 8px;
+  font-weight: 950;
+  letter-spacing: .07em;
   text-transform: uppercase;
 }
 
-.queue-heading-row h3 span:first-child {
-  margin-right: 7px;
-}
-
-#tsQueueCount {
-  margin-left: 3px;
-}
-
-.queue-scroll-hint {
-  color: #9badbd;
-  font-size: 12px;
-}
-
-.top-status-queue-list {
-  /*
-    Approximately three rows remain visible.
-    Additional requests scroll inside this box.
-  */
-  max-height: 228px;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  scrollbar-width: thin;
-  scrollbar-color: #546b80 rgba(0, 0, 0, 0.24);
-}
-
-.top-status-queue-list::-webkit-scrollbar,
-.top-status-notifications-list::-webkit-scrollbar {
-  width: 8px;
-}
-
-.top-status-queue-list::-webkit-scrollbar-track,
-.top-status-notifications-list::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.22);
-  border-radius: 999px;
-}
-
-.top-status-queue-list::-webkit-scrollbar-thumb,
-.top-status-notifications-list::-webkit-scrollbar-thumb {
-  background: #50687c;
-  border-radius: 999px;
-}
-
-.top-status-queue-row {
-  min-height: 76px;
-  display: grid;
-  grid-template-columns:
-    52px
-    38px
-    minmax(180px, 1.5fr)
-    minmax(145px, 1fr)
-    95px;
-  align-items: center;
-  gap: 13px;
-  padding: 9px 11px;
-  border-bottom: 1px solid rgba(135, 158, 180, 0.13);
-}
-
-.top-status-queue-row:last-child {
-  border-bottom: 0;
-}
-
-.queue-position {
-  width: 42px;
-  height: 42px;
-  display: grid;
-  place-items: center;
-  border: 1px solid rgba(83, 158, 223, 0.31);
-  border-radius: 10px;
-  background: rgba(17, 51, 80, 0.2);
-  color: #65b4ff;
-  font-size: 23px;
-  font-weight: 900;
-}
-
-.queue-song-icon {
-  font-size: 24px;
-}
-
-.queue-song-details,
-.queue-singer-details {
-  min-width: 0;
-}
-
-.queue-song-details strong,
-.queue-singer-details strong {
+#topStatusBar .host-strip-metric strong {
   display: block;
   overflow: hidden;
-  color: #fff;
-  font-size: 17px;
+  color: var(--host-text);
+  font-size: 16px;
+  font-weight: 950;
+  line-height: 1.05;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.queue-song-details span,
-.queue-singer-details span {
+#topStatusBar .host-strip-metric em {
   display: block;
   margin-top: 3px;
   overflow: hidden;
-  color: #9cadbd;
-  font-size: 13px;
+  color: #73838c;
+  font-size: 8px;
+  font-style: normal;
+  font-weight: 800;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.queue-person-icon {
-  margin-right: 5px;
-  color: #9cadbd;
-}
-
-.queue-position-label {
-  justify-self: center;
-  min-width: 72px;
-  padding: 8px 9px;
-  border: 1px solid rgba(66, 134, 196, 0.22);
-  border-radius: 10px;
-  background: rgba(16, 52, 86, 0.44);
-  color: #69b6ff;
-  font-size: 13px;
-  font-weight: 900;
-  text-align: center;
-  text-transform: uppercase;
-}
-
-.queue-position-label.up-next {
-  border-color: rgba(18, 218, 108, 0.28);
-  background: rgba(0, 87, 43, 0.42);
-  color: #18e478;
-}
-
-.top-status-queue-empty {
-  min-height: 95px;
+#topStatusBar .venue-metric {
   display: grid;
-  place-items: center;
-  color: #899aa9;
-  font-size: 14px;
-}
-
-/* =========================================================
-   PAGE POSITIONING
-   ========================================================= */
-
-body {
-  padding-top: 62px;
-}
-
-.viewer-topbar {
-  top: 62px !important;
-}
-
-/* =========================================================
-   COMBINED BREAK INFORMATION
-   ========================================================= */
-
-.break-total-row {
-  display: flex;
+  grid-template-columns: 28px minmax(0,1fr);
   align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  margin-top: 13px;
-  padding-top: 11px;
-  border-top: 1px solid rgba(140, 160, 180, 0.18);
-  color: #a9b9c9;
-  font-size: 12px;
-  font-weight: 700;
+  column-gap: 6px;
 }
 
-.break-total-row strong {
-  color: #ffc21d;
-  font-size: 16px;
-  white-space: nowrap;
+#topStatusBar .venue-metric .host-strip-icon {
+  grid-row: 1 / 2;
+  font-size: 22px;
+  opacity: .82;
 }
 
-/* =========================================================
-   SESSION NOTES
-   ========================================================= */
-
-.session-notes-card {
-  display: flex;
-  flex-direction: column;
-}
-
-.top-status-session-notes {
-  width: 100%;
-  flex: 1;
-  min-height: 122px;
-  margin-top: 15px;
-  padding: 12px 13px;
-  resize: none;
-  border: 1px solid rgba(100, 140, 175, 0.28);
-  border-radius: 11px;
-  outline: none;
-  background: rgba(0, 0, 0, 0.34);
-  color: #fff;
-  font: inherit;
-  font-size: 14px;
-  line-height: 1.4;
-}
-
-.top-status-session-notes::placeholder {
-  color: #708090;
-}
-
-.top-status-session-notes:focus {
-  border-color: rgba(30, 170, 255, 0.72);
-  box-shadow: 0 0 13px rgba(30, 170, 255, 0.14);
-}
-
-.top-status-session-notes:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-.session-notes-footer {
-  min-height: 16px;
-  margin-top: 8px;
-  color: #8fa1b1;
-  font-size: 11px;
-  text-align: right;
-}
-
-/* Included and excluded session timers */
-
-.elapsed-metric {
-  margin-top: 12px;
-}
-
-.elapsed-metric > span {
-  display: block;
-  color: #9eafbf;
-  font-size: 11px;
-  font-weight: 900;
-  letter-spacing: 0.25px;
-  text-transform: uppercase;
-}
-
-.elapsed-metric .large-status-value {
-  margin-top: 7px;
-}
-
-.elapsed-excluding {
-  margin-top: 15px;
-  padding-top: 12px;
-  border-top: 1px solid rgba(140, 160, 180, 0.16);
-}
-
-.secondary-time-value {
-  display: block;
-  margin-top: 6px;
-  color: #ffd02c;
-  font-size: 18px;
-  line-height: 1.1;
-}
-
-
-/* Break summary information */
-
-.break-summary-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 9px;
-  margin-top: 12px;
-  padding-top: 11px;
-  border-top: 1px solid rgba(140, 160, 180, 0.18);
-}
-
-.break-summary-item {
+#topStatusBar .venue-metric > div {
   min-width: 0;
 }
 
-.break-summary-item.full-width {
-  grid-column: 1 / -1;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding-top: 8px;
-  border-top: 1px solid rgba(140, 160, 180, 0.12);
+#topStatusBar .venue-metric #tsCompactVenue {
+  font-size: 13px;
 }
 
-.break-summary-item span {
-  display: block;
-  color: #9eafbf;
-  font-size: 10px;
-  font-weight: 800;
-  line-height: 1.2;
+#topStatusBar .venue-metric #tsCompactType {
+  color: var(--host-blue);
 }
 
-.break-summary-item strong {
-  display: block;
-  margin-top: 4px;
-  color: #ffc21d;
-  font-size: 14px;
+#topStatusBar .host-elapsed-green {
+  color: var(--host-green) !important;
 }
 
-.break-summary-item.full-width strong {
-  flex: 0 0 auto;
-  margin-top: 0;
+#topStatusBar .remaining-metric strong {
+  color: var(--host-yellow);
+  font-size: 17px;
 }
 
-/* =========================================================
-   TABLET
-   ========================================================= */
-
-@media (min-width: 700px) and (max-width: 1100px) {
-  .top-statusbar.expanded {
-    max-height: calc(100vh - 6px);
-    overflow-y: auto;
-  }
-
-  .top-status-expanded {
-    padding: 10px 12px 13px;
-  }
-
-  .top-performance-grid {
-    /*
-      Four compact cards across portrait tablet:
-      Started | Break | Notes | Venue
-    */
-    grid-template-columns:
-      minmax(125px, 0.8fr)
-      minmax(175px, 1.1fr)
-      minmax(205px, 1.3fr)
-      minmax(145px, 0.9fr);
-    gap: 9px;
-  }
-
-  .performance-info-card {
-    min-height: 175px;
-    padding: 12px;
-    border-radius: 12px;
-  }
-
-  .status-card-heading {
-    gap: 6px;
-    font-size: 10px;
-    letter-spacing: 0.2px;
-  }
-
-  .status-card-icon {
-    font-size: 15px;
-  }
-
-  .large-status-value {
-    margin-top: 14px;
-    font-size: 20px;
-  }
-
-  .status-card-divider {
-    margin: 16px 0 13px;
-  }
-
-  .break-status-panel {
-    margin-top: 10px;
-    padding: 10px;
-  }
-
-  .break-status-label {
-    font-size: 15px;
-  }
-
-  .break-details {
-    gap: 4px;
-    margin-top: 8px;
-    font-size: 11px;
-  }
-
-  .break-total-row {
-    margin-top: 8px;
-    padding-top: 7px;
-    font-size: 10px;
-  }
-
-  .break-total-row strong {
-    font-size: 13px;
-  }
-
-  .break-action-btn {
-    min-height: 34px;
-    margin-top: 8px;
-    font-size: 11px;
-  }
-
-  .break-action-message {
-    margin-top: 4px;
-    font-size: 9px;
-  }
-
-  .top-status-session-notes {
-    min-height: 105px;
-    margin-top: 10px;
-    padding: 9px;
-    font-size: 12px;
-  }
-
-  .session-notes-footer {
-    margin-top: 5px;
-    font-size: 9px;
-  }
-
-  .notifications-card {
-    grid-column: 1 / -1;
-    min-height: 105px;
-    padding: 11px 13px;
-  }
-
-  .top-status-notifications-list {
-    max-height: 48px;
-    margin-top: 8px;
-  }
-
-  .top-status-admin-link {
-    margin-top: 6px;
-    padding-top: 6px;
-    font-size: 11px;
-  }
-
-  .top-status-queue-card {
-    margin-top: 9px;
-    padding: 10px 12px;
-  }
-
-  .queue-heading-row {
-    padding-bottom: 8px;
-  }
-
-  .queue-heading-row h3 {
-    font-size: 13px;
-  }
-
-  .top-status-queue-list {
-    /*
-      Three compact queue rows.
-    */
-    max-height: 171px;
-  }
-
-  .top-status-queue-row {
-    min-height: 57px;
-    grid-template-columns:
-      37px
-      28px
-      minmax(130px, 1.4fr)
-      minmax(100px, 1fr)
-      66px;
-    gap: 8px;
-    padding: 6px 8px;
-  }
-
-  .queue-position {
-    width: 31px;
-    height: 31px;
-    font-size: 16px;
-  }
-
-  .queue-song-icon {
-    font-size: 18px;
-  }
-
-  .queue-song-details strong,
-  .queue-singer-details strong {
-    font-size: 13px;
-  }
-
-  .queue-song-details span,
-  .queue-singer-details span {
-    margin-top: 1px;
-    font-size: 10px;
-  }
-
-  .queue-position-label {
-    min-width: 58px;
-    padding: 5px;
-    font-size: 9px;
-  }
+#topStatusBar .remaining-metric em {
+  color: #d8b73e;
 }
 
-/* =========================================================
-   SMALL TABLET / PHONE
-   ========================================================= */
-
-@media (max-width: 699px) {
-  .top-statusbar.collapsed {
-    height: 58px;
-  }
-
-  .top-status-strip {
-    min-height: 58px;
-    grid-template-columns: minmax(0, 1fr) 48px;
-    gap: 8px;
-    padding: 6px 9px;
-  }
-
-  .status-pill {
-    height: 44px;
-  }
-
-  .status-pill:nth-child(2),
-  .status-pill:nth-child(3),
-  .status-pill:nth-child(4) {
-    display: none;
-  }
-
-  .top-status-toggle {
-    width: 46px;
-    height: 44px;
-  }
-
-  .top-status-expanded {
-    padding: 10px;
-  }
-
-  .top-performance-grid {
-    grid-template-columns: 1fr 1fr;
-    gap: 9px;
-  }
-
-  .performance-info-card {
-    min-height: 175px;
-    padding: 12px;
-  }
-
-  .notifications-card {
-    grid-column: span 2;
-  }
-
-  .large-status-value {
-    margin-top: 16px;
-    font-size: 21px;
-  }
-
-  .top-status-queue-card {
-    padding: 12px 8px;
-  }
-
-  .queue-heading-row {
-    align-items: flex-start;
-  }
-
-  .queue-scroll-hint {
-    display: none;
-  }
-
-  .top-status-queue-row {
-    min-height: 84px;
-    grid-template-columns: 38px minmax(0, 1fr) 64px;
-    gap: 9px;
-  }
-
-  .queue-position {
-    width: 34px;
-    height: 34px;
-    font-size: 18px;
-  }
-
-  .queue-song-icon {
-    display: none;
-  }
-
-  .queue-song-details {
-    grid-column: 2;
-  }
-
-  .queue-singer-details {
-    grid-column: 2;
-  }
-
-  .queue-position-label {
-    grid-column: 3;
-    grid-row: 1 / span 2;
-    min-width: 60px;
-    padding: 7px 5px;
-    font-size: 11px;
-  }
-
-  body {
-    padding-top: 58px;
-  }
-
-  .viewer-topbar {
-    top: 58px !important;
-  }
+#topStatusBar .requests-metric,
+#topStatusBar .alerts-metric {
+  text-align: center;
 }
 
-@media (min-width: 700px) and (max-width: 1100px) {
-   #topStatusContainer {
-     height: auto !important;
-     max-height: none !important;
-     overflow: visible !important;
-   }
-   
-   .top-statusbar.expanded {
-     height: auto !important;
-     max-height: calc(100dvh - 8px) !important;
-     overflow-x: hidden !important;
-     overflow-y: auto !important;
-   }
-   
-   .top-status-expanded {
-     height: auto !important;
-     min-height: 0 !important;
-     display: block !important;
-     padding: 9px 11px 11px !important;
-     overflow: visible !important;
-   }
-
-  .top-performance-grid {
-    grid-column: 1 / -1;
-    grid-template-columns:
-      minmax(120px, 0.8fr)
-      minmax(180px, 1.15fr)
-      minmax(210px, 1.35fr)
-      minmax(140px, 0.9fr);
-    gap: 8px;
-  }
-
-  .performance-info-card {
-    min-height: 0;
-    height: 215px;
-    padding: 11px;
-  }
-
-  .timing-card .large-status-value {
-    font-size: 18px;
-  }
-
-  .secondary-time-value {
-    font-size: 14px;
-  }
-
-  .break-status-panel {
-    margin-top: 8px;
-    padding: 9px;
-  }
-
-  .break-status-label {
-    font-size: 14px;
-  }
-
-  .break-summary-grid {
-    gap: 6px;
-    margin-top: 8px;
-    padding-top: 7px;
-  }
-
-  .break-summary-item span {
-    font-size: 8px;
-  }
-
-  .break-summary-item strong {
-    font-size: 12px;
-  }
-
-  .break-action-btn {
-    min-height: 31px;
-    margin-top: 6px;
-    font-size: 10px;
-  }
-
-  .top-status-session-notes {
-    min-height: 135px;
-    height: 135px;
-    margin-top: 8px;
-  }
-
-
-
-  .top-status-notifications-list {
-    max-height: none;
-    height: calc(100% - 62px);
-  }
-
-
-
-
-  .top-status-queue-row {
-    min-height: 55px;
-  }
+#topStatusBar .requests-metric strong {
+  color: #ededed;
 }
 
-/* =========================================================
-   LOWER DASHBOARD LAYOUT
-   Notifications | Shortcuts | Queue spanning two columns
-   ========================================================= */
+#topStatusBar .alerts-metric strong {
+  color: var(--host-green);
+}
 
-.top-status-lower-grid {
+#topStatusBar .host-status-toggle {
+  display: grid !important;
+  place-items: center;
+  width: auto !important;
+  height: auto !important;
+  min-height: 100%;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-right: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  color: #f2f2f2 !important;
+  font-size: 16px !important;
+}
+
+#topStatusBar .top-status-compatibility {
+  display: none !important;
+}
+
+/* ---------------------------------------------------------
+   EXPANDED WORKSPACE
+   --------------------------------------------------------- */
+
+#topStatusBar .host-status-expanded {
+  max-height: min(73dvh, 720px) !important;
+  padding: 9px !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain;
+  background:
+    radial-gradient(circle at 80% 0%, rgba(22,66,88,.08), transparent 34rem),
+    #030608 !important;
+  scrollbar-width: thin;
+}
+
+#topStatusBar .host-expanded-primary {
   display: grid;
-  grid-template-columns:
-    minmax(180px, 0.9fr)
-    minmax(240px, 1.25fr)
-    minmax(170px, 0.75fr)
-    minmax(180px, 0.85fr);
-  gap: 14px;
-  margin-top: 14px;
+  grid-template-columns: minmax(430px,1.7fr) minmax(220px,.8fr) minmax(250px,1fr);
+  gap: 7px;
   align-items: stretch;
 }
 
-.top-status-lower-grid .notifications-card {
-  grid-column: 1;
+#topStatusBar .host-expanded-workflow {
+  display: grid;
+  grid-template-columns: minmax(250px,.78fr) minmax(430px,1.65fr);
+  gap: 7px;
+  margin-top: 7px;
 }
 
-.top-status-shortcuts-card {
-  grid-column: 2;
-  display: flex;
-  flex-direction: column;
-}
-
-.top-status-lower-grid .top-status-queue-card {
-  grid-column: 3 / 5;
-  margin-top: 0;
-  min-width: 0;
-}
-
-/* =========================================================
-   SHORTCUTS
-   ========================================================= */
-
-.top-status-shortcuts {
+#topStatusBar .host-expanded-footer {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 9px;
-  margin-top: 14px;
+  gap: 7px;
+  margin-top: 7px;
 }
 
-.top-status-shortcut-btn {
-  width: 100%;
-  min-height: 45px;
-  display: grid;
-  grid-template-columns: 28px minmax(0, 1fr);
-  align-items: center;
-  gap: 9px;
-  padding: 8px 12px;
-  border: 1px solid rgba(90, 130, 165, 0.28);
-  border-radius: 10px;
-  background: rgba(5, 15, 23, 0.82);
-  color: #fff;
-  font-family: inherit;
-  text-align: left;
-  cursor: pointer;
-  transition:
-    border-color 0.18s ease,
-    background 0.18s ease,
-    transform 0.18s ease;
-}
-
-.top-status-shortcut-btn:hover {
-  border-color: rgba(90, 180, 255, 0.7);
-  background: rgba(13, 42, 65, 0.9);
-  transform: translateY(-1px);
-}
-
-.top-status-shortcut-btn span {
-  font-size: 18px;
-  text-align: center;
-}
-
-.top-status-shortcut-btn strong {
+#topStatusBar .performance-info-card,
+#topStatusBar .top-status-pending-card,
+#topStatusBar .top-status-queue-card {
   min-width: 0;
-  overflow: hidden;
-  font-size: 12px;
-  font-weight: 900;
-  text-overflow: ellipsis;
+  margin: 0 !important;
+  padding: 9px !important;
+  border: 1px solid var(--host-line) !important;
+  border-radius: 7px !important;
+  background:
+    linear-gradient(155deg, rgba(8,17,23,.98), rgba(5,10,13,.98)) !important;
+  box-shadow: none !important;
+}
+
+#topStatusBar .status-card-heading {
+  margin-bottom: 6px !important;
+}
+
+#topStatusBar .status-card-heading > span:last-child {
+  color: #a8b2b7;
+  font-size: 8px !important;
+  font-weight: 950 !important;
+  letter-spacing: .06em;
   text-transform: uppercase;
-  white-space: nowrap;
 }
 
-.admin-shortcut {
-  border-color: rgba(255, 70, 60, 0.38);
+/* ADJUSTED remaining */
+#topStatusBar .adjusted-remaining-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
-.lyrics-shortcut {
-  border-color: rgba(32, 177, 255, 0.38);
+#topStatusBar .adjusted-remaining-value {
+  display: block;
+  color: var(--host-yellow);
+  font-size: 25px;
+  font-weight: 950;
+  line-height: 1;
 }
 
-.songs-shortcut {
-  border-color: rgba(28, 223, 119, 0.38);
+#topStatusBar .adjusted-end-time {
+  display: block;
+  margin-top: 6px;
+  color: #d9dde0;
+  font-size: 10px;
+  font-weight: 900;
 }
 
-.top-status-lower-grid .top-status-queue-list {
-  width: 100%;
-  max-height: 174px;
-  overflow-x: hidden;
+#topStatusBar .adjusted-end-time strong {
+  color: var(--host-yellow);
+}
+
+#topStatusBar .adjusted-remaining-hint {
+  display: block;
+  margin-top: 4px;
+  color: #68757b;
+  font-size: 7px;
+  line-height: 1.25;
+}
+
+/* Combined Remaining / Public Song List / Notifications */
+#topStatusBar .host-combined-info-card {
+  min-width: 0;
+}
+
+#topStatusBar .host-combined-info-grid {
+  display: grid;
+  grid-template-columns: minmax(145px,.9fr) minmax(145px,.8fr) minmax(190px,1.2fr);
+  min-height: 100%;
+}
+
+#topStatusBar .host-info-segment {
+  min-width: 0;
+  padding: 2px 10px;
+}
+
+#topStatusBar .host-info-segment:first-child {
+  padding-left: 1px;
+}
+
+#topStatusBar .host-info-segment + .host-info-segment {
+  border-left: 1px solid #26333a;
+}
+
+#topStatusBar .public-list-segment .large-status-value {
+  font-size: 17px !important;
+}
+
+#topStatusBar .compact-notification-list {
+  max-height: 92px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+#topStatusBar .compact-notification-list .top-status-empty {
+  padding: 8px 3px !important;
+  color: #6f7a80;
+  font-size: 8px !important;
+}
+
+/* Break card */
+#topStatusBar .host-break-card .break-status-label {
+  font-size: 12px !important;
+}
+
+#topStatusBar .break-summary-grid {
+  margin-top: 6px !important;
+  gap: 3px 6px !important;
+}
+
+#topStatusBar .break-summary-item {
+  padding: 3px 0 !important;
+}
+
+#topStatusBar .break-summary-item span {
+  font-size: 7px !important;
+}
+
+#topStatusBar .break-summary-item strong {
+  font-size: 9px !important;
+}
+
+#topStatusBar .break-action-btn {
+  min-height: 29px !important;
+  margin-top: 6px !important;
+  padding: 5px 8px !important;
+  font-size: 9px !important;
+}
+
+/* Public list */
+#topStatusBar .compact-song-list-card .large-status-value {
+  font-size: 18px !important;
+}
+
+#topStatusBar .top-status-public-list-name {
+  margin-top: 6px !important;
+  padding-top: 5px !important;
+}
+
+/* Notes */
+#topStatusBar .compact-notes-card .top-status-session-notes {
+  min-height: 70px !important;
+  max-height: 92px !important;
+  padding: 7px !important;
+  font-size: 9px !important;
+  line-height: 1.4 !important;
+}
+
+/* Requests / Run Order */
+#topStatusBar .queue-heading-row {
+  margin-bottom: 6px !important;
+}
+
+#topStatusBar .queue-heading-row h3 {
+  margin: 0 !important;
+  color: var(--host-blue) !important;
+  font-size: 10px !important;
+  letter-spacing: .03em;
+}
+
+#topStatusBar .queue-scroll-hint {
+  color: #6f7a80 !important;
+  font-size: 7px !important;
+}
+
+#topStatusBar .top-status-pending-list,
+#topStatusBar #tsRunOrderList {
+  max-height: 205px !important;
+}
+
+#topStatusBar .host-pending-card {
+  min-height: 178px;
+}
+
+#topStatusBar .ts-pending-row,
+#topStatusBar .ts-run-order-row {
+  min-height: 36px !important;
+  padding: 4px 5px !important;
+}
+
+#topStatusBar .ts-request-main strong,
+#topStatusBar .ts-run-main strong {
+  font-size: 9px !important;
+}
+
+#topStatusBar .ts-request-main small,
+#topStatusBar .ts-run-main small {
+  font-size: 7px !important;
+}
+
+#topStatusBar .ts-pending-actions button,
+#topStatusBar .ts-run-actions button,
+#topStatusBar #tsRunOrderAddBtn {
+  height: 25px !important;
+  min-width: 26px !important;
+  font-size: 8px !important;
+}
+
+#topStatusBar .ts-run-order-add {
+  margin-bottom: 5px !important;
+}
+
+#topStatusBar #tsRunOrderSongSelect {
+  height: 27px !important;
+  font-size: 8px !important;
+}
+
+/* Notifications is deliberately low priority */
+#topStatusBar .host-notifications-card {
+  min-height: 56px;
+}
+
+#topStatusBar .host-notifications-card .top-status-notifications-list {
+  max-height: 82px;
   overflow-y: auto;
 }
 
-.top-status-lower-grid .top-status-queue-row {
-  width: 100%;
-  grid-template-columns:
-    44px
-    32px
-    minmax(140px, 1.45fr)
-    minmax(110px, 0.9fr)
-    76px;
+#topStatusBar .host-notifications-card .top-status-empty {
+  padding: 8px !important;
+  font-size: 8px !important;
 }
-     
+
+/* Shortcuts have been removed from HTML entirely. */
+#topStatusBar .top-status-shortcuts-card,
+#topStatusBar .top-status-shortcuts {
+  display: none !important;
+}
+
+@media (max-width: 1100px) {
+  #topStatusBar .host-compact-strip {
+    grid-template-columns:
+      minmax(80px,.58fr)
+      minmax(150px,1.3fr)
+      minmax(78px,.62fr)
+      minmax(82px,.66fr)
+      minmax(108px,.86fr)
+      minmax(64px,.5fr)
+      44px;
+  }
+
+  #topStatusBar .alerts-metric {
+    display: none;
+  }
+
+  #topStatusBar .host-expanded-primary {
+    grid-template-columns: minmax(0,1.55fr) minmax(210px,.8fr);
+  }
+
+  #topStatusBar .compact-notes-card {
+    grid-column: 1 / -1;
+  }
+
+  #topStatusBar .host-combined-info-grid {
+    grid-template-columns: repeat(3,minmax(0,1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  #topStatusBar .host-compact-strip {
+    grid-template-columns: 72px minmax(118px,1.3fr) 66px 76px 92px 38px;
+    min-height: 64px !important;
+    padding: 5px 6px !important;
+  }
+
+  #topStatusBar .requests-metric,
+  #topStatusBar .alerts-metric {
+    display: none;
+  }
+
+  #topStatusBar .host-strip-metric {
+    padding: 5px 7px;
+  }
+
+  #topStatusBar .host-strip-metric small {
+    font-size: 6px;
+  }
+
+  #topStatusBar .host-strip-metric strong {
+    font-size: 12px;
+  }
+
+  #topStatusBar .remaining-metric strong {
+    font-size: 13px;
+  }
+
+  #topStatusBar .venue-metric {
+    grid-template-columns: 20px minmax(0,1fr);
+  }
+
+  #topStatusBar .venue-metric .host-strip-icon {
+    font-size: 16px;
+  }
+
+  #topStatusBar .venue-metric #tsCompactVenue {
+    font-size: 10px;
+  }
+
+  #topStatusBar .host-expanded-primary,
+  #topStatusBar .host-expanded-workflow {
+    grid-template-columns: 1fr;
+  }
+
+  #topStatusBar .compact-notes-card {
+    grid-column: auto;
+  }
+
+  #topStatusBar .host-combined-info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  #topStatusBar .host-info-segment {
+    padding: 8px 1px;
+  }
+
+  #topStatusBar .host-info-segment + .host-info-segment {
+    border-left: 0;
+    border-top: 1px solid #26333a;
+  }
+
+  #topStatusBar .host-status-expanded {
+    max-height: 70dvh !important;
+  }
+}
+
+
 /* =========================================================
-   FINAL TABLET TYPOGRAPHY FIX
-   Keep this at the very bottom of top-statusbar.css
+   HOST STATUS BAR VISUAL REFINEMENT
    ========================================================= */
 
-@media (min-width: 700px) and (max-width: 1100px) {
+/* Remaining + Public List live together vertically in one card. */
+#topStatusBar .host-combined-info-grid {
+  display: grid !important;
+  grid-template-columns: minmax(250px,.9fr) minmax(250px,1.1fr) !important;
+  min-height: 100% !important;
+}
 
-  /* Use a consistent available font on tablets */
-  #topStatusBar,
-  #topStatusBar button,
-  #topStatusBar textarea,
-  #topStatusBar input,
-  #topStatusBar select {
-    font-family:
-      Bahnschrift,
-      "Arial Narrow",
-      Arial,
-      Helvetica,
-      sans-serif !important;
-  }
+#topStatusBar .host-info-left-stack {
+  display: grid !important;
+  grid-template-rows: auto auto !important;
+  min-width: 0 !important;
+}
 
-  /* ---------------------------------------------------------
-     STARTED / ELAPSED CARD
-     --------------------------------------------------------- */
+#topStatusBar .host-info-left-stack .host-info-segment {
+  padding: 7px 10px !important;
+}
 
-  #topStatusBar .timing-card {
-    display: flex;
-    flex-direction: column;
-  }
+#topStatusBar .host-info-left-stack .public-list-segment {
+  border-left: 0 !important;
+  border-top: 1px solid #26333a !important;
+  margin-top: 7px !important;
+  padding-top: 9px !important;
+}
 
-  #topStatusBar .timing-card .status-card-heading {
-    color: #a9b9c9 !important;
-    font-size: 10px !important;
-    font-weight: 900 !important;
-    line-height: 1.15 !important;
-    letter-spacing: 0.45px !important;
-    text-transform: uppercase !important;
-  }
+#topStatusBar .notification-segment {
+  border-left: 1px solid #26333a !important;
+  padding: 7px 12px !important;
+}
 
-  #topStatusBar .timing-card #tsDashStarted {
-    margin-top: 14px !important;
-    color: #fff !important;
-    font-size: 20px !important;
-    font-weight: 900 !important;
-    line-height: 1 !important;
-  }
+#topStatusBar .public-list-segment #tsDashSongs {
+  display: inline-block !important;
+  margin: 0 0 7px !important;
+  font-size: 16px !important;
+  line-height: 1.1 !important;
+}
 
-  #topStatusBar .timing-card .status-card-divider {
-    flex: 0 0 auto;
-    width: 100%;
-    margin: 16px 0 12px !important;
-  }
+#topStatusBar .top-status-public-list-name {
+  display: flex !important;
+  align-items: baseline !important;
+  gap: 8px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+}
 
-  #topStatusBar .timing-card .elapsed-metric {
-    display: block !important;
-    margin: 0 !important;
-  }
+#topStatusBar .public-list-caption {
+  flex: 0 0 auto !important;
+  color: #78858c !important;
+  font-size: 8px !important;
+  font-weight: 900 !important;
+  letter-spacing: .06em !important;
+  text-transform: uppercase !important;
+}
 
-  /* Fixes the large plain labels visible in the screenshot */
-  #topStatusBar .timing-card .elapsed-metric > span {
-    display: block !important;
-    margin: 0 0 5px !important;
-    padding: 0 !important;
-    color: #9eafbf !important;
-    font-family:
-      Bahnschrift,
-      "Arial Narrow",
-      Arial,
-      sans-serif !important;
-    font-size: 9px !important;
-    font-weight: 900 !important;
-    line-height: 1.2 !important;
-    letter-spacing: 0.45px !important;
-    text-transform: uppercase !important;
-  }
+#topStatusBar #tsDashPublicSetlist {
+  min-width: 0 !important;
+  overflow: hidden !important;
+  color: #f2f5f6 !important;
+  font-size: 13px !important;
+  font-weight: 900 !important;
+  line-height: 1.2 !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
 
-  #topStatusBar .timing-card #tsDashElapsed {
-    display: block !important;
-    margin: 0 !important;
-    color: #1ce47a !important;
-    font-size: 20px !important;
-    font-weight: 900 !important;
-    line-height: 1.08 !important;
-    letter-spacing: 0 !important;
-    text-transform: none !important;
-  }
+/* Pending Requests: readable, full-width, single-line action layout. */
+#topStatusBar .host-pending-card {
+  min-height: 205px !important;
+}
 
-  #topStatusBar .timing-card .elapsed-excluding {
-    display: block !important;
-    margin-top: 11px !important;
-    padding-top: 10px !important;
-    border-top: 1px solid rgba(140, 160, 180, 0.16) !important;
-  }
+#topStatusBar .ts-pending-row {
+  display: grid !important;
+  grid-template-columns: minmax(0,1fr) auto !important;
+  align-items: center !important;
+  gap: 10px !important;
+  min-height: 48px !important;
+  margin: 0 0 5px !important;
+  padding: 7px 8px !important;
+  border: 1px solid #26343b !important;
+  border-radius: 6px !important;
+  background: #071117 !important;
+}
 
-  #topStatusBar .timing-card #tsDashElapsedExcludingBreaks {
-    display: block !important;
-    margin: 0 !important;
-    color: #ffd02c !important;
-    font-size: 14px !important;
-    font-weight: 900 !important;
-    line-height: 1.12 !important;
-    letter-spacing: 0 !important;
-    text-transform: none !important;
-  }
+#topStatusBar .ts-request-main {
+  display: flex !important;
+  align-items: baseline !important;
+  min-width: 0 !important;
+  gap: 7px !important;
+}
 
-  /* ---------------------------------------------------------
-     BREAK CARD
-     --------------------------------------------------------- */
+#topStatusBar .ts-request-main strong {
+  overflow: hidden !important;
+  color: #f4f6f7 !important;
+  font-size: 12px !important;
+  font-weight: 950 !important;
+  line-height: 1.2 !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
 
-  #topStatusBar .break-card .status-card-heading {
-    color: #a9b9c9 !important;
-    font-size: 10px !important;
-    font-weight: 900 !important;
-    line-height: 1.15 !important;
-    letter-spacing: 0.45px !important;
-    text-transform: uppercase !important;
-  }
+#topStatusBar .ts-request-main small {
+  overflow: hidden !important;
+  color: #9ca9af !important;
+  font-size: 9px !important;
+  font-weight: 750 !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
 
-  #topStatusBar .break-status-panel {
-    padding: 10px !important;
-  }
+#topStatusBar .ts-pending-actions,
+#topStatusBar .ts-run-actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  flex-wrap: nowrap !important;
+}
 
-  #topStatusBar .break-status-label {
-    display: block !important;
-    margin: 0 !important;
-    color: #dbe6f0 !important;
-    font-size: 14px !important;
-    font-weight: 900 !important;
-    line-height: 1.15 !important;
-    letter-spacing: 0.25px !important;
-    text-transform: uppercase !important;
-  }
+#topStatusBar .ts-pending-actions button,
+#topStatusBar .ts-run-actions button {
+  display: inline-grid !important;
+  place-items: center !important;
+  width: 29px !important;
+  min-width: 29px !important;
+  height: 29px !important;
+  padding: 0 !important;
+  border: 1px solid #394950 !important;
+  border-radius: 5px !important;
+  background: #182329 !important;
+  color: #e9eef0 !important;
+  font-size: 12px !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+  cursor: pointer !important;
+}
 
-  #topStatusBar .active-break .break-status-label {
-    color: #ffc21d !important;
-  }
+#topStatusBar .ts-pending-actions .accept {
+  border-color: #147d42 !important;
+  background: #0b552c !important;
+  color: #eafff1 !important;
+}
 
-  #topStatusBar .break-details {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 4px 12px !important;
-    margin-top: 8px !important;
-    color: #aebdca !important;
-    font-size: 9px !important;
-    font-weight: 700 !important;
-    line-height: 1.2 !important;
-  }
+#topStatusBar .ts-pending-actions .decline,
+#topStatusBar .ts-run-actions .remove {
+  border-color: #8c3035 !important;
+  background: #541b20 !important;
+  color: #fff0f1 !important;
+}
 
-  #topStatusBar .break-details.hidden {
-    display: none !important;
-  }
+/* Run Order: number, title, singer and buttons all stay on one row. */
+#topStatusBar .ts-run-order-row {
+  display: grid !important;
+  grid-template-columns: 26px minmax(0,1fr) auto !important;
+  align-items: center !important;
+  gap: 9px !important;
+  min-height: 48px !important;
+  margin: 0 0 5px !important;
+  padding: 6px 8px !important;
+  border: 1px solid #26343b !important;
+  border-radius: 6px !important;
+  background: #071117 !important;
+}
 
-  #topStatusBar .break-details span {
-    color: #aebdca !important;
-    font-size: 9px !important;
-    font-weight: 700 !important;
-  }
+#topStatusBar .ts-run-index {
+  display: grid !important;
+  place-items: center !important;
+  width: 24px !important;
+  height: 24px !important;
+  border: 1px solid #33444c !important;
+  border-radius: 50% !important;
+  background: #0b171d !important;
+  color: #7bcaf4 !important;
+  font-size: 10px !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+}
 
-  #topStatusBar .break-details strong {
-    color: #fff !important;
-    font-size: 10px !important;
-    font-weight: 900 !important;
-  }
+#topStatusBar .ts-run-main {
+  display: flex !important;
+  align-items: baseline !important;
+  min-width: 0 !important;
+  gap: 7px !important;
+}
 
-  /*
-    Put the three break statistics on separate clean rows.
-    This prevents:
-    "Total break time 2 mins Total breaks 3..."
-    from appearing like unstyled paragraph text.
-  */
-  #topStatusBar .break-summary-grid {
-    display: grid !important;
+#topStatusBar .ts-run-main strong {
+  overflow: hidden !important;
+  color: #f5f7f8 !important;
+  font-size: 13px !important;
+  font-weight: 950 !important;
+  line-height: 1.2 !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+#topStatusBar .ts-run-main small {
+  overflow: hidden !important;
+  color: #8f9da4 !important;
+  font-size: 9px !important;
+  font-weight: 750 !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+#topStatusBar #tsRunOrderAddBtn {
+  height: 31px !important;
+  padding: 0 12px !important;
+  border: 1px solid #2b824d !important;
+  border-radius: 5px !important;
+  background: #0b5a31 !important;
+  color: #effff5 !important;
+  font-size: 9px !important;
+  font-weight: 950 !important;
+  cursor: pointer !important;
+}
+
+#topStatusBar #tsRunOrderSongSelect {
+  height: 31px !important;
+  border: 1px solid #34444b !important;
+  border-radius: 5px !important;
+  background: #10191e !important;
+  color: #eef2f3 !important;
+}
+
+@media (max-width: 760px) {
+  #topStatusBar .host-combined-info-grid {
     grid-template-columns: 1fr !important;
-    gap: 0 !important;
-    margin-top: 8px !important;
-    padding-top: 6px !important;
-    border-top: 1px solid rgba(140, 160, 180, 0.18) !important;
   }
 
-  #topStatusBar .break-summary-item,
-  #topStatusBar .break-summary-item.full-width {
-    grid-column: auto !important;
-    min-width: 0 !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: space-between !important;
-    gap: 8px !important;
-    margin: 0 !important;
-    padding: 5px 0 !important;
-    border: 0 !important;
-    border-bottom: 1px solid rgba(140, 160, 180, 0.09) !important;
+  #topStatusBar .notification-segment {
+    border-left: 0 !important;
+    border-top: 1px solid #26333a !important;
   }
 
-  #topStatusBar .break-summary-item:last-child {
-    border-bottom: 0 !important;
-  }
-
-  #topStatusBar .break-summary-item span,
-  #topStatusBar .break-summary-item.full-width span {
+  #topStatusBar .ts-request-main,
+  #topStatusBar .ts-run-main {
     display: block !important;
-    min-width: 0 !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    color: #9eafbf !important;
-    font-family:
-      Bahnschrift,
-      "Arial Narrow",
-      Arial,
-      sans-serif !important;
-    font-size: 8px !important;
-    font-weight: 900 !important;
-    line-height: 1.15 !important;
-    letter-spacing: 0.3px !important;
-    text-transform: uppercase !important;
+  }
+}
+
+
+/* =========================================================
+   TABLET WORKSPACE LAYOUT — SEPT 2026
+   Row 1: Remaining/Public | Session Notes | Break Status
+   Row 2: Notifications | Pending Requests | Run Order
+   ========================================================= */
+
+#topStatusBar .host-expanded-primary {
+  display: grid !important;
+  grid-template-columns:
+    minmax(250px, .85fr)
+    minmax(310px, 1.15fr)
+    minmax(250px, .9fr) !important;
+  gap: 8px !important;
+  align-items: stretch !important;
+}
+
+#topStatusBar .host-schedule-card,
+#topStatusBar .host-primary-notes-card,
+#topStatusBar .host-break-card {
+  min-width: 0 !important;
+  height: 100% !important;
+}
+
+/* The Remaining/Public card is now only a vertical stack. */
+#topStatusBar .host-schedule-card .host-info-left-stack {
+  display: grid !important;
+  grid-template-rows: auto auto !important;
+  min-width: 0 !important;
+  height: 100% !important;
+}
+
+#topStatusBar .host-schedule-card .adjusted-remaining-segment {
+  padding: 8px 10px 12px !important;
+}
+
+#topStatusBar .host-schedule-card .public-list-segment {
+  margin-top: 0 !important;
+  padding: 11px 10px 8px !important;
+  border-top: 1px solid #26343b !important;
+  border-left: 0 !important;
+}
+
+/* Session Notes fills the centre of the first row. */
+#topStatusBar .host-primary-notes-card {
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+#topStatusBar .host-primary-notes-card .top-status-session-notes {
+  flex: 1 1 auto !important;
+  width: 100% !important;
+  min-height: 130px !important;
+  max-height: none !important;
+  resize: none !important;
+  padding: 10px !important;
+  border: 1px solid #26343b !important;
+  border-radius: 7px !important;
+  background: #03090d !important;
+  color: #eef3f5 !important;
+  font-size: 10px !important;
+  line-height: 1.45 !important;
+}
+
+/* ---------------------------------------------------------
+   SECOND ROW
+   --------------------------------------------------------- */
+
+#topStatusBar .host-three-column-workflow {
+  display: grid !important;
+  grid-template-columns:
+    minmax(250px, .75fr)
+    minmax(300px, .9fr)
+    minmax(430px, 1.5fr) !important;
+  gap: 8px !important;
+  align-items: stretch !important;
+  margin-top: 8px !important;
+}
+
+#topStatusBar .host-workflow-notifications-card,
+#topStatusBar .host-pending-card,
+#topStatusBar .host-run-order-card {
+  min-width: 0 !important;
+  min-height: 210px !important;
+  height: 100% !important;
+}
+
+/* Notifications now occupy the lower-left card. */
+#topStatusBar .host-workflow-notifications-card {
+  padding: 9px !important;
+}
+
+#topStatusBar .workflow-notification-list {
+  max-height: 185px !important;
+  overflow-y: auto !important;
+  scrollbar-width: thin !important;
+}
+
+#topStatusBar .workflow-notification-list .top-status-empty {
+  display: grid !important;
+  place-items: center !important;
+  min-height: 145px !important;
+  color: #66747b !important;
+  font-size: 9px !important;
+}
+
+/* Pending Requests fills the middle card rather than being squeezed left. */
+#topStatusBar .host-pending-card .top-status-pending-list {
+  max-height: 175px !important;
+}
+
+/* Run Order deliberately receives the most horizontal room. */
+#topStatusBar .host-run-order-card #tsRunOrderList {
+  max-height: 175px !important;
+}
+
+/* Tablet: maintain the requested 3-column arrangement for landscape tablets. */
+@media (min-width: 761px) and (max-width: 1180px) {
+  #topStatusBar .host-expanded-primary {
+    grid-template-columns:
+      minmax(220px, .82fr)
+      minmax(285px, 1.12fr)
+      minmax(235px, .9fr) !important;
   }
 
-  #topStatusBar .break-summary-item strong,
-  #topStatusBar .break-summary-item.full-width strong {
-    flex: 0 0 auto !important;
-    display: block !important;
-    margin: 0 !important;
-    color: #ffc21d !important;
-    font-family:
-      Bahnschrift,
-      "Arial Narrow",
-      Arial,
-      sans-serif !important;
-    font-size: 11px !important;
-    font-weight: 900 !important;
-    line-height: 1 !important;
-    white-space: nowrap !important;
+  #topStatusBar .host-three-column-workflow {
+    grid-template-columns:
+      minmax(220px, .72fr)
+      minmax(275px, .88fr)
+      minmax(390px, 1.45fr) !important;
+  }
+}
+
+/* Narrow portrait layouts stack rather than becoming unreadable. */
+@media (max-width: 760px) {
+  #topStatusBar .host-expanded-primary,
+  #topStatusBar .host-three-column-workflow {
+    grid-template-columns: 1fr !important;
   }
 
-  #topStatusBar .break-action-btn {
-    min-height: 32px !important;
-    margin-top: 7px !important;
-    padding: 6px 8px !important;
-    font-size: 10px !important;
-    font-weight: 900 !important;
-    line-height: 1.1 !important;
+  #topStatusBar .host-primary-notes-card .top-status-session-notes {
+    min-height: 100px !important;
   }
 
-  #topStatusBar .break-action-message {
-    min-height: 8px !important;
-    margin-top: 2px !important;
-    font-size: 8px !important;
+  #topStatusBar .host-workflow-notifications-card,
+  #topStatusBar .host-pending-card,
+  #topStatusBar .host-run-order-card {
+    min-height: 160px !important;
   }
-
-   .top-status-lower-grid {
-     grid-template-columns:
-       minmax(145px, 0.9fr)
-       minmax(195px, 1.15fr)
-       minmax(220px, 1.35fr)
-       minmax(150px, 0.9fr);
-     gap: 8px;
-     margin-top: 8px;
-   }
-   
-   .top-status-lower-grid .notifications-card {
-     grid-column: 1;
-     height: 205px;
-     min-height: 0;
-   }
-   
-   .top-status-shortcuts-card {
-     grid-column: 2;
-     height: 205px;
-     min-height: 0;
-   }
-   
-   .top-status-lower-grid .top-status-queue-card {
-     grid-column: 3 / 5;
-     height: 205px;
-     min-height: 0;
-     margin-top: 0;
-     padding: 10px;
-     overflow: hidden;
-   }
-   
-   .top-status-shortcuts {
-     gap: 6px;
-     margin-top: 9px;
-   }
-   
-   .top-status-shortcut-btn {
-     min-height: 38px;
-     padding: 6px 8px;
-   }
-   
-   .top-status-shortcut-btn span {
-     font-size: 15px;
-   }
-   
-   .top-status-shortcut-btn strong {
-     font-size: 9px;
-   }
-   
-   .top-status-lower-grid .top-status-notifications-list {
-     flex: 1;
-     max-height: 104px;
-     margin-top: 8px;
-   }
-   
-   .top-status-lower-grid .top-status-queue-list {
-     height: 153px;
-     max-height: 153px;
-     overflow-y: auto;
-   }
-   
-   .top-status-lower-grid .top-status-queue-row {
-     min-height: 51px;
-     grid-template-columns:
-       32px
-       24px
-       minmax(95px, 1.4fr)
-       minmax(70px, 0.8fr)
-       54px;
-     gap: 6px;
-     padding: 5px 6px;
-   }
-   
-   .top-status-lower-grid .queue-position {
-     width: 28px;
-     height: 28px;
-     font-size: 14px;
-   }
-   
-   .top-status-lower-grid .queue-song-icon {
-     font-size: 15px;
-   }
-   
-   .top-status-lower-grid .queue-song-details strong,
-   .top-status-lower-grid .queue-singer-details strong {
-     font-size: 10px;
-   }
-   
-   .top-status-lower-grid .queue-song-details span,
-   .top-status-lower-grid .queue-singer-details span {
-     font-size: 8px;
-   }
-   
-   .top-status-lower-grid .queue-position-label {
-     min-width: 48px;
-     padding: 4px;
-     font-size: 8px;
-   }
 }
