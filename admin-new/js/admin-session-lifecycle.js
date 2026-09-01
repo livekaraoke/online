@@ -94,11 +94,23 @@
       if (eventSnap.exists) {
         event = { id:eventSnap.id, ...(eventSnap.data() || {}) };
 
-        scheduledStartAt = tsFromLocal(event.date, event.startTime);
-        const scheduledStartDate = scheduledStartAt?.toDate?.() || null;
-        scheduledEndAt = tsFromLocal(event.date, event.endTime, scheduledStartDate);
+        // New Upcoming Events save canonical Firestore timestamps directly.
+        // Keep date/startTime/endTime as a fallback for older event documents.
+        scheduledStartAt =
+          event.scheduledStartAt ||
+          tsFromLocal(event.date, event.startTime);
 
-        if (scheduledStartAt && scheduledEndAt) {
+        const scheduledStartDate =
+          scheduledStartAt?.toDate?.() ||
+          null;
+
+        scheduledEndAt =
+          event.scheduledEndAt ||
+          tsFromLocal(event.date, event.endTime, scheduledStartDate);
+
+        if (Number.isFinite(Number(event.scheduledDurationMs)) && Number(event.scheduledDurationMs) > 0) {
+          scheduledDurationMs = Number(event.scheduledDurationMs);
+        } else if (scheduledStartAt && scheduledEndAt) {
           scheduledDurationMs =
             scheduledEndAt.toDate().getTime() -
             scheduledStartAt.toDate().getTime();
