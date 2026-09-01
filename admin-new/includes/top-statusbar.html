@@ -84,18 +84,16 @@
        ===================================================== -->
   <div class="top-status-expanded host-status-expanded">
 
-    <!-- PRIMARY HOST ROW -->
+    <!-- =====================================================
+         ROW 1
+         Remaining/Public List | Session Notes | Break Status
+         ===================================================== -->
     <div class="host-expanded-primary">
 
-      <!-- COMBINED LIVE INFO CARD:
-           adjusted remaining + public song list + notifications -->
-      <section class="performance-info-card host-combined-info-card">
+      <!-- REMAINING + PUBLIC SONG LIST -->
+      <section class="performance-info-card host-combined-info-card host-schedule-card">
+        <div class="host-info-left-stack">
 
-        <div class="host-combined-info-grid">
-
-          <div class="host-info-left-stack">
-
-          <!-- ADJUSTED REMAINING -->
           <div class="host-info-segment adjusted-remaining-segment">
             <div class="status-card-heading">
               <span class="status-card-icon">⌛</span>
@@ -112,12 +110,10 @@
               Scheduled duration from actual start
             </small>
 
-            <!-- compatibility/fallback targets -->
             <span id="tsScheduledWindow" class="hidden">No scheduled time</span>
             <strong id="tsRemainingTime" class="hidden">-</strong>
           </div>
 
-          <!-- PUBLIC SONG LIST -->
           <div class="host-info-segment public-list-segment">
             <div class="status-card-heading">
               <span class="status-card-icon">🔒</span>
@@ -134,20 +130,26 @@
             </div>
           </div>
 
-          </div>
+        </div>
+      </section>
 
-          <!-- NOTIFICATIONS -->
-          <div class="host-info-segment notification-segment">
-            <div class="status-card-heading">
-              <span class="status-card-icon">🔔</span>
-              <span>Notifications</span>
-            </div>
+      <!-- SESSION NOTES: moved into the former Notifications position -->
+      <section class="performance-info-card session-notes-card compact-notes-card host-primary-notes-card">
+        <div class="status-card-heading">
+          <span class="status-card-icon">📝</span>
+          <span>Session Notes</span>
+        </div>
 
-            <div id="tsNotificationsList" class="top-status-notifications-list compact-notification-list">
-              <div class="top-status-empty">No notifications yet.</div>
-            </div>
-          </div>
+        <textarea
+          id="tsSessionNotes"
+          class="top-status-session-notes"
+          placeholder="Type session notes..."
+          aria-label="Session notes"
+          disabled
+        ></textarea>
 
+        <div class="session-notes-footer">
+          <span id="tsNotesSaveStatus">No active session</span>
         </div>
       </section>
 
@@ -206,30 +208,25 @@
         <p id="tsBreakActionMessage" class="break-action-message"></p>
       </section>
 
-      <!-- SESSION NOTES -->
-      <section class="performance-info-card session-notes-card compact-notes-card">
-        <div class="status-card-heading">
-          <span class="status-card-icon">📝</span>
-          <span>Session Notes</span>
-        </div>
-
-        <textarea
-          id="tsSessionNotes"
-          class="top-status-session-notes"
-          placeholder="Type session notes..."
-          aria-label="Session notes"
-          disabled
-        ></textarea>
-
-        <div class="session-notes-footer">
-          <span id="tsNotesSaveStatus">No active session</span>
-        </div>
-      </section>
-
     </div>
 
-    <!-- LIVE WORKFLOW ROW -->
-    <div class="host-expanded-workflow">
+    <!-- =====================================================
+         ROW 2
+         Notifications | Pending Requests | Run Order
+         ===================================================== -->
+    <div class="host-expanded-workflow host-three-column-workflow">
+
+      <!-- NOTIFICATIONS: moved into former Session Notes position -->
+      <section class="performance-info-card notifications-card host-workflow-notifications-card">
+        <div class="status-card-heading">
+          <span class="status-card-icon">🔔</span>
+          <span>Notifications</span>
+        </div>
+
+        <div id="tsNotificationsList" class="top-status-notifications-list workflow-notification-list">
+          <div class="top-status-empty">No notifications yet.</div>
+        </div>
+      </section>
 
       <!-- PENDING REQUESTS -->
       <section class="top-status-pending-card host-pending-card">
@@ -269,11 +266,12 @@
           <div class="top-status-queue-empty">Run Order is empty.</div>
         </div>
 
-        <!-- Compatibility targets for older top-statusbar.js builds. -->
         <span id="tsQueueCount" hidden>(0)</span>
         <div id="tsQueueList" hidden></div>
       </section>
+
     </div>
 
+  </div>
   </div>
 </div>
