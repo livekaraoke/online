@@ -1,0 +1,248 @@
+/* =========================================================
+   TOP STATUS BAR — SESSION TOOLS / RUN ORDER
+   Loaded after the existing top-statusbar.css.
+   ========================================================= */
+
+#topStatusBar .top-status-expanded {
+  max-height: min(78vh, 760px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+#topStatusBar .top-performance-grid {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+}
+
+#topStatusBar .remaining-card {
+  min-width: 0;
+}
+
+#topStatusBar .remaining-time-value {
+  color: #71e083;
+  font-size: 22px;
+}
+
+#topStatusBar .remaining-window {
+  display: block;
+  margin-top: 5px;
+  color: #a1a1a1;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+#topStatusBar .remaining-help {
+  display: block;
+  margin-top: 5px;
+  color: #666;
+  font-size: 8px;
+  line-height: 1.3;
+}
+
+#topStatusBar .top-status-lower-grid {
+  display: grid;
+  grid-template-columns: minmax(240px,.65fr) minmax(250px,.75fr) minmax(340px,1.2fr);
+  gap: 8px;
+  align-items: start;
+}
+
+#topStatusBar .notifications-card,
+#topStatusBar .top-status-shortcuts-card {
+  min-width: 0;
+}
+
+#topStatusBar .top-status-pending-card,
+#topStatusBar .top-status-queue-card {
+  min-width: 0;
+  border: 1px solid #292929;
+  border-radius: 8px;
+  background: #0c0c0c;
+  padding: 9px;
+}
+
+#topStatusBar .top-status-pending-card {
+  grid-column: 1 / span 1;
+}
+
+#topStatusBar .run-order-card {
+  grid-column: 2 / -1;
+}
+
+#topStatusBar .top-status-pending-list,
+#topStatusBar #tsRunOrderList {
+  display: grid;
+  gap: 5px;
+  max-height: 240px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+#topStatusBar .ts-pending-row,
+#topStatusBar .ts-run-order-row {
+  display: grid;
+  align-items: center;
+  gap: 6px;
+  min-height: 42px;
+  padding: 5px 6px;
+  border: 1px solid #292929;
+  border-radius: 6px;
+  background: #101010;
+}
+
+#topStatusBar .ts-pending-row {
+  grid-template-columns: minmax(0,1fr) auto;
+}
+
+#topStatusBar .ts-run-order-row {
+  grid-template-columns: 24px minmax(0,1fr) auto;
+}
+
+#topStatusBar .ts-run-order-row.played {
+  opacity: .55;
+  border-color: #24522e;
+  background: #0b120d;
+}
+
+#topStatusBar .ts-request-main,
+#topStatusBar .ts-run-main {
+  min-width: 0;
+}
+
+#topStatusBar .ts-request-main strong,
+#topStatusBar .ts-run-main strong {
+  display: block;
+  overflow: hidden;
+  color: #e8e8e8;
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#topStatusBar .ts-request-main small,
+#topStatusBar .ts-run-main small {
+  display: block;
+  margin-top: 2px;
+  overflow: hidden;
+  color: #777;
+  font-size: 8px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#topStatusBar .ts-pending-actions,
+#topStatusBar .ts-run-actions {
+  display: flex;
+  gap: 3px;
+}
+
+#topStatusBar .ts-pending-actions button,
+#topStatusBar .ts-run-actions button,
+#topStatusBar #tsRunOrderAddBtn {
+  min-width: 28px;
+  height: 27px;
+  padding: 0 6px;
+  border: 1px solid #393939;
+  border-radius: 5px;
+  background: #111;
+  color: #ccc;
+  font-size: 9px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+#topStatusBar .ts-pending-actions .accept {
+  border-color: #2e6e3b;
+  background: #0d1c11;
+  color: #79e38c;
+}
+
+#topStatusBar .ts-pending-actions .decline,
+#topStatusBar .ts-run-actions .remove {
+  border-color: #6e292d;
+  background: #1b0a0b;
+  color: #ed777d;
+}
+
+#topStatusBar .ts-run-index {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border: 1px solid #373737;
+  border-radius: 50%;
+  color: #999;
+  font-size: 8px;
+  font-weight: 900;
+}
+
+#topStatusBar .ts-run-order-add {
+  display: grid;
+  grid-template-columns: minmax(0,1fr) auto;
+  gap: 5px;
+  margin-bottom: 6px;
+}
+
+#topStatusBar #tsRunOrderSongSelect {
+  min-width: 0;
+  height: 28px;
+  padding: 4px 6px;
+  border: 1px solid #333;
+  border-radius: 5px;
+  background: #090909;
+  color: #ddd;
+  color-scheme: dark;
+  font-size: 9px;
+}
+
+#topStatusBar .top-status-public-list-name {
+  margin-top: 5px;
+  padding-top: 5px;
+  border-top: 1px dashed #2c2c2c;
+}
+
+#topStatusBar .top-status-public-list-name span {
+  display: block;
+  color: #666;
+  font-size: 8px;
+  font-weight: 900;
+}
+
+#topStatusBar .top-status-public-list-name strong {
+  display: block;
+  margin-top: 2px;
+  overflow: hidden;
+  color: #aaa;
+  font-size: 9px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 1200px) {
+  #topStatusBar .top-performance-grid {
+    grid-template-columns: repeat(3, minmax(0,1fr));
+  }
+
+  #topStatusBar .top-status-lower-grid {
+    grid-template-columns: repeat(2, minmax(0,1fr));
+  }
+
+  #topStatusBar .run-order-card {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 760px) {
+  #topStatusBar .top-performance-grid,
+  #topStatusBar .top-status-lower-grid {
+    grid-template-columns: 1fr;
+  }
+
+  #topStatusBar .top-status-pending-card,
+  #topStatusBar .run-order-card {
+    grid-column: auto;
+  }
+
+  #topStatusBar .top-status-expanded {
+    max-height: 72vh;
+  }
+}
