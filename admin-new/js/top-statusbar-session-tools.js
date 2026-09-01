@@ -675,33 +675,12 @@
   }
 
   function subscribeLinkedEvent(eventId) {
-    const cleanId = String(eventId || "").trim();
-
-    if (!cleanId) {
-      clearLinkedEventSubscription();
-      renderRemaining();
-      return;
-    }
-
-    if (cleanId === state.linkedEventId && state.linkedEventUnsub) return;
-
+    // Do not read upcomingEvents from the host/lyrics pages. Those pages may
+    // intentionally be denied access by Firestore rules, and the live session
+    // already carries the eventSnapshot/scheduled fields needed by this bar.
+    // This also removes an unnecessary realtime listener/read source.
     clearLinkedEventSubscription();
-    state.linkedEventId = cleanId;
-
-    state.linkedEventUnsub = state.db
-      .collection("upcomingEvents")
-      .doc(cleanId)
-      .onSnapshot(doc => {
-        state.linkedEvent = doc.exists
-          ? { id:doc.id, ...(doc.data() || {}) }
-          : null;
-
-        renderRemaining();
-      }, error => {
-        console.warn("Could not load linked Upcoming Event:", error);
-        state.linkedEvent = null;
-        renderRemaining();
-      });
+    renderRemaining();
   }
 
   function clearSessionSubscriptions() {
@@ -724,6 +703,7 @@
       renderPending();
       renderRunOrder();
       renderCompactHostStrip();
+      window.dispatchEvent(new CustomEvent("lk:session-updated", { detail:{ session:null } }));
       return;
     }
 
@@ -739,6 +719,10 @@
 
         renderRemaining();
         renderCompactHostStrip();
+
+        window.dispatchEvent(new CustomEvent("lk:session-updated", {
+          detail: { session: state.session ? { ...state.session } : null }
+        }));
       }, console.warn)
     );
 
@@ -795,14 +779,9 @@
       }, console.warn)
     );
 
-    state.db.collection("lyrics").get().then(snapshot => {
-      state.songs = snapshot.docs
-        .map(doc => ({id:doc.id,...(doc.data() || {})}))
-        .sort((a,b) =>
-          String(a.title || "").localeCompare(String(b.title || ""), undefined, {sensitivity:"base"})
-        );
-      renderSongSelect();
-    }).catch(console.warn);
+    // Do not load the entire lyrics collection on every page load. Songs are
+    // fetched lazily only if the host actually opens the Add Song selector.
+    renderSongSelect();
   }
 
   function isStatusExpanded() {
@@ -985,6 +964,29 @@
     });
   }
 
+  let songsLoadPromise = null;
+
+  function ensureSongsLoaded() {
+    if (state.songs.length) return Promise.resolve(state.songs);
+    if (songsLoadPromise) return songsLoadPromise;
+
+    songsLoadPromise = state.db.collection("lyrics").get().then(snapshot => {
+      state.songs = snapshot.docs
+        .map(doc => ({id:doc.id,...(doc.data() || {})}))
+        .sort((a,b) =>
+          String(a.title || "").localeCompare(String(b.title || ""), undefined, {sensitivity:"base"})
+        );
+      renderSongSelect();
+      return state.songs;
+    }).catch(error => {
+      songsLoadPromise = null;
+      console.warn("Could not load songs for Run Order selector:", error);
+      return [];
+    });
+
+    return songsLoadPromise;
+  }
+
   function bindUi() {
     if (state.uiBound) return;
     state.uiBound = true;
@@ -1017,6 +1019,10 @@
     });
 
     $("tsRunOrderAddBtn")?.addEventListener("click",addManualSong);
+
+    const songSelect = $("tsRunOrderSongSelect");
+    songSelect?.addEventListener("focus", ensureSongsLoaded, { once:true });
+    songSelect?.addEventListener("pointerdown", ensureSongsLoaded, { once:true });
   }
 
   function waitForInjectedMarkup() {
@@ -1061,6 +1067,7 @@
 
   LK.sessionTools.getRunOrder = () => queueItems().map(item => ({...item}));
   LK.sessionTools.getSessionId = () => state.sessionId;
+  LK.sessionTools.getSession = () => state.session ? ({...state.session}) : null;
 
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded",init);
