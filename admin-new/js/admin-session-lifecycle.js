@@ -135,6 +135,7 @@
 
     await currentRef.set({
       eventId: eventId || "",
+      eventSnapshot: event ? cleanSnapshot(event) : null,
       scheduledStartAt: scheduledStartAt || null,
       scheduledEndAt: scheduledEndAt || null,
       scheduledDurationMs: Number.isFinite(scheduledDurationMs) ? scheduledDurationMs : null,
