@@ -11,7 +11,16 @@
     "Other"
   ];
 
+  const DEFAULT_TYPE_COLORS = {
+    "Live Karaoke": "#36a9e1",
+    "Roxanna": "#d96ce0",
+    "Solo": "#53c985",
+    "Texanna": "#f08a45",
+    "Other": "#a5adb3"
+  };
+
   let typeOptions = [...DEFAULT_TYPE_OPTIONS];
+  let typeColors = { ...DEFAULT_TYPE_COLORS };
   const STATUS_OPTIONS = ["Confirmed", "Tentative", "Cancelled"];
 
   const $ = id => document.getElementById(id);
@@ -175,6 +184,19 @@
       });
   }
 
+  function typeColor(type) {
+    return typeColors[type] || DEFAULT_TYPE_COLORS[type] || "#8ea3ad";
+  }
+
+  function hexToRgba(hex, alpha = 0.14) {
+    const clean = String(hex || "").replace("#","");
+    if (!/^[0-9a-f]{6}$/i.test(clean)) return `rgba(142,163,173,${alpha})`;
+    const r = parseInt(clean.slice(0,2),16);
+    const g = parseInt(clean.slice(2,4),16);
+    const b = parseInt(clean.slice(4,6),16);
+    return `rgba(${r},${g},${b},${alpha})`;
+  }
+
   function renderTypeSummaryCards(upcomingEvents) {
     const container = $("eventTypeSummaryCards");
     if (!container) return;
@@ -191,6 +213,7 @@
         <article
           class="events-summary-card event-type-summary-card type-card-${escapeHTML(cssType)}"
           data-summary-type="${escapeHTML(type)}"
+          style="--event-type-color:${escapeHTML(typeColor(type))};--event-type-bg:${escapeHTML(hexToRgba(typeColor(type), .12))}"
           title="Show ${escapeHTML(type)} events">
           <span>${escapeHTML(String(type).toUpperCase())}</span>
           <strong>${count}</strong>
@@ -285,7 +308,10 @@
           </div>
 
           <div>
-            <span class="event-type-badge ${typeClass}">${escapeHTML(event.type || "Live Karaoke")}</span>
+            <span
+              class="event-type-badge ${typeClass}"
+              style="--event-type-color:${escapeHTML(typeColor(event.type || "Live Karaoke"))};--event-type-bg:${escapeHTML(hexToRgba(typeColor(event.type || "Live Karaoke"), .13))}"
+            >${escapeHTML(event.type || "Live Karaoke")}</span>
             <span class="event-status-badge ${statusClass}" style="margin-top:5px">${escapeHTML(event.status || "Confirmed")}</span>
           </div>
 
@@ -423,13 +449,25 @@
 
     list.innerHTML = typeOptions.map(type => `
       <div class="event-type-manager-row">
+        <span
+          class="event-type-manager-swatch"
+          style="background:${escapeHTML(typeColor(type))}"
+          aria-hidden="true"></span>
         <strong>${escapeHTML(type)}</strong>
+        <label class="event-type-color-control">
+          <span>Colour</span>
+          <input
+            type="color"
+            value="${escapeHTML(typeColor(type))}"
+            data-event-type-color="${escapeHTML(type)}"
+            aria-label="Colour for ${escapeHTML(type)}">
+        </label>
         <button type="button" data-remove-event-type="${escapeHTML(type)}" title="Remove ${escapeHTML(type)}">×</button>
       </div>
     `).join("");
   }
 
-  async function saveEventTypes(nextOptions) {
+  async function saveEventTypes(nextOptions, nextColors = typeColors) {
     if (!EVENT_TYPES_DOC) return;
 
     const clean = [...new Set(
@@ -443,9 +481,19 @@
       return;
     }
 
+    const cleanColors = {};
+    clean.forEach(type => {
+      cleanColors[type] =
+        nextColors[type] ||
+        typeColors[type] ||
+        DEFAULT_TYPE_COLORS[type] ||
+        "#8ea3ad";
+    });
+
     try {
       await EVENT_TYPES_DOC.set({
         options: clean,
+        colors: cleanColors,
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       }, { merge:true });
 
@@ -466,8 +514,13 @@
       return;
     }
 
-    await saveEventTypes([...typeOptions, value]);
+    const selectedColor = $("newEventTypeColorInput")?.value || "#8ea3ad";
+    await saveEventTypes(
+      [...typeOptions, value],
+      { ...typeColors, [value]: selectedColor }
+    );
     input.value = "";
+    if ($("newEventTypeColorInput")) $("newEventTypeColorInput").value = "#8ea3ad";
   }
 
   async function removeEventType(value) {
@@ -476,7 +529,12 @@
       return;
     }
 
-    await saveEventTypes(typeOptions.filter(type => type !== value));
+    const nextColors = { ...typeColors };
+    delete nextColors[value];
+    await saveEventTypes(
+      typeOptions.filter(type => type !== value),
+      nextColors
+    );
   }
 
   function openEventTypesModal() {
@@ -502,6 +560,7 @@
       if (!initialOptions.length) {
         await EVENT_TYPES_DOC.set({
           options: DEFAULT_TYPE_OPTIONS,
+          colors: DEFAULT_TYPE_COLORS,
           updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         }, { merge:true });
       }
@@ -517,6 +576,18 @@
       typeOptions = options.length
         ? [...new Set(options)]
         : [...DEFAULT_TYPE_OPTIONS];
+
+      const colors =
+        doc.exists &&
+        doc.data()?.colors &&
+        typeof doc.data().colors === "object"
+          ? doc.data().colors
+          : {};
+
+      typeColors = {
+        ...DEFAULT_TYPE_COLORS,
+        ...colors
+      };
 
       populateTypeControls();
       renderEventTypeManager();
@@ -891,6 +962,20 @@
       if (removeType) {
         removeEventType(removeType.dataset.removeEventType);
       }
+    });
+
+    $("eventTypesList")?.addEventListener("change", event => {
+      const input = event.target.closest("[data-event-type-color]");
+      if (!input) return;
+
+      const type = input.dataset.eventTypeColor || "";
+      const color = input.value || "#8ea3ad";
+      if (!type) return;
+
+      saveEventTypes(
+        typeOptions,
+        { ...typeColors, [type]: color }
+      );
     });
 
     $("eventModal").addEventListener("click", event => {
