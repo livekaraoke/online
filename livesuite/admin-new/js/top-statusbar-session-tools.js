@@ -17,9 +17,13 @@
     runOrder: { sessionId:"", items:[] },
     songs: [],
     notifications: [],
+    notificationUnread: 0,
+    knownNotificationIds: new Set(),
     requestSnapshotReady: false,
     knownRequestIds: new Set(),
     lastBreakOpen: null,
+    lastRunStatuses: new Map(),
+    runOrderSnapshotReady: false,
     notesSaveTimer: null,
     globalUnsubs: [],
     sessionUnsubs: [],
@@ -285,12 +289,132 @@
     return { breaks, last, start, end, open, totalMs, currentMs: open && start ? Math.max(0, now - start.getTime()) : 0 };
   }
 
-  function pushNotification(text, key = "") {
+  function activityDate(entry) {
+    return tsDate(entry?.at) ||
+      (Number(entry?.atMs) ? new Date(Number(entry.atMs)) : null);
+  }
+
+  function activityIcon(type, fallback = "•") {
+    const icons = {
+      request: "🎤",
+      request_accepted: "✓",
+      request_declined: "✕",
+      break_start: "☕",
+      break_end: "▶",
+      song_start: "▶",
+      song_end: "✓",
+      song_abandoned: "⊘",
+      run_order: "♫",
+      session: "●"
+    };
+    return icons[type] || fallback;
+  }
+
+  function syncNotificationsFromSession() {
+    const log = Array.isArray(state.session?.activityLog)
+      ? state.session.activityLog
+      : [];
+
+    const ordered = log
+      .map(entry => ({ ...entry }))
+      .sort((a,b) => {
+        const ad = activityDate(a)?.getTime() || 0;
+        const bd = activityDate(b)?.getTime() || 0;
+        return bd - ad;
+      });
+
+    const previousIds = state.knownNotificationIds;
+    const nextIds = new Set(
+      ordered.map(entry => entry.id || entry.key).filter(Boolean)
+    );
+
+    if (previousIds.size) {
+      ordered.forEach(entry => {
+        const id = entry.id || entry.key;
+        if (id && !previousIds.has(id)) {
+          state.notificationUnread++;
+        }
+      });
+    }
+
+    state.notifications = ordered;
+    state.knownNotificationIds = nextIds;
+  }
+
+  async function persistActivityEntry(entry) {
+    if (!state.db || !state.sessionId || !entry?.id) return;
+
+    const sessionRef = state.db
+      .collection("performanceSessions")
+      .doc(state.sessionId);
+
+    try {
+      await state.db.runTransaction(async transaction => {
+        const snap = await transaction.get(sessionRef);
+        if (!snap.exists) return;
+
+        const data = snap.data() || {};
+        const current = Array.isArray(data.activityLog)
+          ? data.activityLog
+          : [];
+
+        if (current.some(item => item?.id === entry.id)) return;
+
+        const next = [...current, entry].slice(-500);
+
+        transaction.set(sessionRef, {
+          activityLog: next,
+          activityUpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge:true });
+      });
+    } catch (error) {
+      console.warn("Could not persist session activity:", error);
+    }
+  }
+
+  function pushNotification(
+    text,
+    key = "",
+    type = "session",
+    meta = {},
+    persist = true
+  ) {
     const clean = String(text || "").trim();
     if (!clean) return;
-    if (key && state.notifications.some(item => item.key === key)) return;
-    state.notifications.unshift({ text: clean, key, at: Date.now() });
-    state.notifications = state.notifications.slice(0, 20);
+
+    const id =
+      String(key || "").trim() ||
+      `${type}:${Date.now()}:${Math.random().toString(36).slice(2,7)}`;
+
+    if (state.notifications.some(item => item.id === id || item.key === id)) {
+      return;
+    }
+
+    const entry = {
+      id,
+      key:id,
+      type,
+      icon: activityIcon(type),
+      text:clean,
+      atMs:Date.now(),
+      ...meta
+    };
+
+    state.notifications.unshift(entry);
+    state.notifications = state.notifications.slice(0, 500);
+    state.knownNotificationIds.add(id);
+    state.notificationUnread++;
+
+    renderNotifications();
+
+    if (persist) {
+      persistActivityEntry(entry);
+    }
+  }
+
+  function markNotificationsRead() {
+    state.notificationUnread = 0;
+    renderNotifications();
   }
 
   function renderNotifications() {
@@ -298,51 +422,157 @@
     const badge = $("tsNotificationBadge");
     const label = $("tsNotificationLabel");
     const alerts = $("tsCompactAlerts");
+    const tabCount = $("tsNotificationTabCount");
 
-    const pending = state.requests.filter(isPendingRequest);
-    const entries = [];
+    const count = state.notifications.length;
+    const unread = state.notificationUnread;
 
-    pending.forEach(req => entries.push({
-      text: `🎤 ${req.songTitle || req.title || "Song request"} — ${req.singerName || req.name || "Singer"}`,
-      key: `pending:${req.id}`
-    }));
-
-    state.notifications.forEach(item => {
-      if (!entries.some(entry => entry.key === item.key)) entries.push(item);
-    });
-
-    const count = entries.length;
     if (badge) {
-      badge.textContent = String(count);
-      badge.classList.toggle("hidden", count === 0);
+      badge.textContent = String(unread);
+      badge.classList.toggle("hidden", unread === 0);
     }
-    if (alerts) alerts.textContent = String(count);
-    if (label) label.textContent = count ? `${count} alert${count === 1 ? "" : "s"}` : "No new alerts";
 
-    if (list) {
-      list.innerHTML = count
-        ? entries.slice(0, 12).map(entry => `<div class="top-status-live-notification">${esc(entry.text)}</div>`).join("")
-        : `<div class="top-status-empty">No notifications yet.</div>`;
+    if (tabCount) {
+      tabCount.textContent = `(${unread})`;
+      tabCount.classList.toggle("hidden", unread === 0);
+      tabCount.classList.toggle("has-count", unread > 0);
     }
+
+    if (alerts) alerts.textContent = String(unread);
+    if (label) {
+      label.textContent = unread
+        ? `${unread} new notification${unread === 1 ? "" : "s"}`
+        : "No new alerts";
+    }
+
+    if (!list) return;
+
+    list.innerHTML = count
+      ? state.notifications.map(entry => {
+          const date = activityDate(entry) || new Date();
+          const time = formatClock(date);
+          const icon = entry.icon || activityIcon(entry.type);
+
+          return `
+            <div class="top-status-live-notification compact-notification">
+              <span class="notification-time">${esc(time)}</span>
+              <span class="notification-icon">${esc(icon)}</span>
+              <span class="notification-text">${esc(entry.text)}</span>
+            </div>
+          `;
+        }).join("")
+      : `<div class="top-status-empty">No notifications yet.</div>`;
+  }
+
+  function breakRunOrderPosition() {
+    const items = queueItems();
+    const terminal = new Set([
+      "played","abandoned","left","deleted","deletedbyhost","declined"
+    ]);
+
+    return items.filter(item =>
+      terminal.has(String(item?.status || "").toLowerCase())
+    ).length;
   }
 
   function trackBreakStateNotification() {
     const b = getBreakState();
+    const changed =
+      state.lastBreakOpen !== null &&
+      state.lastBreakOpen !== b.open;
 
-    if (state.lastBreakOpen !== null && state.lastBreakOpen !== b.open) {
-      pushNotification(
-        b.open ? "☕ Break started" : "▶ Break ended",
-        `break:${Date.now()}`
-      );
+    if (changed) {
+      if (b.open) {
+        const startedMs = b.start?.getTime() || Date.now();
+        pushNotification(
+          `Break started after Run Order position ${breakRunOrderPosition()}`,
+          `break:start:${startedMs}`,
+          "break_start",
+          {
+            breakStartedAtMs: startedMs,
+            runOrderPosition: breakRunOrderPosition()
+          }
+        );
+      } else {
+        const lastBreak = b.breaks[b.breaks.length - 1] || {};
+        const startedMs = breakStartDate(lastBreak)?.getTime() || 0;
+        const endedMs = breakEndDate(lastBreak)?.getTime() || Date.now();
+
+        pushNotification(
+          `Break ended (${formatDuration(Math.max(0, endedMs - startedMs))})`,
+          `break:end:${startedMs || endedMs}`,
+          "break_end",
+          {
+            breakStartedAtMs: startedMs || null,
+            breakEndedAtMs: endedMs,
+            runOrderPosition: breakRunOrderPosition()
+          }
+        );
+      }
     }
 
-    const changed = state.lastBreakOpen !== null && state.lastBreakOpen !== b.open;
     state.lastBreakOpen = b.open;
 
     if (changed) {
       renderRunOrder();
     }
   }
+
+  function trackRunOrderActivity(items) {
+    const current = new Map();
+
+    items.forEach((item, index) => {
+      const status = String(item?.status || "").toLowerCase();
+      current.set(item.id, status);
+
+      if (!state.runOrderSnapshotReady) return;
+
+      const previous = state.lastRunStatuses.get(item.id) || "";
+
+      if (status === previous) return;
+
+      const meta = {
+        runOrderItemId:item.id,
+        requestId:item.requestId || "",
+        songId:item.songId || "",
+        songTitle:item.songTitle || item.title || item.songId || "Song",
+        artist:item.artist || "",
+        singerName:item.singerName || "",
+        runOrderPosition:index + 1
+      };
+
+      if (status === "playing") {
+        const atMs = Number(item.playingAtMs) || Date.now();
+
+        pushNotification(
+          `Song started: ${meta.songTitle}${meta.singerName ? ` — ${meta.singerName}` : ""}`,
+          `song:start:${item.id}:${atMs}`,
+          "song_start",
+          { ...meta, songStartedAtMs:atMs }
+        );
+      } else if (status === "played") {
+        const atMs = Number(item.playedAtMs) || Date.now();
+
+        pushNotification(
+          `Song completed: ${meta.songTitle}`,
+          `song:end:${item.id}:${atMs}`,
+          "song_end",
+          { ...meta, songEndedAtMs:atMs }
+        );
+      } else if (status === "abandoned") {
+        pushNotification(
+          `Song abandoned: ${meta.songTitle}`,
+          `song:abandoned:${item.id}:${Date.now()}`,
+          "song_abandoned",
+          meta
+        );
+      }
+    });
+
+    state.lastRunStatuses = current;
+    state.runOrderSnapshotReady = true;
+  }
+
 
   function renderBreakControls() {
     const b = getBreakState();
@@ -513,10 +743,19 @@
 
   function renderPending() {
     const list = $("tsPendingRequestsList");
-    if (!list) return;
-
+    const countEl = $("tsPendingCount");
+    const tabCount = $("tsPendingTabCount");
     const pending = state.requests.filter(isPendingRequest);
-    if ($("tsPendingCount")) $("tsPendingCount").textContent = `(${pending.length})`;
+
+    if (countEl) countEl.textContent = `(${pending.length})`;
+
+    if (tabCount) {
+      tabCount.textContent = `(${pending.length})`;
+      tabCount.classList.toggle("hidden", pending.length === 0);
+      tabCount.classList.toggle("has-count", pending.length > 0);
+    }
+
+    if (!list) return;
 
     if (!state.sessionId) {
       list.innerHTML = `<div class="top-status-queue-empty">No active session.</div>`;
@@ -529,39 +768,35 @@
     }
 
     list.innerHTML = pending.map(request => `
-      <div class="ts-pending-row">
-        <div class="ts-request-main">
+      <div class="ts-pending-request-row">
+        <div class="ts-pending-main">
           <strong>${esc(request.songTitle || request.title || "Untitled Song")}</strong>
-          <small>${esc(request.singerName || request.name || "Singer")}${request.artist || request.songArtist ? ` • ${esc(request.artist || request.songArtist)}` : ""}</small>
+          <small>${esc(request.singerName || request.name || "Singer")}</small>
         </div>
         <div class="ts-pending-actions">
           <button
             type="button"
             class="accept"
             data-ts-accept="${esc(request.id)}"
-            title="Accept request"
-            aria-label="Accept request"
+            title="Accept into Run Order"
           >✓</button>
-
           <button
             type="button"
             class="abandon"
             data-ts-abandon-request="${esc(request.id)}"
-            title="Singer left / request abandoned"
-            aria-label="Mark request abandoned"
+            title="Singer left / abandoned"
           >⊘</button>
-
           <button
             type="button"
             class="decline"
-            data-ts-delete-request="${esc(request.id)}"
-            title="Delete / decline request"
-            aria-label="Delete request"
+            data-ts-decline="${esc(request.id)}"
+            title="Decline request"
           >✕</button>
         </div>
       </div>
     `).join("");
   }
+
 
   function queueItems() {
     if (
@@ -689,86 +924,90 @@
       $("tsRunOrderCount").textContent = `(${items.length})`;
     }
 
+    const tabCount = $("tsRunOrderTabCount");
+    if (tabCount) {
+      tabCount.textContent = `(${items.length})`;
+      tabCount.classList.toggle("hidden", items.length === 0);
+    }
+
     if (!state.sessionId) {
       list.innerHTML = `<div class="top-status-queue-empty">No active session.</div>`;
       return;
     }
 
+    const breakState = getBreakState();
+    const hasPlayingSong = !!runOrderPlayingItem(items);
+    const showPlayButtons = !hasPlayingSong && !breakState.open;
+
+    const breakRow = breakState.open
+      ? `
+        <div class="ts-run-order-row ts-current-break-row">
+          <div class="ts-run-index">☕</div>
+          <div class="ts-run-main">
+            <strong>CURRENTLY ON BREAK</strong>
+            <small>
+              Started ${esc(formatClock(breakState.start))}
+              · ${esc(formatDuration(breakState.currentMs))}
+              · after position ${breakRunOrderPosition()}
+            </small>
+          </div>
+          <div class="ts-run-actions"></div>
+        </div>
+      `
+      : "";
+
     if (!items.length) {
-      list.innerHTML = `<div class="top-status-queue-empty">Run Order is empty.</div>`;
+      list.innerHTML =
+        breakRow ||
+        `<div class="top-status-queue-empty">Run Order is empty.</div>`;
       return;
     }
 
-    const hasPlayingSong = !!runOrderPlayingItem(items);
-    const showPlayButtons = !hasPlayingSong && !getBreakState().open;
+    list.innerHTML =
+      breakRow +
+      items.map((item,index) => {
+        const status = String(item?.status || "").toLowerCase();
+        const isPlaying = status === "playing";
 
-    list.innerHTML = items.map((item,index) => {
-      const status = String(item?.status || "").toLowerCase();
-      const isPlaying = status === "playing";
+        return `
+          <div
+            class="ts-run-order-row${isPlaying ? " is-playing" : ""}"
+            data-ts-run-details="${esc(item.id)}"
+            title="${isPlaying ? "Currently playing" : "View singer/request details"}">
 
-      return `
-        <div
-          class="ts-run-order-row${isPlaying ? " is-playing" : ""}"
-          data-ts-run-details="${esc(item.id)}"
-          title="${isPlaying ? "Currently playing" : "View singer/request details"}">
+            <div class="ts-run-index">${index + 1}</div>
 
-          <div class="ts-run-index">${index + 1}</div>
+            <div class="ts-run-main">
+              <strong>${esc(item.songTitle || item.title || item.songId || "Untitled Song")}</strong>
+              <small>
+                ${esc(item.singerName || (item.source === "manual" ? "Host choice" : item.artist || ""))}
+                ${isPlaying ? `<em class="ts-playing-label">PLAYING</em>` : ""}
+              </small>
+            </div>
 
-          <div class="ts-run-main">
-            <strong>${esc(item.songTitle || item.title || item.songId || "Untitled Song")}</strong>
-            <small>
-              ${esc(item.singerName || (item.source === "manual" ? "Host choice" : item.artist || ""))}
-              ${isPlaying ? `<em class="ts-playing-label">PLAYING</em>` : ""}
-            </small>
+            <div class="ts-run-actions">
+              ${
+                showPlayButtons
+                  ? `<button
+                      type="button"
+                      class="play-song"
+                      data-ts-play="${esc(item.id)}"
+                      title="Open this song"
+                      aria-label="Open this song"
+                    >▶</button>`
+                  : ""
+              }
+
+              <button type="button" data-ts-up="${esc(item.id)}" title="Move up" aria-label="Move song up">↑</button>
+              <button type="button" data-ts-down="${esc(item.id)}" title="Move down" aria-label="Move song down">↓</button>
+              <button type="button" class="abandon" data-ts-abandon-run="${esc(item.id)}" title="Singer left / song abandoned" aria-label="Mark song abandoned">⊘</button>
+              <button type="button" class="remove" data-ts-remove="${esc(item.id)}" title="Remove from Run Order" aria-label="Remove song from Run Order">✕</button>
+            </div>
           </div>
-
-          <div class="ts-run-actions">
-            ${
-              showPlayButtons
-                ? `<button
-                    type="button"
-                    class="play-song"
-                    data-ts-play="${esc(item.id)}"
-                    title="Open this song"
-                    aria-label="Open this song"
-                  >▶</button>`
-                : ""
-            }
-
-            <button
-              type="button"
-              data-ts-up="${esc(item.id)}"
-              title="Move up"
-              aria-label="Move song up"
-            >↑</button>
-
-            <button
-              type="button"
-              data-ts-down="${esc(item.id)}"
-              title="Move down"
-              aria-label="Move song down"
-            >↓</button>
-
-            <button
-              type="button"
-              class="abandon"
-              data-ts-abandon-run="${esc(item.id)}"
-              title="Singer left / song abandoned"
-              aria-label="Mark song abandoned"
-            >⊘</button>
-
-            <button
-              type="button"
-              class="remove"
-              data-ts-remove="${esc(item.id)}"
-              title="Remove from Run Order"
-              aria-label="Remove song from Run Order"
-            >✕</button>
-          </div>
-        </div>
-      `;
-    }).join("");
+        `;
+      }).join("");
   }
+
 
   function renderSongSelect() {
     const select = $("tsRunOrderSongSelect");
@@ -1010,6 +1249,11 @@
     state.sessionId = sessionId || "";
     state.session = null;
     state.requests = [];
+    state.notifications = [];
+    state.notificationUnread = 0;
+    state.knownNotificationIds = new Set();
+    state.lastRunStatuses = new Map();
+    state.runOrderSnapshotReady = false;
     publishSharedSession();
 
     if (!sessionId) {
@@ -1029,6 +1273,7 @@
       state.db.collection("performanceSessions").doc(sessionId).onSnapshot(doc => {
         state.session = doc.exists ? { id:doc.id, ...(doc.data() || {}) } : null;
         publishSharedSession();
+        syncNotificationsFromSession();
         trackBreakStateNotification();
 
         subscribeLinkedEvent(
@@ -1051,7 +1296,16 @@
           if (state.requestSnapshotReady) {
             nextRequests.forEach(req => {
               if (!state.knownRequestIds.has(req.id) && isPendingRequest(req)) {
-                pushNotification(`🎤 New request: ${req.songTitle || req.title || "Song"} — ${req.singerName || req.name || "Singer"}`, `request:${req.id}`);
+                pushNotification(
+                  `New request: ${req.songTitle || req.title || "Song"} — ${req.singerName || req.name || "Singer"}`,
+                  `request:new:${req.id}`,
+                  "request",
+                  {
+                    requestId:req.id,
+                    songTitle:req.songTitle || req.title || "",
+                    singerName:req.singerName || req.name || ""
+                  }
+                );
               }
             });
           }
@@ -1096,7 +1350,15 @@
           ? {sessionId:"",items:[],...(doc.data() || {})}
           : {sessionId:"",items:[]};
 
+        trackRunOrderActivity(queueItems());
         renderRunOrder();
+
+        window.dispatchEvent(new CustomEvent("lk:runorder-updated", {
+          detail: {
+            sessionId: state.runOrder.sessionId || "",
+            items: queueItems().map(item => ({...item}))
+          }
+        }));
       }, console.warn)
     );
 
@@ -1236,6 +1498,10 @@
         pane.classList.toggle("active", active);
       }
     });
+
+    if (tab === "notifications") {
+      markNotificationsRead();
+    }
   }
 
   function initialiseInfoTabs() {
@@ -1255,6 +1521,56 @@
     });
   }
 
+
+  function setWorkflowTab(tabName) {
+    const tab = tabName === "runorder" ? "runorder" : "pending";
+
+    const pendingBtn = $("tsPendingTab");
+    const runBtn = $("tsRunOrderTab");
+    const pendingPane = $("tsPendingPane");
+    const runPane = $("tsRunOrderPane");
+
+    const showPending = tab === "pending";
+
+    pendingBtn?.classList.toggle("active", showPending);
+    runBtn?.classList.toggle("active", !showPending);
+    pendingBtn?.setAttribute("aria-selected", String(showPending));
+    runBtn?.setAttribute("aria-selected", String(!showPending));
+
+    if (pendingPane) {
+      pendingPane.hidden = !showPending;
+      pendingPane.classList.toggle("active", showPending);
+    }
+
+    if (runPane) {
+      runPane.hidden = showPending;
+      runPane.classList.toggle("active", !showPending);
+    }
+  }
+
+  function initialiseWorkflowTabs() {
+    const bar = $("topStatusBar");
+    if (!bar || bar.dataset.workflowTabsBound === "1") return;
+
+    bar.dataset.workflowTabsBound = "1";
+    setWorkflowTab("pending");
+
+    bar.addEventListener("click", event => {
+      const button = event.target.closest("[data-ts-workflow-tab]");
+      if (!button) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+      setWorkflowTab(button.dataset.tsWorkflowTab);
+    });
+  }
+
+  function openRunOrderTab() {
+    const bar = $("topStatusBar");
+    bar?.classList.remove("collapsed");
+    setWorkflowTab("runorder");
+    syncStatusToggleUi();
+  }
 
   function bindUi() {
     if (state.uiBound) return;
@@ -1319,6 +1635,7 @@
     if ($("topStatusBar")) {
       initialiseStatusToggle();
       initialiseInfoTabs();
+      initialiseWorkflowTabs();
       bindUi();
       renderRemaining();
       renderPending();
@@ -1358,6 +1675,8 @@
   LK.sessionTools.getRunOrder = () => queueItems().map(item => ({...item}));
   LK.sessionTools.getSessionId = () => state.sessionId;
   LK.sessionTools.getSession = () => state.session ? { ...state.session } : null;
+  LK.sessionTools.openRunOrderTab = openRunOrderTab;
+  LK.sessionTools.setWorkflowTab = setWorkflowTab;
 
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded",init);
