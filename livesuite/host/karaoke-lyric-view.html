@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Karaoke Lyric View</title>
+  <link rel="stylesheet" href="css/lyrics-suite_OLDER.css">
+</head>
+<body class="singer-page singer-standby-mode">
+  <header class="singer-topbar">
+    <button id="fullscreenSingerBtn" class="btn ghost" type="button">⛶ FULLSCREEN</button>
+    <div class="song-heading">
+      <strong id="singerTitle">KARAOKE LYRIC VIEW</strong>
+      <span id="singerArtist">Ready for the next singer</span>
+    </div>
+    <button id="singerSettingsBtn" class="btn ghost" type="button" disabled>⚙ SETTINGS</button>
+  </header>
+
+  <div id="standbyView" class="standby-view">
+    <div class="standby-noise" aria-hidden="true">
+      <canvas id="standbyStaticCanvas" class="standby-static-canvas"></canvas>
+    </div>
+    <div class="standby-content">
+      <div class="standby-logo-frame">
+        <img class="standby-logo" src="img/karaokelyricdisplay_idle.png" alt="Live Karaoke — You Sing, I Play">
+      </div>
+      <div class="standby-icon">🎤</div>
+      <h1>READY FOR THE NEXT SINGER</h1>
+      <p>The lyrics will appear automatically when the host sends a song.</p>
+    </div>
+  </div>
+
+  <div id="songLoadingView" class="song-loading-view hidden" aria-live="assertive">
+    <div class="loading-pulse-ring"></div>
+    <p>CURRENTLY LOADING SONG…</p>
+    <h1 id="loadingSongTitle">Song Title</h1>
+    <h2 id="loadingSongArtist">Artist</h2>
+    <div id="loadingCountdown" class="loading-countdown">5</div>
+  </div>
+
+  <main id="singerLyrics" class="singer-lyrics hidden"></main>
+
+  <aside id="singerSettings" class="singer-settings hidden">
+    <div class="settings-title"><h2>VIEW SETTINGS</h2><button id="closeSingerSettings" type="button">✕</button></div>
+    <label>GUIDANCE
+      <div class="settings-options guidance-options">
+        <button data-guidance="normal" class="active">Normal Mode</button>
+        <button data-guidance="pro">Lyrics Pro</button>
+      </div>
+      <small class="settings-help">Normal Mode uses clear section colours. Lyrics Pro also shows timing colours, emphasis, underlines and italics saved in the song.</small>
+    </label>
+    <label>THEME<div class="settings-options"><button data-theme="default" class="active">Default</button><button data-theme="warm">Warm</button><button data-theme="contrast">High Contrast</button></div></label>
+    <label>FONT<div class="settings-options"><button data-font="default" class="active">Default</button><button data-font="arial">Arial</button><button data-font="dyslexic">OpenDyslexic</button></div></label>
+    <label>TEXT SIZE<div class="settings-options"><button data-size="small">A−</button><button data-size="normal" class="active">A</button><button data-size="large">A＋</button><button data-size="xlarge">A＋＋</button></div></label>
+    <label>LINE SPACING<div class="settings-options"><button data-spacing="normal" class="active">Default</button><button data-spacing="loose">Loose</button><button data-spacing="looser">Looser</button></div></label>
+    <label class="inline-setting">AUTO-SCROLL <input id="singerAutoScroll" type="checkbox"></label>
+    <label>SCROLL SPEED<div class="stepper"><button id="singerSpeedDown">−</button><strong id="singerSpeedLabel">1.00×</strong><button id="singerSpeedUp">＋</button></div></label>
+    <div class="tip-box"><h3>SINGING TIPS</h3><p>🎤 Sing out and have fun.</p><p>👥 Watch the host for cues.</p><p>★ You are doing great.</p></div>
+  </aside>
+
+  <footer id="singerControls" class="singer-controls hidden"><button id="singerPlayBtn" class="play">▶</button><button id="singerMinusBtn">−</button><strong id="singerBottomSpeed">1.00×</strong><button id="singerPlusBtn">＋</button></footer>
+
+  <!-- CUSTOM PAGE SCROLLBAR: replaces the browser scrollbar -->
+  <div id="karaokeScrollTrack" class="karaoke-scroll-track" aria-hidden="true">
+    <div id="karaokeScrollThumb" class="karaoke-scroll-thumb"></div>
+  </div>
+
+  <script src="../firebase-projects.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="js/firebase-config.js"></script>
+  <script src="js/lyrics-common.js"></script>
+  <script src="js/karaoke-lyric-view.js"></script>
+</body>
+</html>

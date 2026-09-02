@@ -1,0 +1,44 @@
+/* =========================================================
+   LYRICS VIEWER — STICKY DOUBLE BAR + RESTORED VIEW STATE
+   ========================================================= */
+
+:root {
+  --lyricsviewer-topbar-h: 72px;
+}
+
+.lyricsviewer-topbar {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 120 !important;
+}
+
+/* Top Status Bar stays immediately below the Lyrics Viewer bar. */
+#topStatusContainer.lyricsviewer-statusbar {
+  position: sticky !important;
+  top: var(--lyricsviewer-topbar-h) !important;
+  z-index: 115 !important;
+  width: 100% !important;
+  background: #050505 !important;
+}
+
+/* Keep injected status content from escaping its sticky container. */
+#topStatusContainer.lyricsviewer-statusbar > * {
+  position: relative !important;
+  top: auto !important;
+}
+
+/* Alphabet strip begins below both sticky bars more naturally. */
+.library-page .alphabet-nav {
+  top: calc(var(--lyricsviewer-topbar-h) + 74px) !important;
+}
+
+/* New shorter top-right button copy. */
+.lyricsviewer-topbar .create-song-btn {
+  white-space: nowrap;
+}
+
+@media (max-width: 760px) {
+  #topStatusContainer.lyricsviewer-statusbar {
+    top: var(--lyricsviewer-topbar-h) !important;
+  }
+}

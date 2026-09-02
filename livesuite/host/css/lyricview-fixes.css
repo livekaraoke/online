@@ -1,0 +1,1456 @@
+/* =========================================================
+   LYRIC VIEW — FINAL HEADER STACK + TABLET GUIDANCE OVERRIDES
+   Loaded AFTER both lyrics-suite.css and top-statusbar.css.
+   Keeping this separate prevents Lyric View fixes from breaking
+   lyricsviewer.html or the rest of the shared Lyrics Suite.
+   ========================================================= */
+
+:root {
+  --lv-title-h: 58px;
+  --lv-stack-h: 126px;
+}
+
+html,
+body.host-lyric-view-page {
+  margin: 0 !important;
+  padding-top: var(--lv-stack-h) !important;
+  overflow-x: hidden !important;
+}
+
+/* One fixed stack containing BOTH visible rows. */
+#hostStickyStack.host-sticky-stack {
+  display: flex !important;
+  flex-direction: column !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: auto !important;
+  width: 100vw !important;
+  height: auto !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: #050505 !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  transform: none !important;
+  z-index: 2147483000 !important;
+  isolation: isolate !important;
+}
+
+/* ROW 1 — ALWAYS VISIBLE SONG TITLE BAR */
+#hostStickyStack > .host-view-topbar {
+  display: grid !important;
+  grid-template-columns: auto minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  gap: 10px !important;
+  order: 1 !important;
+  position: relative !important;
+  inset: auto !important;
+  width: 100% !important;
+  height: var(--lv-title-h) !important;
+  min-height: var(--lv-title-h) !important;
+  max-height: var(--lv-title-h) !important;
+  flex: 0 0 var(--lv-title-h) !important;
+  margin: 0 !important;
+  padding: 6px 14px !important;
+  background: rgba(4, 4, 4, .995) !important;
+  border-bottom: 1px solid #292929 !important;
+  box-sizing: border-box !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  overflow: visible !important;
+  transform: none !important;
+  z-index: 20 !important;
+}
+
+#hostStickyStack .host-song-heading {
+  display: block !important;
+  min-width: 0 !important;
+  text-align: center !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+#hostStickyStack .host-song-heading strong {
+  display: block !important;
+  color: #fff !important;
+  font-size: 18px !important;
+  line-height: 1.08 !important;
+  font-weight: 800 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+#hostStickyStack .host-song-heading span {
+  display: block !important;
+  color: #9c9c9c !important;
+  font-size: 11px !important;
+  line-height: 1.12 !important;
+  margin-top: 2px !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+#hostStickyStack .host-top-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: 40px !important;
+  min-height: 40px !important;
+  padding: 0 13px !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  white-space: nowrap !important;
+}
+
+/* ROW 2 — TOP STATUS BAR, ALWAYS BELOW THE TITLE BAR. */
+#hostStickyStack > #topStatusContainer.host-status-wrap {
+  display: block !important;
+  order: 2 !important;
+  position: relative !important;
+  inset: auto !important;
+  top: auto !important;
+  left: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  width: 100% !important;
+  max-width: none !important;
+  min-width: 0 !important;
+  min-height: 52px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: #050505 !important;
+  border-bottom: 1px solid #541318 !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  overflow: hidden !important;
+  transform: none !important;
+  z-index: 10 !important;
+}
+
+/* top-statusbar.css is loaded before this file. Force its root back into
+   normal flow so it cannot jump to top:0 and cover the title row. */
+#topStatusContainer > *,
+#topStatusContainer [class*="top-status"],
+#topStatusContainer [class*="status-bar"],
+#topStatusContainer [class*="statusbar"],
+#topStatusContainer [id*="topStatus"] {
+  position: relative !important;
+  top: auto !important;
+  left: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  inset: auto !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+  transform: none !important;
+  box-sizing: border-box !important;
+}
+
+/* Lyrics begin below the measured two-row stack. */
+.host-lyric-view-page .host-lyrics-stage {
+  padding-top: 12px !important;
+  scroll-margin-top: calc(var(--lv-stack-h) + 8px) !important;
+}
+
+.host-lyric-view-page .host-section {
+  scroll-margin-top: calc(var(--lv-stack-h) + 10px) !important;
+}
+
+/* SONG INFO stays below both bars. The title/button remains clickable. */
+#songInfoDrawer.song-info-drawer {
+  top: var(--lv-stack-h) !important;
+  height: calc(100dvh - var(--lv-stack-h)) !important;
+  max-height: calc(100dvh - var(--lv-stack-h)) !important;
+  z-index: 2147482000 !important;
+}
+
+#songInfoBtn.active {
+  border-color: #c81b22 !important;
+  background: #25090b !important;
+}
+
+/* =========================================================
+   BOTTOM PLAYER + SECTION GUIDANCE — NEVER HIDE ON TABLETS
+   ========================================================= */
+.host-bottom-dock {
+  display: grid !important;
+  grid-template-columns: minmax(280px, 430px) minmax(0, 1fr) !important;
+  align-items: stretch !important;
+  left: 10px !important;
+  right: 10px !important;
+  bottom: calc(8px + env(safe-area-inset-bottom, 0px)) !important;
+  gap: 8px !important;
+  width: auto !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  z-index: 2147481000 !important;
+}
+
+.host-scroll-player,
+#sectionProgress.host-section-progress {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  min-width: 0 !important;
+}
+
+#sectionProgress.host-section-progress {
+  align-items: stretch !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  scrollbar-width: thin !important;
+  min-height: 58px !important;
+}
+
+#sectionProgress .progress-section {
+  display: flex !important;
+  min-width: 74px !important;
+  flex: 1 0 74px !important;
+}
+
+/* Keep the floating D-pad above the dock. */
+.host-nav-pad {
+  bottom: calc(82px + env(safe-area-inset-bottom, 0px)) !important;
+  z-index: 2147481500 !important;
+}
+
+/* Tablet layout: player and guidance BOTH visible side by side. */
+@media (max-width: 980px) and (min-width: 701px) {
+  .host-bottom-dock {
+    grid-template-columns: minmax(270px, 40%) minmax(0, 60%) !important;
+  }
+
+  #sectionProgress.host-section-progress {
+    display: flex !important;
+  }
+
+  .host-nav-pad {
+    right: 10px !important;
+    bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important;
+    transform: scale(.82) !important;
+    transform-origin: bottom right !important;
+  }
+}
+
+/* Narrow phones: guidance becomes its own strip ABOVE the transport. */
+@media (max-width: 700px) {
+  :root { --lv-title-h: 56px; }
+
+  #hostStickyStack > .host-view-topbar {
+    height: var(--lv-title-h) !important;
+    min-height: var(--lv-title-h) !important;
+    max-height: var(--lv-title-h) !important;
+    flex-basis: var(--lv-title-h) !important;
+    padding: 5px 8px !important;
+    gap: 6px !important;
+  }
+
+  #hostStickyStack .host-top-btn {
+    height: 38px !important;
+    min-height: 38px !important;
+    padding: 0 9px !important;
+    font-size: 11px !important;
+  }
+
+  #hostStickyStack .host-song-heading strong { font-size: 16px !important; }
+  #hostStickyStack .host-song-heading span { font-size: 10px !important; }
+
+  .host-bottom-dock {
+    grid-template-columns: 1fr !important;
+    grid-template-rows: 50px 56px !important;
+    gap: 6px !important;
+  }
+
+  #sectionProgress.host-section-progress {
+    display: flex !important;
+    grid-row: 1 !important;
+    min-height: 50px !important;
+    padding: 5px 8px !important;
+  }
+
+  .host-scroll-player {
+    grid-row: 2 !important;
+    min-height: 56px !important;
+  }
+
+  .host-nav-pad {
+    bottom: calc(122px + env(safe-area-inset-bottom, 0px)) !important;
+    transform: scale(.74) !important;
+    transform-origin: bottom right !important;
+  }
+}
+
+
+/* =========================================================
+   SECTION GUIDE AUTO-FOLLOW — 2026-08-26
+   The guide can contain unlimited sections. It remains
+   horizontally scrollable in JS, but the native scrollbar
+   is hidden because the active section automatically follows.
+   ========================================================= */
+#sectionProgress.host-section-progress {
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+  scroll-behavior: smooth !important;
+  overscroll-behavior-x: contain !important;
+}
+
+#sectionProgress.host-section-progress::-webkit-scrollbar {
+  width: 0 !important;
+  height: 0 !important;
+  display: none !important;
+}
+
+#sectionProgress .progress-section {
+  flex: 0 0 auto !important;
+  min-width: 74px !important;
+}
+
+
+/* =========================================================
+   PERFORMANCE VIEW REFINEMENTS — 2026-08-26
+   ========================================================= */
+
+/* 1) Bottom section guide: slightly narrower so it can never crowd the
+      transport speed value / plus button. It still auto-follows in JS. */
+.host-bottom-dock {
+  grid-template-columns: minmax(330px, 470px) minmax(0, 1fr) !important;
+}
+
+#sectionProgress.host-section-progress {
+  width: min(100%, 560px) !important;
+  max-width: 560px !important;
+  justify-self: end !important;
+}
+
+@media (max-width: 1180px) and (min-width: 701px) {
+  .host-bottom-dock {
+    grid-template-columns: minmax(330px, 46%) minmax(0, 54%) !important;
+  }
+
+  #sectionProgress.host-section-progress {
+    width: min(100%, 500px) !important;
+    max-width: 500px !important;
+  }
+}
+
+/* 2) Current section header follows the blue active section guide. */
+.host-section.current-section > .host-section-header {
+  border-color: rgba(24, 174, 248, .72) !important;
+  background:
+    linear-gradient(
+      90deg,
+      rgba(14, 74, 108, .72),
+      rgba(15, 43, 60, .58) 46%,
+      rgba(16, 20, 23, .84)
+    ) !important;
+  box-shadow:
+    inset 3px 0 0 #18aef8,
+    0 0 0 1px rgba(24, 174, 248, .12),
+    0 6px 22px rgba(0, 120, 195, .10) !important;
+}
+
+.host-section.current-section > .host-section-header strong,
+.host-section.current-section > .host-section-header .collapse-arrow {
+  color: #d9f3ff !important;
+}
+
+.host-section.current-section > .host-section-header .collapse-hint {
+  color: #75cbff !important;
+}
+
+/* 3) D-pad: UP/DOWN are intentionally larger than PREV/NEXT. */
+.host-nav-pad {
+  width: 204px !important;
+  height: 214px !important;
+}
+
+.host-nav-btn.nav-up,
+.host-nav-btn.nav-down {
+  width: 76px !important;
+  height: 76px !important;
+}
+
+.host-nav-btn.nav-left,
+.host-nav-btn.nav-right {
+  width: 60px !important;
+  height: 60px !important;
+}
+
+.host-nav-btn.nav-up {
+  left: 64px !important;
+  top: 0 !important;
+}
+
+.host-nav-btn.nav-left {
+  left: 0 !important;
+  top: 77px !important;
+}
+
+.host-nav-btn.nav-right {
+  right: 0 !important;
+  top: 77px !important;
+}
+
+.host-nav-btn.nav-down {
+  left: 64px !important;
+  bottom: 0 !important;
+}
+
+.host-nav-btn.nav-up .host-nav-icon,
+.host-nav-btn.nav-down .host-nav-icon {
+  width: 38px !important;
+  height: 38px !important;
+}
+
+.host-nav-btn.nav-left .host-nav-icon,
+.host-nav-btn.nav-right .host-nav-icon {
+  width: 31px !important;
+  height: 31px !important;
+}
+
+/* 4) Quick performance info / karaoke tools before the first section.
+      This is a compact duplicate; the full SONG INFO sidebar remains. */
+.performance-quick-info {
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(330px, .85fr);
+  gap: 10px;
+  margin: 0 0 12px;
+}
+
+.performance-quick-meta,
+.performance-quick-karaoke {
+  background: linear-gradient(145deg, rgba(18,18,18,.96), rgba(8,8,8,.96));
+  border: 1px solid #2c2c2c;
+  border-radius: 8px;
+}
+
+.performance-quick-meta {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(84px, 1fr));
+  min-width: 0;
+}
+
+.performance-quick-meta > div {
+  min-width: 0;
+  padding: 9px 11px;
+  border-right: 1px solid #262626;
+}
+
+.performance-quick-meta > div:last-child {
+  border-right: 0;
+}
+
+.performance-quick-meta small,
+.performance-quick-meta strong {
+  display: block;
+}
+
+.performance-quick-meta small {
+  color: #7e7e7e;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .07em;
+}
+
+.performance-quick-meta strong {
+  margin-top: 3px;
+  color: #f4f4f4;
+  font-size: 17px;
+  line-height: 1.1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.performance-quick-meta #quickTempo,
+.performance-quick-meta #quickCapo {
+  font-size: 20px;
+}
+
+.performance-quick-meta #quickTempo.tempo-match {
+  color: #56e56c !important;
+}
+
+.performance-quick-meta #quickTempo.tempo-different {
+  color: #ffd24d !important;
+}
+
+.performance-quick-meta #quickOriginalBpm.original-different {
+  color: #ff4d55 !important;
+}
+
+.performance-quick-karaoke {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto auto;
+  align-items: center;
+  gap: 7px 9px;
+  padding: 8px 10px;
+}
+
+.performance-quick-label {
+  grid-column: 1 / -1;
+  color: #8d8d8d;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: .08em;
+}
+
+.performance-quick-actions {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(190px, 1fr) auto;
+  gap: 7px;
+}
+
+.performance-quick-actions .split-action {
+  margin: 0;
+}
+
+.performance-quick-actions button,
+.performance-quick-slave button {
+  min-height: 34px;
+  background: #0d190f;
+  border: 1px solid #2fa844;
+  color: #62ee73;
+  border-radius: 6px;
+  padding: 7px 10px;
+  font-size: 10px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.quick-split-action > button:first-child {
+  border-radius: 6px 0 0 6px;
+}
+
+.quick-split-action > button:nth-child(2) {
+  width: 38px;
+  padding-left: 0;
+  padding-right: 0;
+  border-radius: 0 6px 6px 0;
+}
+
+.performance-quick-actions > #quickEditSongBtn {
+  min-width: 104px;
+}
+
+.performance-quick-slave {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(145px, 1fr) auto;
+  gap: 6px;
+}
+
+.performance-quick-slave select {
+  min-width: 0;
+  width: 100%;
+  height: 34px;
+  background: #090909;
+  color: #ddd;
+  border: 1px solid #333;
+  border-radius: 6px;
+  padding: 0 8px;
+  font-size: 10px;
+}
+
+.performance-quick-info .mini-menu {
+  top: 37px;
+}
+
+/* Keep quick info compact on tablets without sacrificing lyric width. */
+@media (max-width: 980px) {
+  .performance-quick-info {
+    grid-template-columns: 1fr !important;
+  }
+
+  .performance-quick-meta {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  .performance-quick-karaoke {
+    grid-template-columns: 1fr !important;
+  }
+
+  .performance-quick-actions {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .performance-quick-slave {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+}
+
+@media (max-width: 700px) {
+  .performance-quick-meta {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .performance-quick-meta > div {
+    border-bottom: 1px solid #262626;
+  }
+
+  .performance-quick-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .performance-quick-slave {
+    grid-template-columns: 1fr;
+  }
+
+  /* On narrow screens the bottom guide already has its own row; keep it
+     slightly inset so it does not touch the transport beneath it. */
+  #sectionProgress.host-section-progress {
+    width: calc(100% - 18px) !important;
+    max-width: none !important;
+    justify-self: center !important;
+  }
+}
+
+
+/* =========================================================
+   TIGHT LAYOUT + KARAOKE TOOL REARRANGEMENT — 2026-08-26
+   ========================================================= */
+
+/* Remove the accidental double vertical offset.
+   The fixed sticky stack needs ONE body offset, not padding on html + body. */
+html {
+  padding-top: 0 !important;
+}
+
+body.host-lyric-view-page {
+  padding-top: var(--lv-stack-h) !important;
+}
+
+/* The main stage itself should begin immediately after the fixed two-row
+   header stack. No extra blank performance-space before the quick details. */
+.host-lyric-view-page .host-lyrics-stage {
+  padding-top: 8px !important;
+  margin-top: 0 !important;
+}
+
+#performanceQuickInfo.performance-quick-info {
+  margin-top: 0 !important;
+}
+
+/* QUICK META: Key / Time / Tempo / Original / Capo / Edit all in one row. */
+.performance-quick-info {
+  grid-template-columns: 1fr !important;
+  gap: 8px !important;
+}
+
+.performance-quick-meta {
+  grid-template-columns:
+    minmax(70px, .75fr)
+    minmax(70px, .75fr)
+    minmax(110px, 1fr)
+    minmax(110px, 1fr)
+    minmax(70px, .7fr)
+    minmax(118px, .9fr) !important;
+}
+
+.performance-quick-edit-cell {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  gap: 4px !important;
+}
+
+.performance-quick-edit-cell #quickEditSongBtn {
+  min-height: 31px !important;
+  width: 100% !important;
+  border: 1px solid #2fa844 !important;
+  border-radius: 6px !important;
+  background: #0d190f !important;
+  color: #62ee73 !important;
+  font-size: 10px !important;
+  font-weight: 900 !important;
+  cursor: pointer !important;
+}
+
+/* KARAOKE TOOLS:
+   left = SEND TO KARAOKE
+   right = SLAVE LYRICS dropdown + SEND LYRICS */
+.performance-quick-karaoke {
+  grid-template-columns: minmax(260px, 1.05fr) minmax(300px, .95fr) !important;
+  grid-template-rows: auto auto !important;
+  column-gap: 12px !important;
+  row-gap: 6px !important;
+  padding: 8px 10px !important;
+}
+
+.performance-quick-label {
+  grid-column: 1 / -1 !important;
+}
+
+.performance-quick-primary {
+  grid-column: 1 !important;
+  min-width: 0 !important;
+}
+
+.performance-quick-primary .quick-split-action {
+  width: 100% !important;
+  margin: 0 !important;
+}
+
+.performance-quick-primary #quickSendToKaraokeBtn {
+  width: 100% !important;
+  min-height: 36px !important;
+}
+
+.performance-quick-slave {
+  grid-column: 2 !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  gap: 7px !important;
+  min-width: 0 !important;
+}
+
+.performance-quick-slave select,
+.performance-quick-slave button {
+  min-height: 36px !important;
+}
+
+/* Sidebar EDIT SONG goes above Key/Time as requested. */
+.drawer-top-edit-btn {
+  width: 100% !important;
+  min-height: 40px !important;
+  margin: 0 0 10px !important;
+  border: 1px solid #2fa844 !important;
+  border-radius: 7px !important;
+  background: #0d190f !important;
+  color: #62ee73 !important;
+  font-weight: 900 !important;
+  cursor: pointer !important;
+}
+
+/* Bottom dock: make the section guide narrower and preserve more guaranteed
+   width for transport controls. */
+.host-bottom-dock {
+  grid-template-columns: minmax(380px, 500px) minmax(0, 430px) !important;
+  justify-content: space-between !important;
+}
+
+#sectionProgress.host-section-progress {
+  width: min(100%, 430px) !important;
+  max-width: 430px !important;
+  justify-self: end !important;
+}
+
+/* Smaller autoscroll -/+ buttons. */
+.host-scroll-player #scrollSpeedDown,
+.host-scroll-player #scrollSpeedUp {
+  min-width: 42px !important;
+  width: 42px !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  font-size: 18px !important;
+}
+
+.host-scroll-player #scrollSpeedLabel {
+  min-width: 62px !important;
+}
+
+/* Tablet */
+@media (max-width: 1100px) {
+  .performance-quick-meta {
+    grid-template-columns:
+      minmax(60px, .7fr)
+      minmax(60px, .7fr)
+      minmax(95px, 1fr)
+      minmax(95px, 1fr)
+      minmax(58px, .65fr)
+      minmax(105px, .9fr) !important;
+  }
+
+  .performance-quick-karaoke {
+    grid-template-columns: minmax(240px, 1fr) minmax(290px, 1fr) !important;
+  }
+
+  .host-bottom-dock {
+    grid-template-columns: minmax(360px, 48%) minmax(0, 400px) !important;
+  }
+
+  #sectionProgress.host-section-progress {
+    width: min(100%, 400px) !important;
+    max-width: 400px !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .performance-quick-meta {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  .performance-quick-karaoke {
+    grid-template-columns: 1fr !important;
+  }
+
+  .performance-quick-primary,
+  .performance-quick-slave {
+    grid-column: 1 !important;
+  }
+
+  .host-bottom-dock {
+    grid-template-columns: 1fr !important;
+  }
+
+  #sectionProgress.host-section-progress {
+    width: calc(100% - 34px) !important;
+    max-width: none !important;
+    justify-self: center !important;
+  }
+}
+
+
+/* =========================================================
+   POPUP RESTORE + GREEN KARAOKE TOOLS + META EMPHASIS
+   2026-08-26
+   ========================================================= */
+
+/* ---------------------------------------------------------
+   RESTORE CUSTOM MODAL
+   The shared stylesheet no longer reliably supplies the
+   Lyric View modal positioning, so make this page self-contained.
+   --------------------------------------------------------- */
+.host-lyric-view-page .suite-modal {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 20000 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 24px !important;
+  background: rgba(0, 0, 0, .68) !important;
+  backdrop-filter: blur(2px) !important;
+}
+
+.host-lyric-view-page .suite-modal.hidden {
+  display: none !important;
+}
+
+.host-lyric-view-page .suite-modal-box {
+  width: min(460px, calc(100vw - 32px)) !important;
+  max-height: calc(100vh - 48px) !important;
+  overflow: auto !important;
+  padding: 22px !important;
+  border: 1px solid rgba(255, 40, 40, .55) !important;
+  border-radius: 12px !important;
+  background:
+    linear-gradient(145deg, rgba(23,23,23,.99), rgba(7,7,7,.99)) !important;
+  color: #fff !important;
+  box-shadow:
+    0 24px 70px rgba(0,0,0,.78),
+    0 0 28px rgba(255,0,0,.18) !important;
+}
+
+.host-lyric-view-page .suite-modal-box h3 {
+  margin: 0 0 10px !important;
+  color: #fff !important;
+  font-size: 20px !important;
+  letter-spacing: .02em !important;
+}
+
+.host-lyric-view-page .suite-modal-box p {
+  margin: 0 0 18px !important;
+  color: #d6d6d6 !important;
+  font-size: 15px !important;
+  line-height: 1.5 !important;
+}
+
+.host-lyric-view-page .suite-modal-actions {
+  display: flex !important;
+  justify-content: flex-end !important;
+  gap: 9px !important;
+}
+
+.host-lyric-view-page .suite-modal-actions button {
+  min-width: 100px !important;
+  min-height: 38px !important;
+  padding: 8px 14px !important;
+  border: 1px solid #444 !important;
+  border-radius: 7px !important;
+  background: #161616 !important;
+  color: #fff !important;
+  font-weight: 800 !important;
+  cursor: pointer !important;
+}
+
+.host-lyric-view-page .suite-modal-actions button.danger {
+  border-color: #d71920 !important;
+  background: linear-gradient(#d71920, #8d090d) !important;
+}
+
+/* ---------------------------------------------------------
+   QUICK META — ORDER IS DEFINED IN HTML.
+   Bigger performance values.
+   --------------------------------------------------------- */
+.performance-quick-meta {
+  grid-template-columns:
+    minmax(116px, 1.05fr)   /* Tempo */
+    minmax(116px, 1.05fr)   /* Original */
+    minmax(72px, .75fr)     /* Key */
+    minmax(72px, .75fr)     /* Capo */
+    minmax(72px, .75fr)     /* Time */
+    minmax(145px, 1fr)      /* Edit */
+    !important;
+}
+
+.performance-quick-meta strong {
+  font-size: 21px !important;
+  font-weight: 900 !important;
+}
+
+.performance-quick-meta #quickTempo,
+.performance-quick-meta #quickOriginalBpm {
+  font-size: 24px !important;
+}
+
+.performance-quick-meta #quickKey,
+.performance-quick-meta #quickCapo {
+  font-size: 24px !important;
+}
+
+.performance-quick-meta #quickTime {
+  font-size: 22px !important;
+}
+
+.performance-quick-edit-cell #quickEditSongBtn {
+  min-height: 40px !important;
+  font-size: 12px !important;
+  letter-spacing: .02em !important;
+}
+
+/* Sidebar values get the same stronger hierarchy. */
+.song-info-drawer .info-meta-grid strong {
+  font-size: 21px !important;
+  font-weight: 900 !important;
+}
+
+.song-info-drawer #infoTempo,
+.song-info-drawer #infoOriginalBpm,
+.song-info-drawer #infoKey,
+.song-info-drawer #infoCapo {
+  font-size: 24px !important;
+}
+
+.drawer-top-edit-btn {
+  min-height: 45px !important;
+  font-size: 13px !important;
+  letter-spacing: .02em !important;
+}
+
+/* ---------------------------------------------------------
+   ALL QUICK KARAOKE CONTROLS GREEN
+   SEND TO KARAOKE + arrow + dropdown + SEND LYRICS.
+   --------------------------------------------------------- */
+.performance-quick-primary .quick-split-action > button,
+.performance-quick-slave select,
+.performance-quick-slave button {
+  background: #07190b !important;
+  border-color: #24b94b !important;
+  color: #67f27d !important;
+  box-shadow: inset 0 0 0 1px rgba(43,214,82,.08) !important;
+}
+
+.performance-quick-primary .quick-split-action > button:hover,
+.performance-quick-slave button:hover {
+  background: #0b2511 !important;
+  border-color: #4bd96b !important;
+}
+
+.performance-quick-slave select {
+  font-weight: 700 !important;
+}
+
+.performance-quick-slave select:focus {
+  outline: none !important;
+  border-color: #67f27d !important;
+  box-shadow: 0 0 0 2px rgba(70,225,100,.13) !important;
+}
+
+/* Keep SEND LYRICS from looking visually heavier than the select/send pair. */
+.performance-quick-slave button {
+  min-width: 132px !important;
+}
+
+/* The reset dropdown should also retain the green tool family. */
+#quickKaraokeMenu.mini-menu {
+  border-color: #24b94b !important;
+  background: #07110a !important;
+}
+
+#quickKaraokeMenu.mini-menu button {
+  color: #67f27d !important;
+  border-color: #24b94b !important;
+  background: #07190b !important;
+}
+
+/* ---------------------------------------------------------
+   RESPONSIVE PERFORMANCE ROW
+   --------------------------------------------------------- */
+@media (max-width: 1100px) {
+  .performance-quick-meta {
+    grid-template-columns:
+      minmax(96px, 1fr)
+      minmax(96px, 1fr)
+      minmax(62px, .7fr)
+      minmax(62px, .7fr)
+      minmax(62px, .7fr)
+      minmax(125px, .9fr)
+      !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .performance-quick-meta {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+}
+
+
+/* =========================================================
+   SIMPLE KARAOKE BUTTON + PERFORMANCE VALUE TYPOGRAPHY
+   ========================================================= */
+
+/* SEND TO KARAOKE — flat/simple like SEND LYRICS */
+.performance-quick-primary .quick-split-action {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) 42px !important;
+  gap: 6px !important;
+}
+
+.performance-quick-primary .quick-split-action > button {
+  background: #07190b !important;
+  border: 1px solid #24b94b !important;
+  color: #67f27d !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+  filter: none !important;
+  transform: none !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+}
+
+.performance-quick-primary #quickSendToKaraokeBtn {
+  border-radius: 6px !important;
+  font-size: 12px !important;
+  font-weight: 900 !important;
+}
+
+.performance-quick-primary #quickKaraokeMenuBtn {
+  width: 42px !important;
+  border-radius: 6px !important;
+}
+
+.performance-quick-primary #quickSendToKaraokeBtn:hover,
+.performance-quick-primary #quickKaraokeMenuBtn:hover {
+  background: #0b2511 !important;
+  border-color: #4bd96b !important;
+  box-shadow: none !important;
+}
+
+/* BPM number and suffix are separate for better live readability. */
+.performance-quick-meta #quickTempo,
+.performance-quick-meta #quickOriginalBpm,
+.song-info-drawer #infoTempo,
+.song-info-drawer #infoOriginalBpm {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  white-space: nowrap !important;
+}
+
+.bpm-number {
+  font-size: 31px !important;
+  line-height: 1 !important;
+  font-weight: 950 !important;
+}
+
+.bpm-suffix {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 13px !important;
+  line-height: 1 !important;
+  font-weight: 900 !important;
+  letter-spacing: .03em !important;
+}
+
+/* KEY / CAPO / TIME same visual size as BPM number. */
+.performance-quick-meta #quickKey,
+.performance-quick-meta #quickCapo,
+.performance-quick-meta #quickTime,
+.song-info-drawer #infoKey,
+.song-info-drawer #infoCapo,
+.song-info-drawer #infoTime {
+  font-size: 31px !important;
+  line-height: 1 !important;
+  font-weight: 950 !important;
+}
+
+/* Keep comparison colours working with nested BPM spans. */
+#quickTempo.tempo-match .bpm-number,
+#quickTempo.tempo-match .bpm-suffix,
+#infoTempo.tempo-match .bpm-number,
+#infoTempo.tempo-match .bpm-suffix {
+  color: #56e56c !important;
+}
+
+#quickTempo.tempo-different .bpm-number,
+#quickTempo.tempo-different .bpm-suffix,
+#infoTempo.tempo-different .bpm-number,
+#infoTempo.tempo-different .bpm-suffix {
+  color: #ffd24d !important;
+}
+
+#quickOriginalBpm.original-different .bpm-number,
+#quickOriginalBpm.original-different .bpm-suffix,
+#infoOriginalBpm.original-different .bpm-number,
+#infoOriginalBpm.original-different .bpm-suffix {
+  color: #ff4d55 !important;
+}
+
+/* EDIT keeps the same cell width but gets clearer/larger text. */
+.performance-quick-edit-cell #quickEditSongBtn {
+  width: 100% !important;
+  min-height: 44px !important;
+  font-size: 16px !important;
+  font-weight: 950 !important;
+  letter-spacing: .015em !important;
+}
+
+@media (max-width: 760px) {
+  .bpm-number,
+  .performance-quick-meta #quickKey,
+  .performance-quick-meta #quickCapo,
+  .performance-quick-meta #quickTime,
+  .song-info-drawer #infoKey,
+  .song-info-drawer #infoCapo,
+  .song-info-drawer #infoTime {
+    font-size: 27px !important;
+  }
+
+  .bpm-suffix {
+    font-size: 11px !important;
+  }
+}
+
+
+/* =========================================================
+   FINAL QUICK-META COLOUR REFINEMENTS
+   ========================================================= */
+
+/* BPM suffix uses the same dark-gray colour as its label, regardless of
+   tempo comparison state. Only the numeric value carries green/yellow/red. */
+.performance-quick-meta .bpm-suffix,
+.song-info-drawer .bpm-suffix {
+  color: #777 !important;
+}
+
+#quickTempo.tempo-match .bpm-number,
+#infoTempo.tempo-match .bpm-number {
+  color: #56e56c !important;
+}
+
+#quickTempo.tempo-different .bpm-number,
+#infoTempo.tempo-different .bpm-number {
+  color: #ffd24d !important;
+}
+
+#quickOriginalBpm.original-different .bpm-number,
+#infoOriginalBpm.original-different .bpm-number {
+  color: #ff4d55 !important;
+}
+
+/* Do NOT colour BPM suffix with match/difference status. */
+#quickTempo.tempo-match .bpm-suffix,
+#quickTempo.tempo-different .bpm-suffix,
+#quickOriginalBpm.original-different .bpm-suffix,
+#infoTempo.tempo-match .bpm-suffix,
+#infoTempo.tempo-different .bpm-suffix,
+#infoOriginalBpm.original-different .bpm-suffix {
+  color: #777 !important;
+}
+
+/* Requested value colours. */
+.performance-quick-meta #quickKey,
+.song-info-drawer #infoKey {
+  color: #4fa3ff !important;
+}
+
+.performance-quick-meta #quickCapo,
+.song-info-drawer #infoCapo {
+  color: #77e68a !important;
+}
+
+.performance-quick-meta #quickTime,
+.song-info-drawer #infoTime {
+  color: #b9b9b9 !important;
+}
+
+/* EDIT has no label above it now; vertically centre the button in its cell. */
+.performance-quick-edit-cell {
+  justify-content: center !important;
+}
+
+
+/* =========================================================
+   CURRENT LYRIC VIEW REFINEMENTS
+   ========================================================= */
+.performance-quick-meta #quickCapo,
+.song-info-drawer #infoCapo {
+  color: #ffffff !important;
+}
+
+.performance-quick-meta #quickTime,
+.song-info-drawer #infoTime {
+  font-size: 24px !important;
+  color: #b9b9b9 !important;
+}
+
+.performance-quick-edit-cell {
+  padding: 0 !important;
+  display: flex !important;
+  align-items: stretch !important;
+}
+
+.performance-quick-edit-cell #quickEditSongBtn {
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 58px !important;
+  margin: 0 !important;
+}
+
+.host-nav-btn.nav-up,
+.host-nav-btn.nav-down {
+  background: rgba(245,245,245,.18) !important;
+  border-color: rgba(255,255,255,.58) !important;
+  box-shadow: 0 0 15px rgba(80,235,112,.24), inset 0 0 16px rgba(255,255,255,.035) !important;
+}
+
+.host-nav-btn.nav-up .host-nav-icon,
+.host-nav-btn.nav-down .host-nav-icon {
+  filter: brightness(1.2) !important;
+}
+
+
+/* Inline links inserted from Lyrics Creator */
+.host-section-body .lyrics-song-link {
+  color: #66b8ff !important;
+  text-decoration: underline !important;
+  text-decoration-thickness: 2px !important;
+  text-underline-offset: 4px !important;
+  font-weight: 850 !important;
+  cursor: pointer !important;
+}
+
+.host-section-body .lyrics-song-link:hover {
+  color: #9fd4ff !important;
+  text-shadow: 0 0 10px rgba(70, 165, 255, .22);
+}
+
+
+/* =========================================================
+   2026-08-31 — PERFORMANCE NAV / STATUS / END SPACING UPDATE
+   ========================================================= */
+
+/* Keep the two-row sticky stack inside the tablet's real content width.
+   100vw can include the scrollbar/safe-area width and push controls offscreen. */
+#hostStickyStack.host-sticky-stack {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+#hostStickyStack > #topStatusContainer.host-status-wrap {
+  width: 100% !important;
+  max-width: 100% !important;
+  padding-left: max(3px, env(safe-area-inset-left, 0px)) !important;
+  padding-right: max(3px, env(safe-area-inset-right, 0px)) !important;
+  box-sizing: border-box !important;
+}
+
+#topStatusContainer,
+#topStatusContainer > *,
+#topStatusContainer [class*="top-status"],
+#topStatusContainer [class*="status-bar"],
+#topStatusContainer [class*="statusbar"] {
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
+
+/* If the injected status bar has its own 100vw sizing, neutralise it. */
+#topStatusContainer > * {
+  width: 100% !important;
+  overflow-x: clip !important;
+}
+
+/* Larger floating four-way navigation pad. */
+.host-nav-pad {
+  width: 228px !important;
+  height: 238px !important;
+}
+
+.host-nav-btn.nav-up,
+.host-nav-btn.nav-down {
+  width: 86px !important;
+  height: 86px !important;
+}
+
+.host-nav-btn.nav-left,
+.host-nav-btn.nav-right {
+  width: 70px !important;
+  height: 70px !important;
+}
+
+.host-nav-btn.nav-up {
+  left: 71px !important;
+  top: 0 !important;
+}
+
+.host-nav-btn.nav-left {
+  left: 0 !important;
+  top: 84px !important;
+}
+
+.host-nav-btn.nav-right {
+  right: 0 !important;
+  top: 84px !important;
+}
+
+.host-nav-btn.nav-down {
+  left: 71px !important;
+  bottom: 0 !important;
+}
+
+.host-nav-btn.nav-up .host-nav-icon,
+.host-nav-btn.nav-down .host-nav-icon {
+  width: 43px !important;
+  height: 43px !important;
+}
+
+.host-nav-btn.nav-left .host-nav-icon,
+.host-nav-btn.nav-right .host-nav-icon {
+  width: 36px !important;
+  height: 36px !important;
+}
+
+/* Bigger PLAY / PAUSE button. The << and >> buttons were removed from HTML. */
+.host-scroll-player #autoScrollBtn {
+  width: 58px !important;
+  min-width: 58px !important;
+  height: 48px !important;
+  min-height: 48px !important;
+  font-size: 20px !important;
+  border-radius: 8px !important;
+}
+
+/* Move -, speed, + closer to the left/player button now that jump buttons are gone. */
+.host-scroll-player {
+  justify-content: flex-start !important;
+  gap: 7px !important;
+  padding-left: 6px !important;
+}
+
+.host-scroll-player #scrollSpeedDown {
+  margin-left: 4px !important;
+}
+
+/* More breathing room before the final END marker. */
+.host-end-marker {
+  margin-top: 110px !important;
+  padding-top: 20px !important;
+}
+
+/* Bottom section navigator uses exactly the same title colour as the
+   section header resolved from Lyrics Creator/system defaults. */
+#sectionProgress .progress-section > span {
+  color: var(--progress-title-color, #ffffff) !important;
+}
+
+/* Active item keeps its section colour rather than being forced blue/white. */
+#sectionProgress .progress-section.active > span {
+  color: var(--progress-title-color, #ffffff) !important;
+  text-shadow: 0 0 9px color-mix(in srgb, var(--progress-title-color, #ffffff) 42%, transparent) !important;
+}
+
+/* Tablet-specific containment + make room for the larger D-pad. */
+@media (max-width: 1100px) {
+  #hostStickyStack > #topStatusContainer.host-status-wrap {
+    overflow: hidden !important;
+  }
+
+  #topStatusContainer > * {
+    transform: none !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+
+  .host-nav-pad {
+    right: 8px !important;
+  }
+}
+
+@media (max-width: 980px) and (min-width: 701px) {
+  .host-nav-pad {
+    transform: scale(.86) !important;
+    transform-origin: bottom right !important;
+    right: 6px !important;
+  }
+}
+
+@media (max-width: 700px) {
+  .host-nav-pad {
+    transform: scale(.78) !important;
+    transform-origin: bottom right !important;
+  }
+
+  .host-end-marker {
+    margin-top: 90px !important;
+  }
+}
+
+
+/* =========================================================
+   RUN ORDER — NEXT SONG
+   ========================================================= */
+
+.host-scroll-player .next-run-order-song-btn {
+  width: auto !important;
+  min-width: 86px !important;
+  height: 34px !important;
+  padding: 0 9px !important;
+  border-color: #345d3c !important;
+  background: rgba(10, 28, 14, .86) !important;
+  color: #83e494 !important;
+  font-size: 9px !important;
+  font-weight: 950 !important;
+  letter-spacing: .04em !important;
+  white-space: nowrap !important;
+}
+
+.host-scroll-player .next-run-order-song-btn:hover {
+  border-color: #56a466 !important;
+  box-shadow: 0 0 10px rgba(80, 190, 101, .15) !important;
+}
+
+@media (max-width: 780px) {
+  .host-scroll-player .next-run-order-song-btn {
+    min-width: 74px !important;
+    padding: 0 6px !important;
+    font-size: 8px !important;
+  }
+}

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lyrics & Chords View</title>
+  <link rel="stylesheet" href="../admin-new/css/top-statusbar.css">
+  <link rel="stylesheet" href="css/lyrics-suite.css">
+</head>
+<body class="host-view-page">
+  <!-- STICKY HOST HEADER + STATUS DASHBOARD -->
+  <div class="host-sticky-stack">
+    <header class="host-topbar">
+      <div class="topbar-left">
+        <a class="btn ghost topbar-exit-btn" href="lyricsviewer.html">← EXIT</a>
+      </div>
+
+      <div class="song-heading">
+        <strong id="topTitle">Loading…</strong>
+        <span id="topArtist"></span>
+      </div>
+
+      <div class="topbar-right">
+        <button id="sidebarToggleBtn" class="btn ghost sidebar-toggle-btn" type="button" aria-expanded="false" aria-controls="hostSidebar">☰ SONG INFO</button>
+      </div>
+    </header>
+
+    <!-- TOP STATUS BAR / DASHBOARD -->
+    <div id="topStatusContainer"></div>
+  </div>
+
+  <section class="song-summary-card extended-summary-card">
+    <div><small>Key</small><strong id="summaryKey">—</strong></div>
+    <div><small>Time</small><strong id="summaryTime">4/4</strong></div>
+    <div><small>Tempo</small><strong id="summaryTempo">—</strong></div>
+    <div><small>Capo</small><strong id="summaryCapo">0</strong></div>
+    <a id="youtubeLink" class="youtube-link hidden" target="_blank" rel="noopener">▶ YouTube</a>
+
+    <div><small>Original BPM</small><strong id="summaryOriginalBpm">—</strong></div>
+    <div><small>Year</small><strong id="summaryYear">—</strong></div>
+    <div class="summary-note"><small>Song Notes</small><strong id="summaryNote">No song notes.</strong></div>
+  </section>
+
+  <section class="control-grid compact-control-grid">
+    <div class="control-card compact-control-card">
+      <h3>CHORD TRANSPOSE</h3>
+      <div class="stepper"><button data-action="chord-minus">−</button><strong id="chordTransposeValue">0</strong><button data-action="chord-plus">＋</button></div>
+      <p id="chordKeyLabel">Original key</p>
+    </div>
+
+    <div class="control-card compact-control-card">
+      <h3>TAB TRANSPOSE</h3>
+      <div class="stepper"><button data-action="tab-minus">−</button><strong id="tabTransposeValue">0</strong><button data-action="tab-plus">＋</button></div>
+      <p>Fret shift</p>
+    </div>
+
+    <div class="control-card compact-control-card">
+      <h3>CAPO</h3>
+      <div class="stepper"><button data-action="capo-minus">−</button><strong id="capoValue">0</strong><button data-action="capo-plus">＋</button></div>
+      <p>Display only</p>
+    </div>
+
+    <div class="control-card compact-control-card view-control-card">
+      <h3>VIEW</h3>
+      <div class="segmented compact-segmented">
+        <button id="hostViewBtn" class="active" type="button">▣ Host</button>
+        <button id="singerPreviewBtn" type="button">♟ Singer</button>
+      </div>
+    </div>
+
+    <div class="control-card compact-control-card tools-card compact-tools-card">
+      <h3>TOOLS</h3>
+      <div class="split-action send-karaoke-split">
+        <button id="sendSingerBtn" class="btn green compact-tool-btn split-main" type="button">➤ SEND TO KARAOKE</button>
+        <button id="sendKaraokeMenuBtn" class="btn green compact-tool-btn split-arrow" type="button" aria-expanded="false" aria-controls="sendKaraokeMenu" title="Karaoke options">▼</button>
+        <div id="sendKaraokeMenu" class="split-menu hidden">
+          <button id="resetKaraokeBtn" type="button">↻ RESET KARAOKE</button>
+        </div>
+      </div>
+      <button id="editSongBtn" class="btn green full compact-tool-btn" type="button">▣ EDIT SONG</button>
+    </div>
+
+
+    <!-- LEGACY SLAVE-LYRICS TOOL -->
+    <div class="control-card compact-control-card tools-card legacy-lyrics-tool-card">
+      <h3>TOOLS · SLAVE LYRICS</h3>
+      <select id="legacyLyricsSongSelect" class="legacy-lyrics-select" aria-label="Choose legacy karaoke lyrics">
+        <option value="">Loading songs…</option>
+      </select>
+      <button id="sendLegacyLyricsBtn" class="btn green full compact-tool-btn" type="button">➤ SEND LYRICS</button>
+      <p id="legacyLyricsStatus" class="legacy-lyrics-status" aria-live="polite"></p>
+    </div>
+  </section>
+
+  <main class="host-layout host-layout-fullwidth">
+    <article class="lyrics-document">
+      <div id="tabOverview" class="tab-overview hidden"></div>
+      <div id="hostLyricsContent" class="host-lyrics-content"><div class="loading-state">Loading song…</div></div>
+      <div class="end-marker">[ END ]</div>
+    </article>
+  </main>
+
+  <aside id="hostSidebar" class="host-sidebar host-sidebar-overlay" aria-hidden="true">
+    <div class="host-sidebar-header">
+      <div>
+        <strong>SONG INFORMATION</strong>
+        <span>Notes, cues, structure and controls</span>
+      </div>
+      <button id="sidebarCloseBtn" class="icon-btn" type="button" aria-label="Close song information">✕</button>
+    </div>
+
+    <div class="host-sidebar-scroll">
+      <section class="panel"><h3>PERFORMANCE NOTES <small>(Visible to Singers)</small></h3><div id="performanceNotesList" class="notes-list"></div></section>
+      <section class="panel"><h3>HOST LYRIC NOTES <small>(Host-only sections)</small></h3><div id="hostNotes" class="host-note-text">—</div></section>
+      <section class="panel my-notes-panel">
+        <h3>MY NOTES <small>(Auto-saved)</small></h3>
+        <textarea id="myNotesInput" class="my-notes-textarea" rows="10" placeholder="Type private notes for this song..."></textarea>
+        <div id="myNotesSaveStatus" class="my-notes-save-status" aria-live="polite"></div>
+      </section>
+      <section class="panel"><h3>SONG STRUCTURE</h3><div id="songStructure" class="structure-list"></div></section>
+      <section class="panel"><h3>SHORTCUTS</h3><div class="shortcut-grid"><button id="fontDownBtn">A− FONT SIZE</button><button id="fontUpBtn">A＋ FONT SIZE</button><button id="scrollToggleBtn">◷ AUTO SCROLL</button><button id="fullscreenBtn">⛶ FULLSCREEN</button><button id="adminShortcutBtn">⚙ ADMIN</button></div></section>
+    </div>
+  </aside>
+
+  <footer class="host-player-bar">
+    <button id="prevSectionBtn">◀◀</button>
+    <button id="playScrollBtn" class="play">▶</button>
+    <button id="nextSectionBtn">▶▶</button>
+    <div class="speed-control"><button id="speedDownBtn">−</button><strong id="speedLabel">1.00×</strong><button id="speedUpBtn">＋</button></div>
+    <span id="sendStatus"></span>
+  </footer>
+
+  <script src="../firebase-projects.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="js/firebase-config.js"></script>
+  <script src="js/lyrics-common.js"></script>
+  <!-- Legacy karaoke lyric catalogue used by the SLAVE LYRICS tool. -->
+  <script src="../adm/files/song-data.js"></script>
+  <script src="js/lyricview.js"></script>
+  <script src="../admin-new/js/top-statusbar.js" data-include="../admin-new/includes/top-statusbar.html"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      if (window.LK?.topStatus?.loadTopStatusBar) {
+        LK.topStatus.loadTopStatusBar();
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,3699 @@
+/* Cleaned and organised from lyrics-suite-tochange.txt.
+   Exact duplicate rules were removed; selector order was preserved. */
+
+/* =========================================================
+   BASE / SHARED COMPONENTS
+   ========================================================= */
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  background: #050505;
+  color: #f6f6f6;
+  font-family: Inter,Segoe UI,Arial,sans-serif;
+}
+
+button,input,select {
+  font: inherit;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.muted {
+  color: #777;
+}
+
+.btn,.icon-btn,.segmented button,.stepper button,.row-actions button,.row-actions a,.shortcut-grid button,.structure-list button {
+  border: 1px solid #353535;
+  background: #111;
+  color: #f5f5f5;
+  border-radius: 7px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: .2s;
+}
+
+.btn {
+  padding: 12px 16px;
+  font-weight: 800;
+  letter-spacing: .03em;
+}
+
+.btn:hover,.icon-btn:hover,.segmented button:hover,.stepper button:hover,.row-actions button:hover,.row-actions a:hover {
+  border-color: #b11217;
+  background: #1b1010;
+}
+
+.btn.red {
+  background: linear-gradient(#bd1016,#7e0509);
+  border-color: #d6282d;
+}
+
+.btn.green {
+  color: #67ef64;
+  border-color: #2eb94e;
+  background: #08160b;
+}
+
+.btn.ghost {
+  background: #0c0c0c;
+}
+
+.btn.full {
+  width: 100%;
+  display: block;
+  text-align: center;
+}
+
+.icon-btn {
+  width: 42px;
+  height: 42px;
+  font-size: 20px;
+}
+
+/* =========================================================
+   HOST LYRICS VIEW
+   ========================================================= */
+
+.app-topbar,.host-topbar,.singer-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  border-bottom: 1px solid #272727;
+  background: rgba(6,6,6,.96);
+  backdrop-filter: blur(14px);
+}
+
+.brand-block,.song-heading {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.brand-block {
+  margin-right: auto;
+}
+
+.brand-block strong {
+  font-size: 18px;
+}
+
+.brand-block span,.song-heading span {
+  color: #9b9b9b;
+  font-size: 13px;
+  margin-top: 3px;
+}
+
+.toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #bbb;
+}
+
+/* =========================================================
+   LYRICS LIBRARY / VIEWER
+   ========================================================= */
+
+.library-shell {
+  display: grid;
+  grid-template-columns: 250px minmax(0,1fr);
+  gap: 16px;
+  padding: 16px 16px 90px;
+}
+
+.library-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.panel,.stats-grid,.song-table-panel,.song-summary-card,.control-card,.lyrics-document {
+  background: linear-gradient(145deg,#121212,#0a0a0a);
+  border: 1px solid #303030;
+  border-radius: 8px;
+  box-shadow: 0 12px 30px rgba(0,0,0,.22);
+}
+
+.panel {
+  padding: 16px;
+}
+
+.panel.compact {
+  padding: 14px;
+}
+
+.panel h3,.control-card h3 {
+  margin: 0 0 14px;
+  font-size: 12px;
+  letter-spacing: .05em;
+}
+
+.panel-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.link-btn {
+  background: none;
+  border: 0;
+  color: #aaa;
+  cursor: pointer;
+}
+
+.segmented {
+  display: flex;
+}
+
+.segmented button {
+  padding: 10px 14px;
+  border-radius: 0;
+}
+
+.segmented button:first-child {
+  border-radius: 6px 0 0 6px;
+}
+
+.segmented button:last-child {
+  border-radius: 0 6px 6px 0;
+}
+
+.segmented button.active {
+  background: #3f0b0d;
+  border-color: #cf1c22;
+}
+
+.search-control {
+  position: relative;
+}
+
+.search-control input,.filter-stack select,.filter-stack input,.library-sidebar select {
+  width: 100%;
+  background: #0c0c0c;
+  color: #eee;
+  border: 1px solid #333;
+  border-radius: 6px;
+  padding: 10px 12px;
+}
+
+.search-control span {
+  position: absolute;
+  right: 12px;
+  top: 9px;
+  color: #777;
+}
+
+.filter-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.filter-stack label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  font-size: 11px;
+  color: #aaa;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4,1fr);
+  padding: 18px;
+  margin-bottom: 14px;
+}
+
+.stats-grid>div {
+  display: grid;
+  grid-template-columns: 36px 1fr;
+  grid-template-rows: auto auto;
+  align-items: center;
+  padding: 0 20px;
+  border-right: 1px solid #2a2a2a;
+}
+
+.stats-grid>div:last-child {
+  border-right: 0;
+}
+
+.stats-grid span {
+  grid-row: 1/3;
+  font-size: 28px;
+  color: #c92128;
+}
+
+.stats-grid small {
+  color: #999;
+}
+
+.stats-grid strong {
+  font-size: 20px;
+}
+
+.song-table-panel {
+  overflow: hidden;
+}
+
+.table-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 18px;
+  border-bottom: 1px solid #2c2c2c;
+}
+
+.table-toolbar strong {
+  color: #ddd;
+}
+
+.table-toolbar strong span {
+  color: #e92d34;
+}
+
+.song-table-head,.song-table-row {
+  display: grid;
+  grid-template-columns: 42px 44px minmax(230px,1.4fr) minmax(180px,1fr) 70px 70px 130px 120px;
+  align-items: center;
+}
+
+.song-table-head {
+  padding: 12px 16px;
+  background: #0a0a0a;
+  color: #aaa;
+  font-size: 11px;
+  border-bottom: 1px solid #323232;
+}
+
+.song-table-row {
+  min-height: 54px;
+  padding: 6px 16px;
+  border-bottom: 1px solid #272727;
+}
+
+.song-table-row:hover {
+  background: #111;
+}
+
+.song-title-cell {
+  border: 0;
+  background: none;
+  color: #fff;
+  text-align: left;
+  cursor: pointer;
+  padding: 4px 0;
+}
+
+.song-title-cell strong,.song-title-cell small {
+  display: block;
+}
+
+.song-title-cell small {
+  color: #8f8f8f;
+  margin-top: 2px;
+}
+
+.star-btn {
+  border: 0;
+  background: none;
+  color: #777;
+  font-size: 22px;
+  cursor: pointer;
+}
+
+.star-btn.active {
+  color: #f0b923;
+}
+
+.key-cell {
+  color: #72d85c;
+}
+
+.public-badge {
+  display: inline-block;
+  padding: 5px 8px;
+  border: 1px solid;
+  border-radius: 5px;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: .04em;
+}
+
+.public-badge.shown {
+  color: #69ec75;
+  border-color: #2c9f40;
+  background: #0b1c0e;
+}
+
+.public-badge.hidden-status {
+  color: #ff6565;
+  border-color: #c42c33;
+  background: #21090b;
+}
+
+.row-actions {
+  display: flex;
+  gap: 7px;
+}
+
+.row-actions button,.row-actions a {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+}
+
+.letter-row {
+  padding: 8px 18px;
+  color: #f0252d;
+  font-weight: 900;
+  background: #090909;
+  border-bottom: 1px solid #242424;
+}
+
+.loading-state,.error-state,.empty-state {
+  padding: 40px;
+  text-align: center;
+  color: #888;
+}
+
+.error-state {
+  color: #ff7373;
+}
+
+.library-player-bar,.host-player-bar {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  bottom: 10px;
+  z-index: 25;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 10px 16px;
+  background: rgba(10,10,10,.96);
+  border: 1px solid #541318;
+  border-radius: 8px;
+  backdrop-filter: blur(10px);
+}
+
+.library-player-bar>div {
+  margin-right: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.library-player-bar>div span {
+  font-size: 12px;
+  color: #999;
+}
+
+.library-player-bar button,.host-player-bar button,.singer-controls button {
+  height: 42px;
+  min-width: 58px;
+  border: 1px solid #333;
+  background: #151515;
+  color: #fff;
+  border-radius: 7px;
+  cursor: pointer;
+}
+
+.play {
+  background: linear-gradient(#c8161c,#85070b) !important;
+  border-color: #e33 !important;
+  font-size: 20px;
+}
+
+.host-topbar {
+  justify-content: space-between;
+}
+
+.topbar-left,.topbar-right {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+}
+
+.host-topbar .song-heading {
+  align-items: center;
+  text-align: center;
+  flex: 1;
+}
+
+.host-topbar .song-heading strong {
+  font-size: 20px;
+}
+
+.song-summary-card {
+  margin: 14px;
+  display: grid;
+  grid-template-columns: repeat(4,1fr) auto;
+  align-items: center;
+  padding: 14px;
+}
+
+.song-summary-card>div {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.song-summary-card small {
+  color: #999;
+}
+
+.youtube-link {
+  color: #ccc;
+  text-decoration: none;
+}
+
+.control-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr .8fr 1.15fr 1.25fr;
+  gap: 10px;
+  padding: 0 14px 14px;
+}
+
+.control-card {
+  padding: 12px;
+  text-align: center;
+}
+
+.control-card p {
+  font-size: 12px;
+  color: #999;
+  margin: 8px 0 0;
+}
+
+.stepper {
+  display: grid;
+  grid-template-columns: 1fr 54px 1fr;
+}
+
+.stepper>* {
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #343434;
+}
+
+.stepper button:first-child {
+  border-radius: 7px 0 0 7px;
+}
+
+.stepper button:last-child {
+  border-radius: 0 7px 7px 0;
+}
+
+.tools-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tools-card h3 {
+  margin-bottom: 2px;
+}
+
+.host-layout {
+  display: grid;
+  grid-template-columns: minmax(0,2.25fr) minmax(280px,1fr);
+  gap: 12px;
+  padding: 0 14px 90px;
+}
+
+.lyrics-document {
+  padding: 18px;
+  border-color: #6a5310;
+}
+
+.host-lyrics-content {
+  font-size: calc(17px * var(--host-font-scale,1));
+  line-height: 1.42;
+}
+
+.host-section {
+  padding: 10px 0 16px;
+  border-bottom: 1px solid #292929;
+}
+
+.host-section h2 {
+  display: inline-block;
+  margin: 0 0 8px;
+  padding: 5px 9px;
+  border-radius: 5px;
+  background: #282828;
+  font-size: .75em;
+  color: #f0f0f0;
+}
+
+.host-section-body {
+  font-weight: 600;
+}
+
+.host-section-body .tab-block,.tab-overview .tab-block {
+  white-space: pre;
+  overflow: auto;
+  font-family: Consolas,monospace;
+  color: #e0b826;
+  background: #090909;
+  border: 1px solid #4f4110;
+  border-radius: 6px;
+  padding: 12px;
+}
+
+.host-tab-section h2 {
+  color: #f5c51b;
+}
+
+.tab-overview {
+  padding: 12px;
+  margin-bottom: 10px;
+  background: #0b0b08;
+  border: 1px solid #66520b;
+  border-radius: 7px;
+}
+
+.tab-overview h3 {
+  margin: 0 0 10px;
+  color: #ffc928;
+  font-size: 12px;
+}
+
+.performance-cue,.host-cue {
+  padding: 12px;
+  text-align: center;
+  color: #45e87b;
+  font-weight: 900;
+}
+
+.host-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.host-sidebar .panel {
+  min-height: 130px;
+}
+
+.host-sidebar h3 small {
+  color: #777;
+  font-weight: 400;
+}
+
+.notes-list>div {
+  padding: 8px 0;
+  color: #cfcfcf;
+}
+
+.notes-list>div::first-letter {
+  color: #43d768;
+}
+
+.host-note-text {
+  white-space: pre-wrap;
+  color: #aaa;
+  line-height: 1.5;
+}
+
+.structure-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.structure-list button {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px;
+  background: none;
+  border: 0;
+  border-bottom: 1px solid #222;
+  text-align: left;
+}
+
+.structure-list button small {
+  color: #777;
+}
+
+.shortcut-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.shortcut-grid button {
+  padding: 10px;
+}
+
+.end-marker {
+  text-align: center;
+  color: #ff5a62;
+  padding: 30px;
+  font-weight: 900;
+}
+
+.speed-control {
+  display: flex;
+}
+
+.speed-control strong {
+  min-width: 90px;
+  text-align: center;
+  padding-top: 12px;
+}
+
+.host-player-bar #sendStatus {
+  margin-left: auto;
+  color: #69e674;
+  font-size: 12px;
+}
+
+/* =========================================================
+   SINGER / KARAOKE VIEW
+   ========================================================= */
+
+.singer-page {
+  min-height: 100vh;
+}
+
+.singer-topbar .song-heading {
+  flex: 1;
+  align-items: center;
+}
+
+.singer-topbar .song-heading strong {
+  font-size: 20px;
+}
+
+.standby-view {
+  min-height: calc(100vh - 78px);
+  display: grid;
+  place-content: center;
+  text-align: center;
+  padding: 30px;
+}
+
+.standby-icon {
+  font-size: 70px;
+}
+
+.standby-view h1 {
+  letter-spacing: .08em;
+}
+
+.standby-view p {
+  color: #999;
+}
+
+.singer-lyrics {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 28px 38px 100px;
+}
+
+.singer-section {
+  padding: 16px 0;
+  border-bottom: 1px solid #303030;
+}
+
+.singer-section h2 {
+  display: inline-block;
+  margin: 0 0 10px;
+  padding: 4px 7px;
+  border-radius: 5px;
+  background: #212121;
+  color: #6ca1ff;
+  font-size: 15px;
+}
+
+.singer-section-body {
+  font-size: 32px;
+  line-height: 1.35;
+  font-weight: 800;
+}
+
+.singer-section[class*="chorus"] h2 {
+  color: #ffc31d;
+}
+
+.singer-section[class*="chorus"] .singer-section-body {
+  color: #ffc31d;
+}
+
+.singer-section[class*="intro"] h2,.singer-section[class*="instrumental"] h2 {
+  color: #51d94c;
+}
+
+.singer-section[class*="pre-chorus"] h2 {
+  color: #b984ef;
+}
+
+.singer-performance-cue,.performance-cue {
+  color: #3ee47a;
+  text-align: center;
+  font-size: 23px;
+  font-weight: 900;
+  padding: 28px 8px;
+}
+
+.singer-end {
+  text-align: center;
+  color: #ff626b;
+  font-size: 25px;
+  font-weight: 900;
+  padding: 45px;
+}
+
+.singer-settings {
+  position: fixed;
+  right: 0;
+  top: 71px;
+  bottom: 0;
+  width: min(360px,92vw);
+  z-index: 40;
+  padding: 22px;
+  background: #111;
+  border-left: 1px solid #333;
+  overflow: auto;
+  box-shadow: -20px 0 45px rgba(0,0,0,.5);
+}
+
+.settings-title {
+  display: flex;
+  justify-content: space-between;
+}
+
+.settings-title button {
+  background: none;
+  border: 0;
+  color: #fff;
+  font-size: 22px;
+}
+
+.singer-settings label {
+  display: block;
+  margin: 22px 0;
+  color: #aaa;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.settings-options {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+  margin-top: 9px;
+}
+
+.settings-options button {
+  padding: 10px;
+  text-align: left;
+  border: 1px solid #363636;
+  background: #151515;
+  color: #fff;
+  border-radius: 6px;
+}
+
+.settings-options button.active {
+  color: #5ce277;
+  border-color: #2cb44a;
+}
+
+.inline-setting {
+  display: flex !important;
+  justify-content: space-between;
+}
+
+.tip-box {
+  border: 1px solid #3b3b3b;
+  border-radius: 8px;
+  padding: 14px;
+}
+
+.tip-box h3 {
+  color: #55df75;
+}
+
+.singer-controls {
+  position: fixed;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 22;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px;
+  background: rgba(15,15,15,.94);
+  border: 1px solid #333;
+  border-radius: 12px;
+}
+
+.singer-controls strong {
+  min-width: 70px;
+  text-align: center;
+}
+
+.singer-page[data-theme="warm"] {
+  background: #160d07;
+}
+
+.singer-page[data-theme="contrast"] {
+  background: #000;
+  color: #fff;
+}
+
+.singer-page[data-font="arial"] {
+  font-family: Arial,sans-serif;
+}
+
+.singer-page[data-font="dyslexic"] {
+  font-family: Verdana,Arial,sans-serif;
+  letter-spacing: .04em;
+}
+
+.singer-page[data-size="small"] .singer-section-body {
+  font-size: 26px;
+}
+
+.singer-page[data-size="large"] .singer-section-body {
+  font-size: 38px;
+}
+
+.singer-page[data-size="xlarge"] .singer-section-body {
+  font-size: 46px;
+}
+
+.singer-page[data-spacing="loose"] .singer-section-body {
+  line-height: 1.55;
+}
+
+.singer-page[data-spacing="looser"] .singer-section-body {
+  line-height: 1.75;
+}
+
+@media (max-width:699px) {
+  .library-shell {
+    grid-template-columns: 210px 1fr;
+  }
+
+  .song-table-head,.song-table-row {
+    grid-template-columns: 38px 38px minmax(190px,1.4fr) minmax(130px,1fr) 55px 55px 110px 95px;
+  }
+
+  .control-grid {
+    grid-template-columns: repeat(2,1fr);
+  }
+
+  .tools-card {
+    grid-column: span 2;
+  }
+
+  .host-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .host-sidebar {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .singer-section-body {
+    font-size: 28px;
+  }
+}
+
+@media (max-width:699px) {
+  .app-topbar {
+    flex-wrap: wrap;
+  }
+
+  .toggle-label {
+    order: 4;
+  }
+
+  .library-shell {
+    display: block;
+    padding: 10px 10px 90px;
+  }
+
+  .library-sidebar {
+    margin-bottom: 12px;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+
+  .stats-grid>div {
+    border: 0;
+    padding: 8px;
+  }
+
+  .song-table-head {
+    display: none;
+  }
+
+  .song-table-row {
+    grid-template-columns: 30px 34px minmax(0,1fr) 90px;
+    gap: 7px;
+  }
+
+  .song-table-row>span:nth-child(4),.song-table-row>strong:nth-child(5),.song-table-row>span:nth-child(6),.song-table-row>span:nth-child(7) {
+    display: none;
+  }
+
+  .row-actions {
+    justify-content: flex-end;
+  }
+
+  .library-player-bar {
+    left: 6px;
+    right: 6px;
+  }
+
+  .library-player-bar>div,.library-player-bar a {
+    display: none;
+  }
+
+  .host-topbar {
+    flex-wrap: wrap;
+  }
+
+  .host-topbar .song-heading {
+    order: -1;
+    width: 100%;
+    flex-basis: 100%;
+  }
+
+  .song-summary-card {
+    grid-template-columns: 1fr 1fr;
+    margin: 8px;
+  }
+
+  .control-grid {
+    grid-template-columns: 1fr 1fr;
+    padding: 0 8px 8px;
+  }
+
+  .host-layout {
+    padding: 0 8px 90px;
+  }
+
+  .host-sidebar {
+    display: block;
+  }
+
+  .host-sidebar .panel {
+    margin-bottom: 8px;
+  }
+
+  .host-lyrics-content {
+    font-size: calc(16px * var(--host-font-scale,1));
+  }
+
+  .singer-topbar {
+    flex-wrap: wrap;
+  }
+
+  .singer-topbar .song-heading {
+    order: -1;
+    flex-basis: 100%;
+  }
+
+  .singer-lyrics {
+    padding: 18px 20px 100px;
+  }
+
+  .singer-section-body {
+    font-size: 27px;
+  }
+
+  .singer-performance-cue {
+    font-size: 20px;
+  }
+}
+
+.library-shell {
+  grid-template-columns: 250px minmax(0,1fr) 34px;
+}
+
+.library-shell.sidebar-collapsed {
+  grid-template-columns: 0 minmax(0,1fr) 34px;
+}
+
+.library-shell.sidebar-collapsed .library-sidebar {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-110%);
+  overflow: hidden;
+}
+
+.library-sidebar {
+  transition: opacity .2s,transform .2s;
+  min-width: 0;
+}
+
+.alphabet-nav {
+  position: sticky;
+  top: 75px;
+  align-self: start;
+  height: calc(100vh - 165px);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 1px;
+  padding: 4px;
+  background: #100404;
+  border: 1px solid #5e1417;
+  border-radius: 7px;
+}
+
+.alphabet-nav button {
+  flex: 1;
+  min-height: 18px;
+  padding: 0;
+  border: 0;
+  border-radius: 3px;
+  background: #5a090d;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.alphabet-nav button:hover {
+  background: #c4141b;
+}
+
+.alphabet-nav button:disabled {
+  opacity: .2;
+  cursor: default;
+}
+
+.creator-page textarea,.setlist-page textarea {
+  font: inherit;
+}
+
+/* =========================================================
+   SETLIST EDITOR
+   ========================================================= */
+
+.setlist-shell {
+  display: grid;
+  grid-template-columns: 280px minmax(0,1fr);
+  gap: 16px;
+  padding: 16px;
+}
+
+.setlist-list-panel {
+  align-self: start;
+  position: sticky;
+  top: 82px;
+}
+
+.setlist-list {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.setlist-list-item {
+  padding: 12px;
+  text-align: left;
+  border: 1px solid #333;
+  background: #0b0b0b;
+  color: #fff;
+  border-radius: 7px;
+  cursor: pointer;
+}
+
+.setlist-list-item strong,.setlist-list-item span {
+  display: block;
+}
+
+.setlist-list-item span {
+  color: #888;
+  margin-top: 4px;
+  font-size: 12px;
+}
+
+.setlist-list-item.active {
+  border-color: #c51c22;
+  background: #2c0b0d;
+}
+
+.setlist-header-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.setlist-header-fields input,.setlist-header-fields textarea,#availableSearch {
+  background: #090909;
+  color: #fff;
+  border: 1px solid #333;
+  border-radius: 7px;
+  padding: 11px;
+}
+
+.setlist-header-fields textarea {
+  min-height: 45px;
+}
+
+.setlist-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.setlist-columns>section {
+  border: 1px solid #2d2d2d;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.setlist-song-list {
+  max-height: 65vh;
+  overflow: auto;
+}
+
+.setlist-song-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto auto;
+  gap: 7px;
+  align-items: center;
+  padding: 9px;
+  border-bottom: 1px solid #292929;
+}
+
+.setlist-song-row div strong,.setlist-song-row div small {
+  display: block;
+}
+
+.setlist-song-row small {
+  color: #888;
+}
+
+.setlist-song-row button {
+  background: #111;
+  color: #fff;
+  border: 1px solid #444;
+  border-radius: 5px;
+  padding: 7px 9px;
+  cursor: pointer;
+}
+
+.drag {
+  color: #d82d34;
+  cursor: grab;
+}
+
+.dragging {
+  opacity: .45;
+}
+
+/* =========================================================
+   LYRICS CREATOR
+   ========================================================= */
+
+.creator-shell {
+  max-width: 1250px;
+  margin: auto;
+  padding: 16px;
+}
+
+.creator-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(4,1fr);
+  gap: 12px;
+}
+
+.creator-meta-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: #aaa;
+  font-size: 12px;
+}
+
+.creator-meta-grid label.wide {
+  grid-column: span 2;
+}
+
+.creator-meta-grid input,.creator-meta-grid textarea {
+  background: #090909;
+  color: #fff;
+  border: 1px solid #333;
+  border-radius: 7px;
+  padding: 11px;
+}
+
+.creator-meta-grid textarea {
+  min-height: 75px;
+}
+
+.public-default-note {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+  color: #ffcb42;
+}
+
+.creator-section-tools {
+  margin-top: 16px;
+}
+
+.creator-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.creator-section-card {
+  border: 1px solid #343434;
+  border-radius: 8px;
+  background: #090909;
+  overflow: hidden;
+}
+
+.creator-section-head {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px;
+  background: #151515;
+}
+
+.creator-section-head input {
+  flex: 1;
+  background: #080808;
+  color: #fff;
+  border: 1px solid #333;
+  border-radius: 5px;
+  padding: 8px;
+  font-weight: 900;
+}
+
+.creator-section-head button,.rich-toolbar button {
+  background: #111;
+  color: #fff;
+  border: 1px solid #444;
+  border-radius: 5px;
+  padding: 7px 9px;
+  cursor: pointer;
+}
+
+.section-type-badge {
+  color: #f3c629;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.rich-toolbar {
+  display: flex;
+  gap: 6px;
+  padding: 7px;
+  border-bottom: 1px solid #2b2b2b;
+}
+
+.creator-rich-editor {
+  min-height: 150px;
+  padding: 16px;
+  line-height: 1.55;
+  outline: none;
+}
+
+.creator-rich-editor:focus {
+  box-shadow: inset 0 0 0 1px #a71a1e;
+}
+
+.creator-rich-editor.tab-editor {
+  font-family: Consolas,monospace;
+  white-space: pre;
+  overflow: auto;
+  color: #efc52d;
+}
+
+.performance-note-editor {
+  width: 100%;
+  min-height: 70px;
+  background: #061109;
+  color: #4bea78;
+  border: 0;
+  padding: 15px;
+  resize: vertical;
+  font-weight: 900;
+}
+
+@media (max-width:699px) {
+  .library-shell,.library-shell.sidebar-collapsed {
+    grid-template-columns: 1fr;
+  }
+
+  .alphabet-nav {
+    position: fixed;
+    right: 3px;
+    top: 120px;
+    z-index: 25;
+    width: 26px;
+  }
+
+  .library-sidebar {
+    display: block;
+  }
+
+  .library-shell.sidebar-collapsed .library-sidebar {
+    display: none;
+  }
+
+  .setlist-shell,.setlist-columns {
+    grid-template-columns: 1fr;
+  }
+
+  .setlist-list-panel {
+    position: static;
+  }
+
+  .creator-meta-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .setlist-header-fields {
+    grid-template-columns: 1fr;
+  }
+
+  .creator-meta-grid label.wide {
+    grid-column: span 2;
+  }
+}
+
+/* =========================================================
+   LYRICS VIEWER UI UPDATE
+   ========================================================= */
+
+.lyricsviewer-topbar {
+  grid-template-columns: auto minmax(190px, 1fr) auto;
+}
+
+.lyricsviewer-topbar .brand-block {
+  min-width: 0;
+}
+
+.lyricsviewer-topbar .create-song-btn {
+  justify-self: end;
+}
+
+.filters-toggle-btn.active {
+  border-color: #e51f27 !important;
+  box-shadow: 0 0 0 1px rgba(229, 31, 39, .35),
+    0 0 14px rgba(229, 31, 39, .16);
+  background: rgba(121, 8, 12, .38);
+}
+
+.sidebar-setlists-panel {
+  display: grid;
+  gap: 12px;
+}
+
+.sidebar-primary-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  border: 1px solid #c51c22;
+  border-radius: 7px;
+  color: #fff;
+  background: linear-gradient(180deg, #991017, #5f070b);
+  text-decoration: none;
+  font-weight: 900;
+  letter-spacing: .04em;
+}
+
+.sidebar-primary-link:hover {
+  background: linear-gradient(180deg, #bd161e, #790a0f);
+}
+
+.sidebar-sticky-toggle {
+  display: flex !important;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 !important;
+  padding: 10px 2px 2px;
+  color: #d7d7d7 !important;
+  font-size: 13px !important;
+  text-transform: none !important;
+}
+
+.sidebar-sticky-toggle input {
+  width: 18px;
+  height: 18px;
+  accent-color: #d71c24;
+}
+
+.sidebar-admin-btn {
+  margin-top: 2px;
+  border-color: #7d2428 !important;
+}
+
+.song-table-head,
+.song-table-row {
+  grid-template-columns: 48px
+    48px
+    minmax(270px, 1.55fr)
+    minmax(170px, .9fr)
+    76px
+    82px
+    108px;
+}
+
+.song-table-row {
+  min-height: 70px;
+  padding-top: 9px;
+  padding-bottom: 9px;
+}
+
+.song-title-cell strong {
+  font-size: 17px;
+  line-height: 1.2;
+}
+
+.song-title-cell small {
+  margin-top: 5px;
+  font-size: 11px;
+  line-height: 1.25;
+  color: #858585;
+}
+
+.song-artist-cell {
+  color: #d4d4d4;
+  font-size: 13px;
+}
+
+.song-number,
+.bpm-cell {
+  font-size: 14px;
+}
+
+.row-actions {
+  justify-content: flex-end;
+}
+
+.row-actions .row-play-btn,
+.row-actions .row-edit-btn {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid #424242;
+  border-radius: 7px;
+  background: #101010;
+  color: #fff;
+  text-decoration: none;
+  cursor: pointer;
+  font-size: 16px;
+  transition: border-color .16s, background .16s, transform .16s;
+}
+
+.row-actions .row-play-btn:hover,
+.row-actions .row-edit-btn:hover {
+  border-color: #d51d25;
+  background: #2a080b;
+  transform: translateY(-1px);
+}
+
+.song-table-row:hover {
+  background: linear-gradient(90deg, rgba(130, 10, 15, .13), #111 48%, #111);
+}
+
+@media (max-width: 699px) {
+  .song-table-head,
+  .song-table-row {
+    grid-template-columns: 40px
+      40px
+      minmax(210px, 1.4fr)
+      minmax(130px, .8fr)
+      58px
+      64px
+      92px;
+  }
+}
+
+@media (max-width: 699px) {
+  .lyricsviewer-topbar {
+    display: grid;
+    grid-template-columns: auto 1fr;
+  }
+
+  .lyricsviewer-topbar .brand-block {
+    align-self: center;
+  }
+
+  .lyricsviewer-topbar .create-song-btn {
+    grid-column: 1 / -1;
+    width: 100%;
+    justify-self: stretch;
+  }
+
+  .song-table-row {
+    grid-template-columns: 30px 34px minmax(0, 1fr) 90px;
+    min-height: 76px;
+  }
+
+  .song-table-row > .song-artist-cell,
+  .song-table-row > .key-cell,
+  .song-table-row > .bpm-cell {
+    display: none;
+  }
+
+  .row-actions {
+    justify-content: flex-end;
+  }
+}
+
+/* =========================================================
+   HOST LYRIC VIEW — COMPACT CONTROLS & OVERLAY INFORMATION
+   ========================================================= */
+
+.host-view-page {
+  overflow-x: hidden;
+}
+
+.host-topbar .topbar-left {
+  min-width: 44px;
+}
+
+.extended-summary-card {
+  grid-template-columns: repeat(5, minmax(110px, 1fr));
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.extended-summary-card > div,
+.extended-summary-card > a {
+  min-height: 50px;
+  padding: 10px 14px;
+  border-right: 1px solid #292929;
+  border-bottom: 1px solid #292929;
+}
+
+.extended-summary-card > :nth-child(5),
+.extended-summary-card > :last-child {
+  border-right: 0;
+}
+
+.extended-summary-card > div {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.extended-summary-card .summary-note {
+  grid-column: span 3;
+  justify-content: flex-start;
+  min-width: 0;
+}
+
+.extended-summary-card .summary-note strong {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #d6d6d6;
+  font-weight: 500;
+}
+
+.extended-summary-card .youtube-link {
+  display: grid;
+  place-items: center;
+}
+
+.compact-control-grid {
+  grid-template-columns: 1fr 1fr .78fr 1.05fr 1.25fr;
+  gap: 8px;
+  padding-bottom: 8px;
+}
+
+.compact-control-card {
+  min-height: 118px;
+  padding: 9px 11px;
+}
+
+.compact-control-card h3 {
+  margin-bottom: 8px;
+  font-size: 11px;
+}
+
+.compact-control-card p {
+  margin-top: 6px;
+  font-size: 11px;
+}
+
+.compact-control-card .stepper > * {
+  height: 36px;
+}
+
+.compact-segmented button {
+  min-height: 54px;
+  padding: 8px 10px;
+  font-size: 13px;
+}
+
+.compact-tools-card {
+  gap: 6px;
+}
+
+.compact-tool-btn {
+  min-height: 38px;
+  padding: 8px 10px;
+  font-size: 12px;
+}
+
+.sidebar-toggle-btn.active {
+  border-color: #d6282d;
+  background: #2c0b0d;
+  box-shadow: 0 0 0 1px rgba(214, 40, 45, .25);
+}
+
+.host-layout-fullwidth {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.host-sidebar-overlay {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 70;
+  width: min(430px, 92vw);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 0;
+  background: #080808;
+  border-left: 1px solid #4a1719;
+  box-shadow: -22px 0 50px rgba(0, 0, 0, .72);
+  transform: translateX(105%);
+  transition: transform .24s ease;
+}
+
+.host-sidebar-overlay.open {
+  transform: translateX(0);
+}
+
+.host-sidebar-header {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 74px;
+  padding: 14px 16px;
+  background: #101010;
+  border-bottom: 1px solid #333;
+}
+
+.host-sidebar-header > div {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.host-sidebar-header strong {
+  color: #fff;
+  font-size: 14px;
+  letter-spacing: .05em;
+}
+
+.host-sidebar-header span {
+  margin-top: 4px;
+  color: #888;
+  font-size: 11px;
+}
+
+.host-sidebar-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 12px;
+  scrollbar-color: #841017 #151515;
+  scrollbar-width: thin;
+}
+
+.host-sidebar-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.host-sidebar-scroll::-webkit-scrollbar-track {
+  background: #151515;
+}
+
+.host-sidebar-scroll::-webkit-scrollbar-thumb {
+  background: #841017;
+  border-radius: 6px;
+}
+
+.host-sidebar-scroll .panel {
+  min-height: 0;
+  margin-bottom: 10px;
+}
+
+.host-sidebar-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 65;
+  background: rgba(0, 0, 0, .56);
+  backdrop-filter: blur(2px);
+}
+
+body.host-sidebar-open {
+  overflow: hidden;
+}
+
+@media (max-width: 900px) {
+  .extended-summary-card {
+    grid-template-columns: repeat(3, minmax(100px, 1fr));
+  }
+
+  .extended-summary-card .summary-note {
+    grid-column: span 2;
+  }
+
+  .compact-control-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .view-control-card,
+  .compact-tools-card {
+    grid-column: auto;
+  }
+}
+
+@media (max-width: 699px) {
+  .host-topbar .topbar-right {
+    width: 100%;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .extended-summary-card {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .extended-summary-card .summary-note {
+    grid-column: 1 / -1;
+  }
+
+  .compact-control-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .compact-tools-card {
+    grid-column: 1 / -1;
+  }
+
+  .compact-control-card {
+    min-height: 106px;
+  }
+}
+
+/* =========================================================
+   ADVANCED LYRICS CREATOR UPDATE
+   ========================================================= */
+.advanced-creator-page .creator-topbar {
+  gap: 14px;
+}
+.creator-brand-block {
+  min-width: 0;
+  flex: 1;
+}
+.creator-brand-block #creatorStatus {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.save-split-wrap {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto 42px;
+  align-items: stretch;
+}
+.save-main-btn {
+  border-radius: 8px 0 0 8px !important;
+}
+.save-menu-btn {
+  min-width: 42px;
+  padding: 0 !important;
+  border-left-color: rgba(255,255,255,.25) !important;
+  border-radius: 0 8px 8px 0 !important;
+}
+.save-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 70;
+  min-width: 190px;
+  padding: 7px;
+  background: #111;
+  border: 1px solid #b90000;
+  border-radius: 9px;
+  box-shadow: 0 18px 40px rgba(0,0,0,.55);
+}
+.save-dropdown button {
+  width: 100%;
+  padding: 12px;
+  color: #fff;
+  background: #250000;
+  border: 1px solid #6f1717;
+  border-radius: 7px;
+  font-weight: 900;
+  cursor: pointer;
+}
+.creator-section-title-row {
+  align-items: flex-start;
+  gap: 18px;
+  margin-bottom: 24px;
+}
+.creator-add-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 10px;
+  max-width: 920px;
+}
+.creator-add-toolbar .btn {
+  margin: 0 !important;
+}
+.btn.teal {
+  color: #19e3c5;
+  border-color: #19e3c5;
+  background: rgba(0,100,90,.18);
+}
+.btn.gold {
+  color: #ffd400;
+  border-color: #b99400;
+  background: rgba(120,85,0,.18);
+}
+.creator-sections {
+  display: grid;
+  gap: 18px;
+  padding-top: 4px;
+}
+.creator-section-card {
+  overflow: visible;
+}
+.creator-section-head {
+  gap: 9px;
+}
+.creator-section-head .section-title-input {
+  min-width: 180px;
+  flex: 1;
+}
+.creator-section-actions {
+  display: flex;
+  gap: 4px;
+}
+.editor-collapse-btn {
+  min-width: 34px;
+}
+.load-collapse-option {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 6px;
+  margin: 0 6px !important;
+  color: #aaa !important;
+  font-size: 11px !important;
+  white-space: nowrap;
+}
+.load-collapse-option input {
+  width: auto !important;
+}
+.host-note-badge {
+  color: #19e3c5 !important;
+}
+.creator-section-body {
+  display: block;
+}
+.creator-section-body.hidden {
+  display: none;
+}
+.advanced-rich-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 10px;
+  border-top: 1px solid rgba(255,255,255,.08);
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  background: #0d0d0d;
+}
+.advanced-rich-toolbar button,
+.advanced-rich-toolbar select {
+  min-height: 37px;
+}
+.toolbar-select {
+  width: auto !important;
+  min-width: 120px;
+  padding: 7px 9px !important;
+  background: #080808;
+  color: white;
+  border: 1px solid #3b3b3b;
+  border-radius: 6px;
+}
+.toolbar-select.size-select {
+  min-width: 82px;
+}
+.quick-green { color: #42f35c !important; border-color: #42f35c !important; }
+.quick-yellow { color: #ffd400 !important; border-color: #ffd400 !important; }
+.quick-teal { color: #19e3c5 !important; border-color: #19e3c5 !important; }
+.creator-rich-editor {
+  min-height: 150px;
+  line-height: 1.55;
+}
+.creator-rich-editor .inserted-chord,
+.inserted-chord {
+  color: #ffd400;
+  font-weight: 900;
+  margin-right: 6px;
+}
+.inserted-blank-tab {
+  margin: 12px 0;
+  padding: 12px;
+  overflow-x: auto;
+  color: #ffd400;
+  background: #050505;
+  border: 1px solid #6f5a00;
+  border-radius: 7px;
+  font: 700 15px/1.35 Consolas, "Courier New", monospace;
+  white-space: pre;
+}
+.host-note-editor,
+.performance-note-editor {
+  width: 100%;
+  min-height: 110px;
+  padding: 14px;
+  color: #fff;
+  background: #080808;
+  border: 0;
+  resize: vertical;
+}
+.host-note-editor {
+  color: #19e3c5;
+  border-left: 4px solid #19e3c5;
+}
+.creator-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(0,0,0,.82);
+}
+.creator-modal-box {
+  width: min(620px, 94vw);
+  max-height: 88vh;
+  overflow: auto;
+  padding: 24px;
+  color: white;
+  background: #111;
+  border: 1px solid rgba(255,0,0,.55);
+  border-radius: 14px;
+  box-shadow: 0 0 36px rgba(255,0,0,.24);
+}
+.creator-modal-box.compact {
+  width: min(460px, 94vw);
+}
+.creator-modal-box h3 {
+  margin: 0 0 14px;
+  color: #ffd400;
+}
+.creator-modal-box label {
+  display: grid;
+  gap: 7px;
+  color: #bbb;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+.creator-modal-box input {
+  width: 100%;
+  padding: 13px;
+  color: white;
+  background: #050505;
+  border: 1px solid #444;
+  border-radius: 7px;
+  font-size: 18px;
+}
+.creator-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+.chord-quick-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 7px;
+  margin: 16px 0;
+}
+.chord-quick-grid button {
+  padding: 9px 4px;
+  color: #ffd400;
+  background: #080808;
+  border: 1px solid #554700;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.chord-preview {
+  padding: 12px;
+  background: #080808;
+  border-radius: 7px;
+}
+.colour-palette {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+.colour-palette button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px;
+  color: white;
+  background: #090909;
+  border: 1px solid #333;
+  border-radius: 7px;
+  cursor: pointer;
+}
+.colour-palette span {
+  width: 23px;
+  height: 23px;
+  border: 1px solid rgba(255,255,255,.4);
+  border-radius: 50%;
+}
+.templates-box {
+  width: min(760px, 96vw);
+}
+.template-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 18px;
+}
+.template-grid button {
+  min-height: 76px;
+  padding: 13px;
+  color: white;
+  text-align: left;
+  background: #090909;
+  border: 1px solid #343434;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.template-grid button:hover {
+  border-color: #d30000;
+  background: #1a0808;
+}
+.template-grid strong,
+.template-grid span {
+  display: block;
+}
+.template-grid span {
+  margin-top: 5px;
+  color: #777;
+  font-size: 11px;
+  text-transform: uppercase;
+}
+
+/* =========================================================
+   COLLAPSIBLE HOST LYRIC SECTIONS
+   ========================================================= */
+.collapsible-host-section {
+  padding: 0 !important;
+  overflow: hidden;
+}
+.host-section-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  padding: 10px 14px;
+  color: #fff;
+  text-align: left;
+  background: rgba(255,255,255,.035);
+  border: 0;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  cursor: pointer;
+}
+.host-section-toggle span {
+  font-weight: 900;
+  letter-spacing: .5px;
+}
+.host-section-toggle small {
+  color: #888;
+  font-size: 10px;
+  white-space: nowrap;
+}
+.collapsible-host-section > .host-section-body {
+  padding: 14px 16px 18px;
+}
+.collapsible-host-section.is-collapsed > .host-section-toggle {
+  border-bottom: 0;
+}
+.host-performance-note-section {
+  border-color: rgba(50,230,100,.38) !important;
+}
+.host-only-note-section {
+  border-color: rgba(25,227,197,.48) !important;
+}
+.host-only-section-note {
+  color: #19e3c5;
+  font-style: italic;
+  white-space: pre-wrap;
+}
+
+@media (max-width: 800px) {
+  .creator-section-title-row {
+    display: block;
+  }
+  .creator-add-toolbar {
+    justify-content: flex-start;
+    margin-top: 15px;
+  }
+  .template-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .chord-quick-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  .load-collapse-option {
+    width: 100%;
+    order: 10;
+  }
+}
+
+/* ========================================================================== */
+/* KARAOKE SEND SPLIT BUTTON + IDLE/LOADING DISPLAY UPDATE                     */
+/* ========================================================================== */
+
+.send-karaoke-split {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 42px;
+  width: 100%;
+  gap: 2px;
+}
+
+.send-karaoke-split .split-main {
+  width: 100%;
+  border-radius: 8px 0 0 8px;
+}
+
+.send-karaoke-split .split-arrow {
+  min-width: 42px;
+  padding-inline: 0;
+  border-radius: 0 8px 8px 0;
+}
+
+.split-menu {
+  position: absolute;
+  z-index: 80;
+  top: calc(100% + 7px);
+  right: 0;
+  min-width: 220px;
+  padding: 7px;
+  background: #111;
+  border: 1px solid #e31a1a;
+  border-radius: 9px;
+  box-shadow: 0 16px 42px rgba(0, 0, 0, .72);
+}
+
+.split-menu button {
+  width: 100%;
+  padding: 12px 14px;
+  color: #fff;
+  background: #240606;
+  border: 1px solid #7b1414;
+  border-radius: 7px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.split-menu button:hover,
+.split-menu button:focus-visible {
+  background: #a50000;
+  border-color: #ff3a3a;
+}
+
+.singer-topbar button:disabled {
+  opacity: .35;
+  cursor: not-allowed;
+  filter: grayscale(1);
+}
+
+/* Standby screen */
+.singer-standby-mode {
+  overflow: hidden;
+  background: #020202;
+}
+
+.standby-view {
+  position: fixed;
+  inset: 70px 0 0;
+  display: grid;
+  place-items: center;
+  min-height: calc(100vh - 70px);
+  overflow: hidden;
+  isolation: isolate;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(95, 0, 0, .16), transparent 48%),
+    #020202;
+}
+
+.standby-noise {
+  position: absolute;
+  z-index: -1;
+  inset: -60%;
+  opacity: .11;
+  pointer-events: none;
+  background-image:
+    repeating-radial-gradient(circle at 20% 30%, rgba(255,255,255,.32) 0 1px, transparent 1px 3px),
+    repeating-linear-gradient(0deg, rgba(255,255,255,.08) 0 1px, transparent 1px 4px);
+  background-size: 7px 7px, 100% 4px;
+  animation: karaokeStaticNoise .18s steps(2, end) infinite;
+  mix-blend-mode: screen;
+}
+
+.standby-content {
+  width: min(1000px, 92vw);
+  max-height: calc(100vh - 100px);
+  padding: 18px 24px 34px;
+  text-align: center;
+}
+
+.standby-logo {
+  display: block;
+  width: min(920px, 88vw);
+  max-height: 62vh;
+  object-fit: contain;
+  margin: 0 auto 8px;
+  filter: drop-shadow(0 0 18px rgba(255, 20, 20, .2));
+}
+
+.standby-content .standby-icon {
+  margin-top: -2px;
+  font-size: clamp(32px, 4vw, 56px);
+  animation: standbyMicPulse 2s ease-in-out infinite;
+}
+
+.standby-content h1 {
+  margin: 10px 0 5px;
+  color: #fff;
+  font-size: clamp(25px, 3vw, 48px);
+  letter-spacing: .11em;
+}
+
+.standby-content p {
+  margin: 0;
+  color: #b7b7b7;
+  font-size: clamp(15px, 1.5vw, 23px);
+}
+
+/* Five-second song transition */
+.song-loading-view {
+  position: fixed;
+  z-index: 45;
+  inset: 70px 0 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 36px;
+  text-align: center;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at center, rgba(174, 0, 0, .24), transparent 45%),
+    linear-gradient(135deg, #020202, #0b0000 50%, #020202);
+}
+
+.song-loading-view::before,
+.song-loading-view::after {
+  content: "";
+  position: absolute;
+  width: 65vmax;
+  height: 65vmax;
+  border: 1px solid rgba(255, 40, 40, .11);
+  border-radius: 50%;
+  animation: loadingOrbit 5s linear infinite;
+}
+
+.song-loading-view::after {
+  width: 45vmax;
+  height: 45vmax;
+  animation-direction: reverse;
+  animation-duration: 3.6s;
+}
+
+.loading-pulse-ring {
+  width: 76px;
+  height: 76px;
+  margin-bottom: 28px;
+  border: 4px solid rgba(255,255,255,.12);
+  border-top-color: #ff2020;
+  border-radius: 50%;
+  animation: loadingSpin .85s linear infinite;
+}
+
+.song-loading-view p {
+  z-index: 1;
+  margin: 0 0 20px;
+  color: #ff4545;
+  font-weight: 900;
+  font-size: clamp(16px, 1.8vw, 25px);
+  letter-spacing: .16em;
+}
+
+.song-loading-view h1 {
+  z-index: 1;
+  max-width: 95vw;
+  margin: 0;
+  color: #fff;
+  font-size: clamp(38px, 6vw, 88px);
+  line-height: 1.05;
+  text-wrap: balance;
+}
+
+.song-loading-view h2 {
+  z-index: 1;
+  margin: 12px 0 28px;
+  color: #c2c2c2;
+  font-size: clamp(22px, 3vw, 42px);
+  font-weight: 500;
+}
+
+.loading-countdown {
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: clamp(105px, 14vw, 180px);
+  aspect-ratio: 1;
+  color: #fff;
+  background: linear-gradient(145deg, #d40000, #700000);
+  border: 3px solid #ff4040;
+  border-radius: 50%;
+  box-shadow: 0 0 55px rgba(255, 0, 0, .42);
+  font-size: clamp(58px, 8vw, 110px);
+  font-weight: 900;
+  animation: countdownBreath 1s ease-in-out infinite;
+}
+
+.loading-countdown.countdown-pop {
+  animation: countdownPop .35s ease-out;
+}
+
+@keyframes karaokeStaticNoise {
+  0% { transform: translate3d(-1%, 1%, 0) rotate(0deg); }
+  25% { transform: translate3d(1.5%, -.5%, 0) rotate(.1deg); }
+  50% { transform: translate3d(-.5%, -1.5%, 0) rotate(-.1deg); }
+  75% { transform: translate3d(1%, 1.5%, 0) rotate(.08deg); }
+  100% { transform: translate3d(-1%, 1%, 0) rotate(0deg); }
+}
+
+@keyframes standbyMicPulse {
+  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 0 rgba(255,0,0,0)); }
+  50% { transform: scale(1.08); filter: drop-shadow(0 0 15px rgba(255,0,0,.6)); }
+}
+
+@keyframes loadingSpin { to { transform: rotate(360deg); } }
+@keyframes loadingOrbit { to { transform: rotate(360deg); } }
+@keyframes countdownBreath {
+  0%, 100% { transform: scale(.94); }
+  50% { transform: scale(1); }
+}
+@keyframes countdownPop {
+  0% { transform: scale(.55); opacity: .35; }
+  75% { transform: scale(1.12); opacity: 1; }
+  100% { transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .standby-noise,
+  .standby-content .standby-icon,
+  .song-loading-view::before,
+  .song-loading-view::after,
+  .loading-pulse-ring,
+  .loading-countdown {
+    animation: none !important;
+  }
+}
+
+@media (max-width: 720px) {
+  .singer-topbar {
+    grid-template-columns: auto 1fr auto;
+  }
+
+  .standby-view,
+  .song-loading-view {
+    top: 62px;
+  }
+
+  .standby-logo {
+    max-height: 47vh;
+  }
+}
+
+/* ========================================================================== */
+/* KARAOKE STANDBY VISUAL — NEON FRAME + REALISTIC ANIMATED TV STATIC          */
+/* ========================================================================== */
+
+/* Replace the earlier standby background/noise presentation with a layered
+   static texture, scan lines, soft red spill, and occasional horizontal roll. */
+.singer-standby-mode {
+  overflow: hidden;
+  background: #000;
+}
+
+.standby-view {
+  position: fixed;
+  inset: 70px 0 0;
+  min-height: calc(100vh - 70px);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  isolation: isolate;
+  background: #030303;
+}
+
+.standby-view::before {
+  content: "";
+  position: absolute;
+  z-index: -4;
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 38%, rgba(116, 0, 0, .22), transparent 48%),
+    linear-gradient(180deg, rgba(255,255,255,.025), transparent 20%, rgba(0,0,0,.16));
+  pointer-events: none;
+}
+
+.standby-noise {
+  position: absolute;
+  z-index: -3;
+  inset: -8%;
+  pointer-events: none;
+  opacity: .23;
+  background-image: url("../img/karaoke_static_noise.jpg");
+  background-size: 118% 118%;
+  background-position: 50% 50%;
+  filter: grayscale(1) contrast(1.25) brightness(.54);
+  mix-blend-mode: screen;
+  animation:
+    karaokeStaticFrame .085s steps(2, end) infinite,
+    karaokeStaticZoom 2.4s steps(1, end) infinite;
+  will-change: transform, background-position, filter;
+}
+
+/* Fine grain overlay, independent of the reference image, so the noise keeps
+   moving even on devices that cache the background image aggressively. */
+.standby-noise::before {
+  content: "";
+  position: absolute;
+  inset: -25%;
+  opacity: .38;
+  background-image:
+    repeating-radial-gradient(circle at 37% 41%, rgba(255,255,255,.26) 0 1px, transparent 1px 3px),
+    repeating-radial-gradient(circle at 73% 62%, rgba(255,255,255,.18) 0 1px, transparent 1px 4px);
+  background-size: 5px 5px, 7px 7px;
+  animation: karaokeFineGrain .11s steps(2, end) infinite;
+}
+
+/* CRT scan lines and dark banding. */
+.standby-noise::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: .62;
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      rgba(255,255,255,.025) 0,
+      rgba(255,255,255,.025) 1px,
+      rgba(0,0,0,.08) 2px,
+      rgba(0,0,0,.08) 4px
+    ),
+    linear-gradient(
+      to bottom,
+      transparent 0 19%,
+      rgba(255,255,255,.13) 20%,
+      rgba(0,0,0,.24) 25%,
+      transparent 31% 48%,
+      rgba(255,255,255,.12) 50%,
+      rgba(0,0,0,.27) 58%,
+      transparent 64% 78%,
+      rgba(255,255,255,.09) 80%,
+      rgba(0,0,0,.24) 88%,
+      transparent 94%
+    );
+  animation: karaokeRollBand 3.2s linear infinite;
+}
+
+.standby-content {
+  position: relative;
+  z-index: 1;
+  width: min(1120px, 94vw);
+  max-height: calc(100vh - 92px);
+  padding: 22px 28px 32px;
+  text-align: center;
+}
+
+/* New wrapper added in karaoke-lyric-view.html. */
+.standby-logo-frame {
+  position: relative;
+  width: min(920px, 83vw);
+  margin: 0 auto 18px;
+  padding: 8px;
+  border: 2px solid #ff3232;
+  border-radius: 24px;
+  background: rgba(0,0,0,.9);
+  box-shadow:
+    0 0 4px #fff,
+    0 0 9px #ff5b5b,
+    0 0 17px #ff1c1c,
+    0 0 32px rgba(255,0,0,.92),
+    inset 0 0 5px rgba(255,255,255,.38),
+    inset 0 0 16px rgba(255,0,0,.36);
+  animation: karaokeNeonFrame 2.35s ease-in-out infinite;
+}
+
+.standby-logo-frame::before,
+.standby-logo-frame::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+.standby-logo-frame::before {
+  inset: -6px;
+  border: 1px solid rgba(255,55,55,.48);
+  filter: blur(2px);
+}
+
+.standby-logo-frame::after {
+  inset: -14px;
+  border: 1px solid rgba(255,0,0,.2);
+  filter: blur(8px);
+}
+
+.standby-logo {
+  display: block;
+  width: 100%;
+  max-height: 55vh;
+  object-fit: contain;
+  margin: 0;
+  border-radius: 16px;
+  background: #000;
+  box-shadow: inset 0 0 28px rgba(0,0,0,.6);
+}
+
+.standby-content .standby-icon {
+  margin-top: 4px;
+  font-size: clamp(34px, 3.8vw, 58px);
+  filter: drop-shadow(0 0 9px rgba(255,25,25,.48));
+  animation: standbyMicPulse 2s ease-in-out infinite;
+}
+
+.standby-content h1 {
+  margin: 8px 0 6px;
+  color: #fff;
+  font-size: clamp(27px, 3vw, 47px);
+  letter-spacing: .14em;
+  text-shadow: 0 2px 0 #000, 0 0 14px rgba(255,255,255,.08);
+}
+
+.standby-content p {
+  margin: 0;
+  color: #b8b8b8;
+  font-size: clamp(15px, 1.45vw, 22px);
+  text-shadow: 0 2px 0 #000;
+}
+
+@keyframes karaokeStaticFrame {
+  0%   { transform: translate3d(-1.4%, .8%, 0) scale(1.035); filter: grayscale(1) contrast(1.3) brightness(.50); }
+  20%  { transform: translate3d(.9%, -1.2%, 0) scale(1.045); filter: grayscale(1) contrast(1.15) brightness(.58); }
+  40%  { transform: translate3d(-.6%, 1.4%, 0) scale(1.025); filter: grayscale(1) contrast(1.42) brightness(.48); }
+  60%  { transform: translate3d(1.3%, .1%, 0) scale(1.04); filter: grayscale(1) contrast(1.22) brightness(.61); }
+  80%  { transform: translate3d(-1%, -1.3%, 0) scale(1.03); filter: grayscale(1) contrast(1.35) brightness(.52); }
+  100% { transform: translate3d(.5%, .9%, 0) scale(1.045); filter: grayscale(1) contrast(1.25) brightness(.56); }
+}
+
+@keyframes karaokeStaticZoom {
+  0%, 22%  { background-position: 50% 50%; background-size: 118% 118%; }
+  23%, 46% { background-position: 46% 53%; background-size: 124% 121%; }
+  47%, 70% { background-position: 54% 47%; background-size: 115% 127%; }
+  71%, 100%{ background-position: 49% 51%; background-size: 121% 116%; }
+}
+
+@keyframes karaokeFineGrain {
+  0%   { transform: translate(-2%, 1%); }
+  25%  { transform: translate(1%, -2%); }
+  50%  { transform: translate(2%, 2%); }
+  75%  { transform: translate(-1%, -1%); }
+  100% { transform: translate(-2%, 1%); }
+}
+
+@keyframes karaokeRollBand {
+  0%   { transform: translateY(-12%); }
+  100% { transform: translateY(12%); }
+}
+
+@keyframes karaokeNeonFrame {
+  0%, 100% {
+    border-color: #ff3838;
+    box-shadow:
+      0 0 4px #fff,
+      0 0 9px #ff5b5b,
+      0 0 17px #ff1c1c,
+      0 0 32px rgba(255,0,0,.92),
+      inset 0 0 5px rgba(255,255,255,.38),
+      inset 0 0 16px rgba(255,0,0,.36);
+  }
+  48% {
+    border-color: #ff7a7a;
+    box-shadow:
+      0 0 5px #fff,
+      0 0 13px #ff7373,
+      0 0 26px #ff1f1f,
+      0 0 44px rgba(255,0,0,1),
+      inset 0 0 8px rgba(255,255,255,.48),
+      inset 0 0 22px rgba(255,0,0,.48);
+  }
+  50% {
+    opacity: .93;
+  }
+  52% {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 720px) {
+  .standby-logo-frame {
+    width: min(92vw, 920px);
+    border-radius: 17px;
+    padding: 5px;
+  }
+
+  .standby-logo {
+    max-height: 45vh;
+    border-radius: 11px;
+  }
+
+  .standby-content {
+    padding-inline: 14px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .standby-noise,
+  .standby-noise::before,
+  .standby-noise::after,
+  .standby-logo-frame {
+    animation: none !important;
+  }
+}
+
+/* ========================================================================== */
+/* KARAOKE VIEW UPDATE — STRONG TV STATIC, GUIDANCE MODES, CUSTOM SCROLLBAR   */
+/* ========================================================================== */
+
+/* Hide the browser scrollbar. The custom track below remains visible. */
+html {
+  scrollbar-width: none;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}
+
+/* Smaller idle artwork while retaining the neon frame. */
+.standby-logo-frame {
+  width: min(730px, 68vw);
+  margin-bottom: 14px;
+}
+
+.standby-logo {
+  max-height: 43vh;
+}
+
+/* Stronger, faster and more visible multi-layer TV static. */
+.standby-noise {
+  inset: -14%;
+  opacity: .58;
+  background-size: 145% 145%;
+  filter: grayscale(1) contrast(1.75) brightness(.82);
+  mix-blend-mode: screen;
+  animation:
+    karaokeStaticFrameAdvanced .055s steps(2, jump-none) infinite,
+    karaokeStaticTextureJump .19s steps(2, end) infinite,
+    karaokeStaticFlicker .13s steps(2, end) infinite;
+}
+
+.standby-noise::before {
+  inset: -35%;
+  opacity: .74;
+  background-image:
+    repeating-radial-gradient(circle at 12% 19%, rgba(255,255,255,.70) 0 1px, rgba(0,0,0,.35) 1px 2px, transparent 2px 4px),
+    repeating-radial-gradient(circle at 77% 58%, rgba(255,255,255,.52) 0 1px, transparent 1px 3px),
+    repeating-linear-gradient(91deg, transparent 0 3px, rgba(255,255,255,.18) 4px, transparent 5px 8px);
+  background-size: 4px 4px, 7px 7px, 11px 11px;
+  mix-blend-mode: screen;
+  animation:
+    karaokeFineGrainAdvanced .045s steps(2, end) infinite,
+    karaokeFineGrainScale .31s steps(2, end) infinite;
+}
+
+.standby-noise::after {
+  opacity: .82;
+  background:
+    repeating-linear-gradient(to bottom, rgba(255,255,255,.11) 0 1px, rgba(0,0,0,.15) 2px 5px),
+    linear-gradient(to bottom,
+      transparent 0 8%, rgba(255,255,255,.23) 9%, rgba(0,0,0,.42) 14%, transparent 18% 35%,
+      rgba(255,255,255,.18) 37%, rgba(0,0,0,.48) 44%, transparent 49% 66%,
+      rgba(255,255,255,.24) 68%, rgba(0,0,0,.5) 76%, transparent 81% 100%);
+  animation:
+    karaokeRollBandAdvanced 1.15s linear infinite,
+    karaokeHorizontalTear .22s steps(2, end) infinite;
+}
+
+@keyframes karaokeStaticFrameAdvanced {
+  0%   { transform: translate3d(-3%,  2%, 0) scale(1.06); }
+  14%  { transform: translate3d( 2%, -3%, 0) scale(1.10); }
+  28%  { transform: translate3d(-1%,  4%, 0) scale(1.04); }
+  42%  { transform: translate3d( 4%,  1%, 0) scale(1.08); }
+  56%  { transform: translate3d(-4%, -2%, 0) scale(1.05); }
+  70%  { transform: translate3d( 1%,  3%, 0) scale(1.11); }
+  84%  { transform: translate3d( 3%, -4%, 0) scale(1.06); }
+  100% { transform: translate3d(-2%,  1%, 0) scale(1.09); }
+}
+
+@keyframes karaokeStaticTextureJump {
+  0%   { background-position: 12% 8%; background-size: 145% 145%; }
+  20%  { background-position: 86% 24%; background-size: 172% 138%; }
+  40%  { background-position: 34% 88%; background-size: 132% 180%; }
+  60%  { background-position: 73% 57%; background-size: 188% 151%; }
+  80%  { background-position: 7% 72%; background-size: 154% 194%; }
+  100% { background-position: 51% 31%; background-size: 176% 142%; }
+}
+
+@keyframes karaokeStaticFlicker {
+  0%, 100% { opacity: .52; filter: grayscale(1) contrast(1.65) brightness(.76); }
+  25% { opacity: .68; filter: grayscale(1) contrast(2.05) brightness(.98); }
+  50% { opacity: .44; filter: grayscale(1) contrast(1.45) brightness(.68); }
+  75% { opacity: .72; filter: grayscale(1) contrast(1.9) brightness(.9); }
+}
+
+@keyframes karaokeFineGrainAdvanced {
+  0% { transform: translate(-5%, 3%); }
+  20% { transform: translate(4%, -6%); }
+  40% { transform: translate(-2%, 6%); }
+  60% { transform: translate(7%, 1%); }
+  80% { transform: translate(-6%, -3%); }
+  100% { transform: translate(3%, 5%); }
+}
+
+@keyframes karaokeFineGrainScale {
+  0%, 100% { background-size: 4px 4px, 7px 7px, 11px 11px; }
+  50% { background-size: 6px 6px, 4px 4px, 15px 9px; }
+}
+
+@keyframes karaokeRollBandAdvanced {
+  from { transform: translateY(-42%); }
+  to { transform: translateY(42%); }
+}
+
+@keyframes karaokeHorizontalTear {
+  0%, 100% { clip-path: inset(0 0 0 0); }
+  25% { clip-path: polygon(0 0,100% 0,100% 22%,3% 22%,3% 27%,100% 27%,100% 100%,0 100%); }
+  50% { clip-path: polygon(0 0,100% 0,100% 48%,0 48%,0 56%,96% 56%,96% 100%,0 100%); }
+  75% { clip-path: polygon(0 0,100% 0,100% 74%,5% 74%,5% 81%,100% 81%,100% 100%,0 100%); }
+}
+
+/* Guidance selector description. */
+.settings-help {
+  display: block;
+  margin-top: 10px;
+  color: #929292;
+  font-size: 12px;
+  line-height: 1.45;
+  text-transform: none;
+}
+
+.guidance-options button {
+  flex: 1 1 145px;
+}
+
+/* Normal Mode: remove inline word styling while retaining semantic section
+   colours supplied by the section classes below. */
+body[data-guidance="normal"] .singer-section-body,
+body[data-guidance="normal"] .singer-section-body * {
+  color: inherit !important;
+  background: transparent !important;
+  -webkit-text-fill-color: currentColor !important;
+  font-style: normal !important;
+  font-weight: inherit !important;
+  text-decoration: none !important;
+  text-shadow: none !important;
+}
+
+body[data-guidance="normal"] .singer-section.guidance-verse,
+body[data-guidance="normal"] .singer-section.guidance-default {
+  color: #f5f5f5;
+}
+
+body[data-guidance="normal"] .singer-section.guidance-chorus {
+  color: #67e35d;
+}
+
+body[data-guidance="normal"] .singer-section.guidance-bridge {
+  color: #65a7ff;
+}
+
+body[data-guidance="normal"] .singer-section.guidance-prechorus {
+  color: #bb83ff;
+}
+
+body[data-guidance="normal"] .singer-section.guidance-repeat,
+body[data-guidance="normal"] .singer-section.guidance-ending {
+  color: #ffd22e;
+}
+
+body[data-guidance="normal"] .singer-section.guidance-instrumental {
+  color: #2de3bd;
+}
+
+body[data-guidance="normal"] .singer-performance-cue,
+body[data-guidance="normal"] .singer-performance-cue * {
+  color: #2de3bd !important;
+  font-style: normal !important;
+  text-decoration: none !important;
+}
+
+/* Lyrics Pro deliberately leaves saved inline formatting untouched. */
+body[data-guidance="pro"] .singer-section-body {
+  color: #f5f5f5;
+}
+
+/* Advanced custom page scrollbar. */
+.karaoke-scroll-track {
+  position: fixed;
+  z-index: 2500;
+  top: 82px;
+  right: 7px;
+  bottom: 92px;
+  width: 13px;
+  padding: 2px;
+  border: 1px solid rgba(255,255,255,.13);
+  border-radius: 999px;
+  background: rgba(5,5,5,.72);
+  box-shadow: inset 0 0 8px rgba(0,0,0,.8), 0 0 14px rgba(0,0,0,.45);
+  opacity: .86;
+  transition: opacity .2s ease, transform .2s ease;
+  touch-action: none;
+}
+
+.karaoke-scroll-track.hidden-scrollbar {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(18px);
+}
+
+.karaoke-scroll-thumb {
+  position: relative;
+  width: 100%;
+  min-height: 52px;
+  border: 1px solid rgba(255,105,105,.9);
+  border-radius: inherit;
+  background: linear-gradient(180deg, #ff4242, #a40000 55%, #5c0000);
+  box-shadow: 0 0 8px rgba(255,0,0,.72), inset 0 0 5px rgba(255,255,255,.25);
+  cursor: grab;
+  will-change: transform;
+}
+
+.karaoke-scroll-thumb::after {
+  content: "";
+  position: absolute;
+  left: 3px;
+  right: 3px;
+  top: 50%;
+  height: 1px;
+  background: rgba(255,255,255,.75);
+  box-shadow: 0 -4px rgba(255,255,255,.42), 0 4px rgba(255,255,255,.42);
+}
+
+.scroll-thumb-dragging,
+.scroll-thumb-dragging * {
+  cursor: grabbing !important;
+  user-select: none !important;
+}
+
+@media (max-width: 720px) {
+  .standby-logo-frame {
+    width: min(78vw, 620px);
+  }
+
+  .standby-logo {
+    max-height: 35vh;
+  }
+
+  .karaoke-scroll-track {
+    right: 3px;
+    width: 10px;
+  }
+}
+
+/* ========================================================================== */
+/* KARAOKE VIEW V2 — GUARANTEED LIVE STATIC + COMPACT IDLE ARTWORK            */
+/* ========================================================================== */
+
+/* The canvas is animated by karaoke-lyric-view.js, so the static visibly moves
+   even on browsers/devices that throttle CSS background-position animation. */
+.standby-noise {
+  inset: 0;
+  opacity: 1;
+  background-image: url("../img/karaoke_static_noise.png");
+  background-size: cover;
+  background-position: center;
+  filter: grayscale(1) contrast(1.6) brightness(.82);
+  mix-blend-mode: normal;
+  animation: karaokeNoiseTextureDrift .7s steps(7, end) infinite;
+}
+
+.standby-static-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: .48;
+  image-rendering: pixelated;
+  mix-blend-mode: screen;
+  filter: contrast(1.7) brightness(1.2);
+  pointer-events: none;
+}
+
+/* Strong scanlines and rolling horizontal interference stay above the canvas. */
+.standby-noise::before {
+  inset: 0;
+  opacity: .56;
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      rgba(255,255,255,.08) 0 1px,
+      rgba(0,0,0,.16) 2px 4px
+    );
+  animation: karaokeScanlineCrawl .42s linear infinite;
+}
+
+.standby-noise::after {
+  opacity: .74;
+  background:
+    linear-gradient(
+      to bottom,
+      transparent 0 12%,
+      rgba(255,255,255,.26) 14%,
+      rgba(0,0,0,.52) 19%,
+      transparent 25% 48%,
+      rgba(255,255,255,.20) 51%,
+      rgba(0,0,0,.48) 57%,
+      transparent 63% 78%,
+      rgba(255,255,255,.18) 82%,
+      rgba(0,0,0,.46) 88%,
+      transparent 94%
+    );
+  animation: karaokeInterferenceRoll 1.25s linear infinite;
+}
+
+@keyframes karaokeNoiseTextureDrift {
+  0%   { background-position: 0% 0%; transform: scale(1.04) translate(0,0); }
+  14%  { background-position: 100% 17%; transform: scale(1.07) translate(-1.5%,1%); }
+  28%  { background-position: 11% 89%; transform: scale(1.05) translate(1%,-1.5%); }
+  42%  { background-position: 83% 43%; transform: scale(1.08) translate(-1%,2%); }
+  56%  { background-position: 28% 71%; transform: scale(1.04) translate(1.7%,-.5%); }
+  70%  { background-position: 66% 8%; transform: scale(1.07) translate(-.7%,-1.8%); }
+  84%  { background-position: 4% 52%; transform: scale(1.06) translate(1.3%,1.4%); }
+  100% { background-position: 100% 100%; transform: scale(1.04) translate(0,0); }
+}
+
+@keyframes karaokeScanlineCrawl {
+  from { transform: translateY(-4px); }
+  to   { transform: translateY(4px); }
+}
+
+@keyframes karaokeInterferenceRoll {
+  from { transform: translateY(-28%); }
+  to   { transform: translateY(28%); }
+}
+
+/* Smaller logo card, keeping the neon frame. */
+.standby-logo-frame {
+  width: min(610px, 58vw);
+  margin-bottom: 12px;
+}
+
+.standby-logo {
+  max-height: 34vh;
+}
+
+/* Make the custom scrollbar feel more premium and easier to grab. */
+.karaoke-scroll-track {
+  right: 8px;
+  top: 82px;
+  bottom: 82px;
+  width: 14px;
+  border: 1px solid rgba(255,255,255,.13);
+  background: rgba(5,5,5,.70);
+  box-shadow: inset 0 0 9px rgba(0,0,0,.8), 0 0 12px rgba(255,0,0,.08);
+  backdrop-filter: blur(8px);
+}
+
+.karaoke-scroll-thumb {
+  min-height: 58px;
+  border: 1px solid rgba(255,100,100,.92);
+  background: linear-gradient(180deg,#ff5050 0%,#bd0d16 48%,#670006 100%);
+  box-shadow: 0 0 11px rgba(255,0,0,.75), inset 0 0 5px rgba(255,255,255,.28);
+}
+
+@media (max-width: 900px) {
+  .standby-logo-frame {
+    width: min(660px, 72vw);
+  }
+  .standby-logo {
+    max-height: 31vh;
+  }
+}
+
+@media (max-width: 620px) {
+  .standby-logo-frame {
+    width: min(84vw, 520px);
+  }
+  .standby-logo {
+    max-height: 27vh;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .standby-static-canvas {
+    display: none;
+  }
+}
+
+/* ========================================================================== */
+/* KARAOKE STANDBY STATIC — LIVE CANVAS FIX                                   */
+/* ========================================================================== */
+/* The PNG is now only a faint analogue texture. The moving picture is created
+   by the continuously redrawn canvas in karaoke-lyric-view.js. */
+.singer-standby-mode .standby-noise {
+  isolation: isolate;
+  overflow: hidden;
+  background: #050505 !important;
+  filter: none !important;
+  animation: standbySignalFlicker 180ms steps(2, end) infinite !important;
+}
+
+/* Faint source texture: visible enough to add structure, but no longer the
+   dominant static layer. */
+.singer-standby-mode .standby-noise::before {
+  content: "";
+  position: absolute;
+  inset: -8%;
+  z-index: 1;
+  opacity: .12 !important;
+  background-image: url("../img/karaoke_static_noise.png") !important;
+  background-size: 118% 118% !important;
+  background-repeat: repeat !important;
+  mix-blend-mode: screen;
+  filter: grayscale(1) contrast(1.35) brightness(.68);
+  animation: standbyTextureJump 240ms steps(1, end) infinite !important;
+  pointer-events: none;
+}
+
+/* This is the actual moving television snow. */
+.singer-standby-mode .standby-static-canvas {
+  display: block !important;
+  position: absolute;
+  inset: -2%;
+  z-index: 2;
+  width: 104%;
+  height: 104%;
+  opacity: .64 !important;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  mix-blend-mode: screen;
+  filter: contrast(1.45) brightness(.78);
+  transform: translateZ(0);
+  will-change: contents, transform, opacity;
+  pointer-events: none;
+}
+
+/* Scanlines and a fast rolling tracking band sit above the generated snow. */
+.singer-standby-mode .standby-noise::after {
+  content: "";
+  position: absolute;
+  inset: -18% 0;
+  z-index: 3;
+  opacity: .46 !important;
+  background:
+    linear-gradient(
+      to bottom,
+      transparent 0 39%,
+      rgba(255,255,255,.24) 42%,
+      rgba(255,255,255,.08) 44%,
+      rgba(0,0,0,.52) 48%,
+      transparent 53% 100%
+    ),
+    repeating-linear-gradient(
+      to bottom,
+      rgba(255,255,255,.035) 0 1px,
+      rgba(0,0,0,.14) 2px 4px
+    ) !important;
+  animation: standbyTrackingRoll 1.05s linear infinite !important;
+  pointer-events: none;
+}
+
+/* Keeps the artwork/text readable without freezing or hiding the noise. */
+.singer-standby-mode .standby-content {
+  z-index: 5;
+  text-shadow: 0 2px 8px #000, 0 0 20px rgba(0,0,0,.95);
+}
+
+@keyframes standbyTextureJump {
+  0%   { transform: translate3d(-3%, -2%, 0) scale(1.04); background-position: 0 0; }
+  20%  { transform: translate3d(2%, 1%, 0) scale(1.07); background-position: 31px -17px; }
+  40%  { transform: translate3d(-1%, 3%, 0) scale(1.05); background-position: -46px 29px; }
+  60%  { transform: translate3d(3%, -1%, 0) scale(1.08); background-position: 68px 11px; }
+  80%  { transform: translate3d(-2%, 2%, 0) scale(1.06); background-position: -19px -55px; }
+  100% { transform: translate3d(1%, -3%, 0) scale(1.04); background-position: 44px 37px; }
+}
+
+@keyframes standbyTrackingRoll {
+  from { transform: translate3d(0, -44%, 0); }
+  to   { transform: translate3d(0, 44%, 0); }
+}
+
+@keyframes standbySignalFlicker {
+  0%, 100% { opacity: .92; }
+  50%      { opacity: 1; }
+}
+
+/* Do not disable the static canvas when reduced-motion is enabled: the singer
+   still needs a clear standby signal. The frame rate is already modest. */
+@media (prefers-reduced-motion: reduce) {
+  .singer-standby-mode .standby-static-canvas {
+    display: block !important;
+  }
+
+  .singer-standby-mode .standby-noise::before {
+    animation-duration: 650ms !important;
+  }
+
+  .singer-standby-mode .standby-noise::after {
+    animation-duration: 2.4s !important;
+  }
+}
+
+/* ========================================================================== */
+/* JULY 2026 — KARAOKE STANDBY BALANCE + HOST TEMPO VALUE FIX                 */
+/* ========================================================================== */
+
+/* Keep the animated snow present but stop it overpowering the standby logo. */
+.singer-standby-mode .standby-static-canvas {
+  opacity: .20 !important;
+  filter: contrast(1.28) brightness(.64) !important;
+  animation: standbyStaticBreath 10s ease-in-out infinite !important;
+}
+
+/* The PNG is now only a very faint texture underneath the live canvas. */
+.singer-standby-mode .standby-noise::before {
+  opacity: .055 !important;
+  filter: grayscale(1) contrast(1.15) brightness(.32) !important;
+}
+
+/* Scanlines/tracking remain visible without washing out the page. */
+.singer-standby-mode .standby-noise::after {
+  opacity: .15 !important;
+}
+
+/* Slow analogue signal breathing: subtle, not a flashing effect. */
+@keyframes standbyStaticBreath {
+  0%, 100% { opacity: .30; filter: contrast(1.22) brightness(.48); }
+  42%      { opacity: .40; filter: contrast(1.32) brightness(.57); }
+  58%      { opacity: .36; filter: contrast(1.28) brightness(.52); }
+}
+
+/* Added and removed at random intervals by karaoke-lyric-view.js. */
+.singer-standby-mode .standby-noise.standby-sync-roll::after {
+  animation: standbyOneOffSyncRoll .9s cubic-bezier(.2,.65,.25,1) 1 !important;
+  opacity: .34 !important;
+}
+
+.singer-standby-mode .standby-noise.standby-glitch-frame .standby-static-canvas {
+  transform: translate3d(10px, -2px, 0) scaleX(1.025) !important;
+  opacity: .42 !important;
+  filter: contrast(1.65) brightness(.72) !important;
+}
+
+.singer-standby-mode .standby-noise.standby-glitch-frame::after {
+  opacity: .30 !important;
+  transform: translate3d(-12px, 0, 0) !important;
+}
+
+@keyframes standbyOneOffSyncRoll {
+  0%   { transform: translate3d(0, -75%, 0); }
+  55%  { transform: translate3d(0, 8%, 0); }
+  72%  { transform: translate3d(0, 14%, 0); }
+  100% { transform: translate3d(0, 75%, 0); }
+}
+
+/* A restrained red pulse keeps the artwork feeling alive between singers. */
+.singer-standby-mode .standby-logo-frame {
+  animation: standbyLogoSignalPulse 4.8s ease-in-out infinite !important;
+}
+
+@keyframes standbyLogoSignalPulse {
+  0%, 100% {
+    box-shadow:
+      0 0 5px #ff3030,
+      0 0 14px rgba(255, 0, 0, .72),
+      0 0 30px rgba(255, 0, 0, .30),
+      inset 0 0 12px rgba(255, 0, 0, .18);
+  }
+  50% {
+    box-shadow:
+      0 0 8px #ff4545,
+      0 0 22px rgba(255, 0, 0, .88),
+      0 0 46px rgba(255, 0, 0, .42),
+      inset 0 0 18px rgba(255, 0, 0, .24);
+  }
+}
+
+/* Host view: style VALUE elements only. !important prevents older generic
+   summary-card rules later in the cascade from overriding these states. */
+.host-view-page #summaryTempo,
+.host-view-page #summaryCapo {
+  font-size: 23px !important;
+  line-height: 1 !important;
+  font-weight: 900 !important;
+}
+
+.host-view-page #summaryOriginalBpm {
+  font-size: 18px !important;
+  font-weight: 900 !important;
+}
+
+.host-view-page #summaryTempo.tempo-match {
+  color: #52ef70 !important;
+  text-shadow: 0 0 10px rgba(82, 239, 112, .20);
+}
+
+.host-view-page #summaryTempo.tempo-different {
+  color: #ffd43b !important;
+  text-shadow: 0 0 10px rgba(255, 212, 59, .18);
+}
+
+.host-view-page #summaryTempo.tempo-unknown {
+  color: inherit !important;
+  text-shadow: none;
+}
+
+.host-view-page #summaryOriginalBpm.original-bpm-different {
+  color: #ff4e58 !important;
+}
+
+.host-view-page #summaryOriginalBpm.original-bpm-match {
+  color: inherit !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .singer-standby-mode .standby-static-canvas {
+    animation-duration: 16s !important;
+  }
+
+  .singer-standby-mode .standby-logo-frame {
+    animation-duration: 8s !important;
+  }
+}
+/* ========================================================================== */
+/* LYRIC VIEW — STICKY HEADER/STATUS ORDER, LEGACY TOOLS, EXACT CHORD LAYOUT   */
+/* ========================================================================== */
+
+/* Keep the song header first and the shared status dashboard directly below
+   it. Both remain visible as one sticky stack while the lyrics scroll. */
+.host-sticky-stack {
+  position: sticky;
+  top: 0;
+  z-index: 80;
+  width: 100%;
+  background: #050505;
+  box-shadow: 0 7px 18px rgba(0,0,0,.54);
+}
+
+.host-sticky-stack .host-topbar {
+  position: relative;
+  top: auto;
+  z-index: 2;
+}
+
+/* The imported top-status stylesheet may position its component independently.
+   These scoped overrides keep it inside the sticky stack and inside the screen. */
+#topStatusContainer {
+  position: relative !important;
+  inset: auto !important;
+  z-index: 1 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow: visible !important;
+  padding: 0 12px 6px !important;
+  background: #050505;
+}
+
+#topStatusContainer > * {
+  position: relative !important;
+  inset: auto !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+}
+
+#topStatusContainer button,
+#topStatusContainer [role="button"] {
+  max-width: calc(100vw - 24px);
+}
+
+/* Keep the status expansion/collapse control comfortably inside the viewport. */
+#topStatusContainer button:last-child,
+#topStatusContainer [data-status-toggle],
+#topStatusContainer .top-status-toggle,
+#topStatusContainer .status-toggle {
+  right: 8px !important;
+  margin-right: 0 !important;
+}
+
+/* Song Info remains usable without dimming, blurring, or locking the lyrics. */
+.host-sidebar-backdrop {
+  display: none !important;
+  pointer-events: none !important;
+  backdrop-filter: none !important;
+}
+
+body.host-sidebar-open {
+  overflow: auto !important;
+}
+
+.host-sidebar-overlay {
+  z-index: 120 !important;
+}
+
+.host-sidebar-header {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: #0b0b0b;
+  border-bottom: 1px solid #333;
+}
+
+#sidebarCloseBtn {
+  flex: 0 0 42px;
+  position: relative;
+  z-index: 6;
+  border-color: #c32027;
+  background: #190809;
+}
+
+/* Second tools card for the older slave-lyrics display. */
+.legacy-lyrics-tool-card {
+  min-width: 0;
+}
+
+.legacy-lyrics-select {
+  width: 100%;
+  min-width: 0;
+  height: 38px;
+  padding: 7px 32px 7px 9px;
+  color: #f3f3f3;
+  background: #080808;
+  border: 1px solid #343434;
+  border-radius: 7px;
+  text-overflow: ellipsis;
+}
+
+.legacy-lyrics-status {
+  min-height: 14px;
+  margin: 0 !important;
+  color: #7ee889 !important;
+  font-size: 10px !important;
+}
+
+/* Preserve every space and line break created in lyricscreator.html. This stops
+   the browser from reflowing chord spacing differently on PC and tablet.
+   Long lines scroll horizontally rather than moving a chord away from its word. */
+.creator-rich-editor,
+.host-section-body {
+  white-space: pre !important;
+  overflow-x: auto !important;
+  overflow-y: visible;
+  overflow-wrap: normal !important;
+  word-break: normal !important;
+  tab-size: 4;
+  font-variant-ligatures: none;
+  font-kerning: none;
+  text-rendering: geometricPrecision;
+}
+
+.creator-rich-editor * ,
+.host-section-body * {
+  white-space: inherit;
+  font-variant-ligatures: none;
+}
+
+/* Do not let tablet-only rules silently reduce the saved section font size. */
+.host-lyrics-content {
+  font-size: calc(17px * var(--host-font-scale,1));
+}
+
+@media (max-width: 900px) {
+  .compact-control-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .legacy-lyrics-tool-card {
+    grid-column: auto;
+  }
+}
+
+@media (max-width: 699px) {
+  #topStatusContainer {
+    padding-inline: 6px !important;
+  }
+
+  .compact-control-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .compact-tools-card,
+  .legacy-lyrics-tool-card {
+    grid-column: auto;
+  }
+
+  .host-lyrics-content {
+    font-size: calc(17px * var(--host-font-scale,1));
+  }
+}
+
+/* ========================================================================== */
+/* AUGUST 2026 FIX — STICKY HEADER ORDER, STATUS WIDTH, EXACT CHORD POSITION   */
+/* ========================================================================== */
+
+/* top-statusbar.css is intentionally loaded BEFORE this stylesheet so these
+   page-specific rules take precedence. The host header is the first row and
+   the shared status dashboard is the second row in one sticky stack. */
+html,
+body.host-view-page {
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body.host-view-page {
+  overflow-y: visible !important;
+}
+
+.host-view-page .host-sticky-stack {
+  position: sticky !important;
+  top: 0 !important;
+  left: 0;
+  right: 0;
+  z-index: 1000 !important;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 100vw;
+  overflow: visible !important;
+  background: #050505;
+  border-bottom: 1px solid #242424;
+  box-shadow: 0 8px 20px rgba(0,0,0,.62);
+  transform: none !important;
+}
+
+.host-view-page .host-sticky-stack > .host-topbar {
+  position: relative !important;
+  inset: auto !important;
+  order: 1;
+  z-index: 3 !important;
+  flex: 0 0 auto;
+  width: 100%;
+  max-width: 100vw;
+  margin: 0;
+  transform: none !important;
+}
+
+.host-view-page .host-sticky-stack > #topStatusContainer {
+  position: relative !important;
+  inset: auto !important;
+  order: 2;
+  z-index: 2 !important;
+  flex: 0 0 auto;
+  width: 100% !important;
+  max-width: 100vw !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  padding: 4px 10px 7px !important;
+  overflow: hidden !important;
+  transform: none !important;
+  background: #050505;
+}
+
+/* The imported status component can add its own fixed/sticky wrappers.
+   Force every injected top-level dashboard wrapper to remain in our stack. */
+.host-view-page #topStatusContainer,
+.host-view-page #topStatusContainer > *,
+.host-view-page #topStatusContainer > * > * {
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.host-view-page #topStatusContainer > * {
+  position: relative !important;
+  inset: auto !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  transform: none !important;
+}
+
+/* Keep the dashboard's far-right expand button inside the tablet viewport. */
+.host-view-page #topStatusContainer button,
+.host-view-page #topStatusContainer [role="button"] {
+  flex-shrink: 0;
+  max-width: 100% !important;
+}
+
+.host-view-page #topStatusContainer button:last-child,
+.host-view-page #topStatusContainer [data-status-toggle],
+.host-view-page #topStatusContainer .top-status-toggle,
+.host-view-page #topStatusContainer .status-toggle,
+.host-view-page #topStatusContainer .dashboard-toggle {
+  position: relative !important;
+  inset: auto !important;
+  right: auto !important;
+  margin-left: auto !important;
+  margin-right: 2px !important;
+  transform: none !important;
+}
+
+/* Exact lyrics/chord positioning.
+   Saved spacing is treated as layout data. It must never wrap, collapse,
+   receive mobile text inflation, or use font ligatures/kerning differently. */
+.host-view-page .host-section-body {
+  display: block;
+  width: max-content;
+  min-width: 100%;
+  max-width: none;
+  white-space: pre !important;
+  overflow-wrap: normal !important;
+  word-break: normal !important;
+  hyphens: none !important;
+  tab-size: 4;
+  font-kerning: none !important;
+  font-variant-ligatures: none !important;
+  font-feature-settings: "kern" 0, "liga" 0, "clig" 0 !important;
+  letter-spacing: normal !important;
+  text-rendering: geometricPrecision;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+.host-view-page .host-section-body * {
+  white-space: inherit !important;
+  overflow-wrap: inherit !important;
+  word-break: inherit !important;
+  hyphens: inherit !important;
+  font-family: inherit !important;
+  font-size: inherit !important;
+  line-height: inherit !important;
+  font-kerning: none !important;
+  font-variant-ligatures: none !important;
+  font-feature-settings: "kern" 0, "liga" 0, "clig" 0 !important;
+  letter-spacing: normal !important;
+}
+
+/* Scroll the section horizontally instead of moving chords to another line. */
+.host-view-page .host-section-content,
+.host-view-page .host-section,
+.host-view-page .host-lyrics-content {
+  overflow-x: auto;
+  overflow-y: visible;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+}
+
+/* Use the same base scaling on desktop and tablets. Section-specific saved
+   font sizes still take precedence through the inline section style. */
+.host-view-page .host-lyrics-content {
+  font-size: calc(17px * var(--host-font-scale, 1)) !important;
+}
+
+@media (max-width: 900px) {
+  .host-view-page .host-sticky-stack > #topStatusContainer {
+    padding-inline: 6px !important;
+  }
+
+  .host-view-page .host-section-body {
+    width: max-content;
+    min-width: 100%;
+  }
+}

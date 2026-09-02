@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lyrics Viewer</title>
+  <link rel="stylesheet" href="css/lyrics-suite.css">
+  <link rel="stylesheet" href="../admin-new/css/top-statusbar.css">
+  <link rel="stylesheet" href="../admin-new/css/top-statusbar-session-tools.css">
+  <link rel="stylesheet" href="css/lyricsviewer-fixes.css">
+</head>
+<body class="library-page">
+  <header class="app-topbar lyricsviewer-topbar">
+    <button id="sidebarToggleBtn" class="btn ghost filters-toggle-btn" type="button" aria-expanded="true">
+      ☰ FILTERS
+    </button>
+
+    <div class="brand-block">
+      <strong>▣ LYRICS VIEWER</strong>
+      <span>Browse, search and open any song</span>
+    </div>
+
+    <a class="btn red create-song-btn" href="lyricscreator.html">
+      ＋ NEW LYRICS / CHORDS
+    </a>
+  </header>
+
+  <!-- TOP STATUS BAR / DASHBOARD -->
+  <div id="topStatusContainer" class="lyricsviewer-statusbar"></div>
+
+  <div id="libraryShell" class="library-shell">
+    <aside id="librarySidebar" class="library-sidebar">
+      <section class="panel compact">
+        <h3>VIEW MODE</h3>
+        <div class="segmented">
+          <button class="active" type="button">▤ List</button>
+          <button type="button" disabled>▦ Table</button>
+        </div>
+      </section>
+
+      <section class="panel compact sidebar-setlists-panel">
+        <a class="sidebar-primary-link" href="setlist-editor.html">☷ SETLISTS</a>
+
+        <label class="sidebar-sticky-toggle">
+          <span>★ Sticky Favourites</span>
+          <input id="stickyFavToggle" type="checkbox">
+        </label>
+      </section>
+
+      <section class="panel compact">
+        <h3>SEARCH</h3>
+        <div class="search-control">
+          <input id="searchInput" placeholder="Search songs, artists...">
+          <span>⌕</span>
+        </div>
+      </section>
+
+      <section class="panel compact filter-stack">
+        <div class="panel-title-row">
+          <h3>FILTERS</h3>
+          <button id="clearFiltersBtn" class="link-btn" type="button">Clear All</button>
+        </div>
+
+        <label>
+          SETLIST
+          <select id="setlistFilter">
+            <option value="">All Setlists / Songs</option>
+          </select>
+        </label>
+
+        <label>
+          ARTIST
+          <select id="artistFilter">
+            <option value="">All Artists</option>
+          </select>
+        </label>
+
+        <label>
+          KEY
+          <select id="keyFilter">
+            <option value="">All Keys</option>
+          </select>
+        </label>
+
+        <label>
+          STATUS
+          <select id="visibilityFilter">
+            <option value="">All Songs</option>
+            <option value="shown">Shown in public list</option>
+            <option value="hidden">Hidden from public list</option>
+          </select>
+        </label>
+
+        <label>
+          HAS CONTENT
+          <select id="contentFilter">
+            <option value="">Any content</option>
+            <option value="lyrics">Lyrics</option>
+            <option value="tabs">Tabs</option>
+          </select>
+        </label>
+      </section>
+
+      <section class="panel compact">
+        <h3>SORT BY</h3>
+        <select id="sortSelect">
+          <option value="title">Title A–Z</option>
+          <option value="artist">Artist A–Z</option>
+          <option value="recent">Recently updated</option>
+          <option value="bpm">BPM low–high</option>
+        </select>
+      </section>
+
+      <a class="btn full ghost sidebar-admin-btn" href="../admin.html">‹ GO TO ADMIN</a>
+      <button id="exportBtn" class="btn full ghost" type="button">⇧ EXPORT SONG LIST</button>
+    </aside>
+
+    <main class="library-main">
+      <section class="stats-grid">
+        <div>
+          <span>♫</span>
+          <small>TOTAL SONGS</small>
+          <strong id="statTotal">0</strong>
+        </div>
+        <div>
+          <span>★</span>
+          <small>FAVOURITES</small>
+          <strong id="statFavs">0</strong>
+        </div>
+        <div>
+          <span>▦</span>
+          <small>PUBLIC SONG LIST</small>
+          <strong id="statPublic">0</strong>
+        </div>
+        <div>
+          <span>☷</span>
+          <small>SETLISTS</small>
+          <strong id="statSetlists">0</strong>
+        </div>
+      </section>
+
+      <section class="song-table-panel">
+        <div class="table-toolbar">
+          <strong><span id="resultCount">0</span> songs found</strong>
+          <div class="toolbar-actions">
+            <button id="refreshBtn" class="icon-btn" type="button" title="Refresh">↻</button>
+          </div>
+        </div>
+
+        <div class="song-table-head">
+          <span>#</span>
+          <span></span>
+          <span>TITLE</span>
+          <span>ARTIST</span>
+          <span>KEY</span>
+          <span>BPM</span>
+          <span>ACTIONS</span>
+        </div>
+
+        <div id="songRows" class="song-rows">
+          <div class="loading-state">Loading songs…</div>
+        </div>
+      </section>
+    </main>
+
+    <nav id="alphabetNav" class="alphabet-nav" aria-label="Alphabet navigation"></nav>
+  </div>
+
+  <footer class="library-player-bar">
+    <div>
+      <strong>PLAY ANY SONG</strong>
+      <span id="selectedSongLabel">Select a song to preview</span>
+    </div>
+    <button id="prevSongBtn" type="button">◀◀</button>
+    <button id="playSelectedBtn" class="play" type="button">▶</button>
+    <button id="nextSongBtn" type="button">▶▶</button>
+    <a class="btn ghost" href="karaoke-lyric-view.html" target="_blank">OPEN SINGER VIEW</a>
+  </footer>
+
+  <script src="../firebase-projects.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="js/firebase-config.js"></script>
+  <script src="js/lyrics-common.js"></script>
+  <script src="../admin-new/js/top-statusbar.js" data-include="../admin-new/includes/top-statusbar.html"></script>
+  <script src="../admin-new/js/top-statusbar-session-tools.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      if (window.LK?.topStatus?.loadTopStatusBar) LK.topStatus.loadTopStatusBar();
+    });
+  </script>
+  <script src="js/lyricsviewer.js"></script>
+</body>
+</html>
