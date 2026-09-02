@@ -21,9 +21,18 @@
     "Other"
   ];
 
+  const DEFAULT_EVENT_TYPE_COLORS = {
+    "Live Karaoke": "#36a9e1",
+    "Roxanna": "#d96ce0",
+    "Solo": "#53c985",
+    "Texanna": "#f08a45",
+    "Other": "#a5adb3"
+  };
+
   let venues = [];
   let upcomingEvents = [];
   let eventTypes = [...DEFAULT_EVENT_TYPES];
+  let eventTypeColors = { ...DEFAULT_EVENT_TYPE_COLORS };
 
   let activeSessionControl = null;
   let activeSessionData = null;
@@ -44,6 +53,32 @@
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;");
+  }
+
+  function typeColor(type) {
+    return eventTypeColors[type] || DEFAULT_EVENT_TYPE_COLORS[type] || "#8ea3ad";
+  }
+
+  function hexToRgba(hex, alpha = 0.14) {
+    const clean = String(hex || "").replace("#", "");
+    if (!/^[0-9a-f]{6}$/i.test(clean)) return `rgba(142,163,173,${alpha})`;
+    const r = parseInt(clean.slice(0,2),16);
+    const g = parseInt(clean.slice(2,4),16);
+    const b = parseInt(clean.slice(4,6),16);
+    return `rgba(${r},${g},${b},${alpha})`;
+  }
+
+  function selectedActiveEventId() {
+    return (
+      activeSessionData?.eventId ||
+      activeSessionControl?.eventId ||
+      ""
+    );
+  }
+
+  function upcomingExcludingActive() {
+    const activeId = selectedActiveEventId();
+    return sortedUpcoming().filter(event => !activeId || event.id !== activeId);
   }
 
   function isPast(event) {
@@ -270,15 +305,28 @@
       });
   }
 
+  function lateDurationText(milliseconds) {
+    const totalMinutes = Math.max(1, Math.floor(Math.abs(milliseconds) / 60000));
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+
+    if (!hours) return `${totalMinutes}min${totalMinutes === 1 ? "" : "s"} late`;
+    if (!minutes) return `${hours}hr${hours === 1 ? "" : "s"} late`;
+    return `${hours}hr${hours === 1 ? "" : "s"} ${minutes}mins late`;
+  }
+
   function countdownText(target) {
     if (!(target instanceof Date) || Number.isNaN(target.getTime())) {
-      return "Time TBC";
+      return { text:"Time TBC", late:false };
     }
 
     const diff = target.getTime() - Date.now();
 
     if (diff <= 0) {
-      return "Starting now";
+      return {
+        text: `Starting Now (${lateDurationText(diff)})`,
+        late: true
+      };
     }
 
     const totalMinutes = Math.floor(diff / 60000);
@@ -286,15 +334,9 @@
     const hours = Math.floor((totalMinutes % 1440) / 60);
     const minutes = totalMinutes % 60;
 
-    if (days > 0) {
-      return `${days}d ${hours}h ${minutes}m`;
-    }
-
-    if (hours > 0) {
-      return `${hours}h ${minutes}m`;
-    }
-
-    return `${Math.max(1, minutes)}m`;
+    if (days > 0) return { text:`${days}d ${hours}h ${minutes}m`, late:false };
+    if (hours > 0) return { text:`${hours}h ${minutes}m`, late:false };
+    return { text:`${Math.max(1, minutes)}m`, late:false };
   }
 
   function getActiveSessionStartDate() {
@@ -315,8 +357,56 @@
     );
   }
 
+  function renderSystemSessionStatus() {
+    const label = $("statusLiveLabel");
+    const box = document.querySelector(".status-live-box");
+    const meta = $("statusLiveSessionMeta");
+    const venue = $("statusLiveVenue");
+    const started = $("statusLiveStarted");
+
+    const hasActiveSession =
+      !!activeSessionControl?.active &&
+      !!(activeSessionControl?.sessionId || activeSessionData?.id);
+
+    if (!hasActiveSession) {
+      meta?.classList.add("hidden");
+      box?.classList.remove("session-forced-live");
+      return;
+    }
+
+    const actualStart = getActiveSessionStartDate();
+
+    if (label) {
+      label.textContent = "● LIVE NOW!";
+      label.className = "live-now-status";
+    }
+
+    if (venue) {
+      venue.textContent =
+        activeSessionData?.venue ||
+        activeSessionControl?.venue ||
+        "Unknown Venue";
+    }
+
+    if (started) {
+      started.textContent = `Started: ${
+        actualStart
+          ? actualStart.toLocaleTimeString(undefined, {
+              hour:"2-digit",
+              minute:"2-digit",
+              hour12:false
+            })
+          : "--:--"
+      }`;
+    }
+
+    meta?.classList.remove("hidden");
+    box?.classList.add("session-forced-live");
+  }
+
   function renderVenueContextStatus() {
     const box = document.querySelector(".status-venue-context-box");
+    const contextLabel = $("statusVenueContextLabel");
     const dateEl = $("statusVenueDate");
     const timeEl = $("statusVenueTime");
     const venueEl = $("statusVenueLabel");
@@ -325,37 +415,22 @@
 
     if (!dateEl || !timeEl || !venueEl || !typeEl || !countdownEl) return;
 
-    const hasActiveSession =
-      !!activeSessionControl?.active &&
-      !!(activeSessionControl?.sessionId || activeSessionData?.id);
+    renderSystemSessionStatus();
 
-    if (hasActiveSession) {
-      const started = getActiveSessionStartDate();
-      const parts = datePartsFromDate(started || new Date());
-
-      dateEl.textContent = parts.date;
-      timeEl.textContent = parts.time;
-      venueEl.textContent =
-        activeSessionData?.venue ||
-        activeSessionControl?.venue ||
-        "Unknown Venue";
-      typeEl.textContent = getCurrentSessionType();
-      countdownEl.textContent = "● LIVE NOW";
-
-      box?.classList.add("session-active");
-      return;
-    }
-
-    box?.classList.remove("session-active");
-
-    const next = sortedUpcoming()[0] || null;
+    // Once a session starts, its linked event stops being the "Upcoming Gig".
+    // This box immediately advances to the next event.
+    const next = upcomingExcludingActive()[0] || null;
 
     if (!next) {
+      contextLabel && (contextLabel.textContent = "UPCOMING GIG:");
       dateEl.textContent = "-- ---";
       timeEl.textContent = "--:--";
       venueEl.textContent = "No upcoming gig";
       typeEl.textContent = "—";
+      typeEl.removeAttribute("style");
       countdownEl.textContent = "No upcoming event";
+      countdownEl.classList.remove("is-late");
+      box?.classList.remove("session-active");
       return;
     }
 
@@ -369,11 +444,25 @@
           time: next.startTime || "--:--"
         };
 
+    contextLabel && (contextLabel.textContent = "UPCOMING GIG:");
     dateEl.textContent = parts.date;
     timeEl.textContent = next.startTime || parts.time;
     venueEl.textContent = next.venue || "Venue TBC";
     typeEl.textContent = next.type || "Other";
-    countdownEl.textContent = countdownText(start);
+
+    const color = typeColor(next.type || "Other");
+    typeEl.style.color = color;
+    typeEl.style.borderColor = color;
+    typeEl.style.background = hexToRgba(color, .12);
+
+    const countdown = countdownText(start);
+    countdownEl.textContent = countdown.text;
+    countdownEl.classList.toggle("is-late", countdown.late);
+
+    box?.classList.toggle(
+      "session-active",
+      !!activeSessionControl?.active
+    );
   }
 
   function setSystemStatusLiveUi() {
@@ -382,7 +471,7 @@
     const button = $("liveCircleBtn");
 
     if (label) {
-      label.textContent = "● Live";
+      label.textContent = "● LIVE NOW!";
       label.classList.remove("offline-status");
       label.classList.add("live-status");
     }
@@ -420,6 +509,13 @@
     if (field) return field;
     try { return sessionStorage.getItem("lkSelectedUpcomingEventId") || ""; } catch { return ""; }
   }
+
+  function selectedSessionEvent() {
+    const id = selectedUpcomingEventId();
+    return upcomingEvents.find(event => event.id === id) || null;
+  }
+
+  window.getSelectedSessionEvent = selectedSessionEvent;
 
   function eventSnapshotForSession(event) {
     if (!event) return null;
@@ -701,43 +797,38 @@
     return lines.join("\n");
   }
 
-  function prefillSessionFromEvent(eventId, { scroll = true } = {}) {
+  function selectSessionEvent(eventId, { updateNotes = true } = {}) {
     const event = upcomingEvents.find(item => item.id === eventId);
-    if (!event) return;
+    if (!event) return null;
 
     if ($("sessionEventIdInput")) {
       $("sessionEventIdInput").value = event.id || "";
     }
 
-    // Keep the event link outside the form too. This survives DOM/UI changes
-    // and gives the session lifecycle a reliable event ID when START PERFORMANCE
-    // is pressed.
+    if ($("sessionEventSelect")) {
+      $("sessionEventSelect").value = event.id || "";
+    }
+
     try {
       sessionStorage.setItem("lkSelectedUpcomingEventId", event.id || "");
     } catch {}
 
-    if ($("sessionTitleInput")) {
-      $("sessionTitleInput").value =
-        event.name ||
-        `${event.type || "Performance"}${event.venue ? ` at ${event.venue}` : ""}`;
-    }
-
-    if ($("venueInput")) $("venueInput").value = event.venue || "";
-
-    populateSessionTypeSelect(event.type || "");
-    if ($("sessionTypeInput") && event.type && eventTypes.includes(event.type)) {
-      $("sessionTypeInput").value = event.type;
-    }
-
-    if ($("sessionNotesInput")) {
+    if (updateNotes && $("sessionNotesInput")) {
       $("sessionNotesInput").value = buildSessionNotes(event);
-      $("sessionNotesInput").dispatchEvent(new Event("input", { bubbles: true }));
+      $("sessionNotesInput").dispatchEvent(new Event("input", { bubbles:true }));
     }
 
     renderSessionSuggestion(event);
+    updateStartButtonForEvent();
+    return event;
+  }
+
+  function prefillSessionFromEvent(eventId, { scroll = true } = {}) {
+    const event = selectSessionEvent(eventId);
+    if (!event) return;
 
     if (typeof window.logAdmin === "function") {
-      window.logAdmin(`Session prefilled from upcoming event: ${event.name || event.id}`);
+      window.logAdmin(`Performance linked to upcoming event: ${event.name || event.id}`);
     }
 
     if (scroll) {
@@ -747,13 +838,64 @@
 
   window.prefillSessionFromEvent = prefillSessionFromEvent;
 
+  function updateStartButtonForEvent() {
+    const button = $("startPerformanceBtn");
+    if (!button) return;
+
+    // Do not override sessions.js while a session is active.
+    if (activeSessionControl?.active) return;
+
+    const hasEvent = !!selectedUpcomingEventId();
+    button.disabled = !hasEvent;
+    button.title = hasEvent
+      ? "Start Performance linked to the selected Upcoming Event"
+      : "Choose an Upcoming Event first";
+  }
+
+  function renderSessionEventSelect() {
+    const select = $("sessionEventSelect");
+    if (!select) return;
+
+    const available = upcomingExcludingActive();
+    let selectedId = selectedUpcomingEventId();
+
+    if (selectedId && !available.some(event => event.id === selectedId)) {
+      selectedId = "";
+    }
+
+    if (!selectedId && available.length) {
+      selectedId = available[0].id;
+    }
+
+    select.innerHTML =
+      (available.length
+        ? ""
+        : `<option value="">No upcoming events available</option>`) +
+      available.map(event => `
+        <option value="${esc(event.id)}">
+          ${esc(formatDate(event.date))}${event.startTime ? ` ${esc(event.startTime)}` : ""}
+          — ${esc(event.name || "Untitled Event")}
+          ${event.venue ? ` — ${esc(event.venue)}` : ""}
+        </option>
+      `).join("");
+
+    if (selectedId) {
+      selectSessionEvent(selectedId, { updateNotes:false });
+    } else {
+      if ($("sessionEventIdInput")) $("sessionEventIdInput").value = "";
+      try { sessionStorage.removeItem("lkSelectedUpcomingEventId"); } catch {}
+      renderSessionSuggestion();
+      updateStartButtonForEvent();
+    }
+  }
+
   function renderSessionSuggestion(event = null) {
     const panel = $("sessionEventSuggestion");
     const body = $("sessionEventSuggestionBody");
     if (!panel || !body) return;
 
     if (!event) {
-      const next = sortedUpcoming()[0];
+      const next = upcomingExcludingActive()[0];
 
       if (!next) {
         panel.classList.remove("has-event");
@@ -764,7 +906,7 @@
       panel.classList.add("has-event");
       body.innerHTML = `
         <button type="button" data-prefill-session="${esc(next.id)}">
-          <strong>Use next gig: ${esc(next.name || "Untitled Event")}</strong>
+          <strong>Next gig selected: ${esc(next.name || "Untitled Event")}</strong>
           <span>
             ${esc(formatDate(next.date))}
             ${next.startTime ? ` • ${esc(next.startTime)}` : ""}
@@ -793,17 +935,38 @@
   function renderNextGigsStatus() {
     const box = $("statusNextGigs");
     if (!box) return;
-    const next = sortedUpcoming().slice(0, 3);
+
+    const next = upcomingExcludingActive().slice(0, 3);
+
     if (!next.length) {
-      box.innerHTML = `<button type="button" class="status-next-gig-empty">No upcoming gigs</button>`;
+      box.innerHTML = `
+        <button type="button" class="status-next-gig-empty">No upcoming gigs</button>
+        <button type="button" class="view-all-gigs-btn" data-view-all-gigs>VIEW ALL</button>
+      `;
       return;
     }
-    box.innerHTML = next.map(event => `
-      <button type="button" data-event-detail="${esc(event.id)}" title="View event details">
-        ${esc(formatDate(event.date))}${event.startTime ? ` ${esc(event.startTime)}` : ""}
-        • ${esc(event.name || "Untitled Event")}
-      </button>
-    `).join("");
+
+    box.innerHTML =
+      next.map(event => {
+        const color = typeColor(event.type || "Other");
+        return `
+          <button
+            type="button"
+            class="status-next-gig-row"
+            data-event-detail="${esc(event.id)}"
+            title="View event details">
+            <span class="status-next-gig-when">
+              ${esc(formatDate(event.date))}
+              ${event.startTime ? `<br>${esc(event.startTime)}` : ""}
+            </span>
+            <span class="status-next-gig-name">
+              ${esc(event.name || "Untitled Event")}
+              <small class="status-next-gig-venue">${esc(event.venue || "Venue TBC")}</small>
+            </span>
+          </button>
+        `;
+      }).join("") +
+      `<button type="button" class="view-all-gigs-btn" data-view-all-gigs>VIEW ALL</button>`;
   }
 
   function renderDashboardEvents() {
@@ -824,7 +987,10 @@
         </div>
         <div class="dashboard-event-venue">${esc(event.venue || "Venue TBC")}</div>
         <div class="dashboard-event-time">${esc(event.startTime || "Time TBC")}</div>
-        <div><span class="dashboard-event-type">${esc(event.type || "Other")}</span></div>
+        <div><span
+          class="dashboard-event-type"
+          style="--event-type-color:${esc(typeColor(event.type || "Other"))};--event-type-bg:${esc(hexToRgba(typeColor(event.type || "Other"), .13))}"
+        >${esc(event.type || "Other")}</span></div>
         <button type="button" class="dashboard-event-prefill-btn" data-prefill-session="${esc(event.id)}" title="Prefill Performance Session">＋</button>
       </article>
     `).join("");
@@ -866,7 +1032,7 @@
   function renderAllEventSurfaces() {
     renderNextGigsStatus();
     renderDashboardEvents();
-    renderSessionSuggestion();
+    renderSessionEventSelect();
   }
 
   async function seedEventTypesIfNeeded() {
@@ -919,7 +1085,16 @@
         : [];
 
       eventTypes = options.length ? [...new Set(options)] : [...DEFAULT_EVENT_TYPES];
+      const colors = doc.exists && doc.data()?.colors && typeof doc.data().colors === "object"
+        ? doc.data().colors
+        : {};
+      eventTypeColors = {
+        ...DEFAULT_EVENT_TYPE_COLORS,
+        ...colors
+      };
       populateSessionTypeSelect();
+      renderAllEventSurfaces();
+      renderVenueContextStatus();
     }, error => {
       console.warn("Event type options unavailable:", error);
       eventTypes = [...DEFAULT_EVENT_TYPES];
@@ -941,6 +1116,15 @@
       if (detail) {
         event.preventDefault();
         openUpcomingEventDetail(detail.dataset.eventDetail);
+        return;
+      }
+
+      if (event.target.closest("[data-view-all-gigs]")) {
+        event.preventDefault();
+        $("upcomingEventsDashboardPanel")?.scrollIntoView({
+          behavior:"smooth",
+          block:"start"
+        });
       }
     });
 
@@ -949,14 +1133,22 @@
       if (event.target === $("dashboardDetailModal")) closeUpcomingEventDetail();
     });
 
+    $("sessionEventSelect")?.addEventListener("change", event => {
+      const eventId = event.target.value || "";
+      if (eventId) selectSessionEvent(eventId);
+    });
+
     $("clearSessionEventSuggestionBtn")?.addEventListener("click", () => {
-      if ($("sessionEventIdInput")) $("sessionEventIdInput").value = "";
-      try { sessionStorage.removeItem("lkSelectedUpcomingEventId"); } catch {}
-      if ($("sessionTitleInput")) $("sessionTitleInput").value = "";
-      if ($("venueInput")) $("venueInput").value = "";
-      if ($("sessionNotesInput")) $("sessionNotesInput").value = "";
-      populateSessionTypeSelect("Live Karaoke");
-      renderSessionSuggestion();
+      const next = upcomingExcludingActive()[0] || null;
+      if (next) {
+        selectSessionEvent(next.id);
+      } else {
+        if ($("sessionEventIdInput")) $("sessionEventIdInput").value = "";
+        if ($("sessionEventSelect")) $("sessionEventSelect").value = "";
+        try { sessionStorage.removeItem("lkSelectedUpcomingEventId"); } catch {}
+        renderSessionSuggestion();
+        updateStartButtonForEvent();
+      }
     });
   }
 
