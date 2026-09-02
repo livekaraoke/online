@@ -5,6 +5,7 @@
   let setlists = [];
   let visibleSongs = [];
   let selectedIndex = -1;
+  let nextRunOrderItem = null;
   let songsUnsub = null;
   let setlistsUnsub = null;
 
@@ -376,6 +377,82 @@
     restoreScrollWhenReady();
   }
 
+  function terminalRunOrderStatus(status) {
+    return [
+      "played","abandoned","left","deleted","deletedbyhost","declined"
+    ].includes(String(status || "").toLowerCase());
+  }
+
+  function chooseNextRunOrderItem(items) {
+    if (!Array.isArray(items)) return null;
+
+    const active = items.filter(item =>
+      item?.songId &&
+      !terminalRunOrderStatus(item.status)
+    );
+
+    const playingIndex = active.findIndex(item =>
+      String(item.status || "").toLowerCase() === "playing"
+    );
+
+    if (playingIndex >= 0) {
+      return active[playingIndex + 1] || null;
+    }
+
+    return active[0] || null;
+  }
+
+  function updateRunOrderPlayer(items) {
+    nextRunOrderItem = chooseNextRunOrderItem(items);
+
+    const label = $("selectedSongLabel");
+    const meta = $("runOrderPlayerMeta");
+    const play = $("playSelectedBtn");
+
+    if (!nextRunOrderItem) {
+      if (label) label.textContent = "No song queued";
+      if (meta) meta.textContent = "Waiting for Run Order";
+      if (play) play.disabled = true;
+      return;
+    }
+
+    if (label) {
+      label.textContent =
+        nextRunOrderItem.songTitle ||
+        nextRunOrderItem.title ||
+        nextRunOrderItem.songId ||
+        "Untitled Song";
+    }
+
+    if (meta) {
+      const parts = [
+        nextRunOrderItem.artist || "",
+        nextRunOrderItem.singerName
+          ? `Requested by ${nextRunOrderItem.singerName}`
+          : ""
+      ].filter(Boolean);
+
+      meta.textContent = parts.join(" · ") || "Next performance";
+    }
+
+    if (play) play.disabled = false;
+  }
+
+  function refreshRunOrderPlayerFromTools() {
+    const items = window.LK?.sessionTools?.getRunOrder?.() || [];
+    updateRunOrderPlayer(items);
+  }
+
+  function openRunOrderPanel() {
+    if (window.LK?.sessionTools?.openRunOrderTab) {
+      LK.sessionTools.openRunOrderTab();
+      document.getElementById("topStatusBar")?.scrollIntoView({
+        behavior:"smooth",
+        block:"start"
+      });
+    }
+  }
+
   function openSong(id) {
     saveViewState();
     window.location.href = `lyricview.html?id=${encodeURIComponent(id)}`;
@@ -495,13 +572,26 @@
 
   $("refreshBtn").onclick = loadData;
   $("exportBtn").onclick = exportCSV;
-  $("prevSongBtn").onclick = () => selectRelative(-1);
-  $("nextSongBtn").onclick = () => selectRelative(1);
   $("playSelectedBtn").onclick = () => {
-    if (selectedIndex >= 0) {
-      openSong(visibleSongs[selectedIndex].firebaseId);
+    if (!nextRunOrderItem?.songId) return;
+
+    saveViewState();
+
+    const params = new URLSearchParams();
+    params.set("id", nextRunOrderItem.songId);
+
+    if (nextRunOrderItem.requestId) {
+      params.set("requestId", nextRunOrderItem.requestId);
     }
+
+    location.href = `lyricview.html?${params.toString()}`;
   };
+
+  $("openRunOrderBtn").onclick = openRunOrderPanel;
+
+  window.addEventListener("lk:runorder-updated", event => {
+    updateRunOrderPlayer(event.detail?.items || []);
+  });
 
   $("sidebarToggleBtn").onclick = () => {
     $("libraryShell").classList.toggle("sidebar-collapsed");
@@ -515,6 +605,8 @@
   syncSidebarButton();
 
   updateStickyOffsets();
+  setTimeout(refreshRunOrderPlayerFromTools, 350);
+  setTimeout(refreshRunOrderPlayerFromTools, 1000);
   window.addEventListener("resize", updateStickyOffsets);
   window.addEventListener("pagehide", saveViewState);
   window.addEventListener("beforeunload", saveViewState);
