@@ -2235,3 +2235,228 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   }, 1200);
 });
+
+
+/* ========================================================================
+   PHONE UX + PUBLIC QUEUE FINAL OVERRIDES — 2026-09-02
+   These definitions intentionally appear last because this historical file
+   contains older duplicate implementations above.
+   ======================================================================== */
+
+function updateCartCount() {
+  document.querySelectorAll(".cart-count").forEach(el => {
+    el.innerText = String(requestCart.length);
+  });
+
+  document.querySelectorAll(".signup-song-btn").forEach(btn => {
+    const key = btn.dataset.songKey;
+    if (!key) return;
+    btn.classList.toggle(
+      "in-cart",
+      requestCart.some(item => songKey(item) === key)
+    );
+  });
+
+  const quick = document.getElementById("quickSignupBar");
+  if (quick) {
+    quick.classList.toggle("has-items", requestCart.length > 0);
+  }
+}
+
+async function fetchPublicRunOrder() {
+  const sessionId = await getActiveSessionIdForQueue();
+  if (!sessionId) return [];
+
+  try {
+    const snap = await db
+      .collection("karaokeControl")
+      .doc("runOrder")
+      .get();
+
+    const data = snap.exists ? (snap.data() || {}) : {};
+    if (data.sessionId && data.sessionId !== sessionId) return [];
+
+    const terminal = new Set([
+      "played",
+      "completed",
+      "abandoned",
+      "left",
+      "deleted",
+      "deletedbyhost",
+      "declined"
+    ]);
+
+    return (Array.isArray(data.items) ? data.items : [])
+      .filter(item => !terminal.has(String(item.status || "").toLowerCase()));
+  } catch (error) {
+    console.error("Could not load Run Order:", error);
+    return [];
+  }
+}
+
+async function fetchPendingPublicRequests() {
+  const sessionId = await getActiveSessionIdForQueue();
+  if (!sessionId) return [];
+
+  try {
+    const snap = await db
+      .collection("publicSongRequests")
+      .where("sessionId", "==", sessionId)
+      .get();
+
+    const pendingStatuses = new Set([
+      "",
+      "pending",
+      "active",
+      "waiting",
+      "requested"
+    ]);
+
+    return snap.docs
+      .map(doc => ({ id:doc.id, ...(doc.data() || {}) }))
+      .filter(item =>
+        pendingStatuses.has(String(item.status || "").toLowerCase())
+      )
+      .sort((a,b) => {
+        const ad = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : 0;
+        const bd = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : 0;
+        return ad - bd;
+      });
+  } catch (error) {
+    console.error("Could not load pending public requests:", error);
+    return [];
+  }
+}
+
+function publicQueueRow(item, index, playing = false) {
+  return `
+    <div class="queue-row session-request-row public-run-row${playing ? " is-playing" : ""}">
+      <div class="queue-number-pill">${index + 1}</div>
+      <div class="queue-song-cell">
+        <strong>${escapeHTML(item.songTitle || item.title || "Untitled Song")}</strong>
+        <span>${escapeHTML(formatArtistName(item.artist || item.songArtist || ""))}</span>
+        ${playing ? `<small class="queue-playing-label">● PLAYING NOW</small>` : ""}
+      </div>
+      <span class="queue-singer-name">${escapeHTML(item.singerName || "Host")}</span>
+    </div>
+  `;
+}
+
+async function renderQueuePanel() {
+  const box = document.getElementById("queuePanelContent");
+  if (!box) return;
+
+  box.innerHTML = `<p class="queue-empty">Loading live queue...</p>`;
+
+  const [runOrder, pendingRequests] = await Promise.all([
+    fetchPublicRunOrder(),
+    fetchPendingPublicRequests()
+  ]);
+
+  const runRows = runOrder.map((item,index) =>
+    publicQueueRow(
+      item,
+      index,
+      String(item.status || "").toLowerCase() === "playing"
+    )
+  ).join("");
+
+  const pendingRows = pendingRequests.map((item,index) => `
+    <div class="queue-row session-request-row pending-public-row">
+      <div class="queue-number-pill">${index + 1}</div>
+      <div class="queue-song-cell">
+        <strong>${escapeHTML(item.songTitle || item.title || "Untitled Song")}</strong>
+        <span>${escapeHTML(formatArtistName(item.songArtist || item.artist || ""))}</span>
+      </div>
+      <span class="queue-singer-name">${escapeHTML(item.singerName || item.name || "Singer")}</span>
+    </div>
+  `).join("");
+
+  const unsentRows = requestCart.map(item => `
+    <div class="queue-row session-request-row pending-cart-row">
+      <div class="queue-number-pill">+</div>
+      <div class="queue-song-cell">
+        <strong>${escapeHTML(item.title)}</strong>
+        <span>${escapeHTML(formatArtistName(item.artist))}${item.year ? " • " + escapeHTML(item.year) : ""}</span>
+      </div>
+      <button class="queue-remove-btn" type="button"
+        onclick="removeSongFromCart('${escapeHTML(songKey(item))}'); renderQueuePanel();">×</button>
+    </div>
+  `).join("");
+
+  box.innerHTML = `
+    <section class="public-queue-section">
+      <h3 class="public-queue-section-title">CURRENT PERFORMANCE ORDER</h3>
+      <p class="public-queue-section-subtitle">Songs already accepted by the host.</p>
+      ${runRows || `<p class="queue-empty">No songs have been added to the performance order yet.</p>`}
+    </section>
+
+    <section class="public-queue-section">
+      <h3 class="public-queue-section-title">PENDING REQUESTS</h3>
+      <p class="public-queue-section-subtitle">Waiting for the host to accept.</p>
+      ${pendingRows || `<p class="queue-empty">No pending singer requests.</p>`}
+    </section>
+
+    ${
+      unsentRows
+        ? `<section class="public-queue-section">
+             <h3 class="public-queue-section-title">YOUR UNSENT SELECTIONS</h3>
+             ${unsentRows}
+             <button class="queue-signup-submit" type="button" onclick="openSignupModal()">SIGN UP TO SING</button>
+           </section>`
+        : ""
+    }
+  `;
+}
+
+function switchBottomTab(tab) {
+  if (tab !== "queue") return;
+
+  document.getElementById("queuePanel")?.classList.remove("hidden");
+  setBottomTabActive("queue");
+  renderQueuePanel();
+}
+
+function closeBottomPanels() {
+  document.getElementById("queuePanel")?.classList.add("hidden");
+  setBottomTabActive("songlist");
+}
+
+function setBottomTabActive(tab) {
+  const buttons = document.querySelectorAll(".bottom-tabs button");
+  buttons.forEach(button => button.classList.remove("active"));
+
+  if (tab === "queue") {
+    document.querySelector(".bottom-tab-queue")?.classList.add("active");
+  } else if (tab === "info") {
+    document.querySelector(".bottom-tab-info")?.classList.add("active");
+  } else {
+    document.querySelector(".bottom-tab-songlist")?.classList.add("active");
+  }
+}
+
+/* Search-field mobile behavior:
+   - results are directly under the search box
+   - bring the search box to the top when the keyboard opens
+*/
+window.addEventListener("DOMContentLoaded", () => {
+  const input = document.getElementById("searchInput");
+  const wrap = input?.closest(".search-wrap");
+
+  if (input && wrap) {
+    input.addEventListener("focus", () => {
+      setTimeout(() => {
+        wrap.scrollIntoView({
+          behavior:"smooth",
+          block:"start"
+        });
+      }, 180);
+    });
+  }
+
+  updateCartCount();
+});
+
+window.renderQueuePanel = renderQueuePanel;
+window.switchBottomTab = switchBottomTab;
+window.closeBottomPanels = closeBottomPanels;
