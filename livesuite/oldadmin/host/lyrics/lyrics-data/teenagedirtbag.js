@@ -1,0 +1,146 @@
+window.songData = {
+  "id": "teeanagedirtbag",
+  "title": "teenagedirtbag",
+  "artist": "Wheatus",
+  "lyrics": [
+    {
+      "type": "note",
+      "text": "INTRO Instrumental (wait for signal)"
+    },
+    {
+      "type": "section",
+      "text": "VERSE 1"
+    },
+    {
+      "type": "verse",
+      "lines": [
+        "Her name is Noelle",
+        "I have a dream about her",
+        "She rings my bell",
+        "I got gym class in half an hour",
+        "Oh, how she rocks",
+        "In Keds and tube socks",
+        "But she doesn't know who I am",
+        "And she doesn't give a damn about me"
+      ]
+    },
+    {
+      "type": "section",
+      "text": "CHORUS"
+    },
+    {
+      "type": "chorus",
+      "lines": [
+        "'Cause I'm just a teenage dirtbag, baby",
+        "Yeah, I'm just a teenage dirtbag, baby",
+        "Listen to Iron Maiden, baby, with me, ooh"
+      ]
+    },
+    {
+      "type": "section-seperator"
+    },
+    {
+      "type": "note",
+      "text": "Short Instrumental (wait for signal)"
+    },
+    {
+      "type": "section",
+      "text": "VERSE 2"
+    },
+    {
+      "type": "verse",
+      "lines": [
+        "Her boyfriend's a dick",
+        "And he brings a gun to school",
+        "And he'd simply kick",
+        "My ass if he knew the truth",
+        "He lives on my block",
+        "And he drives an IROC",
+        "But he doesn't know who I am",
+        "And he doesn't give a damn about me"
+      ]
+    },
+    {
+      "type": "section",
+      "text": "CHORUS"
+    },
+    {
+      "type": "chorus",
+      "lines": [
+        "'Cause I'm just a teenage dirtbag, baby",
+        "Yeah, I'm just a teenage dirtbag, baby",
+        "Listen to Iron Maiden, baby, with me, ooh"
+      ]
+    },
+    {
+      "type": "section",
+      "text": "POST CHORUS"
+    },
+    {
+      "type": "chorusrepeat",
+      "lines": [
+        "Oh, yeah, dirtbag",
+        "No, she doesn't know what she's missin'",
+        "Oh, yeah, dirtbag",
+        "No, she doesn't know what she's missin'"
+      ]
+    },
+    {
+      "type": "section-seperator"
+    },
+    {
+      "type": "note",
+      "text": "Short Instrumental (wait for signal)"
+    },
+    {
+      "type": "section",
+      "text": "VERSE 3"
+    },
+    {
+      "type": "verse",
+      "lines": [
+        "Man, I feel like mold",
+        "It's prom night and I am lonely",
+        "Lo and behold",
+        "She's walkin' over to me",
+        "This must be fake",
+        "My lip starts to shake",
+        "How does she know who I am?",
+        "And why does she give a damn about me?"
+      ]
+    },
+    {
+      "type": "note",
+      "text": "(sung softly:)"
+    },
+    {
+      "type": "section",
+      "text": "CHORUS"
+    },
+    {
+      "type": "chorus",
+      "lines": [
+        "I've got two tickets to Iron Maiden, baby",
+        "Come with me Friday, don't say maybe",
+        "I'm just a teenage dirtbag, baby, like you"
+      ]
+    },
+    {
+      "type": "section",
+      "text": "POST CHORUS"
+    },
+    {
+      "type": "chorusrepeat",
+      "lines": [
+        "Oh, yeah, dirtbag",
+        "No, she doesn't know what she's missin'",
+        "Oh, yeah, dirtbag",
+        "No, she doesn't know what she's missin'..."
+      ]
+    },
+    {
+      "type": "action",
+      "text": "[ END ]"
+    }
+  ]
+};
