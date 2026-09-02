@@ -17,6 +17,22 @@ let selectedPublicSetlist = null;
 let selectedPublicSongIds = null;
 let publicSetlistUnsubscribe = null;
 
+const PUBLIC_CATEGORY_DEFS = [
+  { key:"mostPopular", title:"MOST POPULAR", icon:"🔥" },
+  { key:"partyAnthems", title:"PARTY ANTHEMS", icon:"🎉" },
+  { key:"easyToSing", title:"EASY TO SING", icon:"🎤" },
+  { key:"newAdditions", title:"NEW ADDITIONS", icon:"🆕" }
+];
+
+let publicCategoryConfig = {
+  mostPopular:[],
+  partyAnthems:[],
+  easyToSing:[],
+  newAdditions:[]
+};
+let publicCategoryUnsubscribe = null;
+let publicCategoryOpenState = {};
+
 let liveSessionRequests = [];
 let liveRequestsUnsubscribe = null;
 let liveSessionUnsubscribe = null;
@@ -256,6 +272,7 @@ function startPublicSetlistListener() {
     .doc("publicSongList")
     .onSnapshot(async doc => {
       await resolvePublicSetlist(doc.exists ? (doc.data() || {}) : {});
+      await loadPublicCategoryConfig();
 
       // No page reload required: changing the Admin dropdown immediately
       // changes the public list for visitors who already have it open.
@@ -263,6 +280,46 @@ function startPublicSetlistListener() {
       renderSearchResults();
     }, error => {
       console.warn("Could not listen for Public Song List selection:", error);
+    });
+}
+
+function applyPublicCategoryConfig(data) {
+  const setlistId = selectedPublicSetlist?.id || "";
+  const cfg = setlistId && data?.setlists?.[setlistId]
+    ? data.setlists[setlistId]
+    : {};
+
+  PUBLIC_CATEGORY_DEFS.forEach(def => {
+    publicCategoryConfig[def.key] = Array.isArray(cfg[def.key])
+      ? cfg[def.key].filter(id =>
+          !(selectedPublicSongIds instanceof Set) ||
+          selectedPublicSongIds.has(id)
+        )
+      : [];
+  });
+}
+
+async function loadPublicCategoryConfig() {
+  try {
+    const snap = await db.collection("karaokeControl").doc("publicSongCategories").get();
+    applyPublicCategoryConfig(snap.exists ? (snap.data() || {}) : {});
+  } catch (error) {
+    console.warn("Could not load public song categories:", error);
+    applyPublicCategoryConfig({});
+  }
+}
+
+function startPublicCategoryListener() {
+  if (publicCategoryUnsubscribe) return;
+
+  publicCategoryUnsubscribe = db
+    .collection("karaokeControl")
+    .doc("publicSongCategories")
+    .onSnapshot(doc => {
+      applyPublicCategoryConfig(doc.exists ? (doc.data() || {}) : {});
+      renderPublicSongList();
+    }, error => {
+      console.warn("Could not listen for public song categories:", error);
     });
 }
 
@@ -550,7 +607,9 @@ window.toggleFullSongList = toggleFullSongList;
 async function initPublicSongList() {
   await loadPublicSetlistConfig();
   await reloadAll();
+  await loadPublicCategoryConfig();
   startPublicSetlistListener();
+  startPublicCategoryListener();
   const sessionInfo = await getCurrentSignupSession(false);
   if (!sessionInfo) { showRequestsClosedOnly(); return; }
   showRequestsOpenPage();
@@ -1958,26 +2017,7 @@ function addSongToCart(song, requestAnyway = false) {
 }
 
 function renderCategoryNav() {
-  const nav = document.getElementById("categoryNav");
-  if (!nav) return;
-  nav.innerHTML = "";
-
-  const visibleSections = sections.filter(section => section.visible !== false).sort(sortByOrderThenTitle).slice(0, 4);
-  visibleSections.forEach((section, index) => {
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "category-card";
-    btn.innerHTML = `<b>${CATEGORY_ICONS[index] || "🎵"}</b><strong>${escapeHTML(section.title)}</strong><span>${categorySubText(section.title, index)}</span>`;
-    btn.onclick = () => openCustomSection(section.id, index);
-    nav.appendChild(btn);
-  });
-
-  const fullBtn = document.createElement("button");
-  fullBtn.type = "button";
-  fullBtn.className = "category-card full-category-card";
-  fullBtn.innerHTML = `<b>★</b><strong>FULL SONG LIST</strong><span>All songs A–Z</span>`;
-  fullBtn.onclick = () => toggleFullSongList(true);
-  nav.appendChild(fullBtn);
+  // Feature category cards under Search were intentionally removed.
 }
 
 function openCustomSection(sectionId, index) {
@@ -2012,45 +2052,60 @@ function renderPublicSongList() {
 }
 
 function renderPublicCustomSections(container, search) {
-  sections.filter(section => section.visible !== false).sort(sortByOrderThenTitle).forEach((section, sectionIndex) => {
-    const items = getSectionSongs(section.id)
-      .map(getSectionSongDisplay)
-      .filter(song => song.visible !== false)
+  PUBLIC_CATEGORY_DEFS.forEach((def, sectionIndex) => {
+    const ids = publicCategoryConfig[def.key] || [];
+
+    const items = ids
+      .map(id => getLyricsSongById(id))
+      .filter(Boolean)
+      .filter(song =>
+        !(selectedPublicSongIds instanceof Set) ||
+        selectedPublicSongIds.has(song.id)
+      )
       .filter(song => !search || getSongText(song).includes(search));
 
-    if (!items.length && search) return;
-
     const sectionEl = document.createElement("section");
-    sectionEl.className = "song-section public-section custom-section";
-    sectionEl.id = `customSection-${sectionIndex}`;
+    sectionEl.className = "song-section public-section custom-section featured-public-category";
+    sectionEl.id = `publicCategory-${def.key}`;
 
     const heading = document.createElement("button");
     heading.type = "button";
-    heading.className = "section-red-header";
+    heading.className = "section-red-header featured-category-header";
 
     const body = document.createElement("div");
     body.className = "public-section-songs section-body-card";
 
-    const hasManualState = Object.prototype.hasOwnProperty.call(customSectionOpenStateV7, section.id);
-    const shouldOpen = !fullSongListOpen && (hasManualState ? customSectionOpenStateV7[section.id] : section.openByDefault);
+    const shouldOpen = publicCategoryOpenState[def.key] === true;
     body.style.display = shouldOpen ? "block" : "none";
 
-    heading.innerHTML = `<span>${escapeHTML(section.title)}</span><em>${shouldOpen ? "VIEW LESS" : "VIEW ALL"} →</em>`;
+    heading.innerHTML = `
+      <span><b class="featured-category-icon">${def.icon}</b> ${escapeHTML(def.title)}</span>
+      <em>${items.length} SONG${items.length === 1 ? "" : "S"} · ${shouldOpen ? "VIEW LESS" : "VIEW ALL"} →</em>
+    `;
 
     heading.onclick = () => {
-      fullSongListOpen = false;
-      const isOpen = body.style.display !== "none";
-      customSectionOpenStateV7[section.id] = !isOpen;
-      activeCustomSectionId = customSectionOpenStateV7[section.id] ? section.id : null;
+      publicCategoryOpenState[def.key] = !shouldOpen;
       renderPublicSongList();
+      setTimeout(() => {
+        document.getElementById(`publicCategory-${def.key}`)?.scrollIntoView({
+          behavior:"smooth",
+          block:"nearest"
+        });
+      }, 0);
     };
 
-    renderPlainSongList(body, items);
+    if (items.length) {
+      renderPlainSongList(body, items);
+    } else {
+      body.innerHTML = `<div class="public-category-empty">No songs assigned to this category yet.</div>`;
+    }
+
     sectionEl.appendChild(heading);
     sectionEl.appendChild(body);
     container.appendChild(sectionEl);
   });
 }
+
 
 function renderPublicFullList(container, search) {
   const fullSongs = getVisibleFullSongs().filter(song => !search || getSongText(song).includes(search));
