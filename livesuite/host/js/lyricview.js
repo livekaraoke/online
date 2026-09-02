@@ -25,6 +25,8 @@
   let currentSectionIndex = 0;
   let scrollTimer = null;
   let autoScrollOn = false;
+  let performanceRecordCreated = false;
+  let autoScrollEndHandled = false;
 
   // AUTOSCROLL:
   // 1.00× is now physically one-third of the old 1.00× pace.
@@ -775,25 +777,86 @@
     }
   }
 
+  async function findCurrentRunOrderItem(items) {
+    if (!Array.isArray(items)) return null;
+
+    if (requestId) {
+      const byRequest = items.find(item => item.requestId === requestId);
+      if (byRequest) return byRequest;
+    }
+
+    return items.find(item =>
+      item.songId === currentSongId &&
+      !["played","abandoned","left","deleted","deletedbyhost","declined"]
+        .includes(String(item.status || "").toLowerCase())
+    ) || null;
+  }
+
+  async function setCurrentRunOrderStatus(status) {
+    const { sessionId } = await getActiveSessionContext();
+    if (!sessionId) return null;
+
+    const runRef = db.collection("karaokeControl").doc("runOrder");
+    const runSnap = await runRef.get();
+    const runData = runSnap.exists ? (runSnap.data() || {}) : {};
+
+    if (runData.sessionId !== sessionId || !Array.isArray(runData.items)) {
+      return null;
+    }
+
+    const matched = await findCurrentRunOrderItem(runData.items);
+    if (!matched) return null;
+
+    const items = runData.items.map(item =>
+      item.id === matched.id
+        ? {
+            ...item,
+            status,
+            ...(status === "playing"
+              ? { playingAtMs: Date.now() }
+              : {}),
+            ...(status === "played"
+              ? { playedAtMs: Date.now() }
+              : {})
+          }
+        : item
+    );
+
+    await runRef.set({
+      sessionId,
+      items,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge:true });
+
+    return matched;
+  }
+
   async function recordCurrentSongPlayed() {
-    if (!currentSongId || !currentSong) return;
+    if (!currentSong || !currentSongId) return;
 
     const { sessionId } = await getActiveSessionContext();
     if (!sessionId) return;
 
-    const playedAt = firebase.firestore.Timestamp.now();
+    // Keep the current Run Order song visible and highlighted while scrolling.
+    await setCurrentRunOrderStatus("playing");
+
+    if (performanceRecordCreated) return;
+    performanceRecordCreated = true;
+
+    const startedAt = firebase.firestore.Timestamp.now();
     const performedId =
       `${currentSongId}_${Date.now()}_${Math.random().toString(36).slice(2,6)}`;
 
-    const playedRecord = {
+    const record = {
       songId: currentSongId,
       songTitle: currentSong.title || "",
       songArtist: currentSong.artist || "",
       artist: currentSong.artist || "",
       requestId: requestId || "",
       source: "lyricview-autoscroll",
-      playedAt,
-      createdAt: playedAt
+      startedAt,
+      playedAt: startedAt,
+      createdAt: startedAt
     };
 
     try {
@@ -801,60 +864,94 @@
         .doc(sessionId)
         .collection("performedSongs")
         .doc(performedId)
-        .set(playedRecord);
+        .set(record);
 
       await db.collection("performanceLogs").add({
         sessionId,
-        ...playedRecord,
+        ...record,
         performanceType: "Auto-scroll Play",
         performedBy: "host"
       });
-
-      const runRef = db.collection("karaokeControl").doc("runOrder");
-      const runSnap = await runRef.get();
-      const runData = runSnap.exists ? (runSnap.data() || {}) : {};
-
-      if (runData.sessionId === sessionId && Array.isArray(runData.items)) {
-        let matchedRequestId = "";
-
-        const items = runData.items.map(item => {
-          const sameRequest = requestId && item.requestId === requestId;
-          const sameSong =
-            !requestId &&
-            item.status !== "played" &&
-            item.songId === currentSongId;
-
-          if (sameRequest || sameSong) {
-            matchedRequestId = item.requestId || "";
-            return {
-              ...item,
-              status:"played",
-              playedAtMs:Date.now()
-            };
-          }
-
-          return item;
-        });
-
-        await runRef.set({
-          sessionId,
-          items,
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        }, { merge:true });
-
-        const linkedRequestId = requestId || matchedRequestId;
-        if (linkedRequestId) {
-          await db.collection("publicSongRequests").doc(linkedRequestId).set({
-            status:"completed",
-            playedAt,
-            updatedAt:firebase.firestore.FieldValue.serverTimestamp()
-          }, { merge:true });
-        }
-      }
     } catch (error) {
-      console.error("Could not record played song:", error);
+      console.error("Could not create performance record:", error);
     }
   }
+
+  async function finalizeCurrentSongPlayed() {
+    try {
+      const matched = await setCurrentRunOrderStatus("played");
+      const linkedRequestId = requestId || matched?.requestId || "";
+
+      if (linkedRequestId) {
+        const now = firebase.firestore.Timestamp.now();
+
+        await db.collection("publicSongRequests").doc(linkedRequestId).set({
+          status: "completed",
+          playedAt: now,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge:true });
+      }
+    } catch (error) {
+      console.error("Could not finalize played song:", error);
+    }
+  }
+
+  async function pauseCurrentRunOrderSong() {
+    try {
+      const { sessionId } = await getActiveSessionContext();
+      if (!sessionId) return;
+
+      const runRef = db.collection("karaokeControl").doc("runOrder");
+      const snap = await runRef.get();
+      const data = snap.exists ? (snap.data() || {}) : {};
+
+      if (data.sessionId !== sessionId || !Array.isArray(data.items)) return;
+
+      const matched = await findCurrentRunOrderItem(data.items);
+      if (!matched || String(matched.status || "").toLowerCase() !== "playing") {
+        return;
+      }
+
+      const items = data.items.map(item =>
+        item.id === matched.id
+          ? { ...item, status:"queued" }
+          : item
+      );
+
+      await runRef.set({
+        sessionId,
+        items,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge:true });
+    } catch (error) {
+      console.error("Could not pause Run Order song:", error);
+    }
+  }
+
+  function showEndNextSongButton(show) {
+    const button = $("endNextRunOrderSongBtn");
+    if (!button) return;
+    button.hidden = !show;
+  }
+
+  async function stopAutoScrollAtEnd() {
+    if (autoScrollEndHandled) return;
+    autoScrollEndHandled = true;
+
+    autoScrollOn = false;
+
+    if (scrollTimer) {
+      cancelAnimationFrame(scrollTimer);
+      scrollTimer = null;
+    }
+
+    $("autoScrollBtn")?.classList.remove("active");
+    if ($("autoScrollBtn")) $("autoScrollBtn").textContent = "▶";
+
+    await finalizeCurrentSongPlayed();
+    showEndNextSongButton(true);
+  }
+
 
   async function goToNextRunOrderSong() {
     const { sessionId } = await getActiveSessionContext();
@@ -911,13 +1008,18 @@
   function startAutoScroll() {
     const wasOff = !autoScrollOn;
     autoScrollOn = !autoScrollOn;
+
     $("autoScrollBtn").classList.toggle("active", autoScrollOn);
+    $("autoScrollBtn").textContent = autoScrollOn ? "Ⅱ" : "▶";
 
     if (wasOff && autoScrollOn) {
-      // PLAY means this song has been performed in the current session.
+      autoScrollEndHandled = false;
+      showEndNextSongButton(false);
+
+      // PLAY marks the matching Run Order item as "playing", keeping it
+      // visible and highlighted in the Top Status Bar.
       recordCurrentSongPlayed();
     }
-    $("autoScrollBtn").textContent = autoScrollOn ? "Ⅱ" : "▶";
 
     if (autoScrollOn) {
       let last = performance.now();
@@ -926,9 +1028,6 @@
       const tick = now => {
         if (!autoScrollOn) return;
 
-        // Keep scrolling tied to the browser's refresh cycle.
-        // Fractional accumulation avoids stop/start integer-pixel jumps
-        // at slower speeds while remaining stable at high speeds.
         const dt = Math.min(50, Math.max(0, now - last));
         last = now;
 
@@ -940,17 +1039,33 @@
             window.scrollBy(0, wholePixels);
             fractionalY -= wholePixels;
           }
+
+          const doc = document.documentElement;
+          const atBottom =
+            window.scrollY + window.innerHeight >=
+            Math.max(doc.scrollHeight, document.body.scrollHeight) - 3;
+
+          if (atBottom) {
+            stopAutoScrollAtEnd();
+            return;
+          }
         }
 
         scrollTimer = requestAnimationFrame(tick);
       };
 
       scrollTimer = requestAnimationFrame(tick);
-    } else if (scrollTimer) {
-      cancelAnimationFrame(scrollTimer);
-      scrollTimer = null;
+    } else {
+      if (scrollTimer) {
+        cancelAnimationFrame(scrollTimer);
+        scrollTimer = null;
+      }
+
+      // A manual pause means the song is no longer actively playing.
+      pauseCurrentRunOrderSong();
     }
   }
+
 
   function bindUi() {
     $("exitBtn").onclick = () => location.href = "lyricsviewer.html";
@@ -989,6 +1104,9 @@
     };
     if ($("nextRunOrderSongBtn")) {
       $("nextRunOrderSongBtn").onclick = goToNextRunOrderSong;
+    }
+    if ($("endNextRunOrderSongBtn")) {
+      $("endNextRunOrderSongBtn").onclick = goToNextRunOrderSong;
     }
     $("chordMinus").onclick = () => { chordShift--; applyChordTranspose(); };
     $("chordPlus").onclick = () => { chordShift++; applyChordTranspose(); };
