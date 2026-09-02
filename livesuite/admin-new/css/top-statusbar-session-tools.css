@@ -3157,3 +3157,103 @@
     max-height: 238px !important;
   }
 }
+
+
+/* FINAL POPUP SAFETY: modal styling is intentionally available both scoped
+   and unscoped, so future include-wrapper changes cannot turn it into raw
+   content at the bottom of the page. */
+.ts-run-details-modal {
+  position: fixed !important;
+  z-index: 2147483000 !important;
+  inset: 0 !important;
+  display: grid !important;
+  place-items: center !important;
+  padding: 16px !important;
+  background: rgba(0,0,0,.76) !important;
+  backdrop-filter: blur(3px) !important;
+}
+.ts-run-details-modal.hidden {
+  display: none !important;
+}
+.ts-run-details-box {
+  width: min(520px, 92vw) !important;
+  max-height: min(520px, 82vh) !important;
+  overflow: hidden !important;
+  border: 1px solid #4b626d !important;
+  border-radius: 10px !important;
+  background: #10171b !important;
+  box-shadow: 0 18px 52px rgba(0,0,0,.65) !important;
+}
+.ts-run-details-head {
+  display:flex !important;
+  align-items:center !important;
+  justify-content:space-between !important;
+  gap:10px !important;
+  padding:10px 11px !important;
+  border-bottom:1px solid #2d3a41 !important;
+  background:#151f24 !important;
+}
+.ts-run-details-head > div {
+  display:grid !important;
+  gap:2px !important;
+  min-width:0 !important;
+}
+.ts-run-details-head small {
+  color:#77868d !important;
+  font-size:7px !important;
+  font-weight:950 !important;
+}
+.ts-run-details-head strong {
+  overflow:hidden !important;
+  color:#fff !important;
+  font-size:13px !important;
+  font-weight:950 !important;
+  text-overflow:ellipsis !important;
+  white-space:nowrap !important;
+}
+#tsRunDetailsClose {
+  width:30px !important;
+  min-width:30px !important;
+  height:30px !important;
+  border:1px solid #4d5b62 !important;
+  border-radius:6px !important;
+  background:#20292e !important;
+  color:#fff !important;
+}
+.ts-run-details-body {
+  display:grid !important;
+  grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  gap:8px !important;
+  max-height:390px !important;
+  padding:11px !important;
+  overflow-y:auto !important;
+}
+.ts-run-detail-field {
+  min-width:0 !important;
+  padding:8px 9px !important;
+  border:1px solid #2d3b42 !important;
+  border-radius:6px !important;
+  background:#0b1216 !important;
+}
+.ts-run-detail-field span {
+  display:block !important;
+  margin-bottom:3px !important;
+  color:#738188 !important;
+  font-size:7px !important;
+  font-weight:950 !important;
+  text-transform:uppercase !important;
+}
+.ts-run-detail-field strong {
+  display:block !important;
+  overflow-wrap:anywhere !important;
+  color:#eef4f5 !important;
+  font-size:10px !important;
+  line-height:1.25 !important;
+}
+.ts-run-detail-empty {
+  grid-column:1/-1 !important;
+  padding:12px !important;
+  color:#89979e !important;
+  font-size:9px !important;
+  text-align:center !important;
+}
