@@ -42,8 +42,8 @@
         <div id="heroCurrentSong" class="hero-current-song"></div>
         <div id="heroComingUp" class="hero-coming-up"></div>
 
-        <a id="heroRequestBtn" href="livesuite/list/index.html" class="main-button hero-request-btn">
-          REQUEST / SIGN UP
+        <a id="heroRequestBtn" href="#" class="disabled-button hero-request-btn" aria-disabled="true">
+          SONG LIST LOCKED
         </a>
       </div>
 
@@ -99,10 +99,11 @@
       const db = firebase.firestore();
 
       let upcomingEvents = [];
-      let currentSession = {};
+      let currentSessionControl = {};
+      let currentPerformanceSession = {};
       let karaokeState = {};
-      let publicList = {};
       let runOrder = { items:[] };
+      let performanceSessionUnsub = null;
 
       function esc(value) {
         return String(value || "")
@@ -115,21 +116,61 @@
         return String(type || "").trim().toLowerCase() === "live karaoke";
       }
 
+      function currentSessionId() {
+        return String(
+          currentSessionControl.sessionId ||
+          currentSessionControl.activeSessionId ||
+          ""
+        ).trim();
+      }
+
+      function activeLiveKaraoke() {
+        return (
+          currentSessionControl.active === true &&
+          !!currentSessionId() &&
+          isLiveKaraokeType(
+            currentSessionControl.sessionType ||
+            currentSessionControl.type ||
+            currentPerformanceSession.sessionType ||
+            currentPerformanceSession.type ||
+            currentPerformanceSession.eventSnapshot?.type
+          )
+        );
+      }
+
+      function isOnBreak() {
+        return activeLiveKaraoke() && currentPerformanceSession.breakOpen === true;
+      }
+
       function eventStillUpcoming(event) {
         const eventStatus = String(event?.status || "").toLowerCase();
         const sessionStatus = String(event?.sessionStatus || "").toLowerCase();
 
         if (["cancelled","canceled","ended","completed","done"].includes(eventStatus)) return false;
         if (["active","live","started","ended","completed","done"].includes(sessionStatus)) return false;
-        if (event?.activeSessionId || event?.startedSessionId || event?.completedAt) return false;
+
+        // An event associated with the currently-active session is already the
+        // current gig, so do not show it as "next".
+        if (
+          event?.activeSessionId ||
+          event?.startedSessionId ||
+          event?.completedAt ||
+          (currentSessionControl.eventId && event.id === currentSessionControl.eventId)
+        ) {
+          return false;
+        }
 
         return true;
       }
 
       function eventDate(event) {
         if (!event?.date) return null;
-        const d = new Date(`${event.date}T${event.startTime || "00:00"}:00`);
-        return Number.isNaN(d.getTime()) ? null : d;
+
+        const date = new Date(
+          `${event.date}T${event.startTime || "00:00"}:00`
+        );
+
+        return Number.isNaN(date.getTime()) ? null : date;
       }
 
       function nextLiveKaraokeEvent() {
@@ -138,26 +179,10 @@
           .filter(eventStillUpcoming)
           .sort((a,b) =>
             `${a.date || "9999-12-31"}T${a.startTime || "23:59"}`
-              .localeCompare(`${b.date || "9999-12-31"}T${b.startTime || "23:59"}`)
+              .localeCompare(
+                `${b.date || "9999-12-31"}T${b.startTime || "23:59"}`
+              )
           )[0] || null;
-      }
-
-      function activeLiveKaraoke() {
-        return (
-          currentSession?.active === true &&
-          !!(currentSession.sessionId || currentSession.activeSessionId) &&
-          isLiveKaraokeType(currentSession.sessionType || currentSession.type)
-        );
-      }
-
-      function publicSongsUnlocked() {
-        const live = activeLiveKaraoke();
-
-        if (karaokeState?.songsOverride) {
-          return karaokeState.songsEnabled === true;
-        }
-
-        return live;
       }
 
       function formatEvent(event) {
@@ -180,11 +205,13 @@
         const diff = date.getTime() - Date.now();
 
         if (diff <= 0) {
-          const minsLate = Math.max(1, Math.floor(Math.abs(diff) / 60000));
-          if (minsLate < 60) return `Starting soon · ${minsLate} min late`;
-          const hrs = Math.floor(minsLate / 60);
-          const mins = minsLate % 60;
-          return `Starting soon · ${hrs}h${mins ? ` ${mins}m` : ""} late`;
+          const totalLate = Math.max(1, Math.floor(Math.abs(diff) / 60000));
+          const hours = Math.floor(totalLate / 60);
+          const mins = totalLate % 60;
+
+          return hours
+            ? `Starting now · ${hours}h${mins ? ` ${mins}m` : ""} late`
+            : `Starting now · ${totalLate}m late`;
         }
 
         const totalMins = Math.floor(diff / 60000);
@@ -194,7 +221,16 @@
 
         if (days) return `${days}d ${hours}h ${mins}m`;
         if (hours) return `${hours}h ${mins}m`;
-        return `${Math.max(1, mins)}m`;
+        return `${Math.max(1,mins)}m`;
+      }
+
+      function publicSongsUnlocked() {
+        // Admin dashboard's public-list switch is stored in karaoke/state.
+        if (karaokeState.songsOverride) {
+          return karaokeState.songsEnabled === true;
+        }
+
+        return activeLiveKaraoke();
       }
 
       function activeRunItems() {
@@ -209,13 +245,17 @@
           );
       }
 
-      function renderLiveSongs() {
+      function songArtist(item) {
+        return String(item?.artist || item?.songArtist || "").trim();
+      }
+
+      function renderLivePanel() {
         const hero = document.getElementById("heroLiveNow");
+        const venue = document.getElementById("heroLiveVenue");
         const current = document.getElementById("heroCurrentSong");
         const coming = document.getElementById("heroComingUp");
-        const venue = document.getElementById("heroLiveVenue");
 
-        if (!hero || !current || !coming) return;
+        if (!hero || !venue || !current || !coming) return;
 
         if (!activeLiveKaraoke()) {
           hero.classList.add("hidden");
@@ -223,23 +263,38 @@
         }
 
         hero.classList.remove("hidden");
-        venue.textContent = currentSession.venue || "Live Karaoke";
+        venue.textContent =
+          currentSessionControl.venue ||
+          currentPerformanceSession.venue ||
+          "Live Karaoke";
 
         const items = activeRunItems();
         const playing = items.find(item =>
           String(item.status || "").toLowerCase() === "playing"
         ) || null;
 
+        if (isOnBreak()) {
+          current.innerHTML = `
+            <span>LIVE PERFORMANCE</span>
+            <strong class="hero-break-status">☕ CURRENTLY ON BREAK</strong>
+            <small>The performance will continue shortly.</small>
+          `;
+        } else if (playing) {
+          current.innerHTML = `
+            <span>NOW PLAYING</span>
+            <strong>${esc(playing.songTitle || playing.title || "Song")}</strong>
+            <small>${esc(songArtist(playing))}</small>
+          `;
+        } else {
+          current.innerHTML = `
+            <span>LIVE PERFORMANCE</span>
+            <strong>Waiting for the next song</strong>
+          `;
+        }
+
         const next = items
           .filter(item => !playing || item.id !== playing.id)
           .slice(0,3);
-
-        current.innerHTML = playing
-          ? `<span>NOW PLAYING</span>
-             <strong>${esc(playing.songTitle || playing.title || "Song")}</strong>
-             <small>${esc(playing.singerName ? `Singer: ${playing.singerName}` : playing.artist || "")}</small>`
-          : `<span>LIVE PERFORMANCE</span>
-             <strong>Waiting for the next song</strong>`;
 
         coming.innerHTML = next.length
           ? `<span class="coming-label">COMING UP</span>` +
@@ -248,7 +303,7 @@
                 <b>${index + 1}</b>
                 <span>
                   <strong>${esc(item.songTitle || item.title || "Song")}</strong>
-                  <small>${esc(item.singerName || item.artist || "")}</small>
+                  <small>${esc(songArtist(item))}</small>
                 </span>
               </div>
             `).join("")
@@ -259,53 +314,38 @@
         const button = document.getElementById("songListBtn");
         const heroButton = document.getElementById("heroRequestBtn");
         const message = document.getElementById("songListAccessMessage");
-
         const allowed = activeLiveKaraoke() && publicSongsUnlocked();
         const url = "livesuite/list/index.html";
 
-        [button, heroButton].forEach(el => {
-          if (!el) return;
-
-          if (allowed) {
-            el.href = url;
-            el.classList.remove("disabled-button");
-            el.classList.add("main-button");
-            el.removeAttribute("aria-disabled");
-          } else {
-            el.href = "#";
-            el.classList.remove("main-button");
-            el.classList.add("disabled-button");
-            el.setAttribute("aria-disabled","true");
-          }
-        });
-
         if (button) {
+          button.href = allowed ? url : "#";
+          button.className = allowed ? "main-button" : "disabled-button";
           button.textContent = allowed
             ? "VIEW SONG LIST"
             : "🔒 SONG LIST LOCKED";
-
-          button.onclick = allowed
-            ? null
-            : event => event.preventDefault();
+          button.setAttribute("aria-disabled", allowed ? "false" : "true");
+          button.onclick = allowed ? null : event => event.preventDefault();
         }
 
         if (heroButton) {
+          heroButton.href = allowed ? url : "#";
+          heroButton.className = allowed
+            ? "main-button hero-request-btn"
+            : "disabled-button hero-request-btn";
           heroButton.textContent = allowed
             ? "REQUEST / SIGN UP"
             : "SONG LIST LOCKED";
-
-          heroButton.onclick = allowed
-            ? null
-            : event => event.preventDefault();
+          heroButton.setAttribute("aria-disabled", allowed ? "false" : "true");
+          heroButton.onclick = allowed ? null : event => event.preventDefault();
         }
 
         if (message) {
           if (!activeLiveKaraoke()) {
             message.textContent =
-              "Song requests become available during an active Live Karaoke session.";
+              "Song access becomes available during an active Live Karaoke session.";
           } else if (!publicSongsUnlocked()) {
             message.textContent =
-              "Live Karaoke is running, but the host has not opened the public song list yet.";
+              "Live Karaoke is running, but the host has the public song list locked.";
           } else {
             message.textContent =
               "Live Karaoke is running and song requests are open.";
@@ -313,7 +353,7 @@
         }
       }
 
-      function renderStatus() {
+      function renderPublicStatus() {
         const container = document.getElementById("liveStatus");
         if (!container) return;
 
@@ -323,33 +363,69 @@
               <span class="public-live-dot"></span>
               <div>
                 <strong>LIVE KARAOKE · LIVE NOW</strong>
-                <span>${esc(currentSession.venue || "Live Karaoke")}</span>
+                <span>${esc(
+                  currentSessionControl.venue ||
+                  currentPerformanceSession.venue ||
+                  "Live Karaoke"
+                )}</span>
               </div>
+              ${
+                isOnBreak()
+                  ? `<b class="public-break-chip">☕ CURRENTLY ON BREAK</b>`
+                  : ""
+              }
             </div>
           `;
         } else {
           const event = nextLiveKaraokeEvent();
 
-          if (!event) {
-            container.innerHTML = `
-              <div class="live-box countdown-line">
-                NEXT LIVE KARAOKE EVENT: <span>To be announced</span>
-              </div>
-            `;
-          } else {
-            container.innerHTML = `
+          container.innerHTML = event
+            ? `
               <div class="live-box next-live-karaoke-box">
                 <span class="next-live-label">NEXT LIVE KARAOKE EVENT</span>
                 <strong>${esc(event.venue || event.name || "Venue TBC")}</strong>
                 <span>${esc(formatEvent(event))}</span>
                 <b>${esc(countdown(event))}</b>
               </div>
+            `
+            : `
+              <div class="live-box countdown-line">
+                NEXT LIVE KARAOKE EVENT:
+                <span>To be announced</span>
+              </div>
             `;
-          }
         }
 
-        renderLiveSongs();
+        renderLivePanel();
         renderSongAccess();
+      }
+
+      function listenPerformanceSession() {
+        if (performanceSessionUnsub) {
+          performanceSessionUnsub();
+          performanceSessionUnsub = null;
+        }
+
+        currentPerformanceSession = {};
+        const id = currentSessionId();
+
+        if (!id || currentSessionControl.active !== true) {
+          renderPublicStatus();
+          return;
+        }
+
+        performanceSessionUnsub = db
+          .collection("performanceSessions")
+          .doc(id)
+          .onSnapshot(doc => {
+            currentPerformanceSession = doc.exists
+              ? { id:doc.id, ...(doc.data() || {}) }
+              : {};
+
+            renderPublicStatus();
+          }, error => {
+            console.error("Performance session listener failed:", error);
+          });
       }
 
       db.collection("upcomingEvents").onSnapshot(snapshot => {
@@ -357,32 +433,126 @@
           id:doc.id,
           ...(doc.data() || {})
         }));
-        renderStatus();
+        renderPublicStatus();
       }, console.error);
 
       db.collection("karaokeControl").doc("currentSession").onSnapshot(doc => {
-        currentSession = doc.exists ? (doc.data() || {}) : {};
-        renderStatus();
+        const previousId = currentSessionId();
+
+        currentSessionControl = doc.exists
+          ? (doc.data() || {})
+          : {};
+
+        if (previousId !== currentSessionId() || !performanceSessionUnsub) {
+          listenPerformanceSession();
+        } else {
+          renderPublicStatus();
+        }
       }, console.error);
 
       db.collection("karaoke").doc("state").onSnapshot(doc => {
         karaokeState = doc.exists ? (doc.data() || {}) : {};
-        renderStatus();
-      }, console.error);
-
-      db.collection("karaokeControl").doc("publicSongList").onSnapshot(doc => {
-        publicList = doc.exists ? (doc.data() || {}) : {};
-        renderStatus();
+        renderPublicStatus();
       }, console.error);
 
       db.collection("karaokeControl").doc("runOrder").onSnapshot(doc => {
-        runOrder = doc.exists ? (doc.data() || {}) : {items:[]};
-        renderLiveSongs();
+        runOrder = doc.exists ? (doc.data() || {}) : { items:[] };
+        renderLivePanel();
       }, console.error);
 
-      setInterval(renderStatus, 30000);
+      setInterval(renderPublicStatus, 30000);
     })();
   </script>
+
+  <!-- EVENTS -->
+  <section class="section dark-section">
+    <h2>EVENTS</h2>
+
+    <!-- WHYTE HARTE -->
+    <div class="event-card">
+      <h3>&#9679; WHYTE HARTE &#9679;</h3>
+      <h4>GANDOFFLI STREET,<br>ST PAUL'S BAY,<br>MALTA</h4>
+      <a href="https://maps.app.goo.gl/Mh7gijADn3maEofdA" target="_blank" class="maps-btn">
+        📍 OPEN IN GOOGLE MAPS
+      </a>
+      <br>
+      <p><b>EVERY WEDNESDAY</b></p>
+      <h5>&bull; 8:00PM &bull;</h5>
+      <span class="event-subheading">(Live Karaoke Night)</span>
+    </div>
+
+    <!-- OTHER EVENTS -->
+    <!--
+    <div class="event-card">
+      <h3>&#9679; WHYTE HARTE &#9679;</h3>
+      <h4>GANDOFFLI STREET, ST PAUL'S BAY</h4>
+
+      <p><b>EVERY WEDNESDAY</b></p>
+      <h5>&bull; 7:30PM &bull;</h5>
+      <p>Live Karaoke Night</p>
+    </div>
+    -->
+
+  </section>
+
+  <!-- SONG ACCESS -->
+  <section class="section">
+    <h2>SONG LIST ACCESS</h2>
+    <p id="songListAccessMessage">
+      Song access becomes available during an active Live Karaoke session.
+    </p>
+
+    <a href="#" class="disabled-button" id="songListBtn" aria-disabled="true">
+      🔒 SONG LIST LOCKED
+    </a>
+  </section>
+
+  <!-- COMMUNITY -->
+  <section class="section dark-section">
+    <h2>JOIN THE COMMUNITY</h2>
+    <p>
+      Stay updated, request songs, and join future sessions.
+    </p>
+    <!--<a href="#" class="main-button">-->
+    <!--
+    <a href="#" class="disabled-button">
+      JOIN WHATSAPP
+    </a>
+    -->
+
+    <h3 class="socials-title">
+      SOCIALS
+    </h3>
+
+    <div class="social-icons">
+      <a href="https://facebook.com/livekaraokemt" target="_blank">
+        <img src="img/fb-icon.png" alt="Facebook">
+      </a>
+      <a href="https://instagram.com/livekaraoke.mt" target="_blank">
+        <img src="img/insta-icon.png" alt="Instagram">
+      </a>
+      <!--
+      <a href="https://twitter.com/livekaraokemt" target="_blank">
+        <img src="img/x-icon.png" alt="Twitter">
+      </a>
+      -->
+      <a href="mailto:livekaraoke@protonmail.com">
+        <img src="img/mail-icon.png" alt="Email">
+      </a>
+    </div>
+
+  </section>
+  <br>
+
+  <!-- FOOTER -->
+  <footer>
+    <p>
+      LIVE KARAOKE © 2025
+    </p>
+    <p class="footer-small">
+      Live Music • Real People • Real Atmosphere
+    </p>
+  </footer>
 
 <script>
 
