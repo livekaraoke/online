@@ -83,40 +83,48 @@
   <div class="top-status-expanded host-status-expanded">
 
     <!-- =====================================================
-         ROW 1 — TWO COMPACT TABBED CARDS
-         LEFT:  SESSION STATUS / BREAK STATUS
-         RIGHT: NOTIFICATIONS / SESSION NOTES
+         ROW 1 — ONE FULL-WIDTH TABBED CARD
+         SESSION STATUS | NOTIFICATIONS | SESSION NOTES
+         Break Status now lives inside SESSION STATUS.
          ===================================================== -->
-    <div class="host-dashboard-top-row">
+    <section class="performance-info-card host-primary-tabs-card">
+      <div class="host-card-tabs host-primary-tabs" role="tablist" aria-label="Session information">
+        <button
+          id="tsSessionStatusTab"
+          class="host-card-tab active"
+          type="button"
+          role="tab"
+          aria-selected="true"
+          aria-controls="tsSessionStatusPane"
+          data-ts-info-tab="session"
+        >⌛ SESSION STATUS</button>
 
-      <!-- SESSION STATUS / BREAK STATUS -->
-      <section class="performance-info-card host-main-status-tabs-card">
-        <div class="host-card-tabs host-status-tabs" role="tablist" aria-label="Session and break status">
-          <button
-            id="tsSessionStatusTab"
-            class="host-card-tab active"
-            type="button"
-            role="tab"
-            aria-selected="true"
-            aria-controls="tsSessionStatusPane"
-            data-ts-status-tab="session"
-          >⌛ SESSION STATUS</button>
+        <button
+          id="tsNotificationsTab"
+          class="host-card-tab"
+          type="button"
+          role="tab"
+          aria-selected="false"
+          aria-controls="tsNotificationsPane"
+          data-ts-info-tab="notifications"
+        >🔔 NOTIFICATIONS</button>
 
-          <button
-            id="tsBreakStatusTab"
-            class="host-card-tab"
-            type="button"
-            role="tab"
-            aria-selected="false"
-            aria-controls="tsBreakStatusPane"
-            data-ts-status-tab="break"
-          >☕ BREAK STATUS</button>
-        </div>
+        <button
+          id="tsNotesTab"
+          class="host-card-tab"
+          type="button"
+          role="tab"
+          aria-selected="false"
+          aria-controls="tsNotesPane"
+          data-ts-info-tab="notes"
+        >📝 SESSION NOTES</button>
+      </div>
 
-        <!-- SESSION STATUS PANE -->
-        <div id="tsSessionStatusPane" class="host-tab-pane host-status-pane active" role="tabpanel">
+      <!-- SESSION STATUS includes Remaining, Public List and Break Status -->
+      <div id="tsSessionStatusPane" class="host-tab-pane host-primary-pane active" role="tabpanel">
+        <div class="host-session-combined-grid">
+
           <div class="host-session-status-grid">
-
             <div class="host-session-remaining-block">
               <div class="status-card-heading">
                 <span class="status-card-icon">⌛</span>
@@ -129,7 +137,9 @@
               </div>
 
               <span id="tsAdjustedEndTime" class="adjusted-end-time">Adjusted end —</span>
-              <small id="tsAdjustedRemainingHint" class="adjusted-remaining-hint">Scheduled duration from actual start</small>
+              <small id="tsAdjustedRemainingHint" class="adjusted-remaining-hint">
+                Scheduled duration from actual start
+              </small>
 
               <span id="tsScheduledWindow" class="hidden">No scheduled time</span>
               <strong id="tsRemainingTime" class="hidden">-</strong>
@@ -152,18 +162,13 @@
                 <strong id="tsDashPublicSetlist">Not selected</strong>
               </div>
             </div>
-
           </div>
-        </div>
 
-        <!-- BREAK STATUS PANE -->
-        <div id="tsBreakStatusPane" class="host-tab-pane host-status-pane" role="tabpanel" hidden>
-          <div id="tsBreakCard" class="host-break-tab-layout">
-
+          <div id="tsBreakCard" class="host-break-tab-layout host-session-break-inline">
             <div class="host-break-state-block">
               <div class="status-card-heading">
                 <span class="status-card-icon">☕</span>
-                <span>Break</span>
+                <span>Break Status</span>
               </div>
 
               <strong id="tsBreakStatusLabel" class="break-status-label">Not on break</strong>
@@ -201,54 +206,29 @@
 
             <p id="tsBreakActionMessage" class="break-action-message"></p>
           </div>
+
         </div>
-      </section>
+      </div>
 
-      <!-- NOTIFICATIONS / SESSION NOTES -->
-      <section class="performance-info-card notifications-card host-info-tabs-card">
-        <div class="host-card-tabs" role="tablist" aria-label="Notifications and session notes">
-          <button
-            id="tsNotificationsTab"
-            class="host-card-tab active"
-            type="button"
-            role="tab"
-            aria-selected="true"
-            aria-controls="tsNotificationsPane"
-            data-ts-info-tab="notifications"
-          >🔔 NOTIFICATIONS</button>
-
-          <button
-            id="tsNotesTab"
-            class="host-card-tab"
-            type="button"
-            role="tab"
-            aria-selected="false"
-            aria-controls="tsNotesPane"
-            data-ts-info-tab="notes"
-          >📝 SESSION NOTES</button>
+      <div id="tsNotificationsPane" class="host-tab-pane host-primary-pane" role="tabpanel" hidden>
+        <div id="tsNotificationsList" class="top-status-notifications-list workflow-notification-list">
+          <div class="top-status-empty">No notifications yet.</div>
         </div>
+      </div>
 
-        <div id="tsNotificationsPane" class="host-tab-pane active" role="tabpanel">
-          <div id="tsNotificationsList" class="top-status-notifications-list workflow-notification-list">
-            <div class="top-status-empty">No notifications yet.</div>
-          </div>
+      <div id="tsNotesPane" class="host-tab-pane host-primary-pane" role="tabpanel" hidden>
+        <textarea
+          id="tsSessionNotes"
+          class="top-status-session-notes host-tab-notes"
+          placeholder="Type session notes..."
+          aria-label="Session notes"
+          disabled
+        ></textarea>
+        <div class="session-notes-footer">
+          <span id="tsNotesSaveStatus">No active session</span>
         </div>
-
-        <div id="tsNotesPane" class="host-tab-pane" role="tabpanel" hidden>
-          <textarea
-            id="tsSessionNotes"
-            class="top-status-session-notes host-tab-notes"
-            placeholder="Type session notes..."
-            aria-label="Session notes"
-            disabled
-          ></textarea>
-          <div class="session-notes-footer">
-            <span id="tsNotesSaveStatus">No active session</span>
-          </div>
-        </div>
-      </section>
-
-    </div>
+      </div>
+    </section>
 
     <!-- =====================================================
          ROW 2 — TALLER LIVE WORKFLOW
@@ -290,5 +270,18 @@
 
   </div>
 
+  </div>
+
+  <div id="tsRunOrderDetailsModal" class="ts-run-details-modal hidden" role="dialog" aria-modal="true" aria-labelledby="tsRunDetailsTitle">
+    <div class="ts-run-details-box">
+      <div class="ts-run-details-head">
+        <div>
+          <small>RUN ORDER DETAILS</small>
+          <strong id="tsRunDetailsTitle">Song Request</strong>
+        </div>
+        <button id="tsRunDetailsClose" type="button" aria-label="Close details">✕</button>
+      </div>
+      <div id="tsRunDetailsBody" class="ts-run-details-body"></div>
+    </div>
   </div>
 </div>
