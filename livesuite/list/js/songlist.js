@@ -2460,3 +2460,68 @@ window.addEventListener("DOMContentLoaded", () => {
 window.renderQueuePanel = renderQueuePanel;
 window.switchBottomTab = switchBottomTab;
 window.closeBottomPanels = closeBottomPanels;
+
+
+/* ========================================================================
+   PUBLIC BREAK STATUS — 2026-09-02
+   ======================================================================== */
+let publicBreakSessionUnsubscribe = null;
+
+function setPublicBreakNotice(open) {
+  const notice = document.getElementById("publicBreakNotice");
+  if (!notice) return;
+
+  notice.classList.toggle("hidden", !open);
+}
+
+function listenPublicBreakStatus() {
+  db.collection("karaokeControl")
+    .doc("currentSession")
+    .onSnapshot(doc => {
+      const data = doc.exists ? (doc.data() || {}) : {};
+      const sessionId = String(
+        data.sessionId ||
+        data.activeSessionId ||
+        ""
+      ).trim();
+
+      if (publicBreakSessionUnsubscribe) {
+        publicBreakSessionUnsubscribe();
+        publicBreakSessionUnsubscribe = null;
+      }
+
+      if (data.active !== true || !sessionId) {
+        setPublicBreakNotice(false);
+        return;
+      }
+
+      publicBreakSessionUnsubscribe = db
+        .collection("performanceSessions")
+        .doc(sessionId)
+        .onSnapshot(sessionDoc => {
+          const session = sessionDoc.exists
+            ? (sessionDoc.data() || {})
+            : {};
+
+          setPublicBreakNotice(session.breakOpen === true);
+
+          // Keep an open Queue panel current during a break.
+          const queuePanel = document.getElementById("queuePanel");
+          if (
+            queuePanel &&
+            !queuePanel.classList.contains("hidden") &&
+            typeof renderQueuePanel === "function"
+          ) {
+            renderQueuePanel();
+          }
+        }, error => {
+          console.error("Could not listen for public break status:", error);
+          setPublicBreakNotice(false);
+        });
+    }, error => {
+      console.error("Could not listen for current public session:", error);
+      setPublicBreakNotice(false);
+    });
+}
+
+window.addEventListener("DOMContentLoaded", listenPublicBreakStatus);
