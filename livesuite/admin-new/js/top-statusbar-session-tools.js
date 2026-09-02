@@ -336,7 +336,12 @@
       );
     }
 
+    const changed = state.lastBreakOpen !== null && state.lastBreakOpen !== b.open;
     state.lastBreakOpen = b.open;
+
+    if (changed) {
+      renderRunOrder();
+    }
   }
 
   function renderBreakControls() {
@@ -570,12 +575,103 @@
     return Array.isArray(state.runOrder?.items) ? state.runOrder.items : [];
   }
 
+  function runOrderPlayingItem(items = queueItems()) {
+    return items.find(item =>
+      String(item?.status || "").toLowerCase() === "playing"
+    ) || null;
+  }
+
+  function requestForRunItem(item) {
+    if (!item?.requestId) return null;
+    return state.requests.find(request => request.id === item.requestId) || null;
+  }
+
+  function canLaunchRunOrderSong(items = queueItems()) {
+    return (
+      !!state.sessionId &&
+      !getBreakState().open &&
+      !runOrderPlayingItem(items)
+    );
+  }
+
+  function openRunOrderSong(itemId) {
+    const item = queueItems().find(entry => entry.id === itemId);
+    if (!item?.songId) return;
+
+    const params = new URLSearchParams();
+    params.set("id", item.songId);
+    if (item.requestId) params.set("requestId", item.requestId);
+
+    // Top Status Bar is used on both host/lyricsviewer.html and
+    // host/lyricview.html, so this relative path works in both.
+    location.href = `lyricview.html?${params.toString()}`;
+  }
+
+  function detailValue(label, value) {
+    const clean = String(value ?? "").trim();
+    if (!clean) return "";
+
+    return `
+      <div class="ts-run-detail-field">
+        <span>${esc(label)}</span>
+        <strong>${esc(clean)}</strong>
+      </div>
+    `;
+  }
+
+  function openRunOrderDetails(itemId) {
+    const item = queueItems().find(entry => entry.id === itemId);
+    if (!item) return;
+
+    const request = requestForRunItem(item);
+    const modal = $("tsRunOrderDetailsModal");
+    const body = $("tsRunDetailsBody");
+    const title = $("tsRunDetailsTitle");
+
+    if (!modal || !body || !title) return;
+
+    title.textContent =
+      item.songTitle ||
+      item.title ||
+      item.songId ||
+      "Song Request";
+
+    if (!request) {
+      body.innerHTML = `
+        ${detailValue("Song", item.songTitle || item.title || item.songId)}
+        ${detailValue("Artist", item.artist)}
+        ${detailValue("Added by", item.source === "manual" ? "Host" : item.singerName)}
+        <div class="ts-run-detail-empty">
+          This Run Order item was added manually and has no singer signup details.
+        </div>
+      `;
+    } else {
+      const rating = request.rating
+        ? `${request.rating}/5`
+        : "";
+
+      body.innerHTML = `
+        ${detailValue("Singer", request.singerName || request.name)}
+        ${detailValue("Visiting from", request.location)}
+        ${detailValue("Age range", request.ageRange)}
+        ${detailValue("Rating tonight", rating)}
+        ${detailValue("Song", request.songTitle || request.title || item.songTitle)}
+        ${detailValue("Artist", request.songArtist || request.artist || item.artist)}
+        ${detailValue("Comment / note", request.note)}
+      ` || `<div class="ts-run-detail-empty">No additional signup details.</div>`;
+    }
+
+    modal.classList.remove("hidden");
+  }
+
+  function closeRunOrderDetails() {
+    $("tsRunOrderDetailsModal")?.classList.add("hidden");
+  }
+
   function renderRunOrder() {
     const list = $("tsRunOrderList");
     if (!list) return;
 
-    // Played entries remain stored in Firestore/session history, but are no
-    // longer displayed in the live Run Order. The host only sees what is left.
     const terminalStatuses = new Set([
       "played",
       "abandoned",
@@ -589,7 +685,9 @@
       !terminalStatuses.has(String(item?.status || "").toLowerCase())
     );
 
-    if ($("tsRunOrderCount")) $("tsRunOrderCount").textContent = `(${items.length})`;
+    if ($("tsRunOrderCount")) {
+      $("tsRunOrderCount").textContent = `(${items.length})`;
+    }
 
     if (!state.sessionId) {
       list.innerHTML = `<div class="top-status-queue-empty">No active session.</div>`;
@@ -601,46 +699,75 @@
       return;
     }
 
-    list.innerHTML = items.map((item,index) => `
-      <div class="ts-run-order-row">
-        <div class="ts-run-index">${index + 1}</div>
-        <div class="ts-run-main">
-          <strong>${esc(item.songTitle || item.title || item.songId || "Untitled Song")}</strong>
-          <small>${esc(item.singerName || (item.source === "manual" ? "Host choice" : item.artist || ""))}</small>
+    const hasPlayingSong = !!runOrderPlayingItem(items);
+    const showPlayButtons = !hasPlayingSong && !getBreakState().open;
+
+    list.innerHTML = items.map((item,index) => {
+      const status = String(item?.status || "").toLowerCase();
+      const isPlaying = status === "playing";
+
+      return `
+        <div
+          class="ts-run-order-row${isPlaying ? " is-playing" : ""}"
+          data-ts-run-details="${esc(item.id)}"
+          title="${isPlaying ? "Currently playing" : "View singer/request details"}">
+
+          <div class="ts-run-index">${index + 1}</div>
+
+          <div class="ts-run-main">
+            <strong>${esc(item.songTitle || item.title || item.songId || "Untitled Song")}</strong>
+            <small>
+              ${esc(item.singerName || (item.source === "manual" ? "Host choice" : item.artist || ""))}
+              ${isPlaying ? `<em class="ts-playing-label">PLAYING</em>` : ""}
+            </small>
+          </div>
+
+          <div class="ts-run-actions">
+            ${
+              showPlayButtons
+                ? `<button
+                    type="button"
+                    class="play-song"
+                    data-ts-play="${esc(item.id)}"
+                    title="Open this song"
+                    aria-label="Open this song"
+                  >▶</button>`
+                : ""
+            }
+
+            <button
+              type="button"
+              data-ts-up="${esc(item.id)}"
+              title="Move up"
+              aria-label="Move song up"
+            >↑</button>
+
+            <button
+              type="button"
+              data-ts-down="${esc(item.id)}"
+              title="Move down"
+              aria-label="Move song down"
+            >↓</button>
+
+            <button
+              type="button"
+              class="abandon"
+              data-ts-abandon-run="${esc(item.id)}"
+              title="Singer left / song abandoned"
+              aria-label="Mark song abandoned"
+            >⊘</button>
+
+            <button
+              type="button"
+              class="remove"
+              data-ts-remove="${esc(item.id)}"
+              title="Remove from Run Order"
+              aria-label="Remove song from Run Order"
+            >✕</button>
+          </div>
         </div>
-        <div class="ts-run-actions">
-          <button
-            type="button"
-            data-ts-up="${esc(item.id)}"
-            title="Move up"
-            aria-label="Move song up"
-          >↑</button>
-
-          <button
-            type="button"
-            data-ts-down="${esc(item.id)}"
-            title="Move down"
-            aria-label="Move song down"
-          >↓</button>
-
-          <button
-            type="button"
-            class="abandon"
-            data-ts-abandon-run="${esc(item.id)}"
-            title="Singer left / song abandoned"
-            aria-label="Mark song abandoned"
-          >⊘</button>
-
-          <button
-            type="button"
-            class="remove"
-            data-ts-remove="${esc(item.id)}"
-            title="Remove from Run Order"
-            aria-label="Remove song from Run Order"
-          >✕</button>
-        </div>
-      </div>
-    `).join("");
+      `;
+    }).join("");
   }
 
   function renderSongSelect() {
@@ -1086,73 +1213,29 @@
     syncStatusToggleUi();
   }
 
-  function setStatusTab(tabName) {
-    const tab = tabName === "break" ? "break" : "session";
-
-    const sessionBtn = $("tsSessionStatusTab");
-    const breakBtn = $("tsBreakStatusTab");
-    const sessionPane = $("tsSessionStatusPane");
-    const breakPane = $("tsBreakStatusPane");
-
-    const showSession = tab === "session";
-
-    sessionBtn?.classList.toggle("active", showSession);
-    breakBtn?.classList.toggle("active", !showSession);
-    sessionBtn?.setAttribute("aria-selected", String(showSession));
-    breakBtn?.setAttribute("aria-selected", String(!showSession));
-
-    if (sessionPane) {
-      sessionPane.hidden = !showSession;
-      sessionPane.classList.toggle("active", showSession);
-    }
-
-    if (breakPane) {
-      breakPane.hidden = showSession;
-      breakPane.classList.toggle("active", !showSession);
-    }
-  }
-
-  function initialiseStatusTabs() {
-    const bar = $("topStatusBar");
-    if (!bar || bar.dataset.statusTabsBound === "1") return;
-
-    bar.dataset.statusTabsBound = "1";
-    setStatusTab("session");
-
-    bar.addEventListener("click", event => {
-      const btn = event.target.closest("[data-ts-status-tab]");
-      if (!btn) return;
-      event.preventDefault();
-      event.stopPropagation();
-      setStatusTab(btn.dataset.tsStatusTab);
-    });
-  }
-
   function setInfoTab(tabName) {
-    const tab = tabName === "notes" ? "notes" : "notifications";
+    const tab =
+      ["session","notifications","notes"].includes(tabName)
+        ? tabName
+        : "session";
 
-    const notificationsBtn = $("tsNotificationsTab");
-    const notesBtn = $("tsNotesTab");
-    const notificationsPane = $("tsNotificationsPane");
-    const notesPane = $("tsNotesPane");
+    const controls = [
+      ["session", $("tsSessionStatusTab"), $("tsSessionStatusPane")],
+      ["notifications", $("tsNotificationsTab"), $("tsNotificationsPane")],
+      ["notes", $("tsNotesTab"), $("tsNotesPane")]
+    ];
 
-    const showNotifications = tab === "notifications";
+    controls.forEach(([name, button, pane]) => {
+      const active = name === tab;
 
-    notificationsBtn?.classList.toggle("active", showNotifications);
-    notesBtn?.classList.toggle("active", !showNotifications);
+      button?.classList.toggle("active", active);
+      button?.setAttribute("aria-selected", String(active));
 
-    notificationsBtn?.setAttribute("aria-selected", String(showNotifications));
-    notesBtn?.setAttribute("aria-selected", String(!showNotifications));
-
-    if (notificationsPane) {
-      notificationsPane.hidden = !showNotifications;
-      notificationsPane.classList.toggle("active", showNotifications);
-    }
-
-    if (notesPane) {
-      notesPane.hidden = showNotifications;
-      notesPane.classList.toggle("active", !showNotifications);
-    }
+      if (pane) {
+        pane.hidden = !active;
+        pane.classList.toggle("active", active);
+      }
+    });
   }
 
   function initialiseInfoTabs() {
@@ -1160,25 +1243,39 @@
     if (!bar || bar.dataset.infoTabsBound === "1") return;
 
     bar.dataset.infoTabsBound = "1";
-
-    // User requested Notifications as the default.
-    setInfoTab("notifications");
+    setInfoTab("session");
 
     bar.addEventListener("click", event => {
-      const btn = event.target.closest("[data-ts-info-tab]");
-      if (!btn) return;
+      const button = event.target.closest("[data-ts-info-tab]");
+      if (!button) return;
 
       event.preventDefault();
       event.stopPropagation();
-      setInfoTab(btn.dataset.tsInfoTab);
+      setInfoTab(button.dataset.tsInfoTab);
     });
   }
+
 
   function bindUi() {
     if (state.uiBound) return;
     state.uiBound = true;
 
     document.addEventListener("click", event => {
+      const play = event.target.closest("[data-ts-play]");
+      if (play) {
+        event.preventDefault();
+        event.stopPropagation();
+        return openRunOrderSong(play.dataset.tsPlay);
+      }
+
+      const closeDetails = event.target.closest("#tsRunDetailsClose");
+      if (closeDetails || event.target.id === "tsRunOrderDetailsModal") {
+        event.preventDefault();
+        event.stopPropagation();
+        closeRunOrderDetails();
+        return;
+      }
+
       const accept = event.target.closest("[data-ts-accept]");
       if (accept) return acceptRequest(accept.dataset.tsAccept);
 
@@ -1203,6 +1300,12 @@
 
       const remove = event.target.closest("[data-ts-remove]");
       if (remove) return removeRunOrder(remove.dataset.tsRemove);
+
+      const details = event.target.closest("[data-ts-run-details]");
+      if (details) {
+        event.preventDefault();
+        openRunOrderDetails(details.dataset.tsRunDetails);
+      }
     });
 
     $("tsRunOrderAddBtn")?.addEventListener("click",addManualSong);
@@ -1215,7 +1318,6 @@
   function waitForInjectedMarkup() {
     if ($("topStatusBar")) {
       initialiseStatusToggle();
-      initialiseStatusTabs();
       initialiseInfoTabs();
       bindUi();
       renderRemaining();
