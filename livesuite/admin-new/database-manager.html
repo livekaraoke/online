@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Database Manager - Live Karaoke Suite</title>
+<link rel="icon" type="image/x-icon" href="/online/favicon.ico">
 
 <script src="../firebase-projects.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -140,7 +141,7 @@ pre{background:#090909;border:1px solid #333;border-radius:8px;padding:12px;whit
     Collections: lyrics, lyricsSetlists, songlists, songlistSections, songlistSongs,
     publicSongRequests, publicSignupSessions, performanceSessions, performanceLogs,
     performedSongs, karaoke, karaokeControl, liveLyrics, notes, noteSettings,
-    userProfiles, upcomingEvents, venues. Also copies performanceSessions/*/performedSongs.
+    userProfiles, upcomingEvents, venues, plus the specific document karaoke/state. Also copies performanceSessions/*/performedSongs.
   </small></p>
 
   <pre id="log"></pre>
@@ -178,7 +179,6 @@ const collections = [
   "performanceSessions",
   "performanceLogs",
   "performedSongs",
-  "karaoke",
   "karaokeControl",
   "liveLyrics",
   "notes",
@@ -187,6 +187,49 @@ const collections = [
   "upcomingEvents",
   "venues"
 ];
+
+// The OLD project's rules expose karaoke/state specifically, not the entire
+// karaoke collection. Querying collection("karaoke") therefore fails even
+// when the user is authenticated. Copy this document directly instead.
+const specialDocuments = [
+  "karaoke/state"
+];
+
+const MIGRATION_PROGRESS_KEY = "lksuite.dbMigrationProgress.v2";
+
+function migrationKey(sourceKey, destinationKey) {
+  return sourceKey + "->" + destinationKey;
+}
+
+function loadMigrationProgress(sourceKey, destinationKey) {
+  let all = {};
+  try {
+    all = JSON.parse(localStorage.getItem(MIGRATION_PROGRESS_KEY) || "{}");
+  } catch (_) {}
+
+  const key = migrationKey(sourceKey, destinationKey);
+  return all[key] || { completed: {}, specialCompleted: {} };
+}
+
+function saveMigrationProgress(sourceKey, destinationKey, progress) {
+  let all = {};
+  try {
+    all = JSON.parse(localStorage.getItem(MIGRATION_PROGRESS_KEY) || "{}");
+  } catch (_) {}
+
+  all[migrationKey(sourceKey, destinationKey)] = progress;
+  localStorage.setItem(MIGRATION_PROGRESS_KEY, JSON.stringify(all));
+}
+
+function clearMigrationProgress(sourceKey, destinationKey) {
+  let all = {};
+  try {
+    all = JSON.parse(localStorage.getItem(MIGRATION_PROGRESS_KEY) || "{}");
+  } catch (_) {}
+
+  delete all[migrationKey(sourceKey, destinationKey)];
+  localStorage.setItem(MIGRATION_PROGRESS_KEY, JSON.stringify(all));
+}
 
 const appCache = {};
 
@@ -374,6 +417,21 @@ async function copyCollection(src, dst, name) {
   }
 }
 
+async function copyDocumentPath(src, dst, path) {
+  log("Reading " + path + "…");
+
+  const sourceRef = src.doc(path);
+  const snap = await sourceRef.get();
+
+  if (!snap.exists) {
+    log(path + ": source document does not exist — skipped");
+    return;
+  }
+
+  await dst.doc(path).set(snap.data(), { merge: true });
+  log(path + ": copied");
+}
+
 function explainPermissionError(key) {
   const user = getAuth(key).currentUser;
 
@@ -399,11 +457,11 @@ document.getElementById("copyBtn").onclick = async () => {
   }
 
   if (!confirm(
-    "Copy supported data from " +
+    "Resume copying supported data from " +
     sourceKey +
     " to " +
     destinationKey +
-    "? Existing documents with the same IDs will be merged."
+    "? Completed collections will be skipped."
   )) {
     return;
   }
@@ -413,6 +471,36 @@ document.getElementById("copyBtn").onclick = async () => {
   try {
     const src = getDb(sourceKey);
     const dst = getDb(destinationKey);
+    const progress = loadMigrationProgress(sourceKey, destinationKey);
+
+    /*
+      Your previous run (before this resumable version existed) successfully
+      copied through top-level performedSongs and then failed at karaoke.
+      Seed that known progress once for this exact migration direction so those
+      collections are not read/written again.
+    */
+    if (
+      sourceKey === "LIVEKARAOKEMT" &&
+      destinationKey === "LIVEKARAOKESUITE" &&
+      !progress.seededFromPreviousRun
+    ) {
+      [
+        "lyrics",
+        "lyricsSetlists",
+        "songlists",
+        "songlistSections",
+        "songlistSongs",
+        "publicSongRequests",
+        "publicSignupSessions",
+        "performanceSessions",
+        "performanceLogs",
+        "performedSongs"
+      ].forEach(name => progress.completed[name] = true);
+
+      progress.seededFromPreviousRun = true;
+      saveMigrationProgress(sourceKey, destinationKey, progress);
+      log("Previous successful copy detected: resuming AFTER performedSongs.");
+    }
 
     log(
       "SOURCE AUTH: " +
@@ -425,8 +513,15 @@ document.getElementById("copyBtn").onclick = async () => {
     );
 
     for (const collectionName of collections) {
+      if (progress.completed[collectionName]) {
+        log("SKIP " + collectionName + " — already completed");
+        continue;
+      }
+
       try {
         await copyCollection(src, dst, collectionName);
+        progress.completed[collectionName] = true;
+        saveMigrationProgress(sourceKey, destinationKey, progress);
       } catch (error) {
         if (error.code === "permission-denied") {
           log("PERMISSION DENIED while copying: " + collectionName);
@@ -438,12 +533,61 @@ document.getElementById("copyBtn").onclick = async () => {
       }
     }
 
-    log("DONE.");
+    for (const path of specialDocuments) {
+      if (progress.specialCompleted[path]) {
+        log("SKIP " + path + " — already completed");
+        continue;
+      }
+
+      try {
+        await copyDocumentPath(src, dst, path);
+        progress.specialCompleted[path] = true;
+        saveMigrationProgress(sourceKey, destinationKey, progress);
+      } catch (error) {
+        if (error.code === "permission-denied") {
+          log("PERMISSION DENIED while copying: " + path);
+          log(
+            "The old rules normally allow karaoke/state specifically. " +
+            "Check source/destination Firestore rules if this direct document read fails."
+          );
+        }
+
+        throw error;
+      }
+    }
+
+    log("DONE. Migration progress saved in this browser.");
   } catch (error) {
     console.error(error);
     log("STOPPED: " + (error.code || "") + " " + error.message);
+    log("Progress up to the last completed collection has been saved.");
+    log("Fix the reported problem and press Copy / Resume data again.");
   }
 };
+
+const resetProgressBtn = document.createElement("button");
+resetProgressBtn.type = "button";
+resetProgressBtn.className = "danger";
+resetProgressBtn.textContent = "Reset migration progress";
+resetProgressBtn.onclick = () => {
+  const sourceKey = document.getElementById("source").value;
+  const destinationKey = document.getElementById("destination").value;
+
+  if (!confirm(
+    "Forget saved migration progress for " +
+    sourceKey +
+    " → " +
+    destinationKey +
+    "? This does not delete Firebase data."
+  )) {
+    return;
+  }
+
+  clearMigrationProgress(sourceKey, destinationKey);
+  log("Saved migration progress cleared.");
+};
+
+document.getElementById("copyBtn").after(resetProgressBtn);
 </script>
 
 </body>
