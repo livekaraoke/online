@@ -7,6 +7,7 @@
   let frame = null;
   let unsubscribeSong = null;
   let currentControlSongId = "";
+  let currentControlReloadToken = "";
   let loadingSequence = 0;
   let loadingTimer = null;
   let guidanceMode = localStorage.getItem("karaokeGuidanceMode") || "normal";
@@ -257,22 +258,39 @@
   function listenForHost() {
     db.collection("karaokeControl").doc("liveLyrics").onSnapshot(doc => {
       const data = doc.exists ? doc.data() : {};
-      const id = String(data.currentLyricsSongId || data.currentSongId || "").trim();
+      const id = String(
+        data.currentLyricsSongId ||
+        data.currentSongId ||
+        data.songId ||
+        ""
+      ).trim();
 
-      if (!id || data.displayState === "idle") {
+      const reloadToken = String(data.forceReloadToken || "").trim();
+
+      if (!id || data.displayState === "idle" || data.reset === true) {
         currentControlSongId = "";
+        currentControlReloadToken = "";
+
         if (unsubscribeSong) {
           unsubscribeSong();
           unsubscribeSong = null;
         }
+
         setStandby();
         return;
       }
 
-      // Ignore control-document metadata updates for the song already displayed.
-      if (id === currentControlSongId && song?.firebaseId === id) return;
+      const sameSong = id === currentControlSongId && song?.firebaseId === id;
+      const sameReload =
+        !reloadToken ||
+        reloadToken === currentControlReloadToken;
+
+      // Ignore ordinary metadata updates for the already-displayed song,
+      // but never ignore a fresh SEND TO KARAOKE action.
+      if (sameSong && sameReload) return;
 
       currentControlSongId = id;
+      currentControlReloadToken = reloadToken;
 
       if (unsubscribeSong) unsubscribeSong();
 
