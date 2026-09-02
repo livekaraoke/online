@@ -248,13 +248,17 @@
       </div>
 
       <p class="event-types-help">
-        These options are shared by Upcoming Events and the Admin Performance Session TYPE dropdown.
+        These options are shared across Upcoming Events and Admin. Choose a colour for each type; the same colour is used on gig tags and summary cards.
       </p>
 
       <div id="eventTypesList" class="event-types-list"></div>
 
       <div class="event-type-add-row">
         <input id="newEventTypeInput" type="text" placeholder="Add new type…" />
+        <label class="event-type-new-color" title="Colour for new type">
+          <span>COLOUR</span>
+          <input id="newEventTypeColorInput" type="color" value="#8ea3ad" />
+        </label>
         <button id="addEventTypeBtn" class="events-btn primary" type="button">＋ ADD</button>
       </div>
 
