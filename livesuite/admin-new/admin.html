@@ -1008,6 +1008,163 @@
     }
 </style>
 
+
+<style id="lk-admin-event-session-20260902">
+/* Performance Session: event-linked only */
+.session-event-only-setup {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 7px !important;
+}
+.session-event-only-setup > label {
+  margin-top: 2px;
+  color: #a8b0b5;
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+.session-event-select {
+  width: 100%;
+  min-height: 42px;
+  border: 1px solid #3e535e;
+  border-radius: 7px;
+  background: #111a1f;
+  color: #fff;
+  padding: 0 10px;
+  font-size: 13px;
+  font-weight: 800;
+}
+.session-event-help {
+  color: #728088;
+  font-size: 8px;
+  line-height: 1.35;
+}
+
+/* System Status active-session details */
+.status-live-session-meta {
+  display: grid;
+  gap: 3px;
+  margin-top: 7px;
+  padding-top: 7px;
+  border-top: 1px solid #253039;
+}
+.status-live-session-meta.hidden { display:none !important; }
+.status-live-session-meta strong {
+  overflow: hidden;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 950;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.status-live-session-meta span {
+  color: #8ad7a1;
+  font-size: 9px;
+  font-weight: 850;
+}
+.status-live-box.session-forced-live #statusLiveLabel {
+  color: #67e58b !important;
+  font-weight: 1000 !important;
+}
+
+/* Upcoming Gig hero */
+.status-venue-context-box #statusVenueLabel {
+  font-size: 19px !important;
+  line-height: 1.05 !important;
+}
+.status-venue-countdown {
+  font-size: 13px !important;
+  line-height: 1.1 !important;
+}
+.status-venue-countdown.is-late {
+  color: #ff555f !important;
+  text-shadow: 0 0 8px rgba(255,85,95,.16);
+}
+
+/* Next Gigs: clearer rows + full-width View All */
+.status-next-gigs {
+  display: grid !important;
+  gap: 6px !important;
+}
+.status-next-gigs .status-next-gig-row {
+  display: grid !important;
+  grid-template-columns: 64px minmax(0,1fr) !important;
+  gap: 8px !important;
+  align-items: center !important;
+  width: 100% !important;
+  min-height: 39px !important;
+  padding: 6px 8px !important;
+  border: 1px solid #4b4f52 !important;
+  border-radius: 6px !important;
+  background: #292c2f !important;
+  color: #fff !important;
+  cursor: pointer;
+  text-align: left;
+}
+.status-next-gig-when {
+  color: #f2cf5a !important;
+  font-size: 9px !important;
+  font-weight: 950 !important;
+  line-height: 1.15 !important;
+  text-align: center;
+}
+.status-next-gig-name {
+  min-width: 0;
+  overflow: hidden;
+  color: #fff !important;
+  font-size: 10px !important;
+  font-weight: 900 !important;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.status-next-gig-venue {
+  display:block;
+  margin-top:2px;
+  overflow:hidden;
+  color:#cfd5d8;
+  font-size:8px;
+  font-weight:700;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.status-next-gigs .view-all-gigs-btn {
+  width:100% !important;
+  min-height:31px !important;
+  border:1px solid #5e6468 !important;
+  border-radius:6px !important;
+  background:#34383b !important;
+  color:#fff !important;
+  font-size:9px !important;
+  font-weight:950 !important;
+  letter-spacing:.05em;
+}
+
+/* Public Song List */
+#publicSetlistSelect.public-setlist-picker {
+  min-height: 40px !important;
+  border-color: #596a72 !important;
+  background: #222b30 !important;
+  color: #fff !important;
+  font-size: 13px !important;
+  font-weight: 850 !important;
+}
+#publicSetlistSaveStatus.public-setlist-save-status {
+  display:block;
+  margin-top:5px;
+  color:#d7dcdf !important;
+  font-size:10px !important;
+  font-weight:800 !important;
+}
+
+/* Dashboard event TYPE colours are supplied by JS variables. */
+.dashboard-event-type {
+  border: 1px solid var(--event-type-color, #6fa9c8) !important;
+  background: var(--event-type-bg, rgba(111,169,200,.12)) !important;
+  color: var(--event-type-color, #9bcce8) !important;
+  font-weight: 950 !important;
+}
+</style>
+
 </head>
 <body class="admin-body">
 
@@ -1152,6 +1309,10 @@
             <strong id="statusLiveLabel" class="offline-status">● Offline</strong>
             <button id="liveCircleBtn" type="button" class="circle-status-btn go" onclick="toggleLive()" title="Go live">▶</button>
           </div>
+          <div id="statusLiveSessionMeta" class="status-live-session-meta hidden">
+            <strong id="statusLiveVenue">-</strong>
+            <span id="statusLiveStarted">Started: --:--</span>
+          </div>
         </div>
         <div class="status-box status-venue-context-box">
           <span id="statusVenueContextLabel" class="status-venue-context-label">UPCOMING GIG:</span>
@@ -1194,31 +1355,28 @@
         <div class="card-title-row"><h2>🎙️ Performance Session</h2></div>
         <div class="session-layout">
           <div class="session-details">
-            <div id="sessionSetupFields" class="setup-fields">
+            <div id="sessionSetupFields" class="setup-fields session-event-only-setup">
 
               <div id="sessionEventSuggestion" class="session-event-suggestion">
                 <div class="session-event-suggestion-head">
-                  <span>UPCOMING EVENT SUGGESTION</span>
-                  <button id="clearSessionEventSuggestionBtn" type="button" title="Clear event suggestion">×</button>
+                  <span>LINK PERFORMANCE TO UPCOMING EVENT</span>
+                  <button id="clearSessionEventSuggestionBtn" type="button" title="Reset to next upcoming event">↺</button>
                 </div>
                 <div id="sessionEventSuggestionBody">
-                  <small>No upcoming event selected.</small>
+                  <small>Loading upcoming events…</small>
                 </div>
               </div>
 
               <input id="sessionEventIdInput" type="hidden" value="" />
-              <label>Session Title</label><input id="sessionTitleInput" type="text" placeholder="Friday Night at Whyte Harte" />
-              <label>Venue</label><input id="venueInput" list="venueOptions" placeholder="Whyte Harte" />
-              <datalist id="venueOptions"></datalist>
 
-              <label>Type</label>
-              <select id="sessionTypeInput">
-                <option value="Live Karaoke">Live Karaoke</option>
-                <option value="Roxanna">Roxanna</option>
-                <option value="Solo">Solo</option>
-                <option value="Texanna">Texanna</option>
-                <option value="Other">Other</option>
+              <label for="sessionEventSelect">Upcoming Event</label>
+              <select id="sessionEventSelect" class="session-event-select">
+                <option value="">Loading upcoming events…</option>
               </select>
+
+              <small class="session-event-help">
+                The session title, venue, type and scheduled times come directly from the linked upcoming event.
+              </small>
             </div>
             <div id="activeSessionLabels" class="active-session-labels hidden">
               <div><span>Session Title</span><strong id="sessionTitleLabel"></strong><button type="button" onclick="editActiveSessionDetails()">✎</button></div>
@@ -1289,7 +1447,7 @@
         <div class="card-title-row split">
           <h2>📅 Upcoming Gigs &amp; Events <span id="dashboardUpcomingEventCount">(0)</span></h2>
           <div class="dashboard-event-actions">
-            <button type="button" class="small-outline" onclick="window.location.href='upcoming-events.html'">Manage Events</button>
+            <button type="button" class="small-outline" onclick="window.location.href='upcoming-events.html'">Manage / View All</button>
             <button type="button" class="small-outline" onclick="window.location.href='venues.html'">Venues</button>
           </div>
         </div>
