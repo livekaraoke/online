@@ -1421,3 +1421,87 @@ width: 100%;
     text-align: center;
   }
 }
+
+
+/* ========================================================================
+   NEXT FOUR LIVE KARAOKE EVENTS
+   ======================================================================== */
+
+.events-intro {
+  margin-top: -6px;
+  margin-bottom: 12px;
+  color: #aaa;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.live-karaoke-events-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  width: min(1050px, 100%);
+  margin: 26px auto 0;
+}
+
+.live-karaoke-events-grid .event-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: none;
+  min-height: 310px;
+  margin: 0;
+  padding: 24px 22px;
+}
+
+.live-event-type {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 24px;
+  padding: 0 9px;
+  border: 1px solid rgba(255,62,62,.65);
+  border-radius: 999px;
+  background: rgba(132,0,0,.2);
+  color: #ff6262;
+  font-size: 9px;
+  font-weight: 1000;
+  letter-spacing: .1em;
+}
+
+.live-karaoke-event-card h3 {
+  margin-top: 14px !important;
+}
+
+.live-karaoke-event-card h4 {
+  min-height: 32px;
+  margin-bottom: 22px !important;
+}
+
+.live-karaoke-event-card .maps-btn {
+  margin-top: auto;
+}
+
+.live-event-loading,
+.live-event-empty {
+  grid-column: 1 / -1;
+  min-height: 130px !important;
+  justify-content: center;
+}
+
+@media (max-width: 720px) {
+  .live-karaoke-events-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    margin-top: 18px;
+  }
+
+  .live-karaoke-events-grid .event-card {
+    min-height: 0;
+    padding: 20px 16px;
+  }
+
+  .live-karaoke-event-card h3 {
+    font-size: 1.45rem !important;
+  }
+}
