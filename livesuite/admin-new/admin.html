@@ -1165,6 +1165,151 @@
 }
 </style>
 
+
+<style id="lk-admin-session-dashboard-20260902b">
+/* ---------------------------------------------------------
+   NEXT GIGS compact list
+   --------------------------------------------------------- */
+.status-next-gigs .status-next-gig-row {
+  align-items: center !important;
+  min-height: 44px !important;
+  padding-top: 5px !important;
+  padding-bottom: 5px !important;
+}
+.status-next-gig-when,
+.status-next-gig-main {
+  align-self: center !important;
+}
+.status-next-gig-main {
+  display: flex !important;
+  min-width: 0 !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  line-height: 1.12 !important;
+}
+.status-next-gig-venue-name {
+  overflow: hidden !important;
+  color: #fff !important;
+  font-size: 10px !important;
+  font-weight: 950 !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+.status-next-gig-type {
+  display: block !important;
+  margin-top: 3px !important;
+  overflow: hidden !important;
+  font-size: 8px !important;
+  font-weight: 950 !important;
+  text-overflow: ellipsis !important;
+  text-transform: uppercase !important;
+  white-space: nowrap !important;
+}
+.status-next-gigs .view-all-gigs-btn {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-height: 31px !important;
+  padding: 0 8px !important;
+  background: #1c1f21 !important;
+  border-color: #454b4e !important;
+  color: #f2f4f5 !important;
+  line-height: 1 !important;
+  text-align: center !important;
+}
+
+/* Upcoming gig TYPE + countdown */
+.status-venue-type {
+  font-weight: 950 !important;
+}
+.status-venue-countdown {
+  font-size: 14px !important;
+}
+
+/* ---------------------------------------------------------
+   ACTIVE SESSION DETAILS
+   --------------------------------------------------------- */
+.session-live-details {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0,1fr)) !important;
+  gap: 7px !important;
+  margin-bottom: 10px !important;
+}
+.session-live-details.hidden {
+  display: none !important;
+}
+.session-live-detail {
+  display: grid !important;
+  align-content: center !important;
+  min-width: 0 !important;
+  min-height: 55px !important;
+  padding: 8px 9px !important;
+  border: 1px solid #303b41 !important;
+  border-radius: 7px !important;
+  background: #10171b !important;
+}
+.session-live-detail > span {
+  color: #748188 !important;
+  font-size: 7px !important;
+  font-weight: 950 !important;
+  letter-spacing: .05em !important;
+  text-transform: uppercase !important;
+}
+.session-live-detail > strong {
+  margin-top: 4px !important;
+  overflow: hidden !important;
+  color: #eef3f5 !important;
+  font-size: 12px !important;
+  font-weight: 950 !important;
+  line-height: 1.1 !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+.session-live-detail > small {
+  display: block !important;
+  margin-top: 3px !important;
+  font-size: 7px !important;
+  font-weight: 900 !important;
+}
+#sessionStartVarianceLabel.is-late {
+  color: #ff5a64 !important;
+}
+#sessionStartVarianceLabel.is-early {
+  color: #75dba0 !important;
+}
+#sessionStatusLiveLabel {
+  color: #70df91 !important;
+}
+
+/* Song-request-only summary below Lyrics Suite */
+.session-request-summary {
+  margin-top: 9px !important;
+}
+.session-request-summary-title {
+  margin-bottom: 6px !important;
+  color: #aab4b9 !important;
+  font-size: 9px !important;
+  font-weight: 1000 !important;
+  letter-spacing: .08em !important;
+}
+#sessionDashboard .dashboard-grid {
+  grid-template-columns: repeat(5, minmax(0,1fr)) !important;
+}
+#sessionDashboard .dashboard-card {
+  min-height: 51px !important;
+}
+
+@media (max-width: 1000px) {
+  .session-live-details {
+    grid-template-columns: repeat(3, minmax(0,1fr)) !important;
+  }
+  #sessionDashboard .dashboard-grid {
+    grid-template-columns: repeat(5, minmax(86px,1fr)) !important;
+    overflow-x: auto !important;
+  }
+}
+</style>
+
 </head>
 <body class="admin-body">
 
@@ -1378,10 +1523,16 @@
                 The session title, venue, type and scheduled times come directly from the linked upcoming event.
               </small>
             </div>
-            <div id="activeSessionLabels" class="active-session-labels hidden">
-              <div><span>Session Title</span><strong id="sessionTitleLabel"></strong><button type="button" onclick="editActiveSessionDetails()">✎</button></div>
-              <div><span>Venue</span><strong id="venueLabel"></strong><button type="button" onclick="editActiveSessionDetails()">✎</button></div>
-              <div><span>Type</span><strong id="sessionTypeLabel">Live Karaoke</strong><button type="button" onclick="editActiveSessionDetails()">✎</button></div>
+            <div id="activeSessionLabels" class="active-session-labels session-live-details hidden">
+              <div class="session-live-detail"><span>Session Name</span><strong id="sessionNameLiveLabel">-</strong></div>
+              <div class="session-live-detail"><span>Status</span><strong id="sessionStatusLiveLabel">Active Session</strong></div>
+              <div class="session-live-detail"><span>Started Time</span><strong id="sessionStartedLiveLabel">-</strong><small id="sessionStartVarianceLabel"></small></div>
+              <div class="session-live-detail"><span>Scheduled Time</span><strong id="sessionScheduledLiveLabel">-</strong></div>
+              <div class="session-live-detail"><span>Elapsed</span><strong id="sessionElapsedLiveLabel">0 mins</strong></div>
+              <div class="session-live-detail"><span>Elapsed X/Breaks</span><strong id="sessionPlayLiveLabel">0 mins</strong></div>
+              <div class="session-live-detail"><span>Total Breaks</span><strong id="sessionBreaksLiveLabel">0</strong></div>
+              <div class="session-live-detail"><span>Average BPM</span><strong id="sessionAvgBpmLiveLabel">-</strong></div>
+              <div class="session-live-detail"><span>Date</span><strong id="sessionDateLiveLabel">-</strong></div>
             </div>
             <label class="notes-label">Session Notes</label>
             <textarea id="sessionNotesInput" class="session-notes" placeholder="Session notes..."></textarea>
@@ -1389,10 +1540,10 @@
           </div>
           <div class="session-controls-and-dashboard">
             <div class="session-button-row">
-              <button id="startPerformanceBtn" type="button" onclick="confirmStartPerformance()" class="session-btn green">▶ Start Performance</button>
+              <button id="startPerformanceBtn" type="button" onclick="confirmStartPerformance()" class="session-btn green">▶ Start Session</button>
               <button id="startBreakBtn" type="button" onclick="startBreak()" class="session-btn amber" disabled>☕ Start Break</button>
               <button id="endBreakBtn" type="button" onclick="endBreak()" class="session-btn muted" disabled>End Break</button>
-              <button id="endPerformanceBtn" type="button" onclick="confirmEndPerformance()" class="session-btn red" disabled>■ End Performance</button>
+              <button id="endPerformanceBtn" type="button" onclick="confirmEndPerformance()" class="session-btn red" disabled>■ End Session</button>
             </div>
 
             <div class="session-lyrics-suite-row">
@@ -1404,14 +1555,17 @@
               </button>
             </div>
 
-            <div id="sessionDashboard" class="session-dashboard"></div>
+            <div class="session-request-summary">
+              <div class="session-request-summary-title">SONG REQUESTS</div>
+              <div id="sessionDashboard" class="session-dashboard"></div>
+            </div>
           </div>
         </div>
       </section>
 
       <section id="requestsPanel" class="admin-card requests-card">
         <div class="card-title-row split">
-          <h2>🎤 Active Song Requests <span id="activeRequestCount">(0)</span></h2>
+          <h2>🎤 Active <span id="activeRequestCount">(0)</span></h2>
           <div class="request-toolbar">
             <select id="requestSortSelect" onchange="renderActiveRequests()"><option value="oldest">Sort: Oldest</option><option value="newest">Sort: Newest</option><option value="song">Sort: Song</option></select>
             <button type="button" onclick="renderActiveRequests()">Filter</button>
@@ -1445,7 +1599,7 @@
 
       <section id="upcomingEventsDashboardPanel" class="admin-card dashboard-events-card">
         <div class="card-title-row split">
-          <h2>📅 Upcoming Gigs &amp; Events <span id="dashboardUpcomingEventCount">(0)</span></h2>
+          <h2>📅 Next Gigs <span id="dashboardUpcomingEventCount">(0)</span></h2>
           <div class="dashboard-event-actions">
             <button type="button" class="small-outline" onclick="window.location.href='upcoming-events.html'">Manage / View All</button>
             <button type="button" class="small-outline" onclick="window.location.href='venues.html'">Venues</button>
