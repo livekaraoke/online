@@ -402,8 +402,52 @@
     return active[0] || null;
   }
 
+  function normaliseRunSongIdentity(value) {
+    return String(value || "")
+      .toLowerCase()
+      .replace(/&/g, "and")
+      .replace(/[^a-z0-9]+/g, "");
+  }
+
+  function authoritativeViewerSong(item) {
+    if (!item) return null;
+
+    const exact = songs.find(song =>
+      song.firebaseId === item.songId
+    );
+    if (exact) return exact;
+
+    const titleKey = normaliseRunSongIdentity(item.songTitle || item.title);
+    const artistKey = normaliseRunSongIdentity(item.artist || item.songArtist);
+
+    const matches = songs.filter(song =>
+      normaliseRunSongIdentity(song.title) === titleKey
+    );
+
+    if (artistKey) {
+      const artistMatch = matches.find(song =>
+        normaliseRunSongIdentity(song.artist) === artistKey
+      );
+      if (artistMatch) return artistMatch;
+    }
+
+    return matches.length === 1 ? matches[0] : null;
+  }
+
   function updateRunOrderPlayer(items) {
     nextRunOrderItem = chooseNextRunOrderItem(items);
+
+    if (nextRunOrderItem) {
+      const authoritative = authoritativeViewerSong(nextRunOrderItem);
+      if (authoritative?.firebaseId) {
+        nextRunOrderItem = {
+          ...nextRunOrderItem,
+          songId:authoritative.firebaseId,
+          songTitle:nextRunOrderItem.songTitle || authoritative.title || "",
+          artist:nextRunOrderItem.artist || authoritative.artist || ""
+        };
+      }
+    }
 
     const label = $("selectedSongLabel");
     const meta = $("runOrderPlayerMeta");
