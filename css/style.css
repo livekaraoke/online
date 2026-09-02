@@ -1135,3 +1135,243 @@ width: 100%;
     grid-template-columns: 1fr;
   }
 }
+
+/* ========================================================================
+   PUBLIC LIVE KARAOKE STATUS / LIVE QUEUE — 2026-09-02
+   ======================================================================== */
+
+.hidden {
+  display: none !important;
+}
+
+.hero-content {
+  width: min(920px, 100%);
+}
+
+.hero-live-now {
+  width: min(650px, 94vw);
+  margin: 22px auto 0;
+  padding: 14px;
+  border: 1px solid rgba(61,224,96,.6);
+  border-radius: 10px;
+  background: rgba(3,14,7,.90);
+  box-shadow: 0 0 26px rgba(35,216,76,.18);
+  text-align: left;
+}
+
+.hero-live-now-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 9px;
+  border-bottom: 1px solid rgba(255,255,255,.12);
+}
+
+.hero-live-now-head strong {
+  color: #65e783;
+  font-size: 13px;
+  letter-spacing: .12em;
+}
+
+.hero-live-now-head > span:last-child {
+  margin-left: auto;
+  color: #dbe2dd;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.hero-live-pulse,
+.public-live-dot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #39e566;
+  box-shadow: 0 0 12px #39e566;
+}
+
+.hero-current-song {
+  display: grid;
+  gap: 3px;
+  margin-top: 11px;
+  padding: 10px 11px;
+  border: 1px solid rgba(61,224,96,.25);
+  border-radius: 7px;
+  background: rgba(255,255,255,.035);
+}
+
+.hero-current-song > span {
+  color: #67e68a;
+  font-size: 9px;
+  font-weight: 1000;
+  letter-spacing: .08em;
+}
+
+.hero-current-song strong {
+  color: #fff;
+  font-size: 20px;
+}
+
+.hero-current-song small {
+  color: #aaa;
+  font-size: 11px;
+}
+
+.hero-coming-up {
+  display: grid;
+  gap: 5px;
+  margin-top: 9px;
+}
+
+.coming-label {
+  color: #aaa;
+  font-size: 8px;
+  font-weight: 1000;
+  letter-spacing: .08em;
+}
+
+.coming-song {
+  display: grid;
+  grid-template-columns: 25px minmax(0,1fr);
+  gap: 8px;
+  align-items: center;
+  padding: 6px 8px;
+  border-radius: 6px;
+  background: rgba(255,255,255,.04);
+}
+
+.coming-song > b {
+  display: grid;
+  place-items: center;
+  width: 23px;
+  height: 23px;
+  border: 1px solid #505b55;
+  border-radius: 50%;
+  color: #d5ddd8;
+  font-size: 10px;
+}
+
+.coming-song > span {
+  display: grid;
+  min-width: 0;
+}
+
+.coming-song strong {
+  overflow: hidden;
+  color: #f4f4f4;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.coming-song small,
+.coming-empty {
+  color: #888;
+  font-size: 9px;
+}
+
+.hero-request-btn {
+  display: block;
+  width: 100%;
+  margin-top: 11px;
+  text-align: center;
+}
+
+.live-status-section {
+  padding: 18px 16px 0;
+}
+
+#liveStatus {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.public-live-box,
+.next-live-karaoke-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 18px;
+  border: 1px solid rgba(255,0,0,.32);
+  border-radius: 8px;
+  background: #111;
+}
+
+.public-live-box > div {
+  display: grid;
+  gap: 2px;
+  text-align: left;
+}
+
+.public-live-box strong {
+  color: #62e57d;
+  font-size: 15px;
+}
+
+.public-live-box span:last-child {
+  color: #d2d2d2;
+  font-size: 11px;
+}
+
+.next-live-karaoke-box {
+  display: grid;
+  gap: 4px;
+  text-align: center;
+}
+
+.next-live-label {
+  color: #aaa;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: .13em;
+}
+
+.next-live-karaoke-box strong {
+  color: #fff;
+  font-size: 20px;
+}
+
+.next-live-karaoke-box > span:not(.next-live-label) {
+  color: #ccc;
+  font-size: 12px;
+}
+
+.next-live-karaoke-box b {
+  margin-top: 3px;
+  color: #ffd44c;
+  font-size: 14px;
+}
+
+@media (max-width: 640px) {
+  .hero {
+    min-height: 100svh;
+    height: auto;
+    padding: 25px 12px;
+  }
+
+  .hero-banner {
+    width: 94vw;
+    margin-bottom: 25px;
+  }
+
+  .hero-live-now {
+    width: 100%;
+    padding: 10px;
+  }
+
+  .hero-current-song strong {
+    font-size: 17px;
+  }
+
+  .hero-live-now-head > span:last-child {
+    max-width: 42%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .public-live-box {
+    justify-content: flex-start;
+  }
+}
