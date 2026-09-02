@@ -187,7 +187,14 @@
     try {
       const snap = await db.collection("lyrics").get();
       lyricsSongs = snap.docs
-        .map(doc => ({ id:doc.id, ...(doc.data() || {}) }))
+        .map(doc => ({
+          ...(doc.data() || {}),
+          // Firestore document ID is authoritative.
+          // Some migrated lyric documents contain a legacy "id" field such as
+          // "cometogetherbeatlesthe". Never let that overwrite doc.id.
+          id:doc.id,
+          firebaseId:doc.id
+        }))
         .sort((a,b) =>
           String(a.title || "").localeCompare(String(b.title || ""), undefined, { sensitivity:"base" })
         );
