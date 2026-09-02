@@ -2732,3 +2732,275 @@
     max-height: none !important;
   }
 }
+
+
+/* ========================================================================
+   LIVE RUN ORDER + THREE-TAB TOP ROW — 2026-09-02
+   ======================================================================== */
+
+#topStatusBar {
+  position: relative !important;
+}
+
+/* One full-width card for Session Status / Notifications / Session Notes */
+#topStatusBar .host-primary-tabs-card {
+  display: flex !important;
+  flex-direction: column !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  height: 112px !important;
+  min-height: 112px !important;
+  max-height: 112px !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+}
+
+#topStatusBar .host-primary-tabs {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0,1fr)) !important;
+  flex: 0 0 29px !important;
+  height: 29px !important;
+}
+
+#topStatusBar .host-primary-tabs .host-card-tab {
+  height: 29px !important;
+  font-size: 7px !important;
+}
+
+#topStatusBar .host-primary-pane {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  padding: 7px 9px !important;
+  overflow: hidden !important;
+}
+
+#topStatusBar .host-session-combined-grid {
+  display: grid !important;
+  grid-template-columns: minmax(315px, 1fr) minmax(360px, 1.15fr) !important;
+  align-items: center !important;
+  gap: 10px !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 0 !important;
+}
+
+#topStatusBar .host-session-combined-grid .host-session-status-grid {
+  grid-template-columns: minmax(150px,1fr) 1px minmax(120px,.8fr) !important;
+  gap: 7px !important;
+  height: 100% !important;
+}
+
+#topStatusBar .host-session-break-inline {
+  grid-template-columns: minmax(115px,.75fr) minmax(190px,1.2fr) 88px !important;
+  gap: 6px !important;
+  height: auto !important;
+  min-height: 0 !important;
+}
+
+#topStatusBar .host-session-break-inline .break-action-btn {
+  width: 88px !important;
+  min-width: 88px !important;
+  height: 28px !important;
+  min-height: 28px !important;
+  font-size: 6px !important;
+}
+
+#topStatusBar #tsNotificationsPane .workflow-notification-list {
+  width: 100% !important;
+  height: 100% !important;
+  max-height: 68px !important;
+  overflow-y: auto !important;
+}
+
+#topStatusBar #tsNotesPane .host-tab-notes {
+  width: 100% !important;
+  height: calc(100% - 13px) !important;
+  min-height: 0 !important;
+  resize: none !important;
+}
+
+/* Keep second row tall. */
+#topStatusBar .host-live-workflow-row {
+  margin-top: 7px !important;
+}
+
+/* Current song */
+#topStatusBar .ts-run-order-row.is-playing {
+  border-color: #45c96e !important;
+  background:
+    linear-gradient(90deg, rgba(48,174,88,.18), rgba(14,25,18,.92)) !important;
+  box-shadow:
+    inset 3px 0 0 #49d475,
+    0 0 10px rgba(73,212,117,.10) !important;
+}
+
+#topStatusBar .ts-run-order-row.is-playing .ts-run-main strong {
+  color: #9bf2b3 !important;
+}
+
+#topStatusBar .ts-playing-label {
+  display: inline-block !important;
+  margin-left: 6px !important;
+  padding: 2px 5px !important;
+  border: 1px solid #3ca65d !important;
+  border-radius: 999px !important;
+  background: rgba(32,105,53,.30) !important;
+  color: #76e796 !important;
+  font-size: 5px !important;
+  font-style: normal !important;
+  font-weight: 1000 !important;
+  letter-spacing: .05em !important;
+}
+
+/* Row is clickable for request details */
+#topStatusBar .ts-run-order-row {
+  cursor: pointer !important;
+}
+
+#topStatusBar .ts-run-order-row:hover {
+  border-color: #40545e !important;
+  background-color: rgba(255,255,255,.025) !important;
+}
+
+/* Play action only appears when no song is playing and no break is active. */
+#topStatusBar .ts-run-actions .play-song {
+  border-color: #2e8c4b !important;
+  background: rgba(20,88,42,.28) !important;
+  color: #72e392 !important;
+}
+
+#topStatusBar .ts-run-actions .play-song:hover {
+  border-color: #58d47d !important;
+  box-shadow: 0 0 8px rgba(79,218,119,.18) !important;
+}
+
+/* Request details popup inside Top Status Bar */
+#topStatusBar .ts-run-details-modal {
+  position: absolute !important;
+  z-index: 10050 !important;
+  inset: 0 !important;
+  display: grid !important;
+  place-items: center !important;
+  padding: 12px !important;
+  background: rgba(0,0,0,.72) !important;
+  backdrop-filter: blur(2px) !important;
+}
+
+#topStatusBar .ts-run-details-modal.hidden {
+  display: none !important;
+}
+
+#topStatusBar .ts-run-details-box {
+  width: min(470px, 92%) !important;
+  max-height: 90% !important;
+  overflow: hidden !important;
+  border: 1px solid #43545e !important;
+  border-radius: 9px !important;
+  background: #10171b !important;
+  box-shadow: 0 14px 40px rgba(0,0,0,.48) !important;
+}
+
+#topStatusBar .ts-run-details-head {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 10px !important;
+  padding: 9px 10px !important;
+  border-bottom: 1px solid #2d3a41 !important;
+  background: #151f24 !important;
+}
+
+#topStatusBar .ts-run-details-head > div {
+  display: grid !important;
+  gap: 2px !important;
+  min-width: 0 !important;
+}
+
+#topStatusBar .ts-run-details-head small {
+  color: #77868d !important;
+  font-size: 6px !important;
+  font-weight: 950 !important;
+}
+
+#topStatusBar .ts-run-details-head strong {
+  overflow: hidden !important;
+  color: #fff !important;
+  font-size: 12px !important;
+  font-weight: 950 !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+#topStatusBar #tsRunDetailsClose {
+  flex: 0 0 28px !important;
+  width: 28px !important;
+  height: 28px !important;
+  border: 1px solid #4d5b62 !important;
+  border-radius: 5px !important;
+  background: #20292e !important;
+  color: #fff !important;
+}
+
+#topStatusBar .ts-run-details-body {
+  display: grid !important;
+  grid-template-columns: repeat(2,minmax(0,1fr)) !important;
+  gap: 7px !important;
+  max-height: 220px !important;
+  padding: 10px !important;
+  overflow-y: auto !important;
+}
+
+#topStatusBar .ts-run-detail-field {
+  min-width: 0 !important;
+  padding: 7px 8px !important;
+  border: 1px solid #2d3b42 !important;
+  border-radius: 6px !important;
+  background: #0b1216 !important;
+}
+
+#topStatusBar .ts-run-detail-field span {
+  display: block !important;
+  margin-bottom: 3px !important;
+  color: #738188 !important;
+  font-size: 6px !important;
+  font-weight: 950 !important;
+  text-transform: uppercase !important;
+}
+
+#topStatusBar .ts-run-detail-field strong {
+  display: block !important;
+  overflow-wrap: anywhere !important;
+  color: #eef4f5 !important;
+  font-size: 9px !important;
+  line-height: 1.25 !important;
+}
+
+#topStatusBar .ts-run-detail-empty {
+  grid-column: 1 / -1 !important;
+  padding: 12px !important;
+  color: #89979e !important;
+  font-size: 8px !important;
+  text-align: center !important;
+}
+
+@media (max-width: 760px) {
+  #topStatusBar .host-primary-tabs-card {
+    height: 118px !important;
+    min-height: 118px !important;
+    max-height: 118px !important;
+  }
+
+  #topStatusBar .host-session-combined-grid {
+    grid-template-columns: minmax(0,1fr) minmax(0,1fr) !important;
+    gap: 6px !important;
+  }
+
+  #topStatusBar .host-session-break-inline {
+    grid-template-columns: minmax(88px,.65fr) minmax(140px,1.1fr) 74px !important;
+  }
+
+  #topStatusBar .host-session-break-inline .break-action-btn {
+    width: 74px !important;
+    min-width: 74px !important;
+  }
+}
