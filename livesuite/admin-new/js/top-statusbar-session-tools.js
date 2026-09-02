@@ -829,16 +829,80 @@
     );
   }
 
-  function openRunOrderSong(itemId) {
+  function normaliseSongIdentity(value) {
+    return String(value || "")
+      .toLowerCase()
+      .replace(/&/g, "and")
+      .replace(/[^a-z0-9]+/g, "");
+  }
+
+  function findAuthoritativeSongForRunItem(item) {
+    if (!item) return null;
+
+    // First: exact Firestore document ID.
+    const byId = state.songs.find(song =>
+      song.id === item.songId ||
+      song.firebaseId === item.songId
+    );
+    if (byId) return byId;
+
+    // Existing Run Order rows may contain a migrated legacy song.id field
+    // (title+artist slug) instead of the actual Firestore document ID.
+    const titleKey = normaliseSongIdentity(item.songTitle || item.title);
+    const artistKey = normaliseSongIdentity(item.artist || item.songArtist);
+
+    let matches = state.songs.filter(song =>
+      normaliseSongIdentity(song.title) === titleKey
+    );
+
+    if (artistKey) {
+      const exactArtist = matches.find(song =>
+        normaliseSongIdentity(song.artist) === artistKey
+      );
+      if (exactArtist) return exactArtist;
+    }
+
+    return matches.length === 1 ? matches[0] : null;
+  }
+
+  async function repairRunOrderSongId(item, song) {
+    if (!item?.id || !song?.id || item.songId === song.id) return;
+
+    const items = queueItems().map(entry =>
+      entry.id === item.id
+        ? {
+            ...entry,
+            songId:song.id,
+            songTitle:entry.songTitle || song.title || "",
+            artist:entry.artist || song.artist || ""
+          }
+        : {...entry}
+    );
+
+    try {
+      await saveRunOrder(items);
+    } catch (error) {
+      console.warn("Could not repair Run Order song ID:", error);
+    }
+  }
+
+  async function openRunOrderSong(itemId) {
     const item = queueItems().find(entry => entry.id === itemId);
-    if (!item?.songId) return;
+    if (!item) return;
+
+    const song = findAuthoritativeSongForRunItem(item);
+    const songId = song?.id || item.songId || "";
+
+    if (!songId) return;
+
+    if (song && item.songId !== song.id) {
+      await repairRunOrderSongId(item, song);
+    }
 
     const params = new URLSearchParams();
-    params.set("id", item.songId);
+    params.set("id", songId);
     if (item.requestId) params.set("requestId", item.requestId);
 
-    // Top Status Bar is used on both host/lyricsviewer.html and
-    // host/lyricview.html, so this relative path works in both.
     location.href = `lyricview.html?${params.toString()}`;
   }
 
@@ -1379,7 +1443,13 @@
 
     state.db.collection("lyrics").get().then(snapshot => {
       state.songs = snapshot.docs
-        .map(doc => ({id:doc.id,...(doc.data() || {})}))
+        .map(doc => ({
+          ...(doc.data() || {}),
+          // Firestore document ID is authoritative. A migrated legacy "id"
+          // field must never overwrite it.
+          id:doc.id,
+          firebaseId:doc.id
+        }))
         .sort((a,b) =>
           String(a.title || "").localeCompare(String(b.title || ""), undefined, {sensitivity:"base"})
         );
