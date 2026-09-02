@@ -166,15 +166,24 @@
     <nav id="alphabetNav" class="alphabet-nav" aria-label="Alphabet navigation"></nav>
   </div>
 
-  <footer class="library-player-bar">
-    <div>
-      <strong>PLAY ANY SONG</strong>
-      <span id="selectedSongLabel">Select a song to preview</span>
+  <footer class="library-player-bar run-order-player-bar">
+    <div class="run-order-player-info">
+      <strong>NEXT IN RUN ORDER</strong>
+      <span id="selectedSongLabel">No song queued</span>
+      <small id="runOrderPlayerMeta">Waiting for Run Order</small>
     </div>
-    <button id="prevSongBtn" type="button">◀◀</button>
-    <button id="playSelectedBtn" class="play" type="button">▶</button>
-    <button id="nextSongBtn" type="button">▶▶</button>
-    <a class="btn ghost" href="karaoke-lyric-view.html" target="_blank">OPEN SINGER VIEW</a>
+
+    <button
+      id="playSelectedBtn"
+      class="play"
+      type="button"
+      title="Open next Run Order song"
+      disabled
+    >▶</button>
+
+    <button id="openRunOrderBtn" class="btn ghost" type="button">
+      OPEN RUN ORDER
+    </button>
   </footer>
 
   <script src="../firebase-projects.js"></script>
