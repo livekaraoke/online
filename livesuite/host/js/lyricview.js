@@ -501,17 +501,60 @@
   }
 
   async function sendToKaraoke() {
-    if (!currentSong) return;
-    await db.collection("karaokeControl").doc("liveLyrics").set({
-      currentSongId: currentSongId,
-      songId: currentSongId,
-      title: currentSong.title || "",
-      artist: currentSong.artist || "",
-      song: currentSong,
-      reset: false,
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    }, {merge:true});
-    await showModal("Sent to Karaoke", "The singer display has been updated.");
+    if (!currentSong || !currentSongId) {
+      return showModal(
+        "No Song Loaded",
+        "Open a song before sending it to the karaoke display."
+      );
+    }
+
+    const button = $("sendToKaraokeBtn");
+    const quickButton = $("quickSendToKaraokeBtn");
+
+    if (button) button.disabled = true;
+    if (quickButton) quickButton.disabled = true;
+
+    try {
+      const reloadToken =
+        `${Date.now()}_${Math.random().toString(36).slice(2,7)}`;
+
+      // karaoke-lyric-view.html listens to karaokeControl/liveLyrics.
+      // Write both supported ID fields and an explicit display state.
+      // forceReloadToken means pressing SEND TO KARAOKE again also reloads
+      // the same song instead of being ignored as an unchanged ID.
+      await db.collection("karaokeControl").doc("liveLyrics").set({
+        currentLyricsSongId: currentSongId,
+        currentSongId: currentSongId,
+        songId: currentSongId,
+
+        songTitle: currentSong.title || "",
+        songArtist: currentSong.artist || "",
+        title: currentSong.title || "",
+        artist: currentSong.artist || "",
+
+        song: currentSong,
+        displayState: "song",
+        reset: false,
+        forceReloadToken: reloadToken,
+        sentAt: firebase.firestore.FieldValue.serverTimestamp(),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge:true });
+
+      await showModal(
+        "Sent to Karaoke",
+        `${currentSong.title || "The song"} is being sent to the karaoke display.`
+      );
+    } catch (error) {
+      console.error("Could not send song to karaoke display:", error);
+
+      await showModal(
+        "Send Failed",
+        error?.message || "Could not update the karaoke display."
+      );
+    } finally {
+      if (button) button.disabled = false;
+      if (quickButton) quickButton.disabled = false;
+    }
   }
 
   async function resetKaraoke() {
