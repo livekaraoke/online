@@ -127,23 +127,72 @@
   }
 
   async function startPerformance() {
+    const event =
+      typeof window.getSelectedSessionEvent === "function"
+        ? window.getSelectedSessionEvent()
+        : null;
 
-console.log("START session clicked", {
-  LK,
-  db: LK?.db,
-  titleInput: $("sessionTitleInput"),
-  venueInput: $("venueInput")
-});
+    if (!event?.id) {
+      setSessionStatus("Choose an Upcoming Event before starting the Performance.");
+      $("sessionEventSelect")?.focus();
+      return;
+    }
 
-    const title = $("sessionTitleInput")?.value.trim() || "Untitled Session";
-    const venue = $("venueInput")?.value.trim() || "Unknown Venue";
-    const notes = $("sessionNotesInput")?.value || "";
+    const title =
+      event.name ||
+      `${event.type || "Performance"}${event.venue ? ` @ ${event.venue}` : ""}`;
+
+    const venue = event.venue || "Unknown Venue";
+    const sessionType = event.type || "Other";
+    const notes = $("sessionNotesInput")?.value || event.notes || "";
 
     const localStartedAt = nowTimestamp();
 
-    const ref = await LK.db.collection("performanceSessions").add({
+    const eventSnapshot = {
+      id: event.id || "",
+      name: event.name || "",
+      title,
+      type: sessionType,
+      venue,
+      address: event.address || "",
+      date: event.date || "",
+      startTime: event.startTime || "",
+      endTime: event.endTime || "",
+      arrivalTime: event.arrivalTime || "",
+      contactName: event.contactName || "",
+      contact: event.contact || "",
+      notes: event.notes || ""
+    };
+
+    const scheduleStart = event.date && event.startTime
+      ? new Date(`${event.date}T${event.startTime}:00`)
+      : null;
+
+    let scheduleEnd = event.date && event.endTime
+      ? new Date(`${event.date}T${event.endTime}:00`)
+      : null;
+
+    if (scheduleStart && scheduleEnd && scheduleEnd <= scheduleStart) {
+      scheduleEnd = new Date(scheduleEnd.getTime() + 24 * 60 * 60 * 1000);
+    }
+
+    const scheduledStartAt =
+      scheduleStart && !Number.isNaN(scheduleStart.getTime())
+        ? firebase.firestore.Timestamp.fromDate(scheduleStart)
+        : null;
+
+    const scheduledEndAt =
+      scheduleEnd && !Number.isNaN(scheduleEnd.getTime())
+        ? firebase.firestore.Timestamp.fromDate(scheduleEnd)
+        : null;
+
+    const sessionPayload = {
       title,
       venue,
+      type: sessionType,
+      sessionType,
+      eventId: event.id,
+      eventSnapshot,
       notes,
       status: "active",
       isActive: true,
@@ -153,34 +202,52 @@ console.log("START session clicked", {
       breaks: [],
       createdAt: serverNow(),
       updatedAt: serverNow()
-    });
+    };
+
+    if (scheduledStartAt) sessionPayload.scheduledStartAt = scheduledStartAt;
+    if (scheduledEndAt) sessionPayload.scheduledEndAt = scheduledEndAt;
+
+    const ref = await LK.db.collection("performanceSessions").add(sessionPayload);
 
     LK.state.currentSessionId = ref.id;
     LK.state.currentSessionData = {
       id: ref.id,
-      title,
-      venue,
-      notes,
-      status: "active",
-      isActive: true,
-      breakOpen: false,
-      startedAt: localStartedAt,
-      endedAt: null,
-      breaks: []
+      ...sessionPayload,
+      startedAt: localStartedAt
     };
+
     updateSessionUi(LK.state.currentSessionData);
 
-    await LK.db.collection("karaokeControl").doc("currentSession").set({
+    const controlPayload = {
       active: true,
       sessionId: ref.id,
       activeSessionId: ref.id,
+      eventId: event.id,
       title,
       venue,
+      type: sessionType,
+      sessionType,
+      eventSnapshot,
       startedAt: serverNow(),
       updatedAt: serverNow()
-    }, { merge: true });
+    };
 
-    setSessionStatus("Performance started.");
+    if (scheduledStartAt) controlPayload.scheduledStartAt = scheduledStartAt;
+    if (scheduledEndAt) controlPayload.scheduledEndAt = scheduledEndAt;
+
+    await LK.db.collection("karaokeControl").doc("currentSession").set(
+      controlPayload,
+      { merge: true }
+    );
+
+    // A Performance Session is the authoritative live state.
+    await LK.db.collection("karaoke").doc("state").set({
+      isLive: true,
+      manualOverride: true,
+      updatedAt: serverNow()
+    }, { merge:true });
+
+    setSessionStatus(`Performance started: ${title}`);
   }
 
   async function endPerformance() {
@@ -207,10 +274,19 @@ console.log("START session clicked", {
     active: false,
     sessionId: null,
     activeSessionId: null,
+    eventId: null,
     title: "",
     venue: "",
+    type: "",
+    sessionType: "",
     updatedAt: serverNow()
   }, { merge: true });
+
+  await LK.db.collection("karaoke").doc("state").set({
+    isLive: false,
+    manualOverride: true,
+    updatedAt: serverNow()
+  }, { merge:true });
 
   LK.state.currentSessionId = null;
   LK.state.currentSessionData = null;
@@ -224,8 +300,6 @@ console.log("START session clicked", {
 console.log("START break clicked", {
   LK,
   db: LK?.db,
-  titleInput: $("sessionTitleInput"),
-  venueInput: $("venueInput")
 });
     const session = LK.state.currentSessionData;
     if (!LK.state.currentSessionId || !session) return;
@@ -240,8 +314,6 @@ console.log("START break clicked", {
 console.log("END break clicked", {
   LK,
   db: LK?.db,
-  titleInput: $("sessionTitleInput"),
-  venueInput: $("venueInput")
 });
     const session = LK.state.currentSessionData;
     if (!LK.state.currentSessionId || !session) return;
@@ -268,8 +340,6 @@ console.log("END break clicked", {
     const session = LK.state.currentSessionData;
     if (!session) return;
     $("sessionSetupFields").style.display = "block";
-    $("sessionTitleInput").value = session.title || "";
-    $("venueInput").value = session.venue || "";
   }
 
   function listenCurrentSession() {
