@@ -950,24 +950,28 @@
 
     await finalizeCurrentSongPlayed();
     showEndNextSongButton(true);
+    await renderEndNextSongDetails();
   }
 
 
-  async function goToNextRunOrderSong() {
+  async function getNextRunOrderItem() {
     const { sessionId } = await getActiveSessionContext();
-
-    if (!sessionId) {
-      await showModal("No Active Session", "Start a Performance Session first.");
-      return;
-    }
+    if (!sessionId) return null;
 
     const snap = await db.collection("karaokeControl").doc("runOrder").get();
     const data = snap.exists ? (snap.data() || {}) : {};
 
-    if (data.sessionId !== sessionId || !Array.isArray(data.items) || !data.items.length) {
-      await showModal("Run Order Empty", "There are no songs in the Run Order.");
-      return;
+    if (
+      data.sessionId !== sessionId ||
+      !Array.isArray(data.items) ||
+      !data.items.length
+    ) {
+      return null;
     }
+
+    const terminal = new Set([
+      "played","abandoned","left","deleted","deletedbyhost","declined"
+    ]);
 
     const items = data.items;
     let currentIndex = -1;
@@ -980,18 +984,119 @@
       currentIndex = items.findIndex(item => item.songId === currentSongId);
     }
 
-    let next = null;
-
-    for (let i = Math.max(0,currentIndex + 1); i < items.length; i++) {
-      if (items[i].status !== "played" && items[i].songId) {
-        next = items[i];
-        break;
+    for (let i = Math.max(0, currentIndex + 1); i < items.length; i++) {
+      if (
+        items[i].songId &&
+        !terminal.has(String(items[i].status || "").toLowerCase())
+      ) {
+        return items[i];
       }
     }
 
-    if (!next && currentIndex < 0) {
-      next = items.find(item => item.status !== "played" && item.songId) || null;
+    if (currentIndex < 0) {
+      return items.find(item =>
+        item.songId &&
+        !terminal.has(String(item.status || "").toLowerCase())
+      ) || null;
     }
+
+    return null;
+  }
+
+  function nextDetailField(label, value) {
+    const clean = String(value ?? "").trim();
+    if (!clean) return "";
+
+    return `
+      <div class="host-next-detail-row">
+        <span>${esc(label)}</span>
+        <strong>${esc(clean)}</strong>
+      </div>
+    `;
+  }
+
+  async function renderEndNextSongDetails() {
+    const card = $("endNextSongDetailsCard");
+    if (!card) return;
+
+    const next = await getNextRunOrderItem();
+
+    if (!next?.songId) {
+      card.hidden = false;
+      card.innerHTML = `
+        <div class="host-next-song-card-title">NEXT IN RUN ORDER</div>
+        <div class="host-next-song-empty">No next song in the Run Order.</div>
+      `;
+      return;
+    }
+
+    let song = {};
+    let request = {};
+
+    try {
+      const songSnap = await db.collection("lyrics").doc(next.songId).get();
+      if (songSnap.exists) song = songSnap.data() || {};
+    } catch (error) {
+      console.warn("Could not load next song details:", error);
+    }
+
+    if (next.requestId) {
+      try {
+        const requestSnap = await db
+          .collection("publicSongRequests")
+          .doc(next.requestId)
+          .get();
+
+        if (requestSnap.exists) request = requestSnap.data() || {};
+      } catch (error) {
+        console.warn("Could not load next request details:", error);
+      }
+    }
+
+    const bpm =
+      song.userBpm ??
+      song.bpm ??
+      next.bpm ??
+      "";
+
+    const requester =
+      request.singerName ||
+      request.name ||
+      next.singerName ||
+      "";
+
+    card.hidden = false;
+    card.innerHTML = `
+      <div class="host-next-song-card-title">NEXT IN RUN ORDER</div>
+
+      <div class="host-next-song-hero">
+        <strong>${esc(song.title || next.songTitle || next.title || "Untitled Song")}</strong>
+        <span>${esc(song.artist || next.artist || "")}</span>
+      </div>
+
+      <div class="host-next-song-detail-grid">
+        ${nextDetailField("BPM", bpm)}
+        ${nextDetailField("Key", song.key)}
+        ${nextDetailField("Capo", song.capo)}
+        ${nextDetailField("Song Year", song.year)}
+        ${nextDetailField("Requested By", requester)}
+        ${nextDetailField("Country / From", request.location)}
+        ${nextDetailField("Age Range", request.ageRange)}
+        ${nextDetailField("Rating", request.rating ? `${request.rating}/5` : "")}
+        ${nextDetailField("Request Note", request.note)}
+      </div>
+    `;
+  }
+
+  async function goToNextRunOrderSong() {
+    const { sessionId } = await getActiveSessionContext();
+
+    if (!sessionId) {
+      await showModal("No Active Session", "Start a Performance Session first.");
+      return;
+    }
+
+    const next = await getNextRunOrderItem();
 
     if (!next) {
       await showModal("End of Run Order", "There is no next unplayed song.");
@@ -1005,6 +1110,7 @@
     location.href = `lyricview.html?${params.toString()}`;
   }
 
+
   function startAutoScroll() {
     const wasOff = !autoScrollOn;
     autoScrollOn = !autoScrollOn;
@@ -1015,6 +1121,10 @@
     if (wasOff && autoScrollOn) {
       autoScrollEndHandled = false;
       showEndNextSongButton(false);
+      if ($("endNextSongDetailsCard")) {
+        $("endNextSongDetailsCard").hidden = true;
+        $("endNextSongDetailsCard").innerHTML = "";
+      }
 
       // PLAY marks the matching Run Order item as "playing", keeping it
       // visible and highlighted in the Top Status Bar.
