@@ -2966,3 +2966,124 @@ margin-right: 5px;
     line-height: 1.25;
   }
 }
+
+
+/* ========================================================================
+   REAL-TIME PUBLIC QUEUE / CLOSED SESSION — 2026-09-02
+   ======================================================================== */
+
+.requests-closed-message p {
+  margin: 10px auto 20px;
+  max-width: 560px;
+  color: #555;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.requests-closed-home-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 0 22px;
+  border: 2px solid #b30000;
+  border-radius: 9px;
+  background: #b30000;
+  color: #fff !important;
+  font-size: 13px;
+  font-weight: 1000;
+  letter-spacing: .05em;
+  text-decoration: none;
+}
+
+.requests-closed-home-btn:hover {
+  background: #8f0000;
+  border-color: #8f0000;
+}
+
+.public-queue-live-state {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0 0 12px;
+  padding: 10px 11px;
+  border: 1px solid #3c4c54;
+  border-radius: 8px;
+  background: #10171b;
+}
+
+.public-queue-live-state > span {
+  flex: 0 0 auto;
+  font-size: 20px;
+}
+
+.public-queue-live-state > div {
+  display: grid;
+  gap: 2px;
+}
+
+.public-queue-live-state strong {
+  color: #edf2f4;
+  font-size: 12px;
+  font-weight: 1000;
+}
+
+.public-queue-live-state small {
+  color: #89969c;
+  font-size: 9px;
+  font-weight: 750;
+}
+
+.public-queue-live-state.is-break {
+  border-color: #c49335;
+  background: linear-gradient(90deg, rgba(127,86,17,.24), #151208);
+}
+
+.public-queue-live-state.is-break strong {
+  color: #ffd463;
+}
+
+.public-queue-live-state.is-playing {
+  border-color: #36bd59;
+  background: linear-gradient(90deg, rgba(26,112,48,.23), #09130d);
+}
+
+.public-queue-live-state.is-playing strong {
+  color: #72e693;
+}
+
+.public-queue-section-title .live-count {
+  color: #fff;
+  opacity: .65;
+}
+
+@media (max-width: 640px) {
+  .requests-closed-message {
+    margin: 18px 7px 0 !important;
+    padding: 26px 14px !important;
+  }
+
+  .requests-closed-message h1 {
+    font-size: 28px !important;
+    line-height: 1.05 !important;
+  }
+
+  .requests-closed-message p {
+    font-size: 12px !important;
+  }
+
+  .requests-closed-home-btn {
+    width: 100%;
+    min-height: 50px;
+  }
+
+  .public-queue-live-state {
+    margin-bottom: 10px;
+    padding: 9px;
+  }
+
+  .public-queue-live-state strong {
+    font-size: 11px;
+  }
+}
