@@ -55,9 +55,9 @@
       <div class="search-row">
         <div class="search-wrap">
           <span class="search-icon">⌕</span>
-          <input id="searchInput" class="song-search" placeholder="Search for songs or artists...">
+          <input id="searchInput" class="song-search" placeholder="Search for songs or artists..." autocomplete="off" enterkeyhint="search">
           <button id="clearSearchBtn" class="clear-search-btn" type="button">✕</button>
-        </div>
+            </div>
         <select id="artistFilterSelect" class="artist-filter-select" aria-label="Search by artist">
           <option value="">Search by artist</option>
         </select>
@@ -68,17 +68,16 @@
 
     <div id="publicSongList" class="requests-open-only"></div>
 
-    <section class="bottom-signup-bar requests-open-only">
-      <div class="bottom-signup-copy"><b>🎙️</b><div><strong>READY TO SING?</strong><span>Add songs, then send your request to the host.</span></div></div>
+    <section id="quickSignupBar" class="bottom-signup-bar requests-open-only">
+      <div class="bottom-signup-copy"><b>🎙️</b><div><strong>READY TO SING?</strong><span>Your selected songs are ready.</span></div></div>
       <button class="bottom-signup-btn" type="button" onclick="openSignupModal()"><span>🎙️</span> SIGN UP TO SING <b class="cart-count">0</b></button>
     </section>
   </main>
 
   <nav class="bottom-tabs requests-open-only">
-    <button class="active">♫ SONG LIST</button>
-    <button onclick="switchBottomTab('queue')">♙ QUEUE <b class="cart-count">0</b></button>
-    <button class="disabled-tab" disabled title="Favourites coming soon">☆ FAVOURITES</button>
-    <button onclick="openInfoModal()">ⓘ INFO</button>
+    <button class="active bottom-tab-songlist" onclick="closeBottomPanels()"><span>♫ SONG LIST</span></button>
+    <button class="bottom-tab-queue" onclick="switchBottomTab('queue')"><span>♙ QUEUE</span><b class="cart-count">0</b></button>
+    <button class="bottom-tab-info" onclick="openInfoModal()"><span>ⓘ INFO</span></button>
   </nav>
 
   <div id="signupModal" class="signup-modal hidden">
@@ -108,18 +107,11 @@
   <div id="queuePanel" class="bottom-panel hidden">
     <div class="bottom-panel-box">
       <button class="panel-close" type="button" onclick="closeBottomPanels()">✕</button>
-      <h2>QUEUE</h2>
+      <h2>YOUR KARAOKE QUEUE</h2>
       <div id="queuePanelContent"></div>
     </div>
   </div>
-
-  <div id="favouritesPanel" class="bottom-panel hidden">
-    <div class="bottom-panel-box">
-      <button class="panel-close" type="button" onclick="closeBottomPanels()">✕</button>
-      <h2>FAVOURITES</h2>
-      <div id="favouritesPanelContent"></div>
-    </div>
-  </div>
+</div>
 
   <div id="infoModal" class="signup-modal hidden">
     <div class="signup-box info-box-public">
