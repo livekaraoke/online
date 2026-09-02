@@ -2907,3 +2907,62 @@ margin-right: 5px;
     font-size: 10px !important;
   }
 }
+
+
+/* ========================================================================
+   LIVE BREAK NOTICE
+   ======================================================================== */
+.public-break-notice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 10px 0;
+  padding: 10px 12px;
+  border: 1px solid #c4902f;
+  border-radius: 9px;
+  background: linear-gradient(90deg, rgba(117,78,13,.26), rgba(35,25,8,.94));
+  box-shadow: 0 0 15px rgba(198,145,38,.12);
+}
+
+.public-break-notice > span {
+  flex: 0 0 auto;
+  font-size: 25px;
+}
+
+.public-break-notice > div {
+  display: grid;
+  gap: 2px;
+}
+
+.public-break-notice strong {
+  color: #ffd45b;
+  font-size: 13px;
+  font-weight: 1000;
+  letter-spacing: .05em;
+}
+
+.public-break-notice small {
+  color: #cbbf9d;
+  font-size: 9px;
+  font-weight: 750;
+}
+
+@media (max-width: 640px) {
+  .public-break-notice {
+    margin: 8px 7px 10px;
+    padding: 9px 10px;
+  }
+
+  .public-break-notice > span {
+    font-size: 21px;
+  }
+
+  .public-break-notice strong {
+    font-size: 12px;
+  }
+
+  .public-break-notice small {
+    font-size: 9px;
+    line-height: 1.25;
+  }
+}
