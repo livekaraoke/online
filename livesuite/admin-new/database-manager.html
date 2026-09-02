@@ -113,10 +113,11 @@ pre{background:#090909;border:1px solid #333;border-radius:8px;padding:12px;whit
 <div class="card">
   <h2>Copy Database</h2>
   <div class="notice" style="margin-bottom:12px">
-    <b>userProfiles note:</b> Firebase Authentication UIDs are project-specific.
-    The same email account normally has a different UID in LIVEKARAOKEMT and
-    LIVEKARAOKESUITE. This manager now maps your old signed-in profile to your
-    new signed-in UID instead of trying to create the old UID.
+    <b>userProfiles is intentionally skipped.</b>
+    Firebase Authentication UIDs are project-specific and the profile is not
+    required to migrate your songs, setlists, venues, gigs, sessions, requests,
+    notes or performance data. Your new Admin account can create its own profile
+    in LIVEKARAOKESUITE without risking another permission failure.
   </div>
 
   <div class="row">
@@ -147,7 +148,7 @@ pre{background:#090909;border:1px solid #333;border-radius:8px;padding:12px;whit
     Collections: lyrics, lyricsSetlists, songlists, songlistSections, songlistSongs,
     publicSongRequests, publicSignupSessions, performanceSessions, performanceLogs,
     performedSongs, karaoke, karaokeControl, liveLyrics, notes, noteSettings,
-    userProfiles, upcomingEvents, venues, plus the specific document karaoke/state. Also copies performanceSessions/*/performedSongs.
+    upcomingEvents, venues, plus the specific document karaoke/state. Also copies performanceSessions/*/performedSongs.
   </small></p>
 
   <pre id="log"></pre>
@@ -203,9 +204,7 @@ const specialDocuments = [
 // userProfiles cannot be copied as a normal collection because its Firestore
 // create rule requires request.auth.uid == document ID. Firebase Auth UIDs are
 // different between projects even when the same email/password is used.
-const specialCollections = [
-  "userProfiles"
-];
+const specialCollections = [];
 
 const MIGRATION_PROGRESS_KEY = "lksuite.dbMigrationProgress.v2";
 
@@ -633,6 +632,12 @@ document.getElementById("copyBtn").onclick = async () => {
 
         throw error;
       }
+    }
+
+    if (!progress.specialCompleted["userProfiles:skipped"]) {
+      log("SKIP userProfiles — intentionally not migrated (Firebase Auth UID is project-specific)");
+      progress.specialCompleted["userProfiles:skipped"] = true;
+      saveMigrationProgress(sourceKey, destinationKey, progress);
     }
 
     for (const collectionName of specialCollections) {
