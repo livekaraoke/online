@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Public Song List Editor</title>
+  <link rel="icon" href="/online/favicon.ico">
+  <link rel="stylesheet" href="css/listeditor.css">
+</head>
+<body>
+  <main class="le-shell">
+    <header class="le-header">
+      <div>
+        <span class="le-kicker">LIVE KARAOKE SUITE</span>
+        <h1>Public Song List Editor</h1>
+        <p>Choose which songs from the currently selected Public Song List appear in each featured category.</p>
+      </div>
+      <div class="le-actions">
+        <a href="../admin-new/admin.html">← Admin</a>
+        <a href="index.html" target="_blank">View Public List ↗</a>
+      </div>
+    </header>
+
+    <section class="le-status-card">
+      <div>
+        <span>SELECTED PUBLIC SETLIST</span>
+        <strong id="leSetlistName">Loading…</strong>
+      </div>
+      <div>
+        <span>SONGS</span>
+        <strong id="leSongCount">0</strong>
+      </div>
+      <div>
+        <span>SAVE STATUS</span>
+        <strong id="leSaveStatus">Loading…</strong>
+      </div>
+    </section>
+
+    <section class="le-toolbar">
+      <div class="le-search-wrap">
+        <span>⌕</span>
+        <input id="leSearchInput" type="search" placeholder="Search songs or artists…">
+      </div>
+      <button id="leSaveBtn" class="primary" type="button">SAVE CATEGORIES</button>
+    </section>
+
+    <section class="le-legend">
+      <div><i class="popular"></i>Most Popular</div>
+      <div><i class="party"></i>Party Anthems</div>
+      <div><i class="easy"></i>Easy To Sing</div>
+      <div><i class="new"></i>New Additions</div>
+    </section>
+
+    <section class="le-table-card">
+      <div class="le-table-head">
+        <span>SONG</span>
+        <span>MOST POPULAR</span>
+        <span>PARTY ANTHEMS</span>
+        <span>EASY TO SING</span>
+        <span>NEW ADDITIONS</span>
+      </div>
+      <div id="leSongRows" class="le-song-rows">
+        <div class="le-empty">Loading selected setlist…</div>
+      </div>
+    </section>
+  </main>
+
+  <script src="../firebase-projects.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script>
+    firebase.initializeApp(
+      window.LKFirebaseProjects
+        ? window.LKFirebaseProjects.getSelectedConfig()
+        : window.LK_FIREBASE_CONFIG
+    );
+    window.db = firebase.firestore();
+  </script>
+  <script src="js/listeditor.js"></script>
+</body>
+</html>
