@@ -58,12 +58,61 @@
         <div>${LK.dashboard.escapeHTML(bpm)}</div>
         <div>${LK.dashboard.minutesAgo(req.createdAt)} mins ago</div>
         <div class="request-actions">
-          <button class="request-done" onclick="completeRequest('${req.id}')">★</button>
+          <button class="request-done" onclick="acceptRequestToRunOrder('${req.id}')" title="Accept and add to Run Order">✓</button>
           <button class="request-abandoned" onclick="openReasonModal('${req.id}', 'abandoned')">🚶</button>
           <button class="request-delete" onclick="openReasonModal('${req.id}', 'deleted')">×</button>
         </div>`;
       box.appendChild(row);
     });
+  }
+
+  async function acceptRequestToRunOrder(id) {
+    const req = LK.state.currentRequests.find(item => item.id === id);
+    const sessionId = LK.state.currentSessionId || "";
+
+    if (!req) return;
+
+    if (!sessionId) {
+      LK.sessions.setSessionStatus("Start a Performance Session before accepting requests.");
+      return;
+    }
+
+    const runRef = LK.db.collection("karaokeControl").doc("runOrder");
+    const runSnap = await runRef.get();
+    const runData = runSnap.exists ? (runSnap.data() || {}) : {};
+
+    let items =
+      runData.sessionId && runData.sessionId !== sessionId
+        ? []
+        : (Array.isArray(runData.items) ? runData.items.map(item => ({...item})) : []);
+
+    if (!items.some(item => item.requestId === id)) {
+      items.push({
+        id: `req_${id}`,
+        songId: req.songId || "",
+        songTitle: req.songTitle || req.title || "",
+        artist: req.songArtist || req.artist || "",
+        singerName: req.singerName || req.name || "",
+        requestId: id,
+        source: "request",
+        status: "queued",
+        addedAtMs: Date.now()
+      });
+
+      await runRef.set({
+        sessionId,
+        items,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge:true });
+    }
+
+    await LK.db.collection("publicSongRequests").doc(id).set({
+      status: "queued",
+      acceptedAt: serverNow(),
+      updatedAt: serverNow()
+    }, { merge:true });
+
+    LK.sessions.setSessionStatus("Request accepted and added to Run Order.");
   }
 
   async function completeRequest(id) {
@@ -102,6 +151,7 @@
 
   LK.requests = { initRequests, listenRequestsForSession, renderActiveRequests };
   window.renderActiveRequests = renderActiveRequests;
+  window.acceptRequestToRunOrder = acceptRequestToRunOrder;
   window.completeRequest = completeRequest;
   window.openReasonModal = openReasonModal;
   window.closeReasonModal = closeReasonModal;
