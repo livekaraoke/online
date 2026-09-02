@@ -238,26 +238,26 @@
       <div class="host-card-tabs host-workflow-tabs" role="tablist" aria-label="Live workflow">
         <button
           id="tsPendingTab"
-          class="host-card-tab active"
+          class="host-card-tab"
           type="button"
           role="tab"
-          aria-selected="true"
+          aria-selected="false"
           aria-controls="tsPendingPane"
           data-ts-workflow-tab="pending"
         >🎤 PENDING REQUESTS <span id="tsPendingTabCount" class="ts-tab-count pending-count hidden">(0)</span></button>
 
         <button
           id="tsRunOrderTab"
-          class="host-card-tab"
+          class="host-card-tab active"
           type="button"
           role="tab"
-          aria-selected="false"
+          aria-selected="true"
           aria-controls="tsRunOrderPane"
           data-ts-workflow-tab="runorder"
         >♫ RUN ORDER <span id="tsRunOrderTabCount" class="ts-tab-count hidden">(0)</span></button>
       </div>
 
-      <div id="tsPendingPane" class="host-tab-pane host-workflow-pane active" role="tabpanel">
+      <div id="tsPendingPane" class="host-tab-pane host-workflow-pane" role="tabpanel" hidden>
         <div class="queue-heading-row workflow-pane-heading">
           <h3><span>🎤</span> Pending Requests <span id="tsPendingCount">(0)</span></h3>
           <span class="queue-scroll-hint">Accept or decline</span>
@@ -267,7 +267,7 @@
         </div>
       </div>
 
-      <div id="tsRunOrderPane" class="host-tab-pane host-workflow-pane" role="tabpanel" hidden>
+      <div id="tsRunOrderPane" class="host-tab-pane host-workflow-pane active" role="tabpanel">
         <div class="queue-heading-row workflow-pane-heading">
           <h3><span>♫</span> Run Order <span id="tsRunOrderCount">(0)</span></h3>
           <span class="queue-scroll-hint">Live performance sequence</span>
@@ -291,19 +291,18 @@
 
   </div>
 
-  </div>
-
-
+  
   <div id="tsRunOrderDetailsModal" class="ts-run-details-modal hidden" role="dialog" aria-modal="true" aria-labelledby="tsRunDetailsTitle">
-    <div class="ts-run-details-box">
-      <div class="ts-run-details-head">
-        <div>
-          <small>RUN ORDER DETAILS</small>
-          <strong id="tsRunDetailsTitle">Song Request</strong>
+      <div class="ts-run-details-box">
+        <div class="ts-run-details-head">
+          <div>
+            <small>RUN ORDER DETAILS</small>
+            <strong id="tsRunDetailsTitle">Song Request</strong>
+          </div>
+          <button id="tsRunDetailsClose" type="button" aria-label="Close details">✕</button>
         </div>
-        <button id="tsRunDetailsClose" type="button" aria-label="Close details">✕</button>
+        <div id="tsRunDetailsBody" class="ts-run-details-body"></div>
       </div>
-      <div id="tsRunDetailsBody" class="ts-run-details-body"></div>
     </div>
-  </div>
+
 </div>
