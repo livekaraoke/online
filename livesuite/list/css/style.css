@@ -2396,3 +2396,218 @@ margin-right: 5px;
   color: #ffd400;
   border-color: rgba(255, 212, 0, .35);
 }
+
+
+/* =========================================================
+   LIVESUITE PUBLIC SONG LIST — PHONE / FEATURE CATEGORIES
+   ========================================================= */
+
+.category-nav {
+  display: none !important;
+}
+
+.featured-category-header {
+  min-height: 48px !important;
+}
+
+.featured-category-icon {
+  display:inline-block;
+  width:22px;
+  margin-right:4px;
+  text-align:center;
+}
+
+.public-category-empty {
+  padding:18px 12px;
+  color:#89969c;
+  font-size:11px;
+  text-align:center;
+}
+
+@media (max-width: 640px) {
+  html,body {
+    width:100%;
+    max-width:100%;
+    overflow-x:hidden;
+  }
+
+  body {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .songbook {
+    width:100% !important;
+    max-width:none !important;
+    padding-left:8px !important;
+    padding-right:8px !important;
+  }
+
+  .hero-banner-card {
+    min-height:0 !important;
+    border-radius:9px !important;
+  }
+
+  .hero-banner-card img {
+    width:100% !important;
+    height:auto !important;
+    display:block !important;
+  }
+
+  .instructions {
+    grid-template-columns:repeat(4,minmax(0,1fr)) !important;
+    gap:4px !important;
+    padding:7px 4px !important;
+  }
+
+  .instructions .step {
+    min-width:0 !important;
+    padding:4px 2px !important;
+  }
+
+  .instructions .step b {
+    font-size:15px !important;
+  }
+
+  .instructions .step strong {
+    font-size:7px !important;
+  }
+
+  .instructions .step span {
+    font-size:6px !important;
+  }
+
+  .step-divider {
+    display:none !important;
+  }
+
+  .song-list-title {
+    padding-left:0 !important;
+    padding-right:0 !important;
+  }
+
+  .search-row {
+    display:grid !important;
+    grid-template-columns:1fr !important;
+    gap:7px !important;
+  }
+
+  .search-wrap,
+  .artist-filter-select,
+  .browse-all-btn {
+    width:100% !important;
+    min-width:0 !important;
+    min-height:43px !important;
+  }
+
+  .song-search,
+  .artist-filter-select {
+    font-size:16px !important; /* prevents mobile Chrome zoom */
+  }
+
+  .browse-all-btn {
+    justify-content:center !important;
+  }
+
+  .public-setlist-banner {
+    padding:8px 10px !important;
+  }
+
+  .section-red-header,
+  .full-song-list-toggle {
+    min-height:48px !important;
+    padding:0 10px !important;
+  }
+
+  .section-red-header span,
+  .full-song-list-toggle span {
+    font-size:11px !important;
+  }
+
+  .section-red-header em,
+  .full-song-list-toggle small {
+    font-size:7px !important;
+  }
+
+  .custom-song-list,
+  .full-alpha-section ol {
+    padding-left:31px !important;
+  }
+
+  .custom-song-list li,
+  .full-alpha-section li {
+    padding:8px 4px 8px 1px !important;
+  }
+
+  .song-info {
+    gap:6px !important;
+  }
+
+  .song-text-main {
+    min-width:0 !important;
+  }
+
+  .song-text-main span {
+    font-size:12px !important;
+    line-height:1.15 !important;
+  }
+
+  .song-text-main em {
+    margin-top:2px !important;
+    font-size:9px !important;
+  }
+
+  .signup-song-btn,
+  .song-add-btn {
+    flex:0 0 38px !important;
+    width:38px !important;
+    height:38px !important;
+    min-width:38px !important;
+  }
+
+  .bottom-signup-bar {
+    left:8px !important;
+    right:8px !important;
+    width:auto !important;
+    bottom:58px !important;
+    border-radius:10px !important;
+  }
+
+  .bottom-signup-copy {
+    min-width:0 !important;
+  }
+
+  .bottom-signup-copy span {
+    display:none !important;
+  }
+
+  .bottom-signup-btn {
+    min-width:136px !important;
+    padding:0 10px !important;
+    font-size:9px !important;
+  }
+
+  .bottom-tabs {
+    height:54px !important;
+    padding-bottom:env(safe-area-inset-bottom) !important;
+  }
+
+  .signup-box {
+    width:min(94vw,520px) !important;
+    max-height:88vh !important;
+    overflow-y:auto !important;
+    padding:17px 14px !important;
+  }
+
+  .signup-box input,
+  .signup-box select {
+    min-height:44px !important;
+    font-size:16px !important;
+  }
+
+  .search-results-box {
+    left:8px !important;
+    right:8px !important;
+    width:auto !important;
+    max-height:55vh !important;
+  }
+}
