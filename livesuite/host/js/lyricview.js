@@ -45,6 +45,108 @@
     return Number.isFinite(n) ? n : null;
   };
 
+  function normaliseSongIdentity(value) {
+    return String(value || "")
+      .toLowerCase()
+      .replace(/&/g, "and")
+      .replace(/[^a-z0-9]+/g, "");
+  }
+
+  function sameSongByMetadata(item, song) {
+    if (!item || !song) return false;
+
+    const itemTitle = normaliseSongIdentity(item.songTitle || item.title);
+    const songTitle = normaliseSongIdentity(song.title);
+
+    if (!itemTitle || itemTitle !== songTitle) return false;
+
+    const itemArtist = normaliseSongIdentity(item.artist || item.songArtist);
+    const songArtist = normaliseSongIdentity(song.artist);
+
+    return !itemArtist || !songArtist || itemArtist === songArtist;
+  }
+
+  async function resolveRunOrderSongDocument(item) {
+    if (!item) return null;
+
+    // Fast path: current song ID really is a Firestore document ID.
+    if (item.songId) {
+      try {
+        const direct = await db.collection("lyrics").doc(item.songId).get();
+        if (direct.exists) {
+          return { id:direct.id, ...(direct.data() || {}) };
+        }
+      } catch (error) {
+        console.warn("Direct Run Order song lookup failed:", error);
+      }
+    }
+
+    // Migrated/manual rows can contain a legacy "id" value generated from
+    // title+artist rather than the actual Firestore doc ID. Resolve by title.
+    const title = String(item.songTitle || item.title || "").trim();
+    if (!title) return null;
+
+    try {
+      const snap = await db
+        .collection("lyrics")
+        .where("title", "==", title)
+        .limit(10)
+        .get();
+
+      const candidates = snap.docs.map(doc => ({
+        ...(doc.data() || {}),
+        id:doc.id
+      }));
+
+      if (!candidates.length) return null;
+
+      const artistKey = normaliseSongIdentity(item.artist || item.songArtist);
+      if (artistKey) {
+        const exact = candidates.find(song =>
+          normaliseSongIdentity(song.artist) === artistKey
+        );
+        if (exact) return exact;
+      }
+
+      return candidates.length === 1 ? candidates[0] : candidates[0];
+    } catch (error) {
+      console.warn("Could not resolve legacy Run Order song ID:", error);
+      return null;
+    }
+  }
+
+  async function repairSingleRunOrderItemSongId(item, resolvedSong, runData) {
+    if (
+      !item?.id ||
+      !resolvedSong?.id ||
+      item.songId === resolvedSong.id ||
+      !Array.isArray(runData?.items)
+    ) {
+      return;
+    }
+
+    const items = runData.items.map(entry =>
+      entry.id === item.id
+        ? {
+            ...entry,
+            songId:resolvedSong.id,
+            songTitle:entry.songTitle || resolvedSong.title || "",
+            artist:entry.artist || resolvedSong.artist || ""
+          }
+        : entry
+    );
+
+    try {
+      await db.collection("karaokeControl").doc("runOrder").set({
+        sessionId:runData.sessionId || "",
+        items,
+        updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge:true });
+    } catch (error) {
+      console.warn("Could not self-heal Run Order song ID:", error);
+    }
+  }
+
   function showModal(title, message, withCancel = false) {
     return new Promise(resolve => {
       const modal = $("confirmModal");
@@ -856,11 +958,19 @@
       if (byRequest) return byRequest;
     }
 
-    return items.find(item =>
-      item.songId === currentSongId &&
-      !["played","abandoned","left","deleted","deletedbyhost","declined"]
-        .includes(String(item.status || "").toLowerCase())
-    ) || null;
+    const byId = items.find(item => item.songId === currentSongId);
+    if (byId) return byId;
+
+    // Important for host-selected songs whose old Run Order row contains a
+    // legacy title+artist slug rather than the Firestore document ID.
+    if (currentSong) {
+      const byMetadata = items.find(item =>
+        sameSongByMetadata(item, currentSong)
+      );
+      if (byMetadata) return byMetadata;
+    }
+
+    return null;
   }
 
   async function setCurrentRunOrderStatus(status) {
@@ -882,6 +992,11 @@
       item.id === matched.id
         ? {
             ...item,
+            // Self-heal the legacy wrong Run Order ID as soon as this song
+            // starts/finishes from lyricview.
+            songId:currentSongId || item.songId,
+            songTitle:item.songTitle || currentSong?.title || "",
+            artist:item.artist || currentSong?.artist || "",
             status,
             ...(status === "playing"
               ? { playingAtMs: Date.now() }
@@ -1055,23 +1170,50 @@
       currentIndex = items.findIndex(item => item.songId === currentSongId);
     }
 
+    if (currentIndex < 0 && currentSong) {
+      currentIndex = items.findIndex(item =>
+        sameSongByMetadata(item, currentSong)
+      );
+    }
+
+    let next = null;
+
     for (let i = Math.max(0, currentIndex + 1); i < items.length; i++) {
       if (
         items[i].songId &&
         !terminal.has(String(items[i].status || "").toLowerCase())
       ) {
-        return items[i];
+        next = items[i];
+        break;
       }
     }
 
-    if (currentIndex < 0) {
-      return items.find(item =>
+    if (!next && currentIndex < 0) {
+      next = items.find(item =>
         item.songId &&
         !terminal.has(String(item.status || "").toLowerCase())
       ) || null;
     }
 
-    return null;
+    if (!next) return null;
+
+    const resolved = await resolveRunOrderSongDocument(next);
+
+    if (resolved?.id) {
+      if (resolved.id !== next.songId) {
+        await repairSingleRunOrderItemSongId(next, resolved, data);
+      }
+
+      return {
+        ...next,
+        songId:resolved.id,
+        songTitle:next.songTitle || resolved.title || "",
+        artist:next.artist || resolved.artist || "",
+        _resolvedSong:resolved
+      };
+    }
+
+    return next;
   }
 
   function nextDetailField(label, value) {
@@ -1343,12 +1485,52 @@
     // A displayed song is effectively static during a performance. Use one
     // document read instead of a permanent realtime listener to reduce quota.
     try {
-      const doc = await db.collection("lyrics").doc(songId).get();
+      let doc = await db.collection("lyrics").doc(songId).get();
+
+      if (!doc.exists) {
+        // The URL may have been created from a legacy Run Order songId such as
+        // "cometogetherbeatlesthe" while the real Firestore document is
+        // "cometogether". Use the Run Order metadata to resolve and repair it.
+        try {
+          const context = await getActiveSessionContext();
+          const runSnap = await db.collection("karaokeControl").doc("runOrder").get();
+          const runData = runSnap.exists ? (runSnap.data() || {}) : {};
+          const item = Array.isArray(runData.items)
+            ? runData.items.find(entry =>
+                entry.songId === songId ||
+                (requestId && entry.requestId === requestId)
+              )
+            : null;
+
+          if (item) {
+            const resolved = await resolveRunOrderSongDocument(item);
+
+            if (resolved?.id) {
+              await repairSingleRunOrderItemSongId(item, resolved, runData);
+              currentSongId = resolved.id;
+              doc = await db.collection("lyrics").doc(resolved.id).get();
+
+              // Keep address bar consistent without reloading the page.
+              const repairedParams = new URLSearchParams(location.search);
+              repairedParams.set("id", resolved.id);
+              history.replaceState(
+                null,
+                "",
+                `${location.pathname}?${repairedParams.toString()}${location.hash}`
+              );
+            }
+          }
+        } catch (repairError) {
+          console.warn("Could not repair legacy Run Order URL:", repairError);
+        }
+      }
+
       if (!doc.exists) {
         $("lyricsContent").innerHTML = `<div class="host-load-error">Could not load song data.</div>`;
         return;
       }
-      currentSong = {id:doc.id,...doc.data()};
+
+      currentSong = { ...(doc.data() || {}), id:doc.id };
 
       loadSongScrollSpeed(currentSong);
       setTopTitle(currentSong);
