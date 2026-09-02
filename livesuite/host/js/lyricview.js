@@ -533,10 +533,10 @@
    * RESTORED TO THE ORIGINAL WORKING song-data.js LOGIC.
    *
    * song-data.js:
-   *   root/adm/files/song-data.js
+   *   root/livesuite/oldadmin/files/song-data-kl.js
    *
    * loaded by lyricview.html as:
-   *   ../adm/files/song-data.js
+   *   ../oldadmin/files/song-data-kl.js
    *
    * It exposes:
    *   window.songs = [...]
@@ -556,7 +556,7 @@
   function getSlaveLyricsSongs() {
     if (!Array.isArray(window.songs)) {
       console.error(
-        "window.songs is missing. Check that ../adm/files/song-data.js loads before js/lyricview.js"
+        "window.songs is missing. Check that ../oldadmin/files/song-data-kl.js loads before js/lyricview.js"
       );
       return [];
     }
@@ -690,7 +690,7 @@
       // Explicit legacy mapping. No artist is added to the filename.
       lyricsFileId: id,
       lyricsFileName: fileName,
-      lyricsFilePath: `../adm/host/lyrics/lyrics-data/${fileName}`,
+      lyricsFilePath: `../oldadmin/host/lyrics/lyrics-data/${fileName}`,
       lyricsSource: "song-data-js",
 
       reset: false,
@@ -1248,7 +1248,7 @@
     if ($("quickSendSlaveLyricsBtn")) {
       $("quickSendSlaveLyricsBtn").onclick = () => sendSlaveLyrics("quickSlaveLyricsSelect");
     }
-    $("adminShortcutBtn").onclick = () => window.open("../../admin-new/admin.html","_blank","noopener");
+    $("adminShortcutBtn").onclick = () => window.open("../admin-new/admin.html","_blank","noopener");
     $("myNotesInput").addEventListener("input",() => { clearTimeout(notesSaveTimer); notesSaveTimer=setTimeout(saveMyNotes,700); });
     window.addEventListener("scroll",updateSectionProgress,{passive:true});
     window.addEventListener("resize",updateSectionProgress);
