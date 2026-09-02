@@ -1496,3 +1496,97 @@ body.host-lyric-view-page {
 .host-end-next-song-btn[hidden] {
   display: none !important;
 }
+
+
+/* =========================================================
+   NEXT SONG DETAILS CARD
+   ========================================================= */
+.host-end-next-wrap {
+  flex-direction: column !important;
+  align-items: center !important;
+  gap: 12px !important;
+}
+
+.host-end-next-song-card {
+  width: min(760px, calc(100% - 24px)) !important;
+  border: 1px solid #34474f !important;
+  border-radius: 10px !important;
+  background: #0c1216 !important;
+  box-shadow: 0 12px 30px rgba(0,0,0,.28) !important;
+  overflow: hidden !important;
+}
+
+.host-end-next-song-card[hidden] {
+  display: none !important;
+}
+
+.host-next-song-card-title {
+  padding: 8px 11px !important;
+  border-bottom: 1px solid #2e3c43 !important;
+  background: #121b20 !important;
+  color: #75e394 !important;
+  font-size: 9px !important;
+  font-weight: 1000 !important;
+  letter-spacing: .08em !important;
+}
+
+.host-next-song-hero {
+  display: grid !important;
+  gap: 3px !important;
+  padding: 12px 13px 9px !important;
+}
+
+.host-next-song-hero strong {
+  color: #fff !important;
+  font-size: 18px !important;
+  font-weight: 1000 !important;
+}
+
+.host-next-song-hero span {
+  color: #aab5ba !important;
+  font-size: 11px !important;
+  font-weight: 750 !important;
+}
+
+.host-next-song-detail-grid {
+  display: grid !important;
+  grid-template-columns: repeat(3,minmax(0,1fr)) !important;
+  gap: 1px !important;
+  border-top: 1px solid #28353b !important;
+  background: #28353b !important;
+}
+
+.host-next-detail-row {
+  display: grid !important;
+  gap: 4px !important;
+  min-width: 0 !important;
+  padding: 9px 10px !important;
+  background: #0e1519 !important;
+}
+
+.host-next-detail-row span {
+  color: #718088 !important;
+  font-size: 7px !important;
+  font-weight: 950 !important;
+  text-transform: uppercase !important;
+}
+
+.host-next-detail-row strong {
+  overflow-wrap: anywhere !important;
+  color: #eef3f5 !important;
+  font-size: 10px !important;
+  line-height: 1.25 !important;
+}
+
+.host-next-song-empty {
+  padding: 18px !important;
+  color: #88969c !important;
+  font-size: 11px !important;
+  text-align: center !important;
+}
+
+@media (max-width: 720px) {
+  .host-next-song-detail-grid {
+    grid-template-columns: repeat(2,minmax(0,1fr)) !important;
+  }
+}
