@@ -456,7 +456,9 @@
     typeEl.style.background = hexToRgba(color, .12);
 
     const countdown = countdownText(start);
-    countdownEl.textContent = countdown.text;
+    countdownEl.textContent = countdown.late
+      ? countdown.text
+      : `Countdown: ${countdown.text}`;
     countdownEl.classList.toggle("is-late", countdown.late);
 
     box?.classList.toggle(
@@ -959,9 +961,14 @@
               ${esc(formatDate(event.date))}
               ${event.startTime ? `<br>${esc(event.startTime)}` : ""}
             </span>
-            <span class="status-next-gig-name">
-              ${esc(event.name || "Untitled Event")}
-              <small class="status-next-gig-venue">${esc(event.venue || "Venue TBC")}</small>
+            <span class="status-next-gig-main">
+              <strong class="status-next-gig-venue-name">
+                ${esc(event.venue || "Venue TBC")}
+              </strong>
+              <small
+                class="status-next-gig-type"
+                style="color:${esc(color)}"
+              >${esc(event.type || "Other")}</small>
             </span>
           </button>
         `;
