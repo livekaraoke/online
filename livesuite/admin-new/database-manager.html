@@ -112,6 +112,12 @@ pre{background:#090909;border:1px solid #333;border-radius:8px;padding:12px;whit
 
 <div class="card">
   <h2>Copy Database</h2>
+  <div class="notice" style="margin-bottom:12px">
+    <b>userProfiles note:</b> Firebase Authentication UIDs are project-specific.
+    The same email account normally has a different UID in LIVEKARAOKEMT and
+    LIVEKARAOKESUITE. This manager now maps your old signed-in profile to your
+    new signed-in UID instead of trying to create the old UID.
+  </div>
 
   <div class="row">
     <label>From
@@ -183,7 +189,6 @@ const collections = [
   "liveLyrics",
   "notes",
   "noteSettings",
-  "userProfiles",
   "upcomingEvents",
   "venues"
 ];
@@ -193,6 +198,13 @@ const collections = [
 // when the user is authenticated. Copy this document directly instead.
 const specialDocuments = [
   "karaoke/state"
+];
+
+// userProfiles cannot be copied as a normal collection because its Firestore
+// create rule requires request.auth.uid == document ID. Firebase Auth UIDs are
+// different between projects even when the same email/password is used.
+const specialCollections = [
+  "userProfiles"
 ];
 
 const MIGRATION_PROGRESS_KEY = "lksuite.dbMigrationProgress.v2";
@@ -432,6 +444,96 @@ async function copyDocumentPath(src, dst, path) {
   log(path + ": copied");
 }
 
+async function copyUserProfiles(sourceKey, destinationKey, src, dst) {
+  log("Reading userProfiles…");
+
+  const sourceAuth = getAuth(sourceKey);
+  const destinationAuth = getAuth(destinationKey);
+
+  const sourceUser = sourceAuth.currentUser;
+  const destinationUser = destinationAuth.currentUser;
+
+  if (!sourceUser || !destinationUser) {
+    throw new Error(
+      "Both Firebase projects must be authenticated before copying userProfiles."
+    );
+  }
+
+  const snap = await src.collection("userProfiles").get();
+  log("userProfiles: " + snap.size + " documents");
+
+  let copied = 0;
+  let skipped = 0;
+
+  for (const doc of snap.docs) {
+    /*
+      In your rules:
+        allow create: if signedIn() && request.auth.uid == uid
+
+      The old profile document ID is the OLD project's Auth UID. The NEW
+      project's same email account normally has a different UID, so creating
+      the old UID in the new project is correctly rejected.
+
+      If the source profile belongs to the currently signed-in old user, copy
+      it to the currently signed-in new user's UID instead.
+    */
+    let destinationUid = doc.id;
+
+    if (doc.id === sourceUser.uid) {
+      destinationUid = destinationUser.uid;
+    }
+
+    // We can only CREATE the current destination user's profile under the
+    // production rules. Existing matching destination docs can still be merged.
+    if (destinationUid !== destinationUser.uid) {
+      const existing = await dst.collection("userProfiles").doc(destinationUid).get();
+
+      if (!existing.exists) {
+        skipped++;
+        log(
+          "  SKIP userProfiles/" +
+          doc.id +
+          " — belongs to another UID and cannot be created by " +
+          destinationUser.email
+        );
+        continue;
+      }
+    }
+
+    const data = {
+      ...doc.data(),
+      migratedFromProject: sourceKey,
+      migratedFromUid: doc.id
+    };
+
+    // Do not overwrite an explicit UID field with the old project's UID.
+    if ("uid" in data) {
+      data.uid = destinationUid;
+    }
+
+    await dst
+      .collection("userProfiles")
+      .doc(destinationUid)
+      .set(data, { merge: true });
+
+    copied++;
+
+    log(
+      "  userProfiles/" +
+      doc.id +
+      " -> userProfiles/" +
+      destinationUid
+    );
+  }
+
+  log(
+    "userProfiles complete: " +
+    copied +
+    " copied" +
+    (skipped ? ", " + skipped + " skipped" : "")
+  );
+}
+
 function explainPermissionError(key) {
   const user = getAuth(key).currentUser;
 
@@ -527,6 +629,39 @@ document.getElementById("copyBtn").onclick = async () => {
           log("PERMISSION DENIED while copying: " + collectionName);
           log(explainPermissionError(sourceKey));
           log(explainPermissionError(destinationKey));
+        }
+
+        throw error;
+      }
+    }
+
+    for (const collectionName of specialCollections) {
+      const progressKey = "specialCollection:" + collectionName;
+
+      if (progress.specialCompleted[progressKey]) {
+        log("SKIP " + collectionName + " — already completed");
+        continue;
+      }
+
+      try {
+        if (collectionName === "userProfiles") {
+          await copyUserProfiles(
+            sourceKey,
+            destinationKey,
+            src,
+            dst
+          );
+        }
+
+        progress.specialCompleted[progressKey] = true;
+        saveMigrationProgress(sourceKey, destinationKey, progress);
+      } catch (error) {
+        if (error.code === "permission-denied") {
+          log("PERMISSION DENIED while copying: " + collectionName);
+          log(
+            "userProfiles are UID-sensitive. Ensure the same email is signed " +
+            "into both projects and that the destination account exists."
+          );
         }
 
         throw error;
