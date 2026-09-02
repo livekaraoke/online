@@ -1,0 +1,210 @@
+window.songData = {
+  "id": "dontstopmenow",
+  "title": "Don't stop me now",
+  "artist": "Queen",
+  "lyrics": [
+    {
+      "type": "note",
+      "text": "INTRO Instrumental (wait for signal)"
+    },
+    {
+      "type": "section",
+      "text": "VERSE 1"
+    },
+    {
+      "type": "verse",
+      "lines": [
+        "Tonight,",
+        "I'm gonna have myself a real good time",
+        "I feel ali-i-ive...",
+        "And the world.. I'll turn it inside out",
+        "Yeah! I'm floating around",
+        "In ecstasy",
+        "",
+        "So don't stop me now, don't stop me",
+        "'Cause I'm having a good time, having a good time"
+      ]
+    },
+    {
+      "type": "section",
+      "text": "VERSE 2"
+    },
+    {
+      "type": "verse",
+      "lines": [
+        "I'm a shooting star leaping through the sky",
+        "Like a tiger defying the laws of gravity",
+        "",
+        "I'm a racing car passing by",
+        "Like Lady Godiva",
+        "",
+        "I'm gonna go, go, go",
+        "There's no stopping me"
+      ]
+    },
+    {
+      "type": "section",
+      "text": "PRE CHORUS"
+    },
+    {
+      "type": "chorus",
+      "lines": [
+        "I'm burning through the sky yeah!",
+        "Two hundred degrees,",
+        "That's why they call me Mister Fahrenheit!",
+        "",
+        "I'm traveling at the speed of light",
+        "I wanna make a supersonic man out of you"
+      ]
+    },
+    {
+      "type": "section",
+      "text": "CHORUS"
+    },
+    {
+      "type": "chorusrepeat",
+      "lines": [
+        "Don't stop me now",
+        "I'm having such a good time",
+        "I'm having a ball",
+        "",
+        "Don't stop me now",
+        "If you wanna have a good time",
+        "Just give me a call",
+        "",
+        "Don't stop me now",
+        "'Cause I'm having a good time",
+        "",
+        "Don't stop me now",
+        "Yes, I'm having a good time",
+        "I don't wanna stop at all, yeah!"
+      ]
+    },
+    {
+      "type": "section",
+      "text": "VERSE 3"
+    },
+    {
+      "type": "verse",
+      "lines": [
+        "I'm a rocket ship on my way to Mars",
+        "On a collision course",
+        "I am a satellite",
+        "I'm out of control",
+        "",
+        "I'm a sex machine ready to reload",
+        "Like an atom bomb",
+        "about to-oh-oh-oh-oh-oh explode!"
+      ]
+    },
+    {
+      "type": "section",
+      "text": "PRE CHORUS"
+    },
+    {
+      "type": "chorus",
+      "lines": [
+        "I'm burning through the sky yeah!",
+        "Two hundred degrees,",
+        "That's why they call me Mister Fahrenheit!",
+        "",
+        "I'm traveling at the speed of light",
+        "I wanna make a supersonic woman of you"
+      ]
+    },
+    {
+      "type": "section",
+      "text": "BRIDGE"
+    },
+    {
+      "type": "bridge",
+      "lines": [
+        "Don't stop me",
+        "Don't stop me",
+        "Don't stop me",
+        "Hey, hey, hey!",
+        "",
+        "Don't stop me",
+        "Don't stop me",
+        "Ooh, ooh, ooh",
+        "I like it",
+        "",
+        "Don't stop me",
+        "Don't stop me",
+        "Have a good time, good time",
+        "",
+        "Don't stop me",
+        "Don't stop me",
+        "Ooh....."
+      ]
+    },
+    {
+      "type": "note",
+      "text": "(wait for signal)"
+    },
+    {
+      "type": "action",
+      "text": "Guitar Solo (wait for signal)"
+    },
+    {
+      "type": "section",
+      "text": "PRE CHORUS"
+    },
+    {
+      "type": "chorus",
+      "lines": [
+        "Oh, I'm burning through the sky yeah!",
+        "Two hundred degrees",
+        "That's why they call me Mister Fahrenheit!",
+        "",
+        "Traveling at the speed of light",
+        "I wanna make a supersonic man out of you (Hey, hey)"
+      ]
+    },
+    {
+      "type": "section",
+      "text": "CHORUS"
+    },
+    {
+      "type": "chorusrepeat",
+      "lines": [
+        "Don't stop me now",
+        "I'm having such a good time",
+        "I'm having a ball",
+        "",
+        "Don't stop me now",
+        "If you wanna have a good time",
+        "Alright",
+        "Just give me a call",
+        "",
+        "Don't stop me now",
+        "'Cause I'm having a good time (Hey, hey)",
+        "",
+        "Don't stop me now",
+        "Yes, I'm having a good time",
+        "I don't wanna stop at all....."
+      ]
+    },
+    {
+      "type": "section",
+      "text": "ENDING"
+    },
+    {
+      "type": "chorusrepeat",
+      "lines": [
+        "Ah, da, da, da, da..",
+        "Da, da, ah, ah..",
+        "",
+        "Ah, da, da, ah, ah, ah..",
+        "Ah, da, da..",
+        "",
+        "Ah, da, da, ah, ah..",
+        "Ooh, ooh-ooh, ooh-ooh..."
+      ]
+    },
+    {
+      "type": "action",
+      "text": "[ END ]"
+    }
+  ]
+};
