@@ -2524,4 +2524,352 @@ function listenPublicBreakStatus() {
     });
 }
 
-window.addEventListener("DOMContentLoaded", listenPublicBreakStatus);
+// Replaced by startRealtimePublicQueueMonitor() below.
+
+
+/* ========================================================================
+   REAL-TIME PUBLIC KARAOKE QUEUE — 2026-09-02
+   One current-session listener owns Run Order, pending requests, break state,
+   and automatic closure when the session ends.
+   ======================================================================== */
+
+const publicQueueRealtimeState = {
+  sessionId: "",
+  runOrder: [],
+  pending: [],
+  breakOpen: false,
+  breakStartedAt: null,
+  ready: false
+};
+
+let publicQueueRunOrderUnsub = null;
+let publicQueuePendingUnsub = null;
+let publicQueueSessionUnsub = null;
+let publicQueueControlUnsub = null;
+
+function stopPublicQueueSessionListeners() {
+  if (publicQueueRunOrderUnsub) {
+    publicQueueRunOrderUnsub();
+    publicQueueRunOrderUnsub = null;
+  }
+
+  if (publicQueuePendingUnsub) {
+    publicQueuePendingUnsub();
+    publicQueuePendingUnsub = null;
+  }
+
+  if (publicQueueSessionUnsub) {
+    publicQueueSessionUnsub();
+    publicQueueSessionUnsub = null;
+  }
+}
+
+function isQueuePanelVisible() {
+  const panel = document.getElementById("queuePanel");
+  return !!panel && !panel.classList.contains("hidden");
+}
+
+function closePublicQueuePanel() {
+  document.getElementById("queuePanel")?.classList.add("hidden");
+  setBottomTabActive("songlist");
+}
+
+function currentPublicQueueItems() {
+  const terminal = new Set([
+    "played",
+    "completed",
+    "abandoned",
+    "left",
+    "deleted",
+    "deletedbyhost",
+    "declined"
+  ]);
+
+  return (Array.isArray(publicQueueRealtimeState.runOrder)
+    ? publicQueueRealtimeState.runOrder
+    : []
+  ).filter(item =>
+    !terminal.has(String(item?.status || "").toLowerCase())
+  );
+}
+
+function currentPlayingPublicQueueItem() {
+  return currentPublicQueueItems().find(item =>
+    String(item?.status || "").toLowerCase() === "playing"
+  ) || null;
+}
+
+function renderRealtimeQueuePanel() {
+  const box = document.getElementById("queuePanelContent");
+  if (!box) return;
+
+  if (!requestsOpen || !publicQueueRealtimeState.sessionId) {
+    box.innerHTML = `
+      <p class="queue-empty">The Live Karaoke session is no longer active.</p>
+    `;
+    return;
+  }
+
+  const runOrder = currentPublicQueueItems();
+  const pendingRequests = Array.isArray(publicQueueRealtimeState.pending)
+    ? publicQueueRealtimeState.pending
+    : [];
+
+  const playing = currentPlayingPublicQueueItem();
+
+  let stateRow = "";
+
+  if (publicQueueRealtimeState.breakOpen) {
+    stateRow = `
+      <div class="public-queue-live-state is-break">
+        <span>☕</span>
+        <div>
+          <strong>CURRENTLY ON BREAK</strong>
+          <small>The performance will continue shortly.</small>
+        </div>
+      </div>
+    `;
+  } else if (playing) {
+    stateRow = `
+      <div class="public-queue-live-state is-playing">
+        <span>▶</span>
+        <div>
+          <strong>NOW PLAYING: ${escapeHTML(playing.songTitle || playing.title || "Song")}</strong>
+          <small>${escapeHTML(formatArtistName(playing.artist || playing.songArtist || ""))}</small>
+        </div>
+      </div>
+    `;
+  } else {
+    stateRow = `
+      <div class="public-queue-live-state">
+        <span>♫</span>
+        <div>
+          <strong>WAITING FOR THE NEXT SONG</strong>
+          <small>The host will start the next performance shortly.</small>
+        </div>
+      </div>
+    `;
+  }
+
+  const runRows = runOrder.map((item,index) =>
+    publicQueueRow(
+      item,
+      index,
+      String(item.status || "").toLowerCase() === "playing"
+    )
+  ).join("");
+
+  const pendingRows = pendingRequests.map((item,index) => `
+    <div class="queue-row session-request-row pending-public-row">
+      <div class="queue-number-pill">${index + 1}</div>
+      <div class="queue-song-cell">
+        <strong>${escapeHTML(item.songTitle || item.title || "Untitled Song")}</strong>
+        <span>${escapeHTML(formatArtistName(item.songArtist || item.artist || ""))}</span>
+      </div>
+      <span class="queue-singer-name">${escapeHTML(item.singerName || item.name || "Singer")}</span>
+    </div>
+  `).join("");
+
+  const unsentRows = requestCart.map(item => `
+    <div class="queue-row session-request-row pending-cart-row">
+      <div class="queue-number-pill">+</div>
+      <div class="queue-song-cell">
+        <strong>${escapeHTML(item.title)}</strong>
+        <span>${escapeHTML(formatArtistName(item.artist))}${item.year ? " • " + escapeHTML(item.year) : ""}</span>
+      </div>
+      <button class="queue-remove-btn" type="button"
+        onclick="removeSongFromCart('${escapeHTML(songKey(item))}'); renderRealtimeQueuePanel();">×</button>
+    </div>
+  `).join("");
+
+  box.innerHTML = `
+    ${stateRow}
+
+    <section class="public-queue-section">
+      <h3 class="public-queue-section-title">
+        CURRENT PERFORMANCE ORDER
+        <span class="live-count">(${runOrder.length})</span>
+      </h3>
+      <p class="public-queue-section-subtitle">
+        Updates automatically as the host performs and changes the order.
+      </p>
+      ${runRows || `<p class="queue-empty">No songs are currently in the performance order.</p>`}
+    </section>
+
+    <section class="public-queue-section">
+      <h3 class="public-queue-section-title">
+        PENDING REQUESTS
+        <span class="live-count">(${pendingRequests.length})</span>
+      </h3>
+      <p class="public-queue-section-subtitle">Waiting for the host to accept.</p>
+      ${pendingRows || `<p class="queue-empty">No pending singer requests.</p>`}
+    </section>
+
+    ${
+      unsentRows
+        ? `<section class="public-queue-section">
+             <h3 class="public-queue-section-title">YOUR UNSENT SELECTIONS</h3>
+             ${unsentRows}
+             <button class="queue-signup-submit" type="button" onclick="openSignupModal()">SIGN UP TO SING</button>
+           </section>`
+        : ""
+    }
+  `;
+}
+
+function renderQueuePanel() {
+  renderRealtimeQueuePanel();
+}
+
+function subscribePublicQueueForSession(sessionId) {
+  stopPublicQueueSessionListeners();
+
+  publicQueueRealtimeState.sessionId = sessionId;
+  publicQueueRealtimeState.runOrder = [];
+  publicQueueRealtimeState.pending = [];
+  publicQueueRealtimeState.breakOpen = false;
+  publicQueueRealtimeState.breakStartedAt = null;
+  publicQueueRealtimeState.ready = false;
+
+  publicQueueRunOrderUnsub = db
+    .collection("karaokeControl")
+    .doc("runOrder")
+    .onSnapshot(doc => {
+      const data = doc.exists ? (doc.data() || {}) : {};
+
+      publicQueueRealtimeState.runOrder =
+        !data.sessionId || data.sessionId === sessionId
+          ? (Array.isArray(data.items) ? data.items : [])
+          : [];
+
+      publicQueueRealtimeState.ready = true;
+
+      if (isQueuePanelVisible()) {
+        renderRealtimeQueuePanel();
+      }
+    }, error => {
+      console.error("Realtime Run Order listener failed:", error);
+    });
+
+  publicQueuePendingUnsub = db
+    .collection("publicSongRequests")
+    .where("sessionId", "==", sessionId)
+    .onSnapshot(snapshot => {
+      const pendingStatuses = new Set([
+        "",
+        "pending",
+        "active",
+        "waiting",
+        "requested"
+      ]);
+
+      publicQueueRealtimeState.pending = snapshot.docs
+        .map(doc => ({ id:doc.id, ...(doc.data() || {}) }))
+        .filter(item =>
+          pendingStatuses.has(String(item.status || "").toLowerCase())
+        )
+        .sort((a,b) => {
+          const ad = a.createdAt?.toDate
+            ? a.createdAt.toDate().getTime()
+            : 0;
+          const bd = b.createdAt?.toDate
+            ? b.createdAt.toDate().getTime()
+            : 0;
+          return ad - bd;
+        });
+
+      if (isQueuePanelVisible()) {
+        renderRealtimeQueuePanel();
+      }
+    }, error => {
+      console.error("Realtime pending request listener failed:", error);
+    });
+
+  publicQueueSessionUnsub = db
+    .collection("performanceSessions")
+    .doc(sessionId)
+    .onSnapshot(doc => {
+      const session = doc.exists ? (doc.data() || {}) : {};
+
+      publicQueueRealtimeState.breakOpen =
+        session.breakOpen === true;
+
+      publicQueueRealtimeState.breakStartedAt =
+        session.currentBreakStartedAt ||
+        session.breakStartedAt ||
+        null;
+
+      setPublicBreakNotice(publicQueueRealtimeState.breakOpen);
+
+      if (isQueuePanelVisible()) {
+        renderRealtimeQueuePanel();
+      }
+    }, error => {
+      console.error("Realtime performance-session listener failed:", error);
+      setPublicBreakNotice(false);
+    });
+}
+
+function handlePublicSessionClosed() {
+  stopPublicQueueSessionListeners();
+
+  publicQueueRealtimeState.sessionId = "";
+  publicQueueRealtimeState.runOrder = [];
+  publicQueueRealtimeState.pending = [];
+  publicQueueRealtimeState.breakOpen = false;
+  publicQueueRealtimeState.breakStartedAt = null;
+  publicQueueRealtimeState.ready = false;
+
+  requestsOpen = false;
+  currentSignupSession = null;
+  requestCart = [];
+
+  setPublicBreakNotice(false);
+  updateCartCount();
+  closePublicQueuePanel();
+  showRequestsClosedOnly();
+}
+
+function startRealtimePublicQueueMonitor() {
+  if (publicQueueControlUnsub) return;
+
+  publicQueueControlUnsub = db
+    .collection("karaokeControl")
+    .doc("currentSession")
+    .onSnapshot(doc => {
+      const data = doc.exists ? (doc.data() || {}) : {};
+      const sessionId = String(
+        data.sessionId ||
+        data.activeSessionId ||
+        ""
+      ).trim();
+
+      const active =
+        data.active === true &&
+        !!sessionId;
+
+      if (!active) {
+        handlePublicSessionClosed();
+        return;
+      }
+
+      requestsOpen = true;
+      currentSignupSession = {
+        sessionId,
+        isTestSession:false
+      };
+
+      showRequestsOpenPage();
+
+      if (publicQueueRealtimeState.sessionId !== sessionId) {
+        subscribePublicQueueForSession(sessionId);
+      } else if (isQueuePanelVisible()) {
+        renderRealtimeQueuePanel();
+      }
+    }, error => {
+      console.error("Realtime current-session listener failed:", error);
+    });
+}
+
+window.addEventListener("DOMContentLoaded", startRealtimePublicQueueMonitor);
+window.renderQueuePanel = renderRealtimeQueuePanel;
