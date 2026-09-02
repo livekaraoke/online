@@ -1553,7 +1553,7 @@
     if (!bar || bar.dataset.workflowTabsBound === "1") return;
 
     bar.dataset.workflowTabsBound = "1";
-    setWorkflowTab("pending");
+    setWorkflowTab("runorder");
 
     bar.addEventListener("click", event => {
       const button = event.target.closest("[data-ts-workflow-tab]");
