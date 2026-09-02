@@ -1137,24 +1137,40 @@ width: 100%;
 }
 
 /* ========================================================================
-   PUBLIC LIVE KARAOKE STATUS / LIVE QUEUE — 2026-09-02
+   LIVE KARAOKE PUBLIC STATUS ADDITIONS — keeps original website design
    ======================================================================== */
 
 .hidden {
   display: none !important;
 }
 
+/* The live panel made the original vertically-centred hero taller than one
+   viewport. That caused the banner to be pushed above the top edge.
+   Keep all hero content inside normal flow, starting below the browser edge. */
+.hero {
+  height: auto !important;
+  min-height: 100svh !important;
+  align-items: flex-start !important;
+  padding-top: 48px !important;
+  padding-bottom: 58px !important;
+}
+
 .hero-content {
-  width: min(920px, 100%);
+  width: min(900px, 100%);
+  margin: 0 auto;
+}
+
+.hero-banner {
+  margin-top: 0 !important;
 }
 
 .hero-live-now {
   width: min(650px, 94vw);
   margin: 22px auto 0;
   padding: 14px;
-  border: 1px solid rgba(61,224,96,.6);
+  border: 1px solid rgba(61,224,96,.62);
   border-radius: 10px;
-  background: rgba(3,14,7,.90);
+  background: rgba(3,14,7,.92);
   box-shadow: 0 0 26px rgba(35,216,76,.18);
   text-align: left;
 }
@@ -1183,6 +1199,7 @@ width: 100%;
 .hero-live-pulse,
 .public-live-dot {
   display: inline-block;
+  flex: 0 0 auto;
   width: 9px;
   height: 9px;
   border-radius: 50%;
@@ -1213,8 +1230,13 @@ width: 100%;
 }
 
 .hero-current-song small {
-  color: #aaa;
+  color: #a6afa9;
   font-size: 11px;
+  font-weight: 700;
+}
+
+.hero-break-status {
+  color: #ffd45a !important;
 }
 
 .hero-coming-up {
@@ -1266,8 +1288,11 @@ width: 100%;
 
 .coming-song small,
 .coming-empty {
+  overflow: hidden;
   color: #888;
   font-size: 9px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .hero-request-btn {
@@ -1288,14 +1313,18 @@ width: 100%;
 
 .public-live-box,
 .next-live-karaoke-box {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
+  min-height: 62px;
   padding: 14px 18px;
   border: 1px solid rgba(255,0,0,.32);
   border-radius: 8px;
   background: #111;
+}
+
+.public-live-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
 }
 
 .public-live-box > div {
@@ -1312,6 +1341,17 @@ width: 100%;
 .public-live-box span:last-child {
   color: #d2d2d2;
   font-size: 11px;
+}
+
+.public-break-chip {
+  margin-left: auto;
+  padding: 5px 8px;
+  border: 1px solid #a87d25;
+  border-radius: 999px;
+  background: rgba(133,89,13,.22);
+  color: #ffd45a;
+  font-size: 9px;
+  white-space: nowrap;
 }
 
 .next-live-karaoke-box {
@@ -1345,14 +1385,13 @@ width: 100%;
 
 @media (max-width: 640px) {
   .hero {
-    min-height: 100svh;
-    height: auto;
-    padding: 25px 12px;
+    min-height: 100svh !important;
+    padding: 28px 12px 42px !important;
   }
 
   .hero-banner {
-    width: 94vw;
-    margin-bottom: 25px;
+    width: 94vw !important;
+    margin-bottom: 25px !important;
   }
 
   .hero-live-now {
@@ -1373,5 +1412,12 @@ width: 100%;
 
   .public-live-box {
     justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .public-break-chip {
+    width: 100%;
+    margin-left: 19px;
+    text-align: center;
   }
 }
