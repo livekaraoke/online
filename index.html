@@ -353,6 +353,76 @@
         }
       }
 
+      function renderUpcomingLiveKaraokeEvents() {
+        const container = document.getElementById("liveKaraokeEventsList");
+        if (!container) return;
+
+        const events = upcomingEvents
+          .filter(event => isLiveKaraokeType(event.type))
+          .filter(eventStillUpcoming)
+          .sort((a,b) =>
+            `${a.date || "9999-12-31"}T${a.startTime || "23:59"}`
+              .localeCompare(
+                `${b.date || "9999-12-31"}T${b.startTime || "23:59"}`
+              )
+          )
+          .slice(0,4);
+
+        if (!events.length) {
+          container.innerHTML = `
+            <div class="event-card live-event-empty">
+              <h3>NO UPCOMING LIVE KARAOKE EVENTS</h3>
+              <span class="event-subheading">New dates will appear here when announced.</span>
+            </div>
+          `;
+          return;
+        }
+
+        container.innerHTML = events.map(event => {
+          const date = eventDate(event);
+          const day = date
+            ? date.toLocaleDateString(undefined, {
+                weekday:"short",
+                day:"numeric",
+                month:"short"
+              }).toUpperCase()
+            : "DATE TBC";
+
+          const venue = event.venue || "Venue TBC";
+          const address =
+            event.address ||
+            event.venueLocation ||
+            "";
+
+          const mapsQuery = encodeURIComponent(
+            [venue,address].filter(Boolean).join(", ")
+          );
+
+          return `
+            <article class="event-card live-karaoke-event-card">
+              <span class="live-event-type">LIVE KARAOKE</span>
+              <h3>${esc(venue)}</h3>
+              ${address ? `<h4>${esc(address)}</h4>` : ""}
+              <p><b>${esc(day)}</b></p>
+              <h5>&bull; ${esc(event.startTime || "TIME TBC")} &bull;</h5>
+              <span class="event-subheading">${esc(event.name || "Live Karaoke")}</span>
+
+              ${
+                mapsQuery
+                  ? `<a
+                      class="maps-btn"
+                      target="_blank"
+                      rel="noopener"
+                      href="https://www.google.com/maps/search/?api=1&query=${mapsQuery}">
+                      📍 OPEN IN GOOGLE MAPS
+                    </a>`
+                  : ""
+              }
+            </article>
+          `;
+        }).join("");
+      }
+
       function renderPublicStatus() {
         const container = document.getElementById("liveStatus");
         if (!container) return;
@@ -433,6 +503,7 @@
           id:doc.id,
           ...(doc.data() || {})
         }));
+        renderUpcomingLiveKaraokeEvents();
         renderPublicStatus();
       }, console.error);
 
@@ -467,32 +538,13 @@
   <!-- EVENTS -->
   <section class="section dark-section">
     <h2>EVENTS</h2>
+    <p class="events-intro">Next Live Karaoke events</p>
 
-    <!-- WHYTE HARTE -->
-    <div class="event-card">
-      <h3>&#9679; WHYTE HARTE &#9679;</h3>
-      <h4>GANDOFFLI STREET,<br>ST PAUL'S BAY,<br>MALTA</h4>
-      <a href="https://maps.app.goo.gl/Mh7gijADn3maEofdA" target="_blank" class="maps-btn">
-        📍 OPEN IN GOOGLE MAPS
-      </a>
-      <br>
-      <p><b>EVERY WEDNESDAY</b></p>
-      <h5>&bull; 8:00PM &bull;</h5>
-      <span class="event-subheading">(Live Karaoke Night)</span>
+    <div id="liveKaraokeEventsList" class="live-karaoke-events-grid">
+      <div class="event-card live-event-loading">
+        <h3>LOADING EVENTS…</h3>
+      </div>
     </div>
-
-    <!-- OTHER EVENTS -->
-    <!--
-    <div class="event-card">
-      <h3>&#9679; WHYTE HARTE &#9679;</h3>
-      <h4>GANDOFFLI STREET, ST PAUL'S BAY</h4>
-
-      <p><b>EVERY WEDNESDAY</b></p>
-      <h5>&bull; 7:30PM &bull;</h5>
-      <p>Live Karaoke Night</p>
-    </div>
-    -->
-
   </section>
 
   <!-- SONG ACCESS -->
