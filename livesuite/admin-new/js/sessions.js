@@ -15,18 +15,11 @@
 
     dash.innerHTML = `
       <div class="dashboard-grid">
-        <div class="dashboard-card"><strong>Status</strong><span id="sdStatus">No active session</span></div>
-        <div class="dashboard-card"><strong>Started</strong><span id="sdStarted">-</span></div>
-        <div class="dashboard-card"><strong>Elapsed incl. breaks</strong><span id="sdElapsed">0 mins</span></div>
-        <div class="dashboard-card"><strong>Total Breaks</strong><span id="sdBreaks">0 (0 mins)</span></div>
-        <div class="dashboard-card"><strong>Play Time excl. breaks</strong><span id="sdPlayTime">0 mins</span></div>
         <div class="dashboard-card"><strong>Completed</strong><span id="sdCompleted">0</span></div>
         <div class="dashboard-card"><strong>Abandoned</strong><span id="sdAbandoned">0</span></div>
         <div class="dashboard-card"><strong>Deleted</strong><span id="sdDeleted">0</span></div>
         <div class="dashboard-card"><strong>Songs Left Active</strong><span id="sdLeft">0</span></div>
         <div class="dashboard-card"><strong>Total Requests</strong><span id="sdTotal">0</span></div>
-        <div class="dashboard-card"><strong>Average BPM</strong><span id="sdAvgBpm">-</span></div>
-        <div class="dashboard-card"><strong>Date</strong><span id="sdDate">-</span></div>
       </div>`;
 
     dash.dataset.layoutReady = "1";
@@ -40,29 +33,79 @@
     }
   }
 
+  function scheduledStartDate(session) {
+    const direct = LK.dashboard.getDateFromTimestamp(session?.scheduledStartAt);
+    if (direct) return direct;
+
+    const snapshot = session?.eventSnapshot || {};
+    if (snapshot.date && snapshot.startTime) {
+      const parsed = new Date(`${snapshot.date}T${snapshot.startTime}:00`);
+      if (!Number.isNaN(parsed.getTime())) return parsed;
+    }
+
+    return null;
+  }
+
+  function varianceText(started, scheduled) {
+    if (!started || !scheduled) return { text:"", state:"" };
+
+    const diffMinutes = Math.round((started.getTime() - scheduled.getTime()) / 60000);
+
+    if (Math.abs(diffMinutes) < 1) {
+      return { text:"On time", state:"" };
+    }
+
+    const abs = Math.abs(diffMinutes);
+    const hours = Math.floor(abs / 60);
+    const mins = abs % 60;
+
+    let duration = "";
+    if (hours) duration += `${hours}hr${hours === 1 ? "" : "s"}`;
+    if (mins) duration += `${hours ? " " : ""}${mins}min${mins === 1 ? "" : "s"}`;
+
+    return diffMinutes > 0
+      ? { text:`${duration} late`, state:"is-late" }
+      : { text:`${duration} early`, state:"is-early" };
+  }
+
+  function updateLiveSessionDetails(session, started, elapsedMs, playingMs, breakMs, avgBpm) {
+    if (!session) return;
+
+    const scheduled = scheduledStartDate(session);
+    const variance = varianceText(started, scheduled);
+
+    setDashValue("sessionNameLiveLabel", session.title || session.eventSnapshot?.name || "-");
+    setDashValue("sessionStatusLiveLabel", "Active Session");
+    setDashValue("sessionStartedLiveLabel", LK.dashboard.formatTime(started));
+    setDashValue(
+      "sessionScheduledLiveLabel",
+      scheduled ? LK.dashboard.formatTime(scheduled) : "-"
+    );
+    setDashValue("sessionElapsedLiveLabel", LK.dashboard.formatDuration(elapsedMs));
+    setDashValue("sessionPlayLiveLabel", LK.dashboard.formatDuration(playingMs));
+    setDashValue(
+      "sessionBreaksLiveLabel",
+      `${(session.breaks || []).length} (${LK.dashboard.formatDuration(breakMs)})`
+    );
+    setDashValue("sessionAvgBpmLiveLabel", avgBpm);
+    setDashValue(
+      "sessionDateLiveLabel",
+      scheduled
+        ? LK.dashboard.formatDate(scheduled)
+        : LK.dashboard.formatDate(started)
+    );
+
+    const varianceEl = $("sessionStartVarianceLabel");
+    if (varianceEl) {
+      varianceEl.textContent = variance.text;
+      varianceEl.classList.toggle("is-late", variance.state === "is-late");
+      varianceEl.classList.toggle("is-early", variance.state === "is-early");
+    }
+  }
+
   function updateDashboard(session) {
     ensureDashboardLayout();
 
-    if (!session) {
-      setDashValue("sdStatus", "No active session");
-      setDashValue("sdStarted", "-");
-      setDashValue("sdElapsed", "0 mins");
-      setDashValue("sdBreaks", "0 (0 mins)");
-      setDashValue("sdPlayTime", "0 mins");
-      setDashValue("sdCompleted", "0");
-      setDashValue("sdAbandoned", "0");
-      setDashValue("sdDeleted", "0");
-      setDashValue("sdLeft", "0");
-      setDashValue("sdTotal", "0");
-      setDashValue("sdAvgBpm", "-");
-      setDashValue("sdDate", "-");
-      return;
-    }
-
-    const started = LK.dashboard.getDateFromTimestamp(session.startedAt);
-    const breakMs = calculateBreakMs(session);
-    const elapsedMs = started ? Math.max(0, Date.now() - started.getTime()) : 0;
-    const playingMs = Math.max(0, elapsedMs - breakMs);
     const requests = LK.state.currentRequests || [];
 
     const completed = requests.filter(r =>
@@ -82,6 +125,19 @@
       ["active","pending","waiting","queued","accepted"].includes(String(r.status).toLowerCase())
     ).length;
 
+    setDashValue("sdCompleted", completed);
+    setDashValue("sdAbandoned", abandoned);
+    setDashValue("sdDeleted", deleted);
+    setDashValue("sdLeft", left);
+    setDashValue("sdTotal", requests.length);
+
+    if (!session) return;
+
+    const started = LK.dashboard.getDateFromTimestamp(session.startedAt);
+    const breakMs = calculateBreakMs(session);
+    const elapsedMs = started ? Math.max(0, Date.now() - started.getTime()) : 0;
+    const playingMs = Math.max(0, elapsedMs - breakMs);
+
     const avgBpmArr = requests
       .map(r => Number(r.userBpm || r.songUserBpm || r.bpm))
       .filter(Boolean);
@@ -90,18 +146,14 @@
       ? Math.round(avgBpmArr.reduce((a,b) => a + b, 0) / avgBpmArr.length)
       : "-";
 
-    setDashValue("sdStatus", "Active Session");
-    setDashValue("sdStarted", LK.dashboard.formatTime(started));
-    setDashValue("sdElapsed", LK.dashboard.formatDuration(elapsedMs));
-    setDashValue("sdBreaks", `${(session.breaks || []).length} (${LK.dashboard.formatDuration(breakMs)})`);
-    setDashValue("sdPlayTime", LK.dashboard.formatDuration(playingMs));
-    setDashValue("sdCompleted", completed);
-    setDashValue("sdAbandoned", abandoned);
-    setDashValue("sdDeleted", deleted);
-    setDashValue("sdLeft", left);
-    setDashValue("sdTotal", requests.length);
-    setDashValue("sdAvgBpm", avgBpm);
-    setDashValue("sdDate", LK.dashboard.formatDate(started));
+    updateLiveSessionDetails(
+      session,
+      started,
+      elapsedMs,
+      playingMs,
+      breakMs,
+      avgBpm
+    );
   }
 
   function setSessionStatus(message) {
@@ -111,8 +163,8 @@
 
   async function confirmStartPerformance() {
   const ok = await LK.dashboard.showConfirm(
-    "Start Performance?",
-    "This will start a new performance session and attach new song requests to it."
+    "Start Session?",
+    "Start the session linked to the selected upcoming gig?"
   );
 
   if (!ok) return;
@@ -121,7 +173,7 @@
 }
 
   async function confirmEndPerformance() {
-    if (await LK.dashboard.showConfirm("End Performance?", "This will end the current session. Are you sure?")) {
+    if (await LK.dashboard.showConfirm("End Session?", "This will end the current session. Are you sure?")) {
       endPerformance();
     }
   }
@@ -133,7 +185,7 @@
         : null;
 
     if (!event?.id) {
-      setSessionStatus("Choose an Upcoming Event before starting the Performance.");
+      setSessionStatus("Choose an Upcoming Event before starting the Session.");
       $("sessionEventSelect")?.focus();
       return;
     }
@@ -247,7 +299,7 @@
       updatedAt: serverNow()
     }, { merge:true });
 
-    setSessionStatus(`Performance started: ${title}`);
+    setSessionStatus(`Session started: ${title}`);
   }
 
   async function endPerformance() {
@@ -293,7 +345,7 @@
   updateSessionUi(null);
   LK.requests.listenRequestsForSession(null);
 
-  setSessionStatus("Performance ended.");
+  setSessionStatus("Session ended.");
 }
 
   async function startBreak() {
@@ -337,9 +389,7 @@ console.log("END break clicked", {
   }
 
   function editActiveSessionDetails() {
-    const session = LK.state.currentSessionData;
-    if (!session) return;
-    $("sessionSetupFields").style.display = "block";
+    // Session identity comes from its linked Upcoming Event and is read-only.
   }
 
   function listenCurrentSession() {
@@ -408,9 +458,9 @@ console.log("END break clicked", {
     if ($("activeSessionLabels")) $("activeSessionLabels").classList.toggle("hidden", !active);
 
     if (active) {
-      if ($("sessionTitleLabel")) $("sessionTitleLabel").innerText = session.title || "";
-      if ($("venueLabel")) $("venueLabel").innerText = session.venue || "";
-      if ($("sessionNotesInput") && document.activeElement !== $("sessionNotesInput")) $("sessionNotesInput").value = session.notes || "";
+      if ($("sessionNotesInput") && document.activeElement !== $("sessionNotesInput")) {
+        $("sessionNotesInput").value = session.notes || "";
+      }
     }
 
     const breaks = session?.breaks || [];
