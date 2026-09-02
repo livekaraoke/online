@@ -3004,3 +3004,156 @@
     min-width: 74px !important;
   }
 }
+
+
+/* ========================================================================
+   FULL-WIDTH WORKFLOW TABS + SESSION HISTORY — 2026-09-02
+   ======================================================================== */
+
+/* Popup is now inside #topStatusBar; guarantee overlay behavior. */
+#topStatusBar .ts-run-details-modal {
+  position: fixed !important;
+  z-index: 2147482000 !important;
+  inset: 0 !important;
+  display: grid !important;
+  place-items: center !important;
+  padding: 16px !important;
+  background: rgba(0,0,0,.72) !important;
+  backdrop-filter: blur(3px) !important;
+}
+#topStatusBar .ts-run-details-modal.hidden {
+  display: none !important;
+}
+#topStatusBar .ts-run-details-box {
+  width: min(520px, 92vw) !important;
+  max-height: min(520px, 82vh) !important;
+  border: 1px solid #4b626d !important;
+  border-radius: 10px !important;
+  background: #10171b !important;
+  box-shadow: 0 18px 52px rgba(0,0,0,.6) !important;
+  overflow: hidden !important;
+}
+
+/* Second row becomes one full-width two-tab card. */
+#topStatusBar .host-workflow-tabs-card {
+  display: flex !important;
+  flex-direction: column !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  height: 228px !important;
+  min-height: 228px !important;
+  max-height: 228px !important;
+  margin-top: 7px !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+}
+#topStatusBar .host-workflow-tabs {
+  display: grid !important;
+  grid-template-columns: repeat(2,minmax(0,1fr)) !important;
+  flex: 0 0 30px !important;
+  height: 30px !important;
+}
+#topStatusBar .host-workflow-tabs .host-card-tab {
+  height: 30px !important;
+  font-size: 7px !important;
+}
+#topStatusBar .host-workflow-pane {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  padding: 7px 9px 8px !important;
+  overflow: hidden !important;
+}
+#topStatusBar .host-workflow-pane[hidden] {
+  display: none !important;
+}
+#topStatusBar .workflow-pane-heading {
+  height: 22px !important;
+  min-height: 22px !important;
+  margin-bottom: 5px !important;
+}
+#topStatusBar #tsPendingRequestsList {
+  height: calc(100% - 27px) !important;
+  max-height: none !important;
+  overflow-y: auto !important;
+}
+#topStatusBar #tsRunOrderList {
+  height: calc(100% - 60px) !important;
+  max-height: none !important;
+  overflow-y: auto !important;
+}
+
+/* Red count badges for new/pending items. */
+#topStatusBar .ts-tab-count {
+  display: inline-block !important;
+  margin-left: 4px !important;
+  color: #ff5d66 !important;
+  font-weight: 1000 !important;
+}
+#topStatusBar .ts-tab-count.hidden {
+  display: none !important;
+}
+#topStatusBar .ts-tab-count.has-count,
+#topStatusBar .ts-tab-count.pending-count {
+  color: #ff5d66 !important;
+}
+
+/* Smaller timestamped notifications. */
+#topStatusBar .compact-notification {
+  display: grid !important;
+  grid-template-columns: 35px 18px minmax(0,1fr) !important;
+  align-items: center !important;
+  gap: 5px !important;
+  min-height: 24px !important;
+  padding: 4px 6px !important;
+  border-bottom: 1px solid #222f35 !important;
+  font-size: 7px !important;
+  line-height: 1.15 !important;
+}
+#topStatusBar .compact-notification .notification-time {
+  color: #738188 !important;
+  font-size: 6px !important;
+  font-weight: 850 !important;
+  text-align: right !important;
+}
+#topStatusBar .compact-notification .notification-icon {
+  font-size: 9px !important;
+  text-align: center !important;
+}
+#topStatusBar .compact-notification .notification-text {
+  color: #d8e0e3 !important;
+  font-size: 7px !important;
+  font-weight: 750 !important;
+}
+
+/* Current break appears as a workflow data row. */
+#topStatusBar .ts-current-break-row {
+  border-color: #d19a35 !important;
+  background:
+    linear-gradient(90deg, rgba(151,102,22,.18), rgba(24,20,12,.90)) !important;
+  box-shadow: inset 3px 0 0 #d9a13e !important;
+  cursor: default !important;
+}
+#topStatusBar .ts-current-break-row .ts-run-main strong {
+  color: #ffd36f !important;
+}
+#topStatusBar .ts-current-break-row .ts-run-main small {
+  color: #d5bf87 !important;
+}
+
+/* Details popup fields remain compact and readable. */
+#topStatusBar .ts-run-details-body {
+  display: grid !important;
+  grid-template-columns: repeat(2,minmax(0,1fr)) !important;
+  gap: 7px !important;
+  max-height: 390px !important;
+  padding: 10px !important;
+  overflow-y: auto !important;
+}
+
+@media (max-width: 760px) {
+  #topStatusBar .host-workflow-tabs-card {
+    height: 238px !important;
+    min-height: 238px !important;
+    max-height: 238px !important;
+  }
+}
