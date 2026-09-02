@@ -95,7 +95,13 @@
     const eventStatus = String(event.status || "").toLowerCase();
     const sessionStatus = String(event.sessionStatus || "").toLowerCase();
     if (["cancelled","canceled","ended","completed","done"].includes(eventStatus)) return false;
-    if (["ended","completed","done"].includes(sessionStatus)) return false;
+
+    // Once a Performance Session starts for this gig, it is no longer an
+    // "upcoming" gig. The session record remains linked to the event, but all
+    // Upcoming Gigs surfaces advance immediately to the next event.
+    if (["active","live","started","ended","completed","done"].includes(sessionStatus)) return false;
+
+    if (event.activeSessionId || event.startedSessionId) return false;
     if (event.completedAt) return false;
     return true;
   }
