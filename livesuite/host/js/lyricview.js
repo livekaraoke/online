@@ -515,16 +515,44 @@
   }
 
   async function resetKaraoke() {
-    await db.collection("karaokeControl").doc("liveLyrics").set({
-      currentSongId: null,
-      songId: null,
-      song: null,
-      title: "",
-      artist: "",
-      reset: true,
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    }, {merge:true});
-    $("karaokeMenu").classList.add("hidden");
+    const button = $("resetKaraokeBtn");
+    const quickButton = $("quickResetKaraokeBtn");
+
+    if (button) button.disabled = true;
+    if (quickButton) quickButton.disabled = true;
+
+    try {
+      // karaoke-lyric-view.html listens to this exact control document.
+      // Clearing BOTH supported song-id fields and setting displayState=idle
+      // sends the singer display back to standby immediately.
+      await db.collection("karaokeControl").doc("liveLyrics").set({
+        currentLyricsSongId: "",
+        currentSongId: "",
+        songId: "",
+        song: null,
+        songTitle: "",
+        songArtist: "",
+        title: "",
+        artist: "",
+        chordTranspose: 0,
+        transpose: 0,
+        displayState: "idle",
+        reset: true,
+        resetAt: firebase.firestore.FieldValue.serverTimestamp(),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge:true });
+
+      $("karaokeMenu")?.classList.add("hidden");
+    } catch (error) {
+      console.error("Could not reset karaoke display:", error);
+      await showModal(
+        "Reset Failed",
+        error?.message || "Could not reset the karaoke display."
+      );
+    } finally {
+      if (button) button.disabled = false;
+      if (quickButton) quickButton.disabled = false;
+    }
   }
 
   /************************************************************
