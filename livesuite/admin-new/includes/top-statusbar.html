@@ -1,0 +1,294 @@
+<script src="../../firebase-projects.js"></script>
+<div id="topStatusBar" class="top-statusbar host-statusbar collapsed">
+
+  <!-- =====================================================
+       COMPACT LIVE STRIP
+       Venue / Started / Elapsed / Remaining are deliberately
+       kept HERE so they are always visible to the host.
+       ===================================================== -->
+  <div
+    class="top-status-strip host-compact-strip" data-ts-toggle-strip
+    role="button"
+    tabindex="0"
+    aria-expanded="false"
+  >
+    <div class="host-strip-live">
+      <span id="tsLiveDot" class="dot blue"></span>
+      <strong id="tsLiveLabel">Offline</strong>
+    </div>
+
+    <div class="host-strip-metric venue-metric">
+      <span class="host-strip-icon">📍</span>
+      <div>
+        <small>VENUE</small>
+        <strong id="tsCompactVenue">No active session</strong>
+        <em id="tsCompactType">—</em>
+      </div>
+    </div>
+
+    <div class="host-strip-metric">
+      <small>STARTED</small>
+      <strong id="tsCompactStarted">--:--</strong>
+    </div>
+
+    <div class="host-strip-metric">
+      <small>ELAPSED</small>
+      <strong id="tsCompactElapsed" class="host-elapsed-green">0 mins</strong>
+    </div>
+
+    <div class="host-strip-metric remaining-metric">
+      <small>REMAINING</small>
+      <strong id="tsCompactRemaining">-</strong>
+      <em id="tsCompactScheduledEnd">No scheduled end</em>
+    </div>
+
+    <div class="host-strip-metric requests-metric">
+      <small>REQUESTS</small>
+      <strong id="tsCompactRequests">0</strong>
+    </div>
+
+    <div class="host-strip-metric alerts-metric">
+      <small>ALERTS</small>
+      <strong id="tsCompactAlerts">0</strong>
+    </div>
+
+    <button
+      id="tsToggleBtn" data-ts-toggle-button
+      class="top-status-toggle host-status-toggle"
+      type="button"
+      aria-label="Expand status dashboard"
+    >
+      ▼
+    </button>
+
+    <!-- Compatibility targets used by the existing top-statusbar.js.
+         They remain present but are not displayed. -->
+    <div class="top-status-compatibility" aria-hidden="true">
+      <strong id="tsSessionLabel">No active session</strong>
+      <strong id="tsRequestsLabel">0 requests left</strong>
+      <span id="tsNotificationBadge" class="notification-badge hidden">0</span>
+      <strong id="tsNotificationLabel">No new alerts</strong>
+
+      <strong id="tsDashStarted">-</strong>
+      <strong id="tsDashElapsed">0 mins</strong>
+      <strong id="tsDashVenue">-</strong>
+    </div>
+  </div>
+
+  <!-- =====================================================
+       EXPANDED HOST WORKSPACE
+       STARTED / ELAPSED / VENUE / official Remaining are NOT
+       duplicated here because they stay visible above.
+       ===================================================== -->
+  <div class="top-status-expanded host-status-expanded">
+
+    <!-- =====================================================
+         ROW 1 — TWO COMPACT TABBED CARDS
+         LEFT:  SESSION STATUS / BREAK STATUS
+         RIGHT: NOTIFICATIONS / SESSION NOTES
+         ===================================================== -->
+    <div class="host-dashboard-top-row">
+
+      <!-- SESSION STATUS / BREAK STATUS -->
+      <section class="performance-info-card host-main-status-tabs-card">
+        <div class="host-card-tabs host-status-tabs" role="tablist" aria-label="Session and break status">
+          <button
+            id="tsSessionStatusTab"
+            class="host-card-tab active"
+            type="button"
+            role="tab"
+            aria-selected="true"
+            aria-controls="tsSessionStatusPane"
+            data-ts-status-tab="session"
+          >⌛ SESSION STATUS</button>
+
+          <button
+            id="tsBreakStatusTab"
+            class="host-card-tab"
+            type="button"
+            role="tab"
+            aria-selected="false"
+            aria-controls="tsBreakStatusPane"
+            data-ts-status-tab="break"
+          >☕ BREAK STATUS</button>
+        </div>
+
+        <!-- SESSION STATUS PANE -->
+        <div id="tsSessionStatusPane" class="host-tab-pane host-status-pane active" role="tabpanel">
+          <div class="host-session-status-grid">
+
+            <div class="host-session-remaining-block">
+              <div class="status-card-heading">
+                <span class="status-card-icon">⌛</span>
+                <span>Remaining</span>
+              </div>
+
+              <div class="host-remaining-compact-value">
+                <span id="tsRemainingOverLabel" class="host-over-label">TIME</span>
+                <strong id="tsAdjustedRemainingTime" class="adjusted-remaining-value">-</strong>
+              </div>
+
+              <span id="tsAdjustedEndTime" class="adjusted-end-time">Adjusted end —</span>
+              <small id="tsAdjustedRemainingHint" class="adjusted-remaining-hint">Scheduled duration from actual start</small>
+
+              <span id="tsScheduledWindow" class="hidden">No scheduled time</span>
+              <strong id="tsRemainingTime" class="hidden">-</strong>
+            </div>
+
+            <div class="host-session-divider" aria-hidden="true"></div>
+
+            <div class="host-public-list-block">
+              <div class="status-card-heading">
+                <span class="status-card-icon">🔒</span>
+                <span>Public Song List</span>
+              </div>
+
+              <div class="host-public-list-status-row">
+                <strong id="tsDashSongs" class="large-status-value song-list-locked">Locked</strong>
+              </div>
+
+              <div class="top-status-public-list-name host-public-list-name-compact">
+                <span class="public-list-caption">Selected list</span>
+                <strong id="tsDashPublicSetlist">Not selected</strong>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- BREAK STATUS PANE -->
+        <div id="tsBreakStatusPane" class="host-tab-pane host-status-pane" role="tabpanel" hidden>
+          <div id="tsBreakCard" class="host-break-tab-layout">
+
+            <div class="host-break-state-block">
+              <div class="status-card-heading">
+                <span class="status-card-icon">☕</span>
+                <span>Break</span>
+              </div>
+
+              <strong id="tsBreakStatusLabel" class="break-status-label">Not on break</strong>
+
+              <div id="tsBreakDetails" class="break-details hidden">
+                <span>Started <strong id="tsBreakStarted">-</strong></span>
+                <span>Current <strong id="tsBreakDuration">0 mins</strong></span>
+              </div>
+            </div>
+
+            <div id="tsBreakPanel" class="break-status-panel host-break-tab-metrics">
+              <div class="break-summary-grid">
+                <div class="break-summary-item">
+                  <span>Total break</span>
+                  <strong id="tsDashBreakTotal">0 mins</strong>
+                </div>
+                <div class="break-summary-item">
+                  <span>Breaks</span>
+                  <strong id="tsDashBreakCount">0</strong>
+                </div>
+                <div class="break-summary-item">
+                  <span>Current</span>
+                  <strong id="tsCurrentBreakDuration">0 mins</strong>
+                </div>
+              </div>
+            </div>
+
+            <button
+              id="tsBreakActionBtn"
+              class="break-action-btn start"
+              type="button"
+              onclick="event.stopPropagation(); LK.topStatus.toggleBreak();"
+              disabled
+            >☕ Start Break</button>
+
+            <p id="tsBreakActionMessage" class="break-action-message"></p>
+          </div>
+        </div>
+      </section>
+
+      <!-- NOTIFICATIONS / SESSION NOTES -->
+      <section class="performance-info-card notifications-card host-info-tabs-card">
+        <div class="host-card-tabs" role="tablist" aria-label="Notifications and session notes">
+          <button
+            id="tsNotificationsTab"
+            class="host-card-tab active"
+            type="button"
+            role="tab"
+            aria-selected="true"
+            aria-controls="tsNotificationsPane"
+            data-ts-info-tab="notifications"
+          >🔔 NOTIFICATIONS</button>
+
+          <button
+            id="tsNotesTab"
+            class="host-card-tab"
+            type="button"
+            role="tab"
+            aria-selected="false"
+            aria-controls="tsNotesPane"
+            data-ts-info-tab="notes"
+          >📝 SESSION NOTES</button>
+        </div>
+
+        <div id="tsNotificationsPane" class="host-tab-pane active" role="tabpanel">
+          <div id="tsNotificationsList" class="top-status-notifications-list workflow-notification-list">
+            <div class="top-status-empty">No notifications yet.</div>
+          </div>
+        </div>
+
+        <div id="tsNotesPane" class="host-tab-pane" role="tabpanel" hidden>
+          <textarea
+            id="tsSessionNotes"
+            class="top-status-session-notes host-tab-notes"
+            placeholder="Type session notes..."
+            aria-label="Session notes"
+            disabled
+          ></textarea>
+          <div class="session-notes-footer">
+            <span id="tsNotesSaveStatus">No active session</span>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- =====================================================
+         ROW 2 — TALLER LIVE WORKFLOW
+         ===================================================== -->
+    <div class="host-live-workflow-row">
+
+      <section class="top-status-pending-card host-pending-card">
+        <div class="queue-heading-row">
+          <h3><span>🎤</span> Pending Requests <span id="tsPendingCount">(0)</span></h3>
+          <span class="queue-scroll-hint">Accept or decline</span>
+        </div>
+        <div id="tsPendingRequestsList" class="top-status-pending-list">
+          <div class="top-status-queue-empty">No pending requests.</div>
+        </div>
+      </section>
+
+      <section class="top-status-queue-card run-order-card host-run-order-card">
+        <div class="queue-heading-row">
+          <h3><span>♫</span> Run Order <span id="tsRunOrderCount">(0)</span></h3>
+          <span class="queue-scroll-hint">Live performance sequence</span>
+        </div>
+
+        <div class="ts-run-order-add">
+          <select id="tsRunOrderSongSelect" aria-label="Choose song to add">
+            <option value="">Add a song…</option>
+          </select>
+          <button id="tsRunOrderAddBtn" type="button">＋ ADD</button>
+        </div>
+
+        <div id="tsRunOrderList" class="top-status-queue-list">
+          <div class="top-status-queue-empty">Run Order is empty.</div>
+        </div>
+
+        <span id="tsQueueCount" hidden>(0)</span>
+        <div id="tsQueueList" hidden></div>
+      </section>
+
+    </div>
+
+  </div>
+
+  </div>
+</div>

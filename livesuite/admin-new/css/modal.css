@@ -1,0 +1,25 @@
+.password-gate { position: fixed; inset: 0; z-index: 9999; display: flex; align-items: center; justify-content: center; background: #050505; }
+.gate-box { width: min(390px, 92vw); padding: 34px; background: #111; border: 1px solid var(--line); border-radius: 18px; text-align: center; box-shadow: 0 0 28px rgba(255,0,0,.25); }
+.gate-box h2 { margin: 0 0 24px; letter-spacing: 3px; }
+.gate-box input { width: 100%; margin-bottom: 14px; padding: 15px; background: #070707; color: white; border: 1px solid #333; border-radius: 9px; font-size: 16px; }
+.gate-box button { width: 100%; padding: 14px; background: linear-gradient(180deg, #c50000, #650000); color: white; border: 1px solid #ff3333; border-radius: 9px; font-weight: 900; cursor: pointer; }
+.error { color: #ff5555; min-height: 20px; }
+.admin-modal { position: fixed; inset: 0; z-index: 9998; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,.75); }
+.admin-modal-box { width: min(520px, 92vw); background: #111; border: 1px solid var(--line); border-radius: 14px; padding: 24px; box-shadow: 0 0 30px rgba(255,0,0,.25); }
+.admin-modal-box.compact { width: min(430px, 92vw); }
+.admin-modal-box h3 { color: var(--gold); margin: 0 0 12px; }
+.admin-modal-box textarea, .profile-box input, .profile-box textarea, .profile-box select { width: 100%; min-height: 44px; background: #050505; color: white; border: 1px solid #333; border-radius: 8px; padding: 12px; }
+.admin-modal-box textarea { min-height: 120px; }
+.admin-modal-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 16px; }
+.admin-action-btn { padding: 12px 16px; border-radius: 8px; color: white; border: 1px solid #444; font-weight: 900; cursor: pointer; }
+.admin-action-btn.danger { background: linear-gradient(180deg, #b90000, #650000); border-color: #ff3333; }
+.admin-action-btn.muted { background: #151515; }
+.profile-box label { display: block; color: var(--muted); font-size: 12px; font-weight: 900; text-transform: uppercase; margin: 10px 0 6px; }
+.profile-preview { display: flex; gap: 14px; align-items: center; border: 1px solid var(--line-soft); border-radius: 12px; padding: 12px; margin-bottom: 12px; }
+.profile-preview img { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; border: 1px solid #555; background: #050505; }
+.profile-preview strong, .profile-preview span { display: block; }
+.profile-preview span { color: #aaa; margin-top: 5px; }
+.profile-readonly-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
+.profile-readonly-row div { border: 1px solid var(--line-soft); padding: 12px; border-radius: 9px; }
+.profile-readonly-row span { display: block; color: #aaa; font-size: 12px; text-transform: uppercase; margin-bottom: 6px; }
+@media (max-width: 640px) { .profile-readonly-row { grid-template-columns: 1fr; } }

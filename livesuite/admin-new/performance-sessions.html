@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Performance Sessions</title>
+  <link rel="stylesheet" href="css/performance-sessions.css" />
+  <link rel="stylesheet" href="css/sidebar.css" />
+</head>
+<body class="sessions-body">
+
+  <div id="passwordGate" class="password-gate">
+    <div class="gate-box">
+      <h2>Admin Login</h2>
+      <input id="emailInput" type="email" placeholder="Email..." autocomplete="email" />
+      <input id="passwordInput" type="password" placeholder="Password..." autocomplete="current-password" />
+      <button type="button" onclick="adminLogin()">Login</button>
+      <p id="passwordError" class="error"></p>
+    </div>
+  </div>
+
+  <div id="sessionDetailModal" class="session-modal hidden">
+    <div class="session-modal-box">
+      <button class="modal-close" onclick="closeSessionModal()">✕</button>
+      <div id="sessionModalContent"></div>
+    </div>
+  </div>
+
+  <div id="appShell" class="app-shell" style="display:none;">
+    <div id="sidebarContainer"></div>
+
+    <main class="main-area">
+      <header class="page-header">
+        <h1>◷ Performance Sessions</h1>
+        <button class="export-btn" type="button" onclick="exportSessionsCsv()">⇩ Export Data</button>
+      </header>
+
+      <section class="filters-row">
+        <input id="dateFromInput" type="date" onchange="applyFilters()" />
+        <input id="dateToInput" type="date" onchange="applyFilters()" />
+        <select id="venueFilter" onchange="applyFilters()">
+          <option value="all">All Venues</option>
+          <option value="Whyte Harte">Whyte Harte</option>
+          <option value="Smokehouse">Smokehouse</option>
+          <option value="Test">Test</option>
+        </select>
+        <select id="statusFilter" onchange="applyFilters()">
+          <option value="all">All Statuses</option>
+          <option value="active">Active</option>
+          <option value="ended">Ended</option>
+          <option value="test">Test</option>
+        </select>
+        <div class="search-wrap">
+          <span>🔍</span>
+          <input id="sessionSearchInput" placeholder="Search sessions..." oninput="applyFilters()" />
+        </div>
+      </section>
+
+      <section id="currentSessionPanel" class="current-session-card"></section>
+
+      <section class="analytics-card">
+        <h2>Session Analytics <span>(Selected Period)</span></h2>
+        <div id="analyticsGrid" class="analytics-grid"></div>
+      </section>
+
+      <section class="history-card">
+        <div class="history-title-row">
+          <h2>Session History</h2>
+          <select id="sortSelect" onchange="applyFilters()">
+            <option value="newest">Sort by Date (Newest)</option>
+            <option value="oldest">Sort by Date (Oldest)</option>
+            <option value="duration">Sort by Duration</option>
+            <option value="requests">Sort by Requests</option>
+            <option value="completion">Sort by Completion</option>
+          </select>
+        </div>
+
+        <div class="history-table-wrap">
+          <table class="sessions-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Session</th>
+                <th>Venue</th>
+                <th>Date</th>
+                <th>Sched. Start</th>
+                <th>Sched. End</th>
+                <th>Actual Start</th>
+                <th>Actual End</th>
+                <th>Duration<br><small>excl. breaks</small></th>
+                <th colspan="4">Songs</th>
+                <th>Requests</th>
+                <th>Avg BPM</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+              <tr class="sub-head">
+                <th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th>
+                <th>Comp</th><th>Left</th><th>Aban</th><th>Del</th>
+                <th></th><th></th><th></th><th></th>
+              </tr>
+            </thead>
+            <tbody id="sessionsTableBody"></tbody>
+          </table>
+        </div>
+
+        <div class="table-footer">
+          <span id="tableShowingLabel">Showing 0 sessions</span>
+          <div class="pager">
+            <button onclick="prevPage()">‹</button>
+            <span id="pageLabel">1</span>
+            <button onclick="nextPage()">›</button>
+          </div>
+          <select id="pageSizeSelect" onchange="changePageSize()">
+            <option value="8">8 / page</option>
+            <option value="10">10 / page</option>
+            <option value="20">20 / page</option>
+            <option value="50">50 / page</option>
+          </select>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="deleteSessionDialog" class="custom-dialog hidden">
+    <div class="dialog-box">
+      <div class="dialog-title">Delete Performance Session</div>
+      <div class="dialog-text">
+        This will permanently delete:
+        <ul>
+          <li>Performance Session</li>
+          <li>All linked song requests</li>
+          <li>Performance logs</li>
+        </ul>
+        This action cannot be undone.
+      </div>
+      <div class="dialog-buttons">
+        <button class="dialog-cancel" onclick="closeDeleteDialog()">Cancel</button>
+        <button class="dialog-delete" id="confirmDeleteBtn">Delete Session</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast notification box used instead of alert() -->
+  <div id="toastBox" class="toast-box hidden"></div>
+
+  <script src="../firebase-projects.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+
+  <!-- firebase.js must define firebase app, db, and auth once. -->
+  <script src="js/firebase.js"></script>
+
+  <!-- Sidebar with profile -->
+  <script src="js/profile.js"></script>
+  <script src="js/sidebar.js"></script>
+  <script src="js/members.js"></script>
+  
+  <script src="js/performance-sessions.js"></script>
+</body>
+</html>

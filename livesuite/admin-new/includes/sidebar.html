@@ -1,0 +1,171 @@
+<script src="../../firebase-projects.js"></script>
+<aside class="admin-sidebar suite-sidebar">
+  <div class="suite-brand-block">
+    <div class="suite-brand-icon">🎙️</div>
+    <div class="suite-brand-text">
+      <div class="suite-brand-title">LIVE KARAOKE</div>
+      <div class="suite-brand-subtitle">SUITE</div>
+    </div>
+  </div>
+
+  <button
+    type="button"
+    class="admin-user-card suite-user-card"
+    onclick="openProfileModal()"
+    title="Open profile">
+    <div class="avatar">
+      <img id="sidebarProfileImg" src="" alt="" />
+      <span id="sidebarProfileFallback">👤</span>
+    </div>
+
+    <div class="suite-user-copy">
+      <strong id="adminUserName">Loading...</strong>
+      <span id="adminUserRole">Admin</span>
+      <small>● Online</small>
+    </div>
+  </button>
+
+  <div class="suite-nav-section-title">Overview</div>
+  <nav class="side-nav suite-nav">
+    <a href="admin.html" data-page="dashboard" data-sidebar-nav="dashboard">
+      <span class="suite-nav-icon">🎛️</span>
+      <span class="suite-nav-label">Dashboard</span>
+    </a>
+
+    <a href="upcoming-events.html" data-page="events" data-sidebar-nav="events">
+      <span class="suite-nav-icon">📅</span>
+      <span class="suite-nav-label">Gigs &amp; Events</span>
+    </a>
+
+    <a href="venues.html" data-page="venues" data-sidebar-nav="venues">
+      <span class="suite-nav-icon">📍</span>
+      <span class="suite-nav-label">Venues</span>
+    </a>
+  <a href="database-manager.html">🗄 Database Manager</a>
+</nav>
+
+  <div class="suite-nav-section-title live-title">
+    <span>Live</span>
+    <span id="sidebarLiveNowBadge" class="suite-live-badge hidden">● LIVE NOW</span>
+  </div>
+
+  <nav class="side-nav suite-nav">
+    <button
+      type="button"
+      data-sidebar-admin-section="sessionPanel"
+      onclick="scrollToAdminSection('sessionPanel')">
+      <span class="suite-nav-icon">🎙️</span>
+      <span class="suite-nav-label">Live Session</span>
+      <span class="suite-nav-chevron">›</span>
+    </button>
+
+    <button
+      type="button"
+      data-sidebar-admin-section="requestsPanel"
+      onclick="scrollToAdminSection('requestsPanel')">
+      <span class="suite-nav-icon">💬</span>
+      <span class="suite-nav-label">Song Requests</span>
+      <span id="sidebarRequestBadge" class="suite-nav-count request-count hidden">0</span>
+      <span class="suite-nav-chevron">›</span>
+    </button>
+
+    <button
+      type="button"
+      data-sidebar-admin-section="runOrderPanel"
+      onclick="scrollToAdminSection('runOrderPanel')">
+      <span class="suite-nav-icon">🎵</span>
+      <span class="suite-nav-label">Run Order</span>
+      <span id="sidebarRunOrderBadge" class="suite-nav-count run-order-count hidden">0</span>
+      <span class="suite-nav-chevron">›</span>
+    </button>
+  </nav>
+
+  <div class="suite-nav-section-title music-title">Music</div>
+  <nav class="side-nav suite-nav">
+    <a href="../adm/host/lyricsviewer.html">
+      <span class="suite-nav-icon">🎸</span>
+      <span class="suite-nav-label">Lyrics &amp; Chords</span>
+      <span class="suite-nav-chevron">›</span>
+    </a>
+
+    <a href="../list/index.html">
+      <span class="suite-nav-icon">☷</span>
+      <span class="suite-nav-label">Song List</span>
+      <span class="suite-nav-chevron">›</span>
+    </a>
+  </nav>
+
+  <div class="suite-nav-section-title karaoke-title">Karaoke</div>
+  <nav class="side-nav suite-nav">
+    <a href="../adm/host/venuekaraokelyricbook.html">
+      <span class="suite-nav-icon">▣</span>
+      <span class="suite-nav-label">Lyric Prompter</span>
+      <span class="suite-nav-chevron">›</span>
+    </a>
+  </nav>
+
+  <div class="suite-nav-section-title records-title">Records</div>
+  <nav class="side-nav suite-nav">
+    <a href="performance-sessions.html" data-page="performance-sessions">
+      <span class="suite-nav-icon">🎙️</span>
+      <span class="suite-nav-label">Session History</span>
+      <span class="suite-nav-chevron">›</span>
+    </a>
+  </nav>
+
+  <div class="suite-nav-section-title tools-title">Tools</div>
+  <nav class="side-nav suite-nav">
+    <a href="../notekeeper/notekeeper.html">
+      <span class="suite-nav-icon">📝</span>
+      <span class="suite-nav-label">Notes</span>
+      <span class="suite-nav-chevron">›</span>
+    </a>
+
+    <a href="../songMeta/index.html">
+      <span class="suite-nav-icon">🏷️</span>
+      <span class="suite-nav-label">Song Meta Search</span>
+      <span class="suite-nav-chevron">›</span>
+    </a>
+
+    <a href="../songMeta/index.html">
+      <span class="suite-nav-icon">⏱️</span>
+      <span class="suite-nav-label">Metronome / Click</span>
+      <span class="suite-nav-chevron">›</span>
+    </a>
+  </nav>
+
+  <div class="suite-nav-section-title system-title">System</div>
+  <nav class="side-nav suite-nav">
+    <button
+      id="membersNavLink"
+      type="button"
+      data-sidebar-admin-section="membersPanel"
+      onclick="scrollToAdminSection('membersPanel')">
+      <span class="suite-nav-icon">👥</span>
+      <span class="suite-nav-label">Members &amp; Users</span>
+      <span class="suite-nav-chevron">›</span>
+    </button>
+
+    <button
+      type="button"
+      data-sidebar-admin-section="consolePanel"
+      onclick="scrollToAdminSection('consolePanel')">
+      <span class="suite-nav-icon">🖥️</span>
+      <span class="suite-nav-label">Control Panel</span>
+      <span class="suite-nav-chevron">›</span>
+    </button>
+
+    <button type="button" onclick="adminLogout()">
+      <span class="suite-nav-icon">↗</span>
+      <span class="suite-nav-label">Log Out</span>
+      <span class="suite-nav-chevron">›</span>
+    </button>
+  </nav>
+
+  <div id="sidebarSongRequests" class="sidebar-request-list suite-hidden-request-list"></div>
+
+  <div class="sidebar-footer suite-sidebar-footer">
+    <span>© 2026 Live Karaoke Malta</span>
+    <span>Live Karaoke Suite • v2.5.1</span>
+  </div>
+</aside>

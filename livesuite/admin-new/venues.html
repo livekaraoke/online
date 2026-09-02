@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Venues • Live Karaoke Admin</title>
+
+  <link rel="stylesheet" href="css/admin.css" />
+  <link rel="stylesheet" href="css/sidebar.css" />
+  <link rel="stylesheet" href="css/modal.css" />
+  <link rel="stylesheet" href="css/venues.css" />
+</head>
+
+<body class="admin-body venues-page">
+
+  <div id="venuesAuthGate" class="venues-auth-gate">
+    <div class="venues-auth-card">
+      <div class="venues-auth-spinner"></div>
+      <strong>Checking Admin Session…</strong>
+      <small>Your existing Admin login is reused.</small>
+    </div>
+  </div>
+
+  <div id="venuesApp" class="admin-shell" hidden>
+    <div id="sidebarContainer"></div>
+
+    <main class="admin-main venues-main">
+      <header class="venues-topbar">
+        <div>
+          <p class="venues-eyebrow">LIVE KARAOKE ADMIN</p>
+          <h1>Venues</h1>
+          <p class="venues-subtitle">
+            Store venue details once, then reuse them automatically when creating upcoming gigs and events.
+          </p>
+        </div>
+
+        <div class="venues-topbar-actions">
+          <button id="venuesBackBtn" class="venues-btn ghost" type="button">← ADMIN</button>
+          <button id="newVenueBtn" class="venues-btn primary" type="button">＋ NEW VENUE</button>
+        </div>
+      </header>
+
+      <section class="venues-summary-grid">
+        <article class="venues-summary-card">
+          <span>TOTAL VENUES</span>
+          <strong id="venueCount">0</strong>
+          <small>Saved venue records</small>
+        </article>
+
+        <article class="venues-summary-card">
+          <span>WITH CONTACT</span>
+          <strong id="venueContactCount">0</strong>
+          <small>Contact person saved</small>
+        </article>
+
+        <article class="venues-summary-card">
+          <span>WITH ADDRESS</span>
+          <strong id="venueAddressCount">0</strong>
+          <small>Ready for event autofill</small>
+        </article>
+      </section>
+
+      <section class="venues-panel">
+        <div class="venues-toolbar">
+          <div class="venues-toolbar-search">
+            <label for="venueSearchInput">SEARCH</label>
+            <input id="venueSearchInput" type="search" placeholder="Venue, address, contact, notes…" autocomplete="off" />
+          </div>
+
+          <button id="refreshVenuesBtn" class="venues-btn ghost" type="button">↻ REFRESH</button>
+        </div>
+
+        <div class="venues-list-heading">
+          <div>
+            <h2>Venue Directory</h2>
+            <span id="venuesResultCount">0 venues</span>
+          </div>
+          <small>Venue details are used by Upcoming Gigs &amp; Events.</small>
+        </div>
+
+        <div id="venuesList" class="venues-list">
+          <div class="venues-empty">Loading venues…</div>
+        </div>
+      </section>
+
+      <footer class="venues-footer">Live Karaoke Malta • Venue Directory</footer>
+    </main>
+  </div>
+
+  <!-- CREATE / EDIT VENUE -->
+  <div id="venueModal" class="venues-modal hidden" role="dialog" aria-modal="true" aria-labelledby="venueModalTitle">
+    <div class="venues-modal-card">
+      <div class="venues-modal-head">
+        <div>
+          <span id="venueModalMode">NEW VENUE</span>
+          <h2 id="venueModalTitle">Create Venue</h2>
+        </div>
+        <button id="venueModalCloseBtn" class="venue-icon-close" type="button" aria-label="Close">×</button>
+      </div>
+
+      <input id="venueIdInput" type="hidden" />
+
+      <div class="venue-form-grid">
+        <label class="wide">
+          <span>VENUE NAME</span>
+          <input id="venueNameInput" type="text" placeholder="e.g. The Whyte Harte" />
+        </label>
+
+        <label class="wide">
+          <span>FULL ADDRESS</span>
+          <input id="venueAddressInput" type="text" placeholder="Street, locality, postcode…" />
+        </label>
+
+        <label>
+          <span>LOCALITY / AREA</span>
+          <input id="venueLocalityInput" type="text" placeholder="e.g. Hamrun" />
+        </label>
+
+        <label>
+          <span>MAP / WEBSITE URL</span>
+          <input id="venueWebsiteInput" type="url" placeholder="https://…" />
+        </label>
+
+        <label>
+          <span>CONTACT NAME</span>
+          <input id="venueContactNameInput" type="text" placeholder="Venue contact person" />
+        </label>
+
+        <label>
+          <span>CONTACT PHONE</span>
+          <input id="venueContactPhoneInput" type="text" placeholder="+356…" />
+        </label>
+
+        <label class="wide">
+          <span>CONTACT EMAIL</span>
+          <input id="venueContactEmailInput" type="email" placeholder="name@example.com" />
+        </label>
+
+        <label>
+          <span>DEFAULT ARRIVAL / SETUP</span>
+          <input id="venueDefaultArrivalInput" type="time" />
+        </label>
+
+        <label>
+          <span>CAPACITY</span>
+          <input id="venueCapacityInput" type="number" min="0" step="1" placeholder="Optional" />
+        </label>
+
+        <label class="wide">
+          <span>LOAD-IN / PARKING</span>
+          <textarea id="venueLoadInInput" rows="3" placeholder="Parking, loading doors, stairs, lift, access instructions…"></textarea>
+        </label>
+
+        <label class="wide">
+          <span>TECHNICAL / EQUIPMENT NOTES</span>
+          <textarea id="venueTechnicalInput" rows="3" placeholder="PA, mixer, speakers, stage, power, lighting, house equipment…"></textarea>
+        </label>
+
+        <label class="wide">
+          <span>GENERAL NOTES</span>
+          <textarea id="venueNotesInput" rows="4" placeholder="Any other useful venue information…"></textarea>
+        </label>
+      </div>
+
+      <p id="venueFormMessage" class="venue-form-message"></p>
+
+      <div class="venues-modal-actions">
+        <button id="venueCancelBtn" class="venues-btn ghost" type="button">CANCEL</button>
+        <button id="venueSaveBtn" class="venues-btn primary" type="button">SAVE VENUE</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- DELETE -->
+  <div id="deleteVenueModal" class="venues-modal hidden" role="dialog" aria-modal="true">
+    <div class="venues-modal-card compact">
+      <div class="delete-venue-icon">!</div>
+      <h2>Delete Venue?</h2>
+      <p id="deleteVenueMessage">This venue will be permanently removed.</p>
+      <small class="delete-venue-warning">
+        Existing events keep their saved venue snapshot, but this venue will no longer be available for new events.
+      </small>
+      <div class="venues-modal-actions">
+        <button id="deleteVenueCancelBtn" class="venues-btn ghost" type="button">CANCEL</button>
+        <button id="deleteVenueConfirmBtn" class="venues-btn danger" type="button">DELETE VENUE</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../firebase-projects.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+
+  <script src="js/firebase.js"></script>
+  <script src="js/sidebar.js"></script>
+  <script src="js/profile.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/venues.js"></script>
+</body>
+</html>

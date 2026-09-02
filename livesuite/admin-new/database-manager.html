@@ -1,0 +1,122 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Database Manager - Live Karaoke Suite</title>
+<script src="../firebase-projects.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<style>
+body{font-family:Arial,sans-serif;background:#0c0c0c;color:#eee;margin:0;padding:22px}
+.wrap{max-width:1050px;margin:auto}.card{background:#151515;border:1px solid #333;border-radius:10px;padding:18px;margin-bottom:16px}
+h1,h2{margin-top:0}.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+button,select{background:#222;color:#fff;border:1px solid #555;border-radius:7px;padding:10px 13px;font-weight:700}
+button.primary{background:#116530;border-color:#238c4d}.danger{background:#5d1d1d}.warn{color:#ffd86b}
+pre{background:#090909;border:1px solid #333;border-radius:8px;padding:12px;white-space:pre-wrap;max-height:45vh;overflow:auto}
+small{color:#999}
+</style>
+</head>
+<body><div class="wrap">
+<h1>Database Manager</h1>
+<div class="card">
+<h2>Current App Database</h2>
+<p>Current project: <strong id="currentProject"></strong></p>
+<div class="row">
+<select id="projectSelect">
+<option value="LIVEKARAOKESUITE">LIVEKARAOKESUITE (new)</option>
+<option value="LIVEKARAOKEMT">LIVEKARAOKEMT (old)</option>
+</select>
+<button class="primary" id="switchBtn">Switch app database</button>
+<button onclick="location.href='admin.html'">Back to Admin</button>
+</div>
+<p><small>Selection is stored in this browser's localStorage and applies to all /livesuite/ pages on this origin.</small></p>
+</div>
+
+<div class="card">
+<h2>Copy Database</h2>
+<p class="warn"><b>Use this only when the source database can still be read.</b> Copying does not migrate Firebase Authentication users.</p>
+<div class="row">
+<label>From <select id="source">
+<option value="LIVEKARAOKEMT">LIVEKARAOKEMT</option>
+<option value="LIVEKARAOKESUITE">LIVEKARAOKESUITE</option>
+</select></label>
+<label>To <select id="destination">
+<option value="LIVEKARAOKESUITE">LIVEKARAOKESUITE</option>
+<option value="LIVEKARAOKEMT">LIVEKARAOKEMT</option>
+</select></label>
+<button id="testBtn">Test both</button>
+<button class="primary" id="copyBtn">Copy data</button>
+</div>
+<p><small>Top-level collections copied: lyrics, lyricsSetlists, songlists, songlistSections, songlistSongs, publicSongRequests, publicSignupSessions, performanceSessions, performanceLogs, performedSongs, karaoke, karaokeControl, liveLyrics, notes, noteSettings, userProfiles, upcomingEvents, venues. Also copies performanceSessions/*/performedSongs.</small></p>
+<pre id="log"></pre>
+</div>
+</div>
+<script>
+const current=document.getElementById("currentProject");
+const sel=document.getElementById("projectSelect");
+current.textContent=LKFirebaseProjects.getSelectedKey();
+sel.value=LKFirebaseProjects.getSelectedKey();
+document.getElementById("switchBtn").onclick=()=>{
+  LKFirebaseProjects.selectProject(sel.value,false);
+  alert("Database changed to "+sel.value+". The Admin page will now reload using it.");
+  location.href="admin.html";
+};
+
+const collections=[
+"lyrics","lyricsSetlists","songlists","songlistSections","songlistSongs",
+"publicSongRequests","publicSignupSessions","performanceSessions","performanceLogs",
+"performedSongs","karaoke","karaokeControl","liveLyrics","notes","noteSettings",
+"userProfiles","upcomingEvents","venues"
+];
+const logEl=document.getElementById("log");
+function log(s){logEl.textContent+=s+"\n";logEl.scrollTop=logEl.scrollHeight}
+function dbFor(key,name){
+ const cfg=LKFirebaseProjects.PROJECTS[key];
+ let app;
+ try{app=firebase.app(name)}catch(_){app=firebase.initializeApp(cfg,name)}
+ return app.firestore();
+}
+async function testDb(key){
+ const db=dbFor(key,"test_"+key);
+ await db.collection("karaokeControl").limit(1).get();
+}
+document.getElementById("testBtn").onclick=async()=>{
+ logEl.textContent="";
+ for(const key of [document.getElementById("source").value,document.getElementById("destination").value]){
+   try{await testDb(key);log(key+": READ OK")}catch(e){log(key+": FAILED "+(e.code||"")+" "+e.message)}
+ }
+};
+async function copyCollection(src,dst,name){
+ const snap=await src.collection(name).get(); log(name+": "+snap.size);
+ let batch=dst.batch(), n=0;
+ for(const doc of snap.docs){
+   batch.set(dst.collection(name).doc(doc.id),doc.data()); n++;
+   if(n===400){await batch.commit();batch=dst.batch();n=0}
+ }
+ if(n)await batch.commit();
+ if(name==="performanceSessions"){
+   for(const doc of snap.docs){
+     const sub=await src.collection("performanceSessions").doc(doc.id).collection("performedSongs").get();
+     let b=dst.batch(), c=0;
+     for(const sd of sub.docs){
+       b.set(dst.collection("performanceSessions").doc(doc.id).collection("performedSongs").doc(sd.id),sd.data());c++;
+       if(c===400){await b.commit();b=dst.batch();c=0}
+     }
+     if(c)await b.commit();
+   }
+ }
+}
+document.getElementById("copyBtn").onclick=async()=>{
+ const a=document.getElementById("source").value,b=document.getElementById("destination").value;
+ if(a===b){alert("Source and destination are the same.");return}
+ if(!confirm("Copy ALL supported data from "+a+" to "+b+"? Existing destination docs with the same IDs will be overwritten/merged."))return;
+ logEl.textContent="";
+ try{
+  const src=dbFor(a,"src_"+Date.now()),dst=dbFor(b,"dst_"+Date.now());
+  for(const c of collections) await copyCollection(src,dst,c);
+  log("DONE.");
+ }catch(e){console.error(e);log("STOPPED: "+(e.code||"")+" "+e.message)}
+};
+</script>
+</body></html>
