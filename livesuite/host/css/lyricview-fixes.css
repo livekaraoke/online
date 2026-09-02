@@ -1454,3 +1454,45 @@ body.host-lyric-view-page {
     font-size: 8px !important;
   }
 }
+
+
+/* =========================================================
+   END OF SONG — LARGE NEXT SONG BUTTON
+   ========================================================= */
+
+.host-end-next-wrap {
+  display: flex !important;
+  justify-content: center !important;
+  width: 100% !important;
+  margin: 18px 0 105px !important;
+}
+
+.host-end-next-song-btn {
+  min-width: 260px !important;
+  min-height: 58px !important;
+  padding: 0 28px !important;
+  border: 2px solid #53d879 !important;
+  border-radius: 10px !important;
+  background: rgba(7,25,12,.88) !important;
+  color: #73e995 !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(83,216,121,.08),
+    0 0 18px rgba(83,216,121,.12) !important;
+  font-size: 19px !important;
+  font-weight: 1000 !important;
+  letter-spacing: .08em !important;
+  text-transform: uppercase !important;
+}
+
+.host-end-next-song-btn:hover,
+.host-end-next-song-btn:focus-visible {
+  border-color: #82efa0 !important;
+  color: #a2f6b7 !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(83,216,121,.12),
+    0 0 24px rgba(83,216,121,.20) !important;
+}
+
+.host-end-next-song-btn[hidden] {
+  display: none !important;
+}
