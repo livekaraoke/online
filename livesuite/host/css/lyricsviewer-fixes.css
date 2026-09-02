@@ -42,3 +42,72 @@
     top: var(--lyricsviewer-topbar-h) !important;
   }
 }
+
+
+/* =========================================================
+   RUN ORDER PLAYER BAR
+   ========================================================= */
+.run-order-player-bar {
+  grid-template-columns: minmax(0,1fr) 50px auto !important;
+  gap: 9px !important;
+  align-items: center !important;
+}
+
+.run-order-player-info {
+  display: grid !important;
+  gap: 2px !important;
+  min-width: 0 !important;
+}
+
+.run-order-player-info > strong {
+  color: #72df92 !important;
+  font-size: 8px !important;
+  font-weight: 1000 !important;
+  letter-spacing: .06em !important;
+}
+
+.run-order-player-info > span {
+  overflow: hidden !important;
+  color: #fff !important;
+  font-size: 13px !important;
+  font-weight: 950 !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.run-order-player-info > small {
+  overflow: hidden !important;
+  color: #89969c !important;
+  font-size: 8px !important;
+  font-weight: 750 !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.run-order-player-bar #playSelectedBtn {
+  width: 46px !important;
+  min-width: 46px !important;
+  height: 40px !important;
+  min-height: 40px !important;
+}
+
+.run-order-player-bar #playSelectedBtn:disabled {
+  opacity: .35 !important;
+  cursor: not-allowed !important;
+}
+
+.run-order-player-bar #openRunOrderBtn {
+  min-height: 36px !important;
+  white-space: nowrap !important;
+}
+
+@media (max-width: 720px) {
+  .run-order-player-bar {
+    grid-template-columns: minmax(0,1fr) 46px !important;
+  }
+
+  .run-order-player-bar #openRunOrderBtn {
+    grid-column: 1 / -1 !important;
+    width: 100% !important;
+  }
+}
