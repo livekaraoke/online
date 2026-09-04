@@ -1658,7 +1658,10 @@ body.host-lyric-view-page {
   cursor: default;
 }
 
-/* Main lyric sections never create a page-level horizontal scrollbar. */
+/* Main lyric sections wrap instead of creating a page-level horizontal
+   scrollbar, BUT saved whitespace is musical layout data: chord lines use
+   runs of spaces to place each chord directly above the lyric/word where the
+   change happens. Never collapse those spaces. */
 .host-section,
 .host-section-body,
 .host-section-body * {
@@ -1667,10 +1670,32 @@ body.host-lyric-view-page {
 }
 
 .host-section-body {
+  width: 100% !important;
+  min-width: 0 !important;
   overflow-x: hidden !important;
+
+  /* break-spaces preserves every typed space and every line break while still
+     allowing a long line to wrap inside the available section width. */
+  white-space: break-spaces !important;
   overflow-wrap: anywhere !important;
-  word-break: break-word !important;
-  white-space: normal !important;
+  word-break: normal !important;
+  hyphens: none !important;
+  tab-size: 4;
+  font-kerning: none !important;
+  font-variant-ligatures: none !important;
+  font-feature-settings: "kern" 0, "liga" 0, "clig" 0 !important;
+}
+
+/* Rich-text children must inherit the same whitespace rules. Otherwise a
+   <span>, <b>, <div>, etc. can collapse the spaces between chord symbols. */
+.host-section-body * {
+  white-space: inherit !important;
+  overflow-wrap: inherit !important;
+  word-break: inherit !important;
+  hyphens: inherit !important;
+  font-kerning: inherit !important;
+  font-variant-ligatures: inherit !important;
+  font-feature-settings: inherit !important;
 }
 
 .host-section-body pre,
@@ -1680,7 +1705,7 @@ body.host-lyric-view-page {
   white-space: pre-wrap !important;
   overflow-x: hidden !important;
   overflow-wrap: anywhere !important;
-  word-break: break-word !important;
+  word-break: normal !important;
   max-width: 100% !important;
 }
 
