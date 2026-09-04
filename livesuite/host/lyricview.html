@@ -29,6 +29,13 @@
 
   <main id="hostLyricsStage" class="host-lyrics-stage">
 
+    <div id="linkedSongReturnBar" class="linked-song-return-bar hidden">
+      <button id="linkedSongReturnBtn" type="button">
+        <span>← BACK TO PREVIOUS SONG</span>
+        <strong id="linkedSongReturnTitle">Previous song</strong>
+      </button>
+    </div>
+
     <!-- PERFORMANCE QUICK INFO
          Copy of the most useful SONG INFO details/tools.
          The original SONG INFO sidebar remains unchanged. -->
@@ -128,6 +135,12 @@
         <div><small>CAPO</small><strong id="infoCapo">–</strong></div>
         <div><small>TIME</small><strong id="infoTime">–</strong></div>
         <div><small>YEAR</small><strong id="infoYear">–</strong></div>
+      </section>
+
+      <section class="song-info-card section-visibility-card">
+        <h3>SECTION VISIBILITY</h3>
+        <p id="sectionVisibilityStatus">Checking active session…</p>
+        <button id="showAllSectionsBtn" class="drawer-wide-btn visibility-override-btn" type="button">SHOW ALL SECTIONS</button>
       </section>
 
       <section class="song-info-card">
