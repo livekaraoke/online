@@ -10,6 +10,9 @@
 </head>
 <body>
   <header class="site-shell hero" id="top">
+    <div class="hero-media" aria-hidden="true">
+      <img src="assets/hero-band-photo.jpg" alt="">
+    </div>
     <div class="hero-noise" aria-hidden="true"></div>
     <div class="ornament ornament-top" aria-hidden="true"></div>
 
@@ -22,12 +25,8 @@
 
     <div class="hero-grid">
       <div class="hero-copy">
-        <div class="roxanna-emblem" aria-label="Roxanna">
-          <span class="emblem-star">✦</span>
-          <span class="emblem-line"></span>
-          <h1>ROXANNA</h1>
-          <span class="emblem-line"></span>
-          <small>LIVE BAND</small>
+        <div class="hero-brand" aria-label="Roxanna logo">
+          <img class="hero-logo" src="assets/hero-logo.png" alt="ROXANNA logo">
         </div>
 
         <p class="hero-tagline">LIVE MUSIC.<br>GOOD PEOPLE.<br>GREAT TIMES.</p>
@@ -82,13 +81,13 @@
 
       <button class="action-card" type="button" data-action="connect">
         <span class="action-icon">●●</span>
-        <strong>FOLLOW & CONNECT</strong>
+        <strong>FOLLOW &amp; CONNECT</strong>
         <small>Stay updated with Roxanna</small>
       </button>
 
       <button class="action-card" type="button" data-action="media">
         <span class="action-icon">▶</span>
-        <strong>WATCH & LISTEN</strong>
+        <strong>WATCH &amp; LISTEN</strong>
         <small>Videos, live clips and more</small>
       </button>
     </section>
@@ -115,7 +114,7 @@
 
     <section class="section-block connect-block" id="connectSection">
       <div class="section-heading">
-        <h2>FOLLOW & CONNECT</h2>
+        <h2>FOLLOW &amp; CONNECT</h2>
         <span class="heading-rule"></span>
       </div>
       <p>Follow ROXANNA for new gigs, live clips and announcements.</p>
@@ -134,7 +133,6 @@
     <small>Powered by LiveSuite</small>
   </footer>
 
-  <!-- Songbook / request panel -->
   <div class="modal hidden" id="songModal" role="dialog" aria-modal="true" aria-labelledby="songModalTitle">
     <div class="modal-card songbook-card">
       <button class="modal-close" type="button" data-close="songModal" aria-label="Close">×</button>
@@ -161,7 +159,6 @@
     </div>
   </div>
 
-  <!-- Request details -->
   <div class="modal hidden" id="requestModal" role="dialog" aria-modal="true" aria-labelledby="requestModalTitle">
     <div class="modal-card request-card">
       <button class="modal-close" type="button" data-close="requestModal" aria-label="Close">×</button>
