@@ -1756,3 +1756,40 @@ body.host-lyric-view-page {
     gap: 3px;
   }
 }
+
+/* =========================================================
+   SECTION HEADER — USER-DEFINED COLOUR INDICATOR
+   Uses the exact section title colour saved by Lyrics Creator.
+   The bar replaces the old empty flex spacer, so it automatically fills
+   the available width between the section title and SHOW/HIDE.
+   ========================================================= */
+.host-section-header .section-colour-indicator {
+  display: block !important;
+  flex: 1 1 auto !important;
+  min-width: 28px !important;
+  height: 8px !important;
+  margin: 0 8px !important;
+  border-radius: 999px !important;
+  background: var(--section-indicator-colour, #777) !important;
+  opacity: .96 !important;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,.045),
+    0 0 10px color-mix(in srgb, var(--section-indicator-colour, #777) 38%, transparent) !important;
+  pointer-events: none !important;
+}
+
+/* Keep title and SHOW/HIDE readable; only the indicator consumes spare width. */
+.host-section-header > strong,
+.host-section-header > .collapse-hint,
+.host-section-header > .collapse-arrow {
+  flex: 0 0 auto !important;
+}
+
+@media (max-width: 580px) {
+  .host-section-header .section-colour-indicator {
+    min-width: 18px !important;
+    height: 7px !important;
+    margin-inline: 5px !important;
+  }
+}
+
