@@ -3,6 +3,8 @@
   const params = new URLSearchParams(location.search);
   const songId = params.get("id") || params.get("firebaseId");
   const requestId = params.get("requestId") || "";
+  const returnTo = params.get("returnTo") || "";
+  const fromTitle = params.get("fromTitle") || "";
 
   let currentSong = null;
   let currentSongId = songId;
@@ -22,6 +24,9 @@
     fallback: "#ffffff"
   };
   let sectionEls = [];
+  let sectionItems = [];
+  let activeSessionType = "";
+  let showAllSectionsOverride = false;
   let currentSectionIndex = 0;
   let scrollTimer = null;
   let autoScrollOn = false;
@@ -221,6 +226,66 @@
     $("myNotesInput").value = song.myNotes || "";
   }
 
+  function normaliseType(value) {
+    return String(value || "").trim().toLowerCase();
+  }
+
+  function sectionVisibleForActiveType(section) {
+    if (!activeSessionType) return true;
+    if (!Object.prototype.hasOwnProperty.call(section || {}, "visibleForTypes") || section.visibleForTypes == null) return true;
+    if (!Array.isArray(section.visibleForTypes)) return true;
+    return section.visibleForTypes.some(type => normaliseType(type) === normaliseType(activeSessionType));
+  }
+
+  async function loadActiveSessionType() {
+    activeSessionType = "";
+    try {
+      const { sessionId, control } = await getActiveSessionContext();
+      if (!sessionId) return;
+      activeSessionType = control.sessionType || control.type || "";
+      if (!activeSessionType) {
+        const sessionSnap = await db.collection("performanceSessions").doc(sessionId).get();
+        const session = sessionSnap.exists ? (sessionSnap.data() || {}) : {};
+        activeSessionType = session.sessionType || session.type || "";
+      }
+    } catch (error) {
+      console.warn("Could not resolve active session type for section visibility:", error);
+      activeSessionType = "";
+    }
+  }
+
+  function safeReturnUrl() {
+    if (!returnTo) return "";
+    try {
+      const target = new URL(returnTo, location.href);
+      const here = new URL(location.href);
+      if (target.protocol !== here.protocol || target.host !== here.host) return "";
+      if (!target.pathname.endsWith("/lyricview.html")) return "";
+      return target.href;
+    } catch (_) {
+      return "";
+    }
+  }
+
+  function setupLinkedSongReturn() {
+    const bar = $("linkedSongReturnBar");
+    const button = $("linkedSongReturnBtn");
+    const target = safeReturnUrl();
+    if (!bar || !button || !target) return;
+    bar.classList.remove("hidden");
+    $("linkedSongReturnTitle").textContent = fromTitle || "Previous song";
+    button.onclick = () => { location.href = target; };
+  }
+
+  function buildLinkedSongUrl(targetId) {
+    const next = new URL("lyricview.html", location.href);
+    next.searchParams.set("id", targetId);
+    const currentRelative = `lyricview.html${location.search}${location.hash}`;
+    next.searchParams.set("returnTo", currentRelative);
+    if (currentSong?.title) next.searchParams.set("fromTitle", currentSong.title);
+    return `${next.pathname.split("/").pop()}?${next.searchParams.toString()}${next.hash}`;
+  }
+
   function sectionTypeClass(section) {
     const key = `${section.type || ""} ${section.title || ""}`.toLowerCase();
     if (/tab/.test(key)) return "is-tab";
@@ -367,6 +432,7 @@
     const container = $("lyricsContent");
     container.innerHTML = "";
     sectionEls = [];
+    sectionItems = [];
 
     (song.sections || []).forEach((section, index) => {
       if (section.type === "separator") {
@@ -377,10 +443,12 @@
       }
       if ((section.type || "").toLowerCase() === "host-note") return;
 
+      const restrictedByType = !sectionVisibleForActiveType(section);
       const card = document.createElement("section");
       card.className = `host-section ${sectionTypeClass(section)}`;
       card.dataset.sectionIndex = String(index);
       card.dataset.sectionTitle = section.title || section.type || `Section ${index + 1}`;
+      card.dataset.typeRestricted = restrictedByType ? "true" : "false";
       if (section.collapsed === true) card.classList.add("collapsed");
 
       const header = document.createElement("button");
@@ -388,10 +456,8 @@
       header.type = "button";
       header.innerHTML = `<span class="collapse-arrow">${card.classList.contains("collapsed") ? "▸" : "▾"}</span><strong>${esc(section.title || section.type || "SECTION")}</strong><span class="header-spacer"></span><span class="collapse-hint">${card.classList.contains("collapsed") ? "SHOW" : "HIDE"}</span>`;
 
-      // Optional per-section title colour from Lyrics Creator.
       const titleColour = section.style?.titleColor || getSystemSectionTitleColour(section.title);
       card.dataset.sectionTitleColor = titleColour;
-
       const titleEl = header.querySelector("strong");
       if (titleEl) titleEl.style.color = titleColour;
 
@@ -400,11 +466,11 @@
       body.style.fontFamily = section.style?.fontFamily || "Verdana, Arial, sans-serif";
       if (section.style?.fontSize) body.style.fontSize = `${Number(section.style.fontSize) || 18}px`;
       if (section.style?.color) body.style.color = section.style.color;
+      body.style.textAlign = ["left","center","right"].includes(section.style?.textAlign) ? section.style.textAlign : "left";
 
       if (sectionTypeClass(section) === "is-tab") buildBeatGridTab(section, body);
       else body.innerHTML = cleanSectionHtml(section.html || section.text || "");
 
-      // Apply saved per-section dash colour. Default is gray.
       applySectionDashColour(body, section.style?.dashColor || "#777777");
 
       header.addEventListener("click", () => {
@@ -417,43 +483,110 @@
 
       card.append(header, body);
       container.appendChild(card);
-      sectionEls.push(card);
+      sectionItems.push({ el:card, section, sourceIndex:index, restrictedByType });
     });
 
+    applySectionVisibility(false);
     renderHostNotes(song);
-    renderSectionProgress();
     applyChordTranspose();
     applyTabTranspose();
     updateSectionProgress();
   }
 
+  function applySectionVisibility(preserveScroll = true) {
+    const previous = preserveScroll && sectionEls[currentSectionIndex]
+      ? sectionEls[currentSectionIndex].dataset.sectionIndex
+      : null;
+
+    sectionItems.forEach(item => {
+      const hiddenBySession = item.restrictedByType && !showAllSectionsOverride;
+      item.el.classList.toggle("session-visibility-hidden", hiddenBySession);
+      item.el.classList.toggle("type-restricted-section", item.restrictedByType);
+      item.hiddenBySession = hiddenBySession;
+    });
+
+    sectionEls = sectionItems.filter(item => !item.hiddenBySession).map(item => item.el);
+    if (previous != null) {
+      const restored = sectionEls.findIndex(el => el.dataset.sectionIndex === previous);
+      currentSectionIndex = restored >= 0 ? restored : Math.min(currentSectionIndex, Math.max(0, sectionEls.length - 1));
+    } else {
+      currentSectionIndex = Math.min(currentSectionIndex, Math.max(0, sectionEls.length - 1));
+    }
+
+    renderSectionProgress();
+    updateSectionVisibilityUi();
+  }
+
+  function updateSectionVisibilityUi() {
+    const status = $("sectionVisibilityStatus");
+    const button = $("showAllSectionsBtn");
+    if (!status || !button) return;
+
+    const restrictedCount = sectionItems.filter(item => item.restrictedByType).length;
+    if (!activeSessionType) {
+      status.textContent = "No active session — all sections are visible.";
+      button.textContent = "ALL SECTIONS VISIBLE";
+      button.disabled = true;
+      return;
+    }
+
+    if (!restrictedCount) {
+      status.textContent = `${activeSessionType} session — no sections are hidden.`;
+      button.textContent = "ALL SECTIONS VISIBLE";
+      button.disabled = true;
+      return;
+    }
+
+    button.disabled = false;
+    if (showAllSectionsOverride) {
+      status.textContent = `${activeSessionType} session — visibility override active. ${restrictedCount} restricted section${restrictedCount === 1 ? "" : "s"} forced visible.`;
+      button.textContent = `USE ${activeSessionType.toUpperCase()} FILTER`;
+    } else {
+      status.textContent = `${activeSessionType} session — ${restrictedCount} section${restrictedCount === 1 ? "" : "s"} hidden by section settings.`;
+      button.textContent = "SHOW ALL SECTIONS";
+    }
+  }
+
   function renderHostNotes(song) {
-    const notes = (song.sections || []).filter(s => `${s.type || ""} ${s.title || ""}`.toLowerCase().includes("host note"));
+    const notes = (song.sections || []).filter(s => {
+      const isHost = `${s.type || ""} ${s.title || ""}`.toLowerCase().includes("host note");
+      if (!isHost) return false;
+      return showAllSectionsOverride || sectionVisibleForActiveType(s);
+    });
     const out = $("hostLyricNotes");
-    if (!notes.length) { out.textContent = "No host-note sections."; return; }
+    if (!notes.length) { out.textContent = "No host-note sections for this session type."; return; }
     out.innerHTML = notes.map(n => `<article><strong>${esc(n.title || "HOST NOTE")}</strong><div>${cleanSectionHtml(n.html || n.text || "")}</div></article>`).join("");
   }
 
   function renderSectionProgress() {
     const progress = $("sectionProgress");
     progress.innerHTML = "";
-    sectionEls.forEach((el, i) => {
+
+    sectionItems.forEach((item, allIndex) => {
+      const el = item.el;
       const b = document.createElement("button");
       b.type = "button";
       b.className = "progress-section";
+      if (item.restrictedByType) b.classList.add("type-restricted");
+      if (item.hiddenBySession) b.classList.add("session-hidden");
+
+      const visibleIndex = sectionEls.indexOf(el);
+      b.dataset.visibleIndex = String(visibleIndex);
+      b.setAttribute("aria-disabled", item.hiddenBySession ? "true" : "false");
 
       const progressTitleColour =
         el.dataset.sectionTitleColor ||
         getSystemSectionTitleColour(el.dataset.sectionTitle || "");
 
       b.style.setProperty("--progress-title-color", progressTitleColour);
-      b.innerHTML = `<span>${esc(el.dataset.sectionTitle || `S${i+1}`)}</span><i></i>`;
-      b.onclick = () => scrollToSection(i);
+      b.innerHTML = `<span>${esc(el.dataset.sectionTitle || `S${allIndex+1}`)}</span><i></i>`;
+      b.onclick = () => {
+        if (item.hiddenBySession || visibleIndex < 0) return;
+        scrollToSection(visibleIndex);
+      };
       progress.appendChild(b);
     });
 
-    // Keep the currently active section visible even when the song
-    // contains more sections than can fit across the tablet screen.
     requestAnimationFrame(() => centerActiveProgressSection(false));
   }
 
@@ -467,7 +600,8 @@
     if (!progress) return;
 
     const items = [...progress.querySelectorAll(".progress-section")];
-    const active = items[currentSectionIndex];
+    const active = items.find(item => item.classList.contains("active")) ||
+      items.find(item => Number(item.dataset.visibleIndex) === currentSectionIndex && !item.classList.contains("session-hidden"));
     if (!active) return;
 
     const target =
@@ -490,7 +624,7 @@
 
     // Update/centre the guide immediately when Prev/Next or a guide item is used.
     [...$("sectionProgress").children]
-      .forEach((el, i) => el.classList.toggle("active", i === currentSectionIndex));
+      .forEach(el => el.classList.toggle("active", Number(el.dataset.visibleIndex) === currentSectionIndex && !el.classList.contains("session-hidden")));
 
     sectionEls.forEach((el, i) => {
       el.classList.toggle("current-section", i === currentSectionIndex);
@@ -525,7 +659,7 @@
     currentSectionIndex = bestIndex;
 
     [...$("sectionProgress").children]
-      .forEach((el, i) => el.classList.toggle("active", i === currentSectionIndex));
+      .forEach(el => el.classList.toggle("active", Number(el.dataset.visibleIndex) === currentSectionIndex && !el.classList.contains("session-hidden")));
 
     // Match the bottom guide: tint the section header that is currently
     // nearest the performance reading position.
@@ -1392,6 +1526,23 @@
 
   function bindUi() {
     $("exitBtn").onclick = () => location.href = "lyricsviewer.html";
+    setupLinkedSongReturn();
+    if ($("showAllSectionsBtn")) {
+      $("showAllSectionsBtn").onclick = () => {
+        showAllSectionsOverride = !showAllSectionsOverride;
+        applySectionVisibility(true);
+        if (currentSong) renderHostNotes(currentSong);
+        requestAnimationFrame(updateSectionProgress);
+      };
+    }
+    $("lyricsContent")?.addEventListener("click", event => {
+      const link = event.target.closest("a.lyrics-song-link[data-song-link]");
+      if (!link) return;
+      const targetId = link.dataset.songLink;
+      if (!targetId) return;
+      event.preventDefault();
+      location.href = buildLinkedSongUrl(targetId);
+    });
     // SONG INFO button now toggles the drawer open/closed.
     // This keeps the same top-bar button usable as the close control.
     $("songInfoBtn").onclick = () => {
@@ -1476,7 +1627,7 @@
   function updateSpeed(){ $("scrollSpeedLabel").textContent = `${scrollSpeed.toFixed(1)}×`; }
 
   async function init() {
-    await loadSectionTitleDefaultsForView();
+    await Promise.all([loadSectionTitleDefaultsForView(), loadActiveSessionType()]);
     bindUi();
     if (!songId) {
       $("lyricsContent").innerHTML = `<div class="host-load-error">No song selected.</div>`;
