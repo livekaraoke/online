@@ -454,12 +454,22 @@
       const header = document.createElement("button");
       header.className = "host-section-header";
       header.type = "button";
-      header.innerHTML = `<span class="collapse-arrow">${card.classList.contains("collapsed") ? "▸" : "▾"}</span><strong>${esc(section.title || section.type || "SECTION")}</strong><span class="header-spacer"></span><span class="collapse-hint">${card.classList.contains("collapsed") ? "SHOW" : "HIDE"}</span>`;
+      header.innerHTML = `<span class="collapse-arrow">${card.classList.contains("collapsed") ? "▸" : "▾"}</span><strong>${esc(section.title || section.type || "SECTION")}</strong><span class="section-colour-indicator" aria-hidden="true"></span><span class="collapse-hint">${card.classList.contains("collapsed") ? "SHOW" : "HIDE"}</span>`;
 
       const titleColour = section.style?.titleColor || getSystemSectionTitleColour(section.title);
       card.dataset.sectionTitleColor = titleColour;
       const titleEl = header.querySelector("strong");
       if (titleEl) titleEl.style.color = titleColour;
+
+      // Fill the otherwise empty part of the section heading with the exact
+      // section-title colour chosen in Lyrics Creator. This is deliberately
+      // presentation-only: it reuses section.style.titleColor and creates no
+      // new song/database field.
+      const colourIndicator = header.querySelector(".section-colour-indicator");
+      if (colourIndicator) {
+        colourIndicator.style.setProperty("--section-indicator-colour", titleColour);
+        colourIndicator.style.backgroundColor = titleColour;
+      }
 
       const body = document.createElement("div");
       body.className = "host-section-body";
