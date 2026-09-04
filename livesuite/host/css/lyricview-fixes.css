@@ -1590,3 +1590,144 @@ body.host-lyric-view-page {
     grid-template-columns: repeat(2,minmax(0,1fr)) !important;
   }
 }
+
+
+/* =========================================================
+   2026-09-04 — LINK RETURN + SECTION VISIBILITY + WRAPPING
+   ========================================================= */
+
+.linked-song-return-bar {
+  width: min(1050px, calc(100% - 20px));
+  margin: 4px auto 12px;
+}
+
+.linked-song-return-bar.hidden {
+  display: none !important;
+}
+
+#linkedSongReturnBtn {
+  width: 100%;
+  min-height: 64px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 15px;
+  padding: 10px 18px;
+  border: 1px solid #3b79aa;
+  border-radius: 9px;
+  background: linear-gradient(135deg, #09243b, #07131d);
+  color: #9fd4ff;
+  cursor: pointer;
+  text-align: left;
+  box-shadow: 0 0 18px rgba(52,145,218,.12);
+}
+
+#linkedSongReturnBtn span {
+  font-size: 10px;
+  font-weight: 950;
+  letter-spacing: .05em;
+  white-space: nowrap;
+}
+
+#linkedSongReturnBtn strong {
+  min-width: 0;
+  color: #fff;
+  font-size: 19px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.section-visibility-card p {
+  margin: 0 0 10px;
+  color: #a9a9a9;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.visibility-override-btn {
+  min-height: 48px !important;
+  border-color: #5c4b20 !important;
+  background: #1a1508 !important;
+  color: #f3cf63 !important;
+  font-weight: 950 !important;
+}
+
+.visibility-override-btn:disabled {
+  opacity: .45;
+  cursor: default;
+}
+
+/* Main lyric sections never create a page-level horizontal scrollbar. */
+.host-section,
+.host-section-body,
+.host-section-body * {
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.host-section-body {
+  overflow-x: hidden !important;
+  overflow-wrap: anywhere !important;
+  word-break: break-word !important;
+  white-space: normal !important;
+}
+
+.host-section-body pre,
+.host-section-body .tab-block,
+.host-section-body .performance-tab-body,
+.host-section-body .performance-tab-body pre {
+  white-space: pre-wrap !important;
+  overflow-x: hidden !important;
+  overflow-wrap: anywhere !important;
+  word-break: break-word !important;
+  max-width: 100% !important;
+}
+
+.host-section-body ul,
+.host-section-body ol {
+  margin: .35em 0 .35em 1.45em !important;
+  padding-left: 1.1em !important;
+}
+
+.host-section.session-visibility-hidden {
+  display: none !important;
+}
+
+/* A restricted section always stays visibly identified in the bottom guide. */
+#sectionProgress .progress-section.type-restricted {
+  filter: grayscale(1) !important;
+  border-color: #4b4b4b !important;
+  background: #111 !important;
+}
+
+#sectionProgress .progress-section.type-restricted > span {
+  color: #8a8a8a !important;
+  text-shadow: none !important;
+}
+
+#sectionProgress .progress-section.session-hidden {
+  opacity: .5 !important;
+  cursor: not-allowed !important;
+}
+
+#sectionProgress .progress-section.session-hidden::after {
+  content: "HIDDEN";
+  display: block;
+  color: #656565;
+  font-size: 7px;
+  font-weight: 950;
+  letter-spacing: .05em;
+}
+
+#sectionProgress .progress-section.type-restricted.active > span {
+  color: #bcbcbc !important;
+  text-shadow: none !important;
+}
+
+@media (max-width: 620px) {
+  #linkedSongReturnBtn {
+    grid-template-columns: 1fr;
+    gap: 3px;
+  }
+}
