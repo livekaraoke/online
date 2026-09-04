@@ -1,195 +1,656 @@
-<!doctype html>
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#0a0907">
-  <meta name="description" content="ROXANNA live band — request songs, see what's playing and find upcoming gigs.">
-  <title>ROXANNA — Live Music</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>LIVE KARAOKE</title>
   <link rel="stylesheet" href="css/style.css">
+
+  <link rel="icon" href="favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" href="favicon.png">
 </head>
+
 <body>
-  <header class="site-shell hero" id="top">
-    <div class="hero-noise" aria-hidden="true"></div>
-    <div class="ornament ornament-top" aria-hidden="true"></div>
 
-    <nav class="topbar" aria-label="Main navigation">
-      <a class="mini-brand" href="#top" aria-label="Roxanna home">ROXANNA</a>
-      <button class="share-btn" id="shareBtn" type="button" aria-label="Share Roxanna website">
-        <span>↗</span> SHARE
-      </button>
-    </nav>
+  <!-- HERO SECTION -->
+  <section class="hero">
+    <div class="overlay"></div>
 
-    <div class="hero-grid">
-      <div class="hero-copy">
-        <div class="roxanna-emblem" aria-label="Roxanna">
-          <span class="emblem-star">✦</span>
-          <span class="emblem-line"></span>
-          <h1>ROXANNA</h1>
-          <span class="emblem-line"></span>
-          <small>LIVE BAND</small>
+    <div class="hero-content">
+      <img src="img/banner.png" alt="Live Karaoke Banner" class="hero-banner">
+      <!--<a href="list/index.html" class="main-button">
+        REQUEST A SONG
+      </a>
+
+      <a href="#about" class="main-button" onclick="smoothScroll(event)">
+        GET STARTED
+      </a>-->
+
+      
+      <a href="#about" class="main-button" onclick="smoothScroll(event)">
+        GET STARTED
+      </a>
+
+      <div id="heroLiveNow" class="hero-live-now hidden">
+        <div class="hero-live-now-head">
+          <span class="hero-live-pulse"></span>
+          <strong>LIVE NOW</strong>
+          <span id="heroLiveVenue">Live Karaoke</span>
         </div>
 
-        <p class="hero-tagline">LIVE MUSIC.<br>GOOD PEOPLE.<br>GREAT TIMES.</p>
-        <p class="hero-thanks">THANK YOU FOR SUPPORTING<br>LIVE MUSIC ♥</p>
+        <div id="heroCurrentSong" class="hero-current-song"></div>
+        <div id="heroComingUp" class="hero-coming-up"></div>
+
+        <a id="heroRequestBtn" href="#" class="disabled-button hero-request-btn" aria-disabled="true">
+          SONG LIST LOCKED
+        </a>
       </div>
 
-      <aside class="live-card" id="liveCard" aria-live="polite">
-        <div class="live-card-head">
-          <span class="live-dot" id="liveDot"></span>
-          <div>
-            <small id="liveEyebrow">ROXANNA</small>
-            <strong id="liveHeading">NOT LIVE RIGHT NOW</strong>
-          </div>
-        </div>
-
-        <div class="now-playing" id="nowPlaying">
-          <span>NOW PLAYING</span>
-          <strong>—</strong>
-          <small>Current song appears here during a ROXANNA performance.</small>
-        </div>
-
-        <div class="coming-up" id="comingUp"></div>
-      </aside>
     </div>
-  </header>
 
-  <main class="site-shell content-shell">
-    <section class="action-grid" aria-label="Quick actions">
-      <button class="action-card" type="button" data-action="request">
-        <span class="action-icon">♪</span>
-        <strong>SONG REQUEST</strong>
-        <small>Pick a song for the band</small>
-      </button>
+  </section>
 
-      <button class="action-card" type="button" data-action="songs">
-        <span class="action-icon">≡♪</span>
-        <strong>FULL SONG LIST</strong>
-        <small><span id="songCount">—</span> songs and counting</small>
-      </button>
+  <!-- LIVE STATUS -->
+  <section class="live-status-section">
+    <div id="liveStatus"></div>
+  </section>
 
-      <button class="action-card" type="button" data-action="gigs">
-        <span class="action-icon">▣</span>
-        <strong>UPCOMING GIGS</strong>
-        <small>See where we're playing next</small>
-      </button>
 
-      <button class="action-card" type="button" data-action="tips">
-        <span class="action-icon">♡</span>
-        <strong>DIGITAL TIPS</strong>
-        <small>Support live music</small>
-      </button>
+  <!-- ABOUT -->
+  <section id="about" class="section">
+    <h2>WHAT IS LIVE KARAOKE?</h2>
+    <p>
+      A live music experience where YOU become the singer.
+    </p>
+    <p>
+      Choose from over 150 songs spanning rock, pop, indie, classics, and party anthems. Step up to the mic and perform live with real guitar, live looping, and a real audience.
+    </p>
+    <p>
+      No backing band. No pressure. Just great songs, great people and a great authentic atmosphere.
+    </p>
+  </section>
 
-      <button class="action-card" type="button" data-action="connect">
-        <span class="action-icon">●●</span>
-        <strong>FOLLOW & CONNECT</strong>
-        <small>Stay updated with Roxanna</small>
-      </button>
-
-      <button class="action-card" type="button" data-action="media">
-        <span class="action-icon">▶</span>
-        <strong>WATCH & LISTEN</strong>
-        <small>Videos, live clips and more</small>
-      </button>
-    </section>
-
-    <section class="section-block" id="popularSection">
-      <div class="section-heading">
-        <h2>POPULAR SONGS</h2>
-        <button class="text-link" type="button" data-action="songs">VIEW FULL LIST ›</button>
-      </div>
-      <div id="popularSongs" class="song-preview-list">
-        <div class="loading-row">Loading Roxanna repertoire…</div>
-      </div>
-    </section>
-
-    <section class="section-block" id="gigsSection">
-      <div class="section-heading">
-        <h2>NEXT GIGS</h2>
-        <span class="heading-rule"></span>
-      </div>
-      <div id="gigsList" class="gigs-list">
-        <div class="loading-row">Loading gigs…</div>
-      </div>
-    </section>
-
-    <section class="section-block connect-block" id="connectSection">
-      <div class="section-heading">
-        <h2>FOLLOW & CONNECT</h2>
-        <span class="heading-rule"></span>
-      </div>
-      <p>Follow ROXANNA for new gigs, live clips and announcements.</p>
-      <div class="social-row" id="socialRow"></div>
-    </section>
-
-    <section class="closing-line">
-      <span></span>
-      <strong>ROCK CLASSICS · LIVE REQUESTS · UNFORGETTABLE NIGHTS</strong>
-      <span></span>
-    </section>
-  </main>
-
-  <footer class="site-shell footer">
-    <p>© <span id="year"></span> ROXANNA · LIVE MUSIC</p>
-    <small>Powered by LiveSuite</small>
-  </footer>
-
-  <!-- Songbook / request panel -->
-  <div class="modal hidden" id="songModal" role="dialog" aria-modal="true" aria-labelledby="songModalTitle">
-    <div class="modal-card songbook-card">
-      <button class="modal-close" type="button" data-close="songModal" aria-label="Close">×</button>
-      <div class="modal-heading">
-        <span>ROXANNA · LIVE REQUESTS</span>
-        <h2 id="songModalTitle">SONG LIST</h2>
-        <p id="requestStatusText">Loading request status…</p>
-      </div>
-
-      <div class="song-tools">
-        <label class="search-box">
-          <span>⌕</span>
-          <input id="songSearch" type="search" autocomplete="off" placeholder="Search songs or artists…">
-        </label>
-        <button class="clear-cart" id="clearCartBtn" type="button">CLEAR</button>
-      </div>
-
-      <div class="request-cart-summary" id="cartSummary">
-        <span><b id="cartCount">0</b> selected</span>
-        <button id="openRequestFormBtn" type="button">SEND REQUEST</button>
-      </div>
-
-      <div id="songList" class="song-list"></div>
+    <!-- HOW IT WORKS -->
+  <section id="howitworks" class="section">
+    <h2>HOW IT WORKS</h2>
+    <div class="instructions-container">
+      <img src="img/howitworks-1.png" alt="How To Join Karaoke">
     </div>
-  </div>
+  </section>
 
-  <!-- Request details -->
-  <div class="modal hidden" id="requestModal" role="dialog" aria-modal="true" aria-labelledby="requestModalTitle">
-    <div class="modal-card request-card">
-      <button class="modal-close" type="button" data-close="requestModal" aria-label="Close">×</button>
-      <div class="modal-heading">
-        <span>ROXANNA</span>
-        <h2 id="requestModalTitle">SEND YOUR REQUEST</h2>
-        <p>Requests go straight to the band's LiveSuite.</p>
-      </div>
 
-      <div id="requestSelection" class="request-selection"></div>
-
-      <label class="field-label" for="requestName">Your name *</label>
-      <input class="field-input" id="requestName" type="text" maxlength="60" placeholder="Your name">
-
-      <label class="field-label" for="requestNote">Message to the band <span>optional</span></label>
-      <input class="field-input" id="requestNote" type="text" maxlength="160" placeholder="Birthday, dedication, favourite version…">
-
-      <button class="primary-btn" id="submitRequestBtn" type="button">SEND TO ROXANNA</button>
-      <p class="form-message" id="requestMessage" aria-live="polite"></p>
-    </div>
-  </div>
-
-  <div class="toast" id="toast" aria-live="polite"></div>
-
+  <script src="livesuite/firebase-projects.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-  <script src="js/config.js"></script>
-  <script src="js/firebase-config.js"></script>
-  <script src="js/app.js"></script>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const firebaseConfig = window.LKFirebaseProjects
+        ? window.LKFirebaseProjects.getSelectedConfig()
+        : window.LK_FIREBASE_CONFIG;
+
+      if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+      }
+
+      const db = firebase.firestore();
+
+      let upcomingEvents = [];
+      let currentSessionControl = {};
+      let currentPerformanceSession = {};
+      let karaokeState = {};
+      let runOrder = { items:[] };
+      let performanceSessionUnsub = null;
+
+      function esc(value) {
+        return String(value || "")
+          .replace(/&/g,"&amp;")
+          .replace(/</g,"&lt;")
+          .replace(/>/g,"&gt;");
+      }
+
+      function isLiveKaraokeType(type) {
+        return String(type || "").trim().toLowerCase() === "live karaoke";
+      }
+
+      function currentSessionId() {
+        return String(
+          currentSessionControl.sessionId ||
+          currentSessionControl.activeSessionId ||
+          ""
+        ).trim();
+      }
+
+      function activeLiveKaraoke() {
+        return (
+          currentSessionControl.active === true &&
+          !!currentSessionId() &&
+          isLiveKaraokeType(
+            currentSessionControl.sessionType ||
+            currentSessionControl.type ||
+            currentPerformanceSession.sessionType ||
+            currentPerformanceSession.type ||
+            currentPerformanceSession.eventSnapshot?.type
+          )
+        );
+      }
+
+      function isOnBreak() {
+        return activeLiveKaraoke() && currentPerformanceSession.breakOpen === true;
+      }
+
+      function eventStillUpcoming(event) {
+        const eventStatus = String(event?.status || "").toLowerCase();
+        const sessionStatus = String(event?.sessionStatus || "").toLowerCase();
+
+        if (["cancelled","canceled","ended","completed","done"].includes(eventStatus)) return false;
+        if (["active","live","started","ended","completed","done"].includes(sessionStatus)) return false;
+
+        // An event associated with the currently-active session is already the
+        // current gig, so do not show it as "next".
+        if (
+          event?.activeSessionId ||
+          event?.startedSessionId ||
+          event?.completedAt ||
+          (currentSessionControl.eventId && event.id === currentSessionControl.eventId)
+        ) {
+          return false;
+        }
+
+        return true;
+      }
+
+      function eventDate(event) {
+        if (!event?.date) return null;
+
+        const date = new Date(
+          `${event.date}T${event.startTime || "00:00"}:00`
+        );
+
+        return Number.isNaN(date.getTime()) ? null : date;
+      }
+
+      function nextLiveKaraokeEvent() {
+        return upcomingEvents
+          .filter(event => isLiveKaraokeType(event.type))
+          .filter(eventStillUpcoming)
+          .sort((a,b) =>
+            `${a.date || "9999-12-31"}T${a.startTime || "23:59"}`
+              .localeCompare(
+                `${b.date || "9999-12-31"}T${b.startTime || "23:59"}`
+              )
+          )[0] || null;
+      }
+
+      function formatEvent(event) {
+        const date = eventDate(event);
+        if (!date) return "Date TBC";
+
+        const dateText = date.toLocaleDateString(undefined, {
+          weekday:"short",
+          day:"numeric",
+          month:"short"
+        });
+
+        return `${dateText}${event.startTime ? ` · ${event.startTime}` : ""}`;
+      }
+
+      function countdown(event) {
+        const date = eventDate(event);
+        if (!date) return "";
+
+        const diff = date.getTime() - Date.now();
+
+        if (diff <= 0) {
+          const totalLate = Math.max(1, Math.floor(Math.abs(diff) / 60000));
+          const hours = Math.floor(totalLate / 60);
+          const mins = totalLate % 60;
+
+          return hours
+            ? `Starting now · ${hours}h${mins ? ` ${mins}m` : ""} late`
+            : `Starting now · ${totalLate}m late`;
+        }
+
+        const totalMins = Math.floor(diff / 60000);
+        const days = Math.floor(totalMins / 1440);
+        const hours = Math.floor((totalMins % 1440) / 60);
+        const mins = totalMins % 60;
+
+        if (days) return `${days}d ${hours}h ${mins}m`;
+        if (hours) return `${hours}h ${mins}m`;
+        return `${Math.max(1,mins)}m`;
+      }
+
+      function publicSongsUnlocked() {
+        // Admin dashboard's public-list switch is stored in karaoke/state.
+        if (karaokeState.songsOverride) {
+          return karaokeState.songsEnabled === true;
+        }
+
+        return activeLiveKaraoke();
+      }
+
+      function activeRunItems() {
+        const terminal = new Set([
+          "played","completed","abandoned","left",
+          "deleted","deletedbyhost","declined"
+        ]);
+
+        return (Array.isArray(runOrder?.items) ? runOrder.items : [])
+          .filter(item =>
+            !terminal.has(String(item?.status || "").toLowerCase())
+          );
+      }
+
+      function songArtist(item) {
+        return String(item?.artist || item?.songArtist || "").trim();
+      }
+
+      function renderLivePanel() {
+        const hero = document.getElementById("heroLiveNow");
+        const venue = document.getElementById("heroLiveVenue");
+        const current = document.getElementById("heroCurrentSong");
+        const coming = document.getElementById("heroComingUp");
+
+        if (!hero || !venue || !current || !coming) return;
+
+        if (!activeLiveKaraoke()) {
+          hero.classList.add("hidden");
+          return;
+        }
+
+        hero.classList.remove("hidden");
+        venue.textContent =
+          currentSessionControl.venue ||
+          currentPerformanceSession.venue ||
+          "Live Karaoke";
+
+        const items = activeRunItems();
+        const playing = items.find(item =>
+          String(item.status || "").toLowerCase() === "playing"
+        ) || null;
+
+        if (isOnBreak()) {
+          current.innerHTML = `
+            <span>LIVE PERFORMANCE</span>
+            <strong class="hero-break-status">☕ CURRENTLY ON BREAK</strong>
+            <small>The performance will continue shortly.</small>
+          `;
+        } else if (playing) {
+          current.innerHTML = `
+            <span>NOW PLAYING</span>
+            <strong>${esc(playing.songTitle || playing.title || "Song")}</strong>
+            <small>${esc(songArtist(playing))}</small>
+          `;
+        } else {
+          current.innerHTML = `
+            <span>LIVE PERFORMANCE</span>
+            <strong>Waiting for the next song</strong>
+          `;
+        }
+
+        const next = items
+          .filter(item => !playing || item.id !== playing.id)
+          .slice(0,3);
+
+        coming.innerHTML = next.length
+          ? `<span class="coming-label">COMING UP</span>` +
+            next.map((item,index) => `
+              <div class="coming-song">
+                <b>${index + 1}</b>
+                <span>
+                  <strong>${esc(item.songTitle || item.title || "Song")}</strong>
+                  <small>${esc(songArtist(item))}</small>
+                </span>
+              </div>
+            `).join("")
+          : `<span class="coming-empty">More songs will appear here as they are added.</span>`;
+      }
+
+      function renderSongAccess() {
+        const button = document.getElementById("songListBtn");
+        const heroButton = document.getElementById("heroRequestBtn");
+        const message = document.getElementById("songListAccessMessage");
+        const allowed = activeLiveKaraoke() && publicSongsUnlocked();
+        const url = "livesuite/list/index.html";
+
+        if (button) {
+          button.href = allowed ? url : "#";
+          button.className = allowed ? "main-button" : "disabled-button";
+          button.textContent = allowed
+            ? "VIEW SONG LIST"
+            : "🔒 SONG LIST LOCKED";
+          button.setAttribute("aria-disabled", allowed ? "false" : "true");
+          button.onclick = allowed ? null : event => event.preventDefault();
+        }
+
+        if (heroButton) {
+          heroButton.href = allowed ? url : "#";
+          heroButton.className = allowed
+            ? "main-button hero-request-btn"
+            : "disabled-button hero-request-btn";
+          heroButton.textContent = allowed
+            ? "REQUEST / SIGN UP"
+            : "SONG LIST LOCKED";
+          heroButton.setAttribute("aria-disabled", allowed ? "false" : "true");
+          heroButton.onclick = allowed ? null : event => event.preventDefault();
+        }
+
+        if (message) {
+          if (!activeLiveKaraoke()) {
+            message.textContent =
+              "Song access becomes available during an active Live Karaoke session.";
+          } else if (!publicSongsUnlocked()) {
+            message.textContent =
+              "Live Karaoke is running, but the host has the public song list locked.";
+          } else {
+            message.textContent =
+              "Live Karaoke is running and song requests are open.";
+          }
+        }
+      }
+
+      function renderUpcomingLiveKaraokeEvents() {
+        const container = document.getElementById("liveKaraokeEventsList");
+        if (!container) return;
+
+        const events = upcomingEvents
+          .filter(event => isLiveKaraokeType(event.type))
+          .filter(eventStillUpcoming)
+          .sort((a,b) =>
+            `${a.date || "9999-12-31"}T${a.startTime || "23:59"}`
+              .localeCompare(
+                `${b.date || "9999-12-31"}T${b.startTime || "23:59"}`
+              )
+          )
+          .slice(0,4);
+
+        if (!events.length) {
+          container.innerHTML = `
+            <div class="event-card live-event-empty">
+              <h3>NO UPCOMING LIVE KARAOKE EVENTS</h3>
+              <span class="event-subheading">New dates will appear here when announced.</span>
+            </div>
+          `;
+          return;
+        }
+
+        container.innerHTML = events.map(event => {
+          const date = eventDate(event);
+          const day = date
+            ? date.toLocaleDateString(undefined, {
+                weekday:"short",
+                day:"numeric",
+                month:"short"
+              }).toUpperCase()
+            : "DATE TBC";
+
+          const venue = event.venue || "Venue TBC";
+          const address =
+            event.address ||
+            event.venueLocation ||
+            "";
+
+          const mapsQuery = encodeURIComponent(
+            [venue,address].filter(Boolean).join(", ")
+          );
+
+          return `
+            <article class="event-card live-karaoke-event-card">
+              <span class="live-event-type">LIVE KARAOKE</span>
+              <h3>${esc(venue)}</h3>
+              ${address ? `<h4>${esc(address)}</h4>` : ""}
+              <p><b>${esc(day)}</b></p>
+              <h5>&bull; ${esc(event.startTime || "TIME TBC")} &bull;</h5>
+              <span class="event-subheading">${esc(event.name || "Live Karaoke")}</span>
+
+              ${
+                mapsQuery
+                  ? `<a
+                      class="maps-btn"
+                      target="_blank"
+                      rel="noopener"
+                      href="https://www.google.com/maps/search/?api=1&query=${mapsQuery}">
+                      📍 OPEN IN GOOGLE MAPS
+                    </a>`
+                  : ""
+              }
+            </article>
+          `;
+        }).join("");
+      }
+
+      function renderPublicStatus() {
+        const container = document.getElementById("liveStatus");
+        if (!container) return;
+
+        if (activeLiveKaraoke()) {
+          container.innerHTML = `
+            <div class="live-box public-live-box">
+              <span class="public-live-dot"></span>
+              <div>
+                <strong>LIVE KARAOKE · LIVE NOW</strong>
+                <span>${esc(
+                  currentSessionControl.venue ||
+                  currentPerformanceSession.venue ||
+                  "Live Karaoke"
+                )}</span>
+              </div>
+              ${
+                isOnBreak()
+                  ? `<b class="public-break-chip">☕ CURRENTLY ON BREAK</b>`
+                  : ""
+              }
+            </div>
+          `;
+        } else {
+          const event = nextLiveKaraokeEvent();
+
+          container.innerHTML = event
+            ? `
+              <div class="live-box next-live-karaoke-box">
+                <span class="next-live-label">NEXT LIVE KARAOKE EVENT</span>
+                <strong>${esc(event.venue || event.name || "Venue TBC")}</strong>
+                <span>${esc(formatEvent(event))}</span>
+                <b>${esc(countdown(event))}</b>
+              </div>
+            `
+            : `
+              <div class="live-box countdown-line">
+                NEXT LIVE KARAOKE EVENT:
+                <span>To be announced</span>
+              </div>
+            `;
+        }
+
+        renderLivePanel();
+        renderSongAccess();
+      }
+
+      function listenPerformanceSession() {
+        if (performanceSessionUnsub) {
+          performanceSessionUnsub();
+          performanceSessionUnsub = null;
+        }
+
+        currentPerformanceSession = {};
+        const id = currentSessionId();
+
+        if (!id || currentSessionControl.active !== true) {
+          renderPublicStatus();
+          return;
+        }
+
+        performanceSessionUnsub = db
+          .collection("performanceSessions")
+          .doc(id)
+          .onSnapshot(doc => {
+            currentPerformanceSession = doc.exists
+              ? { id:doc.id, ...(doc.data() || {}) }
+              : {};
+
+            renderPublicStatus();
+          }, error => {
+            console.error("Performance session listener failed:", error);
+          });
+      }
+
+      db.collection("upcomingEvents").onSnapshot(snapshot => {
+        upcomingEvents = snapshot.docs.map(doc => ({
+          id:doc.id,
+          ...(doc.data() || {})
+        }));
+        renderUpcomingLiveKaraokeEvents();
+        renderPublicStatus();
+      }, console.error);
+
+      db.collection("karaokeControl").doc("currentSession").onSnapshot(doc => {
+        const previousId = currentSessionId();
+
+        currentSessionControl = doc.exists
+          ? (doc.data() || {})
+          : {};
+
+        if (previousId !== currentSessionId() || !performanceSessionUnsub) {
+          listenPerformanceSession();
+        } else {
+          renderPublicStatus();
+        }
+      }, console.error);
+
+      db.collection("karaoke").doc("state").onSnapshot(doc => {
+        karaokeState = doc.exists ? (doc.data() || {}) : {};
+        renderPublicStatus();
+      }, console.error);
+
+      db.collection("karaokeControl").doc("runOrder").onSnapshot(doc => {
+        runOrder = doc.exists ? (doc.data() || {}) : { items:[] };
+        renderLivePanel();
+      }, console.error);
+
+      setInterval(renderPublicStatus, 30000);
+    })();
+  </script>
+
+  <!-- EVENTS -->
+  <section class="section dark-section">
+    <h2>EVENTS</h2>
+    <p class="events-intro">Next Live Karaoke events</p>
+
+    <div id="liveKaraokeEventsList" class="live-karaoke-events-grid">
+      <div class="event-card live-event-loading">
+        <h3>LOADING EVENTS…</h3>
+      </div>
+    </div>
+  </section>
+
+  <!-- SONG ACCESS -->
+  <section class="section">
+    <h2>SONG LIST ACCESS</h2>
+    <p id="songListAccessMessage">
+      Song access becomes available during an active Live Karaoke session.
+    </p>
+
+    <a href="#" class="disabled-button" id="songListBtn" aria-disabled="true">
+      🔒 SONG LIST LOCKED
+    </a>
+  </section>
+
+  <!-- COMMUNITY -->
+  <section class="section dark-section">
+    <h2>JOIN THE COMMUNITY</h2>
+    <p>
+      Stay updated, request songs, and join future sessions.
+    </p>
+    <!--<a href="#" class="main-button">-->
+    <!--
+    <a href="#" class="disabled-button">
+      JOIN WHATSAPP
+    </a>
+    -->
+
+    <h3 class="socials-title">
+      SOCIALS
+    </h3>
+
+    <div class="social-icons">
+      <a href="https://facebook.com/livekaraokemt" target="_blank">
+        <img src="img/fb-icon.png" alt="Facebook">
+      </a>
+      <a href="https://instagram.com/livekaraoke.mt" target="_blank">
+        <img src="img/insta-icon.png" alt="Instagram">
+      </a>
+      <!--
+      <a href="https://twitter.com/livekaraokemt" target="_blank">
+        <img src="img/x-icon.png" alt="Twitter">
+      </a>
+      -->
+      <a href="mailto:livekaraoke@protonmail.com">
+        <img src="img/mail-icon.png" alt="Email">
+      </a>
+    </div>
+
+  </section>
+  <br>
+
+  <!-- FOOTER -->
+  <footer>
+    <p>
+      LIVE KARAOKE © 2025
+    </p>
+    <p class="footer-small">
+      Live Music • Real People • Real Atmosphere
+    </p>
+  </footer>
+
+<script>
+
+
+
+
+  
+function smoothScroll(e) {
+    e.preventDefault();
+
+    const target = document.querySelector("#about");
+
+    const targetPosition = target.getBoundingClientRect().top + window.pageYOffset;
+
+    const startPosition = window.pageYOffset;
+
+    const distance = targetPosition - startPosition;
+
+    let startTime = null;
+
+    function animationScroll(currentTime){
+        if(startTime === null) startTime = currentTime;
+
+        const timeElapsed = currentTime - startTime;
+
+        const duration = 1000; // 👈 adjust speed (1000–2000 good range)
+
+        const run = ease(timeElapsed, startPosition, distance, duration);
+
+        window.scrollTo(0, run);
+
+        if(timeElapsed < duration) requestAnimationFrame(animationScroll);
+    }
+
+    function ease(t, b, c, d){
+        t /= d/2;
+        if(t < 1) return c/2*t*t + b;
+        t--;
+        return -c/2 * (t*(t-2) - 1) + b;
+    }
+
+    requestAnimationFrame(animationScroll);
+}
+</script>
+
+
 </body>
 </html>
+
