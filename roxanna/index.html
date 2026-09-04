@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0a0907">
+  <meta name="description" content="ROXANNA live band — request songs, see what's playing and find upcoming gigs.">
+  <title>ROXANNA — Live Music</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="site-shell hero" id="top">
+    <div class="hero-noise" aria-hidden="true"></div>
+    <div class="ornament ornament-top" aria-hidden="true"></div>
+
+    <nav class="topbar" aria-label="Main navigation">
+      <a class="mini-brand" href="#top" aria-label="Roxanna home">ROXANNA</a>
+      <button class="share-btn" id="shareBtn" type="button" aria-label="Share Roxanna website">
+        <span>↗</span> SHARE
+      </button>
+    </nav>
+
+    <div class="hero-grid">
+      <div class="hero-copy">
+        <div class="roxanna-emblem" aria-label="Roxanna">
+          <span class="emblem-star">✦</span>
+          <span class="emblem-line"></span>
+          <h1>ROXANNA</h1>
+          <span class="emblem-line"></span>
+          <small>LIVE BAND</small>
+        </div>
+
+        <p class="hero-tagline">LIVE MUSIC.<br>GOOD PEOPLE.<br>GREAT TIMES.</p>
+        <p class="hero-thanks">THANK YOU FOR SUPPORTING<br>LIVE MUSIC ♥</p>
+      </div>
+
+      <aside class="live-card" id="liveCard" aria-live="polite">
+        <div class="live-card-head">
+          <span class="live-dot" id="liveDot"></span>
+          <div>
+            <small id="liveEyebrow">ROXANNA</small>
+            <strong id="liveHeading">NOT LIVE RIGHT NOW</strong>
+          </div>
+        </div>
+
+        <div class="now-playing" id="nowPlaying">
+          <span>NOW PLAYING</span>
+          <strong>—</strong>
+          <small>Current song appears here during a ROXANNA performance.</small>
+        </div>
+
+        <div class="coming-up" id="comingUp"></div>
+      </aside>
+    </div>
+  </header>
+
+  <main class="site-shell content-shell">
+    <section class="action-grid" aria-label="Quick actions">
+      <button class="action-card" type="button" data-action="request">
+        <span class="action-icon">♪</span>
+        <strong>SONG REQUEST</strong>
+        <small>Pick a song for the band</small>
+      </button>
+
+      <button class="action-card" type="button" data-action="songs">
+        <span class="action-icon">≡♪</span>
+        <strong>FULL SONG LIST</strong>
+        <small><span id="songCount">—</span> songs and counting</small>
+      </button>
+
+      <button class="action-card" type="button" data-action="gigs">
+        <span class="action-icon">▣</span>
+        <strong>UPCOMING GIGS</strong>
+        <small>See where we're playing next</small>
+      </button>
+
+      <button class="action-card" type="button" data-action="tips">
+        <span class="action-icon">♡</span>
+        <strong>DIGITAL TIPS</strong>
+        <small>Support live music</small>
+      </button>
+
+      <button class="action-card" type="button" data-action="connect">
+        <span class="action-icon">●●</span>
+        <strong>FOLLOW & CONNECT</strong>
+        <small>Stay updated with Roxanna</small>
+      </button>
+
+      <button class="action-card" type="button" data-action="media">
+        <span class="action-icon">▶</span>
+        <strong>WATCH & LISTEN</strong>
+        <small>Videos, live clips and more</small>
+      </button>
+    </section>
+
+    <section class="section-block" id="popularSection">
+      <div class="section-heading">
+        <h2>POPULAR SONGS</h2>
+        <button class="text-link" type="button" data-action="songs">VIEW FULL LIST ›</button>
+      </div>
+      <div id="popularSongs" class="song-preview-list">
+        <div class="loading-row">Loading Roxanna repertoire…</div>
+      </div>
+    </section>
+
+    <section class="section-block" id="gigsSection">
+      <div class="section-heading">
+        <h2>NEXT GIGS</h2>
+        <span class="heading-rule"></span>
+      </div>
+      <div id="gigsList" class="gigs-list">
+        <div class="loading-row">Loading gigs…</div>
+      </div>
+    </section>
+
+    <section class="section-block connect-block" id="connectSection">
+      <div class="section-heading">
+        <h2>FOLLOW & CONNECT</h2>
+        <span class="heading-rule"></span>
+      </div>
+      <p>Follow ROXANNA for new gigs, live clips and announcements.</p>
+      <div class="social-row" id="socialRow"></div>
+    </section>
+
+    <section class="closing-line">
+      <span></span>
+      <strong>ROCK CLASSICS · LIVE REQUESTS · UNFORGETTABLE NIGHTS</strong>
+      <span></span>
+    </section>
+  </main>
+
+  <footer class="site-shell footer">
+    <p>© <span id="year"></span> ROXANNA · LIVE MUSIC</p>
+    <small>Powered by LiveSuite</small>
+  </footer>
+
+  <!-- Songbook / request panel -->
+  <div class="modal hidden" id="songModal" role="dialog" aria-modal="true" aria-labelledby="songModalTitle">
+    <div class="modal-card songbook-card">
+      <button class="modal-close" type="button" data-close="songModal" aria-label="Close">×</button>
+      <div class="modal-heading">
+        <span>ROXANNA · LIVE REQUESTS</span>
+        <h2 id="songModalTitle">SONG LIST</h2>
+        <p id="requestStatusText">Loading request status…</p>
+      </div>
+
+      <div class="song-tools">
+        <label class="search-box">
+          <span>⌕</span>
+          <input id="songSearch" type="search" autocomplete="off" placeholder="Search songs or artists…">
+        </label>
+        <button class="clear-cart" id="clearCartBtn" type="button">CLEAR</button>
+      </div>
+
+      <div class="request-cart-summary" id="cartSummary">
+        <span><b id="cartCount">0</b> selected</span>
+        <button id="openRequestFormBtn" type="button">SEND REQUEST</button>
+      </div>
+
+      <div id="songList" class="song-list"></div>
+    </div>
+  </div>
+
+  <!-- Request details -->
+  <div class="modal hidden" id="requestModal" role="dialog" aria-modal="true" aria-labelledby="requestModalTitle">
+    <div class="modal-card request-card">
+      <button class="modal-close" type="button" data-close="requestModal" aria-label="Close">×</button>
+      <div class="modal-heading">
+        <span>ROXANNA</span>
+        <h2 id="requestModalTitle">SEND YOUR REQUEST</h2>
+        <p>Requests go straight to the band's LiveSuite.</p>
+      </div>
+
+      <div id="requestSelection" class="request-selection"></div>
+
+      <label class="field-label" for="requestName">Your name *</label>
+      <input class="field-input" id="requestName" type="text" maxlength="60" placeholder="Your name">
+
+      <label class="field-label" for="requestNote">Message to the band <span>optional</span></label>
+      <input class="field-input" id="requestNote" type="text" maxlength="160" placeholder="Birthday, dedication, favourite version…">
+
+      <button class="primary-btn" id="submitRequestBtn" type="button">SEND TO ROXANNA</button>
+      <p class="form-message" id="requestMessage" aria-live="polite"></p>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" aria-live="polite"></div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/firebase-config.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
