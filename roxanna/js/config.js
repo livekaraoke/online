@@ -24,8 +24,8 @@ window.ROXANNA_CONFIG = {
 
   // Public links. Leave blank to show a friendly "coming soon" message.
   tipUrl: "",
-  facebookUrl: "",
-  instagramUrl: "",
+  facebookUrl: "https://www.facebook.com/share/1F422wjyZA/",
+  instagramUrl: "https://www.instagram/roxanna.mt",
   youtubeUrl: "",
   tiktokUrl: "",
   mediaUrl: "",
