@@ -37,7 +37,10 @@
   let historyApplying = false;
 
   let linkSongs = [];
+  let eventTypes = ["Live Karaoke", "Roxanna", "Solo", "Texanna", "Other"];
+  let legacyMarkerWasRemoved = false;
 
+  const DEFAULT_EVENT_TYPES = ["Live Karaoke", "Roxanna", "Solo", "Texanna", "Other"];
   const FONTS = ["Verdana", "Arial", "Tahoma", "Trebuchet MS", "Georgia", "Times New Roman", "Courier New", "Consolas"];
   const FONT_SIZES = ["12", "14", "16", "18", "20", "24", "28", "32", "40", "48"];
   const COLOURS = [
@@ -57,6 +60,7 @@
     { label: "Solo", type: "performanceNote", title: "SOLO", text: "Solo section (wait for signal)" },
     { label: "Guitar Tab", type: "tab", title: "GUITAR TAB" },
     { label: "Host Note", type: "hostNote", title: "HOST NOTE", text: "Private reminder for the host..." },
+    { label: "Linked Song", type: "lyrics", title: "LINKED SONG", html: "", linkedSongTemplate: true },
     { label: "Ending", type: "lyrics", title: "ENDING", html: "Enter final lyrics here...", colour: "#ff6675" },
     { label: "Separator", type: "separator" }
   ];
@@ -81,7 +85,10 @@
 
       // NEW: empty string means use the normal/default section-title colour
       // supplied by Lyric View. Set a hex colour to override it.
-      titleColor: ""
+      titleColor: "",
+
+      // Whole-section alignment used by Lyrics Creator and Lyric View.
+      textAlign: "left"
     };
   }
 
@@ -240,15 +247,104 @@
     restoreEditorState(snap);
   }
 
+  function stripLegacyMarkerFromText(value) {
+    const original = String(value || "");
+    const cleaned = original.replace(/^[\s\u00a0]*(?:\*\*\s*●\s*\*\*|●)[ \t\u00a0]*/, "");
+    if (cleaned !== original) legacyMarkerWasRemoved = true;
+    return cleaned;
+  }
+
+  function stripLegacyMarkerFromHtml(value) {
+    const holder = document.createElement("div");
+    holder.innerHTML = String(value || "");
+    let removed = false;
+
+    function trimLeadingWhitespace(container) {
+      while (container.firstChild && container.firstChild.nodeType === Node.TEXT_NODE) {
+        const text = container.firstChild.nodeValue || "";
+        const trimmed = text.replace(/^[\s\u00a0]+/, "");
+        if (trimmed === text) break;
+        if (trimmed) {
+          container.firstChild.nodeValue = trimmed;
+          break;
+        }
+        container.firstChild.remove();
+      }
+    }
+
+    function stripInside(container) {
+      trimLeadingWhitespace(container);
+      const first = container.firstChild;
+      if (!first) return false;
+
+      if (first.nodeType === Node.TEXT_NODE) {
+        const original = first.nodeValue || "";
+        const cleaned = original.replace(/^(?:\*\*\s*●\s*\*\*|●)[ \t\u00a0]*/, "");
+        if (cleaned !== original) {
+          first.nodeValue = cleaned;
+          if (!cleaned) first.remove();
+          trimLeadingWhitespace(container);
+          return true;
+        }
+        return false;
+      }
+
+      if (first.nodeType === Node.ELEMENT_NODE) {
+        const tag = first.tagName;
+        if ((tag === "STRONG" || tag === "B") && String(first.textContent || "").trim() === "●") {
+          first.remove();
+          trimLeadingWhitespace(container);
+          return true;
+        }
+
+        // Old creator versions sometimes wrapped the marker in the first block.
+        if (["DIV", "P", "SPAN"].includes(tag) && stripInside(first)) return true;
+      }
+
+      return false;
+    }
+
+    removed = stripInside(holder);
+    if (removed) legacyMarkerWasRemoved = true;
+    return holder.innerHTML;
+  }
+
+  function normaliseVisibleForTypes(section) {
+    if (!Object.prototype.hasOwnProperty.call(section || {}, "visibleForTypes")) return null;
+    if (section.visibleForTypes == null) return null;
+    if (!Array.isArray(section.visibleForTypes)) return null;
+    return [...new Set(section.visibleForTypes.map(v => String(v || "").trim()).filter(Boolean))];
+  }
+
+  async function loadEventTypes() {
+    try {
+      const snap = await db.collection("karaokeControl").doc("eventTypes").get();
+      const options = snap.exists && Array.isArray(snap.data()?.options)
+        ? snap.data().options.map(v => String(v || "").trim()).filter(Boolean)
+        : [];
+      eventTypes = options.length ? [...new Set(options)] : [...DEFAULT_EVENT_TYPES];
+    } catch (error) {
+      console.warn("Could not load event/session types for section visibility:", error);
+      eventTypes = [...DEFAULT_EVENT_TYPES];
+    }
+  }
+
+  function sectionVisibleForType(section, type) {
+    const allowed = normaliseVisibleForTypes(section);
+    if (allowed === null) return true;
+    return allowed.some(value => value.toLowerCase() === String(type || "").trim().toLowerCase());
+  }
+
   function normalizeSection(section) {
     const type = section?.type || "lyrics";
     if (type === "separator") return { type: "separator" };
     return {
       ...section,
       type,
-      title: section.title || (type === "performanceNote" ? "PERFORMANCE NOTE" : type === "hostNote" ? "HOST NOTE" : type === "tab" ? "GUITAR TAB" : "VERSE"),
-      html: section.html || "",
-      text: section.text || "",
+      title: String(section.title || (type === "performanceNote" ? "PERFORMANCE NOTE" : type === "hostNote" ? "HOST NOTE" : type === "tab" ? "GUITAR TAB" : "VERSE")).toUpperCase(),
+      html: stripLegacyMarkerFromHtml(section.html || ""),
+      text: stripLegacyMarkerFromText(section.text || ""),
+      visibleForTypes: normaliseVisibleForTypes(section),
       collapsed: section.collapsed === true,
       editorCollapsed: section.editorCollapsed === true,
       style: {
@@ -335,8 +431,8 @@
     return FONTS.map(font => `<option value="${esc(font)}" ${font === selected ? "selected" : ""}>${esc(font)}</option>`).join("");
   }
 
-  function renderSizeOptions(selected) {
-    return FONT_SIZES.map(size => `<option value="${size}" ${String(size) === String(selected) ? "selected" : ""}>${size}px</option>`).join("");
+  function renderSizeOptions() {
+    return FONT_SIZES.map(size => `<option value="${size}"></option>`).join("");
   }
 
 
@@ -437,15 +533,48 @@
     });
   }
 
+  function renderSectionVisibility(index, section) {
+    const allowed = normaliseVisibleForTypes(section);
+    return `
+      <div class="section-visibility-strip" data-visibility-strip="${index}">
+        <span class="section-visibility-label">VISIBLE TO</span>
+        <div class="section-visibility-types">
+          ${eventTypes.map(type => `
+            <label title="Show this section during ${esc(type)} sessions">
+              <input type="checkbox" data-visible-type="${index}" data-session-type="${esc(type)}" ${allowed === null || sectionVisibleForType(section, type) ? "checked" : ""}>
+              <span>${esc(type)}</span>
+            </label>`).join("")}
+        </div>
+      </div>`;
+  }
+
+  function setSectionFontSize(index, rawValue) {
+    if (!sections[index]) return;
+    const value = Math.max(6, Math.min(120, Math.round(Number(rawValue) || 18)));
+    sections[index].style = { ...defaultStyle(sections[index].type), ...(sections[index].style || {}) };
+    sections[index].style.fontSize = value;
+    const input = document.querySelector(`[data-size="${index}"]`);
+    if (input && String(input.value) !== String(value)) input.value = String(value);
+    const editor = document.querySelector(`[data-html="${index}"]`);
+    if (editor) editor.style.fontSize = `${value}px`;
+    markDirty();
+  }
+
   function sectionToolbar(index, section) {
     const style = section.style || defaultStyle(section.type);
     return `
       <div class="rich-toolbar advanced-rich-toolbar">
         <select class="toolbar-select" data-font="${index}" title="Font name">${renderFontOptions(style.fontFamily)}</select>
-        <select class="toolbar-select size-select" data-size="${index}" title="Font size">${renderSizeOptions(style.fontSize)}</select>
+        <div class="font-size-stepper" title="Section font size">
+          <button type="button" data-size-step="${index}" data-step="-1" title="Decrease font size by 1">▼</button>
+          <input class="toolbar-select size-select" data-size="${index}" type="number" min="6" max="120" step="1" list="fontSizePresets" value="${Number(style.fontSize) || 18}" aria-label="Font size">
+          <button type="button" data-size-step="${index}" data-step="1" title="Increase font size by 1">▲</button>
+        </div>
         <button type="button" data-command="bold" title="Bold"><b>B</b></button>
         <button type="button" data-command="italic" title="Italic"><i>I</i></button>
         <button type="button" data-command="underline" title="Underline"><u>U</u></button>
+        <button type="button" data-command="insertUnorderedList" title="Bullet list">• LIST</button>
+        <button type="button" data-command="insertOrderedList" title="Numbered list">1. LIST</button>
         <label class="text-colour-control" title="Apply a colour to the selected text">
           <span class="text-colour-icon">T</span>
           <input type="color" data-text-colour="${index}" value="${esc(style.color || "#ffffff")}" aria-label="Selected text colour">
@@ -495,6 +624,11 @@
             <label class="load-collapsed-check" title="Checked = load this section closed in Lyric View">
               <input type="checkbox" data-load-collapsed="${index}" ${s.collapsed ? "checked" : ""}>
             </label>
+            <div class="section-align-control" title="Align this whole section">
+              <button type="button" data-section-align="${index}" data-align="left" class="${(s.style?.textAlign || "left") === "left" ? "active" : ""}" aria-label="Align left">⇤</button>
+              <button type="button" data-section-align="${index}" data-align="center" class="${s.style?.textAlign === "center" ? "active" : ""}" aria-label="Align center">↔</button>
+              <button type="button" data-section-align="${index}" data-align="right" class="${s.style?.textAlign === "right" ? "active" : ""}" aria-label="Align right">⇥</button>
+            </div>
             <span class="section-type-badge ${s.type === "hostNote" ? "host-note-badge" : ""}">${s.type === "tab" ? "TAB" : s.type === "performanceNote" ? "SINGER NOTE" : s.type === "hostNote" ? "HOST ONLY" : "LYRICS"}</span>
             <label class="section-title-colour-control" title="Section title font colour">
               TITLE
@@ -509,10 +643,11 @@
             </div>
           </div>
           <div class="creator-section-body ${s.editorCollapsed ? "hidden" : ""}">
+            ${renderSectionVisibility(index, s)}
             ${isTextNote ? "" : sectionToolbar(index, s)}
             ${isTextNote
-              ? `<textarea class="${s.type === "hostNote" ? "host-note-editor" : "performance-note-editor"}" data-note="${index}">${esc(s.text)}</textarea>`
-              : `<div class="creator-rich-editor ${s.type === "tab" ? "tab-editor" : ""}" data-html="${index}" contenteditable="true" style="font-family:${esc(s.style.fontFamily)};font-size:${Number(s.style.fontSize) || 18}px;color:${esc(s.style.color)}">${s.html || ""}</div>`}
+              ? `<textarea class="${s.type === "hostNote" ? "host-note-editor" : "performance-note-editor"}" data-note="${index}" style="text-align:${esc(s.style?.textAlign || "left")}">${esc(s.text)}</textarea>`
+              : `<div class="creator-rich-editor ${s.type === "tab" ? "tab-editor" : ""}" data-html="${index}" contenteditable="true" style="font-family:${esc(s.style.fontFamily)};font-size:${Number(s.style.fontSize) || 18}px;color:${esc(s.style.color)};text-align:${esc(s.style?.textAlign || "left")}">${s.html || ""}</div>`}
           </div>`;
       }
       root.appendChild(card);
@@ -525,7 +660,7 @@
   function syncSectionsFromDOM() {
     document.querySelectorAll("[data-title]").forEach(el => {
       const i = Number(el.dataset.title);
-      if (sections[i]) sections[i].title = el.value;
+      if (sections[i]) sections[i].title = String(el.value || "").toUpperCase();
     });
     document.querySelectorAll("[data-note]").forEach(el => {
       const i = Number(el.dataset.note);
@@ -538,6 +673,14 @@
     document.querySelectorAll("[data-load-collapsed]").forEach(el => {
       const i = Number(el.dataset.loadCollapsed);
       if (sections[i]) sections[i].collapsed = el.checked;
+    });
+
+    document.querySelectorAll("[data-visibility-strip]").forEach(strip => {
+      const i = Number(strip.dataset.visibilityStrip);
+      if (!sections[i]) return;
+      const boxes = [...strip.querySelectorAll(`[data-visible-type="${i}"]`)];
+      const selected = boxes.filter(box => box.checked).map(box => box.dataset.sessionType).filter(Boolean);
+      sections[i].visibleForTypes = selected.length === eventTypes.length ? null : selected;
     });
 
     document.querySelectorAll("[data-dash-colour]").forEach(el => {
@@ -685,7 +828,7 @@
   }
 
   async function load() {
-    await loadSectionTitleDefaults();
+    await Promise.all([loadSectionTitleDefaults(), loadEventTypes()]);
     if (!firebaseId) {
       sections = [makeSection("lyrics")];
       updateEditingStatus();
@@ -701,9 +844,28 @@
     }
 
     loadedSong = doc.data() || {};
+    let migrationNeedsManualSave = false;
+    legacyMarkerWasRemoved = false;
     sections = Array.isArray(loadedSong.sections)
       ? loadedSong.sections.map(normalizeSection)
       : [];
+
+    // One-time migration for songs created by the old Lyrics Creator that
+    // prefixed every section with **●** / ●. The editor always opens clean,
+    // and the cleaned sections are persisted silently when permissions allow.
+    if (legacyMarkerWasRemoved) {
+      try {
+        await db.collection("lyrics").doc(firebaseId).set({
+          sections: sections.map(normalizeSection),
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge:true });
+        loadedSong.sections = JSON.parse(JSON.stringify(sections));
+        legacyMarkerWasRemoved = false;
+      } catch (migrationError) {
+        console.warn("Legacy section marker was removed in the editor but could not be auto-saved:", migrationError);
+        migrationNeedsManualSave = true;
+      }
+    }
 
     $("creatorHeading").textContent = "✎ EDIT SONG";
     $("songTitleInput").value = loadedSong.title || "";
@@ -720,7 +882,7 @@
 
     updateEditingStatus();
     render();
-    dirty = false;
+    dirty = migrationNeedsManualSave;
   }
 
   async function save() {
@@ -863,10 +1025,33 @@
   }
 
   function renderModals() {
+    if ($("fontSizePresets")) $("fontSizePresets").innerHTML = renderSizeOptions();
     $("chordQuickGrid").innerHTML = ["C", "D", "E", "F", "G", "A", "B", "Am", "Em", "Dm", "G7", "Cmaj7", "F#m", "Bb"].map(chord => `<button type="button" data-chord-quick="${esc(chord)}">${esc(chord)}</button>`).join("");
     $("colourPalette").innerHTML = COLOURS.map(([name, colour]) => `<button type="button" data-palette-colour="${colour}" title="${esc(name)}"><span style="background:${colour}"></span>${esc(name)}</button>`).join("");
     $("templateGrid").innerHTML = TEMPLATES.map((template, index) => `<button type="button" data-template="${index}"><strong>${esc(template.label)}</strong><span>${esc(template.type)}</span></button>`).join("");
   }
+
+  document.addEventListener("focusin", event => {
+    if (!event.target.matches?.("[data-title]")) return;
+    // Section-title editing is intentionally replacement-friendly.
+    requestAnimationFrame(() => event.target.select());
+  });
+
+  document.addEventListener("paste", event => {
+    const editor = event.target.closest?.(".creator-rich-editor[contenteditable='true']");
+    if (!editor) return;
+
+    // Always paste as plain text. This strips external fonts, line heights,
+    // margins, spans, classes and all other copied formatting while keeping
+    // the Lyrics Creator's own section formatting authoritative.
+    event.preventDefault();
+    const text = (event.clipboardData || window.clipboardData)?.getData("text/plain") || "";
+    captureSelection(editor);
+    const safeHtml = esc(text.replace(/\r\n?/g, "\n")).replace(/\n/g, "<br>");
+    insertHTMLAtSelection(safeHtml);
+    const index = Number(editor.dataset.html);
+    requestAnimationFrame(() => applyDashColourToEditor(editor, sections[index]?.style?.dashColor || "#777777"));
+  });
 
   document.addEventListener("selectionchange", () => {
     const selection = window.getSelection();
@@ -881,6 +1066,13 @@
     if (event.target.id === "chordInput") $("chordPreview").textContent = event.target.value || "—";
 
     if (event.target.matches("[data-title]")) {
+      const start = event.target.selectionStart;
+      const end = event.target.selectionEnd;
+      const upper = String(event.target.value || "").toUpperCase();
+      if (event.target.value !== upper) {
+        event.target.value = upper;
+        try { event.target.setSelectionRange(start, end); } catch (_) {}
+      }
       syncSectionsFromDOM();
       const index = Number(event.target.dataset.title);
       if (sections[index] && !sections[index].style?.titleColor) {
@@ -888,7 +1080,7 @@
         const custom = document.querySelector(`[data-title-custom="${index}"]`);
         if (custom) custom.value = getSystemSectionTitleColour(event.target.value);
       }
-    } else if (event.target.matches("[data-note],[data-html],[data-load-collapsed]")) {
+    } else if (event.target.matches("[data-note],[data-html],[data-load-collapsed],[data-visible-type]")) {
       syncSectionsFromDOM();
     }
 
@@ -947,12 +1139,7 @@
 
     const size = event.target.closest("[data-size]");
     if (size) {
-      const index = Number(size.dataset.size);
-      const editor = document.querySelector(`[data-html="${index}"]`);
-      sections[index].style.fontSize = Number(size.value);
-      editor.style.fontSize = `${size.value}px`;
-      captureSelection(editor);
-      markDirty();
+      setSectionFontSize(Number(size.dataset.size), size.value);
       return;
     }
 
@@ -1063,6 +1250,12 @@
       return;
     }
 
+    if (event.target.matches("[data-visible-type]")) {
+      syncSectionsFromDOM();
+      markDirty();
+      return;
+    }
+
     if (event.target.matches("[data-load-collapsed]")) {
       syncSectionsFromDOM();
       markDirty();
@@ -1113,6 +1306,29 @@
       const index = Number(collapse.dataset.editorCollapse);
       sections[index].editorCollapsed = !sections[index].editorCollapsed;
       render();
+      return;
+    }
+
+    const sizeStep = event.target.closest("[data-size-step]");
+    if (sizeStep) {
+      syncSectionsFromDOM();
+      const index = Number(sizeStep.dataset.sizeStep);
+      const current = Number(sections[index]?.style?.fontSize) || 18;
+      setSectionFontSize(index, current + Number(sizeStep.dataset.step || 0));
+      return;
+    }
+
+    const align = event.target.closest("[data-section-align]");
+    if (align) {
+      syncSectionsFromDOM();
+      const index = Number(align.dataset.sectionAlign);
+      const value = ["left","center","right"].includes(align.dataset.align) ? align.dataset.align : "left";
+      if (!sections[index]) return;
+      sections[index].style = { ...defaultStyle(sections[index].type), ...(sections[index].style || {}), textAlign:value };
+      const body = document.querySelector(`[data-index="${index}"] .creator-rich-editor, [data-index="${index}"] textarea[data-note]`);
+      if (body) body.style.textAlign = value;
+      document.querySelectorAll(`[data-section-align="${index}"]`).forEach(button => button.classList.toggle("active", button.dataset.align === value));
+      markDirty();
       return;
     }
 
@@ -1180,9 +1396,25 @@
       syncSectionsFromDOM();
       const item = TEMPLATES[Number(template.dataset.template)];
       sections.push(makeSection(item.type, item));
+      const newIndex = sections.length - 1;
       $("templatesModal").classList.add("hidden");
       markDirty();
       render();
+
+      if (item.linkedSongTemplate) {
+        requestAnimationFrame(async () => {
+          const editor = document.querySelector(`[data-html="${newIndex}"]`);
+          if (!editor) return;
+          editor.focus();
+          const range = document.createRange();
+          range.selectNodeContents(editor);
+          range.collapse(false);
+          const selection = window.getSelection();
+          selection.removeAllRanges();
+          selection.addRange(range);
+          await openLinkModal(editor);
+        });
+      }
     }
   });
 
