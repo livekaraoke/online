@@ -20,4 +20,7 @@
 
 window.ROXANNA_HERO_PHOTOS = [
   // Add the filenames that already exist in assets/herophotos/ here:
+  "band1.png",
+  "band2.png",
+  "band3.png"
 ];
