@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#02080d">
+  <title>Billy Lee — Live Music</title>
+  <meta name="description" content="Billy Lee — live music, gigs, requests and live performance in Malta.">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="hero" id="top">
+    <img class="hero-photo" src="assets/hero-billy-lee.png" alt="Billy Lee performing live">
+    <div class="hero-overlay"></div>
+    <button class="icon-btn menu-btn" id="menuBtn" aria-label="Open menu"><span></span><span></span><span></span></button>
+    <button class="share-btn" id="shareBtn" type="button">⌯ <span>SHARE</span></button>
+
+    <div class="hero-left">
+      <img class="brand-logo" src="assets/billy-lee-logo.png" alt="Billy Lee">
+      <div class="hero-gigs" id="heroGigs" aria-live="polite"></div>
+      <div class="support-copy">Thanks for supporting live music.<span>♡</span></div>
+    </div>
+    <div class="music-lives">Music<br>Lives<br>Here</div>
+  </header>
+
+  <main>
+    <section class="live-panel section-shell" id="livePanel" aria-live="polite">
+      <div class="player-main">
+        <img id="playerArt" class="player-art" src="assets/now-playing-placeholder.svg" alt="Current song artwork">
+        <div class="player-copy">
+          <span class="eyebrow" id="liveStateLabel">NOT LIVE</span>
+          <h1 id="currentSongTitle">No active session</h1>
+          <p id="currentSongArtist">Check the upcoming gigs below.</p>
+          <div class="session-meta">
+            <span id="sessionVenue">—</span><i></i><span id="sessionType">—</span>
+          </div>
+          <div class="progress"><span id="progressBar"></span></div>
+        </div>
+        <div class="state-icon" id="stateIcon">♪</div>
+      </div>
+      <div class="request-strip">
+        <div class="queue-summary"><b>♫</b><span><strong id="queueCount">0</strong> request(s) in queue</span></div>
+        <button id="requestSongBtn" class="primary-btn" disabled>♫ &nbsp; REQUEST A SONG →</button>
+      </div>
+    </section>
+
+    <section class="section-shell gigs-section" id="gigs">
+      <div class="section-heading"><span>NEXT GIGS</span></div>
+      <div class="gig-list" id="nextGigs"></div>
+    </section>
+
+    <section class="about section-shell" id="about">
+      <img src="assets/about-billy-lee.jpg" alt="Billy Lee live on stage">
+      <div>
+        <div class="section-heading compact"><span>ABOUT</span></div>
+        <h2>A PASSION FOR LIVE MUSIC</h2>
+        <p>I’m Billy Lee, a Malta-based singer, guitarist and live performer. I build a full live sound from guitar, vocals and looping, moving between intimate acoustic moments, crowd favourites and bigger high-energy arrangements. Whether it’s a solo show or an interactive night, the aim is simple: real music, played live, with the room part of the experience.</p>
+        <div class="signature">Billy Lee</div>
+      </div>
+    </section>
+
+    <section class="watch section-shell" id="watch">
+      <div class="watch-head"><div class="section-heading compact left"><span>▶ &nbsp; WATCH &amp; LISTEN</span></div><a href="#" aria-label="View more videos">VIEW MORE VIDS →</a></div>
+      <div class="video-grid">
+        <a class="video-card" href="#"><div class="thumb thumb-one"><span>▶</span></div><div><b>Live Looping Medley</b><small>3:24</small></div></a>
+        <a class="video-card" href="#"><div class="thumb thumb-two"><span>▶</span></div><div><b>One Guitar. Countless Sounds.</b><small>2:18</small></div></a>
+        <a class="video-card" href="#"><div class="thumb thumb-three"><span>▶</span></div><div><b>Live Loop Performance</b><small>4:07</small></div></a>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="footer-crowd"></div>
+    <div class="footer-inner">
+      <div class="footer-tag"><span></span>BUILT LIVE. PLAYED LIVE.<span></span></div>
+      <div class="socials"><a href="#" aria-label="Instagram">◎</a><a href="#" aria-label="Facebook">f</a><a href="#" aria-label="YouTube">▶</a><a href="#" aria-label="TikTok">♪</a><a href="#" aria-label="Spotify">≋</a></div>
+      <div class="domain">billylee.mt</div>
+    </div>
+  </footer>
+
+  <aside class="drawer" id="drawer" aria-hidden="true"><button id="drawerClose">×</button><a href="#top">HOME</a><a href="#gigs">GIGS</a><a href="#about">ABOUT</a><a href="#watch">WATCH &amp; LISTEN</a><button id="drawerRequest">REQUEST A SONG</button></aside>
+  <div class="scrim" id="scrim"></div>
+
+  <dialog id="eventDialog" class="modal"><button class="modal-close" data-close="eventDialog">×</button><div id="eventDialogBody"></div></dialog>
+
+  <dialog id="requestDialog" class="modal request-modal">
+    <button class="modal-close" data-close="requestDialog">×</button>
+    <div class="request-header"><span class="eyebrow">LIVE REQUESTS</span><h2>REQUEST A SONG</h2><p id="requestListName">Loading selected public song list…</p></div>
+    <div class="request-controls"><input id="songSearch" type="search" placeholder="Search song or artist…" autocomplete="off"><input id="singerName" type="text" placeholder="Your name"></div>
+    <div id="requestNotice" class="request-notice"></div>
+    <div id="songResults" class="song-results"></div>
+    <div class="my-requests"><h3>MY REQUESTS</h3><div id="myRequests"></div></div>
+  </dialog>
+
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="js/firebase-config.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
