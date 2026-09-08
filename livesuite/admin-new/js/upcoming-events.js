@@ -78,10 +78,11 @@
 
   function eventStillUpcoming(event) {
     // Scheduled time passing does NOT remove an event from Upcoming.
-    // It remains until an associated Performance Session is ended.
+    // Once an associated Performance Session becomes active, it is no longer Upcoming.
     if (!event) return false;
     if (event.status === "Cancelled") return false;
-    if (event.sessionStatus === "ended") return false;
+    const sessionStatus = String(event.sessionStatus || "").toLowerCase();
+    if (sessionStatus === "active" || sessionStatus === "ended") return false;
     if (event.completedAt) return false;
     return true;
   }
