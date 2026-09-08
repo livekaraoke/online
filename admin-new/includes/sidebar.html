@@ -1,3 +1,4 @@
+<script src="../../firebase-projects.js"></script>
 <aside class="admin-sidebar suite-sidebar">
   <div class="suite-brand-block">
     <div class="suite-brand-icon">🎙️</div>
@@ -40,7 +41,14 @@
       <span class="suite-nav-icon">📍</span>
       <span class="suite-nav-label">Venues</span>
     </a>
-  </nav>
+
+    <a href="enquiries.html" data-page="enquiries" data-sidebar-nav="enquiries">
+      <span class="suite-nav-icon">✉️</span>
+      <span class="suite-nav-label">Enquiries</span>
+      <span id="sidebarEnquiryBadge" class="suite-nav-count enquiry-count hidden">0</span>
+    </a>
+  <a href="database-manager.html">🗄 Database Manager</a>
+</nav>
 
   <div class="suite-nav-section-title live-title">
     <span>Live</span>
@@ -80,7 +88,7 @@
 
   <div class="suite-nav-section-title music-title">Music</div>
   <nav class="side-nav suite-nav">
-    <a href="../adm/host/lyricsviewer.html">
+    <a href="../host/lyricsviewer.html">
       <span class="suite-nav-icon">🎸</span>
       <span class="suite-nav-label">Lyrics &amp; Chords</span>
       <span class="suite-nav-chevron">›</span>
@@ -91,11 +99,17 @@
       <span class="suite-nav-label">Song List</span>
       <span class="suite-nav-chevron">›</span>
     </a>
+
+    <a href="../list/listeditor.html">
+      <span class="suite-nav-icon">✎</span>
+      <span class="suite-nav-label">List Editor</span>
+      <span class="suite-nav-chevron">›</span>
+    </a>
   </nav>
 
   <div class="suite-nav-section-title karaoke-title">Karaoke</div>
   <nav class="side-nav suite-nav">
-    <a href="../adm/host/venuekaraokelyricbook.html">
+    <a href="../oldadmin/host/venuekaraokelyricbook.html">
       <span class="suite-nav-icon">▣</span>
       <span class="suite-nav-label">Lyric Prompter</span>
       <span class="suite-nav-chevron">›</span>
