@@ -555,3 +555,118 @@
     width: 100%;
   }
 }
+
+/* Venue Directory: preserve full columns and allow horizontal scrolling. */
+.venues-list-scroll {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 6px;
+  scrollbar-color: #4a4a4a #111;
+  scrollbar-width: thin;
+}
+
+.venues-list-scroll::-webkit-scrollbar { height: 10px; }
+.venues-list-scroll::-webkit-scrollbar-track { background: #111; border-radius: 999px; }
+.venues-list-scroll::-webkit-scrollbar-thumb { background: #454545; border-radius: 999px; }
+.venues-list-scroll::-webkit-scrollbar-thumb:hover { background: #5a5a5a; }
+
+.venues-list {
+  min-width: 930px;
+}
+
+.venue-name-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.venue-name-line strong {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.venue-closed-badge {
+  flex: 0 0 auto;
+  padding: 3px 6px;
+  border: 1px solid #8e3035;
+  border-radius: 999px;
+  background: #26090b;
+  color: #ff747b !important;
+  font-size: 8px !important;
+  font-weight: 950;
+  letter-spacing: .06em;
+  line-height: 1;
+}
+
+.venue-row.closed-down {
+  opacity: .72;
+}
+
+.venue-row-actions button.edit {
+  width: auto;
+  min-width: 58px;
+  padding: 0 8px;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.venue-row-actions button.edit span {
+  margin-left: 3px;
+}
+
+.venue-status-field {
+  align-self: end;
+}
+
+.venue-closed-toggle {
+  display: flex !important;
+  align-items: center;
+  gap: 9px;
+  min-height: 39px;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  border: 1px solid #363636;
+  border-radius: 6px;
+  background: #080808;
+  cursor: pointer;
+}
+
+.venue-closed-toggle input {
+  width: 16px;
+  min-height: 0;
+  height: 16px;
+  margin: 0;
+  accent-color: #a91a20;
+}
+
+.venue-closed-toggle span {
+  margin: 0 !important;
+  color: #cfcfcf !important;
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0 !important;
+}
+
+@media (max-width: 780px) {
+  .venue-row {
+    grid-template-columns: minmax(210px, 1.25fr) minmax(230px, 1fr) minmax(170px, .75fr) 90px auto;
+  }
+  .venue-row-address,
+  .venue-row-contact,
+  .venue-row-actions {
+    grid-column: auto;
+    grid-row: auto;
+  }
+}
+.venue-field-label {
+  display: block;
+  margin-bottom: 5px;
+  color: #858585;
+  font-size: 9px;
+  font-weight: 950;
+  letter-spacing: .07em;
+}
