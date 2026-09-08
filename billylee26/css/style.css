@@ -493,3 +493,63 @@
   .booking-intro .section-heading{font-size:11px;letter-spacing:.25em}
   .watch-head{align-items:center}
 }
+
+
+/* v14 — cleaner public navigation, section spacing and concert-style footer */
+/* The public Billy Lee site no longer has a hamburger/drawer menu. */
+.menu-btn,.drawer,.scrim{display:none!important}
+
+/* Give every main section heading more breathing room before its content. */
+.request-song-heading .section-heading,
+.watch-head .section-heading,
+.about-heading,
+.booking-intro .section-heading{margin-bottom:26px!important}
+.gigs-heading-row{margin-bottom:26px!important}
+.gigs-heading-row .section-heading{margin-bottom:0!important}
+.watch-head a{margin-bottom:26px!important}
+
+/* Footer treatment based on the supplied live-crowd reference. */
+footer{
+  min-height:280px;
+  background:#01070b;
+}
+.footer-crowd{
+  opacity:1;
+  background-image:
+    linear-gradient(180deg,rgba(1,7,11,.18) 0%,rgba(1,7,11,.5) 42%,rgba(0,3,5,.93) 100%),
+    radial-gradient(circle at 50% 8%,rgba(24,167,195,.22),transparent 48%),
+    url('../assets/audience-cheering.svg');
+  background-size:cover,cover,cover;
+  background-position:center,center,center bottom;
+  background-repeat:no-repeat;
+}
+.footer-inner{padding:48px 24px 42px}
+.footer-tag{
+  width:min(1080px,94vw);
+  margin:0 auto;
+  gap:32px;
+  font-size:13px;
+  letter-spacing:.38em;
+  white-space:nowrap;
+}
+.footer-tag span{
+  width:auto;
+  flex:1 1 260px;
+  max-width:330px;
+  min-width:120px;
+  background:linear-gradient(90deg,transparent,var(--cyan));
+}
+.footer-tag span:last-child{background:linear-gradient(90deg,var(--cyan),transparent)}
+
+@media(max-width:620px){
+  .request-song-heading .section-heading,
+  .watch-head .section-heading,
+  .about-heading,
+  .booking-intro .section-heading{margin-bottom:20px!important}
+  .gigs-heading-row{margin-bottom:20px!important}
+  .watch-head a{margin-bottom:20px!important}
+  footer{min-height:240px}
+  .footer-inner{padding:38px 14px 32px}
+  .footer-tag{gap:12px;font-size:9px;letter-spacing:.2em}
+  .footer-tag span{min-width:44px;flex-basis:70px}
+}

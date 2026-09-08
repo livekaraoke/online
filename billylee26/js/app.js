@@ -114,7 +114,6 @@
     const playing=playingItem(); const breakOpen=activeSession?.breakOpen===true;
     $("queueCount").textContent=String(active ? queuedRequestCount() : 0);
     $("requestSongBtn").disabled=!active;
-    $("drawerRequest").disabled=!active;
     $("sessionVenue").textContent=active ? (controlData.venue || activeSession?.venue || controlData.eventSnapshot?.venue || "Live") : "—";
     $("sessionType").textContent=active ? (controlData.sessionType || controlData.type || activeSession?.sessionType || activeSession?.type || "Performance") : "—";
     $("progressBar").style.width="0%"; startElapsed(playing);
@@ -508,7 +507,7 @@
   $("editSingerName").addEventListener("keydown",e=>{if(e.key==="Enter")saveRequesterName();});
   $("requestAnotherBtn").addEventListener("click",showRequestBrowser);
   $("viewAllGigsBtn").addEventListener("click",showAllGigs);
-  $("requestSongBtn").addEventListener("click",openRequestDialog); $("drawerRequest").addEventListener("click",openRequestDialog);
+  $("requestSongBtn").addEventListener("click",openRequestDialog);
   $("openBookingDialogBtn").addEventListener("click",()=>{
     $("bookingStatus").className="booking-status";
     $("bookingStatus").textContent="";
@@ -518,8 +517,6 @@
   });
   $("bookingForm").addEventListener("submit",submitBookingEnquiry);
   $("shareBtn").addEventListener("click",async()=>{try{if(navigator.share)await navigator.share({title:document.title,url:location.href});else{await navigator.clipboard.writeText(location.href);alert("Link copied.");}}catch{}});
-  $("menuBtn").addEventListener("click",()=>{$("drawer").classList.add("open");$("scrim").classList.add("show");});
-  const closeDrawer=()=>{$("drawer").classList.remove("open");$("scrim").classList.remove("show");}; $("drawerClose").addEventListener("click",closeDrawer); $("scrim").addEventListener("click",closeDrawer); $("drawer").querySelectorAll("a").forEach(a=>a.addEventListener("click",closeDrawer));
 
   listenEvents(); listenLiveState(); renderLive();
 })();
