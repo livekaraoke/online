@@ -19,7 +19,7 @@
       <img class="brand-logo" src="assets/billy-lee-logo.png" alt="Billy Lee">
       <div class="hero-gigs" id="heroGigs" aria-live="polite"></div>
       <div class="hero-actions">
-        <a class="hero-action primary" id="bookEnquireBtn" href="mailto:livekaraoke@protonmail.com?subject=Billy%20Lee%20Booking%20Enquiry">BOOK / ENQUIRE →</a>
+        <a class="hero-action primary" id="bookEnquireBtn" href="#book">BOOK / ENQUIRE →</a>
         <a class="hero-action secondary" id="watchLiveBtn" href="#requestSongSection">WATCH LIVE →</a>
       </div>
     </div>
@@ -57,14 +57,24 @@
       </div>
     </section>
 
-    <div class="support-copy support-copy-below-player">Thanks for supporting live music.<span>♡</span></div>
-
     <section class="section-shell gigs-section" id="gigs">
       <div class="gigs-heading-row">
         <div class="section-heading"><span>UPCOMING GIGS</span></div>
         <button id="viewAllGigsBtn" class="view-all-gigs" type="button">VIEW ALL GIGS →</button>
       </div>
       <div class="gig-list" id="nextGigs"></div>
+    </section>
+
+    <div class="support-copy support-copy-below-player">Thanks for supporting live music.<span>♡</span></div>
+
+
+    <section class="watch section-shell" id="watch">
+      <div class="watch-head"><div class="section-heading compact left"><span>▶ &nbsp; WATCH &amp; LISTEN</span></div><a href="#" aria-label="View more videos">VIEW MORE VIDS →</a></div>
+      <div class="video-grid">
+        <a class="video-card" href="#"><div class="thumb thumb-one"><span>▶</span></div><div><b>Live Looping Medley</b><small>3:24</small></div></a>
+        <a class="video-card" href="#"><div class="thumb thumb-two"><span>▶</span></div><div><b>One Guitar. Countless Sounds.</b><small>2:18</small></div></a>
+        <a class="video-card" href="#"><div class="thumb thumb-three"><span>▶</span></div><div><b>Live Loop Performance</b><small>4:07</small></div></a>
+      </div>
     </section>
 
     <section class="about section-shell" id="about">
@@ -77,14 +87,28 @@
       </div>
     </section>
 
-    <section class="watch section-shell" id="watch">
-      <div class="watch-head"><div class="section-heading compact left"><span>▶ &nbsp; WATCH &amp; LISTEN</span></div><a href="#" aria-label="View more videos">VIEW MORE VIDS →</a></div>
-      <div class="video-grid">
-        <a class="video-card" href="#"><div class="thumb thumb-one"><span>▶</span></div><div><b>Live Looping Medley</b><small>3:24</small></div></a>
-        <a class="video-card" href="#"><div class="thumb thumb-two"><span>▶</span></div><div><b>One Guitar. Countless Sounds.</b><small>2:18</small></div></a>
-        <a class="video-card" href="#"><div class="thumb thumb-three"><span>▶</span></div><div><b>Live Loop Performance</b><small>4:07</small></div></a>
+    <section class="booking section-shell" id="book">
+      <div class="booking-intro">
+        <div class="section-heading compact left"><span>BOOK / ENQUIRE</span></div>
+        <h2>BRING THE SHOW TO YOUR EVENT.</h2>
+        <p>Venues, corporate events, weddings and private parties — send the details below and I’ll get back to you.</p>
       </div>
+      <form id="bookingForm" class="booking-form">
+        <div class="booking-grid">
+          <label><span>YOUR NAME *</span><input id="enquiryName" name="name" type="text" maxlength="80" required autocomplete="name"></label>
+          <label><span>EMAIL *</span><input id="enquiryEmail" name="email" type="email" maxlength="120" required autocomplete="email"></label>
+          <label><span>PHONE</span><input id="enquiryPhone" name="phone" type="tel" maxlength="50" autocomplete="tel"></label>
+          <label><span>EVENT / BOOKING TYPE *</span><select id="enquiryEventType" name="eventType" required><option value="">Choose one…</option><option>Venue / Bar / Restaurant</option><option>Corporate Event</option><option>Wedding</option><option>Private Party</option><option>Hotel / Resort</option><option>Festival / Public Event</option><option>Other</option></select></label>
+          <label><span>PREFERRED DATE</span><input id="enquiryDate" name="preferredDate" type="date"></label>
+          <label><span>VENUE / LOCALITY</span><input id="enquiryVenue" name="venueOrLocality" type="text" maxlength="140" placeholder="Venue name or locality"></label>
+          <label><span>ESTIMATED GUESTS</span><input id="enquiryGuests" name="estimatedGuests" type="number" min="0" step="1" placeholder="Optional"></label>
+          <label><span>COMPANY / ORGANISATION</span><input id="enquiryCompany" name="company" type="text" maxlength="120" placeholder="Optional"></label>
+          <label class="wide"><span>MESSAGE / DETAILS *</span><textarea id="enquiryMessage" name="message" rows="5" maxlength="1500" required placeholder="Tell me about the event, timings, setup, music style, or anything else useful."></textarea></label>
+        </div>
+        <div class="booking-actions"><button id="bookingSubmitBtn" class="primary-btn booking-submit" type="submit">SEND ENQUIRY →</button><p id="bookingStatus" class="booking-status" aria-live="polite"></p></div>
+      </form>
     </section>
+
   </main>
 
   <footer>
@@ -96,7 +120,7 @@
     </div>
   </footer>
 
-  <aside class="drawer" id="drawer" aria-hidden="true"><button id="drawerClose">×</button><a href="#top">HOME</a><a href="#gigs">GIGS</a><a href="#about">ABOUT</a><a href="#watch">WATCH &amp; LISTEN</a><button id="drawerRequest">REQUEST A SONG</button></aside>
+  <aside class="drawer" id="drawer" aria-hidden="true"><button id="drawerClose">×</button><a href="#top">HOME</a><a href="#gigs">GIGS</a><a href="#watch">WATCH &amp; LISTEN</a><a href="#about">ABOUT</a><a href="#book">BOOK / ENQUIRE</a><button id="drawerRequest">REQUEST A SONG</button></aside>
   <div class="scrim" id="scrim"></div>
 
   <dialog id="eventDialog" class="modal event-modal"><button class="modal-close" data-close="eventDialog">×</button><div id="eventDialogBody"></div></dialog>
