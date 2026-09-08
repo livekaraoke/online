@@ -43,9 +43,30 @@
     return `<button class="gig-row" data-event-id="${escapeHTML(e.id)}"><div class="gig-date"><small>${d.month}</small><strong>${d.day}</strong></div><div class="gig-copy"><b>${escapeHTML(venue)}</b><span>${escapeHTML(location)}</span><em class="type-pill type-${escapeHTML(typeClass(type))}">${escapeHTML(type)}</em></div><time>${escapeHTML(formatTime(e))}</time><span class="chev">›</span></button>`;
   }
 
+  function renderHeroGig(){
+    const active=controlData.active===true && !!activeSessionId;
+    const hero=$('heroGigs');
+    const watch=$('watchLiveBtn');
+    if(active){
+      const venue=controlData.venue || activeSession?.venue || controlData.eventSnapshot?.venue || 'Live Performance';
+      const location=controlData.address || activeSession?.address || controlData.eventSnapshot?.address || '';
+      const type=controlData.sessionType || controlData.type || activeSession?.sessionType || activeSession?.type || 'Performance';
+      hero.innerHTML=`<div class="hero-gig live-now"><div class="date"><small>LIVE</small><strong>●</strong><small>NOW</small></div><div class="event-copy"><b>${escapeHTML(venue)}</b>${location?`<span>${escapeHTML(location)}</span>`:''}<em class="type-pill type-${escapeHTML(typeClass(type))}">${escapeHTML(type)}</em><span class="live-now-badge">LIVE NOW</span></div><div class="event-time">LIVE</div><span class="chev">›</span></div>`;
+      watch.textContent='WATCH LIVE →';
+      watch.classList.add('is-live');
+      watch.setAttribute('href','#requestSongSection');
+      return;
+    }
+    const upcoming=latestEvents.filter(eventIsUpcoming).sort(eventSort);
+    hero.innerHTML = upcoming.length ? eventCard(upcoming[0],true) : `<div class="empty-inline">No upcoming gig published.</div>`;
+    watch.textContent='WATCH LIVE →';
+    watch.classList.remove('is-live');
+    watch.setAttribute('href','#watch');
+  }
+
   function renderEvents(){
     const upcoming=latestEvents.filter(eventIsUpcoming).sort(eventSort);
-    $("heroGigs").innerHTML = upcoming.slice(0,3).map(e=>eventCard(e,true)).join("") || `<div class="empty-inline">No upcoming gigs published.</div>`;
+    renderHeroGig();
     $("nextGigs").innerHTML = upcoming.slice(0,5).map(e=>eventCard(e,false)).join("") || `<div class="empty-box">No upcoming gigs published.</div>`;
   }
 
@@ -77,6 +98,7 @@
 
   function renderLive(){
     const active=controlData.active===true && !!activeSessionId;
+    renderHeroGig();
     const playing=playingItem(); const breakOpen=activeSession?.breakOpen===true;
     $("queueCount").textContent=String(active ? queuedRequestCount() : 0);
     $("requestSongBtn").disabled=!active;
@@ -180,26 +202,14 @@
     setTimeout(()=>$("songSearch").focus(),30);
   }
 
-  async function openRequestDialog(){
-    if(!(controlData.active===true && activeSessionId)){alert("Song requests are only available during an active session.");return;}
-    selectedRequestSongId="";
-    $("requestNameStep").hidden=false;
-    $("requestSongStep").hidden=true;
-    $("requestSuccess").hidden=true;
-    $("requestBrowser").hidden=false;
-    $("singerName").value=localStorage.getItem("billylee26.requestName")||"";
-    $("requestDialog").showModal();
-    setTimeout(()=>$("singerName").focus(),50);
-  }
-
-  async function continueToSongs(){
-    const name=$("singerName").value.trim();
-    if(!name){$("singerName").focus();return;}
+  async function enterSongRequestStep(name){
     localStorage.setItem("billylee26.requestName",name);
     $("requesterNameLabel").textContent=name;
     $("editSingerName").value=name;
     $("requestNameStep").hidden=true;
     $("requestSongStep").hidden=false;
+    $("requestSuccess").hidden=true;
+    $("requestBrowser").hidden=false;
     $("requestNotice").textContent="Loading songs…";
     try{
       await loadPublicSongs();
@@ -209,6 +219,30 @@
       console.error(error);
       $("requestNotice").textContent="Could not load the public song list.";
     }
+  }
+
+  async function openRequestDialog(){
+    if(!(controlData.active===true && activeSessionId)){alert("Song requests are only available during an active session.");return;}
+    selectedRequestSongId="";
+    const storedName=(localStorage.getItem("billylee26.requestName")||"").trim();
+    $("requestSuccess").hidden=true;
+    $("requestBrowser").hidden=false;
+    $("requestDialog").showModal();
+    if(storedName){
+      $("singerName").value=storedName;
+      await enterSongRequestStep(storedName);
+    }else{
+      $("requestNameStep").hidden=false;
+      $("requestSongStep").hidden=true;
+      $("singerName").value="";
+      setTimeout(()=>$("singerName").focus(),50);
+    }
+  }
+
+  async function continueToSongs(){
+    const name=$("singerName").value.trim();
+    if(!name){$("singerName").focus();return;}
+    await enterSongRequestStep(name);
   }
 
   function trackedRequestIds(){try{return JSON.parse(localStorage.getItem("billylee26.requestIds")||"[]");}catch{return[];}}
@@ -292,6 +326,7 @@
       });
       const ids=trackedRequestIds();ids.push(ref.id);saveTrackedRequestIds(ids);
       selectedRequestSongId="";
+      $("requestNote").value="";
       $("requestBrowser").hidden=true;
       $("requestSuccess").hidden=false;
       $("requestSuccessText").textContent=`${song.title||"Your song"} has been sent and is awaiting approval.`;
