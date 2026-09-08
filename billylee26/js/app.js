@@ -391,11 +391,14 @@
     if(venueName) rows.push(`<div><dt>VENUE NAME</dt><dd>${escapeHTML(venueName)}</dd></div>`);
     if(address) rows.push(`<div><dt>ADDRESS</dt><dd>${escapeHTML(address)}</dd></div>`);
     if(locality) rows.push(`<div><dt>LOCALITY</dt><dd>${escapeHTML(locality)}</dd></div>`);
-    if(dateText||timeText) rows.push(`<div><dt>DATE & START TIME</dt><dd>${escapeHTML([dateText,timeText].filter(Boolean).join(" · "))}</dd></div>`);
-    if(mapUrl){ const href=safeUrl(mapUrl); rows.push(`<div><dt>MAP</dt><dd><a class="event-detail-link" href="${escapeHTML(href)}" target="_blank" rel="noopener noreferrer">${escapeHTML(mapUrl)}</a></dd></div>`); }
-    if(website){ const href=safeUrl(website); rows.push(`<div><dt>WEBSITE</dt><dd><a class="event-detail-link" href="${escapeHTML(href)}" target="_blank" rel="noopener noreferrer">${escapeHTML(website)}</a></dd></div>`); }
-    if(e.notes) rows.push(`<div><dt>GIG NOTES</dt><dd>${escapeHTML(e.notes)}</dd></div>`);
-    $("eventDialogBody").innerHTML=`<span class="eyebrow">GIG DETAILS</span><h2>${escapeHTML(venueName)}</h2><dl class="event-detail-list">${rows.join("")}</dl>`;
+    if(dateText) rows.push(`<div><dt>DATE</dt><dd>${escapeHTML(dateText)}</dd></div>`);
+    if(timeText) rows.push(`<div><dt>START TIME</dt><dd>${escapeHTML(timeText)}</dd></div>`);
+    const notes=String(e.notes||"").trim();
+    if(notes) rows.push(`<div><dt>GIG NOTES</dt><dd>${escapeHTML(notes)}</dd></div>`);
+    const links=[];
+    if(website){ const href=safeUrl(website); links.push(`<a class="event-detail-action" href="${escapeHTML(href)}" target="_blank" rel="noopener noreferrer">WEBSITE ↗</a>`); }
+    if(mapUrl){ const href=safeUrl(mapUrl); links.push(`<a class="event-detail-action" href="${escapeHTML(href)}" target="_blank" rel="noopener noreferrer">LOCATION ↗</a>`); }
+    $("eventDialogBody").innerHTML=`<span class="eyebrow">GIG DETAILS</span><h2>${escapeHTML(venueName)}</h2><dl class="event-detail-list">${rows.join("")}</dl>${links.length?`<div class="event-detail-actions">${links.join("")}</div>`:""}`;
     $("eventDialog").showModal();
   }
   function showAllGigs(){
