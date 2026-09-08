@@ -1161,6 +1161,71 @@
     return matched;
   }
 
+  async function ensureCurrentSongPlaying() {
+    if (!currentSongId || !currentSong) return;
+    const { sessionId } = await getActiveSessionContext();
+    if (!sessionId) return;
+    const runRef = db.collection("karaokeControl").doc("runOrder");
+    const startedMs = Date.now();
+    try {
+      await db.runTransaction(async tx => {
+        const snap = await tx.get(runRef);
+        const data = snap.exists ? (snap.data() || {}) : {};
+        let items = data.sessionId === sessionId && Array.isArray(data.items) ? [...data.items] : [];
+        let index = -1;
+        if (requestId) index = items.findIndex(item => item.requestId === requestId);
+        if (index < 0) index = items.findIndex(item => item.songId === currentSongId && String(item.status || "").toLowerCase() !== "played");
+
+        // A lyric-view song is the authoritative live song. Finish any other
+        // item still marked playing, then mark/add this song as playing.
+        items = items.map((item,i) => {
+          if (i !== index && String(item.status || "").toLowerCase() === "playing") {
+            return { ...item, status:"played", playedAtMs:startedMs };
+          }
+          return item;
+        });
+
+        if (index >= 0) {
+          items[index] = {
+            ...items[index],
+            songId:currentSongId,
+            songTitle:currentSong.title || items[index].songTitle || "",
+            title:currentSong.title || items[index].title || "",
+            artist:currentSong.artist || items[index].artist || "",
+            songArtist:currentSong.artist || items[index].songArtist || "",
+            status:"playing",
+            playingAtMs:startedMs,
+            playingAt:firebase.firestore.Timestamp.fromMillis(startedMs)
+          };
+        } else {
+          items.push({
+            id:`lyricview_${currentSongId}_${startedMs}`,
+            songId:currentSongId,
+            songTitle:currentSong.title || "",
+            title:currentSong.title || "",
+            artist:currentSong.artist || "",
+            songArtist:currentSong.artist || "",
+            requestId:requestId || "",
+            singerName:"",
+            source:"lyricview",
+            status:"playing",
+            playingAtMs:startedMs,
+            playingAt:firebase.firestore.Timestamp.fromMillis(startedMs),
+            addedAtMs:startedMs
+          });
+        }
+        tx.set(runRef,{sessionId,items,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
+      });
+      if (requestId) {
+        await db.collection("publicSongRequests").doc(requestId).set({
+          status:"playing", playingAtMs:startedMs,
+          playingAt:firebase.firestore.Timestamp.fromMillis(startedMs),
+          updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+        },{merge:true});
+      }
+    } catch (error) { console.error("Could not put current lyric-view song in Run Order:", error); }
+  }
+
   async function recordCurrentSongPlayed() {
     if (!currentSong || !currentSongId) return;
 
@@ -1446,6 +1511,8 @@
   }
 
   async function goToNextRunOrderSong() {
+    // Leaving via NEXT completes the song that was actually being performed.
+    await recordCurrentSongPlayed();
     const { sessionId } = await getActiveSessionContext();
 
     if (!sessionId) {
