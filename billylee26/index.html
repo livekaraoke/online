@@ -84,21 +84,49 @@
   <dialog id="eventDialog" class="modal"><button class="modal-close" data-close="eventDialog">×</button><div id="eventDialogBody"></div></dialog>
 
   <dialog id="requestDialog" class="modal request-modal">
-    <button class="modal-close" data-close="requestDialog">×</button>
-    <div class="request-header"><span class="eyebrow">LIVE REQUESTS</span><h2>REQUEST A SONG</h2><p id="requestListName">Enter your name to continue.</p></div>
+    <div class="request-modal-top">
+      <div class="request-header"><span class="eyebrow">LIVE REQUESTS</span><h2>REQUEST A SONG</h2></div>
+      <button class="modal-close request-modal-close" data-close="requestDialog" aria-label="Close">×</button>
+    </div>
+
     <section id="requestNameStep" class="request-name-step">
       <label for="singerName">YOUR NAME</label>
       <input id="singerName" type="text" maxlength="60" placeholder="Enter your name" autocomplete="name">
       <button id="continueRequestBtn" class="primary-btn" type="button">CONTINUE →</button>
     </section>
-    <section id="requestSongStep" hidden>
-      <div class="my-requests"><h3>MY REQUESTS</h3><div id="myRequests"></div></div>
-      <div class="request-controls"><input id="songSearch" type="search" placeholder="Search song or artist…" autocomplete="off"></div>
-      <div id="requestNotice" class="request-notice"></div>
-      <div id="songResults" class="song-results"></div>
-      <div id="requestCart" class="request-cart" hidden>
-        <div><strong id="requestCartTitle">Song selected</strong><small id="requestCartArtist"></small></div>
-        <button id="sendRequestBtn" class="primary-btn" type="button">SEND REQUEST →</button>
+
+    <section id="requestSongStep" class="request-song-step" hidden>
+      <div class="requester-block">
+        <div class="requester-name-line">
+          <span class="requester-caption">REQUESTING AS</span>
+          <strong id="requesterNameLabel"></strong>
+          <button id="editRequesterNameBtn" class="icon-btn" type="button" aria-label="Edit name" title="Edit name">✎</button>
+        </div>
+        <div id="requesterNameEdit" class="requester-name-edit" hidden>
+          <input id="editSingerName" type="text" maxlength="60" autocomplete="name">
+          <button id="saveRequesterNameBtn" class="small-btn" type="button">SAVE</button>
+          <button id="cancelRequesterNameBtn" class="small-btn ghost" type="button">CANCEL</button>
+        </div>
+        <label class="request-note-label" for="requestNote">OPTIONAL NOTE / COMMENT</label>
+        <textarea id="requestNote" rows="2" maxlength="240" placeholder="Anything you'd like the host to know?"></textarea>
+      </div>
+
+      <div class="my-requests">
+        <h3>MY REQUESTS</h3>
+        <div id="myRequests" class="my-requests-scroll"></div>
+      </div>
+
+      <div id="requestBrowser" class="request-browser">
+        <div class="request-controls"><input id="songSearch" type="search" placeholder="Search song or artist…" autocomplete="off"></div>
+        <div id="requestNotice" class="request-notice"></div>
+        <div id="songResults" class="song-results"></div>
+      </div>
+
+      <div id="requestSuccess" class="request-success" hidden>
+        <div class="success-mark">✓</div>
+        <h3>REQUEST SENT</h3>
+        <p id="requestSuccessText">Your request has been sent and is awaiting approval.</p>
+        <button id="requestAnotherBtn" class="primary-btn" type="button">REQUEST ANOTHER SONG →</button>
       </div>
     </section>
   </dialog>
