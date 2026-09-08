@@ -42,6 +42,7 @@
           venue.contactPhone,
           venue.contactEmail,
           venue.website,
+          venue.mapUrl,
           venue.loadIn,
           venue.technical,
           venue.notes
@@ -78,15 +79,19 @@
     }
 
     list.innerHTML = data.map(venue => `
-      <article class="venue-row">
+      <article class="venue-row${venue.closedDown ? " closed-down" : ""}">
         <div class="venue-row-main">
-          <strong>${escapeHTML(venue.name || "Untitled Venue")}</strong>
+          <div class="venue-name-line">
+            <strong>${escapeHTML(venue.name || "Untitled Venue")}</strong>
+            ${venue.closedDown ? '<span class="venue-closed-badge">CLOSED DOWN</span>' : ''}
+          </div>
           <span>${escapeHTML(venue.locality || venue.notes || "No locality / notes")}</span>
         </div>
 
         <div class="venue-row-address">
           <strong>${escapeHTML(venue.address || "No address")}</strong>
-          <span>${escapeHTML(venue.website || "No website / map URL")}</span>
+          <span>${escapeHTML(venue.website || "No website URL")}</span>
+          <span>${escapeHTML(venue.mapUrl || "No map URL")}</span>
         </div>
 
         <div class="venue-row-contact">
@@ -100,7 +105,7 @@
         </div>
 
         <div class="venue-row-actions">
-          <button type="button" data-edit-venue="${escapeHTML(venue.id)}" title="Edit venue">✎</button>
+          <button type="button" class="edit" data-edit-venue="${escapeHTML(venue.id)}" title="Edit venue">✎ <span>EDIT</span></button>
           <button type="button" class="delete" data-delete-venue="${escapeHTML(venue.id)}" title="Delete venue">🗑</button>
         </div>
       </article>
@@ -115,6 +120,8 @@
     $("venueAddressInput").value = "";
     $("venueLocalityInput").value = "";
     $("venueWebsiteInput").value = "";
+    $("venueMapInput").value = "";
+    $("venueClosedInput").checked = false;
     $("venueContactNameInput").value = "";
     $("venueContactPhoneInput").value = "";
     $("venueContactEmailInput").value = "";
@@ -146,6 +153,8 @@
     $("venueAddressInput").value = venue.address || "";
     $("venueLocalityInput").value = venue.locality || "";
     $("venueWebsiteInput").value = venue.website || "";
+    $("venueMapInput").value = venue.mapUrl || "";
+    $("venueClosedInput").checked = venue.closedDown === true;
     $("venueContactNameInput").value = venue.contactName || "";
     $("venueContactPhoneInput").value = venue.contactPhone || "";
     $("venueContactEmailInput").value = venue.contactEmail || "";
@@ -187,6 +196,11 @@
       address: $("venueAddressInput").value.trim(),
       locality: $("venueLocalityInput").value.trim(),
       website: $("venueWebsiteInput").value.trim(),
+      mapUrl: $("venueMapInput").value.trim(),
+      closedDown: $("venueClosedInput").checked === true,
+      closedDownAt: $("venueClosedInput").checked === true
+        ? (firebase.firestore.FieldValue.serverTimestamp())
+        : null,
       contactName: $("venueContactNameInput").value.trim(),
       contactPhone: $("venueContactPhoneInput").value.trim(),
       contactEmail: $("venueContactEmailInput").value.trim(),
