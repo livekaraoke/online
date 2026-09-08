@@ -373,3 +373,25 @@
 @media(max-width:620px){
   .hero-gig.live-now{grid-template-columns:82px minmax(0,1fr) 22px!important}
 }
+
+
+/* v11 — layout corrections and enquiry success state */
+.booking-intro{text-align:left}
+.booking-intro .section-heading.left{justify-content:flex-start}
+.booking-intro .section-heading.left:before{display:none}
+.booking-open-btn{display:block;margin-left:auto;margin-right:auto}
+.about{display:block;padding:55px 0 32px}
+.about-heading{width:100%;max-width:none;margin-bottom:24px}
+.about-grid{display:grid;grid-template-columns:38% minmax(0,1fr);gap:40px;align-items:center;width:100%}
+.about-grid img{width:100%;height:310px;object-fit:cover;filter:grayscale(1) contrast(1.08);border-radius:3px;mask-image:linear-gradient(90deg,#000 78%,transparent)}
+.about-copy h2{font-size:27px;margin:4px 0 12px}
+.about-copy p{color:#c9d0d2;line-height:1.7;margin:0;max-width:none}
+.signature{display:none!important}
+.social-icon-link{display:inline-grid!important;place-items:center}
+.social-svg{width:22px;height:22px;display:block}
+.booking-success{text-align:center;padding:34px 10px 18px}
+.booking-success h2{font-size:30px;margin:8px 0 10px}
+.booking-success p{color:#c8d2d5;line-height:1.6;margin:0 auto 22px;max-width:520px}
+.booking-success-close{min-width:180px;padding:0 24px}
+@media(max-width:850px){.about-grid{grid-template-columns:1fr}.about-grid img{height:260px;mask-image:linear-gradient(#000 80%,transparent)}}
+@media(max-width:620px){.about{padding-top:35px}.about-grid{gap:18px}.about-copy h2{font-size:22px}.about-copy p{font-size:14px}}

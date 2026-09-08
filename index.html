@@ -589,6 +589,11 @@
       <button id="lkEnquirySubmit" class="main-button booking-enquiry-submit" type="submit">SEND ENQUIRY</button>
       <p id="lkEnquiryStatus" class="booking-enquiry-status" aria-live="polite"></p>
     </form>
+    <div id="liveKaraokeEnquirySuccess" class="booking-enquiry-success" hidden>
+      <h2>Thank you!</h2>
+      <p id="liveKaraokeEnquirySuccessMessage">Your enquiry has been sent successfully.</p>
+      <button id="liveKaraokeEnquirySuccessClose" class="main-button" type="button">CLOSE</button>
+    </div>
   </dialog>
 
   <!-- COMMUNITY -->
@@ -694,12 +699,19 @@ function smoothScroll(e) {
   const status = document.getElementById("lkEnquiryStatus");
   if (!dialog || !form || !openBtn) return;
 
+  const success = document.getElementById("liveKaraokeEnquirySuccess");
+  const successMessage = document.getElementById("liveKaraokeEnquirySuccessMessage");
+  const successClose = document.getElementById("liveKaraokeEnquirySuccessClose");
+
   openBtn.addEventListener("click", () => {
     status.textContent = "";
     status.className = "booking-enquiry-status";
+    form.hidden = false;
+    success.hidden = true;
     dialog.showModal();
   });
   closeBtn.addEventListener("click", () => dialog.close());
+  successClose.addEventListener("click", () => dialog.close());
   dialog.addEventListener("click", event => { if (event.target === dialog) dialog.close(); });
 
   form.addEventListener("submit", async event => {
@@ -733,7 +745,10 @@ function smoothScroll(e) {
       });
       form.reset();
       status.className = "booking-enquiry-status success";
-      status.textContent = `Thanks ${name}! Your enquiry has been sent.`;
+      status.textContent = "";
+      form.hidden = true;
+      successMessage.textContent = `Thanks ${name}! Your enquiry has been sent successfully.`;
+      success.hidden = false;
     } catch (error) {
       console.error("Could not send Live Karaoke booking enquiry", error);
       status.className = "booking-enquiry-status error";

@@ -475,7 +475,10 @@
       });
       form.reset();
       status.className="booking-status success";
-      status.textContent=`Thanks ${name}! Your enquiry has been sent.`;
+      status.textContent="";
+      form.hidden=true;
+      $("bookingSuccessMessage").textContent=`Thanks ${name}! Your enquiry has been sent successfully.`;
+      $("bookingSuccess").hidden=false;
     }catch(error){
       console.error("Could not send booking enquiry",error);
       status.className="booking-status error";
@@ -509,6 +512,8 @@
   $("openBookingDialogBtn").addEventListener("click",()=>{
     $("bookingStatus").className="booking-status";
     $("bookingStatus").textContent="";
+    $("bookingForm").hidden=false;
+    $("bookingSuccess").hidden=true;
     $("bookingDialog").showModal();
   });
   $("bookingForm").addEventListener("submit",submitBookingEnquiry);

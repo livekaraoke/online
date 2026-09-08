@@ -119,7 +119,7 @@
         <h2>BOOK / ENQUIRE</h2>
         <span class="heading-rule"></span>
       </div>
-      <p>Bring ROXANNA to your venue, corporate event, wedding, private party or special occasion.</p>
+      <p>Bring Roxanna to your venue, corporate event, wedding, private party or special occasion.</p>
       <button class="primary-btn booking-enquiry-open" id="roxannaEnquiryOpen" type="button">BOOK / ENQUIRE</button>
     </section>
 
@@ -216,6 +216,11 @@
         <button class="primary-btn" id="rxEnquirySubmit" type="submit">SEND ENQUIRY</button>
         <p class="form-message" id="rxEnquiryStatus" aria-live="polite"></p>
       </form>
+      <div id="roxannaEnquirySuccess" class="roxanna-enquiry-success" hidden>
+        <h2>Thank you!</h2>
+        <p id="roxannaEnquirySuccessMessage">Your enquiry has been sent successfully.</p>
+        <button class="primary-btn" type="button" data-close="roxannaEnquiryModal">CLOSE</button>
+      </div>
     </div>
   </div>
 
@@ -241,6 +246,8 @@
       openBtn.addEventListener("click", () => {
         $("rxEnquiryStatus").textContent = "";
         $("rxEnquiryStatus").className = "form-message";
+        form.hidden = false;
+        $("roxannaEnquirySuccess").hidden = true;
         modal.classList.remove("hidden");
         document.body.classList.add("modal-open");
       });
@@ -278,7 +285,10 @@
           });
           form.reset();
           status.className = "form-message success";
-          status.textContent = `Thanks ${name}! Your enquiry has been sent.`;
+          status.textContent = "";
+          form.hidden = true;
+          $("roxannaEnquirySuccessMessage").textContent = `Thanks ${name}! Your enquiry has been sent successfully.`;
+          $("roxannaEnquirySuccess").hidden = false;
         } catch (error) {
           console.error("Could not send Roxanna booking enquiry", error);
           status.className = "form-message error";

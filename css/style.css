@@ -1516,3 +1516,11 @@ width: 100%;
 .booking-enquiry-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.booking-enquiry-grid label{display:grid;gap:6px;text-align:left}.booking-enquiry-grid label.wide{grid-column:1/-1}.booking-enquiry-grid label>span{font-size:11px;font-weight:800;letter-spacing:.08em;color:#eee}.booking-enquiry-grid input,.booking-enquiry-grid select,.booking-enquiry-grid textarea{width:100%;border:1px solid #5d3636;border-radius:6px;background:#090707;color:#fff;padding:12px;outline:none}.booking-enquiry-grid input:focus,.booking-enquiry-grid select:focus,.booking-enquiry-grid textarea:focus{border-color:#ff3b3b}.booking-enquiry-grid textarea{resize:vertical;min-height:120px}
 .booking-enquiry-submit{display:block;margin:20px auto 0;cursor:pointer}.booking-enquiry-submit:disabled{opacity:.45;cursor:not-allowed}.booking-enquiry-status{text-align:center;min-height:22px;margin:12px 0 0;color:#ddd}.booking-enquiry-status.success{color:#79e7a0}.booking-enquiry-status.error{color:#ff8d8d}
 @media(max-width:650px){.booking-enquiry-dialog{width:calc(100% - 12px);padding:20px 14px}.booking-enquiry-grid{grid-template-columns:1fr}.booking-enquiry-grid label.wide{grid-column:auto}.booking-enquiry-submit{width:100%}}
+
+
+/* v11 — keep booking dialog centered and show clean success state */
+.booking-enquiry-dialog{position:fixed!important;inset:0!important;margin:auto!important;top:0!important;left:0!important;right:0!important;bottom:0!important}
+.booking-enquiry-success{text-align:center;padding:36px 12px 18px}
+.booking-enquiry-success h2{margin:0 0 12px;font-size:30px}
+.booking-enquiry-success p{color:#ddd;line-height:1.6;margin:0 auto 22px;max-width:520px}
+.booking-enquiry-success .main-button{display:inline-block;min-width:180px;cursor:pointer}

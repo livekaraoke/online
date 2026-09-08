@@ -210,3 +210,13 @@ a{color:inherit}
 /* Booking enquiry section */
 .booking-enquiry-block{text-align:center}.booking-enquiry-block .section-heading{text-align:left}.booking-enquiry-block>p{max-width:650px;margin:0 auto;color:var(--muted);line-height:1.6}.booking-enquiry-open{width:auto;min-width:220px;padding-left:24px;padding-right:24px;margin:18px auto 0}.booking-enquiry-card{width:min(100%,820px)}.roxanna-enquiry-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 14px}.roxanna-enquiry-grid label{display:block}.roxanna-enquiry-grid label.wide{grid-column:1/-1}.roxanna-enquiry-grid .field-label{margin-top:0}.roxanna-enquiry-grid textarea.field-input{resize:vertical;min-height:120px}.roxanna-enquiry-form>.primary-btn{max-width:320px;margin-left:auto;margin-right:auto;display:block}
 @media(max-width:620px){.roxanna-enquiry-grid{grid-template-columns:1fr}.roxanna-enquiry-grid label.wide{grid-column:auto}.booking-enquiry-open{width:100%}}
+
+
+/* v11 — enquiry alignment and success state */
+.booking-enquiry-block{text-align:left}
+.booking-enquiry-block>p{max-width:650px;margin:0;color:var(--muted);line-height:1.6;text-align:left}
+.booking-enquiry-open{display:block;margin:18px auto 0}
+.roxanna-enquiry-success{text-align:center;padding:34px 10px 12px}
+.roxanna-enquiry-success h2{margin:0 0 12px}
+.roxanna-enquiry-success p{color:var(--muted);line-height:1.6;margin:0 auto 22px;max-width:520px}
+.roxanna-enquiry-success .primary-btn{width:auto;min-width:180px;margin:0 auto}
