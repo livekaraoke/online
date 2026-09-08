@@ -147,3 +147,24 @@
 /* Enquiries pending-count badge */
 .suite-nav-count.enquiry-count{min-width:22px;height:22px;padding:0 6px;border:1px solid #ff4954;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;background:#a70f1b;color:#fff;font-size:9px;font-weight:950;box-shadow:0 0 12px rgba(255,55,70,.22)}
 .suite-nav-count.enquiry-count.hidden{display:none}
+
+/* v12 sidebar structure + typography consistency */
+.admin-sidebar.suite-sidebar {
+  font-family: inherit;
+}
+.suite-brand-title,
+.suite-brand-subtitle,
+.suite-nav-section-title,
+.suite-nav-label,
+.suite-user-copy,
+.suite-sidebar-footer {
+  font-family: inherit !important;
+}
+.suite-brand-title { font-size: 22px; font-weight: 950; letter-spacing: .06em; color: #fff; }
+.suite-brand-subtitle { margin-top: 2px; color: #45c8f3; font-size: 18px; font-weight: 950; letter-spacing: .28em; }
+.suite-nav-section-title.billy-title { color: #45c8f3; }
+.suite-nav-section-title.roxanna-title { color: #e56acb; }
+.suite-nav-count.enquiry-count { background:#e21d2d; color:#fff; box-shadow:0 0 10px rgba(226,29,45,.28); }
+.suite-user-card .avatar img { display:none; width:100%; height:100%; object-fit:cover; }
+.suite-user-card .avatar span { display:grid; }
+/* Database Manager is now a normal structured nav row, so it inherits exactly the same font as every other link. */
