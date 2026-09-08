@@ -22,7 +22,13 @@
     const d = new Date(`${e.date}T${e.startTime || "00:00"}:00`);
     return Number.isNaN(d.getTime()) ? null : d;
   }
-  function eventIsUpcoming(e){return e && e.status !== "Cancelled" && e.sessionStatus !== "ended" && !e.completedAt;}
+  function eventIsUpcoming(e){
+    if(!e || e.status === "Cancelled" || e.completedAt) return false;
+    const ss=String(e.sessionStatus||"").toLowerCase();
+    if(ss === "active" || ss === "ended") return false;
+    if(activeSessionId && (e.linkedSessionId===activeSessionId || e.id===controlData.eventId)) return false;
+    return true;
+  }
   function eventSort(a,b){return (dateFromEvent(a)?.getTime() || 9e15) - (dateFromEvent(b)?.getTime() || 9e15);}
   function formatDateParts(e){
     const d = dateFromEvent(e);
@@ -51,8 +57,8 @@
       const venue=controlData.venue || activeSession?.venue || controlData.eventSnapshot?.venue || 'Live Performance';
       const location=controlData.address || activeSession?.address || controlData.eventSnapshot?.address || '';
       const type=controlData.sessionType || controlData.type || activeSession?.sessionType || activeSession?.type || 'Performance';
-      hero.innerHTML=`<div class="hero-gig live-now"><div class="date"><small>LIVE</small><strong>●</strong><small>NOW</small></div><div class="event-copy"><b>${escapeHTML(venue)}</b>${location?`<span>${escapeHTML(location)}</span>`:''}<em class="type-pill type-${escapeHTML(typeClass(type))}">${escapeHTML(type)}</em><span class="live-now-badge">LIVE NOW</span></div><div class="event-time">LIVE</div><span class="chev">›</span></div>`;
-      watch.textContent='WATCH LIVE →';
+      hero.innerHTML=`<div class="hero-gig live-now"><div class="live-label">LIVE NOW</div><div class="event-copy"><b>${escapeHTML(venue)}</b>${location?`<span>${escapeHTML(location)}</span>`:''}<em class="type-pill type-${escapeHTML(typeClass(type))}">${escapeHTML(type)}</em></div></div>`;
+      watch.textContent='REQUEST A SONG →';
       watch.classList.add('is-live');
       watch.setAttribute('href','#requestSongSection');
       return;
@@ -61,13 +67,13 @@
     hero.innerHTML = upcoming.length ? eventCard(upcoming[0],true) : `<div class="empty-inline">No upcoming gig published.</div>`;
     watch.textContent='WATCH LIVE →';
     watch.classList.remove('is-live');
-    watch.setAttribute('href','#watch');
+    watch.setAttribute('href','#gigs');
   }
 
   function renderEvents(){
     const upcoming=latestEvents.filter(eventIsUpcoming).sort(eventSort);
     renderHeroGig();
-    $("nextGigs").innerHTML = upcoming.slice(0,5).map(e=>eventCard(e,false)).join("") || `<div class="empty-box">No upcoming gigs published.</div>`;
+    $("nextGigs").innerHTML = upcoming.slice(0,3).map(e=>eventCard(e,false)).join("") || `<div class="empty-box">No upcoming gigs published.</div>`;
   }
 
   function listenEvents(){
@@ -106,10 +112,11 @@
     $("sessionVenue").textContent=active ? (controlData.venue || activeSession?.venue || controlData.eventSnapshot?.venue || "Live") : "—";
     $("sessionType").textContent=active ? (controlData.sessionType || controlData.type || activeSession?.sessionType || activeSession?.type || "Performance") : "—";
     $("progressBar").style.width="0%"; startElapsed(playing);
-    if(!active){$("liveStateLabel").textContent="NOT LIVE";$("currentSongTitle").textContent="No active session";$("currentSongArtist").textContent="Check the upcoming gigs below.";$("stateIcon").textContent="♪";return;}
-    if(breakOpen){$("liveStateLabel").textContent="ON BREAK";$("currentSongTitle").textContent="We’ll be back shortly";$("currentSongArtist").textContent="Requests remain open during the break.";$("stateIcon").textContent="☕";return;}
-    if(playing){$("liveStateLabel").textContent="NOW PLAYING";$("currentSongTitle").textContent=playing.songTitle||playing.title||"Current song";$("currentSongArtist").textContent=playing.artist||playing.songArtist||"";$("stateIcon").textContent="Ⅱ";return;}
-    $("liveStateLabel").textContent="LIVE NOW";$("currentSongTitle").textContent="Between songs";$("currentSongArtist").textContent="The next performance will start shortly.";$("stateIcon").textContent="♪";
+    const label=$("liveStateLabel"); label.classList.remove("is-playing");
+    if(!active){label.textContent="NOT LIVE";$("currentSongTitle").textContent="No active session";$("currentSongArtist").textContent="Check the upcoming gigs below.";$("stateIcon").textContent="♪";return;}
+    if(breakOpen){label.textContent="ON BREAK";$("currentSongTitle").textContent="We’ll be back shortly";$("currentSongArtist").textContent="Requests remain open during the break.";$("stateIcon").textContent="☕";return;}
+    if(playing){label.textContent="NOW PLAYING";label.classList.add("is-playing");$("currentSongTitle").textContent=playing.songTitle||playing.title||"Current song";$("currentSongArtist").textContent=playing.artist||playing.songArtist||"";$("stateIcon").innerHTML='<span class="pause-bars"><i></i><i></i></span>';return;}
+    label.textContent="LIVE NOW";$("currentSongTitle").textContent="Between songs";$("currentSongArtist").textContent="The next performance will start shortly.";$("stateIcon").textContent="♪";
   }
 
   function attachSessionDoc(id){
@@ -199,7 +206,6 @@
     $("songSearch").value="";
     $("requestNotice").textContent="Choose a song. Tap +, then tap SEND REQUEST on that song.";
     renderSongResults();
-    setTimeout(()=>$("songSearch").focus(),30);
   }
 
   async function enterSongRequestStep(name){
@@ -329,7 +335,7 @@
       $("requestNote").value="";
       $("requestBrowser").hidden=true;
       $("requestSuccess").hidden=false;
-      $("requestSuccessText").textContent=`${song.title||"Your song"} has been sent and is awaiting approval.`;
+      $("requestSuccessText").textContent=`Thank you ${name}! ${song.title||"Your song"} has been sent and is awaiting approval.`;
       await renderMyRequests();
     }catch(error){
       console.error(error);
@@ -352,10 +358,31 @@
     $("requesterNameEdit").hidden=true;
   }
 
-  function showEvent(id){const e=latestEvents.find(x=>x.id===id);if(!e)return;const d=dateFromEvent(e);$("eventDialogBody").innerHTML=`<span class="eyebrow">${escapeHTML(e.type||"EVENT")}</span><h2>${escapeHTML(e.name||e.venue||"Upcoming Gig")}</h2><p><strong>${escapeHTML(e.venue||"")}</strong></p><p>${escapeHTML(e.address||"")}</p><p>${d?escapeHTML(d.toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long",year:"numeric"})):""} • ${escapeHTML(formatTime(e))}</p>${e.notes?`<p>${escapeHTML(e.notes)}</p>`:""}`;$("eventDialog").showModal();}
+  function showEvent(id){
+    const e=latestEvents.find(x=>x.id===id); if(!e)return;
+    const d=dateFromEvent(e);
+    const type=e.type||"Event";
+    const details=[
+      e.address||e.location||"",
+      d?d.toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long",year:"numeric"}):"",
+      formatTime(e),
+      e.endTime?`Ends ${e.endTime}`:""
+    ].filter(Boolean);
+    $("eventDialogBody").innerHTML=`<span class="eyebrow">${escapeHTML(type)}</span><h2>${escapeHTML(e.name||e.venue||"Upcoming Gig")}</h2><p><strong>${escapeHTML(e.venue||"")}</strong></p><p>${escapeHTML(details.join(" • "))}</p>${e.contactName?`<p>Contact: ${escapeHTML(e.contactName)}</p>`:""}${e.notes?`<p>${escapeHTML(e.notes)}</p>`:""}`;
+    $("eventDialog").showModal();
+  }
+  function showAllGigs(){
+    const upcoming=latestEvents.filter(eventIsUpcoming).sort(eventSort);
+    $("allGigsList").innerHTML=upcoming.length?upcoming.map(e=>eventCard(e,false)).join(""):`<div class="empty-box">No upcoming gigs published.</div>`;
+    $("allGigsDialog").showModal();
+  }
 
   document.addEventListener("click",e=>{
-    const eventBtn=e.target.closest("[data-event-id]"); if(eventBtn)showEvent(eventBtn.dataset.eventId);
+    const eventBtn=e.target.closest("[data-event-id]");
+    if(eventBtn){
+      if($("allGigsDialog")?.open) $("allGigsDialog").close();
+      showEvent(eventBtn.dataset.eventId);
+    }
     const song=e.target.closest("[data-song-id]"); if(song)selectRequestSong(song.dataset.songId);
     const close=e.target.closest("[data-close]"); if(close)$(close.dataset.close)?.close();
   });
@@ -367,6 +394,7 @@
   $("cancelRequesterNameBtn").addEventListener("click",()=>{$("requesterNameEdit").hidden=true;});
   $("editSingerName").addEventListener("keydown",e=>{if(e.key==="Enter")saveRequesterName();});
   $("requestAnotherBtn").addEventListener("click",showRequestBrowser);
+  $("viewAllGigsBtn").addEventListener("click",showAllGigs);
   $("requestSongBtn").addEventListener("click",openRequestDialog); $("drawerRequest").addEventListener("click",openRequestDialog);
   $("shareBtn").addEventListener("click",async()=>{try{if(navigator.share)await navigator.share({title:document.title,url:location.href});else{await navigator.clipboard.writeText(location.href);alert("Link copied.");}}catch{}});
   $("menuBtn").addEventListener("click",()=>{$("drawer").classList.add("open");$("scrim").classList.add("show");});
