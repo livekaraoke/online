@@ -377,12 +377,24 @@
     const address=e.address||venueDoc.address||"";
     const locality=e.venueLocality||e.locality||venueDoc.locality||"";
     const website=e.venueWebsite||e.website||venueDoc.website||"";
+    const mapUrl=e.venueMapUrl||e.mapUrl||venueDoc.mapUrl||"";
     const d=dateFromEvent(e);
-    const dateText=d?d.toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long",year:"numeric"}):"TBC";
-    const timeText=formatTime(e);
-    const websiteHtml=website?`<a class="event-detail-link" href="${escapeHTML(website)}" target="_blank" rel="noopener noreferrer">${escapeHTML(website)}</a>`:`<span class="event-detail-muted">Not provided</span>`;
-    const notes=e.notes?escapeHTML(e.notes):`<span class="event-detail-muted">No notes</span>`;
-    $("eventDialogBody").innerHTML=`<span class="eyebrow">GIG DETAILS</span><h2>${escapeHTML(venueName)}</h2><dl class="event-detail-list"><div><dt>VENUE NAME</dt><dd>${escapeHTML(venueName)}</dd></div><div><dt>ADDRESS</dt><dd>${escapeHTML(address||"Not provided")}</dd></div><div><dt>LOCALITY</dt><dd>${escapeHTML(locality||"Not provided")}</dd></div><div><dt>DATE & START TIME</dt><dd>${escapeHTML(dateText)} · ${escapeHTML(timeText)}</dd></div><div><dt>WEBSITE URL</dt><dd>${websiteHtml}</dd></div><div><dt>GIG NOTES</dt><dd>${notes}</dd></div></dl>`;
+    const dateText=d?d.toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long",year:"numeric"}):"";
+    const timeText=(e.startTime||e.scheduledStartAt)?formatTime(e):"";
+    const safeUrl=value=>{
+      const raw=String(value||"").trim();
+      if(!raw)return "";
+      return /^https?:\/\//i.test(raw)?raw:`https://${raw}`;
+    };
+    const rows=[];
+    if(venueName) rows.push(`<div><dt>VENUE NAME</dt><dd>${escapeHTML(venueName)}</dd></div>`);
+    if(address) rows.push(`<div><dt>ADDRESS</dt><dd>${escapeHTML(address)}</dd></div>`);
+    if(locality) rows.push(`<div><dt>LOCALITY</dt><dd>${escapeHTML(locality)}</dd></div>`);
+    if(dateText||timeText) rows.push(`<div><dt>DATE & START TIME</dt><dd>${escapeHTML([dateText,timeText].filter(Boolean).join(" · "))}</dd></div>`);
+    if(mapUrl){ const href=safeUrl(mapUrl); rows.push(`<div><dt>MAP</dt><dd><a class="event-detail-link" href="${escapeHTML(href)}" target="_blank" rel="noopener noreferrer">${escapeHTML(mapUrl)}</a></dd></div>`); }
+    if(website){ const href=safeUrl(website); rows.push(`<div><dt>WEBSITE</dt><dd><a class="event-detail-link" href="${escapeHTML(href)}" target="_blank" rel="noopener noreferrer">${escapeHTML(website)}</a></dd></div>`); }
+    if(e.notes) rows.push(`<div><dt>GIG NOTES</dt><dd>${escapeHTML(e.notes)}</dd></div>`);
+    $("eventDialogBody").innerHTML=`<span class="eyebrow">GIG DETAILS</span><h2>${escapeHTML(venueName)}</h2><dl class="event-detail-list">${rows.join("")}</dl>`;
     $("eventDialog").showModal();
   }
   function showAllGigs(){
