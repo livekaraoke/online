@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Enquiries • Live Karaoke Admin</title>
+  <link rel="stylesheet" href="css/admin.css" />
+  <link rel="stylesheet" href="css/sidebar.css" />
+  <link rel="stylesheet" href="css/sidebar-suite.css" />
+  <link rel="stylesheet" href="css/enquiries.css" />
+</head>
+<body class="admin-body enquiries-page">
+  <div id="enquiriesAuthGate" class="enquiries-auth-gate">
+    <div class="enquiries-auth-card"><div class="enquiries-spinner"></div><strong>Checking Admin Session…</strong><small>Your existing Admin login is reused.</small></div>
+  </div>
+
+  <div id="enquiriesApp" class="admin-shell" hidden>
+    <div id="sidebarContainer"></div>
+    <main class="admin-main enquiries-main">
+      <header class="enquiries-topbar">
+        <div>
+          <p class="enquiries-eyebrow">LIVE KARAOKE ADMIN</p>
+          <h1>Enquiries</h1>
+          <p class="enquiries-subtitle">Booking enquiries submitted from public websites.</p>
+        </div>
+        <button id="refreshEnquiriesBtn" class="enquiries-btn ghost" type="button">↻ REFRESH</button>
+      </header>
+
+      <section class="enquiries-summary-grid">
+        <article><span>PENDING</span><strong id="pendingEnquiryCount">0</strong><small>Need attention</small></article>
+        <article><span>COMPLETED</span><strong id="completedEnquiryCount">0</strong><small>Handled enquiries</small></article>
+        <article><span>TOTAL</span><strong id="totalEnquiryCount">0</strong><small>All enquiries</small></article>
+      </section>
+
+      <section class="enquiries-panel">
+        <div class="enquiries-toolbar">
+          <label><span>SEARCH</span><input id="enquirySearch" type="search" placeholder="Name, email, event, venue, message…" autocomplete="off"></label>
+          <label><span>STATUS</span><select id="enquiryStatusFilter"><option value="pending">Pending</option><option value="">All</option><option value="completed">Completed</option></select></label>
+        </div>
+        <div class="enquiries-list-heading"><div><h2>Booking Enquiries</h2><span id="enquiriesResultCount">0 enquiries</span></div><small>Newest first.</small></div>
+        <div id="enquiriesList" class="enquiries-list"><div class="enquiries-empty">Loading enquiries…</div></div>
+      </section>
+    </main>
+  </div>
+
+  <script src="../firebase-projects.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="js/firebase.js"></script>
+  <script src="js/sidebar.js"></script>
+  <script src="js/profile.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/enquiries.js"></script>
+</body>
+</html>
