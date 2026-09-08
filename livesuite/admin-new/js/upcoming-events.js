@@ -1,1035 +1,219 @@
-(() => {
-  "use strict";
-
-  const COLLECTION = "upcomingEvents";
-  const VENUES_COLLECTION = "venues";
-  const DEFAULT_TYPE_OPTIONS = [
-    "Live Karaoke",
-    "Roxanna",
-    "Solo",
-    "Texanna",
-    "Other"
-  ];
-
-  const DEFAULT_TYPE_COLORS = {
-    "Live Karaoke": "#36a9e1",
-    "Roxanna": "#d96ce0",
-    "Solo": "#53c985",
-    "Texanna": "#f08a45",
-    "Other": "#a5adb3"
-  };
-
-  let typeOptions = [...DEFAULT_TYPE_OPTIONS];
-  let typeColors = { ...DEFAULT_TYPE_COLORS };
-  const STATUS_OPTIONS = ["Confirmed", "Tentative", "Cancelled"];
-
-  const $ = id => document.getElementById(id);
-
-  const db =
-    window.db ||
-    window.LK?.db ||
-    (window.firebase?.firestore ? firebase.firestore() : null);
-
-  const EVENT_TYPES_DOC = db ? db.collection("karaokeControl").doc("eventTypes") : null;
-
-  let events = [];
-  let venues = [];
-  let unsubscribeEvents = null;
-  let eventNameManuallyEdited = false;
-  let lastAutoEventName = "";
-  let unsubscribeVenues = null;
-  let pendingDeleteId = "";
-
-  function escapeHTML(value) {
-    return String(value || "")
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;");
-  }
-
-  function slugClass(value) {
-    return String(value || "")
-      .trim()
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-|-$/g, "");
-  }
-
-  function localDateKey(date = new Date()) {
-    const y = date.getFullYear();
-    const m = String(date.getMonth() + 1).padStart(2, "0");
-    const d = String(date.getDate()).padStart(2, "0");
-    return `${y}-${m}-${d}`;
-  }
-
-  function eventSortValue(event) {
-    return `${event.date || "9999-12-31"}T${event.startTime || "23:59"}`;
-  }
-
-  function isPast(event) {
-    if (!event.date) return false;
-    const now = new Date();
-    const endTime = event.endTime || event.startTime || "23:59";
-    const end = new Date(`${event.date}T${endTime}:00`);
-    return end.getTime() < now.getTime();
-  }
-
-
-  function eventStillUpcoming(event) {
-    // Scheduled time passing does NOT remove an event from Upcoming.
-    // Once an associated Performance Session becomes active, it is no longer Upcoming.
-    if (!event) return false;
-    if (event.status === "Cancelled") return false;
-    const sessionStatus = String(event.sessionStatus || "").toLowerCase();
-    if (sessionStatus === "active" || sessionStatus === "ended") return false;
-    if (event.completedAt) return false;
-    return true;
-  }
-
-  function eventIsCompleted(event) {
-    return !!event && (
-      event.sessionStatus === "ended" ||
-      !!event.completedAt
-    );
-  }
-
-  function formatDate(dateString) {
-    if (!dateString) return { day: "—", month: "NO DATE", full: "No date" };
-
-    const date = new Date(`${dateString}T12:00:00`);
-    if (Number.isNaN(date.getTime())) {
-      return { day: "—", month: dateString, full: dateString };
-    }
-
-    return {
-      day: String(date.getDate()).padStart(2, "0"),
-      month: date.toLocaleDateString(undefined, { month: "short", year: "numeric" }).toUpperCase(),
-      full: date.toLocaleDateString(undefined, {
-        weekday: "short",
-        day: "numeric",
-        month: "short",
-        year: "numeric"
-      })
-    };
-  }
-
-  function formatTimeRange(event) {
-    const start = event.startTime || "";
-    const end = event.endTime || "";
-    if (!start && !end) return "Time TBC";
-    if (start && end) return `${start} – ${end}`;
-    return start || end;
-  }
-
-
-  function formatEventLength(event) {
-    if (!event.startTime || !event.endTime) return "Length TBC";
-
-    const [sh, sm] = event.startTime.split(":").map(Number);
-    const [eh, em] = event.endTime.split(":").map(Number);
-    if (![sh,sm,eh,em].every(Number.isFinite)) return "Length TBC";
-
-    let minutes = (eh * 60 + em) - (sh * 60 + sm);
-    if (minutes < 0) minutes += 24 * 60;
-
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-
-    if (hours && mins) return `${hours}h ${mins}m`;
-    if (hours) return `${hours}h`;
-    return `${mins}m`;
-  }
-
-  function getFilteredEvents() {
-    const search = String($("eventsSearch")?.value || "").trim().toLowerCase();
-    const type = $("eventsTypeFilter")?.value || "";
-    const status = $("eventsStatusFilter")?.value || "";
-    const range = $("eventsRangeFilter")?.value || "upcoming";
-
-    return events
-      .filter(event => {
-        if (type && event.type !== type) return false;
-        if (status && event.status !== status) return false;
-
-        const upcoming = eventStillUpcoming(event);
-        const completed = eventIsCompleted(event);
-
-        if (range === "upcoming" && !upcoming) return false;
-        if (range === "past" && !completed) return false;
-
-        if (search) {
-          const haystack = [
-            event.name,
-            event.venue,
-            event.address,
-            event.type,
-            event.status,
-            event.contactName,
-            event.contact,
-            event.notes
-          ].join(" ").toLowerCase();
-
-          if (!haystack.includes(search)) return false;
-        }
-
-        return true;
-      })
-      .sort((a, b) => {
-        const av = eventSortValue(a);
-        const bv = eventSortValue(b);
-
-        return range === "past"
-          ? bv.localeCompare(av)
-          : av.localeCompare(bv);
-      });
-  }
-
-  function typeColor(type) {
-    return typeColors[type] || DEFAULT_TYPE_COLORS[type] || "#8ea3ad";
-  }
-
-  function hexToRgba(hex, alpha = 0.14) {
-    const clean = String(hex || "").replace("#","");
-    if (!/^[0-9a-f]{6}$/i.test(clean)) return `rgba(142,163,173,${alpha})`;
-    const r = parseInt(clean.slice(0,2),16);
-    const g = parseInt(clean.slice(2,4),16);
-    const b = parseInt(clean.slice(4,6),16);
-    return `rgba(${r},${g},${b},${alpha})`;
-  }
-
-  function renderTypeSummaryCards(upcomingEvents) {
-    const container = $("eventTypeSummaryCards");
-    if (!container) return;
-
-    const configuredTypes = Array.isArray(typeOptions) && typeOptions.length
-      ? typeOptions
-      : DEFAULT_TYPE_OPTIONS;
-
-    container.innerHTML = configuredTypes.map(type => {
-      const count = upcomingEvents.filter(event => event.type === type).length;
-      const cssType = slugClass(type);
-
-      return `
-        <article
-          class="events-summary-card event-type-summary-card type-card-${escapeHTML(cssType)}"
-          data-summary-type="${escapeHTML(type)}"
-          style="--event-type-color:${escapeHTML(typeColor(type))};--event-type-bg:${escapeHTML(hexToRgba(typeColor(type), .12))}"
-          title="Show ${escapeHTML(type)} events">
-          <span>${escapeHTML(String(type).toUpperCase())}</span>
-          <strong>${count}</strong>
-          <small>Upcoming booking${count === 1 ? "" : "s"}</small>
-        </article>
-      `;
-    }).join("");
-  }
-
-  function renderSummary() {
-    const now = new Date();
-    const today = localDateKey(now);
-    const monthPrefix = today.slice(0, 7);
-
-    const upcoming = events
-      .filter(eventStillUpcoming)
-      .sort((a, b) => eventSortValue(a).localeCompare(eventSortValue(b)));
-
-    const next = upcoming[0] || null;
-
-    $("upcomingCount").textContent = String(upcoming.length);
-    $("thisMonthCount").textContent = String(
-      events.filter(event => String(event.date || "").startsWith(monthPrefix)).length
-    );
-    // Build one card for every configured event/session type.
-    // This automatically includes Live Karaoke, Roxanna, Solo, Texanna,
-    // Other, and any future types added through the ⚙ TYPES manager.
-    renderTypeSummaryCards(upcoming);
-
-    if (next) {
-      const date = formatDate(next.date);
-      $("nextGigDate").textContent = `${date.day} ${date.month.split(" ")[0]}`;
-      $("nextGigName").textContent = `${next.name || "Untitled Event"}${next.venue ? " • " + next.venue : ""}`;
-    } else {
-      $("nextGigDate").textContent = "—";
-      $("nextGigName").textContent = "Nothing scheduled";
-    }
-  }
-
-  function renderEvents() {
-    const list = $("eventsList");
-    if (!list) return;
-
-    const filtered = getFilteredEvents();
-    $("eventsResultCount").textContent = `${filtered.length} event${filtered.length === 1 ? "" : "s"}`;
-
-    if (!filtered.length) {
-      list.innerHTML = `
-        <div class="events-empty">
-          No events match the current filters.
-        </div>
-      `;
-      renderSummary();
-      return;
-    }
-
-    list.innerHTML = filtered.map(event => {
-      const date = formatDate(event.date);
-      const typeClass = `type-${slugClass(event.type)}`;
-      const statusClass = `status-${slugClass(event.status)}`;
-      const notesPreview = event.notes
-        ? escapeHTML(event.notes)
-        : "No notes";
-
-      return `
-        <article class="event-row" data-event-id="${escapeHTML(event.id)}">
-          <div class="event-date-block" title="${escapeHTML(date.full)}">
-            <strong>${escapeHTML(date.day)}</strong>
-            <span>${escapeHTML(date.month)}</span>
-          </div>
-
-          <div class="event-main">
-            <strong>${escapeHTML(event.name || "Untitled Event")}</strong>
-
-            <div class="event-schedule-meta">
-              <span><b>Venue:</b> ${escapeHTML(event.venue || "TBC")}</span>
-              <span><b>Start:</b> ${escapeHTML(event.startTime || "TBC")}</span>
-              <span><b>Length:</b> ${escapeHTML(formatEventLength(event))}</span>
-            </div>
-
-            <span class="event-notes-preview">${notesPreview}</span>
-          </div>
-
-          <div class="event-venue">
-            <strong>${escapeHTML(event.venue || "Venue TBC")}</strong>
-            <span>${escapeHTML(event.address || "No address")}</span>
-          </div>
-
-          <div class="event-time">
-            <strong>${escapeHTML(formatTimeRange(event))}</strong>
-            <span>${event.arrivalTime ? `Setup ${escapeHTML(event.arrivalTime)}` : "No setup time"}</span>
-          </div>
-
-          <div>
-            <span
-              class="event-type-badge ${typeClass}"
-              style="--event-type-color:${escapeHTML(typeColor(event.type || "Live Karaoke"))};--event-type-bg:${escapeHTML(hexToRgba(typeColor(event.type || "Live Karaoke"), .13))}"
-            >${escapeHTML(event.type || "Live Karaoke")}</span>
-            <span class="event-status-badge ${statusClass}" style="margin-top:5px">${escapeHTML(event.status || "Confirmed")}</span>
-          </div>
-
-          <div class="event-actions">
-            <button class="event-action-btn" type="button" data-edit-event="${escapeHTML(event.id)}" title="Edit event">✎</button>
-            <button class="event-action-btn delete" type="button" data-delete-event="${escapeHTML(event.id)}" title="Delete event">🗑</button>
-          </div>
-        </article>
-      `;
-    }).join("");
-
-    renderSummary();
-  }
-
-  function venueCombinedContact(venue) {
-    const phone = String(venue?.contactPhone || "").trim();
-    const email = String(venue?.contactEmail || "").trim();
-    return [phone, email].filter(Boolean).join(" • ");
-  }
-
-  function populateVenueSelect(preferredVenueId = "") {
-    const select = $("eventVenueInput");
-    if (!select) return;
-
-    const current = preferredVenueId || select.value || "";
-
-    select.innerHTML =
-      `<option value="">Choose a saved venue...</option>` +
-      venues
-        .slice()
-        .sort((a,b) =>
-          String(a.name || "").localeCompare(String(b.name || ""), undefined, { sensitivity: "base" })
-        )
-        .map(venue =>
-          `<option value="${escapeHTML(venue.id)}">${escapeHTML(venue.name || "Untitled Venue")}</option>`
-        )
-        .join("");
-
-    if (current && venues.some(venue => venue.id === current)) {
-      select.value = current;
-    } else {
-      select.value = "";
-    }
-  }
-
-  function getSelectedVenue() {
-    const id = $("eventVenueInput")?.value || "";
-    return venues.find(venue => venue.id === id) || null;
-  }
-
-  function applyVenueToEventForm(venue, { fillArrival = true } = {}) {
-    const address = $("eventAddressInput");
-    const contactName = $("eventContactNameInput");
-    const contact = $("eventContactInput");
-
-    address.value = venue?.address || "";
-    contactName.value = venue?.contactName || "";
-    contact.value = venueCombinedContact(venue);
-
-    [address, contactName, contact].forEach(input => {
-      input.classList.toggle("venue-autofilled", !!input.value);
-    });
-
-    if (
-      fillArrival &&
-      venue?.defaultArrivalTime &&
-      !$("eventArrivalTimeInput").value
-    ) {
-      $("eventArrivalTimeInput").value = venue.defaultArrivalTime;
-    }
-  }
-
-  function handleVenueSelection() {
-    applyVenueToEventForm(getSelectedVenue());
-    updateAutomaticEventName();
-  }
-
-  function startVenueListener() {
-    if (!db) return;
-    if (unsubscribeVenues) unsubscribeVenues();
-
-    unsubscribeVenues = db.collection(VENUES_COLLECTION).onSnapshot(snapshot => {
-      const selected = $("eventVenueInput")?.value || "";
-
-      venues = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...(doc.data() || {})
-      }));
-
-      populateVenueSelect(selected);
-
-      if ($("eventVenueInput")?.value) {
-        applyVenueToEventForm(getSelectedVenue(), { fillArrival: false });
-        updateAutomaticEventName();
-      }
-    }, error => {
-      console.error("Could not load saved venues:", error);
-      const select = $("eventVenueInput");
-      if (select) {
-        select.innerHTML = `<option value="">Could not load venues</option>`;
-      }
-    });
-  }
-
-  function populateTypeControls(preferredType = "") {
-    const eventSelect = $("eventTypeInput");
-    const filterSelect = $("eventsTypeFilter");
-
-    if (eventSelect) {
-      const current = preferredType || eventSelect.value || typeOptions[0] || "";
-      eventSelect.innerHTML = typeOptions
-        .map(type => `<option value="${escapeHTML(type)}">${escapeHTML(type)}</option>`)
-        .join("");
-
-      eventSelect.value = typeOptions.includes(current)
-        ? current
-        : (typeOptions[0] || "");
-    }
-
-    if (filterSelect) {
-      const current = filterSelect.value || "";
-      filterSelect.innerHTML =
-        `<option value="">All Types</option>` +
-        typeOptions.map(type =>
-          `<option value="${escapeHTML(type)}">${escapeHTML(type)}</option>`
-        ).join("");
-
-      filterSelect.value = typeOptions.includes(current) ? current : "";
-    }
-  }
-
-  function renderEventTypeManager() {
-    const list = $("eventTypesList");
-    if (!list) return;
-
-    list.innerHTML = typeOptions.map(type => `
-      <div class="event-type-manager-row">
-        <span
-          class="event-type-manager-swatch"
-          style="background:${escapeHTML(typeColor(type))}"
-          aria-hidden="true"></span>
-        <strong>${escapeHTML(type)}</strong>
-        <label class="event-type-color-control">
-          <span>Colour</span>
-          <input
-            type="color"
-            value="${escapeHTML(typeColor(type))}"
-            data-event-type-color="${escapeHTML(type)}"
-            aria-label="Colour for ${escapeHTML(type)}">
-        </label>
-        <button type="button" data-remove-event-type="${escapeHTML(type)}" title="Remove ${escapeHTML(type)}">×</button>
-      </div>
-    `).join("");
-  }
-
-  async function saveEventTypes(nextOptions, nextColors = typeColors) {
-    if (!EVENT_TYPES_DOC) return;
-
-    const clean = [...new Set(
-      nextOptions
-        .map(value => String(value || "").trim())
-        .filter(Boolean)
-    )];
-
-    if (!clean.length) {
-      $("eventTypesMessage").textContent = "Keep at least one type.";
-      return;
-    }
-
-    const cleanColors = {};
-    clean.forEach(type => {
-      cleanColors[type] =
-        nextColors[type] ||
-        typeColors[type] ||
-        DEFAULT_TYPE_COLORS[type] ||
-        "#8ea3ad";
-    });
-
-    try {
-      await EVENT_TYPES_DOC.set({
-        options: clean,
-        colors: cleanColors,
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-      }, { merge:true });
-
-      $("eventTypesMessage").textContent = "";
-    } catch (error) {
-      console.error("Could not save event types:", error);
-      $("eventTypesMessage").textContent = error.message || "Could not save types.";
-    }
-  }
-
-  async function addEventType() {
-    const input = $("newEventTypeInput");
-    const value = String(input?.value || "").trim();
-
-    if (!value) return;
-    if (typeOptions.some(type => type.toLowerCase() === value.toLowerCase())) {
-      $("eventTypesMessage").textContent = "That type already exists.";
-      return;
-    }
-
-    const selectedColor = $("newEventTypeColorInput")?.value || "#8ea3ad";
-    await saveEventTypes(
-      [...typeOptions, value],
-      { ...typeColors, [value]: selectedColor }
-    );
-    input.value = "";
-    if ($("newEventTypeColorInput")) $("newEventTypeColorInput").value = "#8ea3ad";
-  }
-
-  async function removeEventType(value) {
-    if (typeOptions.length <= 1) {
-      $("eventTypesMessage").textContent = "Keep at least one type.";
-      return;
-    }
-
-    const nextColors = { ...typeColors };
-    delete nextColors[value];
-    await saveEventTypes(
-      typeOptions.filter(type => type !== value),
-      nextColors
-    );
-  }
-
-  function openEventTypesModal() {
-    renderEventTypeManager();
-    $("eventTypesMessage").textContent = "";
-    $("newEventTypeInput").value = "";
-    $("eventTypesModal").classList.remove("hidden");
-  }
-
-  function closeEventTypesModal() {
-    $("eventTypesModal").classList.add("hidden");
-  }
-
-  async function startEventTypesListener() {
-    if (!EVENT_TYPES_DOC) return;
-
-    try {
-      const initial = await EVENT_TYPES_DOC.get();
-      const initialOptions = initial.exists && Array.isArray(initial.data()?.options)
-        ? initial.data().options.map(v => String(v || "").trim()).filter(Boolean)
-        : [];
-
-      if (!initialOptions.length) {
-        await EVENT_TYPES_DOC.set({
-          options: DEFAULT_TYPE_OPTIONS,
-          colors: DEFAULT_TYPE_COLORS,
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        }, { merge:true });
-      }
-    } catch (error) {
-      console.warn("Could not initialise event types:", error);
-    }
-
-    EVENT_TYPES_DOC.onSnapshot(doc => {
-      const options = doc.exists && Array.isArray(doc.data()?.options)
-        ? doc.data().options.map(v => String(v || "").trim()).filter(Boolean)
-        : [];
-
-      typeOptions = options.length
-        ? [...new Set(options)]
-        : [...DEFAULT_TYPE_OPTIONS];
-
-      const colors =
-        doc.exists &&
-        doc.data()?.colors &&
-        typeof doc.data().colors === "object"
-          ? doc.data().colors
-          : {};
-
-      typeColors = {
-        ...DEFAULT_TYPE_COLORS,
-        ...colors
-      };
-
-      populateTypeControls();
-      renderEventTypeManager();
-      renderEvents();
-    }, error => {
-      console.warn("Event types listener unavailable:", error);
-      typeOptions = [...DEFAULT_TYPE_OPTIONS];
-      populateTypeControls();
-    });
-  }
-
-  function formatEventNameDate(dateString) {
-    if (!dateString) return "";
-    const parts = String(dateString).split("-");
-    if (parts.length !== 3) return "";
-    return `${parts[2]}/${parts[1]}`;
-  }
-
-  function buildAutomaticEventName() {
-    const type = $("eventTypeInput")?.value || "";
-    const venue = getSelectedVenue();
-    const date = formatEventNameDate($("eventDateInput")?.value || "");
-
-    if (!type || !venue?.name || !date) return "";
-    return `${type} @ ${venue.name} ${date}`;
-  }
-
-  function updateAutomaticEventName(force = false) {
-    const input = $("eventNameInput");
-    if (!input) return;
-
-    const next = buildAutomaticEventName();
-    if (!next) return;
-
-    if (
-      force ||
-      !eventNameManuallyEdited ||
-      !input.value.trim() ||
-      input.value === lastAutoEventName
-    ) {
-      input.value = next;
-      lastAutoEventName = next;
-      eventNameManuallyEdited = false;
-    }
-  }
-
-  function resetForm() {
-    eventNameManuallyEdited = false;
-    lastAutoEventName = "";
-    $("eventIdInput").value = "";
-    $("eventNameInput").value = "";
-    populateVenueSelect("");
-    $("eventVenueInput").value = "";
-    populateTypeControls("Live Karaoke");
-    $("eventStatusInput").value = "Confirmed";
-    $("eventDateInput").value = "";
-    $("eventStartTimeInput").value = "";
-    $("eventEndTimeInput").value = "";
-    $("eventArrivalTimeInput").value = "";
-    $("eventAddressInput").value = "";
-    $("eventContactNameInput").value = "";
-    $("eventContactInput").value = "";
-    $("eventNotesInput").value = "";
-    $("eventFormMessage").textContent = "";
-  }
-
-  function openCreateModal() {
-    resetForm();
-    $("eventModalMode").textContent = "NEW EVENT";
-    $("eventModalTitle").textContent = "Create Event";
-    $("eventSaveBtn").textContent = "SAVE EVENT";
-    $("eventModal").classList.remove("hidden");
-
-    setTimeout(() => $("eventNameInput").focus(), 30);
-  }
-
-  function openEditModal(id) {
-    eventNameManuallyEdited = true;
-    lastAutoEventName = "";
-    const event = events.find(item => item.id === id);
-    if (!event) return;
-
-    resetForm();
-
-    $("eventIdInput").value = event.id;
-    $("eventNameInput").value = event.name || "";
-    populateVenueSelect(event.venueId || "");
-    $("eventVenueInput").value = event.venueId || "";
-
-    if (event.venueId && venues.some(venue => venue.id === event.venueId)) {
-      applyVenueToEventForm(getSelectedVenue(), { fillArrival: false });
-    } else {
-      // Backward compatibility for events created before the Venues page.
-      $("eventAddressInput").value = event.address || "";
-      $("eventContactNameInput").value = event.contactName || "";
-      $("eventContactInput").value = event.contact || "";
-      [$("eventAddressInput"), $("eventContactNameInput"), $("eventContactInput")]
-        .forEach(input => input.classList.toggle("venue-autofilled", !!input.value));
-    }
-    populateTypeControls(typeOptions.includes(event.type) ? event.type : (typeOptions[0] || ""));
-    $("eventStatusInput").value = STATUS_OPTIONS.includes(event.status) ? event.status : "Confirmed";
-    $("eventDateInput").value = event.date || "";
-    $("eventStartTimeInput").value = event.startTime || "";
-    $("eventEndTimeInput").value = event.endTime || "";
-    $("eventArrivalTimeInput").value = event.arrivalTime || "";
-    $("eventNotesInput").value = event.notes || "";
-
-    $("eventModalMode").textContent = "EDIT EVENT";
-    $("eventModalTitle").textContent = event.name || "Edit Event";
-    $("eventSaveBtn").textContent = "SAVE CHANGES";
-    $("eventModal").classList.remove("hidden");
-  }
-
-  function closeEventModal() {
-    $("eventModal").classList.add("hidden");
-  }
-
-  function validateForm() {
-    if (!$("eventNameInput").value.trim()) return "Enter an event / gig name.";
-    if (!$("eventVenueInput").value) return "Choose a saved venue.";
-    if (!$("eventDateInput").value) return "Choose the event date.";
-    if (!$("eventStartTimeInput").value) return "Choose the scheduled start time.";
-    if (!$("eventEndTimeInput").value) return "Choose the scheduled end time.";
-    if (!typeOptions.includes($("eventTypeInput").value)) return "Choose a valid event type.";
-    return "";
-  }
-
-  function buildScheduledTimes(dateString, startTime, endTime) {
-    if (!dateString || !startTime || !endTime) {
-      return {
-        scheduledStartAt: null,
-        scheduledEndAt: null,
-        scheduledDurationMs: null
-      };
-    }
-
-    const startDate = new Date(`${dateString}T${startTime}:00`);
-    let endDate = new Date(`${dateString}T${endTime}:00`);
-
-    if (
-      Number.isNaN(startDate.getTime()) ||
-      Number.isNaN(endDate.getTime())
-    ) {
-      return {
-        scheduledStartAt: null,
-        scheduledEndAt: null,
-        scheduledDurationMs: null
-      };
-    }
-
-    // Overnight performance, e.g. 22:00 -> 01:00.
-    if (endDate <= startDate) {
-      endDate = new Date(endDate.getTime() + 24 * 60 * 60 * 1000);
-    }
-
-    return {
-      scheduledStartAt: firebase.firestore.Timestamp.fromDate(startDate),
-      scheduledEndAt: firebase.firestore.Timestamp.fromDate(endDate),
-      scheduledDurationMs: endDate.getTime() - startDate.getTime()
-    };
-  }
-
-  async function saveEvent() {
-    const validation = validateForm();
-    if (validation) {
-      $("eventFormMessage").textContent = validation;
-      return;
-    }
-
-    const id = $("eventIdInput").value.trim();
-    const saveBtn = $("eventSaveBtn");
-    saveBtn.disabled = true;
-    $("eventFormMessage").textContent = "Saving…";
-
-    const selectedVenue = getSelectedVenue();
-
-    const schedule = buildScheduledTimes(
-      $("eventDateInput").value,
-      $("eventStartTimeInput").value,
-      $("eventEndTimeInput").value
-    );
-
-    const payload = {
-      name: $("eventNameInput").value.trim(),
-
-      // Save both the Venue document link and a snapshot of its display data.
-      // This keeps old event records readable even if the Venue is edited later.
-      venueId: selectedVenue?.id || "",
-      venue: selectedVenue?.name || "",
-      type: $("eventTypeInput").value,
-      status: $("eventStatusInput").value,
-      date: $("eventDateInput").value,
-      startTime: $("eventStartTimeInput").value,
-      endTime: $("eventEndTimeInput").value,
-
-      // Canonical schedule fields used by Performance Sessions and Top Status Bar.
-      scheduledStartAt: schedule.scheduledStartAt,
-      scheduledEndAt: schedule.scheduledEndAt,
-      scheduledDurationMs: schedule.scheduledDurationMs,
-
-      arrivalTime: $("eventArrivalTimeInput").value,
-      address: selectedVenue?.address || "",
-      contactName: selectedVenue?.contactName || "",
-      contact: venueCombinedContact(selectedVenue),
-      venueLocality: selectedVenue?.locality || "",
-      venueContactPhone: selectedVenue?.contactPhone || "",
-      venueContactEmail: selectedVenue?.contactEmail || "",
-      notes: $("eventNotesInput").value.trim(),
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-      updatedBy: firebase.auth().currentUser?.email || ""
-    };
-
-    try {
-      if (id) {
-        await db.collection(COLLECTION).doc(id).set(payload, { merge: true });
-      } else {
-        payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-        payload.createdBy = firebase.auth().currentUser?.email || "";
-        await db.collection(COLLECTION).add(payload);
-      }
-
-      closeEventModal();
-    } catch (error) {
-      console.error("Could not save event:", error);
-      $("eventFormMessage").textContent = error.message || "Could not save event.";
-    } finally {
-      saveBtn.disabled = false;
-    }
-  }
-
-  function askDelete(id) {
-    const event = events.find(item => item.id === id);
-    if (!event) return;
-
-    pendingDeleteId = id;
-    $("deleteEventMessage").textContent =
-      `Remove "${event.name || "this event"}"${event.date ? ` on ${formatDate(event.date).full}` : ""}? This cannot be undone.`;
-
-    $("deleteEventModal").classList.remove("hidden");
-  }
-
-  function closeDeleteModal() {
-    pendingDeleteId = "";
-    $("deleteEventModal").classList.add("hidden");
-  }
-
-  async function confirmDelete() {
-    if (!pendingDeleteId) return;
-
-    const id = pendingDeleteId;
-    const button = $("deleteEventConfirmBtn");
-    button.disabled = true;
-
-    try {
-      await db.collection(COLLECTION).doc(id).delete();
-      closeDeleteModal();
-    } catch (error) {
-      console.error("Could not delete event:", error);
-      $("deleteEventMessage").textContent = error.message || "Could not delete event.";
-    } finally {
-      button.disabled = false;
-    }
-  }
-
-  function startEventListener() {
-    if (unsubscribeEvents) unsubscribeEvents();
-
-    unsubscribeEvents = db.collection(COLLECTION)
-      .onSnapshot(snapshot => {
-        events = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...(doc.data() || {})
-        }));
-
-        renderEvents();
-      }, error => {
-        console.error("Could not load upcoming events:", error);
-        $("eventsList").innerHTML = `
-          <div class="events-empty">
-            Could not load events.<br>
-            <small>${escapeHTML(error.message || "Firestore error")}</small>
-          </div>
-        `;
-      });
-  }
-
-  async function loadSidebarFallback() {
-    const container = $("sidebarContainer");
-    if (!container || container.children.length) return;
-
-    try {
-      const response = await fetch("includes/sidebar.html", { cache: "no-store" });
-      if (!response.ok) throw new Error(`Sidebar request failed ${response.status}`);
-      container.innerHTML = await response.text();
-
-      const eventsLink = container.querySelector('[data-page="events"]');
-      eventsLink?.classList.add("active");
-    } catch (error) {
-      console.warn("Could not load Admin sidebar:", error);
-    }
-  }
-
-  function markEventsSidebarLink() {
-    setTimeout(() => {
-      document.querySelector('[data-page="events"]')?.classList.add("active");
-    }, 150);
-  }
-
-  function bindUI() {
-    $("newEventBtn").onclick = openCreateModal;
-    $("eventsBackBtn").onclick = () => { window.location.href = "admin.html"; };
-    $("refreshEventsBtn").onclick = renderEvents;
-
-    $("manageEventTypesBtn").onclick = openEventTypesModal;
-    $("eventTypesCloseBtn").onclick = closeEventTypesModal;
-    $("eventTypesDoneBtn").onclick = closeEventTypesModal;
-    $("addEventTypeBtn").onclick = addEventType;
-    $("newEventTypeInput").addEventListener("keydown", event => {
-      if (event.key === "Enter") {
-        event.preventDefault();
-        addEventType();
-      }
-    });
-
-    $("eventModalCloseBtn").onclick = closeEventModal;
-    $("eventCancelBtn").onclick = closeEventModal;
-    $("eventSaveBtn").onclick = saveEvent;
-    $("eventVenueInput").addEventListener("change", handleVenueSelection);
-    $("eventTypeInput").addEventListener("change", () => updateAutomaticEventName());
-    $("eventDateInput").addEventListener("change", () => updateAutomaticEventName());
-
-    $("eventNameInput").addEventListener("input", () => {
-      const value = $("eventNameInput").value;
-      eventNameManuallyEdited = value !== lastAutoEventName;
-    });
-
-    $("deleteEventCancelBtn").onclick = closeDeleteModal;
-    $("deleteEventConfirmBtn").onclick = confirmDelete;
-
-    ["eventsSearch", "eventsTypeFilter", "eventsStatusFilter", "eventsRangeFilter"]
-      .forEach(id => {
-        const el = $(id);
-        if (!el) return;
-        el.addEventListener(el.tagName === "INPUT" ? "input" : "change", renderEvents);
-      });
-
-    document.addEventListener("click", event => {
-      const edit = event.target.closest("[data-edit-event]");
-      if (edit) {
-        openEditModal(edit.dataset.editEvent);
-        return;
-      }
-
-      const summaryType = event.target.closest("[data-summary-type]");
-      if (summaryType) {
-        const type = summaryType.dataset.summaryType || "";
-        if ($("eventsTypeFilter")) {
-          $("eventsTypeFilter").value = type;
-          renderEvents();
-          $("eventsList")?.scrollIntoView({ behavior: "smooth", block: "start" });
-        }
-        return;
-      }
-
-      const remove = event.target.closest("[data-delete-event]");
-      if (remove) {
-        askDelete(remove.dataset.deleteEvent);
-        return;
-      }
-
-      const removeType = event.target.closest("[data-remove-event-type]");
-      if (removeType) {
-        removeEventType(removeType.dataset.removeEventType);
-      }
-    });
-
-    $("eventTypesList")?.addEventListener("change", event => {
-      const input = event.target.closest("[data-event-type-color]");
-      if (!input) return;
-
-      const type = input.dataset.eventTypeColor || "";
-      const color = input.value || "#8ea3ad";
-      if (!type) return;
-
-      saveEventTypes(
-        typeOptions,
-        { ...typeColors, [type]: color }
-      );
-    });
-
-    $("eventModal").addEventListener("click", event => {
-      if (event.target === $("eventModal")) closeEventModal();
-    });
-
-    $("deleteEventModal").addEventListener("click", event => {
-      if (event.target === $("deleteEventModal")) closeDeleteModal();
-    });
-
-    $("eventTypesModal").addEventListener("click", event => {
-      if (event.target === $("eventTypesModal")) closeEventTypesModal();
-    });
-
-    document.addEventListener("keydown", event => {
-      if (event.key === "Escape") {
-        closeEventModal();
-        closeDeleteModal();
-        closeEventTypesModal();
-      }
-    });
-  }
-
-  function showApp() {
-    $("eventsAuthGate").classList.add("hidden");
-    $("eventsApp").hidden = false;
-
-    loadSidebarFallback();
-    markEventsSidebarLink();
-    startEventTypesListener();
-    startVenueListener();
-    startEventListener();
-  }
-
-  function init() {
-    bindUI();
-
-    // Reuse the existing Firebase Admin auth session. No second login page.
-    firebase.auth().onAuthStateChanged(user => {
-      if (!user) {
-        // The Admin dashboard owns authentication. Send the user there if the
-        // previous session has actually expired.
-        window.location.replace("admin.html");
-        return;
-      }
-
-      showApp();
-    });
-  }
-
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", init);
-  } else {
-    init();
-  }
-})();
+:root{--bg:#02080d;--panel:#041018;--panel2:#061822;--cyan:#24d7e6;--cyan2:#5ee9f2;--line:rgba(36,215,230,.56);--text:#f4f4f1;--muted:#aeb9bc;--warm:#d6b49b}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(circle at 75% 0,#08293a 0,#02080d 34%,#010507 80%);color:var(--text);font-family:Inter,Arial,Helvetica,sans-serif;letter-spacing:.015em}button,a,input{font:inherit}.hero{position:relative;min-height:720px;overflow:hidden;background:#02080d}.hero-photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center}.hero-overlay{position:absolute;inset:0;background:linear-gradient(90deg,rgba(1,6,9,.97) 0%,rgba(1,7,11,.83) 37%,rgba(1,7,11,.14) 66%,rgba(1,7,11,.2) 100%),linear-gradient(0deg,#02080d 0%,transparent 22%)}.hero-left{position:relative;z-index:2;width:min(54%,660px);padding:80px 0 44px 7vw}.brand-logo{display:block;width:min(520px,80%);height:auto;filter:drop-shadow(0 0 16px rgba(36,215,230,.15));margin-bottom:34px}.menu-btn{position:absolute;z-index:4;top:30px;left:28px;width:48px;height:48px;border:0;background:transparent}.menu-btn span{display:block;height:2px;background:#fff;margin:8px 3px}.share-btn{position:absolute;z-index:4;right:30px;top:26px;border:1px solid rgba(255,255,255,.7);border-radius:999px;padding:12px 20px;background:rgba(0,0,0,.25);color:white;letter-spacing:.14em}.share-btn:first-letter{color:var(--cyan)}.hero-gigs{display:grid;gap:8px;width:min(540px,92%)}.hero-gig,.gig-row{border:1px solid var(--line);background:rgba(2,10,15,.78);color:inherit;text-align:left;cursor:pointer}.hero-gig{display:grid;grid-template-columns:78px 1fr auto 22px;align-items:center;min-height:82px;border-radius:8px;padding:8px 14px}.date,.gig-date{display:flex;flex-direction:column;align-items:center;color:var(--cyan);line-height:1}.date strong,.gig-date strong{font-size:34px}.date small,.gig-date small{font-size:12px;font-weight:800}.event-copy,.gig-copy{display:grid;gap:3px;padding-left:16px;border-left:1px solid rgba(255,255,255,.25)}.event-copy b,.gig-copy b{text-transform:uppercase;font-size:14px}.event-copy span,.gig-copy span{font-size:13px;color:#d0d6d8}.event-time{font-size:12px;color:#e3e7e7;white-space:nowrap}.chev{font-size:28px;color:var(--cyan)}.type-pill{display:inline-flex;width:max-content;margin-top:3px;padding:3px 7px;border:1px solid currentColor;border-radius:999px;font-size:9px;font-style:normal;text-transform:uppercase;letter-spacing:.08em;color:#65d6ff;background:rgba(101,214,255,.08)}.type-solo{color:#67dc9a}.type-roxanna{color:#df7dea}.type-live-karaoke{color:#52d6ff}.support-copy{width:min(540px,92%);text-align:center;margin-top:18px;color:#d7dcdd;font-size:15px;letter-spacing:.08em}.support-copy span{display:block;color:var(--cyan);font-size:36px;line-height:1;margin-top:8px}.music-lives{position:absolute;z-index:2;right:6vw;bottom:75px;font-family:cursive;font-size:28px;line-height:1.08;font-style:italic;transform:rotate(-5deg);text-align:center;color:white;text-shadow:0 0 12px #1ad4e3}.section-shell{width:min(1120px,calc(100% - 36px));margin:0 auto}.live-panel{position:relative;z-index:3;margin-top:-1px;background:rgba(3,14,21,.96);border:1px solid var(--line);border-radius:14px;overflow:hidden}.player-main{display:grid;grid-template-columns:126px 1fr 76px;gap:22px;align-items:center;padding:18px}.player-art{width:126px;aspect-ratio:1;border-radius:8px;object-fit:cover;border:1px solid rgba(255,255,255,.28)}.eyebrow{font-size:12px;font-weight:800;letter-spacing:.22em;color:var(--cyan)}.player-copy h1{margin:5px 0 2px;font-size:28px}.player-copy p{margin:0;color:#ddd}.session-meta{display:flex;gap:10px;align-items:center;margin-top:8px;color:#9fb0b5;font-size:12px;text-transform:uppercase;letter-spacing:.07em}.session-meta i{width:4px;height:4px;border-radius:50%;background:var(--cyan)}.progress{height:5px;margin-top:14px;border-radius:99px;background:#1e3039;overflow:hidden}.progress span{display:block;width:0;height:100%;background:var(--cyan);transition:width .3s}.state-icon{border:2px solid var(--cyan);border-radius:50%;width:68px;height:68px;display:grid;place-items:center;color:var(--cyan);font-size:26px}.request-strip{border-top:1px solid rgba(36,215,230,.34);display:grid;grid-template-columns:1fr 1fr;align-items:center;gap:16px;padding:11px 18px}.queue-summary{display:flex;gap:15px;align-items:center}.queue-summary b{color:var(--cyan);font-size:38px}.primary-btn{min-height:52px;background:linear-gradient(180deg,#3fe8f4,#19cce0);border:0;border-radius:8px;font-weight:900;letter-spacing:.04em;color:#001116;cursor:pointer}.primary-btn:disabled{opacity:.38;cursor:not-allowed}.gigs-section{padding:36px 0 12px}.section-heading{display:flex;align-items:center;gap:16px;color:var(--cyan);font-size:14px;font-weight:800;letter-spacing:.36em;margin-bottom:14px}.section-heading:before,.section-heading:after{content:"";height:1px;background:linear-gradient(90deg,transparent,var(--cyan));flex:1}.section-heading:after{background:linear-gradient(90deg,var(--cyan),transparent)}.section-heading.compact{max-width:330px;margin-bottom:10px}.section-heading.left:before{display:none}.gig-list{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:rgba(4,15,20,.76)}.gig-row{width:100%;display:grid;grid-template-columns:94px 1fr 100px 28px;gap:12px;align-items:center;min-height:82px;border:0;border-bottom:1px solid rgba(36,215,230,.27);padding:9px 18px}.gig-row:last-child{border-bottom:0}.gig-date strong{font-size:30px}.gig-copy{border:0;padding:0}.gig-copy b{text-transform:none;font-size:16px}.gig-row time{text-align:right}.about{padding:55px 0 32px;display:grid;grid-template-columns:38% 1fr;gap:40px;align-items:center}.about img{width:100%;height:310px;object-fit:cover;filter:grayscale(1) contrast(1.08);border-radius:3px;mask-image:linear-gradient(90deg,#000 78%,transparent)}.about h2{font-size:27px;margin:4px 0 12px}.about p{color:#c9d0d2;line-height:1.7;margin:0;max-width:690px}.signature{text-align:right;font-family:cursive;font-size:36px;margin-top:12px}.watch{padding:12px 0 38px}.watch-head{display:flex;justify-content:space-between;align-items:center}.watch-head a{color:var(--cyan);text-decoration:none;font-weight:800;font-size:12px}.video-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}.video-card{color:white;text-decoration:none}.thumb{aspect-ratio:16/9;border:1px solid var(--line);border-radius:7px;background-size:cover;background-position:center;display:grid;place-items:center;overflow:hidden}.thumb-one,.thumb-three{background-image:linear-gradient(#00101733,#00101733),url('../assets/hero-billy-lee.png')}.thumb-two{background-image:linear-gradient(#00101766,#00101766),url('../assets/about-billy-lee.jpg');filter:saturate(.7)}.thumb span{width:54px;height:54px;border:2px solid white;border-radius:50%;display:grid;place-items:center;background:#0007}.video-card>div:last-child{display:flex;justify-content:space-between;gap:8px;padding-top:7px;font-size:13px}.video-card small{color:#ccd3d5}footer{position:relative;min-height:220px;overflow:hidden;background:#01070a}.footer-crowd{position:absolute;inset:0;background:radial-gradient(circle at 50% 20%,rgba(20,162,190,.25),transparent 43%),linear-gradient(0deg,#000 0%,transparent 100%),repeating-linear-gradient(87deg,transparent 0 22px,rgba(0,0,0,.55) 24px 42px);opacity:.85}.footer-inner{position:relative;z-index:1;text-align:center;padding:40px 20px}.footer-tag{color:var(--cyan);letter-spacing:.35em;font-size:12px;display:flex;justify-content:center;align-items:center;gap:20px}.footer-tag span{height:1px;width:120px;background:var(--cyan)}.socials{display:flex;justify-content:center;gap:18px;margin:24px 0}.socials a{width:40px;height:40px;border:1px solid var(--cyan);border-radius:50%;display:grid;place-items:center;color:var(--cyan);text-decoration:none;font-weight:800}.domain{letter-spacing:.35em;color:#ddd}.drawer{position:fixed;z-index:20;left:0;top:0;bottom:0;width:min(340px,85vw);background:#020a0f;border-right:1px solid var(--line);transform:translateX(-102%);transition:.25s;padding:70px 25px;display:flex;flex-direction:column;gap:10px}.drawer.open{transform:none}.drawer>a,.drawer>button{color:white;text-decoration:none;background:transparent;border:1px solid rgba(36,215,230,.25);padding:16px;text-align:left}.drawer #drawerClose{position:absolute;top:15px;right:15px;width:42px;height:42px;text-align:center;font-size:24px}.scrim{position:fixed;z-index:19;inset:0;background:#000a;opacity:0;pointer-events:none;transition:.2s}.scrim.show{opacity:1;pointer-events:auto}.modal{width:min(760px,calc(100% - 28px));max-height:88vh;background:#041018;color:white;border:1px solid var(--line);border-radius:14px;padding:24px;box-shadow:0 20px 80px #000c}.modal::backdrop{background:#000b}.modal-close{position:absolute;right:12px;top:10px;background:transparent;color:white;border:0;font-size:30px}.request-header h2{margin:5px 0}.request-header p{margin-top:0;color:#abb9bc}.request-controls{display:grid;grid-template-columns:1fr 220px;gap:10px}.request-controls input{width:100%;padding:14px;border:1px solid rgba(36,215,230,.35);background:#020b10;color:white;border-radius:8px}.request-notice{min-height:24px;margin:10px 0;color:var(--cyan)}.song-results{max-height:330px;overflow:auto;border:1px solid rgba(36,215,230,.25);border-radius:9px}.song-row{width:100%;display:flex;justify-content:space-between;align-items:center;background:#04131b;color:white;border:0;border-bottom:1px solid rgba(255,255,255,.08);padding:12px 14px;text-align:left}.song-row span{display:flex;flex-direction:column}.song-row small{color:#a9b8bc;margin-top:2px}.song-row>b{color:var(--cyan);font-size:22px}.my-requests{margin-top:20px}.my-request{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(255,255,255,.08);padding:10px 0}.my-request span{display:flex;flex-direction:column}.my-request small,.muted{color:#98a8ad}.request-status{font-size:10px;font-weight:900;letter-spacing:.08em;padding:5px 8px;border-radius:99px;color:#f4d27a;border:1px solid currentColor}.status-queued{color:#5ceca8}.status-playing{color:#5ee9f2}.status-completed,.status-played{color:#b7c2c6}.status-declined,.status-deleted,.status-deletedbyhost{color:#ff8181}.empty-inline,.empty-box{color:#9fb0b5;padding:18px}.empty-box{text-align:center}
+@media(max-width:850px){.hero{min-height:690px}.hero-left{width:62%;padding-left:5vw}.brand-logo{width:90%}.hero-gig{grid-template-columns:62px 1fr 18px}.event-time{display:none}.music-lives{right:4vw;font-size:23px}.about{grid-template-columns:1fr}.about img{height:260px;mask-image:linear-gradient(#000 80%,transparent)}.video-grid{grid-template-columns:1fr}.request-controls{grid-template-columns:1fr}}
+@media(max-width:620px){.hero{min-height:780px}.hero-photo{object-position:63% center}.hero-overlay{background:linear-gradient(180deg,rgba(1,6,9,.18),rgba(1,6,9,.55) 35%,#02080d 83%)}.hero-left{width:100%;padding:72px 20px 20px}.brand-logo{width:68%;margin:0 auto 275px}.hero-gigs{width:100%}.hero-gig{background:rgba(2,10,15,.82)}.music-lives{display:none}.share-btn{right:16px;top:15px;padding:9px 13px}.menu-btn{top:12px;left:12px}.live-panel{margin-top:16px}.player-main{grid-template-columns:74px 1fr 52px;gap:12px;padding:13px}.player-art{width:74px}.player-copy h1{font-size:21px}.state-icon{width:48px;height:48px;font-size:18px}.session-meta{font-size:9px;gap:5px}.request-strip{grid-template-columns:1fr;padding:10px}.queue-summary{justify-content:center}.primary-btn{width:100%}.gig-row{grid-template-columns:62px 1fr 24px;padding:8px 10px}.gig-row time{display:none}.gig-date strong{font-size:27px}.gig-copy b{font-size:14px}.gig-copy span{font-size:11px}.type-pill{font-size:8px}.about{padding-top:35px;gap:18px}.about h2{font-size:22px}.about p{font-size:14px}.watch-head{align-items:flex-end}.section-heading{font-size:11px;letter-spacing:.25em}.footer-tag{font-size:10px;letter-spacing:.2em;gap:10px}.footer-tag span{width:44px}.request-modal{padding:18px 12px}.request-controls{grid-template-columns:1fr}.song-results{max-height:45vh}}
+.request-name-step{display:grid;gap:12px;padding:18px 0}.request-name-step label{color:var(--cyan);font-size:12px;font-weight:800;letter-spacing:.18em}.request-name-step input{padding:15px;border:1px solid rgba(36,215,230,.4);background:#020b10;color:#fff;border-radius:8px}.request-name-step .primary-btn{width:100%}.my-requests{margin:0 0 16px;padding-bottom:12px;border-bottom:1px solid rgba(36,215,230,.25)}.request-cart{position:sticky;bottom:0;display:grid;grid-template-columns:1fr auto;gap:14px;align-items:center;padding:12px;margin-top:12px;border:1px solid var(--line);border-radius:10px;background:#03131b}.request-cart[hidden]{display:none}.request-cart>div{display:flex;flex-direction:column}.request-cart small{color:#9fb0b5;margin-top:3px}.request-cart .primary-btn{padding:0 20px}.song-row.selected{background:#07303a}.state-wrap{display:flex;flex-direction:column;align-items:center;gap:7px}.elapsed-time{font-variant-numeric:tabular-nums;color:var(--cyan);font-size:12px;letter-spacing:.08em}
+
+
+/* LIVE REQUESTS modal v2 */
+.request-modal{overflow:hidden;padding:0;height:min(88vh,820px);max-height:88vh}
+.request-modal[open]{display:flex;flex-direction:column}
+.request-modal-top{position:sticky;top:0;z-index:8;display:flex;justify-content:space-between;align-items:flex-start;gap:16px;padding:20px 58px 16px 20px;background:#041018;border-bottom:1px solid rgba(36,215,230,.28)}
+.request-modal-top .request-header h2{margin:4px 0 0}
+.request-modal-close{position:absolute;top:8px;right:10px;z-index:10;width:44px;height:44px;display:grid;place-items:center;border-radius:50%;background:#041018}
+.request-name-step{padding:22px 20px;overflow:auto}
+.request-song-step{min-height:0;display:flex;flex:1;flex-direction:column;padding:14px 20px 20px;overflow:hidden}
+.request-song-step[hidden]{display:none}
+.requester-block{flex:0 0 auto;padding-bottom:12px;border-bottom:1px solid rgba(36,215,230,.25)}
+.requester-name-line{display:flex;align-items:center;gap:9px;min-height:34px}
+.requester-caption{color:#91a4aa;font-size:10px;font-weight:800;letter-spacing:.16em}
+.requester-name-line strong{color:#fff;font-size:16px}
+.icon-btn{border:1px solid rgba(36,215,230,.45);background:#03131b;color:var(--cyan);border-radius:7px;width:32px;height:30px;cursor:pointer}
+.requester-name-edit{display:grid;grid-template-columns:1fr auto auto;gap:8px;margin:7px 0 10px}
+.requester-name-edit[hidden]{display:none}
+.requester-name-edit input,.request-note-label+textarea{width:100%;border:1px solid rgba(36,215,230,.35);background:#020b10;color:#fff;border-radius:8px;padding:10px 12px}
+.small-btn{border:1px solid var(--cyan);background:var(--cyan);color:#001116;border-radius:7px;padding:0 12px;font-size:11px;font-weight:900;cursor:pointer}
+.small-btn.ghost{background:transparent;color:var(--cyan)}
+.request-note-label{display:block;margin:9px 0 6px;color:var(--cyan);font-size:10px;font-weight:800;letter-spacing:.14em}
+.request-note-label+textarea{resize:vertical;min-height:54px;max-height:100px}
+.my-requests{flex:0 0 auto;margin:12px 0 10px;padding:0 0 10px;border-bottom:1px solid rgba(36,215,230,.25)}
+.my-requests h3{margin:0 0 7px;font-size:12px;letter-spacing:.18em;color:var(--cyan)}
+.my-requests-scroll{max-height:145px;overflow:auto;padding-right:4px;overscroll-behavior:contain}
+.my-request{padding:8px 7px;border-radius:7px}
+.my-request.is-playing{background:rgba(36,215,230,.12);box-shadow:inset 3px 0 0 var(--cyan)}
+.request-browser{display:flex;min-height:0;flex:1;flex-direction:column;overflow:hidden}
+.request-browser[hidden]{display:none}
+.request-controls{flex:0 0 auto;grid-template-columns:1fr}
+.request-notice{flex:0 0 auto;margin:7px 0;min-height:19px;font-size:12px}
+.song-results{flex:1;min-height:0;max-height:none;overflow:auto;overscroll-behavior:contain}
+.song-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center}
+.song-action{min-width:44px;min-height:36px;padding:7px 11px;border:1px solid rgba(36,215,230,.5);border-radius:7px;background:transparent;color:var(--cyan);font-size:11px;font-weight:900;letter-spacing:.04em;cursor:pointer}
+.song-row.selected{background:#07303a;box-shadow:inset 3px 0 0 var(--cyan)}
+.song-row.selected .song-action{background:var(--cyan);color:#001116;min-width:118px}
+.song-row.is-playing{background:rgba(36,215,230,.13);box-shadow:inset 3px 0 0 var(--cyan)}
+.song-row.is-playing .song-action{color:var(--cyan2);border-color:var(--cyan);cursor:not-allowed}
+.song-row.is-played{opacity:.58}
+.song-row.is-played .song-action{color:#9aa7aa;border-color:#627176;cursor:not-allowed}
+.request-success{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px 10px;overflow:auto}
+.request-success[hidden]{display:none}
+.success-mark{width:58px;height:58px;border:2px solid var(--cyan);border-radius:50%;display:grid;place-items:center;color:var(--cyan);font-size:30px;margin-bottom:10px}
+.request-success h3{margin:4px 0;color:#fff;letter-spacing:.12em}
+.request-success p{color:#b8c4c7;max-width:450px;line-height:1.5}
+.request-success .primary-btn{margin-top:auto;width:min(100%,420px)}
+/* old sticky cart is no longer used */
+.request-cart{display:none!important}
+@media(max-width:620px){
+  .request-modal{height:92vh;max-height:92vh;width:calc(100% - 14px)}
+  .request-modal-top{padding:15px 52px 12px 14px}
+  .request-song-step{padding:10px 12px 12px}
+  .request-name-step{padding:18px 12px}
+  .requester-name-edit{grid-template-columns:1fr auto}.requester-name-edit .ghost{grid-column:1/-1;min-height:34px}
+  .my-requests-scroll{max-height:120px}
+  .song-action{font-size:10px}.song-row.selected .song-action{min-width:104px}
+}
+
+
+/* v3 hero + request section */
+.hero-gigs{width:min(500px,92%)}
+.hero-gig{min-height:68px;grid-template-columns:64px 1fr auto 18px;padding:7px 12px}
+.hero-gig .date strong{font-size:28px}
+.hero-gig .event-copy{gap:2px;padding-left:12px}
+.hero-gig .event-copy b{font-size:13px}
+.hero-gig .event-copy span{font-size:11px}
+.hero-gig .type-pill{font-size:8px;margin-top:2px}
+.hero-gig.live-now{border-color:#46e28b;background:linear-gradient(90deg,rgba(18,78,54,.78),rgba(2,15,14,.82));box-shadow:0 0 0 1px rgba(70,226,139,.12),0 0 28px rgba(70,226,139,.12)}
+.hero-gig.live-now .date,.hero-gig.live-now .chev,.hero-gig.live-now .event-time{color:#67f1a6}
+.hero-gig .live-now-badge{display:inline-flex;align-items:center;gap:6px;color:#77f2ac;font-size:10px;font-weight:900;letter-spacing:.12em;text-transform:uppercase}
+.hero-gig .live-now-badge:before{content:"";width:7px;height:7px;border-radius:50%;background:#61ee9c;box-shadow:0 0 12px #61ee9c}
+.hero-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:min(500px,92%);margin-top:10px}
+.hero-action{display:flex;align-items:center;justify-content:center;min-height:44px;border-radius:8px;text-decoration:none;font-size:12px;font-weight:900;letter-spacing:.08em}
+.hero-action.primary{background:linear-gradient(180deg,#3fe8f4,#19cce0);color:#001116}
+.hero-action.secondary{border:1px solid var(--cyan);background:rgba(2,14,20,.72);color:var(--cyan)}
+.hero-action.is-live{border-color:#58ee9c;color:#72f2aa;background:rgba(15,63,46,.72);box-shadow:0 0 18px rgba(70,226,139,.12)}
+.request-song-section{position:relative;isolation:isolate;padding:44px 0 42px;overflow:hidden;border-top:1px solid rgba(36,215,230,.2);border-bottom:1px solid rgba(36,215,230,.17)}
+.request-song-bg{position:absolute;z-index:-2;inset:0;background-image:linear-gradient(180deg,rgba(1,8,12,.82),rgba(1,8,12,.9)),url('../assets/audience-cheering.svg');background-repeat:no-repeat;background-position:center bottom;background-size:cover;opacity:.66}
+.request-song-section:after{content:"";position:absolute;z-index:-1;inset:0;background:radial-gradient(circle at 50% 85%,rgba(18,142,166,.18),transparent 46%)}
+.request-song-inner{position:relative}
+.request-song-heading{margin:0 0 20px;padding:0 4px;max-width:760px}
+.request-song-heading h2{margin:6px 0 5px;font-size:clamp(24px,3vw,38px);font-weight:500;letter-spacing:.04em}
+.request-song-heading p{margin:0;color:#c1cdd0;font-size:15px;line-height:1.55}
+.request-song-section .live-panel{width:100%;margin:0;background:rgba(3,14,21,.88);backdrop-filter:blur(3px)}
+.request-name-step[hidden]{display:none!important}
+@media(max-width:620px){
+  .hero-gig{grid-template-columns:58px 1fr 18px;min-height:64px}.hero-gig .event-time{display:none}
+  .hero-actions{width:100%;grid-template-columns:1fr 1fr;gap:8px}.hero-action{font-size:10px;min-height:42px;padding:0 8px}
+  .request-song-section{padding:32px 0 28px}.request-song-heading h2{font-size:24px}.request-song-heading p{font-size:13px}
+}
+
+/* v4 refinements: hero live state, request modal, player, upcoming gigs */
+.hero-gig.live-now{
+  grid-template-columns:96px 1fr;
+  gap:12px;
+  min-height:68px;
+  border-color:#46e28b;
+  background:linear-gradient(90deg,rgba(16,76,51,.8),rgba(2,15,14,.84));
+}
+.hero-gig.live-now .live-label{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  white-space:nowrap;
+  color:#74f3ab;
+  font-size:12px;
+  font-weight:900;
+  letter-spacing:.08em;
+  line-height:1;
+  padding-right:10px;
+  border-right:1px solid rgba(116,243,171,.42);
+}
+.hero-gig.live-now .live-label:before{
+  content:"";
+  width:9px;
+  height:9px;
+  margin-right:7px;
+  border-radius:50%;
+  background:#67efa4;
+  box-shadow:0 0 12px rgba(103,239,164,.85);
+}
+.hero-gig.live-now .event-copy{border-left:0;padding-left:0}
+.hero-gig.live-now .event-copy b{color:#fff}
+.hero-gig.live-now .event-copy .type-pill{margin-top:3px}
+
+.support-copy-below-player{
+  width:min(1120px,calc(100% - 36px));
+  margin:16px auto 4px;
+  text-align:center;
+}
+.support-copy-below-player span{font-size:30px;margin-top:3px}
+
+.request-song-heading{max-width:none}
+.request-song-heading h2{
+  font-size:clamp(19px,2.2vw,30px);
+  white-space:nowrap;
+  letter-spacing:.025em;
+}
+#liveStateLabel.is-playing{color:#67efa4;text-shadow:0 0 12px rgba(103,239,164,.24)}
+.pause-bars{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;height:100%}
+.pause-bars i{display:block;width:6px;height:25px;border-radius:3px;background:currentColor}
+
+.gigs-heading-row{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:14px}
+.gigs-heading-row .section-heading{flex:1;margin-bottom:0}
+.view-all-gigs{flex:0 0 auto;border:0;background:transparent;color:var(--cyan);font-size:12px;font-weight:800;letter-spacing:.08em;cursor:pointer;padding:8px 0}
+.gig-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;border:0;border-radius:0;overflow:visible;background:transparent}
+.gig-row{min-width:0;grid-template-columns:62px minmax(0,1fr) 72px 18px;gap:8px;min-height:108px;border:1px solid rgba(36,215,230,.34)!important;border-radius:9px;padding:10px 11px;background:rgba(4,15,20,.76)}
+.gig-row time{font-size:11px;white-space:nowrap;color:#dce4e5}
+.gig-row .gig-copy b{font-size:14px}
+.gig-row .gig-copy span{font-size:11px}
+.gig-row .type-pill{font-size:8px}
+
+.event-modal,.all-gigs-modal{overflow:auto}
+.event-modal #eventDialogBody{padding:10px 24px 12px 4px}
+.event-modal h2,.all-gigs-modal h2{margin:5px 0 18px}
+.all-gigs-modal{width:min(860px,calc(100% - 28px))}
+.all-gigs-head{padding-right:40px}
+.all-gigs-list{display:grid;gap:9px;margin-top:14px}
+.all-gigs-list .gig-row{grid-template-columns:74px 1fr 90px 24px;min-height:78px;width:100%}
+
+/* LIVE REQUESTS: modal scrolls, header stays visible, song list is usable */
+.request-modal{
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+  height:min(92vh,880px)!important;
+  max-height:92vh!important;
+  overscroll-behavior:contain;
+}
+.request-modal[open]{display:block!important}
+.request-modal-top{
+  position:sticky!important;
+  top:0;
+  z-index:20;
+}
+.request-song-step{
+  display:block!important;
+  min-height:auto!important;
+  overflow:visible!important;
+}
+.request-song-step[hidden]{display:none!important}
+.my-requests{margin:14px 0 12px}
+.my-requests-scroll{max-height:130px;overflow:auto;overscroll-behavior:contain}
+.request-browser{display:block!important;overflow:visible!important;min-height:auto!important}
+.request-browser[hidden]{display:none!important}
+.full-song-list-title{margin:5px 0 10px;color:var(--cyan);font-size:12px;letter-spacing:.18em}
+.request-controls{display:block!important}
+.song-results{
+  min-height:250px;
+  max-height:44vh!important;
+  overflow-y:auto!important;
+  overscroll-behavior:contain;
+  scrollbar-gutter:stable;
+}
+.request-success{min-height:340px}
+
+@media(max-width:900px){
+  .gig-list{grid-template-columns:1fr}
+  .gig-row{grid-template-columns:70px 1fr 88px 22px;min-height:82px}
+}
+@media(max-width:620px){
+  .hero-gig.live-now{grid-template-columns:90px 1fr!important}
+  .hero-gig.live-now .live-label{font-size:11px}
+  .request-song-heading h2{font-size:17px;letter-spacing:0;white-space:nowrap}
+  .gigs-heading-row{align-items:center}
+  .view-all-gigs{font-size:10px}
+  .gig-row{grid-template-columns:58px 1fr 20px;min-height:76px}
+  .gig-row time{display:none}
+  .all-gigs-list .gig-row{grid-template-columns:60px 1fr 72px 20px}
+  .all-gigs-list .gig-row time{display:block;font-size:10px}
+  .request-modal{width:calc(100% - 10px)!important;height:94vh!important;max-height:94vh!important}
+  .request-song-step{padding-bottom:18px!important}
+  .my-requests-scroll{max-height:115px}
+  .song-results{min-height:280px;max-height:48vh!important}
+}
