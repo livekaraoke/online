@@ -395,3 +395,101 @@
 .booking-success-close{min-width:180px;padding:0 24px}
 @media(max-width:850px){.about-grid{grid-template-columns:1fr}.about-grid img{height:260px;mask-image:linear-gradient(#000 80%,transparent)}}
 @media(max-width:620px){.about{padding-top:35px}.about-grid{gap:18px}.about-copy h2{font-size:22px}.about-copy p{font-size:14px}}
+
+
+/* v13 — consistent section headings, tablet grids, hero image/menu fixes */
+/* Every public section heading starts at the same left edge and carries one rule to the right. */
+.section-heading.left,
+.request-song-heading .section-heading,
+.watch-head .section-heading,
+.about-heading,
+.booking-intro .section-heading{
+  width:100%;
+  max-width:none;
+  margin:0 0 14px;
+  justify-content:flex-start;
+  white-space:nowrap;
+}
+.section-heading.left:before,
+.request-song-heading .section-heading:before,
+.watch-head .section-heading:before,
+.about-heading:before,
+.booking-intro .section-heading:before{display:none!important}
+.section-heading.left:after,
+.request-song-heading .section-heading:after,
+.watch-head .section-heading:after,
+.about-heading:after,
+.booking-intro .section-heading:after{
+  display:block!important;
+  flex:1 1 auto!important;
+  width:auto!important;
+  min-width:30px;
+  background:linear-gradient(90deg,var(--cyan),transparent)!important;
+}
+.request-song-heading{padding:0;max-width:none}
+.request-song-heading .section-heading{margin-bottom:8px}
+.request-song-heading h2{
+  margin:4px 0 5px;
+  font-size:clamp(17px,1.8vw,24px)!important;
+  font-weight:500;
+  letter-spacing:.015em!important;
+  text-transform:none;
+  white-space:normal!important;
+}
+.watch-head{gap:18px}
+.watch-head .section-heading{flex:1 1 auto;margin-bottom:14px}
+.watch-head a{flex:0 0 auto;margin-bottom:14px;white-space:nowrap}
+.about-heading{margin-bottom:24px!important}
+.booking-intro{max-width:none;width:100%}
+.booking-intro .section-heading{margin-bottom:14px}
+.booking-intro h2,.booking-intro p{max-width:760px}
+
+/* The later generic .icon-btn rule was shrinking the hero menu control. */
+.menu-btn.icon-btn{
+  width:44px!important;
+  height:44px!important;
+  padding:8px!important;
+  border:1px solid rgba(36,215,230,.45)!important;
+  border-radius:8px!important;
+  background:rgba(3,19,27,.72)!important;
+}
+.menu-btn.icon-btn span{width:100%;margin:5px 0;height:2px}
+
+/* On desktop/tablet show the complete hero artwork instead of cropping it to the viewport. */
+@media(min-width:621px){
+  .hero-photo{
+    inset:0 0 0 auto;
+    width:auto;
+    height:100%;
+    max-width:none;
+    object-fit:contain;
+    object-position:right center;
+  }
+}
+
+/* Tablet keeps the desktop-style three-across content layout. */
+@media(min-width:621px) and (max-width:900px){
+  .gig-list{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:10px}
+  .gig-row{grid-template-columns:52px minmax(0,1fr) 58px 16px!important;gap:6px;min-height:100px;padding:9px 8px}
+  .gig-row .gig-date strong{font-size:25px}
+  .gig-row .gig-date small{font-size:9px}
+  .gig-row .gig-copy b{font-size:12px}
+  .gig-row .gig-copy span{font-size:9px}
+  .gig-row time{font-size:11px!important;gap:4px}
+  .gig-row .clock-icon{font-size:1em}
+  .video-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:12px}
+  .video-card>div:last-child{font-size:11px}
+  .thumb span{width:44px;height:44px}
+  .about-grid{grid-template-columns:38% minmax(0,1fr)!important;gap:28px}
+  .about-grid img{height:280px!important;mask-image:linear-gradient(90deg,#000 78%,transparent)!important}
+}
+
+@media(max-width:620px){
+  .request-song-heading h2{font-size:16px!important}
+  .section-heading.left,
+  .request-song-heading .section-heading,
+  .watch-head .section-heading,
+  .about-heading,
+  .booking-intro .section-heading{font-size:11px;letter-spacing:.25em}
+  .watch-head{align-items:center}
+}
