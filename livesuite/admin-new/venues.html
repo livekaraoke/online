@@ -78,8 +78,10 @@
           <small>Venue details are used by Upcoming Gigs &amp; Events.</small>
         </div>
 
-        <div id="venuesList" class="venues-list">
-          <div class="venues-empty">Loading venues…</div>
+        <div class="venues-list-scroll" aria-label="Venue Directory horizontal scroll">
+          <div id="venuesList" class="venues-list">
+            <div class="venues-empty">Loading venues…</div>
+          </div>
         </div>
       </section>
 
@@ -117,9 +119,22 @@
         </label>
 
         <label>
-          <span>MAP / WEBSITE URL</span>
-          <input id="venueWebsiteInput" type="url" placeholder="https://…" />
+          <span>WEBSITE URL</span>
+          <input id="venueWebsiteInput" type="url" placeholder="https://venuewebsite.com" />
         </label>
+
+        <label>
+          <span>MAP URL</span>
+          <input id="venueMapInput" type="url" placeholder="https://maps.google.com/…" />
+        </label>
+
+        <div class="venue-status-field">
+          <span class="venue-field-label">VENUE STATUS</span>
+          <label class="venue-closed-toggle">
+            <input id="venueClosedInput" type="checkbox" />
+            <span>Mark this venue as closed down</span>
+          </label>
+        </div>
 
         <label>
           <span>CONTACT NAME</span>
