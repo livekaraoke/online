@@ -1162,22 +1162,37 @@
   }
 
   async function ensureCurrentSongPlaying() {
-    if (!currentSongId || !currentSong) return;
+    if (!currentSongId || !currentSong) return 0;
     const { sessionId } = await getActiveSessionContext();
-    if (!sessionId) return;
+    if (!sessionId) return 0;
+
     const runRef = db.collection("karaokeControl").doc("runOrder");
-    const startedMs = Date.now();
+    let effectiveStartedMs = 0;
+
     try {
       await db.runTransaction(async tx => {
         const snap = await tx.get(runRef);
         const data = snap.exists ? (snap.data() || {}) : {};
         let items = data.sessionId === sessionId && Array.isArray(data.items) ? [...data.items] : [];
+
         let index = -1;
         if (requestId) index = items.findIndex(item => item.requestId === requestId);
-        if (index < 0) index = items.findIndex(item => item.songId === currentSongId && String(item.status || "").toLowerCase() !== "played");
+        if (index < 0) index = items.findIndex(item =>
+          item.songId === currentSongId &&
+          !["played","completed"].includes(String(item.status || "").toLowerCase())
+        );
+        if (index < 0) index = items.findIndex(item => sameSongByMetadata(item, currentSong) && !["played","completed"].includes(String(item.status || "").toLowerCase()));
 
-        // A lyric-view song is the authoritative live song. Finish any other
-        // item still marked playing, then mark/add this song as playing.
+        const existing = index >= 0 ? items[index] : null;
+        const existingStarted = existing && String(existing.status || "").toLowerCase() === "playing"
+          ? (Number(existing.playingAtMs) || (existing.playingAt?.toMillis ? existing.playingAt.toMillis() : 0))
+          : 0;
+        const startedMs = existingStarted || Date.now();
+        effectiveStartedMs = startedMs;
+
+        // lyricview.html is authoritative for what the host is actually playing.
+        // Finish any other live item, then mark this song playing. If it was not
+        // already in Run Order, insert it so all public sites can see NOW PLAYING.
         items = items.map((item,i) => {
           if (i !== index && String(item.status || "").toLowerCase() === "playing") {
             return { ...item, status:"played", playedAtMs:startedMs };
@@ -1214,16 +1229,28 @@
             addedAtMs:startedMs
           });
         }
-        tx.set(runRef,{sessionId,items,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
+
+        tx.set(runRef,{
+          sessionId,
+          items,
+          updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+        },{merge:true});
       });
+
       if (requestId) {
         await db.collection("publicSongRequests").doc(requestId).set({
-          status:"playing", playingAtMs:startedMs,
-          playingAt:firebase.firestore.Timestamp.fromMillis(startedMs),
+          status:"playing",
+          playingAtMs:effectiveStartedMs || Date.now(),
+          playingAt:firebase.firestore.Timestamp.fromMillis(effectiveStartedMs || Date.now()),
           updatedAt:firebase.firestore.FieldValue.serverTimestamp()
         },{merge:true});
       }
-    } catch (error) { console.error("Could not put current lyric-view song in Run Order:", error); }
+
+      return effectiveStartedMs;
+    } catch (error) {
+      console.error("Could not put current lyric-view song in Run Order:", error);
+      return 0;
+    }
   }
 
   async function recordCurrentSongPlayed() {
@@ -1232,15 +1259,18 @@
     const { sessionId } = await getActiveSessionContext();
     if (!sessionId) return;
 
-    // Keep the current Run Order song visible and highlighted while scrolling.
-    await setCurrentRunOrderStatus("playing");
+    // Always ensure the displayed lyric-view song exists in Run Order and is
+    // marked playing. This also supplies the exact first-start timestamp used
+    // by the public NOW PLAYING elapsed timer.
+    const startedMs = await ensureCurrentSongPlaying();
 
     if (performanceRecordCreated) return;
     performanceRecordCreated = true;
 
-    const startedAt = firebase.firestore.Timestamp.now();
+    const actualStartedMs = startedMs || Date.now();
+    const startedAt = firebase.firestore.Timestamp.fromMillis(actualStartedMs);
     const performedId =
-      `${currentSongId}_${Date.now()}_${Math.random().toString(36).slice(2,6)}`;
+      `${currentSongId}_${actualStartedMs}_${Math.random().toString(36).slice(2,6)}`;
 
     const record = {
       songId: currentSongId,
@@ -1250,6 +1280,7 @@
       requestId: requestId || "",
       source: "lyricview-autoscroll",
       startedAt,
+      playingAtMs: actualStartedMs,
       playedAt: startedAt,
       createdAt: startedAt
     };
