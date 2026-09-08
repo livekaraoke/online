@@ -50,9 +50,9 @@
     const venue=e.venue||e.name||"Event";
     const locality=eventLocality(e);
     if(compact){
-      return `<button class="hero-gig" data-event-id="${escapeHTML(e.id)}"><div class="date"><small>${d.dow}</small><strong>${d.day}</strong><small>${d.month}</small></div><div class="event-copy"><div class="hero-event-titleline"><b>${escapeHTML(venue)}</b>${locality?`<span class="hero-locality">${escapeHTML(locality)}</span>`:""}</div><em class="type-pill type-${escapeHTML(typeClass(type))}">${escapeHTML(type)}</em></div><div class="event-time">◷ ${escapeHTML(formatTime(e))}</div><span class="chev">›</span></button>`;
+      return `<button class="hero-gig" data-event-id="${escapeHTML(e.id)}"><div class="date"><small>${d.dow}</small><strong>${d.day}</strong><small>${d.month}</small></div><div class="event-copy hero-event-copy"><b>${escapeHTML(venue)}</b>${locality?`<span class="hero-locality">${escapeHTML(locality)}</span>`:""}</div><div class="event-time"><span class="clock-icon" aria-hidden="true">◷</span>${escapeHTML(formatTime(e))}</div><span class="chev">›</span></button>`;
     }
-    return `<button class="gig-row" data-event-id="${escapeHTML(e.id)}"><div class="gig-date"><small>${d.month}</small><strong>${d.day}</strong></div><div class="gig-copy"><b>${escapeHTML(venue)}</b>${locality?`<span>${escapeHTML(locality)}</span>`:""}<em class="type-pill type-${escapeHTML(typeClass(type))}">${escapeHTML(type)}</em></div><time>${escapeHTML(formatTime(e))}</time><span class="chev">›</span></button>`;
+    return `<button class="gig-row" data-event-id="${escapeHTML(e.id)}"><div class="gig-date"><small>${d.month}</small><strong>${d.day}</strong></div><div class="gig-copy"><b>${escapeHTML(venue)}</b>${locality?`<span>${escapeHTML(locality)}</span>`:""}<em class="type-pill type-${escapeHTML(typeClass(type))}">${escapeHTML(type)}</em></div><time><span class="clock-icon" aria-hidden="true">◷</span>${escapeHTML(formatTime(e))}</time><span class="chev">›</span></button>`;
   }
 
   function renderHeroGig(){
@@ -61,9 +61,8 @@
     const watch=$('watchLiveBtn');
     if(active){
       const venue=controlData.venue || activeSession?.venue || controlData.eventSnapshot?.venue || 'Live Performance';
-      const location=controlData.address || activeSession?.address || controlData.eventSnapshot?.address || '';
-      const type=controlData.sessionType || controlData.type || activeSession?.sessionType || activeSession?.type || 'Performance';
-      hero.innerHTML=`<div class="hero-gig live-now"><div class="live-label">LIVE NOW</div><div class="event-copy"><b>${escapeHTML(venue)}</b>${location?`<span>${escapeHTML(location)}</span>`:''}<em class="type-pill type-${escapeHTML(typeClass(type))}">${escapeHTML(type)}</em></div></div>`;
+      const locality=controlData.venueLocality || controlData.locality || activeSession?.venueLocality || activeSession?.locality || controlData.eventSnapshot?.venueLocality || controlData.eventSnapshot?.locality || '';
+      hero.innerHTML=`<div class="hero-gig live-now"><div class="live-label">LIVE NOW</div><div class="event-copy hero-event-copy"><b>${escapeHTML(venue)}</b>${locality?`<span class="hero-locality">${escapeHTML(locality)}</span>`:''}</div></div>`;
       watch.textContent='REQUEST A SONG →';
       watch.classList.add('is-live');
       watch.setAttribute('href','#requestSongSection');
@@ -133,7 +132,7 @@
   function listenLiveState(){
     db.collection("karaokeControl").doc("currentSession").onSnapshot(doc=>{
       const d=doc.exists?(doc.data()||{}):{}; controlData=d; const next=d.active===true?String(d.sessionId||d.activeSessionId||""):"";
-      if(next!==activeSessionId){activeSessionId=next;attachSessionDoc(next);} renderLive();
+      if(next!==activeSessionId){activeSessionId=next;attachSessionDoc(next);if($("requestDialog")?.open) renderMyRequests();} renderLive();
     },err=>console.error("Current session listener failed",err));
     db.collection("karaokeControl").doc("runOrder").onSnapshot(doc=>{
       const d=doc.exists?(doc.data()||{}):{};
@@ -273,12 +272,14 @@
     clearRequestListeners();
     const ids=trackedRequestIds();
     const box=$("myRequests");
-    if(!ids.length){box.innerHTML=`<p class="muted">Requests you make on this device will appear here.</p>`;return;}
+    if(!activeSessionId){box.innerHTML=`<p class="muted">Requests from previous sessions are hidden.</p>`;return;}
+    if(!ids.length){box.innerHTML=`<p class="muted">Requests you make in this session will appear here.</p>`;return;}
     const records=new Map();
     const paint=()=>{
-      box.innerHTML=ids.slice().reverse().map(id=>{
-        const r=records.get(id);
-        if(!r)return `<div class="my-request"><span>Loading…</span></div>`;
+      const current=ids.slice().reverse().map(id=>records.get(id)).filter(r=>r && String(r.sessionId||"")===String(activeSessionId));
+      if(!current.length){box.innerHTML=`<p class="muted">Requests you make in this session will appear here.</p>`;return;}
+      box.innerHTML=current.map(r=>{
+        const id=r.id;
         const runStatus=runOrderStatusForRequest(id);
         const effectiveStatus=runStatus||String(r.status||"active").toLowerCase();
         const playing=effectiveStatus==="playing";
@@ -403,6 +404,55 @@
     $("allGigsDialog").showModal();
   }
 
+  async function submitBookingEnquiry(event){
+    event.preventDefault();
+    const form=$("bookingForm");
+    const status=$("bookingStatus");
+    const button=$("bookingSubmitBtn");
+    if(!form.reportValidity()) return;
+    const name=$("enquiryName").value.trim();
+    const email=$("enquiryEmail").value.trim();
+    const phone=$("enquiryPhone").value.trim();
+    const eventType=$("enquiryEventType").value.trim();
+    const preferredDate=$("enquiryDate").value;
+    const venueOrLocality=$("enquiryVenue").value.trim();
+    const company=$("enquiryCompany").value.trim();
+    const guestsRaw=$("enquiryGuests").value;
+    const message=$("enquiryMessage").value.trim();
+    button.disabled=true;
+    status.className="booking-status";
+    status.textContent="Sending enquiry…";
+    try{
+      await db.collection("bookingEnquiries").add({
+        status:"pending",
+        source:"billylee26",
+        type:"Solo",
+        performerType:"Solo",
+        name,
+        email,
+        phone,
+        eventType,
+        preferredDate:preferredDate||"",
+        venueOrLocality,
+        company,
+        estimatedGuests:guestsRaw?Number(guestsRaw):null,
+        message,
+        pageUrl:location.href,
+        createdAt:firebase.firestore.FieldValue.serverTimestamp(),
+        updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+      });
+      form.reset();
+      status.className="booking-status success";
+      status.textContent=`Thanks ${name}! Your enquiry has been sent.`;
+    }catch(error){
+      console.error("Could not send booking enquiry",error);
+      status.className="booking-status error";
+      status.textContent="Could not send the enquiry. Please try again.";
+    }finally{
+      button.disabled=false;
+    }
+  }
+
   document.addEventListener("click",e=>{
     const eventBtn=e.target.closest("[data-event-id]");
     if(eventBtn){
@@ -422,6 +472,7 @@
   $("requestAnotherBtn").addEventListener("click",showRequestBrowser);
   $("viewAllGigsBtn").addEventListener("click",showAllGigs);
   $("requestSongBtn").addEventListener("click",openRequestDialog); $("drawerRequest").addEventListener("click",openRequestDialog);
+  $("bookingForm").addEventListener("submit",submitBookingEnquiry);
   $("shareBtn").addEventListener("click",async()=>{try{if(navigator.share)await navigator.share({title:document.title,url:location.href});else{await navigator.clipboard.writeText(location.href);alert("Link copied.");}}catch{}});
   $("menuBtn").addEventListener("click",()=>{$("drawer").classList.add("open");$("scrim").classList.add("show");});
   const closeDrawer=()=>{$("drawer").classList.remove("open");$("scrim").classList.remove("show");}; $("drawerClose").addEventListener("click",closeDrawer); $("scrim").addEventListener("click",closeDrawer); $("drawer").querySelectorAll("a").forEach(a=>a.addEventListener("click",closeDrawer));
