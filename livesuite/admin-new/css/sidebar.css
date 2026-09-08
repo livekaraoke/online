@@ -144,3 +144,6 @@
 .sidebar-request-item:hover {
   background: rgba(0, 255, 100, .18);
 }
+/* Enquiries pending-count badge */
+.suite-nav-count.enquiry-count{min-width:22px;height:22px;padding:0 6px;border:1px solid #ff4954;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;background:#a70f1b;color:#fff;font-size:9px;font-weight:950;box-shadow:0 0 12px rgba(255,55,70,.22)}
+.suite-nav-count.enquiry-count.hidden{display:none}

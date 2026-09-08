@@ -2,6 +2,7 @@
   let sidebarRequestsUnsub = null;
   let sidebarSessionUnsub = null;
   let sidebarRunOrderUnsub = null;
+  let sidebarEnquiriesUnsub = null;
 
   function $(id) {
     return document.getElementById(id);
@@ -28,6 +29,7 @@
       listenSidebarSongRequests();
       listenSidebarLiveSession();
       listenSidebarRunOrder();
+      listenSidebarEnquiries();
     } catch (error) {
       console.error("Could not load admin sidebar:", error);
     }
@@ -202,6 +204,29 @@
       });
   }
 
+  function listenSidebarEnquiries() {
+    const badge = $("sidebarEnquiryBadge");
+    if (!window.LK?.db) return;
+
+    if (sidebarEnquiriesUnsub) {
+      sidebarEnquiriesUnsub();
+      sidebarEnquiriesUnsub = null;
+    }
+
+    sidebarEnquiriesUnsub = LK.db
+      .collection("bookingEnquiries")
+      .where("status", "==", "pending")
+      .onSnapshot(snapshot => {
+        const count = snapshot.size;
+        if (badge) {
+          badge.textContent = String(count);
+          badge.classList.toggle("hidden", count === 0);
+        }
+      }, error => {
+        console.warn("Could not load enquiry count:", error);
+      });
+  }
+
   function listenSidebarRunOrder() {
     const badge = $("sidebarRunOrderBadge");
 
@@ -247,7 +272,8 @@
     toggleMembersPanel,
     listenSidebarSongRequests,
     listenSidebarLiveSession,
-    listenSidebarRunOrder
+    listenSidebarRunOrder,
+    listenSidebarEnquiries
   };
 
   window.scrollToAdminSection = scrollToAdminSection;
