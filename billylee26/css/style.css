@@ -343,3 +343,18 @@
 .event-detail-action{display:inline-flex;align-items:center;justify-content:center;min-width:130px;padding:11px 16px;border:1px solid var(--line);border-radius:8px;background:rgba(36,215,230,.08);color:var(--cyan);font-size:12px;font-weight:900;letter-spacing:.08em;text-decoration:none}
 .event-detail-action:hover{background:rgba(36,215,230,.16);text-decoration:none}
 @media(max-width:620px){.event-detail-actions{display:grid;grid-template-columns:1fr 1fr}.event-detail-action{min-width:0}}
+
+/* v9 — compact booking section with enquiry form in modal */
+.booking{padding:48px 0 62px}
+.booking-intro{max-width:760px;margin-bottom:0}
+.booking-open-btn{margin-top:20px;min-width:220px;padding:0 24px}
+.booking-modal{width:min(820px,calc(100% - 28px));overflow:auto;padding:26px}
+.booking-modal-head{padding-right:44px;margin-bottom:18px}
+.booking-modal-head h2{margin:6px 0 8px;font-size:28px}
+.booking-modal-head p{margin:0;color:#bdc9cc;line-height:1.55}
+.booking-modal .booking-form{margin-top:18px}
+@media(max-width:620px){
+  .booking-open-btn{width:100%}
+  .booking-modal{width:calc(100% - 12px);max-height:92vh;padding:18px 14px}
+  .booking-modal-head h2{font-size:22px}
+}
