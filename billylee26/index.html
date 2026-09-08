@@ -22,7 +22,6 @@
         <a class="hero-action primary" id="bookEnquireBtn" href="mailto:livekaraoke@protonmail.com?subject=Billy%20Lee%20Booking%20Enquiry">BOOK / ENQUIRE →</a>
         <a class="hero-action secondary" id="watchLiveBtn" href="#requestSongSection">WATCH LIVE →</a>
       </div>
-      <div class="support-copy">Thanks for supporting live music.<span>♡</span></div>
     </div>
     <div class="music-lives">Music<br>Lives<br>Here</div>
   </header>
@@ -58,8 +57,13 @@
       </div>
     </section>
 
+    <div class="support-copy support-copy-below-player">Thanks for supporting live music.<span>♡</span></div>
+
     <section class="section-shell gigs-section" id="gigs">
-      <div class="section-heading"><span>NEXT GIGS</span></div>
+      <div class="gigs-heading-row">
+        <div class="section-heading"><span>UPCOMING GIGS</span></div>
+        <button id="viewAllGigsBtn" class="view-all-gigs" type="button">VIEW ALL GIGS →</button>
+      </div>
       <div class="gig-list" id="nextGigs"></div>
     </section>
 
@@ -95,7 +99,8 @@
   <aside class="drawer" id="drawer" aria-hidden="true"><button id="drawerClose">×</button><a href="#top">HOME</a><a href="#gigs">GIGS</a><a href="#about">ABOUT</a><a href="#watch">WATCH &amp; LISTEN</a><button id="drawerRequest">REQUEST A SONG</button></aside>
   <div class="scrim" id="scrim"></div>
 
-  <dialog id="eventDialog" class="modal"><button class="modal-close" data-close="eventDialog">×</button><div id="eventDialogBody"></div></dialog>
+  <dialog id="eventDialog" class="modal event-modal"><button class="modal-close" data-close="eventDialog">×</button><div id="eventDialogBody"></div></dialog>
+  <dialog id="allGigsDialog" class="modal all-gigs-modal"><button class="modal-close" data-close="allGigsDialog">×</button><div class="all-gigs-head"><span class="eyebrow">LIVE DATES</span><h2>UPCOMING GIGS</h2></div><div id="allGigsList" class="all-gigs-list"></div></dialog>
 
   <dialog id="requestDialog" class="modal request-modal">
     <div class="request-modal-top">
@@ -131,7 +136,8 @@
       </div>
 
       <div id="requestBrowser" class="request-browser">
-        <div class="request-controls"><input id="songSearch" type="search" placeholder="Search song or artist…" autocomplete="off"></div>
+        <h3 class="full-song-list-title">FULL SONG REQUEST LIST</h3>
+        <div class="request-controls"><input id="songSearch" type="search" placeholder="Search song or artist…" autocomplete="off" inputmode="search"></div>
         <div id="requestNotice" class="request-notice"></div>
         <div id="songResults" class="song-results"></div>
       </div>
