@@ -337,3 +337,9 @@
   .booking-actions{align-items:stretch;flex-direction:column}
   .booking-submit{width:100%}
 }
+
+/* v8 — public gig detail link actions */
+.event-detail-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+.event-detail-action{display:inline-flex;align-items:center;justify-content:center;min-width:130px;padding:11px 16px;border:1px solid var(--line);border-radius:8px;background:rgba(36,215,230,.08);color:var(--cyan);font-size:12px;font-weight:900;letter-spacing:.08em;text-decoration:none}
+.event-detail-action:hover{background:rgba(36,215,230,.16);text-decoration:none}
+@media(max-width:620px){.event-detail-actions{display:grid;grid-template-columns:1fr 1fr}.event-detail-action{min-width:0}}
