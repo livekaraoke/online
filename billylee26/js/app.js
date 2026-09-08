@@ -101,35 +101,93 @@
       if(next!==activeSessionId){activeSessionId=next;attachSessionDoc(next);} renderLive();
     },err=>console.error("Current session listener failed",err));
     db.collection("karaokeControl").doc("runOrder").onSnapshot(doc=>{
-      const d=doc.exists?(doc.data()||{}):{}; runOrder=(activeSessionId && d.sessionId && d.sessionId!==activeSessionId)?[]:(Array.isArray(d.items)?d.items:[]); renderLive();
+      const d=doc.exists?(doc.data()||{}):{};
+      runOrder=(activeSessionId && d.sessionId && d.sessionId!==activeSessionId)?[]:(Array.isArray(d.items)?d.items:[]);
+      renderLive();
+      if($("requestDialog")?.open && !$("requestSongStep").hidden){
+        if(!$("requestBrowser").hidden) renderSongResults();
+        renderMyRequests();
+      }
     },err=>console.error("Run order listener failed",err));
   }
 
   async function loadPublicSongs(){
-    const cfgSnap=await db.collection("karaokeControl").doc("publicSongList").get(); const cfg=cfgSnap.exists?(cfgSnap.data()||{}):{};
+    const cfgSnap=await db.collection("karaokeControl").doc("publicSongList").get();
+    const cfg=cfgSnap.exists?(cfgSnap.data()||{}):{};
     if(cfg.setlistId){
       const setSnap=await db.collection("lyricsSetlists").doc(cfg.setlistId).get();
       if(setSnap.exists){
-        const set={id:setSnap.id,...setSnap.data()}; publicSetlist=set; $("requestListName").textContent=set.name||cfg.setlistName||"Public Song List";
-        const ids=Array.isArray(set.songIds)?set.songIds:[]; const chunks=[]; for(let i=0;i<ids.length;i+=10) chunks.push(ids.slice(i,i+10));
+        const set={id:setSnap.id,...setSnap.data()};
+        publicSetlist=set;
+        const ids=Array.isArray(set.songIds)?set.songIds:[];
+        const chunks=[]; for(let i=0;i<ids.length;i+=10) chunks.push(ids.slice(i,i+10));
         const groups=await Promise.all(chunks.map(chunk=>db.collection("lyrics").where(firebase.firestore.FieldPath.documentId(),"in",chunk).get()));
-        const map=new Map(); groups.forEach(s=>s.docs.forEach(d=>map.set(d.id,{id:d.id,...d.data()}))); songs=ids.map(id=>map.get(id)).filter(Boolean); return;
+        const map=new Map();
+        groups.forEach(group=>group.docs.forEach(doc=>map.set(doc.id,{id:doc.id,...doc.data()})));
+        songs=ids.map(id=>map.get(id)).filter(Boolean);
+        return;
       }
     }
-    const all=await db.collection("lyrics").get(); songs=all.docs.map(d=>({id:d.id,...d.data()})).filter(s=>s.title && s.publicSongListVisible!==false); publicSetlist=null; $("requestListName").textContent="Public Song List";
+    const all=await db.collection("lyrics").get();
+    songs=all.docs.map(d=>({id:d.id,...d.data()})).filter(song=>song.title && song.publicSongListVisible!==false);
+    publicSetlist=null;
+  }
+
+  function normaliseSongIdentity(value){return String(value||"").toLowerCase().replace(/[^a-z0-9]+/g,"").trim();}
+  function sameSong(item,song){
+    if(!item||!song)return false;
+    if(item.songId && item.songId===song.id)return true;
+    const a=normaliseSongIdentity(item.songTitle||item.title);
+    const b=normaliseSongIdentity(song.title);
+    if(!a||a!==b)return false;
+    const ia=normaliseSongIdentity(item.artist||item.songArtist);
+    const sa=normaliseSongIdentity(song.artist);
+    return !ia||!sa||ia===sa;
+  }
+  function songSessionState(song){
+    const matches=runOrder.filter(item=>sameSong(item,song));
+    if(matches.some(item=>String(item.status||"").toLowerCase()==="playing")) return "playing";
+    if(matches.some(item=>["played","completed"].includes(String(item.status||"").toLowerCase()))) return "played";
+    return "available";
+  }
+  function runOrderStatusForRequest(requestId){
+    const item=runOrder.find(row=>row?.requestId===requestId);
+    return item?String(item.status||"").toLowerCase():"";
   }
 
   function renderSongResults(){
-    const q=$("songSearch").value.trim().toLowerCase(); const list=(q?songs.filter(s=>`${s.title||""} ${s.artist||""}`.toLowerCase().includes(q)):songs).slice(0,80);
-    $("songResults").innerHTML=list.map(s=>`<button class="song-row${selectedRequestSongId===s.id?" selected":""}" data-song-id="${escapeHTML(s.id)}"><span><strong>${escapeHTML(s.title||"Untitled")}</strong><small>${escapeHTML(s.artist||"")}</small></span><b>＋</b></button>`).join("") || `<div class="empty-box">No songs found.</div>`;
+    const q=$("songSearch").value.trim().toLowerCase();
+    const list=(q?songs.filter(song=>`${song.title||""} ${song.artist||""}`.toLowerCase().includes(q)):songs).slice(0,120);
+    $("songResults").innerHTML=list.map(song=>{
+      const state=songSessionState(song);
+      const selected=selectedRequestSongId===song.id;
+      let action="＋", disabled="", stateClass="";
+      if(state==="playing"){action="NOW PLAYING";disabled=" disabled";stateClass=" is-playing";}
+      else if(state==="played"){action="ALREADY PLAYED";disabled=" disabled";stateClass=" is-played";}
+      else if(selected){action="SEND REQUEST";stateClass=" selected";}
+      return `<div class="song-row${stateClass}" data-song-row-id="${escapeHTML(song.id)}"><span><strong>${escapeHTML(song.title||"Untitled")}</strong><small>${escapeHTML(song.artist||"")}</small></span><button class="song-action" type="button" data-song-id="${escapeHTML(song.id)}"${disabled}>${escapeHTML(action)}</button></div>`;
+    }).join("") || `<div class="empty-box">No songs found.</div>`;
+  }
+
+  function showRequestBrowser(){
+    selectedRequestSongId="";
+    $("requestSuccess").hidden=true;
+    $("requestBrowser").hidden=false;
+    $("requestNote").value="";
+    $("songSearch").value="";
+    $("requestNotice").textContent="Choose a song. Tap +, then tap SEND REQUEST on that song.";
+    renderSongResults();
+    setTimeout(()=>$("songSearch").focus(),30);
   }
 
   async function openRequestDialog(){
     if(!(controlData.active===true && activeSessionId)){alert("Song requests are only available during an active session.");return;}
     selectedRequestSongId="";
-    $("requestNameStep").hidden=false; $("requestSongStep").hidden=true;
+    $("requestNameStep").hidden=false;
+    $("requestSongStep").hidden=true;
+    $("requestSuccess").hidden=true;
+    $("requestBrowser").hidden=false;
     $("singerName").value=localStorage.getItem("billylee26.requestName")||"";
-    $("requestListName").textContent="Enter your name to continue.";
     $("requestDialog").showModal();
     setTimeout(()=>$("singerName").focus(),50);
   }
@@ -138,43 +196,125 @@
     const name=$("singerName").value.trim();
     if(!name){$("singerName").focus();return;}
     localStorage.setItem("billylee26.requestName",name);
-    $("requestNameStep").hidden=true; $("requestSongStep").hidden=false;
+    $("requesterNameLabel").textContent=name;
+    $("editSingerName").value=name;
+    $("requestNameStep").hidden=true;
+    $("requestSongStep").hidden=false;
     $("requestNotice").textContent="Loading songs…";
-    try{await loadPublicSongs();renderSongResults();$("requestNotice").textContent="Tap + to select a song, then press SEND REQUEST.";renderMyRequests();}
-    catch(e){console.error(e);$("requestNotice").textContent="Could not load the public song list.";}
+    try{
+      await loadPublicSongs();
+      await renderMyRequests();
+      showRequestBrowser();
+    }catch(error){
+      console.error(error);
+      $("requestNotice").textContent="Could not load the public song list.";
+    }
   }
 
   function trackedRequestIds(){try{return JSON.parse(localStorage.getItem("billylee26.requestIds")||"[]");}catch{return[];}}
   function saveTrackedRequestIds(ids){localStorage.setItem("billylee26.requestIds",JSON.stringify([...new Set(ids)].slice(-40)));}
   function clearRequestListeners(){requestListeners.forEach(fn=>{try{fn();}catch{}});requestListeners=[];}
-  function statusLabel(status){const s=String(status||"active").toLowerCase(); if(s==="queued")return "ACCEPTED"; if(s==="playing")return "PLAYING"; if(["completed","played"].includes(s))return "PLAYED"; if(["declined","deleted","deletedbyhost"].includes(s))return "DECLINED"; if(s==="abandoned"||s==="left")return "REMOVED"; return "PENDING";}
+  function statusLabel(status){
+    const s=String(status||"active").toLowerCase();
+    if(s==="queued")return "ACCEPTED";
+    if(s==="playing")return "NOW PLAYING";
+    if(["completed","played"].includes(s))return "PLAYED";
+    if(["declined","deleted","deletedbyhost"].includes(s))return "DECLINED";
+    if(s==="abandoned"||s==="left")return "REMOVED";
+    return "PENDING";
+  }
   async function renderMyRequests(){
-    clearRequestListeners(); const ids=trackedRequestIds(); const box=$("myRequests"); if(!ids.length){box.innerHTML=`<p class="muted">Requests you make on this device will appear here.</p>`;return;}
+    clearRequestListeners();
+    const ids=trackedRequestIds();
+    const box=$("myRequests");
+    if(!ids.length){box.innerHTML=`<p class="muted">Requests you make on this device will appear here.</p>`;return;}
     const records=new Map();
-    const paint=()=>{box.innerHTML=ids.map(id=>{const r=records.get(id); if(!r)return `<div class="my-request"><span>Loading…</span></div>`; return `<div class="my-request"><span><strong>${escapeHTML(r.songTitle||"Song")}</strong><small>${escapeHTML(r.songArtist||r.artist||"")}</small></span><em class="request-status status-${escapeHTML(String(r.status||"active").toLowerCase())}">${statusLabel(r.status)}</em></div>`;}).join("");}; paint();
-    ids.forEach(id=>requestListeners.push(db.collection("publicSongRequests").doc(id).onSnapshot(doc=>{if(doc.exists)records.set(id,{id,...doc.data()});paint();}))); 
+    const paint=()=>{
+      box.innerHTML=ids.slice().reverse().map(id=>{
+        const r=records.get(id);
+        if(!r)return `<div class="my-request"><span>Loading…</span></div>`;
+        const runStatus=runOrderStatusForRequest(id);
+        const effectiveStatus=runStatus||String(r.status||"active").toLowerCase();
+        const playing=effectiveStatus==="playing";
+        return `<div class="my-request${playing?" is-playing":""}"><span><strong>${escapeHTML(r.songTitle||"Song")}</strong><small>${escapeHTML(r.songArtist||r.artist||"")}</small></span><em class="request-status status-${escapeHTML(effectiveStatus)}">${statusLabel(effectiveStatus)}</em></div>`;
+      }).join("");
+    };
+    paint();
+    ids.forEach(id=>requestListeners.push(db.collection("publicSongRequests").doc(id).onSnapshot(doc=>{if(doc.exists)records.set(id,{id,...doc.data()});paint();})));
   }
 
   function selectRequestSong(songId){
-    const song=songs.find(s=>s.id===songId); if(!song)return;
-    selectedRequestSongId=songId; renderSongResults();
-    $("requestCartTitle").textContent=song.title||"Selected song";
-    $("requestCartArtist").textContent=song.artist||"";
-    $("requestCart").hidden=false;
-    $("requestNotice").textContent="Selected. Press SEND REQUEST to send it to the host.";
+    const song=songs.find(item=>item.id===songId);
+    if(!song)return;
+    const state=songSessionState(song);
+    if(state!=="available")return;
+    if(selectedRequestSongId===songId){
+      sendSelectedRequest();
+      return;
+    }
+    selectedRequestSongId=songId;
+    $("requestNotice").textContent=`${song.title||"Song"} selected. Tap SEND REQUEST on that song to confirm.`;
+    renderSongResults();
   }
 
   async function sendSelectedRequest(){
-    const name=$("singerName").value.trim(); const song=songs.find(s=>s.id===selectedRequestSongId);
+    const name=(localStorage.getItem("billylee26.requestName")||"").trim();
+    const song=songs.find(item=>item.id===selectedRequestSongId);
     if(!name||!song||!activeSessionId)return;
-    const btn=$("sendRequestBtn"); btn.disabled=true;
+    if(songSessionState(song)!=="available"){
+      $("requestNotice").textContent="That song is already playing or has already been played in this session.";
+      selectedRequestSongId="";
+      renderSongResults();
+      return;
+    }
+    const rowButton=document.querySelector(`.song-action[data-song-id="${CSS.escape(song.id)}"]`);
+    if(rowButton)rowButton.disabled=true;
     try{
-      const ref=await db.collection("publicSongRequests").add({listId:publicSetlist?.id||"venue-main-public-song-list",publicSetlistId:publicSetlist?.id||"",publicSetlistName:publicSetlist?.name||"",sessionId:activeSessionId,isTestSession:false,status:"active",singerName:name,name,source:"billylee26",songId:song.id,songTitle:song.title||"",artist:song.artist||"",songArtist:song.artist||"",year:song.year||"",createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+      const note=$("requestNote").value.trim();
+      const ref=await db.collection("publicSongRequests").add({
+        listId:publicSetlist?.id||"venue-main-public-song-list",
+        publicSetlistId:publicSetlist?.id||"",
+        publicSetlistName:publicSetlist?.name||"",
+        sessionId:activeSessionId,
+        isTestSession:false,
+        status:"active",
+        singerName:name,
+        name,
+        note,
+        comment:note,
+        source:"billylee26",
+        songId:song.id,
+        songTitle:song.title||"",
+        artist:song.artist||"",
+        songArtist:song.artist||"",
+        year:song.year||"",
+        createdAt:firebase.firestore.FieldValue.serverTimestamp()
+      });
       const ids=trackedRequestIds();ids.push(ref.id);saveTrackedRequestIds(ids);
-      $("requestNotice").textContent=`${song.title} sent. Waiting for host approval.`;
-      selectedRequestSongId=""; $("requestCart").hidden=true; renderSongResults(); renderMyRequests();
-    }catch(e){console.error(e);$("requestNotice").textContent="Could not send request. Please try again.";}
-    finally{btn.disabled=false;}
+      selectedRequestSongId="";
+      $("requestBrowser").hidden=true;
+      $("requestSuccess").hidden=false;
+      $("requestSuccessText").textContent=`${song.title||"Your song"} has been sent and is awaiting approval.`;
+      await renderMyRequests();
+    }catch(error){
+      console.error(error);
+      $("requestNotice").textContent="Could not send request. Please try again.";
+      if(rowButton)rowButton.disabled=false;
+    }
+  }
+
+  function beginEditRequesterName(){
+    $("editSingerName").value=localStorage.getItem("billylee26.requestName")||$("requesterNameLabel").textContent||"";
+    $("requesterNameEdit").hidden=false;
+    setTimeout(()=>$("editSingerName").focus(),20);
+  }
+  function saveRequesterName(){
+    const name=$("editSingerName").value.trim();
+    if(!name){$("editSingerName").focus();return;}
+    localStorage.setItem("billylee26.requestName",name);
+    $("singerName").value=name;
+    $("requesterNameLabel").textContent=name;
+    $("requesterNameEdit").hidden=true;
   }
 
   function showEvent(id){const e=latestEvents.find(x=>x.id===id);if(!e)return;const d=dateFromEvent(e);$("eventDialogBody").innerHTML=`<span class="eyebrow">${escapeHTML(e.type||"EVENT")}</span><h2>${escapeHTML(e.name||e.venue||"Upcoming Gig")}</h2><p><strong>${escapeHTML(e.venue||"")}</strong></p><p>${escapeHTML(e.address||"")}</p><p>${d?escapeHTML(d.toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long",year:"numeric"})):""} • ${escapeHTML(formatTime(e))}</p>${e.notes?`<p>${escapeHTML(e.notes)}</p>`:""}`;$("eventDialog").showModal();}
@@ -187,7 +327,11 @@
   $("songSearch").addEventListener("input",renderSongResults);
   $("continueRequestBtn").addEventListener("click",continueToSongs);
   $("singerName").addEventListener("keydown",e=>{if(e.key==="Enter")continueToSongs();});
-  $("sendRequestBtn").addEventListener("click",sendSelectedRequest);
+  $("editRequesterNameBtn").addEventListener("click",beginEditRequesterName);
+  $("saveRequesterNameBtn").addEventListener("click",saveRequesterName);
+  $("cancelRequesterNameBtn").addEventListener("click",()=>{$("requesterNameEdit").hidden=true;});
+  $("editSingerName").addEventListener("keydown",e=>{if(e.key==="Enter")saveRequesterName();});
+  $("requestAnotherBtn").addEventListener("click",showRequestBrowser);
   $("requestSongBtn").addEventListener("click",openRequestDialog); $("drawerRequest").addEventListener("click",openRequestDialog);
   $("shareBtn").addEventListener("click",async()=>{try{if(navigator.share)await navigator.share({title:document.title,url:location.href});else{await navigator.clipboard.writeText(location.href);alert("Link copied.");}}catch{}});
   $("menuBtn").addEventListener("click",()=>{$("drawer").classList.add("open");$("scrim").classList.add("show");});
