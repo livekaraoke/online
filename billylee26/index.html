@@ -18,13 +18,25 @@
     <div class="hero-left">
       <img class="brand-logo" src="assets/billy-lee-logo.png" alt="Billy Lee">
       <div class="hero-gigs" id="heroGigs" aria-live="polite"></div>
+      <div class="hero-actions">
+        <a class="hero-action primary" id="bookEnquireBtn" href="mailto:livekaraoke@protonmail.com?subject=Billy%20Lee%20Booking%20Enquiry">BOOK / ENQUIRE →</a>
+        <a class="hero-action secondary" id="watchLiveBtn" href="#requestSongSection">WATCH LIVE →</a>
+      </div>
       <div class="support-copy">Thanks for supporting live music.<span>♡</span></div>
     </div>
     <div class="music-lives">Music<br>Lives<br>Here</div>
   </header>
 
   <main>
-    <section class="live-panel section-shell" id="livePanel" aria-live="polite">
+    <section class="request-song-section" id="requestSongSection">
+      <div class="request-song-bg" aria-hidden="true"></div>
+      <div class="section-shell request-song-inner">
+        <div class="request-song-heading">
+          <span class="eyebrow">REQUEST A SONG</span>
+          <h2>HEAR YOUR FAVOURITE SONG LIVE TONIGHT.</h2>
+          <p>Pick a song, send a request, and be part of the show.</p>
+        </div>
+        <section class="live-panel" id="livePanel" aria-live="polite">
       <div class="player-main">
         <img id="playerArt" class="player-art" src="assets/now-playing-placeholder.svg" alt="Current song artwork">
         <div class="player-copy">
@@ -41,6 +53,8 @@
       <div class="request-strip">
         <div class="queue-summary"><b>♫</b><span><strong id="queueCount">0</strong> request(s) in queue</span></div>
         <button id="requestSongBtn" class="primary-btn" disabled>♫ &nbsp; REQUEST A SONG →</button>
+      </div>
+        </section>
       </div>
     </section>
 
