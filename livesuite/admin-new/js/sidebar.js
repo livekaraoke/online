@@ -21,18 +21,69 @@
       target.innerHTML = await response.text();
 
       highlightCurrentPage();
+      bindSidebarProfile();
 
       if (window.LK?.profile?.applyProfileToDashboard) {
         LK.profile.applyProfileToDashboard();
       }
 
       listenSidebarSongRequests();
+      listenSidebarEnquiries();
       listenSidebarLiveSession();
       listenSidebarRunOrder();
       listenSidebarEnquiries();
     } catch (error) {
       console.error("Could not load admin sidebar:", error);
     }
+  }
+
+  function bindSidebarProfile() {
+    const auth = window.LK?.auth || window.firebase?.auth?.();
+    const db = window.LK?.db || window.firebase?.firestore?.();
+    if (!auth || !db) return;
+
+    const applyUser = user => {
+      if (!user) return;
+      if (sidebarProfileUnsub) {
+        sidebarProfileUnsub();
+        sidebarProfileUnsub = null;
+      }
+
+      const apply = profile => {
+        const nameEl = $("adminUserName");
+        const roleEl = $("adminUserRole");
+        const img = $("sidebarProfileImg");
+        const fallback = $("sidebarProfileFallback");
+        const displayName = String(profile?.displayName || user.displayName || "Admin").trim() || "Admin";
+        const photoURL = String(profile?.photoURL || user.photoURL || "").trim();
+
+        if (nameEl) nameEl.textContent = displayName;
+        if (roleEl) roleEl.textContent = profile?.role || "Admin";
+        if (img && fallback) {
+          img.onerror = () => {
+            img.style.display = "none";
+            fallback.style.display = "grid";
+          };
+          if (photoURL) {
+            img.src = photoURL;
+            img.style.display = "block";
+            fallback.style.display = "none";
+          } else {
+            img.removeAttribute("src");
+            img.style.display = "none";
+            fallback.style.display = "grid";
+          }
+        }
+      };
+
+      apply({});
+      sidebarProfileUnsub = db.collection("userProfiles").doc(user.uid).onSnapshot(snap => {
+        apply(snap.exists ? (snap.data() || {}) : {});
+      }, error => console.warn("Could not load sidebar profile:", error));
+    };
+
+    if (auth.currentUser) applyUser(auth.currentUser);
+    else auth.onAuthStateChanged(applyUser);
   }
 
   function highlightCurrentPage() {
@@ -271,6 +322,7 @@
     highlightCurrentPage,
     toggleMembersPanel,
     listenSidebarSongRequests,
+    listenSidebarEnquiries,
     listenSidebarLiveSession,
     listenSidebarRunOrder,
     listenSidebarEnquiries
