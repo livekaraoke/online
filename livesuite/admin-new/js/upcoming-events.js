@@ -800,6 +800,7 @@
       contact: venueCombinedContact(selectedVenue),
       venueLocality: selectedVenue?.locality || "",
       venueWebsite: selectedVenue?.website || "",
+      venueMapUrl: selectedVenue?.mapUrl || "",
       venueContactPhone: selectedVenue?.contactPhone || "",
       venueContactEmail: selectedVenue?.contactEmail || "",
       notes: $("eventNotesInput").value.trim(),
