@@ -41,12 +41,18 @@
     return new Date(2000,0,1,h,m||0).toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit",hour12:false});
   }
   function typeClass(type){return String(type||"Other").toLowerCase().replace(/[^a-z0-9]+/g,"-");}
+  function eventLocality(e){
+    return e?.venueLocality || e?.locality || e?.location || "";
+  }
   function eventCard(e, compact=false){
-    const d=formatDateParts(e); const type=e.type||"Other"; const venue=e.venue||e.name||"Event"; const location=e.address||e.location||"";
+    const d=formatDateParts(e);
+    const type=e.type||"Other";
+    const venue=e.venue||e.name||"Event";
+    const locality=eventLocality(e);
     if(compact){
-      return `<button class="hero-gig" data-event-id="${escapeHTML(e.id)}"><div class="date"><small>${d.dow}</small><strong>${d.day}</strong><small>${d.month}</small></div><div class="event-copy"><b>${escapeHTML(venue)}</b><span>${escapeHTML(location)}</span><em class="type-pill type-${escapeHTML(typeClass(type))}">${escapeHTML(type)}</em></div><div class="event-time">◷ ${escapeHTML(formatTime(e))}</div><span class="chev">›</span></button>`;
+      return `<button class="hero-gig" data-event-id="${escapeHTML(e.id)}"><div class="date"><small>${d.dow}</small><strong>${d.day}</strong><small>${d.month}</small></div><div class="event-copy"><div class="hero-event-titleline"><b>${escapeHTML(venue)}</b>${locality?`<span class="hero-locality">${escapeHTML(locality)}</span>`:""}</div><em class="type-pill type-${escapeHTML(typeClass(type))}">${escapeHTML(type)}</em></div><div class="event-time">◷ ${escapeHTML(formatTime(e))}</div><span class="chev">›</span></button>`;
     }
-    return `<button class="gig-row" data-event-id="${escapeHTML(e.id)}"><div class="gig-date"><small>${d.month}</small><strong>${d.day}</strong></div><div class="gig-copy"><b>${escapeHTML(venue)}</b><span>${escapeHTML(location)}</span><em class="type-pill type-${escapeHTML(typeClass(type))}">${escapeHTML(type)}</em></div><time>${escapeHTML(formatTime(e))}</time><span class="chev">›</span></button>`;
+    return `<button class="gig-row" data-event-id="${escapeHTML(e.id)}"><div class="gig-date"><small>${d.month}</small><strong>${d.day}</strong></div><div class="gig-copy"><b>${escapeHTML(venue)}</b>${locality?`<span>${escapeHTML(locality)}</span>`:""}<em class="type-pill type-${escapeHTML(typeClass(type))}">${escapeHTML(type)}</em></div><time>${escapeHTML(formatTime(e))}</time><span class="chev">›</span></button>`;
   }
 
   function renderHeroGig(){
@@ -358,17 +364,25 @@
     $("requesterNameEdit").hidden=true;
   }
 
-  function showEvent(id){
+  async function showEvent(id){
     const e=latestEvents.find(x=>x.id===id); if(!e)return;
+    let venueDoc={};
+    if(e.venueId){
+      try{
+        const snap=await db.collection("venues").doc(e.venueId).get();
+        if(snap.exists) venueDoc=snap.data()||{};
+      }catch(error){console.warn("Could not load venue details",error);}
+    }
+    const venueName=e.venue||venueDoc.name||e.name||"Upcoming Gig";
+    const address=e.address||venueDoc.address||"";
+    const locality=e.venueLocality||e.locality||venueDoc.locality||"";
+    const website=e.venueWebsite||e.website||venueDoc.website||"";
     const d=dateFromEvent(e);
-    const type=e.type||"Event";
-    const details=[
-      e.address||e.location||"",
-      d?d.toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long",year:"numeric"}):"",
-      formatTime(e),
-      e.endTime?`Ends ${e.endTime}`:""
-    ].filter(Boolean);
-    $("eventDialogBody").innerHTML=`<span class="eyebrow">${escapeHTML(type)}</span><h2>${escapeHTML(e.name||e.venue||"Upcoming Gig")}</h2><p><strong>${escapeHTML(e.venue||"")}</strong></p><p>${escapeHTML(details.join(" • "))}</p>${e.contactName?`<p>Contact: ${escapeHTML(e.contactName)}</p>`:""}${e.notes?`<p>${escapeHTML(e.notes)}</p>`:""}`;
+    const dateText=d?d.toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long",year:"numeric"}):"TBC";
+    const timeText=formatTime(e);
+    const websiteHtml=website?`<a class="event-detail-link" href="${escapeHTML(website)}" target="_blank" rel="noopener noreferrer">${escapeHTML(website)}</a>`:`<span class="event-detail-muted">Not provided</span>`;
+    const notes=e.notes?escapeHTML(e.notes):`<span class="event-detail-muted">No notes</span>`;
+    $("eventDialogBody").innerHTML=`<span class="eyebrow">GIG DETAILS</span><h2>${escapeHTML(venueName)}</h2><dl class="event-detail-list"><div><dt>VENUE NAME</dt><dd>${escapeHTML(venueName)}</dd></div><div><dt>ADDRESS</dt><dd>${escapeHTML(address||"Not provided")}</dd></div><div><dt>LOCALITY</dt><dd>${escapeHTML(locality||"Not provided")}</dd></div><div><dt>DATE & START TIME</dt><dd>${escapeHTML(dateText)} · ${escapeHTML(timeText)}</dd></div><div><dt>WEBSITE URL</dt><dd>${websiteHtml}</dd></div><div><dt>GIG NOTES</dt><dd>${notes}</dd></div></dl>`;
     $("eventDialog").showModal();
   }
   function showAllGigs(){
