@@ -358,3 +358,18 @@
   .booking-modal{width:calc(100% - 12px);max-height:92vh;padding:18px 14px}
   .booking-modal-head h2{font-size:22px}
 }
+
+/* v10 — booking alignment, current-gig details and section consistency */
+.booking-intro{text-align:center;margin-left:auto;margin-right:auto}
+.booking-intro .section-heading.left{justify-content:center}
+.booking-intro .section-heading.left:before{display:block}
+.booking-open-btn{display:block;margin-left:auto;margin-right:auto}
+.booking-modal-head h2,.booking-intro h2{text-transform:none}
+.support-copy-below-player{padding-top:30px!important;margin-top:38px!important}
+.about .section-heading{max-width:none;width:100%}
+.hero-gig.live-now{grid-template-columns:auto minmax(0,1fr) 24px;width:100%;cursor:pointer}
+.hero-gig.live-now .event-copy{border-left:0;padding-left:0}
+@media(max-width:620px){.booking-open-btn{width:min(100%,320px)}}
+@media(max-width:620px){
+  .hero-gig.live-now{grid-template-columns:82px minmax(0,1fr) 22px!important}
+}

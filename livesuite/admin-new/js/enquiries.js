@@ -9,6 +9,15 @@
   function esc(v){return String(v??"").replace(/[&<>\"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
   function timeMs(v){if(v?.toMillis)return v.toMillis();if(v?.toDate)return v.toDate().getTime();return 0;}
   function fmtDate(v){const ms=timeMs(v);return ms?new Date(ms).toLocaleString("en-GB",{day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"}):"—";}
+
+  function sourceLabel(e){
+    const raw=String(e?.source||e?.sourceKey||"website").trim();
+    const key=raw.toLowerCase();
+    if(key==="billylee26" || key==="billy lee" || key==="billy lee website") return "Billy Lee Website";
+    if(key==="roxanna" || key==="roxanna website") return "Roxanna Website";
+    if(key==="live-karaoke" || key==="live karaoke" || key==="live karaoke website") return "Live Karaoke Website";
+    return raw||"Website";
+  }
   function filtered(){
     const q=String($("enquirySearch")?.value||"").trim().toLowerCase();
     const status=String($("enquiryStatusFilter")?.value||"");
@@ -26,7 +35,7 @@
       ["COMPANY / ORGANISATION",e.company],
       ["ESTIMATED GUESTS",e.estimatedGuests!=null?String(e.estimatedGuests):""],
       ["PERFORMER TYPE",e.type||e.performerType],
-      ["SOURCE",e.source]
+      ["SOURCE WEBSITE",sourceLabel(e)]
     ].filter(([,v])=>String(v??"").trim());
     let out=items.map(([k,v])=>`<div class="enquiry-detail"><b>${esc(k)}</b><span>${esc(v)}</span></div>`).join("");
     if(e.message)out+=`<div class="enquiry-detail enquiry-message"><b>MESSAGE / DETAILS</b><span>${esc(e.message)}</span></div>`;
@@ -39,7 +48,7 @@
     const rows=filtered();$("enquiriesResultCount").textContent=`${rows.length} enquir${rows.length===1?"y":"ies"}`;
     $("enquiriesList").innerHTML=rows.length?rows.map(e=>{
       const status=String(e.status||"pending");
-      return `<article class="enquiry-card${status==="completed"?" is-completed":""}"><div class="enquiry-meta"><span class="enquiry-status ${esc(status)}">${status.toUpperCase()}</span><span class="enquiry-date">${esc(fmtDate(e.createdAt))}</span><span class="enquiry-source">${esc(e.source||"website")} • ${esc(e.type||e.performerType||"—")}</span></div><div class="enquiry-main"><h3>${esc(e.name||"Unnamed enquiry")}</h3><div class="enquiry-contact">${e.email?`<a href="mailto:${esc(e.email)}">${esc(e.email)}</a>`:""}${e.phone?`<a href="tel:${esc(e.phone)}">${esc(e.phone)}</a>`:""}</div><div class="enquiry-details">${details(e)}</div></div><div class="enquiry-actions"><button type="button" class="enquiries-btn ${status==="completed"?"reopen":"completed"}" data-enquiry-status="${esc(e.id)}" data-next-status="${status==="completed"?"pending":"completed"}">${status==="completed"?"REOPEN":"MARK COMPLETED"}</button></div></article>`;
+      return `<article class="enquiry-card${status==="completed"?" is-completed":""}"><div class="enquiry-meta"><span class="enquiry-status ${esc(status)}">${status.toUpperCase()}</span><span class="enquiry-date">${esc(fmtDate(e.createdAt))}</span><span class="enquiry-source">${esc(sourceLabel(e))} • ${esc(e.type||e.performerType||"—")}</span></div><div class="enquiry-main"><h3>${esc(e.name||"Unnamed enquiry")}</h3><div class="enquiry-contact">${e.email?`<a href="mailto:${esc(e.email)}">${esc(e.email)}</a>`:""}${e.phone?`<a href="tel:${esc(e.phone)}">${esc(e.phone)}</a>`:""}</div><div class="enquiry-details">${details(e)}</div></div><div class="enquiry-actions"><button type="button" class="enquiries-btn ${status==="completed"?"reopen":"completed"}" data-enquiry-status="${esc(e.id)}" data-next-status="${status==="completed"?"pending":"completed"}">${status==="completed"?"REOPEN":"MARK COMPLETED"}</button></div></article>`;
     }).join(""):`<div class="enquiries-empty">No enquiries match the current filters.</div>`;
   }
   function listen(){

@@ -559,6 +559,38 @@
     </a>
   </section>
 
+
+  <!-- ENQUIRE -->
+  <section class="section dark-section enquiry-section" id="enquire">
+    <h2>BOOK / ENQUIRE</h2>
+    <p>Bring Live Karaoke to your venue, corporate event, wedding, private party or special occasion.</p>
+    <button class="main-button enquiry-open-btn" id="liveKaraokeEnquiryOpen" type="button">BOOK / ENQUIRE</button>
+  </section>
+
+  <dialog class="booking-enquiry-dialog" id="liveKaraokeEnquiryDialog">
+    <button class="booking-enquiry-close" id="liveKaraokeEnquiryClose" type="button" aria-label="Close">×</button>
+    <div class="booking-enquiry-head">
+      <span>LIVE KARAOKE</span>
+      <h2>Book / Enquire</h2>
+      <p>Tell us about your event and we’ll get back to you.</p>
+    </div>
+    <form id="liveKaraokeEnquiryForm" class="booking-enquiry-form">
+      <div class="booking-enquiry-grid">
+        <label><span>YOUR NAME *</span><input id="lkEnquiryName" type="text" maxlength="80" required autocomplete="name"></label>
+        <label><span>EMAIL *</span><input id="lkEnquiryEmail" type="email" maxlength="120" required autocomplete="email"></label>
+        <label><span>PHONE</span><input id="lkEnquiryPhone" type="tel" maxlength="50" autocomplete="tel"></label>
+        <label><span>EVENT / BOOKING TYPE *</span><select id="lkEnquiryEventType" required><option value="">Choose one…</option><option>Venue / Bar / Restaurant</option><option>Corporate Event</option><option>Wedding</option><option>Private Party</option><option>Hotel / Resort</option><option>Festival / Public Event</option><option>Other</option></select></label>
+        <label><span>PREFERRED DATE</span><input id="lkEnquiryDate" type="date"></label>
+        <label><span>VENUE / LOCALITY</span><input id="lkEnquiryVenue" type="text" maxlength="140" placeholder="Venue name or locality"></label>
+        <label><span>ESTIMATED GUESTS</span><input id="lkEnquiryGuests" type="number" min="0" step="1" placeholder="Optional"></label>
+        <label><span>COMPANY / ORGANISATION</span><input id="lkEnquiryCompany" type="text" maxlength="120" placeholder="Optional"></label>
+        <label class="wide"><span>MESSAGE / DETAILS *</span><textarea id="lkEnquiryMessage" rows="5" maxlength="1500" required placeholder="Tell us about the event, timings, venue and anything else useful."></textarea></label>
+      </div>
+      <button id="lkEnquirySubmit" class="main-button booking-enquiry-submit" type="submit">SEND ENQUIRY</button>
+      <p id="lkEnquiryStatus" class="booking-enquiry-status" aria-live="polite"></p>
+    </form>
+  </dialog>
+
   <!-- COMMUNITY -->
   <section class="section dark-section">
     <h2>JOIN THE COMMUNITY</h2>
@@ -650,6 +682,68 @@ function smoothScroll(e) {
 }
 </script>
 
+
+<script>
+(() => {
+  "use strict";
+  const dialog = document.getElementById("liveKaraokeEnquiryDialog");
+  const form = document.getElementById("liveKaraokeEnquiryForm");
+  const openBtn = document.getElementById("liveKaraokeEnquiryOpen");
+  const closeBtn = document.getElementById("liveKaraokeEnquiryClose");
+  const submitBtn = document.getElementById("lkEnquirySubmit");
+  const status = document.getElementById("lkEnquiryStatus");
+  if (!dialog || !form || !openBtn) return;
+
+  openBtn.addEventListener("click", () => {
+    status.textContent = "";
+    status.className = "booking-enquiry-status";
+    dialog.showModal();
+  });
+  closeBtn.addEventListener("click", () => dialog.close());
+  dialog.addEventListener("click", event => { if (event.target === dialog) dialog.close(); });
+
+  form.addEventListener("submit", async event => {
+    event.preventDefault();
+    if (!form.reportValidity()) return;
+    const guestsRaw = document.getElementById("lkEnquiryGuests").value;
+    submitBtn.disabled = true;
+    status.className = "booking-enquiry-status";
+    status.textContent = "Sending enquiry…";
+    try {
+      const db = firebase.firestore();
+      const name = document.getElementById("lkEnquiryName").value.trim();
+      await db.collection("bookingEnquiries").add({
+        status: "pending",
+        source: "Live Karaoke Website",
+        sourceKey: "live-karaoke",
+        type: "Live Karaoke",
+        performerType: "Live Karaoke",
+        name,
+        email: document.getElementById("lkEnquiryEmail").value.trim(),
+        phone: document.getElementById("lkEnquiryPhone").value.trim(),
+        eventType: document.getElementById("lkEnquiryEventType").value.trim(),
+        preferredDate: document.getElementById("lkEnquiryDate").value || "",
+        venueOrLocality: document.getElementById("lkEnquiryVenue").value.trim(),
+        company: document.getElementById("lkEnquiryCompany").value.trim(),
+        estimatedGuests: guestsRaw ? Number(guestsRaw) : null,
+        message: document.getElementById("lkEnquiryMessage").value.trim(),
+        pageUrl: location.href,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      form.reset();
+      status.className = "booking-enquiry-status success";
+      status.textContent = `Thanks ${name}! Your enquiry has been sent.`;
+    } catch (error) {
+      console.error("Could not send Live Karaoke booking enquiry", error);
+      status.className = "booking-enquiry-status error";
+      status.textContent = "Could not send the enquiry. Please try again.";
+    } finally {
+      submitBtn.disabled = false;
+    }
+  });
+})();
+</script>
 
 </body>
 </html>

@@ -62,7 +62,8 @@
     if(active){
       const venue=controlData.venue || activeSession?.venue || controlData.eventSnapshot?.venue || 'Live Performance';
       const locality=controlData.venueLocality || controlData.locality || activeSession?.venueLocality || activeSession?.locality || controlData.eventSnapshot?.venueLocality || controlData.eventSnapshot?.locality || '';
-      hero.innerHTML=`<div class="hero-gig live-now"><div class="live-label">LIVE NOW</div><div class="event-copy hero-event-copy"><b>${escapeHTML(venue)}</b>${locality?`<span class="hero-locality">${escapeHTML(locality)}</span>`:''}</div></div>`;
+      const activeEventId=String(controlData.eventId || controlData.upcomingEventId || controlData.linkedEventId || activeSession?.eventId || activeSession?.upcomingEventId || activeSession?.linkedEventId || "").trim();
+      hero.innerHTML=`<button class="hero-gig live-now" type="button" ${activeEventId?`data-event-id="${escapeHTML(activeEventId)}"`:`data-current-event="1"`}><div class="live-label">LIVE NOW</div><div class="event-copy hero-event-copy"><b>${escapeHTML(venue)}</b>${locality?`<span class="hero-locality">${escapeHTML(locality)}</span>`:''}</div><span class="chev">›</span></button>`;
       watch.textContent='REQUEST A SONG →';
       watch.classList.add('is-live');
       watch.setAttribute('href','#requestSongSection');
@@ -365,8 +366,8 @@
     $("requesterNameEdit").hidden=true;
   }
 
-  async function showEvent(id){
-    const e=latestEvents.find(x=>x.id===id); if(!e)return;
+  async function showEventDetails(eventData){
+    const e=eventData||{};
     let venueDoc={};
     if(e.venueId){
       try{
@@ -374,7 +375,7 @@
         if(snap.exists) venueDoc=snap.data()||{};
       }catch(error){console.warn("Could not load venue details",error);}
     }
-    const venueName=e.venue||venueDoc.name||e.name||"Upcoming Gig";
+    const venueName=e.venue||venueDoc.name||e.name||"Live Gig";
     const address=e.address||venueDoc.address||"";
     const locality=e.venueLocality||e.locality||venueDoc.locality||"";
     const website=e.venueWebsite||e.website||venueDoc.website||"";
@@ -400,6 +401,33 @@
     if(mapUrl){ const href=safeUrl(mapUrl); links.push(`<a class="event-detail-action" href="${escapeHTML(href)}" target="_blank" rel="noopener noreferrer">LOCATION ↗</a>`); }
     $("eventDialogBody").innerHTML=`<span class="eyebrow">GIG DETAILS</span><h2>${escapeHTML(venueName)}</h2><dl class="event-detail-list">${rows.join("")}</dl>${links.length?`<div class="event-detail-actions">${links.join("")}</div>`:""}`;
     $("eventDialog").showModal();
+  }
+
+  async function showEvent(id){
+    const e=latestEvents.find(x=>x.id===id);
+    if(e) return showEventDetails(e);
+    if(controlData.active===true && activeSessionId) return showCurrentEvent();
+  }
+
+  async function showCurrentEvent(){
+    const eventId=String(controlData.eventId || controlData.upcomingEventId || controlData.linkedEventId || activeSession?.eventId || activeSession?.upcomingEventId || activeSession?.linkedEventId || "").trim();
+    const fromList=eventId?latestEvents.find(x=>x.id===eventId):latestEvents.find(x=>x.linkedSessionId===activeSessionId);
+    if(fromList) return showEventDetails(fromList);
+    const snapshot=controlData.eventSnapshot||activeSession?.eventSnapshot||{};
+    const merged={
+      ...snapshot,
+      venueId: snapshot.venueId || controlData.venueId || activeSession?.venueId || "",
+      venue: snapshot.venue || controlData.venue || activeSession?.venue || "",
+      address: snapshot.address || controlData.address || activeSession?.address || "",
+      venueLocality: snapshot.venueLocality || snapshot.locality || controlData.venueLocality || controlData.locality || activeSession?.venueLocality || activeSession?.locality || "",
+      venueWebsite: snapshot.venueWebsite || snapshot.website || controlData.venueWebsite || controlData.website || activeSession?.venueWebsite || activeSession?.website || "",
+      venueMapUrl: snapshot.venueMapUrl || snapshot.mapUrl || controlData.venueMapUrl || controlData.mapUrl || activeSession?.venueMapUrl || activeSession?.mapUrl || "",
+      date: snapshot.date || controlData.date || activeSession?.date || "",
+      startTime: snapshot.startTime || controlData.startTime || activeSession?.startTime || "",
+      scheduledStartAt: snapshot.scheduledStartAt || controlData.scheduledStartAt || activeSession?.scheduledStartAt || null,
+      notes: snapshot.notes || controlData.notes || activeSession?.notes || ""
+    };
+    return showEventDetails(merged);
   }
   function showAllGigs(){
     const upcoming=latestEvents.filter(eventIsUpcoming).sort(eventSort);
@@ -428,7 +456,8 @@
     try{
       await db.collection("bookingEnquiries").add({
         status:"pending",
-        source:"billylee26",
+        source:"Billy Lee Website",
+        sourceKey:"billylee26",
         type:"Solo",
         performerType:"Solo",
         name,
@@ -462,6 +491,8 @@
       if($("allGigsDialog")?.open) $("allGigsDialog").close();
       showEvent(eventBtn.dataset.eventId);
     }
+    const currentEventBtn=e.target.closest("[data-current-event]");
+    if(currentEventBtn) showCurrentEvent();
     const song=e.target.closest("[data-song-id]"); if(song)selectRequestSong(song.dataset.songId);
     const close=e.target.closest("[data-close]"); if(close)$(close.dataset.close)?.close();
   });

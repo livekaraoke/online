@@ -113,6 +113,16 @@
       </div>
     </section>
 
+
+    <section class="section-block booking-enquiry-block" id="enquireSection">
+      <div class="section-heading">
+        <h2>BOOK / ENQUIRE</h2>
+        <span class="heading-rule"></span>
+      </div>
+      <p>Bring ROXANNA to your venue, corporate event, wedding, private party or special occasion.</p>
+      <button class="primary-btn booking-enquiry-open" id="roxannaEnquiryOpen" type="button">BOOK / ENQUIRE</button>
+    </section>
+
     <section class="section-block connect-block" id="connectSection">
       <div class="section-heading">
         <h2>FOLLOW &amp; CONNECT</h2>
@@ -182,6 +192,33 @@
     </div>
   </div>
 
+
+  <div class="modal hidden" id="roxannaEnquiryModal" role="dialog" aria-modal="true" aria-labelledby="roxannaEnquiryTitle">
+    <div class="modal-card booking-enquiry-card">
+      <button class="modal-close" type="button" data-close="roxannaEnquiryModal" aria-label="Close">×</button>
+      <div class="modal-heading">
+        <span>ROXANNA</span>
+        <h2 id="roxannaEnquiryTitle">BOOK / ENQUIRE</h2>
+        <p>Tell us about your event and we’ll get back to you.</p>
+      </div>
+      <form id="roxannaEnquiryForm" class="roxanna-enquiry-form">
+        <div class="roxanna-enquiry-grid">
+          <label><span class="field-label">YOUR NAME *</span><input class="field-input" id="rxEnquiryName" type="text" maxlength="80" required autocomplete="name"></label>
+          <label><span class="field-label">EMAIL *</span><input class="field-input" id="rxEnquiryEmail" type="email" maxlength="120" required autocomplete="email"></label>
+          <label><span class="field-label">PHONE</span><input class="field-input" id="rxEnquiryPhone" type="tel" maxlength="50" autocomplete="tel"></label>
+          <label><span class="field-label">EVENT / BOOKING TYPE *</span><select class="field-input" id="rxEnquiryEventType" required><option value="">Choose one…</option><option>Venue / Bar / Restaurant</option><option>Corporate Event</option><option>Wedding</option><option>Private Party</option><option>Hotel / Resort</option><option>Festival / Public Event</option><option>Other</option></select></label>
+          <label><span class="field-label">PREFERRED DATE</span><input class="field-input" id="rxEnquiryDate" type="date"></label>
+          <label><span class="field-label">VENUE / LOCALITY</span><input class="field-input" id="rxEnquiryVenue" type="text" maxlength="140" placeholder="Venue name or locality"></label>
+          <label><span class="field-label">ESTIMATED GUESTS</span><input class="field-input" id="rxEnquiryGuests" type="number" min="0" step="1" placeholder="Optional"></label>
+          <label><span class="field-label">COMPANY / ORGANISATION</span><input class="field-input" id="rxEnquiryCompany" type="text" maxlength="120" placeholder="Optional"></label>
+          <label class="wide"><span class="field-label">MESSAGE / DETAILS *</span><textarea class="field-input" id="rxEnquiryMessage" rows="5" maxlength="1500" required placeholder="Tell us about the event, timings, venue and anything else useful."></textarea></label>
+        </div>
+        <button class="primary-btn" id="rxEnquirySubmit" type="submit">SEND ENQUIRY</button>
+        <p class="form-message" id="rxEnquiryStatus" aria-live="polite"></p>
+      </form>
+    </div>
+  </div>
+
   <div class="toast" id="toast" aria-live="polite"></div>
 
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -191,5 +228,67 @@
   <script src="js/config.js"></script>
   <script src="js/firebase-config.js"></script>
   <script src="js/app.js"></script>
+
+  <script>
+    (() => {
+      "use strict";
+      const $ = id => document.getElementById(id);
+      const modal = $("roxannaEnquiryModal");
+      const form = $("roxannaEnquiryForm");
+      const openBtn = $("roxannaEnquiryOpen");
+      if (!modal || !form || !openBtn) return;
+
+      openBtn.addEventListener("click", () => {
+        $("rxEnquiryStatus").textContent = "";
+        $("rxEnquiryStatus").className = "form-message";
+        modal.classList.remove("hidden");
+        document.body.classList.add("modal-open");
+      });
+
+      form.addEventListener("submit", async event => {
+        event.preventDefault();
+        if (!form.reportValidity()) return;
+        const submitBtn = $("rxEnquirySubmit");
+        const status = $("rxEnquiryStatus");
+        const guestsRaw = $("rxEnquiryGuests").value;
+        submitBtn.disabled = true;
+        status.className = "form-message";
+        status.textContent = "Sending enquiry…";
+        try {
+          const db = window.ROXANNA_DB || firebase.firestore();
+          const name = $("rxEnquiryName").value.trim();
+          await db.collection("bookingEnquiries").add({
+            status: "pending",
+            source: "Roxanna Website",
+            sourceKey: "roxanna",
+            type: "Roxanna",
+            performerType: "Roxanna",
+            name,
+            email: $("rxEnquiryEmail").value.trim(),
+            phone: $("rxEnquiryPhone").value.trim(),
+            eventType: $("rxEnquiryEventType").value.trim(),
+            preferredDate: $("rxEnquiryDate").value || "",
+            venueOrLocality: $("rxEnquiryVenue").value.trim(),
+            company: $("rxEnquiryCompany").value.trim(),
+            estimatedGuests: guestsRaw ? Number(guestsRaw) : null,
+            message: $("rxEnquiryMessage").value.trim(),
+            pageUrl: location.href,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+          form.reset();
+          status.className = "form-message success";
+          status.textContent = `Thanks ${name}! Your enquiry has been sent.`;
+        } catch (error) {
+          console.error("Could not send Roxanna booking enquiry", error);
+          status.className = "form-message error";
+          status.textContent = "Could not send the enquiry. Please try again.";
+        } finally {
+          submitBtn.disabled = false;
+        }
+      });
+    })();
+  </script>
+
 </body>
 </html>
