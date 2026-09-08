@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 520" preserveAspectRatio="xMidYMax slice">
+<defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0b7590" stop-opacity=".12"/><stop offset="1" stop-color="#02070b" stop-opacity=".92"/></linearGradient><filter id="blur"><feGaussianBlur stdDeviation="3"/></filter></defs>
+<rect width="1600" height="520" fill="url(#g)"/>
+<g fill="#06151c" opacity=".92">
+<circle cx="70" cy="405" r="42"/><circle cx="155" cy="385" r="52"/><circle cx="260" cy="420" r="44"/><circle cx="350" cy="380" r="55"/><circle cx="455" cy="410" r="46"/><circle cx="560" cy="390" r="56"/><circle cx="680" cy="415" r="48"/><circle cx="790" cy="385" r="58"/><circle cx="910" cy="410" r="48"/><circle cx="1015" cy="380" r="56"/><circle cx="1135" cy="412" r="47"/><circle cx="1245" cy="382" r="55"/><circle cx="1365" cy="410" r="48"/><circle cx="1490" cy="388" r="58"/>
+<path d="M0 455 Q130 410 270 455T540 455T810 455T1080 455T1350 455T1620 455V520H0Z"/>
+<path d="M125 400l-28-140 22-5 33 120 18-185 20 2-8 214zm255-20-42-150 22-7 44 115 1-174 22 1 12 193zm290 18-18-176 22-3 25 139 40-181 21 6-31 211zm305-10-30-155 22-5 36 120 19-181 21 2-8 210zm330 15-20-164 22-3 28 124 34-175 22 5-24 207z"/>
+</g>
+<g fill="#20cde0" opacity=".08" filter="url(#blur)"><circle cx="220" cy="280" r="80"/><circle cx="760" cy="250" r="105"/><circle cx="1320" cy="285" r="90"/></g>
+</svg>
