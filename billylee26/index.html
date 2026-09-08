@@ -90,22 +90,9 @@
       <div class="booking-intro">
         <div class="section-heading compact left"><span>BOOK / ENQUIRE</span></div>
         <h2>BRING THE SHOW TO YOUR EVENT.</h2>
-        <p>Venues, corporate events, weddings and private parties — send the details below and I’ll get back to you.</p>
+        <p>Venues, corporate events, weddings and private parties — send me the details and I’ll get back to you.</p>
+        <button id="openBookingDialogBtn" class="primary-btn booking-open-btn" type="button">BOOK / ENQUIRE →</button>
       </div>
-      <form id="bookingForm" class="booking-form">
-        <div class="booking-grid">
-          <label><span>YOUR NAME *</span><input id="enquiryName" name="name" type="text" maxlength="80" required autocomplete="name"></label>
-          <label><span>EMAIL *</span><input id="enquiryEmail" name="email" type="email" maxlength="120" required autocomplete="email"></label>
-          <label><span>PHONE</span><input id="enquiryPhone" name="phone" type="tel" maxlength="50" autocomplete="tel"></label>
-          <label><span>EVENT / BOOKING TYPE *</span><select id="enquiryEventType" name="eventType" required><option value="">Choose one…</option><option>Venue / Bar / Restaurant</option><option>Corporate Event</option><option>Wedding</option><option>Private Party</option><option>Hotel / Resort</option><option>Festival / Public Event</option><option>Other</option></select></label>
-          <label><span>PREFERRED DATE</span><input id="enquiryDate" name="preferredDate" type="date"></label>
-          <label><span>VENUE / LOCALITY</span><input id="enquiryVenue" name="venueOrLocality" type="text" maxlength="140" placeholder="Venue name or locality"></label>
-          <label><span>ESTIMATED GUESTS</span><input id="enquiryGuests" name="estimatedGuests" type="number" min="0" step="1" placeholder="Optional"></label>
-          <label><span>COMPANY / ORGANISATION</span><input id="enquiryCompany" name="company" type="text" maxlength="120" placeholder="Optional"></label>
-          <label class="wide"><span>MESSAGE / DETAILS *</span><textarea id="enquiryMessage" name="message" rows="5" maxlength="1500" required placeholder="Tell me about the event, timings, setup, music style, or anything else useful."></textarea></label>
-        </div>
-        <div class="booking-actions"><button id="bookingSubmitBtn" class="primary-btn booking-submit" type="submit">SEND ENQUIRY →</button><p id="bookingStatus" class="booking-status" aria-live="polite"></p></div>
-      </form>
     </section>
 
   </main>
@@ -124,6 +111,29 @@
 
   <dialog id="eventDialog" class="modal event-modal"><button class="modal-close" data-close="eventDialog">×</button><div id="eventDialogBody"></div></dialog>
   <dialog id="allGigsDialog" class="modal all-gigs-modal"><button class="modal-close" data-close="allGigsDialog">×</button><div class="all-gigs-head"><span class="eyebrow">LIVE DATES</span><h2>UPCOMING GIGS</h2></div><div id="allGigsList" class="all-gigs-list"></div></dialog>
+
+  <dialog id="bookingDialog" class="modal booking-modal">
+    <button class="modal-close" data-close="bookingDialog" aria-label="Close booking enquiry">×</button>
+    <div class="booking-modal-head">
+      <span class="eyebrow">BOOK / ENQUIRE</span>
+      <h2>BRING THE SHOW TO YOUR EVENT.</h2>
+      <p>Tell me a little about the booking and I’ll get back to you.</p>
+    </div>
+    <form id="bookingForm" class="booking-form">
+      <div class="booking-grid">
+        <label><span>YOUR NAME *</span><input id="enquiryName" name="name" type="text" maxlength="80" required autocomplete="name"></label>
+        <label><span>EMAIL *</span><input id="enquiryEmail" name="email" type="email" maxlength="120" required autocomplete="email"></label>
+        <label><span>PHONE</span><input id="enquiryPhone" name="phone" type="tel" maxlength="50" autocomplete="tel"></label>
+        <label><span>EVENT / BOOKING TYPE *</span><select id="enquiryEventType" name="eventType" required><option value="">Choose one…</option><option>Venue / Bar / Restaurant</option><option>Corporate Event</option><option>Wedding</option><option>Private Party</option><option>Hotel / Resort</option><option>Festival / Public Event</option><option>Other</option></select></label>
+        <label><span>PREFERRED DATE</span><input id="enquiryDate" name="preferredDate" type="date"></label>
+        <label><span>VENUE / LOCALITY</span><input id="enquiryVenue" name="venueOrLocality" type="text" maxlength="140" placeholder="Venue name or locality"></label>
+        <label><span>ESTIMATED GUESTS</span><input id="enquiryGuests" name="estimatedGuests" type="number" min="0" step="1" placeholder="Optional"></label>
+        <label><span>COMPANY / ORGANISATION</span><input id="enquiryCompany" name="company" type="text" maxlength="120" placeholder="Optional"></label>
+        <label class="wide"><span>MESSAGE / DETAILS *</span><textarea id="enquiryMessage" name="message" rows="5" maxlength="1500" required placeholder="Tell me about the event, timings, setup, music style, or anything else useful."></textarea></label>
+      </div>
+      <div class="booking-actions"><button id="bookingSubmitBtn" class="primary-btn booking-submit" type="submit">SEND ENQUIRY →</button><p id="bookingStatus" class="booking-status" aria-live="polite"></p></div>
+    </form>
+  </dialog>
 
   <dialog id="requestDialog" class="modal request-modal">
     <div class="request-modal-top">
