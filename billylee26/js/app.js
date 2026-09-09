@@ -518,9 +518,7 @@
   const galleryPhotos=[
     {src:"assets/photos/gallery-billy-01.jpg",alt:"Billy Lee performing live on stage"},
     {src:"assets/photos/gallery-billy-02.jpg",alt:"Billy Lee singing live"},
-    {src:"assets/photos/gallery-billy-03.jpg",alt:"Billy Lee live performance"},
-    {src:"assets/hero-billy-lee.png",alt:"Billy Lee live on guitar"},
-    {src:"assets/about-billy-lee.jpg",alt:"Billy Lee on stage"}
+    {src:"assets/photos/gallery-billy-03.jpg",alt:"Billy Lee live performance"}
   ];
   let currentPhotoIndex=0;
   function renderAllPhotos(){
