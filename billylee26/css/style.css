@@ -1054,3 +1054,92 @@ p,
   .about-modal-content{padding-right:16px}
   .about-modal-content h2{font-size:24px}
 }
+
+/* v26 — equal photo thumbnails, sticky gallery chrome, stronger popup close controls */
+.photo-preview-grid{
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  gap:18px!important;
+}
+.photo-thumb{
+  width:100%;
+  aspect-ratio:16/9!important;
+  border-radius:7px!important;
+}
+
+/* Keep the gallery title and close control visible while the photo list scrolls. */
+.photos-modal{
+  overflow-y:auto!important;
+  scrollbar-width:auto;
+  scrollbar-color:#dce9eb #0a1a22;
+}
+.photos-modal-sticky{
+  position:sticky;
+  top:-24px;
+  z-index:20;
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:18px;
+  margin:-24px -24px 16px;
+  padding:22px 18px 10px 24px;
+  background:linear-gradient(180deg,#041018 0%,#041018 84%,rgba(4,16,24,.96) 100%);
+  border-bottom:1px solid rgba(36,215,230,.2);
+}
+.photos-modal-sticky .photos-modal-head{min-width:0}
+.photos-modal-sticky .photos-modal-head h2{margin:5px 0 4px!important}
+.photos-modal-sticky>.modal-close{
+  position:static!important;
+  flex:0 0 auto;
+  margin-top:-7px;
+}
+.photos-modal::-webkit-scrollbar{width:16px}
+.photos-modal::-webkit-scrollbar-track{
+  background:#0a1a22;
+  border-left:1px solid rgba(36,215,230,.22);
+  border-radius:999px;
+}
+.photos-modal::-webkit-scrollbar-thumb{
+  background:#dce9eb;
+  border:3px solid #0a1a22;
+  border-radius:999px;
+  min-height:70px;
+}
+.photos-modal::-webkit-scrollbar-thumb:hover{background:#fff}
+
+/* Every popup X should be unmistakably clickable. */
+.modal-close,
+.lightbox-close{
+  width:48px!important;
+  height:48px!important;
+  display:grid!important;
+  place-items:center!important;
+  padding:0!important;
+  font-size:36px!important;
+  line-height:1!important;
+  font-weight:900!important;
+  cursor:pointer!important;
+}
+.modal-close:hover,
+.lightbox-close:hover{
+  color:var(--cyan)!important;
+  transform:scale(1.06);
+}
+
+@media(max-width:760px){
+  .photo-preview-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:12px!important;
+  }
+  .photo-preview-grid .photo-thumb:first-child{
+    grid-column:auto!important;
+    aspect-ratio:16/9!important;
+  }
+}
+@media(max-width:620px){
+  .photo-preview-grid{gap:8px!important}
+  .photos-modal-sticky{
+    top:-18px;
+    margin:-18px -12px 12px;
+    padding:17px 10px 8px 12px;
+  }
+}
