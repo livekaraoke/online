@@ -719,3 +719,39 @@ footer{min-height:300px}
   .gig-row .type-pill{font-size:11px!important}
   .support-heart{width:27px!important;height:24px!important}
 }
+
+/* v17 — restore original Billy Lee site typography everywhere except section titles */
+body,
+button,
+a,
+input,
+select,
+textarea,
+p,
+.about-copy p,
+.booking-intro p,
+.booking-modal-head p,
+.video-card small,
+.view-all-gigs,
+.eyebrow,
+.type-pill,
+.gig-row,
+.hero-gig,
+.watch-head a,
+.share-btn,
+.support-copy-below-player,
+.footer-tag,
+.domain,
+.socials a{
+  font-family:Inter,Arial,Helvetica,sans-serif!important;
+}
+
+/* Section titles intentionally retain the newer UPCOMING GIGS typography. */
+.section-heading,
+.gigs-heading-row .section-heading,
+.request-song-heading .section-heading,
+.watch-head .section-heading,
+.about-heading,
+.booking-intro .section-heading{
+  font-family:"Barlow Condensed","Arial Narrow",Arial,sans-serif!important;
+}
