@@ -38,6 +38,21 @@
     el.style.color = error ? "#ff6d72" : "#6fbd79";
   }
 
+  function isPermissionDenied(error) {
+    const code = String(error?.code || "").toLowerCase();
+    const message = String(error?.message || "").toLowerCase();
+    return code.includes("permission-denied") || message.includes("missing or insufficient permissions");
+  }
+
+  function markSetlistsUnavailable(message = "Unavailable on this database") {
+    const select = $("publicSetlistSelect");
+    if (select) {
+      select.innerHTML = `<option value="">${esc(message)}</option>`;
+      select.disabled = true;
+    }
+    setPublicListStatus(message, true);
+  }
+
   function populatePublicSetlistSelect() {
     const select = $("publicSetlistSelect");
     if (!select) return;
@@ -75,10 +90,14 @@
 
       populatePublicSetlistSelect();
     }, error => {
+      if (isPermissionDenied(error)) {
+        markSetlistsUnavailable("Setlists unavailable on this database");
+        console.info("Public setlists are not permitted by this Firebase ruleset.");
+        return;
+      }
+
       console.error("Could not load Lyrics Suite setlists:", error);
-      const select = $("publicSetlistSelect");
-      if (select) select.innerHTML = `<option value="">Could not load setlists</option>`;
-      setPublicListStatus("Setlists unavailable", true);
+      markSetlistsUnavailable("Could not load setlists");
     });
   }
 
@@ -95,6 +114,11 @@
         setPublicListStatus("No setlist selected");
       }
     }, error => {
+      if (isPermissionDenied(error)) {
+        markSetlistsUnavailable("Setlists unavailable on this database");
+        console.info("Selected public setlist is not permitted by this Firebase ruleset.");
+        return;
+      }
       console.error("Could not read selected public setlist:", error);
     });
   }
@@ -228,11 +252,17 @@
   }
 
   function init() {
-    $("publicSetlistSelect")?.addEventListener("change", savePublicSetlistSelection);
+    const publicSetlistSelect = $("publicSetlistSelect");
+    publicSetlistSelect?.addEventListener("change", savePublicSetlistSelection);
     $("sessionTypeInput")?.addEventListener("change", saveActiveSessionType);
 
-    listenForSetlists();
-    listenForCurrentPublicList();
+    // Avoid opening Firestore listeners for this optional feature on pages
+    // that do not actually contain the Public Song List controls.
+    if (publicSetlistSelect || $("publicSetlistSaveStatus")) {
+      listenForSetlists();
+      listenForCurrentPublicList();
+    }
+
     listenCurrentSessionType();
 
     // Existing admin JS files are loaded before this addon.

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DB Logs • LiveSuite</title>
+  <link rel="stylesheet" href="css/admin.css" />
+  <link rel="stylesheet" href="css/sidebar.css" />
+  <link rel="stylesheet" href="css/db-logs.css" />
+</head>
+<body class="db-logs-body">
+  <div class="db-shell">
+    <div id="sidebarContainer"></div>
+
+    <main class="db-main">
+      <header class="db-page-header">
+        <div>
+          <div class="db-eyebrow">SYSTEM MONITOR</div>
+          <h1>DB LOGS</h1>
+          <p>Browser-side Firestore activity for LiveSuite. The logger itself never writes to Firestore.</p>
+        </div>
+        <div class="db-header-actions">
+          <span id="projectBadge" class="project-badge">Project: —</span>
+          <span id="captureBadge" class="capture-badge live">● CAPTURING</span>
+        </div>
+      </header>
+
+      <section class="db-notice">
+        <strong>What this page measures</strong>
+        <span>
+          It records Firestore SDK calls made by LiveSuite admin pages in this browser and stores them only in localStorage.
+          Keep this page open in one tab while using LiveSuite in another tab to watch activity appear live.
+          It is not a project-wide Firebase audit log and it does not create a database document for each entry.
+        </span>
+      </section>
+
+      <section class="db-summary-grid">
+        <article><span>READS</span><strong id="readCount">0</strong><small>observed document reads</small></article>
+        <article><span>LISTENER READS</span><strong id="listenCount">0</strong><small>initial + changed docs</small></article>
+        <article><span>WRITES</span><strong id="writeCount">0</strong><small>set / update / add / batch</small></article>
+        <article><span>DELETES</span><strong id="deleteCount">0</strong><small>observed deletes</small></article>
+        <article><span>ERRORS</span><strong id="errorCount">0</strong><small>permission / quota / network</small></article>
+        <article><span>ENTRIES</span><strong id="entryCount">0</strong><small>local history retained</small></article>
+      </section>
+
+      <section class="db-controls">
+        <div class="db-filter-tabs" id="filterTabs">
+          <button type="button" class="active" data-filter="all">ALL</button>
+          <button type="button" data-filter="read">READS</button>
+          <button type="button" data-filter="listen">LISTENERS</button>
+          <button type="button" data-filter="write">WRITES</button>
+          <button type="button" data-filter="delete">DELETES</button>
+          <button type="button" data-filter="transaction">TRANSACTIONS</button>
+          <button type="button" data-filter="error">ERRORS</button>
+        </div>
+        <div class="db-control-actions">
+          <input id="logSearch" type="search" placeholder="Search collection, document, page or operation…" autocomplete="off" />
+          <button id="pauseBtn" type="button" class="outline-btn">PAUSE</button>
+          <button id="exportBtn" type="button" class="outline-btn">EXPORT CSV</button>
+          <button id="clearBtn" type="button" class="danger-btn">CLEAR LOCAL LOG</button>
+        </div>
+      </section>
+
+      <section class="db-table-card">
+        <div class="db-table-head">
+          <div>
+            <strong>LOCAL FIRESTORE ACTIVITY</strong>
+            <span id="showingLabel">Showing 0 entries</span>
+          </div>
+          <div class="db-legend">
+            <span><i class="dot read"></i>read</span>
+            <span><i class="dot listen"></i>listener</span>
+            <span><i class="dot write"></i>write</span>
+            <span><i class="dot error"></i>error</span>
+          </div>
+        </div>
+        <div class="db-table-scroll">
+          <table class="db-log-table">
+            <thead>
+              <tr>
+                <th>TIME</th>
+                <th>TYPE</th>
+                <th>COUNT</th>
+                <th>OPERATION</th>
+                <th>TARGET</th>
+                <th>PAGE</th>
+                <th>SOURCE</th>
+                <th>DETAIL</th>
+              </tr>
+            </thead>
+            <tbody id="logsBody"></tbody>
+          </table>
+          <div id="emptyState" class="db-empty">
+            <strong>No activity captured yet.</strong>
+            <span>Open another LiveSuite admin page and use it normally. Reads and writes will appear here without being stored in Firestore.</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="db-help-grid">
+        <article>
+          <h2>How to find a spike</h2>
+          <p>Sort visually by repeated target/operation. A listener that keeps producing updates or a transaction showing callback #2, #3, #4… is a strong sign of repeated database work.</p>
+        </article>
+        <article>
+          <h2>Project-wide totals</h2>
+          <p>Use Firebase / Google Cloud Firestore Usage and Usage Insights for authoritative project-wide totals. This local page is for identifying which LiveSuite code path is causing the traffic.</p>
+        </article>
+      </section>
+    </main>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="js/firebase.js"></script>
+  <script src="js/sidebar.js"></script>
+  <script src="js/db-logs.js"></script>
+</body>
+</html>

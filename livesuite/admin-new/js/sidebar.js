@@ -3,6 +3,7 @@
   let sidebarSessionUnsub = null;
   let sidebarRunOrderUnsub = null;
   let sidebarEnquiriesUnsub = null;
+  let sidebarProfileUnsub = null;
 
   function $(id) {
     return document.getElementById(id);
@@ -27,14 +28,21 @@
         LK.profile.applyProfileToDashboard();
       }
 
-      listenSidebarSongRequests();
-      listenSidebarEnquiries();
-      listenSidebarLiveSession();
-      listenSidebarRunOrder();
-      listenSidebarEnquiries();
+      // DB Logs intentionally avoids opening Firestore listeners of its own.
+      // This keeps the monitoring page from generating extra database reads.
+      if (!isDbLogsPage()) {
+        listenSidebarSongRequests();
+        listenSidebarEnquiries();
+        listenSidebarLiveSession();
+        listenSidebarRunOrder();
+      }
     } catch (error) {
       console.error("Could not load admin sidebar:", error);
     }
+  }
+
+  function isDbLogsPage() {
+    return (location.pathname.split("/").pop() || "").toLowerCase() === "db-logs.html";
   }
 
   function bindSidebarProfile() {
@@ -44,6 +52,32 @@
 
     const applyUser = user => {
       if (!user) return;
+
+      // On DB Logs use only Firebase Auth profile fields so the monitoring
+      // page itself does not perform a userProfiles Firestore read/listen.
+      if (isDbLogsPage()) {
+        const nameEl = $("adminUserName");
+        const roleEl = $("adminUserRole");
+        const img = $("sidebarProfileImg");
+        const fallback = $("sidebarProfileFallback");
+        const displayName = String(user.displayName || user.email || "Admin").trim() || "Admin";
+        const photoURL = String(user.photoURL || "").trim();
+        if (nameEl) nameEl.textContent = displayName;
+        if (roleEl) roleEl.textContent = "Admin";
+        if (img && fallback) {
+          if (photoURL) {
+            img.src = photoURL;
+            img.style.display = "block";
+            fallback.style.display = "none";
+          } else {
+            img.removeAttribute("src");
+            img.style.display = "none";
+            fallback.style.display = "grid";
+          }
+        }
+        return;
+      }
+
       if (sidebarProfileUnsub) {
         sidebarProfileUnsub();
         sidebarProfileUnsub = null;
@@ -255,6 +289,12 @@
       });
   }
 
+  function isPermissionDenied(error) {
+    const code = String(error?.code || "").toLowerCase();
+    const message = String(error?.message || "").toLowerCase();
+    return code.includes("permission-denied") || message.includes("missing or insufficient permissions");
+  }
+
   function listenSidebarEnquiries() {
     const badge = $("sidebarEnquiryBadge");
     if (!window.LK?.db) return;
@@ -274,6 +314,19 @@
           badge.classList.toggle("hidden", count === 0);
         }
       }, error => {
+        if (badge) {
+          badge.textContent = "";
+          badge.classList.add("hidden");
+        }
+
+        // bookingEnquiries was added after the legacy Firebase project.
+        // A legacy ruleset may legitimately deny this optional badge.
+        // Do not turn that into an uncaught/noisy admin-console error.
+        if (isPermissionDenied(error)) {
+          console.info("Sidebar enquiry badge unavailable on this Firebase ruleset.");
+          return;
+        }
+
         console.warn("Could not load enquiry count:", error);
       });
   }
