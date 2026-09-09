@@ -13,7 +13,7 @@
 */
 window.BILLY_LEE_YOUTUBE_VIDEOS = [
   {
-    url: "https://youtu.be/T4z0bFzz_Gc?si=xAmZKTeNHvfMv_sa",
+    url: "https://www.youtube.com/watch?v=T4z0bFzz_Gc?si=xAmZKTeNHvfMv_sa",
     title: "Live Acoustic Cover",
     duration: "3:49"
   },
