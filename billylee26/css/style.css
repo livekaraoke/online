@@ -1143,3 +1143,19 @@ p,
     padding:17px 10px 8px 12px;
   }
 }
+
+/* v28 — gallery photos live only in assets/photos; smaller desktop hero artwork */
+@media (min-width:851px){
+  .hero-photo{
+    left:auto!important;
+    right:0!important;
+    width:86%!important;
+  }
+}
+@media (min-width:621px) and (max-width:850px){
+  .hero-photo{
+    left:auto!important;
+    right:0!important;
+    width:90%!important;
+  }
+}
