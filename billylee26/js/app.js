@@ -143,7 +143,7 @@
     const label=$("liveStateLabel"); const title=$("currentSongTitle");
     label.classList.remove("is-playing"); title.classList.remove("between-songs-title");
     if(!active){label.textContent="NOT LIVE";title.textContent="No active session";$("currentSongArtist").textContent="Check the upcoming gigs below.";$("stateIcon").textContent="♪";return;}
-    if(breakOpen){label.textContent="ON BREAK";title.textContent="We’ll be back shortly";$("currentSongArtist").textContent="Requests remain open during the break.";$("stateIcon").textContent="☕";return;}
+    if(breakOpen){label.textContent="ON BREAK";title.textContent="- WE\'LL BE BACK SHORTLY -";title.classList.add("between-songs-title");$("currentSongArtist").textContent="Requests remain open during the break.";$("stateIcon").textContent="☕";return;}
     if(playing){label.textContent="NOW PLAYING";label.classList.add("is-playing");title.textContent=playing.songTitle||playing.title||"Current song";$("currentSongArtist").textContent=playing.artist||playing.songArtist||"";$("stateIcon").innerHTML='<span class="pause-bars"><i></i><i></i></span>';return;}
     label.textContent="LIVE NOW";title.textContent="- BETWEEN SONGS -";title.classList.add("between-songs-title");$("currentSongArtist").textContent="The next song will start shortly.";$("stateIcon").textContent="♪";
   }
