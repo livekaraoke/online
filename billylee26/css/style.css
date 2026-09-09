@@ -1229,3 +1229,8 @@ p,
   .about-modal-content{padding-right:14px}
   .about-modal-content p{margin-bottom:24px!important}
 }
+
+/* v33 — match ABOUT header spacing to other section headers */
+.about-heading-row{
+  margin-bottom:14px!important;
+}
