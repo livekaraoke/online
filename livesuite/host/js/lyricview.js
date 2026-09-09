@@ -31,6 +31,10 @@
   let scrollTimer = null;
   let autoScrollOn = false;
   let performanceRecordCreated = false;
+  let performanceRecordPromise = null;
+  let ensurePlayingPromise = null;
+  let ensurePlayingDone = false;
+  let ensurePlayingRetryAfter = 0;
   let autoScrollEndHandled = false;
 
   // AUTOSCROLL:
@@ -1163,15 +1167,25 @@
 
   async function ensureCurrentSongPlaying() {
     if (!currentSongId || !currentSong) return 0;
-    const { sessionId } = await getActiveSessionContext();
-    if (!sessionId) return 0;
 
-    const runRef = db.collection("karaokeControl").doc("runOrder");
-    let effectiveStartedMs = 0;
+    // This function may be reached from more than one PLAY/NEXT path. Never let
+    // those paths create concurrent Firestore transactions/reads for the same song.
+    if (ensurePlayingDone) return Number(window.__lyricviewPlayingStartedMs || 0);
+    if (ensurePlayingPromise) return ensurePlayingPromise;
+    if (Date.now() < ensurePlayingRetryAfter) return 0;
 
-    try {
-      await db.runTransaction(async tx => {
-        const snap = await tx.get(runRef);
+    ensurePlayingPromise = (async () => {
+      const { sessionId } = await getActiveSessionContext();
+      if (!sessionId) return 0;
+
+      const runRef = db.collection("karaokeControl").doc("runOrder");
+
+      try {
+        // A normal read + conditional write is deliberate here. The previous
+        // transaction was automatically retried by Firestore when quota was
+        // exhausted, multiplying BatchGet requests. Lyricview only needs one
+        // idempotent update when PLAY begins.
+        const snap = await runRef.get();
         const data = snap.exists ? (snap.data() || {}) : {};
         let items = data.sessionId === sessionId && Array.isArray(data.items) ? [...data.items] : [];
 
@@ -1181,38 +1195,49 @@
           item.songId === currentSongId &&
           !["played","completed"].includes(String(item.status || "").toLowerCase())
         );
-        if (index < 0) index = items.findIndex(item => sameSongByMetadata(item, currentSong) && !["played","completed"].includes(String(item.status || "").toLowerCase()));
+        if (index < 0) index = items.findIndex(item =>
+          sameSongByMetadata(item, currentSong) &&
+          !["played","completed"].includes(String(item.status || "").toLowerCase())
+        );
 
         const existing = index >= 0 ? items[index] : null;
         const existingStarted = existing && String(existing.status || "").toLowerCase() === "playing"
           ? (Number(existing.playingAtMs) || (existing.playingAt?.toMillis ? existing.playingAt.toMillis() : 0))
           : 0;
         const startedMs = existingStarted || Date.now();
-        effectiveStartedMs = startedMs;
 
-        // lyricview.html is authoritative for what the host is actually playing.
-        // Finish any other live item, then mark this song playing. If it was not
-        // already in Run Order, insert it so all public sites can see NOW PLAYING.
+        let changed = false;
         items = items.map((item,i) => {
           if (i !== index && String(item.status || "").toLowerCase() === "playing") {
+            changed = true;
             return { ...item, status:"played", playedAtMs:startedMs };
           }
           return item;
         });
 
         if (index >= 0) {
-          items[index] = {
-            ...items[index],
-            songId:currentSongId,
-            songTitle:currentSong.title || items[index].songTitle || "",
-            title:currentSong.title || items[index].title || "",
-            artist:currentSong.artist || items[index].artist || "",
-            songArtist:currentSong.artist || items[index].songArtist || "",
-            status:"playing",
-            playingAtMs:startedMs,
-            playingAt:firebase.firestore.Timestamp.fromMillis(startedMs)
-          };
+          const old = items[index];
+          const alreadyCorrect =
+            String(old.status || "").toLowerCase() === "playing" &&
+            old.songId === currentSongId &&
+            Number(old.playingAtMs || 0) === Number(startedMs);
+
+          if (!alreadyCorrect) {
+            changed = true;
+            items[index] = {
+              ...old,
+              songId:currentSongId,
+              songTitle:currentSong.title || old.songTitle || "",
+              title:currentSong.title || old.title || "",
+              artist:currentSong.artist || old.artist || "",
+              songArtist:currentSong.artist || old.songArtist || "",
+              status:"playing",
+              playingAtMs:startedMs,
+              playingAt:firebase.firestore.Timestamp.fromMillis(startedMs)
+            };
+          }
         } else {
+          changed = true;
           items.push({
             id:`lyricview_${currentSongId}_${startedMs}`,
             songId:currentSongId,
@@ -1230,77 +1255,90 @@
           });
         }
 
-        tx.set(runRef,{
-          sessionId,
-          items,
-          updatedAt:firebase.firestore.FieldValue.serverTimestamp()
-        },{merge:true});
-      });
+        if (changed) {
+          await runRef.set({
+            sessionId,
+            items,
+            updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+          },{merge:true});
+        }
 
-      if (requestId) {
-        await db.collection("publicSongRequests").doc(requestId).set({
-          status:"playing",
-          playingAtMs:effectiveStartedMs || Date.now(),
-          playingAt:firebase.firestore.Timestamp.fromMillis(effectiveStartedMs || Date.now()),
-          updatedAt:firebase.firestore.FieldValue.serverTimestamp()
-        },{merge:true});
+        if (requestId) {
+          // One request-status write per lyric page/play, not on every call.
+          await db.collection("publicSongRequests").doc(requestId).set({
+            status:"playing",
+            playingAtMs:startedMs,
+            playingAt:firebase.firestore.Timestamp.fromMillis(startedMs),
+            updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+          },{merge:true});
+        }
+
+        window.__lyricviewPlayingStartedMs = startedMs;
+        ensurePlayingDone = true;
+        return startedMs;
+      } catch (error) {
+        // Do not hammer Firestore after a quota/network failure. A later manual
+        // PLAY can retry after the cooldown instead of triggering SDK retry storms.
+        ensurePlayingRetryAfter = Date.now() + 60000;
+        console.error("Could not put current lyric-view song in Run Order:", error);
+        return 0;
       }
+    })();
 
-      return effectiveStartedMs;
-    } catch (error) {
-      console.error("Could not put current lyric-view song in Run Order:", error);
-      return 0;
+    try {
+      return await ensurePlayingPromise;
+    } finally {
+      ensurePlayingPromise = null;
     }
   }
 
   async function recordCurrentSongPlayed() {
     if (!currentSong || !currentSongId) return;
 
-    const { sessionId } = await getActiveSessionContext();
-    if (!sessionId) return;
-
-    // Always ensure the displayed lyric-view song exists in Run Order and is
-    // marked playing. This also supplies the exact first-start timestamp used
-    // by the public NOW PLAYING elapsed timer.
-    const startedMs = await ensureCurrentSongPlaying();
-
-    if (performanceRecordCreated) return;
+    // Claim this recording immediately, before any await. This prevents rapid
+    // PLAY toggles / NEXT from racing and creating duplicate history/log writes.
+    if (performanceRecordCreated) return performanceRecordPromise;
     performanceRecordCreated = true;
 
-    const actualStartedMs = startedMs || Date.now();
-    const startedAt = firebase.firestore.Timestamp.fromMillis(actualStartedMs);
-    const performedId =
-      `${currentSongId}_${actualStartedMs}_${Math.random().toString(36).slice(2,6)}`;
+    performanceRecordPromise = (async () => {
+      const { sessionId } = await getActiveSessionContext();
+      if (!sessionId) return;
 
-    const record = {
-      songId: currentSongId,
-      songTitle: currentSong.title || "",
-      songArtist: currentSong.artist || "",
-      artist: currentSong.artist || "",
-      requestId: requestId || "",
-      source: "lyricview-autoscroll",
-      startedAt,
-      playingAtMs: actualStartedMs,
-      playedAt: startedAt,
-      createdAt: startedAt
-    };
+      const startedMs = await ensureCurrentSongPlaying();
+      const actualStartedMs = startedMs || Date.now();
+      const startedAt = firebase.firestore.Timestamp.fromMillis(actualStartedMs);
+      const performedId = `${currentSongId}_${actualStartedMs}`;
 
-    try {
-      await db.collection("performanceSessions")
-        .doc(sessionId)
-        .collection("performedSongs")
-        .doc(performedId)
-        .set(record);
+      const record = {
+        songId: currentSongId,
+        songTitle: currentSong.title || "",
+        songArtist: currentSong.artist || "",
+        artist: currentSong.artist || "",
+        requestId: requestId || "",
+        source: "lyricview-autoscroll",
+        startedAt,
+        playingAtMs: actualStartedMs,
+        playedAt: startedAt,
+        createdAt: startedAt
+      };
 
-      await db.collection("performanceLogs").add({
-        sessionId,
-        ...record,
-        performanceType: "Auto-scroll Play",
-        performedBy: "host"
-      });
-    } catch (error) {
-      console.error("Could not create performance record:", error);
-    }
+      try {
+        // Keep the per-session performed-song record used by Session History.
+        // Use a deterministic id so the same play cannot be duplicated by a race.
+        await db.collection("performanceSessions")
+          .doc(sessionId)
+          .collection("performedSongs")
+          .doc(performedId)
+          .set(record, { merge:true });
+
+        // Intentionally DO NOT also add to performanceLogs. That second global
+        // log duplicated every play and is unnecessary for lyricview operation.
+      } catch (error) {
+        console.error("Could not create performance record:", error);
+      }
+    })();
+
+    return performanceRecordPromise;
   }
 
   async function finalizeCurrentSongPlayed() {
