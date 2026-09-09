@@ -56,6 +56,15 @@
     return `<button class="gig-row" data-event-id="${escapeHTML(e.id)}"><div class="gig-date"><small>${d.dow}</small><strong>${d.day}</strong><small>${d.month}</small></div><div class="gig-copy"><b>${escapeHTML(venue)}</b>${locality?`<span>${escapeHTML(locality)}</span>`:""}<div class="gig-meta"><span class="gig-clock" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v5l3.5 2"/></svg></span><time>${escapeHTML(time12)}</time></div>${type?`<em class="type-pill type-${escapeHTML(typeClass(type))}">${escapeHTML(type)}</em>`:""}</div></button>`;
   }
 
+  function allGigsTableRow(e){
+    const d=formatDateParts(e);
+    const type=e.type||"Other";
+    const venue=e.venue||e.name||"Event";
+    const locality=eventLocality(e);
+    const time12=(()=>{const raw=e?.startTime||"";if(!raw)return "TBC";const [h,m]=raw.split(":").map(Number);if(!Number.isFinite(h))return raw;return new Date(2000,0,1,h,m||0).toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit",hour12:true});})();
+    return `<button class="all-gigs-row" data-event-id="${escapeHTML(e.id)}" data-from-all-gigs="1"><span class="all-gigs-date"><small>${d.dow}</small><strong>${d.day}</strong><small>${d.month}</small></span><span class="all-gigs-venue"><b>${escapeHTML(venue)}</b>${locality?`<small>${escapeHTML(locality)}</small>`:""}</span><span class="all-gigs-time"><b>${escapeHTML(time12)}</b>${type?`<small class="type-${escapeHTML(typeClass(type))}">${escapeHTML(type)}</small>`:""}</span><span class="all-gigs-chev" aria-hidden="true">›</span></button>`;
+  }
+
   function renderHeroGig(){
     const active=controlData.active===true && !!activeSessionId;
     const hero=$('heroGigs');
@@ -366,7 +375,7 @@
     $("requesterNameEdit").hidden=true;
   }
 
-  async function showEventDetails(eventData){
+  async function showEventDetails(eventData, options={}){
     const e=eventData||{};
     let venueDoc={};
     if(e.venueId){
@@ -376,6 +385,7 @@
       }catch(error){console.warn("Could not load venue details",error);}
     }
     const venueName=e.venue||venueDoc.name||e.name||"Live Gig";
+    const type=e.type||e.sessionType||"";
     const address=e.address||venueDoc.address||"";
     const locality=e.venueLocality||e.locality||venueDoc.locality||"";
     const website=e.venueWebsite||e.website||venueDoc.website||"";
@@ -394,25 +404,27 @@
     if(locality) rows.push(`<div><dt>LOCALITY</dt><dd>${escapeHTML(locality)}</dd></div>`);
     if(dateText) rows.push(`<div><dt>DATE</dt><dd>${escapeHTML(dateText)}</dd></div>`);
     if(timeText) rows.push(`<div><dt>START TIME</dt><dd>${escapeHTML(timeText)}</dd></div>`);
+    if(type) rows.push(`<div><dt>TYPE</dt><dd>${escapeHTML(type)}</dd></div>`);
     const notes=String(e.notes||"").trim();
     if(notes) rows.push(`<div><dt>GIG NOTES</dt><dd>${escapeHTML(notes)}</dd></div>`);
     const links=[];
     if(website){ const href=safeUrl(website); links.push(`<a class="event-detail-action" href="${escapeHTML(href)}" target="_blank" rel="noopener noreferrer">WEBSITE ↗</a>`); }
     if(mapUrl){ const href=safeUrl(mapUrl); links.push(`<a class="event-detail-action" href="${escapeHTML(href)}" target="_blank" rel="noopener noreferrer">LOCATION ↗</a>`); }
-    $("eventDialogBody").innerHTML=`<span class="eyebrow">GIG DETAILS</span><h2>${escapeHTML(venueName)}</h2><dl class="event-detail-list">${rows.join("")}</dl>${links.length?`<div class="event-detail-actions">${links.join("")}</div>`:""}`;
+    const back=options.fromAllGigs?`<button type="button" class="event-back-all" id="eventBackAllBtn" aria-label="Back to all gigs"><span aria-hidden="true">←</span> VIEW ALL GIGS</button>`:"";
+    $("eventDialogBody").innerHTML=`${back}<span class="eyebrow">GIG DETAILS</span><h2>${escapeHTML(venueName)}</h2><dl class="event-detail-list">${rows.join("")}</dl>${links.length?`<div class="event-detail-actions">${links.join("")}</div>`:""}`;
     $("eventDialog").showModal();
   }
 
-  async function showEvent(id){
+  async function showEvent(id, options={}){
     const e=latestEvents.find(x=>x.id===id);
-    if(e) return showEventDetails(e);
-    if(controlData.active===true && activeSessionId) return showCurrentEvent();
+    if(e) return showEventDetails(e, options);
+    if(controlData.active===true && activeSessionId) return showCurrentEvent(options);
   }
 
-  async function showCurrentEvent(){
+  async function showCurrentEvent(options={}){
     const eventId=String(controlData.eventId || controlData.upcomingEventId || controlData.linkedEventId || activeSession?.eventId || activeSession?.upcomingEventId || activeSession?.linkedEventId || "").trim();
     const fromList=eventId?latestEvents.find(x=>x.id===eventId):latestEvents.find(x=>x.linkedSessionId===activeSessionId);
-    if(fromList) return showEventDetails(fromList);
+    if(fromList) return showEventDetails(fromList, options);
     const snapshot=controlData.eventSnapshot||activeSession?.eventSnapshot||{};
     const merged={
       ...snapshot,
@@ -425,13 +437,14 @@
       date: snapshot.date || controlData.date || activeSession?.date || "",
       startTime: snapshot.startTime || controlData.startTime || activeSession?.startTime || "",
       scheduledStartAt: snapshot.scheduledStartAt || controlData.scheduledStartAt || activeSession?.scheduledStartAt || null,
-      notes: snapshot.notes || controlData.notes || activeSession?.notes || ""
+      notes: snapshot.notes || controlData.notes || activeSession?.notes || "",
+      type: snapshot.type || snapshot.sessionType || controlData.sessionType || controlData.type || activeSession?.sessionType || activeSession?.type || ""
     };
-    return showEventDetails(merged);
+    return showEventDetails(merged, options);
   }
   function showAllGigs(){
     const upcoming=latestEvents.filter(eventIsUpcoming).sort(eventSort);
-    $("allGigsList").innerHTML=upcoming.length?upcoming.map(e=>eventCard(e,false)).join(""):`<div class="empty-box">No upcoming gigs published.</div>`;
+    $("allGigsList").innerHTML=upcoming.length?upcoming.map(allGigsTableRow).join(""):`<div class="empty-box">No upcoming gigs published.</div>`;
     $("allGigsDialog").showModal();
   }
 
@@ -491,11 +504,17 @@
   document.addEventListener("click",e=>{
     const eventBtn=e.target.closest("[data-event-id]");
     if(eventBtn){
+      const fromAll=eventBtn.dataset.fromAllGigs==="1";
       if($("allGigsDialog")?.open) $("allGigsDialog").close();
-      showEvent(eventBtn.dataset.eventId);
+      showEvent(eventBtn.dataset.eventId,{fromAllGigs:fromAll});
     }
     const currentEventBtn=e.target.closest("[data-current-event]");
     if(currentEventBtn) showCurrentEvent();
+    const backAll=e.target.closest("#eventBackAllBtn");
+    if(backAll){
+      if($("eventDialog")?.open) $("eventDialog").close();
+      showAllGigs();
+    }
     const song=e.target.closest("[data-song-id]"); if(song)selectRequestSong(song.dataset.songId);
     const close=e.target.closest("[data-close]"); if(close)$(close.dataset.close)?.close();
   });
