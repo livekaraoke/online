@@ -652,3 +652,70 @@ footer{min-height:300px}
   .gig-meta time{font-size:14px!important}.gig-clock{width:19px;height:19px}
   .footer-tag{gap:14px!important;font-size:9px!important;letter-spacing:.18em!important}.footer-tag span{min-width:60px!important;flex-basis:110px!important}
 }
+
+/* v16 — unified section titles, icons, button icons and gig spacing */
+.section-heading,
+.gigs-heading-row .section-heading,
+.request-song-heading .section-heading,
+.watch-head .section-heading,
+.about-heading,
+.booking-intro .section-heading{
+  font-family:"Barlow Condensed","Arial Narrow",Arial,sans-serif!important;
+  font-size:22px!important;
+  font-weight:500!important;
+  letter-spacing:.12em!important;
+  line-height:1!important;
+  display:flex!important;
+  align-items:center!important;
+  gap:12px!important;
+}
+.section-icon{width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;color:var(--cyan);flex:0 0 22px}
+.section-icon svg{width:100%;height:100%;display:block;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.section-heading>span:not(.section-icon){white-space:nowrap}
+
+.hero-action,.primary-btn{display:inline-flex;align-items:center;justify-content:center;gap:9px}
+.button-icon{width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;flex:0 0 18px;color:currentColor}
+.button-icon svg{width:100%;height:100%;display:block;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+
+.gig-date{
+  align-items:center!important;
+  justify-content:flex-start!important;
+  text-align:center!important;
+  padding-left:8px!important;
+  padding-right:18px!important;
+}
+.gig-row .gig-copy b{font-size:21px!important}
+.gig-row .gig-copy>span{font-size:18px!important}
+.gig-meta time{font-size:18px!important}
+.gig-row .type-pill{font-size:13px!important}
+
+.support-heart{width:31px!important;height:27px!important}
+
+@media(min-width:621px) and (max-width:900px){
+  .section-heading,
+  .gigs-heading-row .section-heading,
+  .request-song-heading .section-heading,
+  .watch-head .section-heading,
+  .about-heading,
+  .booking-intro .section-heading{font-size:22px!important}
+  .gig-date{padding-left:5px!important;padding-right:10px!important}
+  .gig-row .gig-copy b{font-size:16px!important}
+  .gig-row .gig-copy>span{font-size:14px!important}
+  .gig-meta time{font-size:14px!important}
+  .gig-row .type-pill{font-size:10px!important}
+}
+@media(max-width:620px){
+  .section-heading,
+  .gigs-heading-row .section-heading,
+  .request-song-heading .section-heading,
+  .watch-head .section-heading,
+  .about-heading,
+  .booking-intro .section-heading{font-size:20px!important;gap:10px!important}
+  .section-icon{width:20px;height:20px;flex-basis:20px}
+  .gig-date{padding-left:5px!important;padding-right:12px!important}
+  .gig-row .gig-copy b{font-size:18px!important}
+  .gig-row .gig-copy>span{font-size:16px!important}
+  .gig-meta time{font-size:16px!important}
+  .gig-row .type-pill{font-size:11px!important}
+  .support-heart{width:27px!important;height:24px!important}
+}

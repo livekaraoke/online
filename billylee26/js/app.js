@@ -65,7 +65,7 @@
       const locality=controlData.venueLocality || controlData.locality || activeSession?.venueLocality || activeSession?.locality || controlData.eventSnapshot?.venueLocality || controlData.eventSnapshot?.locality || '';
       const activeEventId=String(controlData.eventId || controlData.upcomingEventId || controlData.linkedEventId || activeSession?.eventId || activeSession?.upcomingEventId || activeSession?.linkedEventId || "").trim();
       hero.innerHTML=`<button class="hero-gig live-now" type="button" ${activeEventId?`data-event-id="${escapeHTML(activeEventId)}"`:`data-current-event="1"`}><div class="live-label">LIVE NOW</div><div class="event-copy hero-event-copy"><b>${escapeHTML(venue)}</b>${locality?`<span class="hero-locality">${escapeHTML(locality)}</span>`:''}</div><span class="chev">›</span></button>`;
-      watch.textContent='REQUEST A SONG →';
+      watch.innerHTML='<span class="button-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 18V5l10-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="16" cy="16" r="3"/></svg></span><span>REQUEST A SONG →</span>';
       watch.classList.add('is-live');
       watch.setAttribute('href','#requestSongSection');
       return;
