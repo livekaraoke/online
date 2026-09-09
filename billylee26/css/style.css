@@ -878,3 +878,112 @@ p,
   .all-gigs-venue b{font-size:14px}.all-gigs-venue small{font-size:11px}
   .all-gigs-time b{font-size:12px}.all-gigs-time small{font-size:8px}
 }
+
+/* v19 — gig detail type badge, date polish, heading actions, booking layout */
+.type-pill,
+.all-gigs-type,
+.event-detail-type{
+  color:var(--event-type-color,#a5adb3)!important;
+  border-color:var(--event-type-color,#a5adb3)!important;
+}
+.type-pill{background:rgba(255,255,255,.025)!important}
+.all-gigs-type{color:var(--event-type-color,#a5adb3)!important}
+
+.gig-date{
+  min-height:88px;
+  justify-content:center!important;
+  align-items:center!important;
+  text-align:center!important;
+  padding:3px 8px 2px 6px!important;
+}
+.gig-date small,
+.gig-date strong{width:100%;text-align:center}
+.gig-date strong{
+  padding-top:5px!important;
+  padding-bottom:4px!important;
+  line-height:.9!important;
+}
+.gig-date small:last-child{letter-spacing:.09em}
+.gig-meta time{font-weight:800!important}
+
+.event-detail-heading h2{margin:5px 0 8px!important}
+.event-detail-type{
+  display:inline-flex;
+  align-items:center;
+  width:max-content;
+  padding:5px 10px;
+  border:1px solid currentColor;
+  border-radius:999px;
+  font-size:11px;
+  font-weight:800;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  background:rgba(255,255,255,.025);
+}
+.event-back-all{
+  display:flex!important;
+  width:max-content;
+  margin:0 0 20px!important;
+}
+.event-detail-action-yellow{
+  border-color:#f0c84f!important;
+  background:linear-gradient(180deg,#f7da68,#e7b92d)!important;
+  color:#171100!important;
+  box-shadow:0 0 0 1px rgba(240,200,79,.08);
+}
+.event-detail-action-yellow:hover{
+  background:linear-gradient(180deg,#ffe784,#f0c33b)!important;
+  color:#120e00!important;
+}
+
+.about-heading-row,
+.watch-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:20px;
+}
+.about-heading-row .section-heading,
+.watch-head .section-heading{margin-bottom:0!important;flex:0 1 auto}
+.section-link-action,
+.watch-head .section-link-action{
+  flex:0 0 auto;
+  border:0;
+  background:transparent;
+  color:var(--cyan);
+  padding:8px 0;
+  font-family:Inter,Arial,Helvetica,sans-serif!important;
+  font-size:12px!important;
+  font-weight:800!important;
+  letter-spacing:.08em!important;
+  text-decoration:none;
+  cursor:pointer;
+  white-space:nowrap;
+}
+
+.booking-intro{max-width:none!important}
+.booking-content-row{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  align-items:center;
+  gap:30px;
+}
+.booking-copy-wrap{max-width:760px}
+.booking-content-row .booking-open-btn{
+  margin-top:0!important;
+  min-width:220px;
+  justify-self:end;
+}
+
+@media(min-width:621px) and (max-width:900px){
+  .gig-date{min-height:82px;padding:3px 6px 2px 5px!important}
+  .section-link-action,.watch-head .section-link-action{font-size:10px!important}
+  .booking-content-row{gap:18px}
+}
+@media(max-width:620px){
+  .gig-date{min-height:72px;padding:3px 5px 2px 4px!important}
+  .about-heading-row,.watch-head{gap:12px}
+  .section-link-action,.watch-head .section-link-action{font-size:10px!important}
+  .booking-content-row{grid-template-columns:1fr;gap:18px}
+  .booking-content-row .booking-open-btn{width:100%;justify-self:stretch}
+}

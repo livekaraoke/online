@@ -14,6 +14,8 @@
   let latestEvents = [];
   let selectedRequestSongId = "";
   let elapsedTimer = null;
+  const DEFAULT_TYPE_COLORS = {"Live Karaoke":"#36a9e1","Roxanna":"#d96ce0","Solo":"#53c985","Texanna":"#f08a45","Other":"#a5adb3"};
+  let eventTypeColors = {...DEFAULT_TYPE_COLORS};
 
   function escapeHTML(v){return String(v ?? "").replace(/[&<>\"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
   function dateFromEvent(e){
@@ -33,7 +35,7 @@
   function formatDateParts(e){
     const d = dateFromEvent(e);
     if (!d) return {dow:"",day:"—",month:""};
-    return {dow:d.toLocaleDateString("en-GB",{weekday:"short"}).toUpperCase(),day:String(d.getDate()).padStart(2,"0"),month:d.toLocaleDateString("en-GB",{month:"short"}).toUpperCase()};
+    return {dow:d.toLocaleDateString("en-GB",{weekday:"short"}).toUpperCase(),day:String(d.getDate()).padStart(2,"0"),month:["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"][d.getMonth()]};
   }
   function formatTime(e){
     const raw=e?.startTime || ""; if(!raw) return "TBC";
@@ -41,6 +43,8 @@
     return new Date(2000,0,1,h,m||0).toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit",hour12:false});
   }
   function typeClass(type){return String(type||"Other").toLowerCase().replace(/[^a-z0-9]+/g,"-");}
+  function typeColor(type){return eventTypeColors[type] || DEFAULT_TYPE_COLORS[type] || "#a5adb3";}
+  function typePillStyle(type){const c=typeColor(type);return `--event-type-color:${escapeHTML(c)}`;}
   function eventLocality(e){
     return e?.venueLocality || e?.locality || e?.location || "";
   }
@@ -53,7 +57,7 @@
       return `<button class="hero-gig" data-event-id="${escapeHTML(e.id)}"><div class="date"><small>${d.dow}</small><strong>${d.day}</strong><small>${d.month}</small></div><div class="event-copy hero-event-copy"><b>${escapeHTML(venue)}</b>${locality?`<span class="hero-locality">${escapeHTML(locality)}</span>`:""}</div><div class="event-time"><span class="clock-icon" aria-hidden="true">◷</span>${escapeHTML(formatTime(e))}</div><span class="chev">›</span></button>`;
     }
     const time12 = (()=>{const raw=e?.startTime||"";if(!raw)return "TBC";const [h,m]=raw.split(":").map(Number);if(!Number.isFinite(h))return raw;return new Date(2000,0,1,h,m||0).toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit",hour12:true});})();
-    return `<button class="gig-row" data-event-id="${escapeHTML(e.id)}"><div class="gig-date"><small>${d.dow}</small><strong>${d.day}</strong><small>${d.month}</small></div><div class="gig-copy"><b>${escapeHTML(venue)}</b>${locality?`<span>${escapeHTML(locality)}</span>`:""}<div class="gig-meta"><span class="gig-clock" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v5l3.5 2"/></svg></span><time>${escapeHTML(time12)}</time></div>${type?`<em class="type-pill type-${escapeHTML(typeClass(type))}">${escapeHTML(type)}</em>`:""}</div></button>`;
+    return `<button class="gig-row" data-event-id="${escapeHTML(e.id)}"><div class="gig-date"><small>${d.dow}</small><strong>${d.day}</strong><small>${d.month}</small></div><div class="gig-copy"><b>${escapeHTML(venue)}</b>${locality?`<span>${escapeHTML(locality)}</span>`:""}<div class="gig-meta"><span class="gig-clock" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v5l3.5 2"/></svg></span><time>${escapeHTML(time12)}</time></div>${type?`<em class="type-pill type-${escapeHTML(typeClass(type))}" style="${typePillStyle(type)}">${escapeHTML(type)}</em>`:""}</div></button>`;
   }
 
   function allGigsTableRow(e){
@@ -62,7 +66,7 @@
     const venue=e.venue||e.name||"Event";
     const locality=eventLocality(e);
     const time12=(()=>{const raw=e?.startTime||"";if(!raw)return "TBC";const [h,m]=raw.split(":").map(Number);if(!Number.isFinite(h))return raw;return new Date(2000,0,1,h,m||0).toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit",hour12:true});})();
-    return `<button class="all-gigs-row" data-event-id="${escapeHTML(e.id)}" data-from-all-gigs="1"><span class="all-gigs-date"><small>${d.dow}</small><strong>${d.day}</strong><small>${d.month}</small></span><span class="all-gigs-venue"><b>${escapeHTML(venue)}</b>${locality?`<small>${escapeHTML(locality)}</small>`:""}</span><span class="all-gigs-time"><b>${escapeHTML(time12)}</b>${type?`<small class="type-${escapeHTML(typeClass(type))}">${escapeHTML(type)}</small>`:""}</span><span class="all-gigs-chev" aria-hidden="true">›</span></button>`;
+    return `<button class="all-gigs-row" data-event-id="${escapeHTML(e.id)}" data-from-all-gigs="1"><span class="all-gigs-date"><small>${d.dow}</small><strong>${d.day}</strong><small>${d.month}</small></span><span class="all-gigs-venue"><b>${escapeHTML(venue)}</b>${locality?`<small>${escapeHTML(locality)}</small>`:""}</span><span class="all-gigs-time"><b>${escapeHTML(time12)}</b>${type?`<small class="all-gigs-type type-${escapeHTML(typeClass(type))}" style="${typePillStyle(type)}">${escapeHTML(type)}</small>`:""}</span><span class="all-gigs-chev" aria-hidden="true">›</span></button>`;
   }
 
   function renderHeroGig(){
@@ -96,6 +100,15 @@
     db.collection("upcomingEvents").onSnapshot(snap=>{
       latestEvents=snap.docs.map(doc=>({id:doc.id,...(doc.data()||{})})); renderEvents();
     }, err=>console.error("Upcoming events listener failed",err));
+  }
+
+  function listenEventTypes(){
+    db.collection("karaokeControl").doc("eventTypes").onSnapshot(doc=>{
+      const data=doc.exists?(doc.data()||{}):{};
+      const colors=(data.colors && typeof data.colors==="object")?data.colors:{};
+      eventTypeColors={...DEFAULT_TYPE_COLORS,...colors};
+      renderEvents();
+    },err=>console.warn("Event type colours listener failed",err));
   }
 
   function queuedRequestCount(){
@@ -399,19 +412,18 @@
       return /^https?:\/\//i.test(raw)?raw:`https://${raw}`;
     };
     const rows=[];
-    if(venueName) rows.push(`<div><dt>VENUE NAME</dt><dd>${escapeHTML(venueName)}</dd></div>`);
     if(address) rows.push(`<div><dt>ADDRESS</dt><dd>${escapeHTML(address)}</dd></div>`);
     if(locality) rows.push(`<div><dt>LOCALITY</dt><dd>${escapeHTML(locality)}</dd></div>`);
     if(dateText) rows.push(`<div><dt>DATE</dt><dd>${escapeHTML(dateText)}</dd></div>`);
     if(timeText) rows.push(`<div><dt>START TIME</dt><dd>${escapeHTML(timeText)}</dd></div>`);
-    if(type) rows.push(`<div><dt>TYPE</dt><dd>${escapeHTML(type)}</dd></div>`);
     const notes=String(e.notes||"").trim();
     if(notes) rows.push(`<div><dt>GIG NOTES</dt><dd>${escapeHTML(notes)}</dd></div>`);
     const links=[];
-    if(website){ const href=safeUrl(website); links.push(`<a class="event-detail-action" href="${escapeHTML(href)}" target="_blank" rel="noopener noreferrer">WEBSITE ↗</a>`); }
-    if(mapUrl){ const href=safeUrl(mapUrl); links.push(`<a class="event-detail-action" href="${escapeHTML(href)}" target="_blank" rel="noopener noreferrer">LOCATION ↗</a>`); }
-    const back=options.fromAllGigs?`<button type="button" class="event-back-all" id="eventBackAllBtn" aria-label="Back to all gigs"><span aria-hidden="true">←</span> VIEW ALL GIGS</button>`:"";
-    $("eventDialogBody").innerHTML=`${back}<span class="eyebrow">GIG DETAILS</span><h2>${escapeHTML(venueName)}</h2><dl class="event-detail-list">${rows.join("")}</dl>${links.length?`<div class="event-detail-actions">${links.join("")}</div>`:""}`;
+    if(website){ const href=safeUrl(website); links.push(`<a class="event-detail-action event-detail-action-yellow" href="${escapeHTML(href)}" target="_blank" rel="noopener noreferrer">WEBSITE ↗</a>`); }
+    if(mapUrl){ const href=safeUrl(mapUrl); links.push(`<a class="event-detail-action event-detail-action-yellow" href="${escapeHTML(href)}" target="_blank" rel="noopener noreferrer">LOCATION ↗</a>`); }
+    const back=options.fromAllGigs?`<button type="button" class="event-back-all" id="eventBackAllBtn" aria-label="Back to all gigs"><span aria-hidden="true">←</span> BACK TO ALL GIGS</button>`:"";
+    const typeBadge=type?`<span class="event-detail-type type-${escapeHTML(typeClass(type))}" style="${typePillStyle(type)}">${escapeHTML(type)}</span>`:"";
+    $("eventDialogBody").innerHTML=`${back}<div class="event-detail-heading"><span class="eyebrow">GIG DETAILS</span><h2>${escapeHTML(venueName)}</h2>${typeBadge}</div><dl class="event-detail-list">${rows.join("")}</dl>${links.length?`<div class="event-detail-actions">${links.join("")}</div>`:""}`;
     $("eventDialog").showModal();
   }
 
@@ -538,5 +550,5 @@
   $("bookingForm").addEventListener("submit",submitBookingEnquiry);
   $("shareBtn").addEventListener("click",async()=>{try{if(navigator.share)await navigator.share({title:document.title,url:location.href});else{await navigator.clipboard.writeText(location.href);alert("Link copied.");}}catch{}});
 
-  listenEvents(); listenLiveState(); renderLive();
+  listenEventTypes(); listenEvents(); listenLiveState(); renderLive();
 })();
