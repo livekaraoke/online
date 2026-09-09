@@ -2,6 +2,7 @@
   const OWNER_EMAIL = "leeborg23@gmail.com";
   const USER_ROLES = ["Admin", "Manager", "Band Member", "Venue", "Host", "Member", "Fan"];
 
+  /*
   const firebaseConfig = {
     apiKey: "AIzaSyC4gSodXM35E2ZdYaz6mrCvTUYzW75ZCBk",
     authDomain: "livekaraokemt.firebaseapp.com",
@@ -10,6 +11,16 @@
     messagingSenderId: "425980659562",
     appId: "1:425980659562:web:892ddcd53fb209d1114713"
   };
+  */
+  const firebaseConfig = {
+  apiKey: "AIzaSyAkJ6yKFE8jgcDoWtZfQKmHjhBk4rfZ8Fg",
+  authDomain: "livekaraokesuite.firebaseapp.com",
+  projectId: "livekaraokesuite",
+  storageBucket: "livekaraokesuite.firebasestorage.app",
+  messagingSenderId: "25324781952",
+  appId: "1:25324781952:web:ca9467eecce90574ee8165",
+  measurementId: "G-J1DVP1T0HW"
+};
 
   if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 
