@@ -553,3 +553,102 @@ footer{
   .footer-tag{gap:12px;font-size:9px;letter-spacing:.2em}
   .footer-tag span{min-width:44px;flex-basis:70px}
 }
+
+/* v15 — reference typography, share icon, support heart and editorial gig layout */
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
+
+body,button,a,input,select,textarea{font-family:"Barlow Condensed","Arial Narrow",Arial,sans-serif}
+p,.about-copy p,.booking-intro p,.booking-modal-head p,.video-card small{font-family:"Barlow Condensed","Arial Narrow",Arial,sans-serif}
+.section-heading,.view-all-gigs,.eyebrow,.type-pill,.gig-row,.hero-gig,.watch-head a{font-family:"Barlow Condensed","Arial Narrow",Arial,sans-serif}
+
+.share-btn{
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  min-width:126px;min-height:46px;padding:9px 20px;
+  font-family:"Space Mono",monospace;font-size:13px;font-weight:400;letter-spacing:.16em;
+  border:1px solid rgba(255,255,255,.88);background:rgba(0,5,8,.2)
+}
+.share-btn:first-letter{color:inherit}
+.share-icon{width:22px;height:22px;display:block;overflow:visible}
+.share-icon circle{fill:var(--cyan);stroke:none}
+.share-icon path{fill:none;stroke:var(--cyan);stroke-width:1.65;stroke-linecap:round}
+
+.support-copy-below-player{
+  font-family:"Space Mono",monospace!important;
+  font-size:15px!important;font-weight:400;letter-spacing:.045em!important;
+  color:#e7e9e7!important;
+}
+.support-heart{width:36px;height:32px;margin-top:11px!important;display:block!important;color:var(--cyan)}
+.support-heart svg{display:block;width:100%;height:100%;overflow:visible}
+.support-heart path{fill:none;stroke:currentColor;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+
+/* Upcoming gigs: three editorial columns, matching the supplied reference. */
+.gigs-section{padding-top:42px;padding-bottom:22px;border-top:1px solid rgba(49,196,214,.13);border-bottom:1px solid rgba(49,196,214,.13)}
+.gigs-heading-row{margin-bottom:22px!important}
+.gigs-heading-row .section-heading{font-size:22px!important;font-weight:500!important;letter-spacing:.12em!important}
+.view-all-gigs{font-size:15px!important;font-weight:500!important;letter-spacing:.13em!important}
+.gig-list{
+  display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:0!important;
+  overflow:visible!important;background:transparent!important;border:0!important;border-radius:0!important
+}
+.gig-row{
+  min-width:0!important;min-height:108px!important;width:100%!important;
+  display:grid!important;grid-template-columns:82px minmax(0,1fr)!important;gap:16px!important;
+  align-items:start!important;padding:6px 24px 6px 0!important;
+  border:0!important;border-radius:0!important;background:transparent!important;
+  position:relative;color:#f3f3ef!important
+}
+.gig-row:not(:last-child){border-right:1px solid rgba(180,220,226,.44)!important;margin-right:24px}
+.gig-row .chev{display:none!important}
+.gig-date{align-items:flex-start!important;text-align:left!important;line-height:.92!important;color:var(--cyan)!important;border-right:1px solid rgba(180,220,226,.48);padding-right:18px;min-height:96px}
+.gig-date small:first-child{font-size:16px!important;font-weight:500!important;letter-spacing:.08em!important;margin-bottom:2px}
+.gig-date strong{font-size:38px!important;font-weight:500!important;line-height:.86!important}
+.gig-date small:last-child{font-size:16px!important;font-weight:500!important;letter-spacing:.06em!important;margin-top:6px}
+.gig-copy{display:flex!important;flex-direction:column!important;gap:2px!important;padding:4px 0 0!important;border:0!important;min-width:0}
+.gig-row .gig-copy b{font-size:18px!important;font-weight:500!important;letter-spacing:.055em!important;text-transform:uppercase!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gig-row .gig-copy>span{font-size:16px!important;font-weight:300!important;letter-spacing:.03em!important;color:#d8d7d3!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gig-meta{display:flex;align-items:center;gap:8px;margin-top:10px;color:#f1f1ed}
+.gig-meta time{display:block!important;font-size:16px!important;font-weight:400!important;letter-spacing:.035em!important;color:inherit!important;white-space:nowrap!important}
+.gig-clock{width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;color:var(--cyan);flex:0 0 auto}
+.gig-clock svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.45;stroke-linecap:round;stroke-linejoin:round}
+.gig-row .type-pill{margin-top:8px!important;padding:2px 0!important;border:0!important;background:transparent!important;border-radius:0!important;font-size:11px!important;font-weight:600!important;letter-spacing:.12em!important}
+
+/* Stronger footer crowd silhouette and longer tagline rules. */
+footer{min-height:300px}
+.footer-crowd{
+  background-image:
+    linear-gradient(180deg,rgba(1,9,14,.08) 0%,rgba(1,8,12,.38) 35%,rgba(0,3,5,.92) 100%),
+    radial-gradient(circle at 48% 10%,rgba(44,194,220,.2),transparent 50%),
+    url('../assets/audience-cheering.svg');
+  background-size:cover,cover,cover;
+  background-position:center,center,center bottom;
+  filter:saturate(1.15) contrast(1.05)
+}
+.footer-tag{width:min(1260px,96vw)!important;gap:38px!important;font-family:"Space Mono",monospace;font-size:13px!important;letter-spacing:.34em!important}
+.footer-tag span{flex:1 1 380px!important;max-width:460px!important;min-width:170px!important}
+.domain{font-family:"Space Mono",monospace;letter-spacing:.3em}
+.socials a{font-family:"Barlow Condensed","Arial Narrow",Arial,sans-serif}
+
+@media(min-width:621px) and (max-width:900px){
+  .gig-list{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+  .gig-row{grid-template-columns:58px minmax(0,1fr)!important;gap:10px!important;padding-right:14px!important;min-height:100px!important}
+  .gig-row:not(:last-child){margin-right:14px!important}
+  .gig-date{padding-right:10px;min-height:88px}
+  .gig-date small:first-child,.gig-date small:last-child{font-size:12px!important}
+  .gig-date strong{font-size:30px!important}
+  .gig-row .gig-copy b{font-size:14px!important}
+  .gig-row .gig-copy>span{font-size:12px!important}
+  .gig-meta{margin-top:7px;gap:5px}.gig-meta time{font-size:12px!important}.gig-clock{width:17px;height:17px}
+  .gig-row .type-pill{font-size:9px!important;margin-top:5px!important}
+}
+@media(max-width:620px){
+  .share-btn{min-width:110px;min-height:40px;padding:7px 14px;font-size:11px;gap:8px}.share-icon{width:19px;height:19px}
+  .support-copy-below-player{font-size:12px!important;letter-spacing:.025em!important}.support-heart{width:31px;height:28px}
+  .gig-list{grid-template-columns:1fr!important}
+  .gig-row{grid-template-columns:68px minmax(0,1fr)!important;padding:12px 0!important;min-height:104px!important}
+  .gig-row:not(:last-child){border-right:0!important;border-bottom:1px solid rgba(180,220,226,.24)!important;margin-right:0!important}
+  .gig-date{min-height:82px;padding-right:12px}
+  .gig-date small:first-child,.gig-date small:last-child{font-size:13px!important}.gig-date strong{font-size:32px!important}
+  .gig-row .gig-copy b{font-size:16px!important}.gig-row .gig-copy>span{font-size:14px!important}
+  .gig-meta time{font-size:14px!important}.gig-clock{width:19px;height:19px}
+  .footer-tag{gap:14px!important;font-size:9px!important;letter-spacing:.18em!important}.footer-tag span{min-width:60px!important;flex-basis:110px!important}
+}

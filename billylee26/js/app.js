@@ -52,7 +52,8 @@
     if(compact){
       return `<button class="hero-gig" data-event-id="${escapeHTML(e.id)}"><div class="date"><small>${d.dow}</small><strong>${d.day}</strong><small>${d.month}</small></div><div class="event-copy hero-event-copy"><b>${escapeHTML(venue)}</b>${locality?`<span class="hero-locality">${escapeHTML(locality)}</span>`:""}</div><div class="event-time"><span class="clock-icon" aria-hidden="true">◷</span>${escapeHTML(formatTime(e))}</div><span class="chev">›</span></button>`;
     }
-    return `<button class="gig-row" data-event-id="${escapeHTML(e.id)}"><div class="gig-date"><small>${d.month}</small><strong>${d.day}</strong></div><div class="gig-copy"><b>${escapeHTML(venue)}</b>${locality?`<span>${escapeHTML(locality)}</span>`:""}<em class="type-pill type-${escapeHTML(typeClass(type))}">${escapeHTML(type)}</em></div><time><span class="clock-icon" aria-hidden="true">◷</span>${escapeHTML(formatTime(e))}</time><span class="chev">›</span></button>`;
+    const time12 = (()=>{const raw=e?.startTime||"";if(!raw)return "TBC";const [h,m]=raw.split(":").map(Number);if(!Number.isFinite(h))return raw;return new Date(2000,0,1,h,m||0).toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit",hour12:true});})();
+    return `<button class="gig-row" data-event-id="${escapeHTML(e.id)}"><div class="gig-date"><small>${d.dow}</small><strong>${d.day}</strong><small>${d.month}</small></div><div class="gig-copy"><b>${escapeHTML(venue)}</b>${locality?`<span>${escapeHTML(locality)}</span>`:""}<div class="gig-meta"><span class="gig-clock" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v5l3.5 2"/></svg></span><time>${escapeHTML(time12)}</time></div>${type?`<em class="type-pill type-${escapeHTML(typeClass(type))}">${escapeHTML(type)}</em>`:""}</div></button>`;
   }
 
   function renderHeroGig(){
