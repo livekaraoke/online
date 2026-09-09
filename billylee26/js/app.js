@@ -140,11 +140,12 @@
     $("sessionVenue").textContent=active ? (controlData.venue || activeSession?.venue || controlData.eventSnapshot?.venue || "Live") : "—";
     $("sessionType").textContent=active ? (controlData.sessionType || controlData.type || activeSession?.sessionType || activeSession?.type || "Performance") : "—";
     $("progressBar").style.width="0%"; startElapsed(playing);
-    const label=$("liveStateLabel"); label.classList.remove("is-playing");
-    if(!active){label.textContent="NOT LIVE";$("currentSongTitle").textContent="No active session";$("currentSongArtist").textContent="Check the upcoming gigs below.";$("stateIcon").textContent="♪";return;}
-    if(breakOpen){label.textContent="ON BREAK";$("currentSongTitle").textContent="We’ll be back shortly";$("currentSongArtist").textContent="Requests remain open during the break.";$("stateIcon").textContent="☕";return;}
-    if(playing){label.textContent="NOW PLAYING";label.classList.add("is-playing");$("currentSongTitle").textContent=playing.songTitle||playing.title||"Current song";$("currentSongArtist").textContent=playing.artist||playing.songArtist||"";$("stateIcon").innerHTML='<span class="pause-bars"><i></i><i></i></span>';return;}
-    label.textContent="LIVE NOW";$("currentSongTitle").textContent="Between songs";$("currentSongArtist").textContent="The next performance will start shortly.";$("stateIcon").textContent="♪";
+    const label=$("liveStateLabel"); const title=$("currentSongTitle");
+    label.classList.remove("is-playing"); title.classList.remove("between-songs-title");
+    if(!active){label.textContent="NOT LIVE";title.textContent="No active session";$("currentSongArtist").textContent="Check the upcoming gigs below.";$("stateIcon").textContent="♪";return;}
+    if(breakOpen){label.textContent="ON BREAK";title.textContent="We’ll be back shortly";$("currentSongArtist").textContent="Requests remain open during the break.";$("stateIcon").textContent="☕";return;}
+    if(playing){label.textContent="NOW PLAYING";label.classList.add("is-playing");title.textContent=playing.songTitle||playing.title||"Current song";$("currentSongArtist").textContent=playing.artist||playing.songArtist||"";$("stateIcon").innerHTML='<span class="pause-bars"><i></i><i></i></span>';return;}
+    label.textContent="LIVE NOW";title.textContent="- BETWEEN SONGS -";title.classList.add("between-songs-title");$("currentSongArtist").textContent="The next song will start shortly.";$("stateIcon").textContent="♪";
   }
 
   function attachSessionDoc(id){
@@ -513,6 +514,31 @@
     }
   }
 
+
+  const galleryPhotos=[
+    {src:"assets/gallery-billy-01.jpg",alt:"Billy Lee performing live on stage"},
+    {src:"assets/gallery-billy-02.jpg",alt:"Billy Lee singing live"},
+    {src:"assets/gallery-billy-03.jpg",alt:"Billy Lee live performance"},
+    {src:"assets/hero-billy-lee.png",alt:"Billy Lee live on guitar"},
+    {src:"assets/about-billy-lee.jpg",alt:"Billy Lee on stage"}
+  ];
+  let currentPhotoIndex=0;
+  function renderAllPhotos(){
+    const grid=$("allPhotosGrid");
+    if(!grid)return;
+    grid.innerHTML=galleryPhotos.map((photo,index)=>`<button class="all-photo-thumb" type="button" data-photo-index="${index}" aria-label="Open photo ${index+1}"><img src="${photo.src}" alt="${photo.alt}"></button>`).join("");
+  }
+  function openPhoto(index){
+    currentPhotoIndex=(Number(index)+galleryPhotos.length)%galleryPhotos.length;
+    const photo=galleryPhotos[currentPhotoIndex];
+    $("lightboxPhoto").src=photo.src;
+    $("lightboxPhoto").alt=photo.alt;
+    $("lightboxCaption").textContent=`${currentPhotoIndex+1} / ${galleryPhotos.length}`;
+    if($("allPhotosDialog")?.open)$("allPhotosDialog").close();
+    if(!$("photoLightboxDialog").open)$("photoLightboxDialog").showModal();
+  }
+  function stepPhoto(delta){openPhoto(currentPhotoIndex+delta);}
+
   document.addEventListener("click",e=>{
     const eventBtn=e.target.closest("[data-event-id]");
     if(eventBtn){
@@ -527,6 +553,7 @@
       if($("eventDialog")?.open) $("eventDialog").close();
       showAllGigs();
     }
+    const photo=e.target.closest("[data-photo-index]"); if(photo)openPhoto(Number(photo.dataset.photoIndex));
     const song=e.target.closest("[data-song-id]"); if(song)selectRequestSong(song.dataset.songId);
     const close=e.target.closest("[data-close]"); if(close)$(close.dataset.close)?.close();
   });
@@ -548,6 +575,12 @@
     $("bookingDialog").showModal();
   });
   $("bookingForm").addEventListener("submit",submitBookingEnquiry);
+  $("aboutReadMoreBtn").addEventListener("click",()=>$("aboutDialog").showModal());
+  $("viewMorePhotosBtn").addEventListener("click",()=>{renderAllPhotos();$("allPhotosDialog").showModal();});
+  $("photoPrevBtn").addEventListener("click",()=>stepPhoto(-1));
+  $("photoNextBtn").addEventListener("click",()=>stepPhoto(1));
+  document.addEventListener("keydown",e=>{if(!$("photoLightboxDialog")?.open)return;if(e.key==="ArrowLeft")stepPhoto(-1);if(e.key==="ArrowRight")stepPhoto(1);});
+  renderAllPhotos();
   $("shareBtn").addEventListener("click",async()=>{try{if(navigator.share)await navigator.share({title:document.title,url:location.href});else{await navigator.clipboard.writeText(location.href);alert("Link copied.");}}catch{}});
 
   listenEventTypes(); listenEvents(); listenLiveState(); renderLive();

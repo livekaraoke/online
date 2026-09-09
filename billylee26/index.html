@@ -16,6 +16,7 @@
 
     <div class="hero-left">
       <img class="brand-logo" src="assets/billy-lee-logo.png" alt="Billy Lee">
+      <div class="hero-next-label">NEXT GIG:</div>
       <div class="hero-gigs" id="heroGigs" aria-live="polite"></div>
       <div class="hero-actions">
         <a class="hero-action primary" id="bookEnquireBtn" href="#book"><span class="button-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 7V5a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v2"/><rect x="3" y="7" width="18" height="14" rx="2"/><path d="M3 12h18"/></svg></span><span>BOOK / ENQUIRE →</span></a>
@@ -72,6 +73,18 @@
         <a class="video-card" href="#"><div class="thumb thumb-one"><span>▶</span></div><div><b>Live Looping Medley</b><small>3:24</small></div></a>
         <a class="video-card" href="#"><div class="thumb thumb-two"><span>▶</span></div><div><b>One Guitar. Countless Sounds.</b><small>2:18</small></div></a>
         <a class="video-card" href="#"><div class="thumb thumb-three"><span>▶</span></div><div><b>Live Loop Performance</b><small>4:07</small></div></a>
+      </div>
+    </section>
+
+    <section class="photos section-shell" id="photos">
+      <div class="photos-heading-row">
+        <div class="section-heading left"><span class="section-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m5 17 4-4 3 3 2-2 5 3"/></svg></span><span>PHOTOS</span></div>
+        <button class="section-link-action" type="button" id="viewMorePhotosBtn">VIEW MORE →</button>
+      </div>
+      <div class="photo-preview-grid">
+        <button class="photo-thumb" type="button" data-photo-index="0" aria-label="Open photo 1"><img src="assets/gallery-billy-01.jpg" alt="Billy Lee performing live on stage"></button>
+        <button class="photo-thumb" type="button" data-photo-index="1" aria-label="Open photo 2"><img src="assets/gallery-billy-02.jpg" alt="Billy Lee singing live"></button>
+        <button class="photo-thumb" type="button" data-photo-index="2" aria-label="Open photo 3"><img src="assets/gallery-billy-03.jpg" alt="Billy Lee live performance"></button>
       </div>
     </section>
 
@@ -141,6 +154,30 @@
       <p id="bookingSuccessMessage">Your enquiry has been sent successfully.</p>
       <button class="primary-btn booking-success-close" type="button" data-close="bookingDialog">CLOSE</button>
     </div>
+  </dialog>
+
+  <dialog id="aboutDialog" class="modal about-modal">
+    <button class="modal-close" data-close="aboutDialog" aria-label="Close about">×</button>
+    <div class="about-modal-content">
+      <span class="eyebrow">ABOUT BILLY LEE</span>
+      <h2>LIVE MUSIC, BUILT IN THE MOMENT.</h2>
+      <p>Billy Lee is a Malta-based singer, guitarist and live performer focused on making every show feel immediate and genuinely live. Guitar, vocals and looping are layered in real time, creating arrangements that can move from stripped-back acoustic moments to a much bigger full-band sound.</p>
+      <p>The set is built around the room rather than a fixed formula. Familiar songs can be reshaped on the spot, requests can become part of the night, and the audience is encouraged to be part of the performance rather than simply watch it.</p>
+      <p>From bars and venues to private events and special occasions, the aim stays the same: strong songs, real instruments, spontaneous moments and a live experience that feels different every time.</p>
+    </div>
+  </dialog>
+
+  <dialog id="allPhotosDialog" class="modal photos-modal">
+    <button class="modal-close" data-close="allPhotosDialog" aria-label="Close photos">×</button>
+    <div class="photos-modal-head"><span class="eyebrow">GALLERY</span><h2>PHOTOS</h2></div>
+    <div class="all-photos-grid" id="allPhotosGrid"></div>
+  </dialog>
+
+  <dialog id="photoLightboxDialog" class="photo-lightbox">
+    <button class="lightbox-close" data-close="photoLightboxDialog" aria-label="Close photo">×</button>
+    <button class="lightbox-nav lightbox-prev" id="photoPrevBtn" type="button" aria-label="Previous photo">‹</button>
+    <figure><img id="lightboxPhoto" src="" alt="Billy Lee gallery photo"><figcaption id="lightboxCaption"></figcaption></figure>
+    <button class="lightbox-nav lightbox-next" id="photoNextBtn" type="button" aria-label="Next photo">›</button>
   </dialog>
 
   <dialog id="requestDialog" class="modal request-modal">
