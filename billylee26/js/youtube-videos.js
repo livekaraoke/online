@@ -13,6 +13,11 @@
 */
 window.BILLY_LEE_YOUTUBE_VIDEOS = [
   {
+    url: "https://youtu.be/T4z0bFzz_Gc?si=xAmZKTeNHvfMv_sa",
+    title: "Live Acoustic Cover",
+    duration: "3:49"
+  },
+  {
     url: "",
     title: "Live Looping Medley",
     duration: ""
