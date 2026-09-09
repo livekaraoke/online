@@ -1,12 +1,10 @@
 (function(){
   "use strict";
 
-  const firebaseConfig = (window.LKFirebaseProjects && typeof window.LKFirebaseProjects.getSelectedConfig === "function")
-    ? window.LKFirebaseProjects.getSelectedConfig()
-    : window.LK_FIREBASE_CONFIG;
+  const firebaseConfig = window.SITE_FIREBASE_CONFIG;
 
   if (!firebaseConfig) {
-    console.error("LiveSuite Firebase project configuration is unavailable.");
+    console.error("Billy Lee Firebase configuration is unavailable. Check db/currentdb.js.");
     return;
   }
 
