@@ -68,12 +68,8 @@
 
 
     <section class="watch section-shell" id="watch">
-      <div class="watch-head"><div class="section-heading left"><span class="section-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m10 9 5 3-5 3Z"/></svg></span><span>WATCH &amp; LISTEN</span></div><a class="section-link-action" href="#" aria-label="View more videos">VIEW MORE VIDS →</a></div>
-      <div class="video-grid">
-        <a class="video-card" href="#"><div class="thumb thumb-one"><span>▶</span></div><div><b>Live Looping Medley</b><small>3:24</small></div></a>
-        <a class="video-card" href="#"><div class="thumb thumb-two"><span>▶</span></div><div><b>One Guitar. Countless Sounds.</b><small>2:18</small></div></a>
-        <a class="video-card" href="#"><div class="thumb thumb-three"><span>▶</span></div><div><b>Live Loop Performance</b><small>4:07</small></div></a>
-      </div>
+      <div class="watch-head"><div class="section-heading left"><span class="section-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m10 9 5 3-5 3Z"/></svg></span><span>WATCH &amp; LISTEN</span></div><button class="section-link-action" type="button" id="viewMoreVideosBtn">VIEW MORE VIDS →</button></div>
+      <div class="video-grid" id="videoPreviewGrid"></div>
     </section>
 
     <section class="photos section-shell" id="photos">
@@ -154,6 +150,26 @@
       <h2>Thank you!</h2>
       <p id="bookingSuccessMessage">Your enquiry has been sent successfully.</p>
       <button class="primary-btn booking-success-close" type="button" data-close="bookingDialog">CLOSE</button>
+    </div>
+  </dialog>
+
+
+  <dialog id="allVideosDialog" class="modal videos-modal">
+    <div class="videos-modal-sticky">
+      <div class="videos-modal-head"><span class="eyebrow">WATCH &amp; LISTEN</span><h2>VIDEOS</h2></div>
+      <button class="modal-close" data-close="allVideosDialog" aria-label="Close videos">×</button>
+    </div>
+    <div class="all-videos-grid" id="allVideosGrid"></div>
+  </dialog>
+
+  <dialog id="videoPlayerDialog" class="video-player-dialog">
+    <div class="video-player-top">
+      <div><span class="eyebrow">WATCH &amp; LISTEN</span><h2 id="videoPlayerTitle">VIDEO</h2></div>
+      <button class="modal-close video-player-close" data-close="videoPlayerDialog" aria-label="Close video">×</button>
+    </div>
+    <div class="video-player-frame-wrap">
+      <iframe id="youtubePlayerFrame" title="Billy Lee video player" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" sandbox="allow-scripts allow-same-origin allow-presentation"></iframe>
+      <button id="videoPlayPauseBtn" class="video-play-pause" type="button" aria-label="Pause video">❚❚</button>
     </div>
   </dialog>
 
@@ -243,6 +259,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
   <script src="js/firebase-config.js"></script>
+  <script src="js/youtube-videos.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

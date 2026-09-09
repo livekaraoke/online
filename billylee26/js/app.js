@@ -515,6 +515,83 @@
   }
 
 
+  const youtubeVideos=(Array.isArray(window.BILLY_LEE_YOUTUBE_VIDEOS)?window.BILLY_LEE_YOUTUBE_VIDEOS:[])
+    .map((video,index)=>{
+      const raw=String(video?.url||video?.id||"").trim();
+      let id="";
+      if(/^[A-Za-z0-9_-]{11}$/.test(raw)) id=raw;
+      else {
+        try{
+          const u=new URL(raw);
+          if(u.hostname.includes("youtu.be")) id=u.pathname.split("/").filter(Boolean)[0]||"";
+          else if(u.pathname.startsWith("/shorts/")) id=u.pathname.split("/")[2]||"";
+          else if(u.pathname.startsWith("/embed/")) id=u.pathname.split("/")[2]||"";
+          else id=u.searchParams.get("v")||"";
+        }catch{}
+      }
+      if(!/^[A-Za-z0-9_-]{11}$/.test(id)) return null;
+      return {
+        id,
+        title:String(video?.title||`Video ${index+1}`),
+        duration:String(video?.duration||""),
+        thumbnail:`https://i.ytimg.com/vi/${id}/hqdefault.jpg`
+      };
+    }).filter(Boolean);
+
+  let currentVideoIndex=0;
+  let videoPaused=false;
+
+  function videoCardHTML(video,index,all=false){
+    return `<button class="video-card${all?" all-video-card":""}" type="button" data-video-index="${index}" aria-label="Play ${escapeHTML(video.title)}">
+      <div class="thumb youtube-thumb" style="background-image:linear-gradient(#00101733,#00101733),url('${video.thumbnail}')"><span>▶</span></div>
+      <div><b>${escapeHTML(video.title)}</b>${video.duration?`<small>${escapeHTML(video.duration)}</small>`:""}</div>
+    </button>`;
+  }
+
+  function renderVideos(){
+    const preview=$("videoPreviewGrid");
+    const all=$("allVideosGrid");
+    if(preview){
+      preview.innerHTML=youtubeVideos.length
+        ? youtubeVideos.slice(0,3).map((v,i)=>videoCardHTML(v,i)).join("")
+        : `<div class="video-empty">Videos coming soon.</div>`;
+    }
+    if(all){
+      all.innerHTML=youtubeVideos.length
+        ? youtubeVideos.map((v,i)=>videoCardHTML(v,i,true)).join("")
+        : `<div class="video-empty">Videos coming soon.</div>`;
+    }
+    const more=$("viewMoreVideosBtn");
+    if(more) more.hidden=youtubeVideos.length<=3;
+  }
+
+  function sendVideoCommand(func){
+    const frame=$("youtubePlayerFrame");
+    try{
+      frame?.contentWindow?.postMessage(JSON.stringify({event:"command",func,args:[]}),"*");
+    }catch{}
+  }
+
+  function openVideo(index){
+    const video=youtubeVideos[Number(index)];
+    if(!video)return;
+    currentVideoIndex=Number(index);
+    videoPaused=false;
+    $("videoPlayerTitle").textContent=video.title;
+    const frame=$("youtubePlayerFrame");
+    frame.src=`https://www.youtube-nocookie.com/embed/${video.id}?autoplay=1&controls=0&disablekb=1&fs=0&iv_load_policy=3&playsinline=1&rel=0&modestbranding=1&enablejsapi=1`;
+    $("videoPlayPauseBtn").textContent="❚❚";
+    $("videoPlayPauseBtn").setAttribute("aria-label","Pause video");
+    if($("allVideosDialog")?.open) $("allVideosDialog").close();
+    if(!$("videoPlayerDialog").open) $("videoPlayerDialog").showModal();
+  }
+
+  function closeVideoPlayer(){
+    const frame=$("youtubePlayerFrame");
+    if(frame) frame.src="";
+  }
+
+
   const galleryPhotos=[
     {src:"assets/photos/gallery-billy-01.jpg",alt:"Billy Lee performing live on stage"},
     {src:"assets/photos/gallery-billy-02.jpg",alt:"Billy Lee singing live"},
@@ -551,9 +628,15 @@
       if($("eventDialog")?.open) $("eventDialog").close();
       showAllGigs();
     }
+    const video=e.target.closest("[data-video-index]"); if(video)openVideo(Number(video.dataset.videoIndex));
     const photo=e.target.closest("[data-photo-index]"); if(photo)openPhoto(Number(photo.dataset.photoIndex));
     const song=e.target.closest("[data-song-id]"); if(song)selectRequestSong(song.dataset.songId);
-    const close=e.target.closest("[data-close]"); if(close)$(close.dataset.close)?.close();
+    const close=e.target.closest("[data-close]");
+    if(close){
+      const dialogId=close.dataset.close;
+      $(dialogId)?.close();
+      if(dialogId==="videoPlayerDialog") closeVideoPlayer();
+    }
   });
   $("songSearch").addEventListener("input",renderSongResults);
   $("continueRequestBtn").addEventListener("click",continueToSongs);
@@ -574,10 +657,19 @@
   });
   $("bookingForm").addEventListener("submit",submitBookingEnquiry);
   $("aboutReadMoreBtn").addEventListener("click",()=>$("aboutDialog").showModal());
+  $("viewMoreVideosBtn").addEventListener("click",()=>{renderVideos();$("allVideosDialog").showModal();});
+  $("videoPlayPauseBtn").addEventListener("click",()=>{
+    videoPaused=!videoPaused;
+    sendVideoCommand(videoPaused?"pauseVideo":"playVideo");
+    $("videoPlayPauseBtn").textContent=videoPaused?"▶":"❚❚";
+    $("videoPlayPauseBtn").setAttribute("aria-label",videoPaused?"Play video":"Pause video");
+  });
+  $("videoPlayerDialog").addEventListener("close",closeVideoPlayer);
   $("viewMorePhotosBtn").addEventListener("click",()=>{renderAllPhotos();$("allPhotosDialog").showModal();});
   $("photoPrevBtn").addEventListener("click",()=>stepPhoto(-1));
   $("photoNextBtn").addEventListener("click",()=>stepPhoto(1));
   document.addEventListener("keydown",e=>{if(!$("photoLightboxDialog")?.open)return;if(e.key==="ArrowLeft")stepPhoto(-1);if(e.key==="ArrowRight")stepPhoto(1);});
+  renderVideos();
   renderAllPhotos();
   $("shareBtn").addEventListener("click",async()=>{try{if(navigator.share)await navigator.share({title:document.title,url:location.href});else{await navigator.clipboard.writeText(location.href);alert("Link copied.");}}catch{}});
 

@@ -1234,3 +1234,26 @@ p,
 .about-heading-row{
   margin-bottom:14px!important;
 }
+
+/* v34 — YouTube video gallery/player */
+.video-card{border:0;background:transparent;padding:0;text-align:left;cursor:pointer;width:100%}
+.youtube-thumb{background-size:cover;background-position:center}
+.video-empty{grid-column:1/-1;border:1px solid rgba(36,215,230,.25);border-radius:8px;padding:28px;text-align:center;color:#9fb0b5}
+.videos-modal{padding:0!important;overflow:hidden!important;max-height:88vh}
+.videos-modal-sticky{position:sticky;top:0;z-index:4;display:flex;justify-content:space-between;align-items:flex-start;gap:20px;padding:24px 58px 18px 24px;background:#041018;border-bottom:1px solid rgba(36,215,230,.28)}
+.videos-modal-head h2{margin:5px 0 0}
+.all-videos-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;padding:20px 24px 28px;max-height:calc(88vh - 92px);overflow-y:auto;scrollbar-width:auto;scrollbar-color:#d9f8fb #0a2029}
+.all-videos-grid::-webkit-scrollbar{width:16px}
+.all-videos-grid::-webkit-scrollbar-track{background:#0a2029;border-radius:999px}
+.all-videos-grid::-webkit-scrollbar-thumb{background:#d9f8fb;border:4px solid #0a2029;border-radius:999px}
+.all-videos-grid::-webkit-scrollbar-thumb:hover{background:#fff}
+.video-player-dialog{width:min(980px,calc(100% - 28px));padding:0;border:1px solid var(--line);border-radius:14px;background:#02080d;color:#fff;box-shadow:0 20px 80px #000d;overflow:hidden}
+.video-player-dialog::backdrop{background:#000d}
+.video-player-top{position:relative;display:flex;justify-content:space-between;align-items:flex-start;padding:20px 58px 16px 20px;background:#041018;border-bottom:1px solid rgba(36,215,230,.3)}
+.video-player-top h2{margin:4px 0 0;font-size:20px}
+.video-player-close{top:10px!important;right:13px!important}
+.video-player-frame-wrap{position:relative;aspect-ratio:16/9;background:#000;overflow:hidden}
+#youtubePlayerFrame{display:block;width:100%;height:100%;border:0;pointer-events:none}
+.video-play-pause{position:absolute;right:18px;bottom:18px;z-index:3;width:52px;height:52px;border:2px solid rgba(255,255,255,.9);border-radius:50%;background:rgba(0,0,0,.72);color:white;font-weight:900;font-size:17px;cursor:pointer;display:grid;place-items:center}
+.video-play-pause:hover{border-color:var(--cyan);color:var(--cyan)}
+@media(max-width:620px){.all-videos-grid{grid-template-columns:1fr;padding:14px}.videos-modal-sticky{padding-left:16px}.video-player-top{padding-left:16px}.video-player-top h2{font-size:17px}.video-play-pause{width:46px;height:46px;right:12px;bottom:12px}}
