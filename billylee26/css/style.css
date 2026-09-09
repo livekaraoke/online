@@ -755,3 +755,126 @@ p,
 .booking-intro .section-heading{
   font-family:"Barlow Condensed","Arial Narrow",Arial,sans-serif!important;
 }
+
+/* v18 — gig detail type, centered date, bold time, scroll-only gig list modal */
+.gig-row .gig-meta time{font-weight:700!important}
+.gig-date{
+  justify-content:flex-start!important;
+  align-items:center!important;
+  text-align:center!important;
+  padding-left:9px!important;
+  padding-right:13px!important;
+}
+.gig-date strong{
+  display:block;
+  padding-top:4px;
+  padding-bottom:1px;
+}
+.gig-date small:last-child{text-transform:uppercase}
+.support-copy-below-player{font-size:18px!important}
+
+/* All gigs modal: header/close remain fixed while only the gig rows scroll. */
+.all-gigs-modal{
+  width:min(900px,calc(100% - 28px))!important;
+  height:min(760px,88vh);
+  max-height:88vh!important;
+  overflow:hidden!important;
+  display:none;
+  grid-template-rows:auto minmax(0,1fr);
+  padding:0!important;
+}
+.all-gigs-modal[open]{display:grid!important}
+.all-gigs-head{
+  position:relative;
+  z-index:2;
+  padding:24px 62px 18px 24px!important;
+  background:#041018;
+  border-bottom:1px solid rgba(36,215,230,.22);
+}
+.all-gigs-head .eyebrow{display:block;margin-bottom:5px}
+.all-gigs-head h2{margin:0!important}
+.all-gigs-modal>.modal-close{
+  position:absolute!important;
+  z-index:5!important;
+  top:14px!important;
+  right:16px!important;
+}
+.all-gigs-list{
+  min-height:0;
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+  display:block!important;
+  margin:0!important;
+  padding:8px 14px 16px!important;
+  scrollbar-gutter:stable;
+}
+.all-gigs-row{
+  width:100%;
+  min-height:78px;
+  display:grid;
+  grid-template-columns:70px minmax(0,1fr) 128px 18px;
+  align-items:center;
+  gap:14px;
+  padding:9px 8px;
+  border:0;
+  border-bottom:1px solid rgba(36,215,230,.18);
+  background:transparent;
+  color:inherit;
+  text-align:left;
+  cursor:pointer;
+}
+.all-gigs-row:hover{background:rgba(36,215,230,.055)}
+.all-gigs-date{
+  min-height:58px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  color:var(--cyan);
+  line-height:.9;
+  border-right:1px solid rgba(180,220,226,.32);
+  padding-right:10px;
+}
+.all-gigs-date small{font-size:11px;font-weight:600;letter-spacing:.08em}
+.all-gigs-date strong{font-size:26px;font-weight:600;line-height:.9;padding:2px 0}
+.all-gigs-venue{display:flex;flex-direction:column;gap:3px;min-width:0}
+.all-gigs-venue b{font-size:17px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.all-gigs-venue small{font-size:13px;color:#c4ced1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.all-gigs-time{display:flex;flex-direction:column;align-items:flex-start;gap:4px}
+.all-gigs-time b{font-size:15px;font-weight:800;white-space:nowrap}
+.all-gigs-time small{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--cyan)}
+.all-gigs-chev{font-size:22px;color:var(--cyan);justify-self:end}
+
+.event-back-all{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  margin:0 0 14px;
+  padding:0;
+  border:0;
+  background:transparent;
+  color:var(--cyan);
+  font-weight:800;
+  font-size:12px;
+  letter-spacing:.08em;
+  cursor:pointer;
+}
+.event-back-all span{font-size:18px;line-height:1}
+
+@media(min-width:621px) and (max-width:900px){
+  .gig-date{padding-left:7px!important;padding-right:9px!important}
+  .support-copy-below-player{font-size:16px!important}
+  .all-gigs-row{grid-template-columns:62px minmax(0,1fr) 112px 16px;gap:10px}
+}
+@media(max-width:620px){
+  .gig-date{padding-left:7px!important;padding-right:10px!important}
+  .gig-date strong{padding-top:3px}
+  .support-copy-below-player{font-size:15px!important}
+  .all-gigs-modal{width:calc(100% - 12px)!important;height:92vh;max-height:92vh!important}
+  .all-gigs-head{padding:20px 54px 15px 16px!important}
+  .all-gigs-list{padding:4px 8px 12px!important}
+  .all-gigs-row{grid-template-columns:54px minmax(0,1fr) 92px 14px;gap:8px;padding:10px 5px}
+  .all-gigs-date{min-height:52px;padding-right:7px}.all-gigs-date strong{font-size:22px}.all-gigs-date small{font-size:9px}
+  .all-gigs-venue b{font-size:14px}.all-gigs-venue small{font-size:11px}
+  .all-gigs-time b{font-size:12px}.all-gigs-time small{font-size:8px}
+}
