@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+  <title>Live Karaoke Admin</title>
+
+  <link rel="stylesheet" href="../css/style.css">
+
+</head>
+
+<body class="admin-body">
+
+  <div id="passwordGate" class="password-gate">
+    <div class="gate-box">
+      <h2>Admin Login</h2>
+  
+      <input type="email" id="emailInput" placeholder="Email..." autocomplete="email" />
+  
+      <input type="password" id="passwordInput" placeholder="Password..." autocomplete="current-password" />
+  
+      <button onclick="adminLogin()">Login</button>
+  
+      <p id="passwordError" class="error"></p>
+    </div>
+  </div>
+
+  
+
+  <!-- TOP BUTTON -->
+  <!--
+  <div class="admin-top">
+    <button onclick="goMainSite()" class="admin-btn">
+      ⬅ GO BACK TO MAIN SITE
+    </button>
+  </div>
+  -->
+  <div id="adminContent" style="display:none;">
+    <!-- CONSOLE -->
+    <div class="admin-container">
+
+      <br>
+  
+      <h1>LIVE KARAOKE ADMIN</h1>
+      <h1>👤</h1>
+
+      <h2>⚙️ SETTINGS</h2>
+
+      <!--
+      <button onclick="setLive(true)" class="admin-btn live-btn">
+        🟢 GO LIVE
+      </button>
+  
+      <button onclick="setLive(false)" class="admin-btn">
+        🔴 END LIVE
+      </button>
+  
+      <button onclick="toggleSongs(true)" class="admin-btn">
+        🟢 ENABLE SONGS
+      </button>
+  
+      <button onclick="toggleSongs(false)" class="admin-btn">
+        🔴 LOCK SONGS
+      </button>
+      -->
+
+      <button id="liveToggleBtn" onclick="toggleLive()" class="admin-btn-main live-btn">
+        🟢 GO LIVE
+      </button>
+      
+      <button id="songsToggleBtn" onclick="toggleSongsAuto()" class="admin-btn-main">
+        🟢 UNLOCK SONG LIST
+      </button>
+
+      <button onclick="goMainSite()" class="admin-btn">
+        <!--⬅-->
+        ⬅️ GO BACK TO MAIN SITE
+      </button>
+  
+      <button onclick="adminLogout()" class="admin-btn">
+        ↗️ LOG OUT
+      </button>
+
+<!--
+
+View Live Performance Book	🎤	🎤 View Live Performance Book
+Lyrics Viewer	📜	📜 Lyrics Viewer
+Lyrics & Chords Viewer	🎼	🎼 Lyrics & Chords Viewer
+Lyrics & Chords Writer	✍️🎼	✍️🎼 Lyrics & Chords Writer
+Lyrics Writer	✍️	✍️ Lyrics Writer
+Lyric Book	📖	📖 Lyric Book
+Note Keeper	🗒️	🗒️ Note Keeper
+
+Some alternative icon sets:
+
+More Professional
+🎤 Live Performance Book
+📄 Lyrics Viewer
+🎸 Lyrics & Chords Viewer
+🛠️ Lyrics & Chords Editor
+✏️ Lyrics Editor
+📚 Lyric Book
+🗒️ Note Keeper
+Music-Oriented
+🎙️ Live Performance Book
+🎵 Lyrics Viewer
+🎸 Lyrics & Chords Viewer
+🎼 Lyrics & Chords Writer
+🎤 Lyrics Writer
+📖 Lyric Book
+🗒️ Note Keeper
+Matching Set (recommended)
+🎤 View Live Performance Book
+📜 Lyrics Viewer
+🎼 Lyrics & Chords Viewer
+✍️🎼 Lyrics & Chords Writer
+✍️ Lyrics Writer
+📖 Lyric Book
+🗒️ Note Keeper
+
+I think 📜, 🎼, ✍️🎼, ✍️, 📖, and 🗒️ work especially well together because they clearly communicat
+
+
+
+
+      
+      -->
+
+      <section class="admin-panel session-panel">
+        <h2>🎙️ PERFORMANCE SESSION</h2>
+      
+       <div id="sessionSetupFields">
+          <input id="sessionTitleInput" placeholder="Session Title">
+          <input id="venueInput" list="venueOptions" placeholder="Venue">
+          <datalist id="venueOptions">
+            <option value="Whyte Harte">
+            <option value="Smokehouse">
+          </datalist>
+        </div>
+        
+        <div id="activeSessionLabels" style="display:none;">
+          <div><strong>Session:</strong> <span id="sessionTitleLabel"></span></div>
+          <div><strong>Venue:</strong> <span id="venueLabel"></span></div>
+        </div>
+        
+        <textarea id="sessionNotesInput" placeholder="Session notes..."></textarea>
+        
+        <div id="sessionActionStatus" class="session-action-status"></div>
+        
+        <div class="session-button-row">
+          <button id="startPerformanceBtn" onclick="confirmStartPerformance()">START PERFORMANCE</button>
+          <button id="startBreakBtn" onclick="startBreak()">START BREAK</button>
+          <button id="endBreakBtn" onclick="endBreak()">END BREAK</button>
+          <button id="endPerformanceBtn" onclick="confirmEndPerformance()">END PERFORMANCE</button>
+        </div>
+        <div id="sessionDashboard" class="session-dashboard"></div>
+      </section>
+      
+      <section class="admin-panel">
+        <h2>🎤 ACTIVE SONG REQUESTS</h2>
+        <div id="activeRequestsList" class="active-requests-list"></div>
+      </section>
+
+      <br>
+      <h2>🎤 VENUE MODE</h2>
+
+      <!--
+      <button
+        class="admin-btn-main"
+        onclick="window.location.href='../snglst/songList.html'">
+        📜 SONG LIST
+      </button>
+      -->
+
+      <button
+        class="admin-btn-main"
+        onclick="window.location.href='host/venuekaraokelyricbook.html'">
+        🧑🏼‍🎤 KARAOKE LYRIC BOOK
+      </button>
+      
+      <br>
+      <h2>🎸 HOST MODE</h2>
+
+      <!--
+      <button
+        class="admin-btn-main"
+        onclick="window.location.href='host/karaokehostchordbook.html'">
+        🎤 VIEW KARAOKE HOST BOOK
+      </button>
+      -->
+      
+      <button
+        class="admin-btn-main"
+        onclick="window.location.href='host/lyricsviewer.html'">
+        🎸 LYRICS & CHORDS VIEWER
+      </button>
+
+      <br>
+      <h2>📋🗒️ SONG LIST</h2>
+      
+      <button
+        class="admin-btn-main"
+        onclick="window.location.href='../songlist/'">
+        🔎 SONG LIST VIEW
+      </button>
+      
+      <button
+        class="admin-btn-main"
+        onclick="window.location.href='../songlist/host/editor.html'">
+        ✎ SONG LIST EDITOR
+      </button>
+      
+      <!--
+      <button
+        class="admin-btn-main"
+        onclick="window.location.href='host/lyricscreator.html'">
+        🎸 LYRICS & CHORDS WRITER
+      </button>
+      -->
+
+      <br>
+      <h2>🎙️ PERFORMANCE MODE</h2>
+      
+      <button
+        class="admin-btn-main"
+        onclick="window.location.href='host/lyricsviewer.html'">
+        🎙️ VIEW LIVE PERFORMANCE BOOK
+      </button>
+      
+      <!--
+      <button
+        class="admin-btn-main"
+        onclick="window.location.href='live/lyricscreator.html'">
+        🎤 CREATE NEW LYRICS
+      </button>
+      -->
+
+      <!--
+      <a href="host/karaokehostchordbook.html" class="admin-btn">
+        🎤 KARAOKE HOST BOOK
+      </a>
+      
+      <a href="live/liveperformancechordbook.html" class="admin-btn-main">
+        🎸 LIVE PERFORMANCE BOOK
+      </a>
+      
+      <button id="hostKaraokeChordBookBtn" onclick="" class="admin-btn-main">
+        &#127928; HOST KARAOKE CHORD BOOK
+      </button>
+      
+      <button id="livePerformanceChordBookLyricsBtn" onclick="" class="admin-btn-main">
+        &#127908; LIVE PERFORMANCE CHORD BOOK
+      </button>
+      -->
+
+      <br>
+      <h2>🛠️ TOOLS</h2>
+
+      <button
+        class="admin-btn-main"
+        onclick="window.location.href='../notekeeper/notekeeper.html'">
+        📝 NOTE KEEPER
+      </button>
+
+      <button
+        class="admin-btn-main"
+        onclick="window.location.href='../songMeta/index.html'">
+        🏷️ SONG META SEARCH
+      </button>
+
+      <button
+        class="admin-btn-main"
+        onclick="window.location.href='../songMeta/index.html'">
+        ⏱️ METRONOME / CLICK
+      </button>
+
+      
+        
+      <br>
+      <h2>🖥️ CONTROL PANEL</h2>
+  
+      <div id="adminConsole" class="admin-console"></div>
+      
+    </div>
+  </div>
+
+  <div id="requestReasonModal" class="admin-modal hidden">
+    <div class="admin-modal-box">
+      <h3 id="requestReasonTitle">Request Note</h3>
+      <textarea id="requestReasonInput" placeholder="Reason / note optional"></textarea>
+      <div class="admin-modal-actions">
+        <button onclick="confirmRequestReason()" class="admin-btn-main">Save</button>
+        <button onclick="closeRequestReasonModal()" class="admin-btn">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  
+ 
+
+  <!-- FIREBASE -->
+
+  <script src="../firebase-projects.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+
+
+ <script src="../js/admin.js"></script>
+
+  </body>
+
+</html>
