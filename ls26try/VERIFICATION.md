@@ -1,18 +1,13 @@
-# Visual correction verification — 2026-09-10
+# Stage3 verification
 
-Passed:
-- 220 JavaScript files/inline script units checked with Node syntax validation.
-- Local scripts/styles referenced by eight entry pages resolve.
-- Library entry and LyricView markup have no duplicate static IDs.
-- BPM range with original-BPM fallback, decade, genre, manual/session setlists and favourites tested in isolation.
-- Library queue addition and session mismatch guard; existing atomic request acceptance and reorder checks.
-- Existing cache, normalized Inbox capture and retained-draft retry checks.
+Passed: 221 JavaScript/inline syntax checks; local entry assets resolve. Existing data/Inbox, filter and transactional queue tests pass. New stage-timing.cjs verifies 120 local ticks without database accesses, no venue/time rewrites, lateness label, red exactly at -5 minutes and repeated Next Section commands retaining their destination.
 
-No live Firebase was read or changed. Browser preview was previously rejected by automatic approval review; this patch has not been browser-rendered or tested on a tablet. Static/isolated tests do not certify visual pixel matching, real authentication/rules, all inherited functionality or multi-device behaviour. These checks must be distinguished from full browser regression testing.
+No browser or live Firebase operations were run. The earlier local preview was rejected by automatic approval review. Tablet layout, touch targets, popup/scroll integration, real rules and all inherited workflows remain unverified on-device. The in-memory tests do not certify complete live behaviour.
 
-Run locally with Node:
+Run with Node:
 ```
+node verification/data-and-inbox.cjs
 node verification/library-filters.cjs
 node verification/queue-workflows.cjs
-node verification/data-and-inbox.cjs
+node verification/stage-timing.cjs
 ```

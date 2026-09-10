@@ -198,8 +198,8 @@
         el.classList.remove("is-overdue", "is-remaining");
         return;
       }
-      const overdue = ms <= 0;
-      el.textContent = formatDuration(Math.abs(ms));
+      const overdue = ms <= -300000;
+      const value=shortDuration(ms);if(el.textContent!==value)el.textContent=value;
       el.classList.toggle("is-overdue", overdue);
       el.classList.toggle("is-remaining", !overdue);
     };
@@ -239,7 +239,8 @@
     setValueState(legacyRemaining, remainingMs);
 
     if (compactEnd) {
-      compactEnd.textContent = target ? `ENDS ${formatClock(target)}` : "No scheduled end";
+      const late=actualStart&&schedule.start?Math.max(0,Math.round((actualStart-schedule.start)/60000)):0;
+      const value=target?`+${late}mins late`:'No scheduled end';if(compactEnd.textContent!==value)compactEnd.textContent=value;
     }
 
     if (adjustedEnd) {
@@ -584,71 +585,19 @@
 
   }
 
+  // Single owner for compact labels. Local ticks never write Firestore.
+  function compactText(id,value){const el=$(id);if(el&&el.textContent!==String(value))el.textContent=String(value);}
+  function shortDuration(ms){const mins=Math.floor(Math.abs(ms)/60000);return (ms<0?'−':'')+(mins>=60?Math.floor(mins/60)+'h ':'')+(mins%60)+'m';}
   function renderCompactHostStrip() {
-    const venueEl = $("tsCompactVenue");
-    const typeEl = $("tsCompactType");
-    const startedEl = $("tsCompactStarted");
-    const elapsedEl = $("tsCompactElapsed");
-    const requestsEl = $("tsCompactRequests");
-    const alertsEl = $("tsCompactAlerts");
-
-    const session = state.session;
-    const control = state.currentControl || {};
-
-    if (!state.sessionId || !session) {
-      if (venueEl) venueEl.textContent = "No active session";
-      if (typeEl) typeEl.textContent = "—";
-      if (startedEl) startedEl.textContent = "--:--";
-      if (elapsedEl) elapsedEl.textContent = "0 mins";
-      if (requestsEl) requestsEl.textContent = "0";
-      if (alertsEl) alertsEl.textContent = "0";
-      return;
-    }
-
-    const actualStart = actualStartDate();
-
-    if (venueEl) {
-      venueEl.textContent =
-        session.venue ||
-        control.venue ||
-        session.eventSnapshot?.venue ||
-        "Venue TBC";
-    }
-
-    if (typeEl) {
-      typeEl.textContent =
-        session.sessionType ||
-        session.type ||
-        control.sessionType ||
-        control.type ||
-        session.eventSnapshot?.type ||
-        "Performance";
-    }
-
-    if (startedEl) {
-      startedEl.textContent = actualStart ? formatClock(actualStart) : "--:--";
-    }
-
-    if (elapsedEl) {
-      elapsedEl.textContent =
-        actualStart
-          ? formatDuration(Math.max(0, Date.now() - actualStart.getTime()))
-          : "0 mins";
-    }
-
-    if (requestsEl) {
-      requestsEl.textContent = String(
-        state.requests.filter(request => {
-          const status = String(request?.status || "").toLowerCase();
-          return !status || ["active","pending","waiting"].includes(status);
-        }).length
-      );
-    }
-
-    if (alertsEl) {
-      const pendingCount = state.requests.filter(isPendingRequest).length;
-      alertsEl.textContent = String(Math.max(pendingCount, state.notifications.length));
-    }
+    const session=state.session, control=state.currentControl||{};
+    if(!state.sessionId||!session){Object.entries({tsCompactVenue:'No active session',tsCompactType:'—',tsCompactStarted:'--:--',tsCompactElapsed:'0m',tsCompactRequests:'0',tsCompactAlerts:'0'}).forEach(([id,v])=>compactText(id,v));return;}
+    const actual=actualStartDate(),schedule=resolvedSchedule();
+    compactText('tsCompactVenue',session.venue||control.venue||session.eventSnapshot?.venue||'Venue TBC');
+    compactText('tsCompactType',schedule.start&&schedule.end?formatClock(schedule.start)+' – '+formatClock(schedule.end):'Time not set');
+    compactText('tsCompactStarted',actual?formatClock(actual):'--:--');
+    compactText('tsCompactElapsed',actual?shortDuration(Math.max(0,Date.now()-actual.getTime())):'0m');
+    compactText('tsCompactRequests',state.requests.filter(isPendingRequest).length);
+    compactText('tsCompactAlerts',Math.max(state.requests.filter(isPendingRequest).length,state.notifications.length));
   }
 
   function isPendingRequest(request) {
@@ -686,8 +635,9 @@
       <div class="ts-pending-request-row" data-ls-request="${esc(request.id)}">
         <div class="ts-pending-main">
           <strong>${esc(request.songTitle || request.title || "Untitled Song")}</strong>
-          <small>${esc(request.artist || request.songArtist || "")} · ${esc(request.singerName || request.name || "Singer")} · ${esc(request.location || "")}<br>${esc(request.note || "")}</small>
+          <small>${esc(request.artist || request.songArtist || "")} · ${esc(request.singerName || request.name || "Singer")} · ${esc(request.location || "")}</small>
         </div>
+        ${request.note?`<div class="ls26-request-note">${esc(request.note)}</div>`:''}
         <div class="ts-pending-actions">
           <button
             type="button"
@@ -961,11 +911,12 @@
             <div class="ts-run-main">
               <strong>${esc(item.songTitle || item.title || item.songId || "Untitled Song")}</strong>
               <small>
-                ${esc(item.artist || "")} · ${esc(item.singerName || "Host choice")} · ${esc(requestForRunItem(item)?.location || "")}<br>${esc(requestForRunItem(item)?.note || "")}
+                ${esc(item.artist || "")} · ${esc(item.singerName || "Host choice")} · ${esc(requestForRunItem(item)?.location || "")}
                 ${isPlaying ? `<em class="ts-playing-label">${status === "played" ? "FINISHED" : "PLAYING"}</em>` : ""}
               </small>
             </div>
 
+            ${(requestForRunItem(item)?.note||item.note)?`<div class="ls26-request-note">${esc(requestForRunItem(item)?.note||item.note)}</div>`:''}
             <div class="ts-run-actions">
               ${
                 showPlayButtons && !isPlaying

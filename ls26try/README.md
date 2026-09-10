@@ -1,3 +1,11 @@
+## Stage3 usability patch
+
+Library now fits the available viewport and scrolls its song list. Session-setlist selection displays its name. The session panels and performance controls have larger, clearer typography. A searchable cached session-setlist popup replaces Run Order's Add dropdown.
+
+The venue/time flashing came from two local timers writing different content to the same label. One owner now updates those labels only when changed. The tested timer path makes no database accesses. This is a source/test finding, not a measurement of your live project's total Firebase usage.
+
+Remaining time retains the existing actual-start + booked-duration calculation. It is signed, yellow through four minutes overdue and red at five minutes overdue. The extra label records non-negative start lateness. Manual section jumps briefly suspend scroll motion without changing the song's playing status.
+
 ## Visual correction — visual2
 
 Library now uses a dedicated stylesheet and inline filters matching the supplied reference. Navigation and session share a sticky wrapper; the session panel expands to a taller scrollable area. Song actions, transpose drawer and logos were corrected. Library filtering stays local and row Queue uses an active-session transaction. URLs work when the folder is named `ls26try` as well as `ls26`.

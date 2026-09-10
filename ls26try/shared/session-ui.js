@@ -20,7 +20,7 @@
     const start=date(session.scheduledStartAt),end=date(session.scheduledEndAt),duration=start&&end?Math.round((end-start)/60000):0;
     const breaks=session.breaks||[],open=session.breakOpen||breaks.some(x=>(x.start||x.startedAt)&&!(x.end||x.endedAt));
     const total=breaks.reduce((sum,b)=>sum+Math.max(0,((date(b.end||b.endedAt)||new Date())-date(b.start||b.startedAt))/60000),0);
-    grid.innerHTML=`<div><p>${esc((start||date(session.startedAt)||new Date()).toLocaleDateString())}</p><strong>${esc(session.venue||session.venueName||'Venue')}</strong><small>${esc(session.locality||session.location||'')}</small><p>${clock(start)} – ${clock(end)}</p><strong>(${Math.floor(duration/60)}h ${duration%60}m)</strong><button data-session="times">Edit times</button></div><div><small>Public song list</small><strong>${esc(publicList.setlistName||'Not selected')}</strong><button data-session="list">Change public list</button><button data-session="requests">${$('tsDashSongs')?.textContent==='Unlocked'?'Close':'Open'} song requests</button><button data-session="break">${open?'RESUME SESSION':'START BREAK'}</button><button class="danger" data-session="end">END SESSION</button></div><div><strong>Break history</strong><div class="ls26-breaks"><table><thead><tr><th>#</th><th>Start</th><th>End</th><th>Time</th></tr></thead><tbody>${breaks.map((b,i)=>`<tr><td>${i+1}</td><td>${clock(b.start||b.startedAt)}</td><td>${clock(b.end||b.endedAt)}</td><td>${Math.floor(Math.max(0,((date(b.end||b.endedAt)||new Date())-date(b.start||b.startedAt))/60000))}m</td></tr>`).join('')}</tbody></table></div><p>${breaks.length} breaks · ${Math.floor(total)}m total</p></div>`;
+    grid.innerHTML=`<section class="ls26-session-card"><small class="ls26-eyebrow">PERFORMANCE SESSION</small><p>${esc((start||date(session.startedAt)||new Date()).toLocaleDateString())}</p><strong>${esc(session.venue||session.venueName||'Venue')}</strong><small>${esc(session.locality||session.location||'')}</small><p>${clock(start)} – ${clock(end)}</p><strong>(${Math.floor(duration/60)}h ${duration%60}m)</strong><button data-session="times">✎ Edit projected times</button></section><section class="ls26-session-card"><small class="ls26-eyebrow">PUBLIC SONG LIST</small><strong>${esc(publicList.setlistName||'Not selected')}</strong><button data-session="list">☷ Change song list</button><button data-session="requests">${$('tsDashSongs')?.textContent==='Unlocked'?'Close':'Open'} song requests</button><button class="ls26-break-action" data-session="break">${open?'RESUME SESSION':'START BREAK'}</button><button class="danger" data-session="end">END SESSION</button></section><section class="ls26-session-card ls26-break-card"><div class="ls26-break-heading"><strong>Break history</strong><span>${breaks.length} breaks · ${Math.floor(total)}m total</span></div><div class="ls26-breaks"><table><thead><tr><th>#</th><th>Start</th><th>End</th><th>Time</th></tr></thead><tbody>${breaks.map((b,i)=>`<tr><td>${i+1}</td><td>${clock(b.start||b.startedAt)}</td><td>${clock(b.end||b.endedAt)}</td><td>${Math.floor(Math.max(0,((date(b.end||b.endedAt)||new Date())-date(b.start||b.startedAt))/60000))}m</td></tr>`).join('')}</tbody></table></div><p class="ls26-muted">${breaks.length?"All breaks recorded for this session":"No breaks taken yet"}</p></section>`;
     grid.onclick=async e=>{const action=e.target.closest('[data-session]')?.dataset.session;if(!action)return;try{if(action==='break')return LK.topStatus.toggleBreak();if(action==='times')return editTimes(session);if(action==='list')return chooseList(session);if(action==='requests'){const enabled=$('tsDashSongs')?.textContent!=='Unlocked';if(confirm(`${enabled?'Open':'Close'} song requests?`))await db().collection('karaoke').doc('state').set({songsEnabled:enabled,updatedAt:stamp()},{merge:true});}if(action==='end')await endSession(session);}catch(err){LS26.toast(err.message);}};
   }
   function editTimes(session){
@@ -60,9 +60,23 @@
       const list=card.querySelector('.ls26-mirror-list'),original=$(source);if(!original)continue;const content=original.innerHTML;if(list.innerHTML!==content)list.innerHTML=content;
     }
   }
+  async function openSongPicker(){
+    const d=dialog('Add a song',`<p class="ls26-muted" id="ls26PickerListName">Loading session song list…</p><input class="ls26-picker-search" placeholder="Search songs or artists" aria-label="Search session songs"><div class="ls26-picker-list">Loading…</div><a class="ls26-button" href="${LS26.url('library.html')}">Open full Library</a>`);
+    try{
+      await tools().ensureSongs();const session=tools().getSession()||{},publicList=tools().getPublicList()||{};
+      const snap=await LS26Data.collection('lyricsSetlists');const lists=snap.docs.map(x=>({id:x.id,...x.data()}));
+      const chosen=lists.find(x=>x.id===(session.setlistId||session.publicSetlistId||publicList.setlistId));
+      const ids=new Set(session.setlistSongIds||chosen?.songIds||[]),songs=tools().getSongs().filter(x=>ids.has(x.id)).sort((a,b)=>String(a.title).localeCompare(String(b.title)));
+      d.querySelector('#ls26PickerListName').textContent=chosen?.name||session.setlistName||publicList.setlistName||'No session setlist selected';
+      const render=()=>{const q=d.querySelector('input').value.toLowerCase();d.querySelector('.ls26-picker-list').innerHTML=songs.filter(x=>(x.title+' '+x.artist).toLowerCase().includes(q)).map(x=>`<button data-picker-song="${esc(x.id)}"><span><strong>${esc(x.title)}</strong><small>${esc(x.artist||'')}</small></span><span>＋ Add</span></button>`).join('')||'<p>No matching session songs. Choose a session setlist or open the Library.</p>';};
+      d.querySelector('input').oninput=render;render();
+      d.addEventListener('click',async e=>{const button=e.target.closest('[data-picker-song]');if(!button)return;button.disabled=true;try{const song=songs.find(x=>x.id===button.dataset.pickerSong);await tools().enqueueSong({...song,firebaseId:song.id});button.lastElementChild.textContent='✓ Added';}catch(error){LS26.toast(error.message);button.disabled=false;}});
+    }catch(error){d.querySelector('.ls26-picker-list').textContent=error.message;}
+  }
   function ready(){
     if(!$('topStatusBar'))return false;
     renderSession();mirror();
+    if($("ls26AddSong"))$("ls26AddSong").onclick=openSongPicker;
     const observer=new MutationObserver(()=>mirror());for(const id of ['tsRunOrderList','tsPendingRequestsList'])if($(id))observer.observe($(id),{childList:true,subtree:true});
     if(document.body.classList.contains('ls26-requests-page')){LK.topStatus.expand();tools().setWorkflowTab('pending');}
     return true;
@@ -83,7 +97,7 @@
       const row=e.target.closest('[data-ls-request],[data-ts-run-details]');if(row){e.preventDefault();e.stopImmediatePropagation();const item=tools()?.getRunOrder().find(x=>x.id===row.dataset.tsRunDetails);const request=tools()?.getRequests().find(x=>x.id===(row.dataset.lsRequest||item?.requestId));enrichDetail(request,item);}
     },true);
     // Local clock/timing updates have zero network operations.
-    setInterval(()=>{if($('ls26Clock'))$('ls26Clock').textContent=clock(new Date());const s=tools()?.getSession();if(s){const start=s.scheduledStartAt,end=s.scheduledEndAt;if($('tsCompactType')&&start&&end)$('tsCompactType').textContent=clock(start)+' – '+clock(end);if($('tsLiveLabel'))$('tsLiveLabel').textContent=s.breakOpen?'BREAK':'LIVE';}},1000);
+    setInterval(()=>{const el=$('ls26Clock'),value=clock(new Date());if(el&&el.textContent!==value)el.textContent=value;const session=tools()?.getSession(),live=$('tsLiveLabel');if(session&&live){const label=session.breakOpen?'BREAK':'LIVE';if(live.textContent!==label)live.textContent=label;}},1000);
   }
   document.addEventListener('DOMContentLoaded',init);
 })();

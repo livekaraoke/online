@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="../admin-new/css/top-statusbar-session-tools.css">
   <!-- Lyric View-only overrides MUST load last -->
   <link rel="stylesheet" href="css/lyricview-fixes.css">
-<link rel="stylesheet" href="../shared/theme.css?v=20260910-visual2"><link rel="stylesheet" href="../shared/performance.css?v=20260910-visual2"><script src="../shared/data.js?v=20260910-visual2"></script></head>
+<link rel="stylesheet" href="../shared/theme.css?v=20260910-stage3"><link rel="stylesheet" href="../shared/performance.css?v=20260910-stage3"><script src="../shared/data.js?v=20260910-stage3"></script></head>
 <body class="host-lyric-view-page">
   <!-- Song title/actions; navigation and session move into shared sticky header -->
   <div id="hostStickyStack" class="host-sticky-stack">
@@ -108,8 +108,8 @@
 
   <div class="host-bottom-dock">
     <div class="host-scroll-player">
-      <button id="ls26PrevSection" type="button" title="Previous lyric section">❮</button><button id="autoScrollBtn" class="play" type="button">▶</button>
-      <button id="ls26NextSection" type="button" title="Next lyric section">❯</button><button id="nextRunOrderSongBtn" class="next-run-order-song-btn" type="button">Next song ↓</button>
+      <button id="autoScrollBtn" class="play" type="button">▶</button>
+      <button id="nextRunOrderSongBtn" class="next-run-order-song-btn" type="button">Next song ↓</button>
     <button id="scrollSpeedDown" type="button">−</button>
       <strong id="scrollSpeedLabel">1.0×</strong>
       <button id="scrollSpeedUp" type="button">＋</button>
@@ -218,8 +218,8 @@
   <!-- SONG INDEX FOR SEND LYRICS -->
   <script src="../oldadmin/files/song-data-kl.js"></script>
   <script src="js/lyricview.js"></script>
-  <script src="../admin-new/js/top-statusbar.js" data-include="../admin-new/includes/top-statusbar.html"></script>
-  <script src="../admin-new/js/top-statusbar-session-tools.js?v=20260910-visual2"></script>
+  <script src="../admin-new/js/top-statusbar.js" data-include="../admin-new/includes/top-statusbar.html?v=20260910-stage3"></script>
+  <script src="../admin-new/js/top-statusbar-session-tools.js?v=20260910-stage3"></script>
   <script>
     document.addEventListener("DOMContentLoaded", function () {
       if (window.LK && LK.topStatus && typeof LK.topStatus.loadTopStatusBar === "function") {
@@ -227,5 +227,5 @@
       }
     });
   </script>
-<script src="../shared/shell.js?v=20260910-visual2"></script><script src="../shared/inbox.js?v=20260910-visual2"></script><script src="../shared/session-ui.js?v=20260910-visual2"></script><script src="../shared/performance.js?v=20260910-visual2"></script></body>
+<script src="../shared/shell.js?v=20260910-stage3"></script><script src="../shared/inbox.js?v=20260910-stage3"></script><script src="../shared/session-ui.js?v=20260910-stage3"></script><script src="../shared/performance.js?v=20260910-stage3"></script></body>
 </html>

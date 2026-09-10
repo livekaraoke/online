@@ -32,6 +32,8 @@
   let activeSessionType = "";
   let showAllSectionsOverride = false;
   let currentSectionIndex = 0;
+  let manualSectionUntil = 0;
+  let relativeScrollFrame = 0;
   let scrollTimer = null;
   let autoScrollOn = false;
   let performanceRecordCreated = false;
@@ -640,6 +642,8 @@
 
   function scrollToSection(index) {
     if (!sectionEls.length) return;
+    cancelAnimationFrame(relativeScrollFrame);
+    manualSectionUntil=Date.now()+650;
     currentSectionIndex = Math.max(0, Math.min(sectionEls.length - 1, index));
 
     // Update/centre the guide immediately when Prev/Next or a guide item is used.
@@ -652,28 +656,21 @@
 
     centerActiveProgressSection(true);
 
-    sectionEls[currentSectionIndex].scrollIntoView({
-      behavior: "smooth",
-      block: "start"
-    });
-
-    setTimeout(updateSectionProgress, 350);
+    const quick=document.getElementById('performanceQuickInfo');
+    quick?.classList.toggle('ls26-released',currentSectionIndex>0);
+    const header=document.getElementById('ls26StickyHeader');
+    const offset=(header?.getBoundingClientRect().height||0)+(currentSectionIndex===0&&!quick?.classList.contains('ls26-released')?(quick?.getBoundingClientRect().height||0):0)+12;
+    window.scrollTo({top:Math.max(0,sectionEls[currentSectionIndex].getBoundingClientRect().top+window.scrollY-offset),behavior:'instant'});
+    setTimeout(updateSectionProgress,700);
   }
 
   function updateSectionProgress() {
-    if (!sectionEls.length) return;
+    if (!sectionEls.length || Date.now()<manualSectionUntil) return;
 
-    const anchor = Math.max(120, window.innerHeight * .27);
+    const header=document.getElementById("ls26StickyHeader"),quick=document.getElementById("performanceQuickInfo");
+    const anchor=(header?.getBoundingClientRect().height||0)+(quick&&!quick.classList.contains("ls26-released")?quick.getBoundingClientRect().height:0)+24;
     let bestIndex = 0;
-    let best = Infinity;
-
-    sectionEls.forEach((el, i) => {
-      const d = Math.abs(el.getBoundingClientRect().top - anchor);
-      if (d < best) {
-        best = d;
-        bestIndex = i;
-      }
-    });
+    sectionEls.forEach((el,i)=>{if(el.getBoundingClientRect().top<=anchor)bestIndex=i;});
 
     const changed = bestIndex !== currentSectionIndex;
     currentSectionIndex = bestIndex;
@@ -699,6 +696,8 @@
   });
 
   function smoothRelativeScroll(direction) {
+    cancelAnimationFrame(relativeScrollFrame);
+    manualSectionUntil=Date.now()+750;
     const amount = window.innerHeight * .5 * direction;
     const start = window.scrollY;
     const target = Math.max(0, Math.min(document.documentElement.scrollHeight - innerHeight, start + amount));
@@ -708,9 +707,9 @@
       const t = Math.min(1,(now-started)/duration);
       const e = t < .5 ? 2*t*t : 1 - Math.pow(-2*t+2,2)/2;
       scrollTo(0,start+(target-start)*e);
-      if (t < 1) requestAnimationFrame(frame);
+      if (t < 1) relativeScrollFrame=requestAnimationFrame(frame);
     }
-    requestAnimationFrame(frame);
+    relativeScrollFrame=requestAnimationFrame(frame);
   }
 
   function chordParts(chord) {
@@ -1613,7 +1612,7 @@
         const dt = Math.min(50, Math.max(0, now - last));
         last = now;
 
-        if (!document.hidden) {
+        if (!document.hidden && Date.now()>=manualSectionUntil) {
           fractionalY += dt * AUTO_SCROLL_BASE_PX_PER_MS * scrollSpeed;
 
           const wholePixels = Math.floor(fractionalY);

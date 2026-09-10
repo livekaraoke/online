@@ -188,3 +188,24 @@ New helpers: genres, populateExtraFilters, updateSelected, queueSong, enqueueSon
 Changed setup/syncSidebarButton/render/filteredSongs and navigation mount.
 Tests: library-filters.cjs, queue-workflows.cjs, data-and-inbox.cjs; syntax/static
 asset checks. Browser visual fidelity and live Firebase remain unverified.
+
+2026-09-10 — STAGE3 usability correction
+Library: fixed-height viewport with flex-sized scroll list, preserved controls,
+selected song and next-song cards; active session setlist name below heading.
+Performance: centered 54px metadata cells; removed duplicate previous/next
+buttons in playback dock; larger centered Play; wider four-way navigator.
+Drawer: measured lower edge stops above dock/section guide; its content scrolls.
+Transpose button gains green styling and active-state glow.
+Session strip: one owner of schedule labels, idempotent text updates, compact
+signed durations, yellow remaining until <= -5m then red, +Nmins late label,
+fixed circular request badge and smaller clock. Larger main navigation text.
+Expanded panels: labelled session cards and break summary; larger notification,
+notes, song titles and requester metadata; requester note beside song details.
+Run Order: cached session-setlist picker dialog replaces visible dropdown;
+Library link retained. enqueueSong remains the shared transactional queue writer.
+Navigation: explicit jumps suspend scroll motion for 650ms without changing
+song status; section tracking uses the containing section, not nearest heading.
+Verification: 221 script/inline syntax units and local entry assets passed;
+isolated cache/Inbox/filter/queue/timer/navigation tests passed. 120 timing ticks
+made zero DB accesses and did not rewrite venue/schedule strings. Notes retain
+five-second save debounce. Browser/device/live Firebase verification outstanding.

@@ -77,7 +77,7 @@
       requestAnimationFrame(() => {
         $("songRows").scrollTop=Number(restoredState.listScroll)||0;
         window.scrollTo({
-          top: Number(restoredState.scrollY) || 0,
+          top: 0,
           left: 0,
           behavior: "auto"
         });
@@ -398,6 +398,9 @@
 
     renderAlphabetNav(groups);
     updateSelected();
+    const session=window.LK?.sessionTools?.getSession?.()||{},pub=window.LK?.sessionTools?.getPublicList?.()||{};
+    const sessionList=setlists.find(x=>x.id===(session.setlistId||session.publicSetlistId||pub.setlistId));
+    const caption=$("ls26SessionSetlistName");caption.hidden=scope!=='session';caption.textContent=sessionList?.name||session.setlistName||pub.setlistName||'No session setlist selected';
     document.querySelectorAll("[data-scope]").forEach(b=>b.classList.toggle("active",b.dataset.scope===scope));
     selectedIndex = Math.min(selectedIndex, visibleSongs.length - 1);
 
