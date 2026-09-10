@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+  
+<head>
+  <meta charset="UTF-8">
+  <title>Lyrics & Chords Creator</title>
+  <link rel="stylesheet" href="../css/lyricscreator.css">
+</head>
+
+<body>
+  <!---------------------------------------------------------------------------------------->
+  <!------------------------------------ DB SETTINGS --------------------------------------->
+  <!---------------------------------------------------------------------------------------->
+  <script src="../../firebase-projects.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+  <script>
+    const firebaseConfig = window.LKFirebaseProjects
+  ? window.LKFirebaseProjects.getSelectedConfig()
+  : window.LK_FIREBASE_CONFIG;
+  
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+  </script>
+  <!---------------------------------------------------------------------------------------->
+  <!--------------------------------- END OF DB SETTINGS ----------------------------------->
+  <!---------------------------------------------------------------------------------------->
+
+  
+  <!---------------------------------------------------------------------------------------->
+  <!--------------------------------------- TOP BAR ---------------------------------------->
+  <!---------------------------------------------------------------------------------------->
+  <header class="topbar">
+    <div class="back-split">
+      <button onclick="history.back()" class="btn">◀ BACK</button>
+      <button onclick="toggleBackMenu()" class="btn back-arrow">▼</button>
+  
+      <div id="backDropdown" class="back-dropdown">
+        <button onclick="history.back()">Back to previous page</button>
+        <button onclick="window.location.href='../../admin-new/admin.html'">Admin Main Page</button>
+        <button onclick="window.location.href='lyricsviewer.html'">Lyric Viewer</button>
+      </div>
+    </div>
+    
+    <div class="creator-title-wrap">
+      <h1 id="creatorTopTitle">● Lyrics & Chords Creator ●</h1>
+      <div id="creatorSubTitle" class="creator-subtitle"></div>
+    </div>
+    
+    <div class="save-split">
+      <button onclick="handleSaveClick()" class="save-main-btn">
+        💾 Save
+      </button>
+    
+      <button onclick="toggleSaveMenu()" class="save-arrow-btn">
+        ▼
+      </button>
+    
+      <div id="saveDropdown" class="save-dropdown">
+        <button onclick="handleSaveClick()">Save</button>
+        <button onclick="handleDownloadClick()">Download .JS File</button>
+        <button onclick="handleDeleteSong()">Delete Song</button>
+      </div>
+    </div>
+  </header>
+  <!---------------------------------------------------------------------------------------->
+  <!------------------------------------ END OF TOP BAR ------------------------------------>
+  <!---------------------------------------------------------------------------------------->
+
+  
+  <!---------------------------------------------------------------------------------------->
+  <!------------------------------------- SONG DETAILS ------------------------------------->
+  <!---------------------------------------------------------------------------------------->
+  <section class="song-meta-wrapper">
+    <h2 class="panel-title">Song Details</h2>
+  
+    <div class="song-meta">
+    
+      <div class="field">
+        <label>Song Title</label>
+        <input id="songTitle" placeholder="Song title">
+      </div>
+      
+       <div class="field">
+        <label>Artist</label>
+        <input id="artistName" placeholder="Artist">
+      </div>
+    
+      <div class="field">
+        <label>User BPM</label>
+        <input id="userBpm" placeholder="User BPM e.g. 96">
+      </div>
+      
+       <div class="field">
+        <label>Original BPM</label>
+        <input id="originalBpm" placeholder="Original BPM e.g. 101">
+      </div>
+
+      <div class="field note-field">
+        <label>Note</label>
+        <textarea id="songNote" placeholder="Any notes..." rows="4"></textarea>
+      </div>
+      
+      <div class="field">
+        <label>Capo</label>
+        <input id="capoNote" placeholder="Capo e.g. 2">
+      </div>
+    
+      <div class="field">
+        <label>Key</label>
+        <input id="songKey" placeholder="Key e.g. C">
+      </div>
+
+      <div class="field">
+        <label>Song Year</label>
+        <input id="songYear" placeholder="e.g. 1999">
+      </div>
+
+      <div class="field">
+        <label>Karaoke Lyrics</label>
+        <select id="karaokeLyrics" onchange="handleKaraokeLyricsChange()">
+          <option value="No">No</option>
+          <option value="__add__">Add...</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Media Link</label>
+        <input id="youtubeLink" placeholder="e.g. https://www.youtube.com/watch?v=...">
+      </div>
+
+      <div class="personalNotes" >Saved symbols:  ↑   ↓   ▲    ▼    ⧉   ✕   ✖  </div>
+      
+    </div>
+  </section>
+  <!---------------------------------------------------------------------------------------->
+  <!--------------------------------- END OF SONG DETAILS ---------------------------------->
+  <!---------------------------------------------------------------------------------------->
+
+  
+  <!---------------------------------------------------------------------------------------->
+  <!------------------------------------- EDITOR PANEL ------------------------------------->
+  <!---------------------------------------------------------------------------------------->
+  <section class="editor-panel">
+  
+    <h2 id="editorTitle">Create Section</h2>
+
+    <!------ SECTION TITLE ------>
+    <div class="field">
+      <label>Section Title</label>
+      <input
+        id="sectionTitleCustom"
+        list="sectionPresets"
+        placeholder="SECTION TITLE">
+    </div>
+  
+    <!------ SECTION PRESETS ------>
+    <datalist id="sectionPresets">
+      <option value="CHORDS LEGEND">
+      <option value="INTRO">
+      <option value="VERSE">
+      <option value="CHORUS">
+      <option value="PRE-CHORUS">
+      <option value="POST-CHORUS">
+      <option value="BRIDGE">
+      <option value="SOLO">
+      <option value="INSTRUMENTAL">
+      <option value="OUTRO">
+      <option value="ENDING">
+    </datalist>
+  
+    <!------ SECTION TYPE ------>
+    <div class="field">
+      <label>Section Type</label>
+      <select id="sectionType">
+        <option value="lyrics">Lyrics & Chords</option>
+        <option value="tab">Guitar Tab</option>
+        <option value="progressions">Chord Progressions</option>
+        <option value="notes">Notes</option>
+      </select>
+    </div>
+
+    <!------ SECTION EDITOR CONTROLS ------>
+    <div class="controls">
+      
+      <!------ SECTION CONTROLS ROW 1 ------>
+      <div class="controls-main-row">
+        
+        <!------ SECTION TEXT FONT ------>
+        <select id="fontFamily" onchange="updateEditorFont()">
+          <option value="Verdana">Verdana</option>
+          <option value="Courier New">Courier New</option>
+          <option value="Arial">Arial</option>
+          <option value="Bahnschrift">Bahnschrift</option>
+        </select>
+        
+        <!------ SECTION TEXT FORMATTING ------>
+        <div class="format-buttons">
+          <button type="button"
+                  class="color-btn active"
+                  onclick="formatText('bold')">
+            <b>B</b>
+          </button>
+          <button type="button"
+                  class="color-btn active"
+                  onclick="formatText('italic')">
+            <i>I</i>
+          </button>
+          <button type="button"
+                  class="color-btn active"
+                  onclick="formatText('underline')">
+            <u>U</u>
+          </button>
+        </div>
+  
+        <!------ SECTION TAB Load Open / Closed ------>
+        <div class="tab-load-control" id="tabOptions" style="display:none;">
+          <button
+            type="button"
+            id="tabStartsCollapsedBtn"
+            class="tab-toggle-btn active"
+            onclick="toggleTabStartsCollapsed()">
+            Load Closed
+          </button>
+          <input type="checkbox" id="tabStartsCollapsed" checked hidden>
+        </div>
+      
+        <!------ SECTION TEXT ALIGN ------>
+        <div class="format-buttons">
+          <button type="button" class="color-btn-justify" onclick="formatText('justifyLeft')">◀ L</button>
+          <button type="button" class="color-btn-justify" onclick="formatText('justifyCenter')">C</button>
+          <button type="button" class="color-btn-justify" onclick="formatText('justifyRight')">R ▶</button>
+        </div>
+        
+      <!------ END OF SECTION CONTROLS ROW 1 ------>
+      </div>
+
+      <!------ SECTION CONTROLS ROW 2 ------>
+      <div class="controls-second-row">
+
+        <!------ SECTION TEXT COLOR ------>
+        <div class="color-picker">
+          <!-- WHITE -->
+          <button class="color-btn" style="background:#FFFFFF" onclick="formatColor('#FFFFFF')"></button>
+          <!-- GREEN -->
+          <button class="color-btn" style="background:#7CFF3A" onclick="formatColor('#7CFF3A')"></button>
+          <!-- YELLOW -->
+          <button class="color-btn" style="background:#FFD400" onclick="formatColor('#FFD400')"></button>
+          <!-- ORANGE -->
+          <button class="color-btn" style="background:#FF7A1A" onclick="formatColor('#FF7A1A')"></button>
+          <!-- TEAL -->
+          <button class="color-btn" style="background:#00B0F0" onclick="formatColor('#00B0F0')"></button>
+          <!-- RED -->
+          <button class="color-btn" style="background:#ff3333" onclick="formatColor('#ff3333')"></button>
+          <!-- PURPLE -->
+          <button class="color-btn" style="background:#7788FF" onclick="formatColor('#7788FF')"></button>
+        </div>
+
+        
+        <!------ SECTION TEXT FORMATTING PRESET: GREEN & BOLD?? ------>
+        <button type="button" class="preset-btn green-preset" onclick="formatPreset('#7CFF3A')">
+          <b> B </b>
+        </button>
+        
+        <!------ SECTION TEXT FORMATTING PRESET : TEAL & BOLD ------>
+        <button type="button" class="preset-btn yellow-preset" onclick="formatPreset('#FFFF00')">
+          <b> B </b>
+        </button>
+
+        <!------ SECTION TAB INSERT REPEAT LABEL ------>
+
+        <!--
+        <button type="button" class="btn small-control-btn" onclick="insertRepeatLabel()">
+          (x2)
+        </button>
+        -->
+
+        <!------ SECTION TAB INSERT SONG LINK ------>
+        <div id="songLinkModal" class="confirm-modal hidden">
+          <div class="confirm-box">
+            <h3>Insert Song Link</h3>
+            <select id="songLinkSelect"></select>
+        
+            <div class="confirm-actions">
+              <button id="songLinkInsertBtn" class="btn red">Insert</button>
+              <button id="songLinkCancelBtn" class="btn">Cancel</button>
+            </div>
+          </div>
+        </div>
+
+        <!------ SECTION TAB INSERT BLANK TAB ------>
+        <button type="button" id="insertTabBtn" class="btn tab-btn" onclick="insertBlankTab()">
+          ➕ Guitar Tab
+        </button>
+
+        <!------ SECTION TAB INSERT BAR IN CURRENT BLOCK TAB ------>
+        <button type="button" id="insertBarBtn" class="btn tab-btn" onclick="insertTabBar()" style="display:none;" disabled>
+        + Bar
+        </button>
+  
+        <!------ INSERT TIME IN CURRENT TAB BLOCK -->      
+        <button type="button" id="insertTimeBtn" class="btn tab-btn" onclick="insertTabTimeLine()" style="display:none;" disabled>
+        ⨥ Time
+        </button>
+
+        <!------ INSERT PERFORMANCE NOTE -->
+        <div class="dropdown-control">
+          <button type="button" class="btn tab-btn" onclick="togglePerfNoteMenu()">
+            + Note ▼
+          </button>
+
+          <div id="perfNoteMenu" class="mini-dropdown hidden">
+            <button type="button" onclick="insertPerformanceNote('🎤')">🎤 Vocal Note</button>
+            <button type="button" onclick="insertPerformanceNote('🎸')">🎸 Guitar Note</button>
+          </div>
+        </div>
+
+        <!------ INSERT MUSIC SYMBOL IN CURRENT TAB BLOCK -->
+        <div class="dropdown-control">
+          <button type="button" class="btn tab-btn" onclick="toggleSymbolMenu()">
+            ♪ Symbol ▼
+          </button>
+
+          <div id="symbolMenu" class="mini-dropdown hidden">
+            <button onclick="insertMusicSymbol('𝅝')">𝅝</button>
+            <button onclick="insertMusicSymbol('𝅗𝅥')">𝅗𝅥</button>
+            <button onclick="insertMusicSymbol('𝅘𝅥')">𝅘𝅥</button>
+            <button onclick="insertMusicSymbol('𝅘𝅥𝅮')">𝅘𝅥𝅮</button>
+            <button onclick="insertMusicSymbol('𝄽')">𝄽</button>
+            <button onclick="insertMusicSymbol('𝄾')">𝄾</button>
+            <button onclick="insertMusicSymbol('♯')">♯</button>
+            <button onclick="insertMusicSymbol('♮')">♮</button>
+            <button onclick="insertMusicSymbol('♭')">♭</button>
+            <button onclick="insertMusicSymbol('⫰')">⫰</button>
+            <button onclick="insertMusicSymbol('|')">|</button>
+            <button onclick="insertMusicSymbol('⸾')">⸾</button>
+            <button onclick="insertMusicSymbol('⦚')">⦚</button>
+          </div>
+        </div>
+     
+        
+      <!------ END OF SECTION CONTROLS ROW 2 ------>
+      </div>
+    <!------ END OF SECTION EDITOR CONTROLS ------>
+    </div>
+
+    
+    <!------ SECTION TEXT BOX / EDITOR ------>
+    <div id="sectionEditor" contenteditable="true"
+      style="font-family: Verdana, Arial, sans-serif"
+      class="section-editor" data-placeholder="Enter chords and lyrics here..."></div>
+    
+    <div class="section-save-row">
+      <!------ SECTION SAVE / UPDATE ------>
+      <button id="saveSectionBtn" onclick="saveSectionWithConfirm()" class="btn red">
+        Add Section
+      </button>
+
+      <!------ UPDATE SECTION & GO TO NEXT SECTION ------>
+      <button
+        id="updateNextBtn"
+        onclick="updateAndGoNext()"
+        class="btn next-btn"
+        style="display:none;">
+        Update & Go to Next Section
+      </button>
+    
+      <!------ SECTION CANCEL SAVE / UPDATE ------>
+      <button id="cancelEditBtn" onclick="cancelEdit()" class="btn" style="display:none;">
+        Cancel
+      </button>
+    </div>
+    
+  </section>
+  <!---------------------------------------------------------------------------------------->
+  <!---------------------------------- END OF EDITOR PANEL --------------------------------->
+  <!---------------------------------------------------------------------------------------->
+
+  
+  <!---------------------------------------------------------------------------------------->
+  <!------------------------------------- PREVIEW AREA ------------------------------------->
+  <!---------------------------------------------------------------------------------------->
+  <section class="preview-area">
+  
+    <!------ SONG PREVIEW AREA TITLE ------>
+    <h2 class="previewSectionTitle">Preview Lyrics</h2>
+    
+    <!------ SONG PREVIEW ------>
+    <div class="song-preview">
+
+      <!------ SONG DETAILS ------>
+      <div class="song-header">
+        <div>
+          <h3 id="previewTitle">Song Title - Artist</h3>
+          <div id="previewYear" class="preview-year-under-title"></div>
+          <div id="previewKaraokeLyrics"></div>
+          <div id="previewSongNote"></div>
+        </div>
+        <div class="preview-meta-right">
+          <div id="previewUserBpm"></div>
+          <div id="previewOriginalBpm"></div>
+          <div id="previewCapo"></div>
+          <div id="previewKey"></div>
+        </div>
+      </div>
+      <!-------------------------->
+
+      <!------ LIVE PREVIEW OF CURRENT SECTION BEING CREATED / EDITED ------>
+      <div id="livePreviewBox" class="live-preview-box hidden">
+        <div class="live-preview-label">Live Section Preview</div>
+        <div id="liveSectionPreview"
+             class="lyric-section preview-draft">
+        </div>
+      </div>
+      <!-------------------------------------------------------------------->
+
+      <!------ REST OF THE SONG PREVIEW ------>
+      <div id="sectionsPreview"></div>
+
+      <div class = "end-marker">
+        <div class="marker-symbols">⦓</div> END <div class="marker-symbols">⦔</div>
+      </div>
+  
+    <!------ END OF SONG PREVIEW ------>
+    </div>
+    
+  </section>
+  <!---------------------------------------------------------------------------------------->
+  <!--------------------------------- END OF PREVIEW AREA ---------------------------------->
+  <!---------------------------------------------------------------------------------------->
+
+  
+  <!---------------------------------------------------------------------------------------->
+  <!------------------------------------ LOAD JS FILE -------------------------------------->
+  <!---------------------------------------------------------------------------------------->
+  <script src="../files/song-data-kl.js"></script>
+  <script src="../js/lyricscreator.js"></script>
+  <!---------------------------------------------------------------------------------------->
+
+  
+  <!---------------------------------------------------------------------------------------->
+  <!------------------------------------ CONFIRM MODAL ------------------------------------->
+  <!---------------------------------------------------------------------------------------->
+  <div id="confirmModal" class="confirm-modal hidden">
+    <div class="confirm-box">
+      <h3 id="confirmTitle">Confirm</h3>
+      <p id="confirmMessage"></p>
+  
+      <div class="confirm-actions">
+        <button id="confirmOk" class="btn red">Confirm</button>
+        <button id="confirmCancel" class="btn">Cancel</button>
+      </div>
+    </div>
+  </div>
+  
+  <div id="karaokePickerModal" class="confirm-modal hidden">
+    <div class="confirm-box">
+      <h3>Select Karaoke Lyrics</h3>
+  
+      <select id="karaokePickerSelect"></select>
+  
+      <div class="confirm-actions">
+        <button class="btn red" onclick="confirmKaraokeLyricsChoice()">Add</button>
+        <button class="btn" onclick="closeKaraokePicker()">Cancel</button>
+      </div>
+    </div>
+  </div>
+  <!---------------------------------------------------------------------------------------->
+  <!--------------------------------- END OF CONFIRM MODAL --------------------------------->
+  <!---------------------------------------------------------------------------------------->
+
+  
+</body>
+</html>

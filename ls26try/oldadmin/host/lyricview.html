@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Lyric View</title>
+  <link rel="stylesheet" href="../css/lyricsviewer.css">
+  <link rel="stylesheet" href="../../admin-new/css/top-statusbar.css">
+</head>
+
+<body>
+
+  
+<header class="viewer-topbar">
+  <!-- BACK BUTTON -->
+  <div class="back-split">
+    <button onclick="history.back()" class="viewer-btn">◀ BACK</button>
+    <button onclick="toggleBackMenu()" class="viewer-btn back-arrow">▼</button>
+  
+    <div id="backDropdown" class="back-dropdown">
+      <button onclick="history.back()">Back to previous page</button>
+      <button onclick="window.location.href='../../admin-new/admin.html'">Admin Main Page</button>
+      <button onclick="window.location.href='lyricsviewer.html'">Song List</button>
+    </div>
+  </div>
+
+  <!-- TOP BAR TITLE -->
+  <div id="topbarSongTitle" class="topbar-song-title">
+    Loading...
+  </div>
+
+  <!--<select id="liveKaraokeLyrics" class="viewer-btn red send-temp"></select>-->
+  
+  <button id="sendToSingerBtn" class="viewer-btn red send-to-singer-screen">
+    🎤 Send to Singer Screen
+  </button>
+  
+  <button id="editBtn" class="viewer-btn red">📝 EDIT</button>
+  
+</header>
+
+  <!-- TOP STATUS BAR / DASHBOARD -->
+  <div id="topStatusContainer"></div>
+  
+
+<!-- LYRIC PAGE -->
+<main class="lyric-page">
+
+  <div class="song-header">
+
+    <div class="song-title-area">
+      <h1 id="songTitle"></h1>
+      <div id="songYear"></div>
+      <div id="karaokeLyrics"></div>
+      <button id="youtubeBtn" class="viewer-btn" style="display:none;"> ▶ YouTube</button>
+      <div id="songNote"></div>
+    </div>
+
+    <div class="song-meta-box">
+      <div id="userBpm"></div>
+      <div id="originalBpm"></div>
+      <div id="capo"></div>
+      <div id="songKey"></div>
+
+      <!-- ADDED: performance log buttons below Key -->
+      <div id="performanceLogButtons" class="performance-log-buttons" style="display:none;">
+        <button id="performedByMeBtn" class="viewer-btn performance-log-btn self" type="button">
+          🎸 Performed by Me
+        </button>
+        <button id="performedBySingerBtn" class="viewer-btn performance-log-btn singer" type="button">
+          🎤 Performed by Singer
+        </button>
+      </div>
+      <!-- END ADDED -->
+    </div>
+
+  </div>
+
+  <div id="lyricsContent"></div>
+
+</main>
+
+<!-- ADDED: floating scroll controls -->
+<div class="floating-scroll-controls" aria-label="Page scroll controls">
+  <button type="button" class="floating-scroll-btn" onclick="slowHalfPageScroll(-1)" aria-label="Scroll up">▲</button>
+  <button type="button" class="floating-scroll-btn" onclick="slowHalfPageScroll(1)" aria-label="Scroll down">▼</button>
+</div>
+<!-- END ADDED -->
+
+<script src="../../firebase-projects.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+<script>
+  const firebaseConfig = window.LKFirebaseProjects
+  ? window.LKFirebaseProjects.getSelectedConfig()
+  : window.LK_FIREBASE_CONFIG;
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  window.db = db;
+  window.LK = window.LK || {};
+  window.LK.db = db;
+</script>
+
+  
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const songId = params.get("id");
+  const requestId = params.get("requestId");
+
+  // ADDED: keep the latest song data available for performance logging
+  let currentSongData = null;
+  // END ADDED
+
+  if (!songId) {
+    document.body.innerHTML =
+      "<h1 style='color:white;text-align:center;'>No song selected</h1>";
+  } else {
+    db.collection("lyrics").doc(songId).onSnapshot(doc => {
+      if (!doc.exists) {
+        document.getElementById("lyricsContent").innerHTML =
+          "<p>Could not load song data.</p>";
+        return;
+      }
+
+      const song = doc.data();
+      currentSongData = song; // ADDED
+      renderSong(song, songId);
+    });
+  }
+
+  function renderSong(song, songId) {
+    document.getElementById("songTitle").innerText =
+      `${song.title} - ${song.artist}`;
+
+    document.getElementById("topbarSongTitle").innerHTML = `
+        <div class="topbar-song-name">${escapeHTML(song.title)}</div>
+        <div class="topbar-song-artist">${escapeHTML(song.artist)}</div>
+      `;
+
+    document.getElementById("userBpm").innerText =
+      song.userBpm ? `${song.userBpm} BPM` : "";
+
+    document.getElementById("originalBpm").innerText =
+      song.originalBpm ? `Original: ${song.originalBpm} BPM` : "";
+
+    document.getElementById("capo").innerText =
+      song.capo ? `Capo: ${song.capo}` : "";
+
+    document.getElementById("songKey").innerText =
+      song.key ? `Key: ${song.key}` : "";
+
+    document.getElementById("songYear").innerText =
+      song.year ? `Year: ${song.year}` : "";
+
+    const youtubeBtn = document.getElementById("youtubeBtn");
+
+    if (song.youtubeLink) {
+      youtubeBtn.style.display = "inline-block";
+      youtubeBtn.onclick = () => openYoutubePopup(song.youtubeLink);
+    } else {
+      youtubeBtn.style.display = "none";
+    }
+
+    // ADDED: connect performance buttons to Firestore logging
+    setupPerformanceLogButtons(song, songId);
+    // END ADDED
+
+    document.getElementById("sendToSingerBtn").onclick = async () => {
+    const karaokeId = song.karaokeLyrics;
+  
+    if (!karaokeId || karaokeId === "No") {
+      showAlert("No Karaoke Lyrics connected", "This song has no Karaoke Lyrics ID.");
+      return;
+    }
+  
+    await db.collection("karaokeControl").doc("liveLyrics").set({
+      currentSongId: karaokeId,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  
+    showAlert("Singer screen updated.", "Singer screen updated according to the Karaoke Lyrics ID.");
+  };
+
+    document.getElementById("editBtn").onclick = () => {
+      window.location.href =
+        `lyricscreator.html?firebaseId=${encodeURIComponent(songId)}`;
+    };
+
+    const container = document.getElementById("lyricsContent");
+    container.innerHTML = "";
+
+    (song.sections || []).forEach(section => {
+      if (section.type === "separator") {
+        const sep = document.createElement("div");
+        sep.className = "viewer-separator";
+        container.appendChild(sep);
+        return;
+      }
+
+      const div = document.createElement("section");
+
+      const isTab = section.type === "tab";
+      const isCollapsed = isTab && section.collapsed === true;
+
+      div.className = isTab
+        ? `viewer-section viewer-tab ${isCollapsed ? "collapsed-tab" : ""}`
+        : "viewer-section";
+
+      div.style.fontFamily = section.style?.fontFamily || "Verdana";
+      div.style.color = section.style?.color || "white";
+
+      let displayHtml = section.html || "";
+      
+      if (isTab) {
+        displayHtml = section.html || "";
+      }
+
+/* Saved symbols:  ↑   ↓   ▲    ▼    ⧉   ✕   ✖  */
+
+      div.innerHTML = `
+        ${section.title
+          ? `<h2>${isTab ? (isCollapsed ? "▶ " : "▼ ") : ""}${escapeHTML(section.title)}${isTab ? " (Tab)" : ""}</h2>`
+          : ""
+        }
+            
+        <div class="viewer-section-text">
+          ${displayHtml}
+        </div>
+      `;
+
+      if (isTab) {
+        div.addEventListener("click", e => {
+          if (e.target.tagName === "A" || e.target.tagName === "BUTTON") return;
+        
+          section.collapsed = !section.collapsed;
+          renderSong(song, songId);
+          setTimeout(() => {
+            div.scrollIntoView({ behavior: "smooth", block: "start" });
+          }, 50);
+        });
+      }
+
+      container.appendChild(div);
+    });
+
+    const endMarker = document.createElement("div");
+    endMarker.className = "end-marker";
+
+    const startSymb = document.createElement("div");
+    startSymb.className = "marker-symbols";
+    startSymb.textContent = "⦓";
+
+    const endSymb = document.createElement("div");
+    endSymb.className = "marker-symbols";
+    endSymb.textContent = "⦔";
+
+    endMarker.appendChild(startSymb);
+    endMarker.append(" END ");
+    endMarker.appendChild(endSymb);
+
+    container.appendChild(endMarker);
+  }
+
+  function showAlert(title, message) {
+    return new Promise(resolve => {
+      const modal = document.getElementById("confirmModal");
+      const titleEl = document.getElementById("confirmTitle");
+      const messageEl = document.getElementById("confirmMessage");
+      const ok = document.getElementById("confirmOk");
+      const cancel = document.getElementById("confirmCancel");
+  
+      titleEl.innerText = title;
+      messageEl.innerText = message;
+  
+      cancel.style.display = "none";
+      modal.classList.remove("hidden");
+  
+      ok.onclick = () => {
+        modal.classList.add("hidden");
+        cancel.style.display = "";
+        resolve(true);
+      };
+    });
+  }
+
+function getYoutubeEmbedUrl(url) {
+  const text = String(url || "").trim();
+
+  let id = "";
+
+  const watchMatch = text.match(/[?&]v=([^&]+)/);
+  const shortMatch = text.match(/youtu\.be\/([^?&]+)/);
+  const embedMatch = text.match(/youtube\.com\/embed\/([^?&]+)/);
+
+  if (watchMatch) id = watchMatch[1];
+  else if (shortMatch) id = shortMatch[1];
+  else if (embedMatch) id = embedMatch[1];
+
+  if (!id) return "";
+
+  return `https://www.youtube.com/embed/${id}?autoplay=1`;
+}
+
+function openYoutubePopup(url) {
+  const embedUrl = getYoutubeEmbedUrl(url);
+
+  if (!embedUrl) {
+    showAlert("Invalid YouTube Link", "This song does not have a valid YouTube link.");
+    return;
+  }
+
+  document.getElementById("youtubePlayerWrap").innerHTML = `
+    <iframe
+      src="${embedUrl}"
+      allow="autoplay; encrypted-media"
+      allowfullscreen>
+    </iframe>
+  `;
+
+  document.getElementById("youtubeModal").classList.remove("hidden");
+}
+
+function closeYoutubePopup() {
+  document.getElementById("youtubePlayerWrap").innerHTML = "";
+  document.getElementById("youtubeModal").classList.add("hidden");
+}
+
+  function toggleBackMenu() {
+    document.getElementById("backDropdown").classList.toggle("show");
+  }
+
+  function escapeHTML(str) {
+    return String(str || "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+  }
+
+  /************************************************************
+   * ADDED: FLOATING HALF-PAGE SCROLL
+   ************************************************************/
+  function slowHalfPageScroll(direction) {
+    const distance = Math.round(window.innerHeight * 0.5) * direction;
+    const startY = window.scrollY;
+    const maxY = document.documentElement.scrollHeight - window.innerHeight;
+    const targetY = Math.max(0, Math.min(maxY, startY + distance));
+    const duration = 900;
+    const startTime = performance.now();
+
+    function easeInOut(t) {
+      return t < 0.5
+        ? 2 * t * t
+        : 1 - Math.pow(-2 * t + 2, 2) / 2;
+    }
+
+    function step(now) {
+      const progress = Math.min((now - startTime) / duration, 1);
+      const eased = easeInOut(progress);
+      window.scrollTo(0, startY + (targetY - startY) * eased);
+
+      if (progress < 1) {
+        requestAnimationFrame(step);
+      }
+    }
+
+    requestAnimationFrame(step);
+  }
+
+  /************************************************************
+   * ADDED: PERFORMANCE LOGGING TO CURRENT SESSION
+   ************************************************************/
+  function setupPerformanceLogButtons(song, songId) {
+    const wrap = document.getElementById("performanceLogButtons");
+    const meBtn = document.getElementById("performedByMeBtn");
+    const singerBtn = document.getElementById("performedBySingerBtn");
+
+    if (!wrap || !meBtn || !singerBtn) return;
+
+    wrap.style.display = "flex";
+
+    meBtn.onclick = () => logSongPerformance("self", song, songId);
+    singerBtn.onclick = () => logSongPerformance("singer", song, songId);
+  }
+
+  async function getCurrentSessionIdOrTest() {
+    try {
+      const currentSnap = await db.collection("karaokeControl").doc("currentSession").get();
+      const current = currentSnap.exists ? currentSnap.data() : null;
+
+      if (current && current.active === true && current.sessionId) {
+        return current.sessionId;
+      }
+
+      const testRef = db.collection("performanceSessions").doc("test-session");
+      const testSnap = await testRef.get();
+
+      if (!testSnap.exists) {
+        await testRef.set({
+          title: "Test Session",
+          venue: "Test",
+          status: "test",
+          isActive: false,
+          breakOpen: false,
+          notes: "Automatically created because a song was logged without an active session.",
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+      }
+
+      return "test-session";
+    } catch (error) {
+      console.error("Could not get current session:", error);
+      return "test-session";
+    }
+  }
+
+ async function logSongPerformance(performedBy, song, songId) {
+  const label = performedBy === "self" ? "Performed by Me" : "Performed by Singer";
+
+  try {
+    setPerformanceButtonsDisabled(true);
+
+    const sessionId = await getCurrentSessionIdOrTest();
+
+    await db.collection("performanceLogs").add({
+      sessionId,
+      requestId: requestId || "",
+      songId,
+      songTitle: song.title || "",
+      songArtist: song.artist || "",
+      userBpm: song.userBpm || "",
+      originalBpm: song.originalBpm || "",
+      capo: song.capo || "",
+      key: song.key || "",
+      year: song.year || "",
+      performedBy,
+      performanceType: label,
+      source: "lyricview.html",
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    await db.collection("performanceSessions").doc(sessionId).collection("performedSongs").add({
+      requestId: requestId || "",
+      songId,
+      songTitle: song.title || "",
+      songArtist: song.artist || "",
+      performedBy,
+      performanceType: label,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    if (requestId && performedBy === "singer") {
+      await db.collection("publicSongRequests").doc(requestId).set({
+        status: "completed",
+        completedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        performedBy,
+        performanceType: label,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+    }
+
+    await showAlert("Performance Logged", `${label} has been logged.`);
+
+    window.location.href = "../../admin-new/admin.html";
+
+  } catch (error) {
+    console.error(error);
+    setPerformanceButtonsDisabled(false);
+    showAlert("Log Failed", "Could not log this performance. Check Firebase permissions.");
+  }
+}
+
+  function setPerformanceButtonsDisabled(disabled) {
+    const meBtn = document.getElementById("performedByMeBtn");
+    const singerBtn = document.getElementById("performedBySingerBtn");
+
+    if (meBtn) meBtn.disabled = disabled;
+    if (singerBtn) singerBtn.disabled = disabled;
+  }
+  /************************************************************
+   * END ADDED
+   ************************************************************/
+  
+</script>
+  <!---------------------------------------------------------------------------------------->
+  <!------------------------------------ CONFIRM MODAL ------------------------------------->
+  <!---------------------------------------------------------------------------------------->
+  <div id="confirmModal" class="confirm-modal hidden">
+    <div class="confirm-box">
+      <h3 id="confirmTitle">Confirm</h3>
+      <p id="confirmMessage"></p>
+  
+      <div class="confirm-actions">
+        <button id="confirmOk" class="btn red">Confirm</button>
+        <button id="confirmCancel" class="btn">Cancel</button>
+      </div>
+    </div>
+  </div>
+  <!---------------------------------------------------------------------------------------->
+  <!--------------------------------- END OF CONFIRM MODAL --------------------------------->
+  <!---------------------------------------------------------------------------------------->
+
+
+  <!---------------------------------------------------------------------------------------->
+  <!---------------------------------- TEMP SEND LYRICS ------------------------------------>
+  <!---------------------------------------------------------------------------------------->
+<!--
+  
+<script src="../files/song-data-kl.js"></script>
+  
+<script>
+function populateKaraokeDropdown() {
+  const ddl = document.getElementById("liveKaraokeLyrics");
+
+  ddl.innerHTML = "";
+
+  ddl.innerHTML =
+  '<option value="">Select karaoke lyrics...</option>';
+  
+  window.songs
+    .filter(s => s.hasLyrics)
+    .forEach(song => {
+
+      const id = song.url.replace(
+        /^lyrics\/song\.html\?id=/i,
+        ""
+      );
+
+      const opt = document.createElement("option");
+      opt.value = id;
+      opt.textContent = `${song.title} - ${song.artist}`;
+
+      ddl.appendChild(opt);
+    });
+}
+
+document.getElementById("liveKaraokeLyrics")
+  .addEventListener("change", async function () {
+
+    await db
+      .collection("karaokeControl")
+      .doc("liveLyrics")
+      .set({
+        currentSongId: this.value,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+  });
+
+window.addEventListener("DOMContentLoaded", populateKaraokeDropdown);
+</script>
+  -->
+  <!---------------------------------------------------------------------------------------->
+  <!------------------------------- END OF TEMP SEND LYRICS -------------------------------->
+  <!---------------------------------------------------------------------------------------->
+  
+  <div id="youtubeModal" class="confirm-modal hidden">
+    <div class="confirm-box youtube-box">
+      <button class="youtube-close" onclick="closeYoutubePopup()">✕</button>
+      <div id="youtubePlayerWrap"></div>
+    </div>
+  </div>
+  
+  <script src="../../admin-new/js/top-statusbar.js" data-include="../../admin-new/includes/top-statusbar.html"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      LK.topStatus.loadTopStatusBar();
+    });
+  </script>
+
+
+</body>
+</html>

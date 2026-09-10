@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PDF Viewer</title>
+
+  <style>
+    html, body {
+      margin: 0;
+      height: 100%;
+      background: #000;
+      font-family: Arial, sans-serif;
+      overflow: hidden;
+    }
+
+    .pdf-topbar {
+      height: 58px;
+      background: #050505;
+      border-bottom: 2px solid #ff2020;
+      box-shadow: 0 0 18px rgba(255,0,0,.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 8px;
+      box-sizing: border-box;
+      z-index: 10;
+      position: relative;
+    }
+
+    .pdf-btn {
+      background: linear-gradient(180deg, #ff2b2b, #990000);
+      color: white;
+      border: 1px solid rgba(255,255,255,.2);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      text-decoration: none;
+      box-shadow: 0 0 10px rgba(255,0,0,.5);
+    }
+
+    .pdf-btn:hover {
+      box-shadow: 0 0 18px rgba(255,0,0,.8);
+    }
+
+    .pdf-frame {
+      width: 100%;
+      height: calc(100vh - 58px);
+      border: none;
+      background: #000;
+      display: block;
+    }
+  </style>
+<script src="../firebase-projects.js"></script>
+</head>
+
+<body>
+
+  <div class="pdf-topbar">
+    <a href="host/karaokehostchordbook.html" class="pdf-btn">Back to Main</a>
+    <button onclick="goTop()" class="pdf-btn">Top</button>
+    <button onclick="toggleFullscreen()" id="fullscreenBtn" class="pdf-btn">Full Screen</button>
+  </div>
+
+  <iframe id="pdfViewer" class="pdf-frame"></iframe>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+  
+    const file = params.get("file");
+    const page = params.get("page") || 1;
+  
+    const allowedFiles = {
+      karaoke: "files/livekaraokelyrics1_4.pdf",
+      performance: "files/liveperformancelyrics.pdf"
+    };
+  
+    const pdfViewer = document.getElementById("pdfViewer");
+    const fullscreenBtn = document.getElementById("fullscreenBtn");
+  
+    function loadPdf(targetPage) {
+      if (!allowedFiles[file]) {
+        document.body.innerHTML =
+          "<h1 style='color:white;text-align:center;margin-top:40px;'>PDF not found</h1>";
+        return;
+      }
+  
+      pdfViewer.src = "about:blank";
+  
+      setTimeout(() => {
+        pdfViewer.src = allowedFiles[file] + "#page=" + targetPage + "&zoom=page-width";
+      }, 80);
+    }
+  
+    function goTop() {
+      loadPdf(2);
+    }
+  
+    async function toggleFullscreen() {
+      try {
+        if (!document.fullscreenElement) {
+          await document.documentElement.requestFullscreen();
+        } else {
+          await document.exitFullscreen();
+        }
+        updateFullscreenButton();
+      } catch (err) {
+        console.log("Fullscreen error:", err);
+      }
+    }
+  
+    function updateFullscreenButton() {
+      fullscreenBtn.innerText = document.fullscreenElement
+        ? "Exit Fullscreen"
+        : "Full Screen";
+    }
+  
+    document.addEventListener("fullscreenchange", updateFullscreenButton);
+  
+    loadPdf(page);
+    updateFullscreenButton();
+  </script>
+
+</body>
+</html>
