@@ -1,0 +1,737 @@
+<!-- Copyright © 2026 LiveSuite. All rights reserved.
+ database-manager.html — preserved application page with LS26 shared navigation and theme.
+-->
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Database Manager - Live Karaoke Suite</title>
+<link rel="icon" type="image/x-icon" href="/online/favicon.ico">
+
+<script src="../firebase-projects.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+<style>
+:root{
+  color-scheme:dark;
+  --bg:#0b0b0b;
+  --card:#151515;
+  --line:#333;
+  --text:#eee;
+  --muted:#999;
+  --green:#16833d;
+  --green2:#20a653;
+  --amber:#d59b20;
+  --red:#a92c36;
+}
+*{box-sizing:border-box}
+body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);margin:0;padding:22px}
+.wrap{max-width:1100px;margin:auto}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px;margin-bottom:16px}
+h1,h2,h3{margin-top:0}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+button,select,input{
+  background:#222;color:#fff;border:1px solid #555;border-radius:7px;
+  padding:10px 13px;font-weight:700
+}
+input{font-weight:400;min-width:220px}
+button{cursor:pointer}
+button.primary{background:var(--green);border-color:var(--green2)}
+button.warn{background:#6a4a08;border-color:var(--amber)}
+button.danger{background:#5d1d1d;border-color:var(--red)}
+button:disabled{opacity:.45;cursor:not-allowed}
+.status{display:inline-block;padding:4px 8px;border-radius:999px;font-size:12px;font-weight:800}
+.status.ok{background:#123d24;color:#7ff0a1}
+.status.off{background:#3a1a1a;color:#ff9b9b}
+.status.wait{background:#3a3316;color:#ffe082}
+small,.muted{color:var(--muted)}
+pre{background:#090909;border:1px solid #333;border-radius:8px;padding:12px;white-space:pre-wrap;max-height:45vh;overflow:auto}
+.notice{padding:12px;border-radius:8px;background:#2b2408;border:1px solid #5c4b0c;color:#ffe085}
+@media(max-width:760px){.grid2{grid-template-columns:1fr}.row>*{max-width:100%}}
+</style>
+<link rel="stylesheet" href="../shared/theme.css"><link rel="stylesheet" href="../shared/performance.css"><script src="../shared/data.js"></script></head>
+
+<body>
+<div class="wrap">
+
+<h1>Database Manager</h1>
+
+<div class="card">
+  <h2>Current App Database</h2>
+  <p>Current project: <strong id="currentProject"></strong></p>
+  <div class="row">
+    <select id="projectSelect">
+      <option value="LIVEKARAOKESUITE">LIVEKARAOKESUITE (new)</option>
+      <option value="LIVEKARAOKEMT">LIVEKARAOKEMT (old)</option>
+    </select>
+    <button class="primary" id="switchBtn">Switch app database</button>
+    <button onclick="location.href='admin.html'">Back to Admin</button>
+  </div>
+  <p><small>The selection is stored in this browser and applies to /livesuite/ pages.</small></p>
+</div>
+
+<div class="card">
+  <h2>Database Authentication</h2>
+
+  <div class="notice">
+    The copy stopped because some Firestore collections require an authenticated user.
+    Signing in to the Admin app does not automatically authenticate the separate Firebase
+    app instances used by this Database Manager, so sign in here before copying.
+  </div>
+
+  <div class="grid2" style="margin-top:14px">
+    <section>
+      <h3>LIVEKARAOKEMT</h3>
+      <p>Status: <span id="authOldStatus" class="status off">Not signed in</span></p>
+      <div class="row">
+        <input id="oldEmail" type="email" autocomplete="username" placeholder="Email">
+        <input id="oldPassword" type="password" autocomplete="current-password" placeholder="Password">
+        <button id="oldSignIn" class="primary">Sign in</button>
+        <button id="oldSignOut">Sign out</button>
+      </div>
+    </section>
+
+    <section>
+      <h3>LIVEKARAOKESUITE</h3>
+      <p>Status: <span id="authNewStatus" class="status off">Not signed in</span></p>
+      <div class="row">
+        <input id="newEmail" type="email" autocomplete="username" placeholder="Email">
+        <input id="newPassword" type="password" autocomplete="current-password" placeholder="Password">
+        <button id="newSignIn" class="primary">Sign in</button>
+        <button id="newSignOut">Sign out</button>
+      </div>
+    </section>
+  </div>
+
+  <p class="muted">
+    You can use the same email/password for both projects if you created the same Admin
+    account in both Firebase Authentication projects.
+  </p>
+</div>
+
+<div class="card">
+  <h2>Copy Database</h2>
+  <div class="notice" style="margin-bottom:12px">
+    <b>userProfiles is intentionally skipped.</b>
+    Firebase Authentication UIDs are project-specific and the profile is not
+    required to migrate your songs, setlists, venues, gigs, sessions, requests,
+    notes or performance data. Your new Admin account can create its own profile
+    in LIVEKARAOKESUITE without risking another permission failure.
+  </div>
+
+  <div class="row">
+    <label>From
+      <select id="source">
+        <option value="LIVEKARAOKEMT">LIVEKARAOKEMT</option>
+        <option value="LIVEKARAOKESUITE">LIVEKARAOKESUITE</option>
+      </select>
+    </label>
+
+    <label>To
+      <select id="destination">
+        <option value="LIVEKARAOKESUITE">LIVEKARAOKESUITE</option>
+        <option value="LIVEKARAOKEMT">LIVEKARAOKEMT</option>
+      </select>
+    </label>
+
+    <button id="testBtn">Test both</button>
+    <button class="primary" id="copyBtn">Copy / Resume data</button>
+  </div>
+
+  <p><small>
+    Re-running the copy is safe for the same document IDs. Collections already copied are
+    written again with the same IDs, so you can resume after fixing permissions.
+  </small></p>
+
+  <p><small>
+    Collections: lyrics, lyricsSetlists, songlists, songlistSections, songlistSongs,
+    publicSongRequests, publicSignupSessions, performanceSessions, performanceLogs,
+    performedSongs, karaoke, karaokeControl, liveLyrics, notes, noteSettings,
+    upcomingEvents, venues, plus the specific document karaoke/state. Also copies performanceSessions/*/performedSongs.
+  </small></p>
+
+  <pre id="log"></pre>
+</div>
+
+</div>
+
+<script>
+const current = document.getElementById("currentProject");
+const projectSelect = document.getElementById("projectSelect");
+const logEl = document.getElementById("log");
+
+current.textContent = LKFirebaseProjects.getSelectedKey();
+projectSelect.value = LKFirebaseProjects.getSelectedKey();
+
+document.getElementById("switchBtn").onclick = () => {
+  LKFirebaseProjects.selectProject(projectSelect.value, false);
+  alert("Database changed to " + projectSelect.value + ". Admin will reload using it.");
+  location.href = "admin.html";
+};
+
+const PROJECT_KEYS = {
+  old: "LIVEKARAOKEMT",
+  new: "LIVEKARAOKESUITE"
+};
+
+const collections = [
+  "lyrics",
+  "lyricsSetlists",
+  "songlists",
+  "songlistSections",
+  "songlistSongs",
+  "publicSongRequests",
+  "publicSignupSessions",
+  "performanceSessions",
+  "performanceLogs",
+  "performedSongs",
+  "karaokeControl",
+  "liveLyrics",
+  "notes",
+  "noteSettings",
+  "upcomingEvents",
+  "venues"
+];
+
+// The OLD project's rules expose karaoke/state specifically, not the entire
+// karaoke collection. Querying collection("karaoke") therefore fails even
+// when the user is authenticated. Copy this document directly instead.
+const specialDocuments = [
+  "karaoke/state"
+];
+
+// userProfiles cannot be copied as a normal collection because its Firestore
+// create rule requires request.auth.uid == document ID. Firebase Auth UIDs are
+// different between projects even when the same email/password is used.
+const specialCollections = [];
+
+const MIGRATION_PROGRESS_KEY = "lksuite.dbMigrationProgress.v2";
+
+function migrationKey(sourceKey, destinationKey) {
+  return sourceKey + "->" + destinationKey;
+}
+
+function loadMigrationProgress(sourceKey, destinationKey) {
+  let all = {};
+  try {
+    all = JSON.parse(localStorage.getItem(MIGRATION_PROGRESS_KEY) || "{}");
+  } catch (_) {}
+
+  const key = migrationKey(sourceKey, destinationKey);
+  return all[key] || { completed: {}, specialCompleted: {} };
+}
+
+function saveMigrationProgress(sourceKey, destinationKey, progress) {
+  let all = {};
+  try {
+    all = JSON.parse(localStorage.getItem(MIGRATION_PROGRESS_KEY) || "{}");
+  } catch (_) {}
+
+  all[migrationKey(sourceKey, destinationKey)] = progress;
+  localStorage.setItem(MIGRATION_PROGRESS_KEY, JSON.stringify(all));
+}
+
+function clearMigrationProgress(sourceKey, destinationKey) {
+  let all = {};
+  try {
+    all = JSON.parse(localStorage.getItem(MIGRATION_PROGRESS_KEY) || "{}");
+  } catch (_) {}
+
+  delete all[migrationKey(sourceKey, destinationKey)];
+  localStorage.setItem(MIGRATION_PROGRESS_KEY, JSON.stringify(all));
+}
+
+const appCache = {};
+
+function log(message) {
+  logEl.textContent += message + "\n";
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+function getApp(key) {
+  if (appCache[key]) return appCache[key];
+
+  const cfg = LKFirebaseProjects.PROJECTS[key];
+  const appName = "dbmanager_" + key;
+
+  let app;
+  try {
+    app = firebase.app(appName);
+  } catch (_) {
+    app = firebase.initializeApp(cfg, appName);
+  }
+
+  appCache[key] = app;
+  return app;
+}
+
+function getDb(key) {
+  return getApp(key).firestore();
+}
+
+function getAuth(key) {
+  return getApp(key).auth();
+}
+
+function updateAuthUi(key, user) {
+  const isOld = key === "LIVEKARAOKEMT";
+  const el = document.getElementById(isOld ? "authOldStatus" : "authNewStatus");
+
+  if (user) {
+    el.textContent = "Signed in: " + (user.email || user.uid);
+    el.className = "status ok";
+  } else {
+    el.textContent = "Not signed in";
+    el.className = "status off";
+  }
+}
+
+function watchAuth(key) {
+  getAuth(key).onAuthStateChanged(user => updateAuthUi(key, user));
+}
+
+async function signIn(key, emailId, passwordId) {
+  const email = document.getElementById(emailId).value.trim();
+  const password = document.getElementById(passwordId).value;
+
+  if (!email || !password) {
+    alert("Enter email and password.");
+    return;
+  }
+
+  try {
+    await getAuth(key).signInWithEmailAndPassword(email, password);
+    log(key + ": AUTH OK");
+  } catch (error) {
+    console.error(error);
+    log(key + ": AUTH FAILED " + (error.code || "") + " " + error.message);
+  }
+}
+
+document.getElementById("oldSignIn").onclick = () =>
+  signIn("LIVEKARAOKEMT", "oldEmail", "oldPassword");
+
+document.getElementById("newSignIn").onclick = () =>
+  signIn("LIVEKARAOKESUITE", "newEmail", "newPassword");
+
+document.getElementById("oldSignOut").onclick = async () =>
+  getAuth("LIVEKARAOKEMT").signOut();
+
+document.getElementById("newSignOut").onclick = async () =>
+  getAuth("LIVEKARAOKESUITE").signOut();
+
+watchAuth("LIVEKARAOKEMT");
+watchAuth("LIVEKARAOKESUITE");
+
+async function testDb(key) {
+  const db = getDb(key);
+  await db.collection("karaokeControl").limit(1).get();
+}
+
+document.getElementById("testBtn").onclick = async () => {
+  logEl.textContent = "";
+
+  for (const key of [
+    document.getElementById("source").value,
+    document.getElementById("destination").value
+  ]) {
+    try {
+      await testDb(key);
+      const user = getAuth(key).currentUser;
+      log(
+        key + ": READ OK" +
+        (user ? " | AUTH " + user.email : " | NOT AUTHENTICATED")
+      );
+    } catch (error) {
+      log(key + ": FAILED " + (error.code || "") + " " + error.message);
+    }
+  }
+};
+
+async function commitBatchIfNeeded(batchState, force = false) {
+  if (batchState.count === 0) return;
+
+  if (force || batchState.count >= 400) {
+    await batchState.batch.commit();
+    batchState.batch = batchState.db.batch();
+    batchState.count = 0;
+  }
+}
+
+async function copyCollection(src, dst, name) {
+  log("Reading " + name + "…");
+
+  const snap = await src.collection(name).get();
+  log(name + ": " + snap.size + " documents");
+
+  const batchState = {
+    db: dst,
+    batch: dst.batch(),
+    count: 0
+  };
+
+  for (const doc of snap.docs) {
+    batchState.batch.set(
+      dst.collection(name).doc(doc.id),
+      doc.data(),
+      { merge: true }
+    );
+
+    batchState.count++;
+
+    if (batchState.count >= 400) {
+      await commitBatchIfNeeded(batchState, true);
+    }
+  }
+
+  await commitBatchIfNeeded(batchState, true);
+
+  if (name === "performanceSessions") {
+    for (const doc of snap.docs) {
+      const sub = await src
+        .collection("performanceSessions")
+        .doc(doc.id)
+        .collection("performedSongs")
+        .get();
+
+      if (!sub.size) continue;
+
+      log("  " + doc.id + "/performedSongs: " + sub.size);
+
+      const subBatch = {
+        db: dst,
+        batch: dst.batch(),
+        count: 0
+      };
+
+      for (const subDoc of sub.docs) {
+        subBatch.batch.set(
+          dst
+            .collection("performanceSessions")
+            .doc(doc.id)
+            .collection("performedSongs")
+            .doc(subDoc.id),
+          subDoc.data(),
+          { merge: true }
+        );
+
+        subBatch.count++;
+
+        if (subBatch.count >= 400) {
+          await commitBatchIfNeeded(subBatch, true);
+        }
+      }
+
+      await commitBatchIfNeeded(subBatch, true);
+    }
+  }
+}
+
+async function copyDocumentPath(src, dst, path) {
+  log("Reading " + path + "…");
+
+  const sourceRef = src.doc(path);
+  const snap = await sourceRef.get();
+
+  if (!snap.exists) {
+    log(path + ": source document does not exist — skipped");
+    return;
+  }
+
+  await dst.doc(path).set(snap.data(), { merge: true });
+  log(path + ": copied");
+}
+
+async function copyUserProfiles(sourceKey, destinationKey, src, dst) {
+  log("Reading userProfiles…");
+
+  const sourceAuth = getAuth(sourceKey);
+  const destinationAuth = getAuth(destinationKey);
+
+  const sourceUser = sourceAuth.currentUser;
+  const destinationUser = destinationAuth.currentUser;
+
+  if (!sourceUser || !destinationUser) {
+    throw new Error(
+      "Both Firebase projects must be authenticated before copying userProfiles."
+    );
+  }
+
+  const snap = await src.collection("userProfiles").get();
+  log("userProfiles: " + snap.size + " documents");
+
+  let copied = 0;
+  let skipped = 0;
+
+  for (const doc of snap.docs) {
+    /*
+      In your rules:
+        allow create: if signedIn() && request.auth.uid == uid
+
+      The old profile document ID is the OLD project's Auth UID. The NEW
+      project's same email account normally has a different UID, so creating
+      the old UID in the new project is correctly rejected.
+
+      If the source profile belongs to the currently signed-in old user, copy
+      it to the currently signed-in new user's UID instead.
+    */
+    let destinationUid = doc.id;
+
+    if (doc.id === sourceUser.uid) {
+      destinationUid = destinationUser.uid;
+    }
+
+    // We can only CREATE the current destination user's profile under the
+    // production rules. Existing matching destination docs can still be merged.
+    if (destinationUid !== destinationUser.uid) {
+      const existing = await dst.collection("userProfiles").doc(destinationUid).get();
+
+      if (!existing.exists) {
+        skipped++;
+        log(
+          "  SKIP userProfiles/" +
+          doc.id +
+          " — belongs to another UID and cannot be created by " +
+          destinationUser.email
+        );
+        continue;
+      }
+    }
+
+    const data = {
+      ...doc.data(),
+      migratedFromProject: sourceKey,
+      migratedFromUid: doc.id
+    };
+
+    // Do not overwrite an explicit UID field with the old project's UID.
+    if ("uid" in data) {
+      data.uid = destinationUid;
+    }
+
+    await dst
+      .collection("userProfiles")
+      .doc(destinationUid)
+      .set(data, { merge: true });
+
+    copied++;
+
+    log(
+      "  userProfiles/" +
+      doc.id +
+      " -> userProfiles/" +
+      destinationUid
+    );
+  }
+
+  log(
+    "userProfiles complete: " +
+    copied +
+    " copied" +
+    (skipped ? ", " + skipped + " skipped" : "")
+  );
+}
+
+function explainPermissionError(key) {
+  const user = getAuth(key).currentUser;
+
+  if (!user) {
+    return key + " is not authenticated. Sign in above, then retry.";
+  }
+
+  return (
+    key +
+    " is authenticated as " +
+    user.email +
+    ", but Firestore rules still rejected the operation. Check that project's Firestore Rules."
+  );
+}
+
+document.getElementById("copyBtn").onclick = async () => {
+  const sourceKey = document.getElementById("source").value;
+  const destinationKey = document.getElementById("destination").value;
+
+  if (sourceKey === destinationKey) {
+    alert("Source and destination are the same.");
+    return;
+  }
+
+  if (!confirm(
+    "Resume copying supported data from " +
+    sourceKey +
+    " to " +
+    destinationKey +
+    "? Completed collections will be skipped."
+  )) {
+    return;
+  }
+
+  logEl.textContent = "";
+
+  try {
+    const src = getDb(sourceKey);
+    const dst = getDb(destinationKey);
+    const progress = loadMigrationProgress(sourceKey, destinationKey);
+
+    /*
+      Your previous run (before this resumable version existed) successfully
+      copied through top-level performedSongs and then failed at karaoke.
+      Seed that known progress once for this exact migration direction so those
+      collections are not read/written again.
+    */
+    if (
+      sourceKey === "LIVEKARAOKEMT" &&
+      destinationKey === "LIVEKARAOKESUITE" &&
+      !progress.seededFromPreviousRun
+    ) {
+      [
+        "lyrics",
+        "lyricsSetlists",
+        "songlists",
+        "songlistSections",
+        "songlistSongs",
+        "publicSongRequests",
+        "publicSignupSessions",
+        "performanceSessions",
+        "performanceLogs",
+        "performedSongs"
+      ].forEach(name => progress.completed[name] = true);
+
+      progress.seededFromPreviousRun = true;
+      saveMigrationProgress(sourceKey, destinationKey, progress);
+      log("Previous successful copy detected: resuming AFTER performedSongs.");
+    }
+
+    log(
+      "SOURCE AUTH: " +
+      (getAuth(sourceKey).currentUser?.email || "not authenticated")
+    );
+
+    log(
+      "DESTINATION AUTH: " +
+      (getAuth(destinationKey).currentUser?.email || "not authenticated")
+    );
+
+    for (const collectionName of collections) {
+      if (progress.completed[collectionName]) {
+        log("SKIP " + collectionName + " — already completed");
+        continue;
+      }
+
+      try {
+        await copyCollection(src, dst, collectionName);
+        progress.completed[collectionName] = true;
+        saveMigrationProgress(sourceKey, destinationKey, progress);
+      } catch (error) {
+        if (error.code === "permission-denied") {
+          log("PERMISSION DENIED while copying: " + collectionName);
+          log(explainPermissionError(sourceKey));
+          log(explainPermissionError(destinationKey));
+        }
+
+        throw error;
+      }
+    }
+
+    if (!progress.specialCompleted["userProfiles:skipped"]) {
+      log("SKIP userProfiles — intentionally not migrated (Firebase Auth UID is project-specific)");
+      progress.specialCompleted["userProfiles:skipped"] = true;
+      saveMigrationProgress(sourceKey, destinationKey, progress);
+    }
+
+    for (const collectionName of specialCollections) {
+      const progressKey = "specialCollection:" + collectionName;
+
+      if (progress.specialCompleted[progressKey]) {
+        log("SKIP " + collectionName + " — already completed");
+        continue;
+      }
+
+      try {
+        if (collectionName === "userProfiles") {
+          await copyUserProfiles(
+            sourceKey,
+            destinationKey,
+            src,
+            dst
+          );
+        }
+
+        progress.specialCompleted[progressKey] = true;
+        saveMigrationProgress(sourceKey, destinationKey, progress);
+      } catch (error) {
+        if (error.code === "permission-denied") {
+          log("PERMISSION DENIED while copying: " + collectionName);
+          log(
+            "userProfiles are UID-sensitive. Ensure the same email is signed " +
+            "into both projects and that the destination account exists."
+          );
+        }
+
+        throw error;
+      }
+    }
+
+    for (const path of specialDocuments) {
+      if (progress.specialCompleted[path]) {
+        log("SKIP " + path + " — already completed");
+        continue;
+      }
+
+      try {
+        await copyDocumentPath(src, dst, path);
+        progress.specialCompleted[path] = true;
+        saveMigrationProgress(sourceKey, destinationKey, progress);
+      } catch (error) {
+        if (error.code === "permission-denied") {
+          log("PERMISSION DENIED while copying: " + path);
+          log(
+            "The old rules normally allow karaoke/state specifically. " +
+            "Check source/destination Firestore rules if this direct document read fails."
+          );
+        }
+
+        throw error;
+      }
+    }
+
+    log("DONE. Migration progress saved in this browser.");
+  } catch (error) {
+    console.error(error);
+    log("STOPPED: " + (error.code || "") + " " + error.message);
+    log("Progress up to the last completed collection has been saved.");
+    log("Fix the reported problem and press Copy / Resume data again.");
+  }
+};
+
+const resetProgressBtn = document.createElement("button");
+resetProgressBtn.type = "button";
+resetProgressBtn.className = "danger";
+resetProgressBtn.textContent = "Reset migration progress";
+resetProgressBtn.onclick = () => {
+  const sourceKey = document.getElementById("source").value;
+  const destinationKey = document.getElementById("destination").value;
+
+  if (!confirm(
+    "Forget saved migration progress for " +
+    sourceKey +
+    " → " +
+    destinationKey +
+    "? This does not delete Firebase data."
+  )) {
+    return;
+  }
+
+  clearMigrationProgress(sourceKey, destinationKey);
+  log("Saved migration progress cleared.");
+};
+
+document.getElementById("copyBtn").after(resetProgressBtn);
+</script>
+
+<script src="../shared/shell.js"></script><script src="../shared/inbox.js"></script><script src="../shared/session-ui.js"></script><script src="../shared/performance.js"></script></body>
+</html>
