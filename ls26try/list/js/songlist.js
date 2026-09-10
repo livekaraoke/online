@@ -847,14 +847,14 @@ async function saveListSettings() {
   const name = cleanText(input?.value) || DEFAULT_LIST_NAME;
   await db.collection("songlists").doc(MAIN_LIST_ID).set({ name, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
   await initEditor();
-  alert("List settings saved.");
+  await LS26Dialogs.alert("List settings saved.");
 }
 
 async function addSection() {
   const titleInput = document.getElementById("sectionTitleInput");
   const openInput = document.getElementById("sectionOpenInput");
   const title = cleanText(titleInput?.value);
-  if (!title) return alert("Enter a section title.");
+  if (!title) return await LS26Dialogs.alert("Enter a section title.");
   await db.collection("songlistSections").add({
     listId: getActiveRequestListId(), publicSetlistId: selectedPublicSetlist?.id || "", publicSetlistName: selectedPublicSetlist?.name || "",
     title,
@@ -872,7 +872,7 @@ async function addSection() {
 async function renameSection(sectionId, title) {
   const clean = cleanText(title);
   if (!clean) {
-    alert("Section title cannot be empty.");
+    await LS26Dialogs.alert("Section title cannot be empty.");
     return initEditor();
   }
   await db.collection("songlistSections").doc(sectionId).set({ title: clean, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
@@ -895,7 +895,7 @@ async function toggleEditorSectionCollapsed(sectionId, editorCollapsed) {
 }
 
 async function deleteSection(sectionId) {
-  if (!confirm("Delete this section? Songs inside this custom section will be removed from the section only. The main lyrics database will not be touched.")) return;
+  if (!await LS26Dialogs.confirm("Delete this section? Songs inside this custom section will be removed from the section only. The main lyrics database will not be touched.")) return;
   const items = sectionSongs.filter(item => item.sectionId === sectionId);
   for (const item of items) await db.collection("songlistSongs").doc(item.id).delete();
   await db.collection("songlistSections").doc(sectionId).delete();
@@ -905,11 +905,11 @@ async function deleteSection(sectionId) {
 async function addExistingSongToSection(sectionId) {
   const select = document.getElementById(`addSongSelect-${sectionId}`);
   const lyricsId = select?.value;
-  if (!lyricsId) return alert("Choose a song first.");
+  if (!lyricsId) return await LS26Dialogs.alert("Choose a song first.");
   const song = getLyricsSongById(lyricsId);
-  if (!song) return alert("Could not find that song in the lyrics database.");
+  if (!song) return await LS26Dialogs.alert("Could not find that song in the lyrics database.");
   const existing = sectionSongs.some(item => item.sectionId === sectionId && item.lyricsId === lyricsId);
-  if (existing) return alert("That song is already in this section.");
+  if (existing) return await LS26Dialogs.alert("That song is already in this section.");
   await db.collection("songlistSongs").add({
     listId: getActiveRequestListId(), publicSetlistId: selectedPublicSetlist?.id || "", publicSetlistName: selectedPublicSetlist?.name || "",
     sectionId,
@@ -931,7 +931,7 @@ async function toggleSectionSongVisible(entryId, visible) {
 }
 
 async function deleteSectionSong(entryId) {
-  if (!confirm("Remove this song from this custom section?")) return;
+  if (!await LS26Dialogs.confirm("Remove this song from this custom section?")) return;
   await db.collection("songlistSongs").doc(entryId).delete();
   await initEditor();
 }
@@ -1022,9 +1022,9 @@ window.addEventListener("DOMContentLoaded", () => {
   if (signupSubmitBtn) signupSubmitBtn.onclick = submitSongSignup;
 
   if (document.body.dataset.page === "editor") {
-    initEditor().catch(error => {
+    initEditor().catch(async error => {
       console.error(error);
-      alert(error.message || "Error loading editor.");
+      await LS26Dialogs.alert(error.message || "Error loading editor.");
     });
   }
   if (document.body.dataset.page === "public-songlist") {

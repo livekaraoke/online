@@ -754,7 +754,7 @@
   async function openRunOrderSong(itemId) {
     const item = queueItems().find(entry => entry.id === itemId);
     if (!item) return;
-    if(runOrderPlayingItem() && !confirm("Finish the current song and start this one?"))return;
+    if(runOrderPlayingItem() && !await LS26Dialogs.confirm("Finish the current song and start this one?"))return;
 
     const song = findAuthoritativeSongForRunItem(item);
     const songId = song?.id || item.songId || "";
@@ -847,10 +847,12 @@
       "declined"
     ]);
 
+    const previousPositions=new Map([...list.querySelectorAll('[data-ts-run-details]')].map(row=>[row.dataset.tsRunDetails,row.getBoundingClientRect().top]));
     const all=queueItems();
     const current=all.find(x=>x.status==='playing') || [...all].reverse().find(x=>x.status==='played');
     const items=[...(current?[current]:[]),...all.filter(item => item!==current && !terminalStatuses.has(String(item?.status || '').toLowerCase()))];
 
+    const movable=items.filter(x=>!['playing','played'].includes(String(x.status||'').toLowerCase()));
     if ($("tsRunOrderCount")) {
       $("tsRunOrderCount").textContent = `(${items.length})`;
     }
@@ -930,14 +932,21 @@
                   : ""
               }
 
-              <button type="button" data-ts-up="${esc(item.id)}" title="Move up" aria-label="Move song up">↑</button>
-              <button type="button" data-ts-down="${esc(item.id)}" title="Move down" aria-label="Move song down">↓</button>
+              <button type="button" data-ts-up="${esc(item.id)}" ${isPlaying||movable.indexOf(item)<=0?'disabled':''} title="Move up" aria-label="Move song up">↑</button>
+              <button type="button" data-ts-down="${esc(item.id)}" ${isPlaying||movable.indexOf(item)>=movable.length-1?'disabled':''} title="Move down" aria-label="Move song down">↓</button>
               <button type="button" class="abandon" data-ts-abandon-run="${esc(item.id)}" title="Singer left / song abandoned" aria-label="Mark song abandoned">⊘</button>
               <button type="button" class="remove" data-ts-remove="${esc(item.id)}" title="Remove from Run Order" aria-label="Remove song from Run Order">✕</button>
             </div>
           </div>
         `;
       }).join("");
+    // FLIP animation after snapshot rendering; never writes or polls Firebase.
+    if(!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches){
+      list.querySelectorAll('[data-ts-run-details]').forEach(row=>{
+        const old=previousPositions.get(row.dataset.tsRunDetails),delta=old-row.getBoundingClientRect().top;
+        if(Number.isFinite(delta)&&delta)row.animate?.([{transform:`translateY(${delta}px)`,opacity:.65},{transform:'translateY(0)',opacity:1}],{duration:180,easing:'ease-out'});
+      });
+    }
   }
 
 
@@ -1017,18 +1026,20 @@
   }
 
   async function moveRunOrder(itemId,direction) {
-    if(!state.sessionId)return;
+    if(!state.sessionId)throw Error('Start a session before reordering.');
+    const sessionId=state.sessionId;
     const ref=state.db.collection('karaokeControl').doc('runOrder');
-    await state.db.runTransaction(async tx=>{
+    return state.db.runTransaction(async tx=>{
       const snap=await tx.get(ref),data=snap.data()||{};
-      if(data.sessionId!==state.sessionId)throw Error('Session changed. Refresh before reordering.');
+      if(state.sessionId!==sessionId||data.sessionId!==sessionId)throw Error('Session changed. Refresh before reordering.');
       const items=(data.items||[]).map(x=>({...x}));
       const terminal=new Set(['playing','played','abandoned','left','declined','deleted','deletedbyhost']);
       const indexes=items.map((x,i)=>terminal.has(String(x.status||'').toLowerCase())?-1:i).filter(i=>i>=0);
       const at=indexes.findIndex(i=>items[i].id===itemId),to=at+direction;
-      if(at<0||to<0||to>=indexes.length)return;
+      if(at<0||to<0||to>=indexes.length)return false;
       [items[indexes[at]],items[indexes[to]]]=[items[indexes[to]],items[indexes[at]]];
       tx.set(ref,{items,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
+      return true;
     });
   }
 

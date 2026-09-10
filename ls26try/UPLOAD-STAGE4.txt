@@ -1,0 +1,21 @@
+LIVESUITE STAGE4 — UPLOAD / REPLACE
+
+1. Keep a backup of your current ls26/ or ls26try/ directory.
+2. This ZIP includes the full root/ls26/ directory. Copy the files inside it into
+   your existing directory. Do not upload another nested root/ls26/ below it.
+   If your test folder is ls26try/, keep that folder name; relative routes support it.
+3. Preserve any Firebase configuration or other settings you changed independently
+   since the previous package. This update needs no database migration or new rules.
+4. Upload all replacement files together, then reload the tablet page once. Asset
+   URLs carry stage4 versions so earlier cached CSS/JS is not mixed with this patch.
+
+Quick on-device checks before a performance:
+- Filters opens/closes artist/key/genre/decade/sort/BPM controls; Export downloads CSV.
+- Reorder two upcoming songs in both directions; the playing song remains pinned.
+- Projected end edit leaves the start unchanged; open/close requests changes the label.
+- Custom confirmation X cancels; no action should occur merely from dismissing it.
+- Verify sticky header, title/year/original BPM and drawer/dock on your tablet.
+- Play starts scrolling/song; Pause only pauses scrolling. Next Song still opens end cards.
+
+No live Firebase or browser rendering test was performed. Existing authentication,
+Firebase rules and project settings remain authoritative. See VERIFICATION-STAGE4.md.

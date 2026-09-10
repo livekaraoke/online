@@ -1,3 +1,19 @@
+## Stage4 update — 10 September 2026
+
+Filters now toggles the complete filter section, with Export alongside. The navigation,
+LyricView title/metadata, session controls and play icons are updated. All native
+alert/confirm/prompt calls have been replaced with awaited custom dialogs. A persistent
+X closes custom popups without approving pending actions.
+
+Run Order uses transactional moves with boundary/playing controls disabled and a short
+reorder animation. Session status permits editing only the projected end. Request
+availability displays an explicit open/closed status from the existing listener.
+
+This package contains the complete `root/ls26/` directory. Copy its contents over your
+existing `ls26/` (or `ls26try/`) directory, preserving your selected Firebase project and
+any deployment-specific configuration. Shared assets are versioned `20260910-stage4`.
+See UPLOAD-STAGE4.txt for installation and testing instructions.
+
 ## Stage3 usability patch
 
 Library now fits the available viewport and scrolls its song list. Session-setlist selection displays its name. The session panels and performance controls have larger, clearer typography. A searchable cached session-setlist popup replaces Run Order's Add dropdown.

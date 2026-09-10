@@ -132,8 +132,8 @@
       render();
     });
 
-    $("clearBtn").addEventListener("click", () => {
-      if (!confirm("Clear the local DB activity history in this browser? This does not delete anything from Firestore.")) return;
+    $("clearBtn").addEventListener("click", async () => {
+      if (!await LS26Dialogs.confirm("Clear the local DB activity history in this browser? This does not delete anything from Firestore.")) return;
       api?.clear?.();
       render();
     });

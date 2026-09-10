@@ -209,3 +209,25 @@ Verification: 221 script/inline syntax units and local entry assets passed;
 isolated cache/Inbox/filter/queue/timer/navigation tests passed. 120 timing ticks
 made zero DB accesses and did not rewrite venue/schedule strings. Notes retain
 five-second save debounce. Browser/device/live Firebase verification outstanding.
+
+2026-09-10 STAGE4 — FILTERS, SESSION ACTIONS, TITLE AND DIALOGS
+ADDED shared/dialogs.js + dialogs.css: async alert/confirm/prompt, safe cancellation,
+sticky X for existing custom dialogs. Native calls migrated with await; no global
+synchronous confirm override. All HTML entry points load the shared module.
+CHANGED Library: one collapsible filter panel, locally retained open/closed state,
+Export beside Filters (existing CSV export retained), centered SVG play icon.
+CHANGED Session: projected end-only editor (start preserved), smaller songlist
+name, explicit request-open state from existing snapshot, icon lifecycle actions,
+visible expanded-panel boundary. No additional Firebase subscriptions.
+CHANGED Run Order: boundary/playing arrows disabled, explicit transaction result,
+active-session race guard and 180ms snapshot-driven reorder animation. Reduced
+motion respected. Playing/finished history remains pinned and cannot reorder.
+CHANGED LyricView: removed EXIT and duplicate quick Edit/original BPM fields;
+original BPM moved into title in orange, with year/artist; compact right-aligned
+Tempo/Key/Capo/Time. Primary Edit action preserved. Play/pause uses centered SVG.
+CHANGED navigation: grouped right beside Host Mode; larger gear/profile icon,
+cyan separators; smaller footer logos. Consolidated old navigation/Transpose CSS.
+VERIFIED queue, filters, cache/Inbox, clock, section navigation, dialog cancellation,
+and end-only save using fixtures. No live Firebase or browser visual test.
+New named functions: dialogs.js ask, enhance, scan. Removed visible controls are
+intentional; their old guarded bindings are harmless to preserved engine paths.

@@ -8,6 +8,7 @@
   const scriptElement = document.currentScript;
 
   let currentSession = null;
+  let requestsEnabled = null;
   let currentRequests = [];
   let notifications = [];
 
@@ -254,6 +255,7 @@
 
           const isLive = data.isLive === true;
           const songsEnabled = data.songsEnabled === true;
+          if(requestsEnabled!==songsEnabled){requestsEnabled=songsEnabled;window.dispatchEvent(new Event('ls26:requests-gate'));}
 
           setText(
             "tsLiveLabel",
@@ -591,7 +593,7 @@
       return;
     }
 
-    if(!confirm(currentSession.breakOpen?"Resume this session?":"Start a break?"))return;
+    if(!await LS26Dialogs.confirm(currentSession.breakOpen?"Resume this session?":"Start a break?"))return;
     breakActionRunning = true;
     renderBreakStatus();
 
@@ -1155,6 +1157,7 @@
   window.LK = window.LK || {};
 
   window.LK.topStatus = {
+    getRequestsEnabled: () => requestsEnabled,
     loadTopStatusBar,
     toggle,
     toggleBreak,

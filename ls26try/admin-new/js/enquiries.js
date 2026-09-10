@@ -62,7 +62,7 @@
   }
   async function setStatus(id,status){
     if(!db||!id)return;
-    try{await db.collection(COLLECTION).doc(id).set({status,updatedAt:firebase.firestore.FieldValue.serverTimestamp(),completedAt:status==="completed"?firebase.firestore.FieldValue.serverTimestamp():null,completedBy:status==="completed"?(firebase.auth().currentUser?.email||""):""},{merge:true});}catch(err){console.error(err);alert("Could not update enquiry status.");}
+    try{await db.collection(COLLECTION).doc(id).set({status,updatedAt:firebase.firestore.FieldValue.serverTimestamp(),completedAt:status==="completed"?firebase.firestore.FieldValue.serverTimestamp():null,completedBy:status==="completed"?(firebase.auth().currentUser?.email||""):""},{merge:true});}catch(err){console.error(err);await LS26Dialogs.alert("Could not update enquiry status.");}
   }
   function bind(){
     $("enquirySearch").addEventListener("input",render);$("enquiryStatusFilter").addEventListener("change",render);$("refreshEnquiriesBtn").addEventListener("click",render);
