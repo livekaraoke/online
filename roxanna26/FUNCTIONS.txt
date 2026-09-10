@@ -1,0 +1,31 @@
+ROXANNA26 — FUNCTION REGISTER
+Copyright © 2026 Roxanna. Created 2026-09-10.
+Baseline: uploaded online-main(8).zip, roxanna visual assets and billylee26 flows.
+
+index.html: band home, repertoire, live player, gigs, media, booking and dialogs.
+css/style.css: unified gold/black styling, original hero, responsive cards/dialogs.
+js/config.js: dedicated Roxanna setlist mapping, media and public social links.
+js/policy.js: strict act classification, session identity and queue isolation.
+js/firebase-config.js + db/: preserved existing project selection/initialization.
+js/hero-slideshow.js + assets/herophotos/photos.js: preserved band-photo slideshow;
+  hidden-tab/reduced-motion pause; empty image requests removed.
+js/app.js: BillyLee26 public flows adapted to Roxanna:
+  listenEvents, syncLive, attachSessionDoc, listenLiveState — filtered snapshots,
+  lazy queue subscription, fail-closed errors, cleanup on navigation.
+  loadPublicSongs — dedicated repertoire, coalesced cache, no global fallback.
+  renderLive, renderHeroGig, renderEvents — Roxanna-only show and event rendering.
+  openRequestDialog, enterSongRequestStep, selectRequestSong, sendSelectedRequest —
+  named single-song confirmation, note, transactional active-act/gate validation.
+  renderMyRequests, clearRequestListeners — scoped status tracking, no reattachment
+  on unchanged ID sets, current-session-only local history.
+  showEventDetails, showCurrentEvent, showAllGigs — venue metadata cache and gigs.
+  submitBookingEnquiry — existing Admin collection with Roxanna classification.
+  renderVideos, openVideo, closeVideoPlayer — configurable Roxanna-only media.
+  renderAllPhotos, openPhoto, stepPhoto — local band gallery and lightbox.
+  renderRepertoire, toast — offline repertoire browse and custom status messages.
+
+Intentionally not carried across: Billy Lee images/videos/biography and mixed-act
+calendar/live fallback. Original cart replaced by requested BillyLee26 single-song
+flow. Original all-lyrics fetch removed in favour of dedicated setlist ID reads.
+No original source directory or database data modified. Append changes here after
+reviewing actual code and callers. Validation details are in README.md.
