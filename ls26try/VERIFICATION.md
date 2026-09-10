@@ -1,11 +1,18 @@
-# Verification — 2026-09-10
+# Visual correction verification — 2026-09-10
 
-- Node syntax checks: 219 script files / inline units passed.
-- Local script and stylesheet references on eight entry pages: passed.
-- Data/Inbox fixtures: shared in-flight reads, cache refresh, normalized duplicate counts, session/venue capture, offline drafts and retained-ID retry passed.
-- Queue fixtures: atomic/idempotent acceptance, pinned current song, upcoming reorder and foreign-session rejection passed.
-- New launcher routes point to included pages. Player, Request Form and Venue Display remain explicitly future features.
+Passed:
+- 220 JavaScript files/inline script units checked with Node syntax validation.
+- Local scripts/styles referenced by eight entry pages resolve.
+- Library entry and LyricView markup have no duplicate static IDs.
+- BPM range with original-BPM fallback, decade, genre, manual/session setlists and favourites tested in isolation.
+- Library queue addition and session mismatch guard; existing atomic request acceptance and reorder checks.
+- Existing cache, normalized Inbox capture and retained-draft retry checks.
 
-Automatic approval review rejected the local browser preview. No alternate browser access was attempted. Visual fidelity, tablet touch behaviour, live authentication/rules/indexes, cross-device operation, requester-side reason display and complete inherited feature regression remain unverified. Tests use in-memory fixtures; they are not Firestore emulator or production tests. No live Firebase writes were performed.
+No live Firebase was read or changed. Browser preview was previously rejected by automatic approval review; this patch has not been browser-rendered or tested on a tablet. Static/isolated tests do not certify visual pixel matching, real authentication/rules, all inherited functionality or multi-device behaviour. These checks must be distinguished from full browser regression testing.
 
-Review FIREBASE-SETUP.md before enabling Song Inbox. Keep the original livesuite available until real-device acceptance is complete.
+Run locally with Node:
+```
+node verification/library-filters.cjs
+node verification/queue-workflows.cjs
+node verification/data-and-inbox.cjs
+```

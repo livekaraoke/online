@@ -1600,6 +1600,13 @@
     },1000);
   }
 
+  // Shared Library enqueue command: one transaction, no extra subscriptions.
+  LK.sessionTools.enqueueSong = async song => {
+    const sessionId=state.sessionId;if(!sessionId)throw new Error('Start a session before adding songs to Run Order.');
+    const ref=state.db.collection('karaokeControl').doc('runOrder');
+    const item={id:'manual_'+Date.now()+'_'+Math.random().toString(36).slice(2,8),songId:song.firebaseId,songTitle:song.title||'',artist:song.artist||'',singerName:'',requestId:'',source:'manual',status:'queued',addedAtMs:Date.now()};
+    await state.db.runTransaction(async tx=>{const snap=await tx.get(ref),data=snap.data()||{};if(state.sessionId!==sessionId)throw new Error('Session changed. Please try again.');if(data.sessionId&&data.sessionId!==sessionId)throw new Error('Run Order belongs to another session. Open Admin to initialize the current session.');tx.set(ref,{sessionId,items:[...(data.items||[]),item],updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});});
+  };
   LK.sessionTools.getControl = () => state.currentControl;
   LK.sessionTools.getRunOrderSnapshot = () => state.runOrderSnapshotReady ? state.runOrder : null;
   LK.sessionTools.getRequests = () => state.requests.map(x=>({...x}));

@@ -10,6 +10,8 @@
   let visibleSongs = [];
   let selectedIndex = -1;
   let nextRunOrderItem = null;
+  let selectedId = "";
+  let scope = new URLSearchParams(location.search).get("view")==="setlist" ? "session" : "all";
   let songsUnsub = null;
   let setlistsUnsub = null;
 
@@ -36,6 +38,8 @@
       sort: filters.sort?.value || "title",
       setlist: filters.setlist?.value || "",
       stickyFavs: $("stickyFavToggle")?.checked || false,
+      genre: filters.genre.value, decade: filters.decade.value, bpmMin: filters.bpmMin.value, bpmMax: filters.bpmMax.value, scope, selectedId,
+      listScroll: $("songRows").scrollTop,
       scrollY: Math.max(0, window.scrollY || 0)
     };
   }
@@ -50,6 +54,9 @@
 
   function applyImmediateRestoredState() {
     restoredState = readViewState();
+    scope = new URLSearchParams(location.search).get("view")==="setlist" ? "session" : (restoredState.scope||"all");
+    selectedId=restoredState.selectedId||"";
+    filters.bpmMin.value=restoredState.bpmMin||"";filters.bpmMax.value=restoredState.bpmMax||"";
 
     if (restoredState.sidebarCollapsed) {
       $("libraryShell")?.classList.add("sidebar-collapsed");
@@ -68,6 +75,7 @@
 
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
+        $("songRows").scrollTop=Number(restoredState.listScroll)||0;
         window.scrollTo({
           top: Number(restoredState.scrollY) || 0,
           left: 0,
@@ -94,7 +102,7 @@
     visibility: $("visibilityFilter"),
     content: $("contentFilter"),
     sort: $("sortSelect"),
-    setlist: $("setlistFilter")
+    setlist: $("setlistFilter"), genre:$("genreFilter"), decade:$("decadeFilter"), bpmMin:$("bpmMin"), bpmMax:$("bpmMax")
   };
 
   function saveFavourites() {
@@ -130,6 +138,7 @@
         };
       });
 
+      populateExtraFilters();
       populateFilters();
       populateSetlists();
       render();
@@ -153,7 +162,7 @@
     );
 
     filters.setlist.innerHTML =
-      '<option value="">All Setlists / Songs</option>' +
+      '<option value="">Choose setlist</option>' +
       ordered.map(setlist => `
         <option value="${LyricsCommon.escapeHTML(setlist.id)}">
           ${LyricsCommon.escapeHTML(setlist.name || "Untitled Setlist")}
@@ -196,6 +205,13 @@
       : "";
   }
 
+  // All filtering is performed against the already loaded library; no new reads.
+  function genres(song){return (Array.isArray(song.genres)?song.genres:String(song.genre||song.genres||'').split(',')).map(x=>String(x).trim()).filter(Boolean);}
+  function populateExtraFilters(){
+    const entries=[['genre',[...new Set(songs.flatMap(genres))].sort(),'All genres'],['decade',[...new Set(songs.map(x=>Math.floor(Number(x.year)/10)*10).filter(x=>x>=1900&&x<=2100))].sort((a,b)=>a-b),'All decades']];
+    entries.forEach(([key,values,label])=>{const current=filters[key].value||restoredState?.[key]||'';filters[key].innerHTML='<option value="">'+label+'</option>'+values.map(v=>'<option value="'+LyricsCommon.escapeHTML(v)+'">'+LyricsCommon.escapeHTML(v)+(key==='decade'?'s':'')+'</option>').join('');filters[key].value=values.some(v=>String(v)===String(current))?current:'';});
+  }
+
   function filteredSongs() {
     const query = filters.search.value.toLowerCase().trim();
     const chosenSetlist = setlists.find(
@@ -205,7 +221,7 @@
       ? new Set(chosenSetlist.songIds)
       : null;
 
-    if(new URLSearchParams(location.search).get('view')==='setlist'){
+    if(scope==='session'){
       const session=window.LK?.sessionTools?.getSession?.();
       const publicList=window.LK?.sessionTools?.getPublicList?.()||{};
       const selected=setlists.find(x=>x.id===(session?.setlistId||session?.publicSetlistId||publicList.setlistId));
@@ -214,7 +230,7 @@
     let list = songs.filter(song => {
       const matchesSearch =
         !query ||
-        `${song.title} ${song.artist} ${song.key} ${song.year}`
+        `${song.title} ${song.artist} ${song.key} ${song.year} ${song.sections.map(s=>s.content||s.html||s.text||" ").join(" ")}`
           .toLowerCase()
           .includes(query);
 
@@ -239,7 +255,12 @@
       const matchesSetlist =
         !allowedIds || allowedIds.has(song.firebaseId);
 
-      return matchesSearch &&
+      const bpm=Number(song.userBpm||song.originalBpm)||0;
+      const extra=(!filters.genre.value||genres(song).includes(filters.genre.value)) &&
+        (!filters.decade.value||Math.floor(Number(song.year)/10)*10===Number(filters.decade.value)) &&
+        (!filters.bpmMin.value||bpm>=Number(filters.bpmMin.value)) && (!filters.bpmMax.value||(bpm>0&&bpm<=Number(filters.bpmMax.value))) &&
+        (scope!=='favourites'||favourites.has(song.firebaseId));
+      return extra && matchesSearch &&
         matchesArtist &&
         matchesKey &&
         matchesVisibility &&
@@ -323,11 +344,11 @@
       }
 
       const row = document.createElement("div");
-      row.className = "song-table-row";
+      row.className = "song-table-row"+(song.firebaseId===selectedId?" is-selected":"");
       row.dataset.id = song.firebaseId;
 
       row.innerHTML = `
-        <span class="song-number">${index + 1}</span>
+
 
         <button
           class="star-btn ${favourites.has(song.firebaseId) ? "active" : ""}"
@@ -339,24 +360,21 @@
 
         <button
           class="song-title-cell"
-          data-open="${song.firebaseId}"
+          data-select="${song.firebaseId}"
           type="button">
           <strong>${LyricsCommon.escapeHTML(song.title)}</strong>
-          <small>${LyricsCommon.escapeHTML(song.artist)}</small>
+          <small>${LyricsCommon.escapeHTML(song.artist)}${song.year ? " · "+LyricsCommon.escapeHTML(song.year) : ""}</small>
         </button>
-
-        <span class="song-artist-cell">
-          ${LyricsCommon.escapeHTML(song.artist)}
-        </span>
 
         <strong class="key-cell">
           ${LyricsCommon.escapeHTML(song.key || "—")}
         </strong>
 
         <span class="bpm-cell">
-          ${LyricsCommon.escapeHTML(song.userBpm || "—")}
+          ${LyricsCommon.escapeHTML(song.userBpm || song.originalBpm || "—")}
         </span>
 
+        <span class="capo-cell">${LyricsCommon.escapeHTML(song.capo || "0")}</span>
         <span class="row-actions">
           <button
             class="row-play-btn"
@@ -366,12 +384,7 @@
             ▶
           </button>
 
-          <a
-            class="row-edit-btn"
-            href="lyricscreator.html?firebaseId=${encodeURIComponent(song.firebaseId)}"
-            title="Edit song">
-            ✎
-          </a>
+          <button class="row-queue-btn" data-queue="${song.firebaseId}" type="button" title="Add to Run Order">＋ Queue</button>
         </span>
       `;
 
@@ -384,6 +397,8 @@
     }
 
     renderAlphabetNav(groups);
+    updateSelected();
+    document.querySelectorAll("[data-scope]").forEach(b=>b.classList.toggle("active",b.dataset.scope===scope));
     selectedIndex = Math.min(selectedIndex, visibleSongs.length - 1);
 
     restoreScrollWhenReady();
@@ -511,7 +526,7 @@
 
   function openSong(id) {
     saveViewState();
-    window.location.href = `lyricview.html?id=${encodeURIComponent(id)}`;
+    window.location.href = LS26.url(`host/lyricview.html?id=${encodeURIComponent(id)}`);
   }
 
   function selectRelative(delta) {
@@ -525,8 +540,7 @@
       )
     );
 
-    $("selectedSongLabel").textContent =
-      `${visibleSongs[selectedIndex].title} — ${visibleSongs[selectedIndex].artist}`;
+    selectedId=visibleSongs[selectedIndex].firebaseId;updateSelected();
   }
 
   function exportCSV() {
@@ -559,15 +573,19 @@
     URL.revokeObjectURL(link.href);
   }
 
-  function syncSidebarButton() {
-    const collapsed = $("libraryShell").classList.contains("sidebar-collapsed");
-    const button = $("sidebarToggleBtn");
-
-    button.setAttribute("aria-expanded", String(!collapsed));
-    button.classList.toggle("active", !collapsed);
-  }
+  function syncSidebarButton(){const open=!$("librarySidebar").hidden;$("sidebarToggleBtn").setAttribute('aria-expanded',String(open));}
+  function updateSelected(){const song=songs.find(x=>x.firebaseId===selectedId);$("ls26SelectedTitle").textContent=song?`${song.title} — ${song.artist}`:'Select a song';$("ls26OpenSelected").disabled=!song;$("ls26QueueSelected").disabled=!song;document.querySelectorAll('.song-table-row').forEach(x=>x.classList.toggle('is-selected',x.dataset.id===selectedId));}
+  async function queueSong(id,button){const song=songs.find(x=>x.firebaseId===id);if(!song)return;button.disabled=true;try{await LK.sessionTools.enqueueSong(song);window.LS26.toast('Added to Run Order');}catch(error){window.LS26.toast(error.message);}finally{button.disabled=false;}}
+  $("ls26OpenSelected").onclick=()=>selectedId&&openSong(selectedId);
+  $("ls26QueueSelected").onclick=e=>queueSong(selectedId,e.currentTarget);
+  document.querySelectorAll('[data-scope]').forEach(button=>button.onclick=()=>{scope=button.dataset.scope;filters.setlist.value='';render();saveViewState();});
+  filters.setlist.addEventListener('change',()=>{scope='all';render();saveViewState();});
+  document.querySelectorAll('[data-bpm]').forEach(button=>button.onclick=()=>{const [id,delta]=button.dataset.bpm.split(':');const input=$(id);input.value=Math.max(0,Math.min(400,(Number(input.value)||100)+Number(delta)));input.dispatchEvent(new Event('input'));});
+  $("songRows").addEventListener('scroll',saveViewState,{passive:true});
 
   document.addEventListener("click", event => {
+    const queue=event.target.closest('[data-queue]');if(queue){queueSong(queue.dataset.queue,queue);return;}
+    const select=event.target.closest('[data-select]');if(select){selectedId=select.dataset.select;updateSelected();saveViewState();return;}
     const open = event.target.closest("[data-open]");
     if (open) {
       openSong(open.dataset.open);
@@ -592,10 +610,9 @@
       const targetId =
         `letter-${letter.dataset.letter === "#" ? "number" : letter.dataset.letter}`;
 
-      document.getElementById(targetId)?.scrollIntoView({
-        behavior: "smooth",
-        block: "start"
-      });
+      const target=document.getElementById(targetId),list=$("songRows");
+      if(target)list.scrollTo({top:target.getBoundingClientRect().top-list.getBoundingClientRect().top+list.scrollTop,behavior:'smooth'});
+      document.querySelectorAll('[data-letter]').forEach(x=>x.classList.toggle('active',x===letter));
     }
   });
 
@@ -622,11 +639,12 @@
     filters.content.value = "";
     filters.setlist.value = "";
     filters.sort.value = "title";
+    filters.genre.value="";filters.decade.value="";filters.bpmMin.value="";filters.bpmMax.value="";scope="all";$("stickyFavToggle").checked=false;
     render();
     saveViewState();
   };
 
-  $("refreshBtn").onclick = loadData;
+  $("refreshBtn").onclick = ()=>{LS26Data.invalidate("lyrics");LS26Data.invalidate("lyricsSetlists");loadData();};
   $("exportBtn").onclick = exportCSV;
   $("playSelectedBtn").onclick = () => {
     if (!nextRunOrderItem?.songId) return;
@@ -640,7 +658,8 @@
       params.set("requestId", nextRunOrderItem.requestId);
     }
 
-    location.href = `lyricview.html?${params.toString()}`;
+    params.set("play","1");
+    location.href = LS26.url(`host/lyricview.html?${params.toString()}`);
   };
 
   $("openRunOrderBtn").onclick = openRunOrderPanel;
@@ -650,7 +669,7 @@
   });
 
   $("sidebarToggleBtn").onclick = () => {
-    $("libraryShell").classList.toggle("sidebar-collapsed");
+    $("librarySidebar").hidden=!$("librarySidebar").hidden;
     syncSidebarButton();
     saveViewState();
   };

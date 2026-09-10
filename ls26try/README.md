@@ -1,3 +1,9 @@
+## Visual correction — visual2
+
+Library now uses a dedicated stylesheet and inline filters matching the supplied reference. Navigation and session share a sticky wrapper; the session panel expands to a taller scrollable area. Song actions, transpose drawer and logos were corrected. Library filtering stays local and row Queue uses an active-session transaction. URLs work when the folder is named `ls26try` as well as `ls26`.
+
+Replace files using the accompanying upload guide. No Firebase configuration replacement or database migration is needed for this visual patch. Existing Song Inbox rules requirements still apply. Browser rendering has not been verified, so exact visual equivalence is not certified.
+
 # LiveSuite LS26
 
 Implementation package based on the supplied `livesuite(1).rar` archive. Upload the **ls26 directory** alongside the existing livesuite directory in your GitHub Pages repository. Open `ls26/index.html` (or `/online/ls26/index.html` when the repository is served under `/online/`). No build step is needed. Keep the old livesuite directory available during acceptance testing.

@@ -168,3 +168,23 @@ shared/shell.js
 
 verification/firebase-fixture.js
   emit
+
+2026-09-10 — VISUAL CORRECTION, revision visual2
+Rebuilt Library markup and its dedicated shared/library.css; removed legacy
+Library CSS imports to eliminate the red/black layout. Retained existing
+library data engine, favourites, CSV, visibility/content filters and editor links.
+Added local genre/decade/BPM filters, favourite/session scopes, manual setlist
+selector, year/capo columns, selection card, scrolling alphabet navigation.
+Library Play opens LyricView; Next in Run Order play starts the queued song.
+Added sessionTools.enqueueSong: transactional Library queue addition, active
+session required, prevents cross-session writes. No new listeners.
+Shared shell creates ls26StickyHeader outside legacy host title wrapper:
+navigation and session stay sticky together; folder name is not hardcoded.
+Corrected logo CSS background reset and increased expanded session panel height.
+Reworked performance action row and transpose controls, retaining original
+chord/tab algorithms, independent legacy controls in Song Info, and capo tools.
+Play/Pause, section navigation, karaoke, notes and end cards keep their engines.
+New helpers: genres, populateExtraFilters, updateSelected, queueSong, enqueueSong.
+Changed setup/syncSidebarButton/render/filteredSongs and navigation mount.
+Tests: library-filters.cjs, queue-workflows.cjs, data-and-inbox.cjs; syntax/static
+asset checks. Browser visual fidelity and live Firebase remain unverified.

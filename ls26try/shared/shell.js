@@ -16,14 +16,17 @@
   function mount(){
     if(document.body.dataset.ls26Mounted)return;document.body.dataset.ls26Mounted='true';
     const isLyric=location.pathname.endsWith('/lyricview.html');
-    const isLibrary=location.pathname.endsWith('/lyricsviewer.html')||location.pathname.endsWith('/ls26/library.html');
+    const isLibrary=location.pathname.endsWith('/lyricsviewer.html')||location.pathname.endsWith('/library.html');
     const tab=params.get('view')==='setlist'?'Setlist':isLibrary?'Library':isLyric?'LyricView':location.pathname.endsWith('/requests.html')?'Requests':'';
     const nav=document.createElement('nav');nav.className='ls26-nav';nav.setAttribute('aria-label','LiveSuite navigation');
-    nav.innerHTML=`<a class="ls26-brand" href="${url('library.html')}" aria-label="LiveSuite Library"></a>${[['Library','library.html'],['LyricView','host/lyricview.html'],['Setlist','library.html?view=setlist'],['Requests','requests.html']].map(([label,path])=>`<a ${label==='LyricView'?'id="ls26LyricLink"':''} class="${label===tab?'active':''}" href="${url(path)}">${label}</a>`).join('')}<button id="ls26InboxOpen" type="button">▣ INBOX</button><a href="${url('admin-new/admin.html')}" aria-label="Admin dashboard">⚙</a><a class="ls26-host" href="${url('admin-new/admin.html')}">◉ Host Mode</a>`;
-    const stack=$('hostStickyStack');(stack||document.body).prepend(nav);
+    nav.innerHTML=`<a class="ls26-brand" href="${url('library.html')}" aria-label="LiveSuite Library"></a>${[['Library','library.html','♫'],['LyricView','host/lyricview.html','▣'],['Setlist','library.html?view=setlist','☷'],['Requests','requests.html','♟']].map(([label,path,icon])=>`<a ${label==='LyricView'?'id="ls26LyricLink"':''} class="${label===tab?'active':''}" href="${url(path)}"><span class="ls26-nav-icon" aria-hidden="true">${icon}</span>${label}</a>`).join('')}<button id="ls26InboxOpen" type="button">▣ INBOX</button><a href="${url('admin-new/admin.html')}" aria-label="Admin dashboard">⚙</a><a class="ls26-host" href="${url('admin-new/admin.html')}"><span class="ls26-user-icon">●</span><span>Host Mode<small>Sing. Play. Repeat.</small></span></a>`;
+    let stack=$('ls26StickyHeader');
+    if(!stack){stack=document.createElement('div');stack.id='ls26StickyHeader';document.body.prepend(stack);}
+    stack.append(nav);const status=$('topStatusContainer');if(status)stack.append(status);
+    new ResizeObserver(()=>document.documentElement.style.setProperty('--ls-header-h',stack.getBoundingClientRect().height+'px')).observe(stack);
     $('ls26InboxOpen').onclick=openInbox;
     $('ls26LyricLink').onclick=e=>{e.preventDefault();const items=window.LK?.sessionTools?.getRunOrder?.()||[];const song=items.find(i=>i.status==='playing');const target=song?.songId?url('host/lyricview.html?id='+encodeURIComponent(song.songId)+(song.requestId?'&requestId='+encodeURIComponent(song.requestId):'')):sessionStorage.getItem('ls26:lastSong');if(target)location.href=target;else toast('Choose a song in Library first.');};
-    if(isLibrary){const refresh=document.createElement('button');refresh.id='ls26RefreshLibrary';refresh.className='ls26-button';refresh.textContent='Refresh Library';nav.after(refresh);refresh.onclick=()=>{LS26Data.invalidate('lyrics');LS26Data.invalidate('lyricsSetlists');location.reload();};}
+
 
     if(location.pathname.includes('/admin-new/'))document.body.classList.add('ls26-admin');
     const foot=document.createElement('footer');foot.className='ls26-footer';foot.innerHTML='<div class="ls26-brand" role="img" aria-label="LiveSuite — Live Performance OS"></div>';document.body.append(foot);
