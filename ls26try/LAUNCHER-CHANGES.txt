@@ -1,0 +1,6 @@
+2026-09-10 — Choose-mode page redesign
+index.html: five existing mode destinations preserved; semantic full-card links and decorative inline SVG icons; no scripts or Firebase calls.
+shared/launcher.css: replaced previous launcher styles with self-contained navy/cyan portrait layout, full-width green Lyricsuite card, mobile stacking, keyboard focus and reduced-motion handling.
+assets/livesuite-brand.png: unchanged existing brand image, included for completeness. Horizontal lockup displayed using CSS cropping.
+No dashboard, venue, singer, player or library logic changed. Player still opens its existing Coming Soon page.
+Verified: all five links resolve in the supplied website; local assets exist; no JavaScript or database dependencies. Browser appearance and signed-in workflows were not tested.

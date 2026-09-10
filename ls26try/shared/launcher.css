@@ -1,3 +1,64 @@
 /* Copyright © 2026 LiveSuite. All rights reserved.
- * Mode launcher layout, using the shared blue theme and brand asset. */
-.ls26-launcher{margin:0;min-height:100dvh;display:grid;place-items:center;background:radial-gradient(ellipse at top,#092d40,var(--ls-bg) 70%)!important}.ls26-launcher main{width:min(760px,94vw);padding:24px}.ls26-launcher-brand{width:min(520px,100%);height:140px;background:var(--ls-logo) center 26%/100% auto no-repeat;margin:0 auto 24px}.ls26-launcher h1{text-align:center;font-size:24px;color:var(--ls-muted);font-weight:normal;margin:0 0 30px}.ls26-mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.ls26-mode-grid a{min-height:158px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:var(--ls-panel);border:1px solid var(--ls-border);border-radius:12px;color:var(--ls-text);text-decoration:none}.ls26-mode-grid a:hover,.ls26-mode-grid a:focus-visible{border-color:var(--ls-accent);background:var(--ls-soft)}.ls26-mode-grid a>span{font-size:32px;color:var(--ls-accent)}.ls26-mode-grid strong{font-size:21px}.ls26-mode-grid small{color:var(--ls-muted);font-size:15px}.ls26-mode-grid .lyricsuite{grid-column:1/-1;min-height:115px;border-color:var(--ls-success)}.ls26-mode-grid .lyricsuite>span{color:var(--ls-success)}@media(max-width:500px){.ls26-launcher main{padding:14px}.ls26-launcher-brand{height:95px}.ls26-mode-grid{gap:10px}.ls26-mode-grid strong{font-size:17px}.ls26-mode-grid a{min-height:140px}}
+ * Choose-mode screen: portrait reference layout, responsive cards and local logo.
+ * This stylesheet is self-contained so it cannot alter other LiveSuite pages.
+ */
+:root{color-scheme:dark;--ink:#f6f8fb;--muted:#aac8e6;--cyan:#00ceff;--green:#00eda1;--line:#17516c}
+*{box-sizing:border-box}
+body.ls26-launcher{margin:0;min-height:100svh;background:radial-gradient(ellipse at 50% 0%,#03405a70,transparent 44%),radial-gradient(ellipse at 46% 68%,#00314728,transparent 65%),#00111c;color:var(--ink);font-family:Arial,Helvetica,sans-serif;-webkit-font-smoothing:antialiased}
+.ls26-launcher main{width:min(934px,calc(100% - 90px));margin:auto;padding:100px 0 80px}
+.launcher-heading{text-align:center}
+/* The existing brand sheet is cropped in CSS to its upper horizontal lockup. */
+.launcher-brand{width:min(740px,90%);height:auto;aspect-ratio:4.15;margin:0 auto;background:url('../assets/livesuite-brand.png') center 25.4%/105.2% auto no-repeat;mask-image:linear-gradient(to right,transparent,#000 3%,#000 97%,transparent);-webkit-mask-image:linear-gradient(to right,transparent,#000 3%,#000 97%,transparent)}
+h1{font-size:60px;line-height:1.15;letter-spacing:-1.8px;margin:35px 0 84px;font-weight:750}
+.mode-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:21px}
+.mode-card{min-width:0;display:flex;flex-direction:column;padding:44px 31px 21px;border:1px solid #186080;border-radius:18px;background:linear-gradient(120deg,#00223563,#00121d40);color:var(--ink);text-decoration:none;min-height:314px;transition:border-color .18s,box-shadow .18s,background .18s;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.mode-host{border-color:var(--cyan);box-shadow:inset 0 0 22px #00cfff0a,0 0 16px #00cfff0a}
+.mode-main{display:flex;align-items:center;gap:27px;flex:1;padding-bottom:38px}
+.mode-icon{flex-shrink:0;width:126px;height:126px;border:1.5px solid var(--cyan);border-radius:50%;display:grid;place-items:center;color:var(--cyan);background:radial-gradient(circle,#00314755,transparent 68%);box-shadow:inset 0 0 14px #00cfff20,0 0 18px #00cfff18}
+.mode-icon svg{width:64px;height:68px;fill:none;stroke:currentColor;stroke-width:2.8;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 5px #00cfff35)}
+.mode-copy{min-width:0}
+.mode-copy h2{font-size:29px;line-height:1.15;letter-spacing:-.7px;margin:0 0 16px;font-weight:750}
+.mode-copy p{font-size:23px;line-height:1.38;color:var(--muted);margin:0;font-weight:400}
+.mode-action{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:79px;padding-top:19px;border-top:1px solid #164356;color:var(--cyan);font-size:23px;font-weight:600}
+.mode-venue .mode-action{color:var(--muted)}
+.mode-arrow{width:58px;height:58px;border:1.5px solid var(--cyan);border-radius:50%;display:grid;place-items:center;flex-shrink:0;color:var(--cyan);box-shadow:inset 0 0 12px #00cfff12,0 0 10px #00cfff10}
+.mode-arrow svg{width:32px;height:32px;fill:none;stroke:currentColor;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+/* Player keeps its existing information-page link while clearly marked forthcoming. */
+.mode-player{border-color:#204557;color:#b6c7d9;background:#00131e50}
+.mode-player .mode-copy p{color:#678ba8}
+.mode-player .mode-icon{color:#33749e;border-color:#427998;box-shadow:none;background:transparent}
+.mode-player .mode-icon svg{filter:none}
+.coming-soon{display:inline-flex;align-items:center;min-height:47px;padding:10px 25px;border:1px solid #244456;border-radius:24px;background:linear-gradient(#0c2738,#031723);font-size:18px;color:#87b2d3;letter-spacing:1px;font-weight:400}
+.mode-lyrics{grid-column:1/-1;flex-direction:row;align-items:center;gap:38px;margin-top:7px;min-height:215px;padding:30px 31px;border-color:var(--green);background:linear-gradient(110deg,#00352648,#002d2430);box-shadow:inset 0 0 22px #00eda108}
+.mode-lyrics .mode-icon{width:154px;height:154px;border-color:var(--green);color:var(--green);box-shadow:inset 0 0 18px #00eda114,0 0 20px #00eda115;background:radial-gradient(circle,#003c2d60,transparent 70%)}
+.mode-lyrics .mode-icon svg{width:88px;height:88px;stroke-width:2;filter:drop-shadow(0 0 5px #00eda122)}
+.mode-lyrics .mode-copy{flex:1}
+.mode-lyrics h2{font-size:36px;margin-bottom:12px}
+.mode-lyrics .mode-arrow{width:92px;height:92px;border-color:var(--green);color:var(--green);box-shadow:inset 0 0 18px #00eda112,0 0 20px #00eda112}
+.mode-lyrics .mode-arrow svg{width:43px;height:43px;stroke-width:3}
+.mode-card:hover{border-color:var(--cyan);background-color:#06304650;box-shadow:0 0 24px #00cfff12}
+.mode-lyrics:hover{border-color:var(--green);background-color:#003c2c50}
+.mode-card:focus-visible{outline:3px solid var(--ink);outline-offset:5px}
+.launcher-footer{display:flex;align-items:center;gap:34px;margin-top:79px;color:#89c6f0;font-size:20px;letter-spacing:4px;white-space:nowrap}
+.launcher-footer::before,.launcher-footer::after{content:'';height:1px;background:#1a5670;flex:1}
+/* Scale the reference proportions to portrait tablets, without hiding content. */
+@media(min-width:701px) and (max-width:1000px){
+ .ls26-launcher main{width:calc(100% - 8.8vw);padding-top:9.8vw}
+ .launcher-brand{width:79.2%}h1{font-size:5.86vw;margin:3.42vw 0 8.2vw}
+ .mode-grid{gap:2.05vw}.mode-card{padding:4.3vw 3vw 2vw;min-height:30.7vw;border-radius:1.76vw}
+ .mode-main{gap:2.64vw;padding-bottom:3.7vw}.mode-icon{width:12.3vw;height:12.3vw}.mode-icon svg{width:6.25vw;height:6.64vw}
+ .mode-copy h2{font-size:2.83vw;margin-bottom:1.56vw}.mode-copy p{font-size:2.25vw}
+ .mode-action{font-size:2.25vw;min-height:7.72vw;padding-top:1.85vw}.mode-arrow{width:5.66vw;height:5.66vw}.mode-arrow svg{width:3.12vw;height:3.12vw}
+ .coming-soon{font-size:1.76vw;padding:1vw 2.44vw;min-height:4.6vw}
+ .mode-lyrics{min-height:21vw;padding:2.93vw 3vw;gap:3.7vw}.mode-lyrics .mode-icon{width:15vw;height:15vw}.mode-lyrics .mode-icon svg{width:8.6vw;height:8.6vw}
+ .mode-lyrics h2{font-size:3.52vw}.mode-lyrics .mode-arrow{width:9vw;height:9vw}.mode-lyrics .mode-arrow svg{width:4.2vw;height:4.2vw}
+ .launcher-footer{margin-top:7.7vw;font-size:1.95vw;gap:3.3vw}
+}
+@media(max-width:700px){
+ .ls26-launcher main{width:calc(100% - 36px);padding:40px 0}.launcher-brand{width:95%}h1{font-size:36px;letter-spacing:-1px;margin:24px 0 35px}
+ .mode-grid{grid-template-columns:1fr;gap:16px}.mode-card{min-height:230px;padding:25px 24px 18px}.mode-main{gap:22px;padding-bottom:22px}.mode-icon{width:88px;height:88px}.mode-icon svg{width:46px;height:50px}
+ .mode-copy h2{font-size:24px;letter-spacing:-.4px;margin-bottom:10px}.mode-copy p{font-size:18px}.mode-action{min-height:65px;font-size:18px;padding-top:16px}.mode-arrow{width:48px;height:48px}
+ .coming-soon{font-size:15px;min-height:40px}.mode-lyrics{gap:18px;min-height:160px;margin-top:0;padding:24px 18px}.mode-lyrics .mode-icon{width:76px;height:76px}.mode-lyrics .mode-icon svg{width:46px;height:46px}.mode-lyrics h2{font-size:24px}.mode-lyrics p{font-size:16px}.mode-lyrics .mode-arrow{width:44px;height:44px}.mode-lyrics .mode-arrow svg{width:26px;height:26px}
+ .launcher-footer{font-size:14px;letter-spacing:2px;gap:16px;margin-top:40px}
+}
+@media(prefers-reduced-motion:reduce){.mode-card{transition:none}}
