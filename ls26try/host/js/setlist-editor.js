@@ -296,7 +296,7 @@
 
   async function deleteCurrentSetlist() {
     if (!current || !auth.currentUser) return;
-    if (!confirm(`Delete ${current.name || "this setlist"}?`)) return;
+    if (!await LS26Dialogs.confirm(`Delete ${current.name || "this setlist"}?`)) return;
 
     const button = $("deleteSetlistBtn");
     setBusy(button, true, "DELETING...");

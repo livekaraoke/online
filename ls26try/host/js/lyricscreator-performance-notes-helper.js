@@ -11,8 +11,8 @@ window.addEventListener("DOMContentLoaded", () => {
   button.type = "button";
   button.className = "btn performance-note-helper-btn";
   button.textContent = "＋ Performance Note";
-  button.onclick = () => {
-    const text = prompt("Singer-visible performance note (for example: Short instrumental — wait for signal)");
+  button.onclick = async () => {
+    const text = await LS26Dialogs.prompt("Singer-visible performance note (for example: Short instrumental — wait for signal)");
     if (!text || !text.trim()) return;
     songData.sections.push({
       type: "performanceNote",

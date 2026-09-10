@@ -177,7 +177,7 @@
   }
 
   function setTopTitle(song) {
-    $("topbarSongTitle").innerHTML = `<strong>${esc(song.title || "Untitled")}</strong><span>${esc(song.artist || "")}</span>`;
+    $("topbarSongTitle").innerHTML = `<strong>${esc(song.title || "Untitled")}</strong><span>${esc(song.artist || "")}${song.year ? " · " + esc(song.year) : ""} <b class="ls26-title-bpm">${song.originalBpm ? esc(song.originalBpm) + " BPM original" : ""}</b></span>`;
     $("infoSongTitle").textContent = `${song.title || "Untitled"}${song.artist ? " — " + song.artist : ""}`;
   }
 
@@ -1385,7 +1385,7 @@
     }
 
     $("autoScrollBtn")?.classList.remove("active");
-    if ($("autoScrollBtn")) $("autoScrollBtn").textContent = "▶";
+    if ($("autoScrollBtn")) $("autoScrollBtn").innerHTML = '<svg class="ls26-play-icon" viewBox="0 0 32 32" aria-hidden="true"><path d="M7 3 29 16 7 29Z"/></svg>';
 
     await finalizeCurrentSongPlayed();
     showEndNextSongButton(true);
@@ -1586,7 +1586,8 @@
     autoScrollOn = !autoScrollOn;
 
     $("autoScrollBtn").classList.toggle("active", autoScrollOn);
-    $("autoScrollBtn").textContent = autoScrollOn ? "Ⅱ" : "▶";
+    $("autoScrollBtn").innerHTML = autoScrollOn ? '<svg class="ls26-play-icon" viewBox="0 0 32 32" aria-hidden="true"><path d="M7 4h6v24H7zM19 4h6v24h-6z"/></svg>' : '<svg class="ls26-play-icon" viewBox="0 0 32 32" aria-hidden="true"><path d="M7 3 29 16 7 29Z"/></svg>';
+    $("autoScrollBtn").setAttribute('aria-label', autoScrollOn ? 'Pause auto-scroll (song stays playing)' : 'Start or resume auto-scroll');
 
     if (wasOff && autoScrollOn) {
       autoScrollEndHandled = false;
@@ -1648,7 +1649,7 @@
 
 
   function bindUi() {
-    $("exitBtn").onclick = () => location.href = LS26.url("library.html");
+    if ($("exitBtn")) $("exitBtn").onclick = () => location.href = LS26.url("library.html");
     setupLinkedSongReturn();
     if ($("showAllSectionsBtn")) {
       $("showAllSectionsBtn").onclick = () => {

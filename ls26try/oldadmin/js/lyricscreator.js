@@ -366,14 +366,9 @@ function insertMusicSymbol(symbol) {
 /**********************************************************/
 /********************** SAVE SECTION **********************/
 /**********************************************************/
-function saveSection() {
+async function saveSection() {
 
-  /*
-  if (editingIndex !== null) {
-    const ok = confirm("Update this section?");
-    if (!ok) return;
-  }
-  */
+
   
   const title = document.getElementById("sectionTitleCustom").value.toUpperCase().trim();
 
@@ -389,7 +384,7 @@ function saveSection() {
   let html = editor.innerHTML;
 
   if (!html.replace(/<br\s*\/?>/gi, "").trim()) {
-    alert("Please enter lyrics/chords first.");
+    await LS26Dialogs.alert("Please enter lyrics/chords first.");
     return;
   }
 
@@ -1100,9 +1095,9 @@ function cancelEdit() {
   renderPreview();
 }
 
-function insertBefore(index) {
-  const title = prompt("Section title:");
-  const text = prompt("Lyrics / chords:");
+async function insertBefore(index) {
+  const title = await LS26Dialogs.prompt("Section title:");
+  const text = await LS26Dialogs.prompt("Lyrics / chords:");
 
   if (!text) return;
 
@@ -1160,11 +1155,11 @@ function makeSafeFileName(name) {
     .replace(/(^-|-$)/g, "");
 }
 
-function downloadJS() {
+async function downloadJS() {
   updateMeta();
 
   if (!songData.title.trim()) {
-    alert("Please enter a song title.");
+    await LS26Dialogs.alert("Please enter a song title.");
     return;
   }
 
@@ -1319,12 +1314,12 @@ function loadSongForEditing(file) {
 
   script.src = `lyrics/new-lyrics-data/${file}`;
 
-  script.onload = () => {
+  script.onload = async () => {
     const variableName = getSongVariableName(file);
     const loadedSong = window[variableName];
 
     if (!loadedSong) {
-      alert("Could not load song for editing.");
+      await LS26Dialogs.alert("Could not load song for editing.");
       return;
     }
 
@@ -1343,8 +1338,8 @@ function loadSongForEditing(file) {
     renderPreview();
   };
 
-  script.onerror = () => {
-    alert("Could not find file: " + file);
+  script.onerror = async () => {
+    await LS26Dialogs.alert("Could not find file: " + file);
   };
 
   document.body.appendChild(script);
@@ -1911,7 +1906,7 @@ async function loadSongFromFirebase(firebaseId) {
     const doc = await db.collection("lyrics").doc(firebaseId).get();
 
     if (!doc.exists) {
-      alert("Could not find song in DB.");
+      await LS26Dialogs.alert("Could not find song in DB.");
       return;
     }
 
@@ -1977,7 +1972,7 @@ async function loadSongFromFirebase(firebaseId) {
 
   } catch (error) {
     console.error(error);
-    alert("Error loading song from DB");
+    await LS26Dialogs.alert("Error loading song from DB");
   }
 }
 

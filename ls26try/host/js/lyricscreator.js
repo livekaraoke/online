@@ -843,7 +843,7 @@
 
     const doc = await db.collection("lyrics").doc(firebaseId).get();
     if (!doc.exists) {
-      alert("Song not found");
+      await LS26Dialogs.alert("Song not found");
       return;
     }
 
@@ -894,7 +894,7 @@
     const title = $("songTitleInput").value.trim();
     const artist = $("artistInput").value.trim();
     if (!title || !artist) {
-      alert("Title and artist are required.");
+      await LS26Dialogs.alert("Title and artist are required.");
       return;
     }
 
@@ -936,7 +936,7 @@
       location.href = `lyricview.html?id=${encodeURIComponent(id)}`;
     } catch (error) {
       console.error(error);
-      alert(`Could not save song: ${error.message}`);
+      await LS26Dialogs.alert(`Could not save song: ${error.message}`);
       $("saveSongBtn").disabled = false;
     }
   }
@@ -1491,8 +1491,8 @@
     undoStack = [snapshotEditorState()];
     redoStack = [];
     updateUndoRedoButtons();
-  }).catch(error => {
+  }).catch(async error => {
     console.error(error);
-    alert(`Could not load song: ${error.message}`);
+    await LS26Dialogs.alert(`Could not load song: ${error.message}`);
   });
 })();

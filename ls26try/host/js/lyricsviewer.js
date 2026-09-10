@@ -29,7 +29,7 @@
 
   function currentViewState() {
     return {
-      sidebarCollapsed: $("libraryShell")?.classList.contains("sidebar-collapsed") || false,
+      filtersExpanded: !$("libraryFilterPanel").hidden,
       search: filters.search?.value || "",
       artist: filters.artist?.value || "",
       key: filters.key?.value || "",
@@ -58,9 +58,7 @@
     selectedId=restoredState.selectedId||"";
     filters.bpmMin.value=restoredState.bpmMin||"";filters.bpmMax.value=restoredState.bpmMax||"";
 
-    if (restoredState.sidebarCollapsed) {
-      $("libraryShell")?.classList.add("sidebar-collapsed");
-    }
+    $("libraryFilterPanel").hidden = !restoredState.filtersExpanded;
 
     if (filters.search) filters.search.value = restoredState.search || "";
     if (filters.visibility) filters.visibility.value = restoredState.visibility || "";
@@ -576,7 +574,7 @@
     URL.revokeObjectURL(link.href);
   }
 
-  function syncSidebarButton(){const open=!$("librarySidebar").hidden;$("sidebarToggleBtn").setAttribute('aria-expanded',String(open));}
+  function syncSidebarButton(){const open=!$("libraryFilterPanel").hidden;$("sidebarToggleBtn").setAttribute('aria-expanded',String(open));}
   function updateSelected(){const song=songs.find(x=>x.firebaseId===selectedId);$("ls26SelectedTitle").textContent=song?`${song.title} — ${song.artist}`:'Select a song';$("ls26OpenSelected").disabled=!song;$("ls26QueueSelected").disabled=!song;document.querySelectorAll('.song-table-row').forEach(x=>x.classList.toggle('is-selected',x.dataset.id===selectedId));}
   async function queueSong(id,button){const song=songs.find(x=>x.firebaseId===id);if(!song)return;button.disabled=true;try{await LK.sessionTools.enqueueSong(song);window.LS26.toast('Added to Run Order');}catch(error){window.LS26.toast(error.message);}finally{button.disabled=false;}}
   $("ls26OpenSelected").onclick=()=>selectedId&&openSong(selectedId);
@@ -672,7 +670,7 @@
   });
 
   $("sidebarToggleBtn").onclick = () => {
-    $("librarySidebar").hidden=!$("librarySidebar").hidden;
+    $("libraryFilterPanel").hidden=!$("libraryFilterPanel").hidden;
     syncSidebarButton();
     saveViewState();
   };

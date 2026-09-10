@@ -18,11 +18,11 @@ This software is proprietary and intended for personal and performance use only.
 
 <!DOCTYPE html>
 <html>
-<head>
+<head><link rel="stylesheet" href="../../shared/dialogs.css?v=20260910-stage4"><script src="../../shared/dialogs.js?v=20260910-stage4"></script>
   <meta charset="UTF-8">
   <title>Live Karaoke Song Lyrics Library</title>
-  <link rel="stylesheet" href="../css/styleLyricsIndex.css">
-  <script src="../files/song-data.js"></script>
+  <link rel="stylesheet" href="../css/styleLyricsIndex.css?v=20260910-stage4">
+  <script src="../files/song-data.js?v=20260910-stage4"></script>
 </head>
 
 <body>
@@ -72,7 +72,7 @@ This software is proprietary and intended for personal and performance use only.
 
 </header>
 
-<script src="../../firebase-projects.js"></script>
+<script src="../../firebase-projects.js?v=20260910-stage4"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
@@ -336,15 +336,15 @@ function loadSetlist(name) {
   return data[name] || [];
 }
 
-function saveFavesAsSetlist() {
+async function saveFavesAsSetlist() {
   const faves = getFaves();
 
   if (faves.length === 0) {
-    alert("No favourites to save");
+    await LS26Dialogs.alert("No favourites to save");
     return;
   }
 
-  const name = prompt("Enter setlist name:");
+  const name = await LS26Dialogs.prompt("Enter setlist name:");
   if (!name) return;
 
   let existing = JSON.parse(localStorage.getItem("setlists") || "{}");
@@ -356,7 +356,7 @@ function saveFavesAsSetlist() {
   // clear favourites
   localStorage.removeItem("faves");
 
-  alert("Setlist saved!");
+  await LS26Dialogs.alert("Setlist saved!");
 
   location.reload(); // refresh dropdown
 }
@@ -711,22 +711,22 @@ function saveSetlists(data) {
   localStorage.setItem("setlists", JSON.stringify(data));
 }
 
-function createSetlistFromFaves() {
+async function createSetlistFromFaves() {
   const faves = getFaves();
 
   if (faves.length === 0) {
-    alert("No favourites to save");
+    await LS26Dialogs.alert("No favourites to save");
     return;
   }
 
-  const name = prompt("Enter setlist name:");
+  const name = await LS26Dialogs.prompt("Enter setlist name:");
   if (!name) return;
 
   const data = getSetlists();
 
   // ?? prevent overwrite accidentally
   if (data[name]) {
-    if (!confirm("Setlist exists. Overwrite?")) return;
+    if (!await LS26Dialogs.confirm("Setlist exists. Overwrite?")) return;
   }
 
   data[name] = [...faves];
@@ -736,7 +736,7 @@ function createSetlistFromFaves() {
   // Clear favourites after saving
   localStorage.removeItem("faves");
 
-  alert("Setlist saved!");
+  await LS26Dialogs.alert("Setlist saved!");
 
   populateSetlistDropdown();
   renderSongs();
