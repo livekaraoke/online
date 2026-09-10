@@ -1,0 +1,170 @@
+LIVESUITE LS26 — FUNCTION AND CHANGE REGISTER
+Copyright © 2026 LiveSuite. All rights reserved.
+Baseline: user-supplied livesuite(1).rar. Change date: 2026-09-10.
+
+MAINTENANCE RULE
+Before editing/removing a function, inspect its implementation and all callers.
+This register is an index, not proof of behaviour. Update it with date, reason,
+replacement and verification. Keep CSS in its owning module; do not append
+repeated overrides. Legacy rendering CSS remains until browser regressions pass.
+
+2026-09-10 ADDITIONS
+shared/data.js: project/user-scoped read cache, coalesced requests, invalidation.
+shared/shell.js: navigation, current-song routing, Inbox dialog, creator handoff.
+shared/inbox.js: normalized capture, count transaction, retained drafts, explicit
+retry, bounded occurrence history, paginated management and status changes.
+shared/session-ui.js: session editor, break history, request detail/reason dialogs,
+shared end lists, current-song highlight, client clock; no extra list listeners.
+shared/performance.js: action buttons, drawer lifecycle, sticky metadata,
+section navigation, BPM adjustment and existing admin End Session handoff.
+shared/start.js: standalone shared Session Bar initialization.
+shared/theme.css: theme tokens and brand asset seam; blue theme only.
+shared/performance.css: centralized compatibility skin for existing renderers.
+shared/launcher.css: standalone mode launcher layout.
+index.html: five mode buttons; no Firebase access.
+library.html: Library engine entry with correct base URL.
+venue.html / player.html: mode destinations and clearly marked future tools.
+requests.html / song-inbox.html: session requests and post-gig Inbox management.
+
+2026-09-10 CHANGED / REMOVED
+host/js/lyricview.js: removed pauseCurrentRunOrderSong and its invocation;
+auto-scroll pause must not pause the playing-song status. Next Song now jumps
+to the end cards; PLAY NEXT SONG retains actual next-song launch.
+admin-new/js/top-statusbar-session-tools.js: removed unused duplicate toggleBreak,
+renderSessionNotes and saveTopbarNotes. Canonical break/notes handlers remain
+in top-statusbar.js. Request acceptance and reorder use transactions.
+Automatic notification persistence replaced with bounded local activity journal;
+existing historical logs retained. Unified five tabs remember selection.
+Songs load lazily; event fallback becomes cached one-time read.
+host/js/lyricsviewer.js: cached data and current-session setlist filter.
+admin-new/js/firebase.js: uses existing project selector consistently.
+Notes debounce increased to five seconds; speed preference debounce 1.2 seconds.
+Admin styles reuse blue tokens; original admin auth/archive engines retained.
+Library routes updated after mode-launcher correction.
+
+VERIFICATION
+Syntax checks and isolated tests pass; see VERIFICATION.md.
+Live Firebase, requester-facing messages, tablet visuals and complete legacy
+regressions remain unverified. No claim of complete feature parity certification.
+
+NAMED FUNCTION INVENTORY (static scan; excludes anonymous methods)
+
+admin-new/js/admin-dashboard-enhancements.js
+  esc, tsDate, formatDate, formatLongDate, formatTime, formatDurationMs, eventDuration, sessionActualStart, sessionActualEnd, sessionScheduledStart, sessionScheduledEnd, breakDurationMs, sessionDuration, openDetailModal, closeDetailModal, detailCell, viewUpcomingEvent, sessionRequestSummary, requestStatusLabel, loadSessionRecords, viewPastSession, renderPastSessions, listenPastSessions, setMembersCollapsed, installMembersToggleOverride, toggleMembersPanel, randomPassword, clearNewUserForm, openNewUserModal, closeNewUserModal, createMemberUser, bindUi, init
+
+admin-new/js/admin-events-integration.js
+  esc, typeColor, hexToRgba, selectedActiveEventId, upcomingExcludingActive, isPast, eventStillUpcoming, sortedUpcoming, formatDate, formatEventLength, datePartsFromDate, firestoreTimestampToDate, eventStartDate, eventEndDate, legacyNextEventFromUpcoming, legacyNextEventKey, syncLegacyNextEventMirror, listenForLegacyNextEventDrift, lateDurationText, countdownText, getActiveSessionStartDate, getCurrentSessionType, renderSystemSessionStatus, renderVenueContextStatus, setSystemStatusLiveUi, forceSystemLiveForPerformance, selectedUpcomingEventId, selectedSessionEvent, eventSnapshotForSession, linkCurrentSessionToEvent, resolveActiveEventId, markEventCompleted, wrapPerformanceLifecycle, completeEventForEndedSession, listenForActiveSessionStatus, startVenueStatusCountdown, populateVenueDatalist, populateSessionTypeSelect, findVenueByName, buildSessionNotes, selectSessionEvent, prefillSessionFromEvent, updateStartButtonForEvent, renderSessionEventSelect, renderSessionSuggestion, renderNextGigsStatus, renderDashboardEvents, openUpcomingEventDetail, closeUpcomingEventDetail, renderAllEventSurfaces, seedEventTypesIfNeeded, startListeners, bindUI, classifyActiveRequestRows, watchActiveRequestRows, init
+
+admin-new/js/admin-session-lifecycle.js
+  tsFromLocal, requestBucket, requestSummary, cleanSnapshot, normalise, eventStartDate, titleDateToken, resolveEventIdForSession, repairActiveSessionLink, associateNewSession, getCurrentSessionControl, snapshotSessionData, normaliseUnfinishedRequests, finishAssociatedEvent, finalizeSession, clearLiveSync, startLiveSessionSnapshots, listenCurrentSessionForSnapshots, wrapStartPerformance, wrapEndPerformance, bindWrappers, init
+
+admin-new/js/auth.js
+  adminLogin, adminLogout, initAuth
+
+admin-new/js/dashboard.js
+  getDateFromTimestamp, formatTime, formatDate, formatDuration, minutesAgo, escapeHTML, logAdmin, renderConsole, clearConsole, exportLog, scrollToConsole, updateClock, getCurrentEvent, getIsLive, getSongsAvailable, updateAdminButtons, updateStatusStrip, listenKaraokeState, toggleLive, toggleSongsAuto, showConfirm, closeConfirmModal, initDashboard
+
+admin-new/js/db-logs.js
+  readEntries, matches, total, shortSource, render, updateCaptureButton, exportCsv, bind, requireAdmin
+
+admin-new/js/enquiries.js
+  esc, timeMs, fmtDate, sourceLabel, filtered, details, render, listen, setStatus, bind, show, init
+
+admin-new/js/events.js
+  escapeHTML, combinedContact, filteredVenues, renderSummary, renderVenues, resetForm, openNewVenue, openEditVenue, closeVenueModal, saveVenue, askDeleteVenue, closeDeleteVenue, confirmDeleteVenue, startVenueListener, loadSidebar, bindUI, showApp, init
+
+admin-new/js/firebase.js
+  installLiveSuiteDbActivityMonitor, settings, captureEnabled, cleanStack, refPath, flush, recordDbActivity, success, failure, wrapPromise, extractSnapshotCallbacks
+
+admin-new/js/members.js
+  loadAllMembers, renderMembersList, openMemberModal, closeMemberModal, saveMemberFromModal, initMembers
+
+admin-new/js/performance-sessions.js
+  esc, tsDate, formatDate, formatTime, formatHours, getBreakMs, actualStart, actualEnd, scheduledStart, scheduledEnd, durationValues, requestStatusBucket, getRequestSnapshot, countsFor, playedSnapshot, averageBpm, sessionSearchText, populateVenueFilter, renderCurrentSession, renderAnalytics, renderTable, applyFilters, loadLiveFallback, requestStatusLabel, viewSessionDetails, closeSessionModal, openDeleteDialog, closeDeleteDialog, deleteSession, showToast, prevPage, nextPage, changePageSize, exportSessionsCsv, adminLogin, loadSidebar, startSessionListener, showApp, init
+
+admin-new/js/profile.js
+  ensureMyProfile, applyProfileToDashboard, openProfileModal, closeProfileModal, saveMyProfile
+
+admin-new/js/public-setlist-session-addon.js
+  esc, setPublicListStatus, isPermissionDenied, markSetlistsUnavailable, populatePublicSetlistSelect, listenForSetlists, listenForCurrentPublicList, savePublicSetlistSelection, listenCurrentSessionType, saveActiveSessionType, wrapStartPerformance, init
+
+admin-new/js/requests.js
+  listenRequestsForSession, renderActiveRequests, acceptRequestToRunOrder, completeRequest, openReasonModal, closeReasonModal, confirmRequestReason, initRequests
+
+admin-new/js/run-order.js
+  esc, uid, normaliseItems, saveItems, renderSongSelect, render, move, remove, addManualSong, listenCurrentSession, listenRunOrder, loadSongs, bind, init
+
+admin-new/js/sessions.js
+  calculateBreakMs, ensureDashboardLayout, setDashValue, scheduledStartDate, varianceText, updateLiveSessionDetails, updateDashboard, setSessionStatus, confirmStartPerformance, confirmEndPerformance, startPerformance, endPerformance, startBreak, endBreak, saveSessionNotesLive, editActiveSessionDetails, listenCurrentSession, updateSessionUi, initSessions
+
+admin-new/js/sidebar.js
+  $, loadSidebar, isDbLogsPage, bindSidebarProfile, highlightCurrentPage, setActiveAdminSection, scrollToAdminSection, toggleMembersPanel, listenSidebarSongRequests, listenSidebarLiveSession, isPermissionDenied, listenSidebarEnquiries, listenSidebarRunOrder, escapeHTML
+
+admin-new/js/top-statusbar-public-list.js
+  dbRef, render, startListener, waitForInjectedStatusBar
+
+admin-new/js/top-statusbar-session-tools.js
+  publishSharedSession, dbRef, esc, tsDate, formatClock, formatDuration, scheduledDurationMs, actualStartDate, localDateTime, eventScheduleFallback, resolvedSchedule, renderRemaining, breakStartDate, breakEndDate, getBreakState, activityDate, activityIcon, syncNotificationsFromSession, persistActivityEntry, pushNotification, markNotificationsRead, renderNotifications, breakRunOrderPosition, trackBreakStateNotification, trackRunOrderActivity, renderBreakControls, renderCompactHostStrip, isPendingRequest, renderPending, queueItems, runOrderPlayingItem, requestForRunItem, canLaunchRunOrderSong, normaliseSongIdentity, findAuthoritativeSongForRunItem, repairRunOrderSongId, openRunOrderSong, detailValue, openRunOrderDetails, closeRunOrderDetails, renderRunOrder, renderSongSelect, saveRunOrder, makeQueueItemFromRequest, acceptRequest, abandonRequest, deleteRequest, moveRunOrder, abandonRunOrder, removeRunOrder, addManualSong, renderPublicSetlistName, clearLinkedEventSubscription, inferLinkedEvent, subscribeLinkedEvent, clearSessionSubscriptions, subscribeSession, startListeners, ensureSongs, isStatusExpanded, syncStatusToggleUi, setStatusExpanded, toggleStatusExpanded, initialiseStatusToggle, selectSessionTab, setInfoTab, setWorkflowTab, initialiseInfoTabs, initialiseWorkflowTabs, openRunOrderTab, bindUi, waitForInjectedMarkup, init
+
+admin-new/js/top-statusbar.js
+  $, getDb, serverTimestamp, nowTimestamp, loadTopStatusBar, toggle, markNotificationsSeen, addNotification, renderNotifications, listenStatus, connectSharedSessionState, listenCurrentSession, listenForFallbackActiveSession, listenSessionDoc, stopSessionDocListener, stopActiveSessionFallback, getBreakInformation, renderBreakStatus, toggleBreak, listenRequests, stopRequestsListener, isActiveRequest, sortRequestsOldestFirst, renderRequests, connectSessionNotesInput, renderSessionNotes, saveSessionNotesDelayed, saveSessionNotesNow, renderSession, setText, toDate, formatClockTime, formatDuration, escapeHTML
+
+admin-new/js/upcoming-events.js
+  escapeHTML, slugClass, localDateKey, eventSortValue, isPast, eventStillUpcoming, eventIsCompleted, formatDate, formatTimeRange, formatEventLength, getFilteredEvents, typeColor, hexToRgba, renderTypeSummaryCards, renderSummary, renderEvents, venueCombinedContact, populateVenueSelect, getSelectedVenue, applyVenueToEventForm, handleVenueSelection, startVenueListener, populateTypeControls, renderEventTypeManager, saveEventTypes, addEventType, removeEventType, openEventTypesModal, closeEventTypesModal, startEventTypesListener, formatEventNameDate, buildAutomaticEventName, updateAutomaticEventName, resetForm, openCreateModal, openEditModal, closeEventModal, validateForm, buildScheduledTimes, saveEvent, askDelete, closeDeleteModal, confirmDelete, startEventListener, startCurrentSessionListener, loadSidebarFallback, markEventsSidebarLink, bindUI, showApp, init
+
+admin-new/js/venues.js
+  escapeHTML, combinedContact, filteredVenues, renderSummary, renderVenues, resetForm, openNewVenue, openEditVenue, closeVenueModal, saveVenue, askDeleteVenue, closeDeleteVenue, confirmDeleteVenue, startVenueListener, loadSidebar, bindUI, showApp, init
+
+firebase-projects.js
+  normalizeKey, getSelectedKey, getSelectedConfig, selectProject
+
+host/js/karaoke-lyric-view.js
+  scheduleStandbySyncRoll, scheduleStandbyGlitch, resizeStaticCanvas, paintStaticFrame, initialiseLiveStatic, stopAutoScroll, setSettingsEnabled, clearLoadingTimer, setStandby, setLoadingState, beginSongCountdown, listenForHost, sectionGuidanceClass, applyGuidanceMode, updateCustomScrollbar, renderSingerSong, scrollLoop, toggleScroll, updateSpeed, initialiseCustomScrollbar
+
+host/js/lyrics-common.js
+  escapeHTML, toDate, normalizeSong, semitoneMod, transposeRoot, transposeChordToken, transposeChordText, transposeChordHTML, transposeTabHTML, stripEditorControls, isChordOnlyLine, singerHTMLFromSection, getPerformanceNotes, hasTabs, hasLyrics
+
+host/js/lyricscreator.js
+  esc, blankTabHTML, defaultStyle, normaliseSectionTitleKey, getSystemSectionTitleColour, getEffectiveSectionTitleColour, loadSectionTitleDefaults, saveSectionTitleDefaults, resetSectionTitleDefaults, snapshotEditorState, updateUndoRedoButtons, pushUndoState, restoreEditorState, performUndo, performRedo, stripLegacyMarkerFromText, stripLegacyMarkerFromHtml, trimLeadingWhitespace, stripInside, normaliseVisibleForTypes, loadEventTypes, sectionVisibleForType, normalizeSection, makeSection, updateEditingStatus, markDirty, captureSelection, restoreSelection, insertHTMLAtSelection, applyCommand, applyQuickColour, renderFontOptions, renderSizeOptions, renderDashColourOptions, renderTitleColourOptions, unwrapDashSpans, applyDashColourToEditor, refreshAllDashColours, renderSectionVisibility, setSectionFontSize, sectionToolbar, render, syncSectionsFromDOM, showConfirm, closeConfirm, leaveWithoutSaving, renderSetlistMembership, loadSetlistMembership, saveSetlistMembership, load, save, moveSection, loadLinkSongs, openLinkModal, insertSelectedSongLink, openChordModal, openColourModal, renderModals
+
+host/js/lyricscreator_OLDER.js
+  esc, blankTabHTML, defaultStyle, normalizeSection, makeSection, updateEditingStatus, markDirty, captureSelection, restoreSelection, insertHTMLAtSelection, applyCommand, applyQuickColour, renderFontOptions, renderSizeOptions, sectionToolbar, render, syncSectionsFromDOM, showConfirm, closeConfirm, leaveWithoutSaving, load, save, enableDrag, moveSection, openChordModal, openColourModal, renderModals
+
+host/js/lyricsviewer.js
+  readViewState, currentViewState, saveViewState, applyImmediateRestoredState, restoreScrollWhenReady, updateStickyOffsets, saveFavourites, loadData, showError, populateSetlists, populateFilters, filteredSongs, groupFor, renderAlphabetNav, render, terminalRunOrderStatus, chooseNextRunOrderItem, normaliseRunSongIdentity, authoritativeViewerSong, updateRunOrderPlayer, refreshRunOrderPlayerFromTools, openRunOrderPanel, openSong, selectRelative, exportCSV, syncSidebarButton
+
+host/js/lyricview.js
+  normaliseSongIdentity, sameSongByMetadata, resolveRunOrderSongDocument, repairSingleRunOrderItemSongId, showModal, setTopTitle, setInfo, renderBpmValue, normaliseType, sectionVisibleForActiveType, loadActiveSessionType, safeReturnUrl, setupLinkedSongReturn, buildLinkedSongUrl, sectionTypeClass, cleanSectionHtml, normaliseSectionTitleKey, getSystemSectionTitleColour, loadSectionTitleDefaultsForView, applySectionDashColour, buildBeatGridTab, renderSections, applySectionVisibility, updateSectionVisibilityUi, renderHostNotes, renderSectionProgress, centerActiveProgressSection, scrollToSection, updateSectionProgress, smoothRelativeScroll, frame, chordParts, transposeChordToken, captureOriginalChordText, applyChordTranspose, captureOriginalTabCells, applyTabTranspose, sendToKaraoke, resetKaraoke, dVal, getSlaveLyricsSongs, findCurrentSlaveLyricsId, loadSlaveLyricsOptions, sendSlaveLyrics, saveMyNotes, logNoteEditToSession, loadSongScrollSpeed, saveSongScrollSpeed, getActiveSessionContext, findCurrentRunOrderItem, setCurrentRunOrderStatus, ensureCurrentSongPlaying, recordCurrentSongPlayed, finalizeCurrentSongPlayed, showEndNextSongButton, stopAutoScrollAtEnd, getNextRunOrderItem, nextDetailField, renderEndNextSongDetails, goToNextRunOrderSong, startAutoScroll, bindUi, updateSpeed, init, initHostStickyStack, syncHostStickyStack, bindObservers
+
+host/js/lyricview_OLDER.js
+  stripLegacyLeadingMarkerFromHTML, stripLegacyLeadingMarkerFromText, cleanLegacyMarkersFromSongData, migrateLegacySectionMarkersAcrossDatabase, loadSong, sectionTitle, createCollapsibleSection, bpmNumber, updateTempoStyling, htmlToPlainText, renderHostLyricNotes, syncMyNotesInput, getActivePerformanceSessionId, saveMyNotes, queueMyNotesSave, renderSong, renderPerformanceNotes, renderStructure, renderTabOverview, sendToSinger, resetKaraoke, setSendMenuOpen, legacySongCatalogue, legacySongIdFromUrl, populateLegacyLyricsSongs, sendLegacyLyrics, setSidebarOpen, toggleSidebar, autoScrollLoop, toggleScroll
+
+host/js/setlist-editor.js
+  esc, normalizeSong, showEditorMessage, setBusy, showLoadingGate, updateAuthUi, showLoginFallback, startEditorListeners, stopEditorListeners, handleFirestoreError, renderList, renderEditor, renderAvailable, createNewSetlist, saveCurrentSetlist, deleteCurrentSetlist, enableDrag
+
+list/js/listeditor.js
+  setStatus, loadSelectedSetlist, loadSongs, loadCategories, render, save
+
+list/js/songlist.js
+  escapeHTML, normalizeSongKey, isActiveRequest, isSongUnavailable, startLiveRequestListener, updateLiveRequestUi, cleanText, sortByTitle, sortByOrderThenTitle, getSongText, getLyricsSongById, getVisibleFullSongs, getFullSongCount, getSectionSongs, getSectionSongDisplay, getAlphaGroup, alphabetGroups, isAlreadyPlayedToday, getActiveRequestListId, updatePublicSetlistBanner, resolvePublicSetlist, loadPublicSetlistConfig, startPublicSetlistListener, applyPublicCategoryConfig, loadPublicCategoryConfig, startPublicCategoryListener, ensureMainList, loadSections, loadSectionSongs, loadLyricsSongs, reloadAll, getCurrentSignupSession, showRequestsClosedOnly, showRequestsOpenPage, songKey, isInCart, updateCartCount, addSongToCart, removeSongFromCart, showCartToast, signupButtonHTML, addSongToCartFromButton, openSignupModal, closeSignupModal, renderCartPreview, submitSongSignup, renderSearchResults, clearSearchResults, renderCategoryNav, categorySubText, toggleFullSongList, initPublicSongList, renderPublicSongList, renderPublicCustomSections, updateHeading, renderPublicFullList, renderPlainSongList, initEditor, renderSectionsEditor, buildLyricsOptionsForSection, createSectionSongRow, renderFullSongEditor, saveListSettings, addSection, renameSection, toggleSectionVisible, toggleSectionDefault, toggleEditorSectionCollapsed, deleteSection, addExistingSongToSection, toggleSectionSongVisible, deleteSectionSong, toggleFullSongVisible, focusSectionTitle, enableSectionDragOrdering, saveSectionOrderFromDOM, enableSongDragOrdering, saveSongOrderFromDOM, saveFavourites, setBottomTabActive, closeBottomPanels, switchBottomTab, openInfoModal, closeInfoModal, renderQueuePanel, renderFavouritesPanel, toggleFavouriteFromJson, openCustomSection, formatArtistName, getActiveSessionIdForQueue, isQueueVisibleStatus, isFinalUnavailableStatus, fetchCurrentSessionRequests, getNormalizedSongKey, getSongSessionState, populateArtistFilter, refreshSessionSongStates, fetchPublicRunOrder, fetchPendingPublicRequests, publicQueueRow, setPublicBreakNotice, listenPublicBreakStatus, stopPublicQueueSessionListeners, isQueuePanelVisible, closePublicQueuePanel, currentPublicQueueItems, currentPlayingPublicQueueItem, renderRealtimeQueuePanel, subscribePublicQueueForSession, handlePublicSessionClosed, startRealtimePublicQueueMonitor
+
+oldadmin/js/lyricscreator.js
+  generateSongId, cleanWordPaste, updateMeta, formatText, formatColor, colourDashSegment, setSectionColor, updateEditorFont, createTabTimeLine, insertTabTimeLine, togglePerfNoteMenu, createPerformanceNote, insertPerformanceNote, toggleSymbolMenu, insertMusicSymbol, saveSection, upgradeOldTabStrings, normalizeTabBlocks, normalizeTabNoteLine, normalizeTabDashLines, confirmUpdateSection, saveSectionWithConfirm, formatPreset, insertRepeatLabel, insertSongLink, clearEditor, insertSeparator, insertTabBar, moveSection, updateAndGoNext, renderPreview, toggleSectionCollapse, duplicateSection, addSectionMarker, toggleTabSection, setTabControlMode, editSection, ensureTabInsertRows, cancelEdit, insertBefore, restoreTabEditability, deleteSection, escapeHTML, makeSafeFileName, downloadJS, updateLivePreview, loadSongForEditing, insertBlankTab, createTabBlock, createTabInsertButton, createStringLine, insertHtmlAtCursor, setCaret, setCaretInsideCell, getCurrentEditorColor, getActiveCellIndex, fillTabCell, resetTabCell, prepareNoteCells, fillNoteCell, resetNoteCell, updateNoteClass, updateTabNoteStates, getSongVariableName, saveSongToFirebase, loadSongFromFirebase, showAlert, syncTabToggleButton, toggleTabStartsCollapsed, limitLineLength, toggleSaveMenu, showConfirm, confirmPendingSectionUpdate, handleSaveClick, handleDownloadClick, handleDeleteSong, toggleBackMenu, cleanKaraokeUrl, loadKaraokeLyricsList, handleKaraokeLyricsChange, confirmKaraokeLyricsChoice, closeKaraokePicker
+
+shared/data.js
+  pack, unpack, collection, invalidate
+
+shared/inbox.js
+  digest, commit, capture, manage, render, load
+
+shared/performance.js
+  setup, open, sticky, adminHandoff
+
+shared/session-ui.js
+  dialog, renderSession, editTimes, chooseList, endSession, enrichDetail, rejectDialog, mirror, ready, init
+
+shared/shell.js
+  toast, mount, openInbox
+
+verification/firebase-fixture.js
+  emit

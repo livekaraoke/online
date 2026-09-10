@@ -1,0 +1,17 @@
+LiveSuite theme extension contract — 2026-09-10
+
+Implemented default: Blue.
+Planned: Red & Black; Pink; Black & White Minimal.
+
+1. Add theme-specific logo/image paths to LS26.themes in shared/shell.js.
+2. Define a token block in shared/theme.css using a data-theme attribute.
+3. Set --ls-bg, --ls-panel, --ls-soft, --ls-border, --ls-text, --ls-muted,
+   --ls-accent, --ls-success, --ls-warning, --ls-danger and --ls-logo.
+4. Persist theme choice locally; changing theme must not touch Firestore.
+5. Keep one DOM and one set of event handlers for all themes.
+6. Verify contrast and touch sizes for every theme, including statuses.
+7. Do not duplicate the lyric renderer or copy entire page stylesheets per theme.
+
+Legacy editor/admin styles are compatibility dependencies. Migrate their remaining
+literal colours into tokens only after visual regression checks. No unverified
+wholesale CSS deletion was performed in this build.
