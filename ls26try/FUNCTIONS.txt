@@ -231,3 +231,12 @@ VERIFIED queue, filters, cache/Inbox, clock, section navigation, dialog cancella
 and end-only save using fixtures. No live Firebase or browser visual test.
 New named functions: dialogs.js ask, enhance, scan. Removed visible controls are
 intentional; their old guarded bindings are harmless to preserved engine paths.
+
+
+2026-09-10 — Admin dashboard presentation revision (reference 649.png)
+ADDED admin-new/css/dashboard26.css: scoped navy/cyan dashboard, compact live-session metrics, readable requests/run order, sticky navigation and complete sidebar.
+ADDED admin-new/css/dashboard-compat.css: existing inline structural styles consolidated into one compatibility stylesheet; historical inline priority flags removed so the scoped theme can control appearance.
+ADDED admin-new/js/dashboard26.js: moves existing live badge into profile area above OVERVIEW; expands secondary sections for original sidebar/history links; no network/database calls.
+UPDATED admin-new/admin.html: LIVE SESSION heading, Public Song List moved into session, dashboard title and theme references.
+PRESERVED all existing application IDs, controls, inline handlers, script dependencies, authentication gate, sidebar destinations, request/session/profile/member operations. No backend function removed.
+VALIDATED static preservation of 112 application IDs, 77 controls, 44 inline handlers, 24 original script references; JavaScript syntax checked. Live authenticated/Firebase behavior not tested.

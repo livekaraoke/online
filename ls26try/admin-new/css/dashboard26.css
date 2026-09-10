@@ -1,0 +1,131 @@
+/* Copyright © 2026 LiveSuite. All rights reserved.
+ * dashboard26.css — admin-only navy/cyan presentation. No data or permission changes.
+ * Compatibility layouts load first; this scoped theme owns dashboard appearance.
+ */
+body.ls26-dashboard26 { --d26-side:210px; --line:#245167; --panel:#051925; --muted:#a6bdd0; font-family:Arial,Helvetica,sans-serif; color:#edf6ff; }
+/* Sticky application navigation and independently scrollable, complete sidebar. */
+.ls26-dashboard26 #ls26StickyHeader { position:sticky; top:0; z-index:2200; }
+.ls26-dashboard26 .ls26-nav { border-radius:0; border-color:#1b4358; }
+.ls26-dashboard26 .ls26-nav>a[aria-label="Admin dashboard"] { color:#31d2f5; border:1px solid #24a8ce; border-radius:6px; background:#072c3e; }
+.ls26-dashboard26 #sidebarContainer { width:var(--d26-side); }
+.ls26-dashboard26 .admin-sidebar.suite-sidebar { width:var(--d26-side); top:var(--ls-header-h,68px); bottom:0; padding:14px 11px; gap:0; background:linear-gradient(110deg,#061925,#02101a); border-right:1px solid #1b3b50; scrollbar-width:thin; scrollbar-color:#286782 #04131e; }
+.ls26-dashboard26 .suite-brand-block { display:none; }
+.ls26-dashboard26 .suite-user-card { margin:0 0 15px; padding:10px 2px; grid-template-columns:44px minmax(0,1fr); gap:9px; }
+.ls26-dashboard26 .suite-user-card .avatar { width:42px; height:42px; border-color:#25b5d7; background:#062434; }
+.ls26-dashboard26 .suite-user-copy strong { font-size:15px; color:#fff; }
+.ls26-dashboard26 .suite-user-copy span { font-size:12px; }
+.ls26-dashboard26 .suite-user-copy small { color:#56e5a0; font-size:11px; }
+.ls26-dashboard26 .suite-user-copy .suite-live-badge { margin-top:6px; font-size:10px; color:#54eda9; background:#06392e; }
+.ls26-dashboard26 .suite-nav-section-title { color:#91adbf; border-top:1px solid #18384a; padding:18px 9px 9px; margin:13px 0 0; font-size:11px; letter-spacing:1.4px; }
+.ls26-dashboard26 .suite-nav-section-title.live-title { margin:0; padding-top:12px; }
+.ls26-dashboard26 .suite-nav { gap:4px; }
+.ls26-dashboard26 .suite-nav>a,.ls26-dashboard26 .suite-nav>button { min-height:44px; border:1px solid transparent; border-radius:6px; padding:9px 10px; font-size:13px; font-weight:500; text-transform:none; background:transparent; color:#eef6fc; }
+.ls26-dashboard26 .suite-nav>a.active,.ls26-dashboard26 .suite-nav>button.active,.ls26-dashboard26 .suite-nav>a:hover,.ls26-dashboard26 .suite-nav>button:hover { background:linear-gradient(90deg,#073b51,#052030); border-color:#26c8ea; box-shadow:inset 0 0 12px #16bcdd16; }
+.ls26-dashboard26 .suite-nav-icon { font-size:20px; width:25px; color:#a9d9ed; filter:none; }
+.ls26-dashboard26 .suite-nav-label { font-size:13px; }
+.ls26-dashboard26 .suite-footer { color:#89a3b5; }
+/* Dashboard typography and status line. Authentication still controls adminContent. */
+.ls26-dashboard26 .admin-main { margin-left:var(--d26-side); width:calc(100% - var(--d26-side)); max-width:1500px; padding:20px 20px 28px; }
+.ls26-dashboard26 .admin-topbar { display:flex; justify-content:space-between; gap:16px; align-items:center; margin:0 0 12px; }
+.ls26-dashboard26 .admin-topbar h1 { color:#f5faff; font-size:clamp(24px,3.2vw,38px); line-height:1.1; margin:0 0 4px; letter-spacing:.3px; }
+.ls26-dashboard26 .admin-topbar p { color:#bad1e2; margin:0; font-size:17px; }
+.ls26-dashboard26 .topbar-time { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:5px; max-width:190px; font-size:13px; }
+.ls26-dashboard26 .day-label { font-size:13px; color:#c6d9e7; }
+.ls26-dashboard26 #clockLabel { color:#2ed7f5; flex-basis:100%; text-align:right; font-size:38px; line-height:1.1; text-shadow:none; }
+.ls26-dashboard26 .advanced-status-strip { display:flex; flex-wrap:wrap; gap:14px; align-items:center; padding:9px 14px; margin:0 0 14px; border:1px solid #245167; border-radius:7px; background:#041721; }
+.ls26-dashboard26 .advanced-status-strip .status-box { padding:0; border:0; min-width:0; flex:1; }
+.ls26-dashboard26 .status-live-box { display:flex; gap:14px; align-items:center; flex:3!important; flex-wrap:wrap; }
+.ls26-dashboard26 .status-live-box>span { display:none; }
+.ls26-dashboard26 .status-action-line { display:flex; align-items:center; gap:10px; margin:0; }
+.ls26-dashboard26 #statusLiveLabel { font-size:17px!important; animation:none; white-space:nowrap; text-shadow:none; }
+.ls26-dashboard26 #liveCircleBtn,.ls26-dashboard26 #songsCircleBtn { width:38px; height:38px; min-width:38px; font-size:18px; box-shadow:none; display:grid; place-items:center; }
+.ls26-dashboard26 .status-live-session-meta { margin:0; padding:0 0 0 14px; border-left:1px solid #28617a; }
+.ls26-dashboard26 #statusLiveVenue { font-size:15px; }
+.ls26-dashboard26 #statusLiveStarted { color:#9bb8ca; font-size:11px; }
+.ls26-dashboard26 .advanced-status-strip .status-box>span { font-size:10px; color:#95b1c5; }
+.ls26-dashboard26 #statusUpdatedLabel { font-size:13px; }
+/* Session card: headline, details, public list and notes grouped together. */
+.ls26-dashboard26 .admin-card { background:linear-gradient(120deg,#061d2a,#03131e); padding:15px; margin:0 0 13px; border:1px solid #2289ab; border-radius:9px; box-shadow:0 0 12px #00c9ee08; scroll-margin-top:calc(var(--ls-header-h,68px) + 14px); }
+.ls26-dashboard26 #sessionPanel { border-color:#21c3e5!important; box-shadow:0 0 0 1px #13b6d522; }
+.ls26-dashboard26 .card-title-row { margin-bottom:12px; }
+.ls26-dashboard26 .card-title-row h2 { color:#3fcbed; font-size:20px; letter-spacing:.2px; }
+.ls26-dashboard26 #sessionPanel>.card-title-row h2 { font-size:27px; }
+.ls26-dashboard26 .session-layout { display:block; grid-template-columns:1fr; gap:12px; }
+.ls26-dashboard26 .session-details { min-width:0; padding:0; background:transparent; border:0; }
+.ls26-dashboard26 .session-event-only-setup { margin-bottom:14px; }
+.ls26-dashboard26 .session-event-suggestion { background:#082633; border:1px solid #245c71; padding:12px; }
+.ls26-dashboard26 .session-event-suggestion-head span { color:#b1c8d8; font-size:11px; }
+.ls26-dashboard26 .session-event-help { color:#97b6c9; font-size:12px; margin-top:6px; }
+.ls26-dashboard26 .session-live-details { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; margin:0 0 13px; }
+.ls26-dashboard26 .session-live-detail { grid-template-columns:1fr; min-width:0; min-height:68px; padding:11px 12px; background:linear-gradient(130deg,#0b2938,#061923); border:1px solid #254c61; border-radius:7px; }
+.ls26-dashboard26 .session-live-detail>span { color:#a6bfd1; font-size:10px; letter-spacing:.7px; }
+.ls26-dashboard26 .session-live-detail>strong { display:block; color:#f1f8ff; font-size:19px; line-height:1.25; white-space:normal; overflow:visible; margin-top:5px; }
+.ls26-dashboard26 .session-live-detail>small { font-size:11px; margin-top:3px; }
+.ls26-dashboard26 .session-live-detail:first-child { grid-column:span 2; background:transparent; border-color:transparent; padding-left:0; }
+.ls26-dashboard26 .session-live-detail:first-child strong { font-size:25px; }
+.ls26-dashboard26 .session-live-detail:nth-child(2) { grid-column:span 2; background:transparent; border-color:transparent; text-align:right; }
+.ls26-dashboard26 #sessionStatusLiveLabel { color:#59e5a8; font-size:17px; }
+.ls26-dashboard26 .session-live-detail:nth-child(n+7) { min-height:48px; display:flex; gap:10px; align-items:center; background:transparent; border:0; }
+.ls26-dashboard26 .session-live-detail:nth-child(n+7)>strong { font-size:15px; margin:0; }
+.ls26-dashboard26 .public-song-status-box { display:grid; grid-template-columns:minmax(140px,1fr) auto; gap:8px 18px; align-items:center; margin:4px 0 16px; padding:13px 15px; border:1px solid #2a566b; border-radius:8px; background:#061e2a; min-width:0; }
+.ls26-dashboard26 .public-song-status-box>span { grid-column:1/-1; color:#42d0ee; font-size:15px; font-weight:700; text-transform:uppercase; }
+.ls26-dashboard26 .public-setlist-picker-label { display:none; }
+.ls26-dashboard26 #publicSetlistSelect { grid-column:1; grid-row:2; min-height:42px; margin:0; font-size:14px; background:#0c2837; border-color:#36596c; color:white; }
+.ls26-dashboard26 .public-song-status-box .status-action-line { grid-column:2; grid-row:2; }
+.ls26-dashboard26 #statusSongsLabel { font-size:14px!important; text-shadow:none; }
+.ls26-dashboard26 #publicSetlistSaveStatus { grid-column:1/-1; font-size:12px; color:#97b6c8; }
+.ls26-dashboard26 #publicSetlistSaveStatus:empty { display:none; }
+.ls26-dashboard26 .notes-label { font-size:12px; margin:7px 0; color:#d6e5ee; }
+.ls26-dashboard26 #sessionNotesInput { width:100%; min-height:64px; height:64px; font-size:15px; padding:12px; color:white; background:#04141e; border:1px solid #31566a; resize:vertical; border-radius:6px; }
+.ls26-dashboard26 .session-action-status { font-size:11px; color:#a8c1d3; text-align:right; padding:5px 0; }
+.ls26-dashboard26 .session-controls-and-dashboard { display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
+.ls26-dashboard26 .session-button-row { margin-bottom:0; display:flex; flex:3; gap:8px; flex-wrap:wrap; }
+.ls26-dashboard26 .session-btn { min-height:48px; height:auto; flex:1; min-width:110px; padding:10px; font-size:13px; border-radius:6px; background:#06251f; border:1px solid #26c88b; color:#5bf3b6; box-shadow:none; }
+.ls26-dashboard26 .session-btn.amber { color:#ffdc68; border-color:#f4c33b; background:#2a2513; }
+.ls26-dashboard26 .session-btn.red { color:#ff8592; border-color:#ed526b; background:#321322; }
+.ls26-dashboard26 .session-btn.muted { background:#102635; color:#b8cfdd; border-color:#456475; }
+.ls26-dashboard26 .session-lyrics-suite-row { margin:0; display:flex; flex:1; }
+.ls26-dashboard26 .session-lyrics-suite-row .session-btn { width:100%; min-width:165px; }
+.ls26-dashboard26 .session-request-summary { flex-basis:100%; margin:0; }
+.ls26-dashboard26 .session-request-summary-title { font-size:10px; color:#98b3c7; }
+.ls26-dashboard26 #sessionDashboard .dashboard-grid { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:6px; }
+.ls26-dashboard26 #sessionDashboard .dashboard-card { padding:8px; min-height:46px; background:#061e2a; border-color:#22465b; }
+/* Shared controls, requests, and run order retain original handlers. */
+.ls26-dashboard26 .admin-main button:not(.session-btn):not(.circle-status-btn),.ls26-dashboard26 .admin-main select,.ls26-dashboard26 .admin-main input { background:#092332; color:#dbeef9; border:1px solid #2c6179; border-radius:6px; min-height:38px; padding:8px 11px; }
+.ls26-dashboard26 .admin-main button:disabled { opacity:.4; }
+.ls26-dashboard26 .admin-main button:hover:not(:disabled) { filter:brightness(1.2); }
+.ls26-dashboard26 #activeRequestCount,.ls26-dashboard26 #adminRunOrderCount { display:inline-flex; align-items:center; justify-content:center; min-width:28px; height:28px; padding:0 6px; border-radius:20px; background:#b83350; color:white; font-size:14px; vertical-align:middle; }
+.ls26-dashboard26 .request-header { color:#8bb0c5; background:#041622; font-size:10px; }
+.ls26-dashboard26 .request-header,.ls26-dashboard26 .active-request-row { grid-template-columns:28px minmax(120px,1.6fr) minmax(75px,1fr) 38px 48px 130px; gap:8px; min-width:0; }
+.ls26-dashboard26 .active-request-row,.ls26-dashboard26 .admin-run-order-row { background:#071e2b; border:1px solid #27485b; border-radius:7px; padding:10px; margin:7px 0; gap:10px; }
+.ls26-dashboard26 .request-main strong,.ls26-dashboard26 .admin-run-order-main strong { font-size:17px; color:#f4faff; }
+.ls26-dashboard26 .request-main span,.ls26-dashboard26 .request-person span,.ls26-dashboard26 .admin-run-order-main small,.ls26-dashboard26 .admin-run-order-singer { font-size:12px; color:#a3c0d3; }
+.ls26-dashboard26 .request-actions button,.ls26-dashboard26 .admin-run-order-actions button { width:40px; height:40px; display:inline-grid; place-items:center; padding:0!important; font-size:22px; }
+.ls26-dashboard26 .request-actions .request-done { color:#55ecb0!important; border-color:#37b787!important; background:#062a24!important; }
+.ls26-dashboard26 .request-actions .request-abandoned { color:#ffdc73!important; border-color:#b99535!important; }
+.ls26-dashboard26 .request-actions .request-delete,.ls26-dashboard26 .admin-run-order-actions .remove { color:#ff6982!important; border-color:#b3425d!important; background:#2a1320!important; }
+.ls26-dashboard26 .admin-run-order-index,.ls26-dashboard26 .request-number { border-radius:50%; background:#123448; color:#e7f9ff; }
+.ls26-dashboard26 .admin-run-order-row.played { opacity:.65; }
+.ls26-dashboard26 .admin-help-text { font-size:12px; color:#99b6c9; line-height:1.4; }
+.ls26-dashboard26 .history-btn { width:100%; margin-top:9px; font-size:12px; }
+.ls26-dashboard26 .run-order-add-controls { display:flex; gap:7px; min-width:0; }
+.ls26-dashboard26 #adminRunOrderSongSelect { max-width:240px; min-width:0; font-size:13px; }
+/* Collapsible secondary panels keep all original links and actions available. */
+.ls26-dashboard26 .d26-disclosure { margin-bottom:10px; border:1px solid #28556d; border-radius:8px; padding:10px 13px; background:#061c29; }
+.ls26-dashboard26 .d26-disclosure>summary { cursor:pointer; font-size:14px; color:#b8dceb; font-weight:700; padding:4px; }
+.ls26-dashboard26 .d26-disclosure[open]>summary { margin-bottom:12px; }
+.ls26-dashboard26 .d26-disclosure>.admin-card { margin:0; border:0; padding:4px; background:transparent; }
+.ls26-dashboard26 .d26-upcoming-summary { display:grid; grid-template-columns:1fr 1fr; gap:14px; padding:12px; border:1px solid #254b61; border-radius:6px; margin-bottom:12px; }
+.ls26-dashboard26 .d26-upcoming-summary .status-box { border:0; background:transparent; padding:8px; }
+.ls26-dashboard26 .quick-grid { grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; }
+.ls26-dashboard26 .quick-card { padding:10px; background:#062333; border-color:#235169; }
+.ls26-dashboard26 .quick-card h3 { font-size:13px; }
+.ls26-dashboard26 .quick-card button { font-size:12px; }
+.ls26-dashboard26 .admin-footer { color:#8eacbf; font-size:12px; }
+.ls26-dashboard26 .ls26-footer { margin-left:var(--d26-side); }
+.ls26-dashboard26 .ls26-footer .ls26-brand { width:210px; height:56px; }
+.ls26-dashboard26 .admin-modal-box { background:#061d2a; color:#eef8ff; border:1px solid #2ca5c7; }
+.ls26-dashboard26 .hidden { display:none!important; }
+@media (min-width:1500px) { .ls26-dashboard26 { --d26-side:240px; } }
+@media (max-width:1000px) { .ls26-dashboard26 { --d26-side:185px; } .ls26-dashboard26 .admin-main { padding:15px 12px; } .ls26-dashboard26 .session-live-detail>strong { font-size:16px; } .ls26-dashboard26 .request-header,.ls26-dashboard26 .active-request-row { grid-template-columns:24px minmax(100px,1.6fr) minmax(65px,1fr) 36px 40px 125px; gap:6px; } }
+@media (max-width:760px) { .ls26-dashboard26 { --d26-side:0px; } .ls26-dashboard26 #sidebarContainer { width:auto; } .ls26-dashboard26 .admin-sidebar.suite-sidebar { position:relative; top:auto; width:100%; max-height:320px; border-bottom:1px solid #28556d; } .ls26-dashboard26 .suite-nav { display:grid; grid-template-columns:1fr 1fr; } .ls26-dashboard26 .admin-main { padding:15px 10px; } .ls26-dashboard26 .card-title-row.split { display:flex; flex-wrap:wrap; } .ls26-dashboard26 .session-live-details { grid-template-columns:repeat(2,minmax(0,1fr)); } .ls26-dashboard26 .session-live-detail:first-child,.ls26-dashboard26 .session-live-detail:nth-child(2) { grid-column:auto; } .ls26-dashboard26 .public-song-status-box { grid-template-columns:1fr; } .ls26-dashboard26 .public-song-status-box .status-action-line { grid-column:1; grid-row:3; } .ls26-dashboard26 .active-requests-list { overflow-x:auto; } .ls26-dashboard26 .active-request-row,.ls26-dashboard26 .request-header { min-width:570px; } .ls26-dashboard26 .d26-upcoming-summary,.ls26-dashboard26 .quick-grid { grid-template-columns:1fr; } }
