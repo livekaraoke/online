@@ -1,0 +1,19 @@
+ROXANNA26 — GALLERY & LAYOUT UPDATE
+
+Copy the contents of root/roxanna26/ into your existing roxanna26/ folder, replacing matching files. Keep all other files in place. Do not add an extra root folder inside your site.
+
+Includes updated HTML, CSS, application script, configuration, function history, and three gallery images. The config retains the social URLs and repertoire settings from the previously supplied version; if you edited those settings since then, retain your values when uploading js/config.js.
+
+Changes:
+- About header Read More button removed.
+- Photos preview and lightbox load exclusively from assets/gallery/.
+- Existing three gallery pictures included at their new paths.
+- Upcoming gigs and All Gigs no longer show the Roxanna type badge below the time.
+- Section heading text slightly larger.
+- Hero logo centered above the next-gig card with more space below.
+
+To add/change gallery images: place the images in assets/gallery/, then update the photos array in js/config.js. The first three entries appear in the Photos preview; View More shows all entries. Static GitHub Pages cannot automatically list a folder. The hero slideshow continues to use its separate assets/herophotos/ configuration.
+
+Reload after upload; changed assets have new cache versions.
+
+Validation: JavaScript syntax, element references and local assets checked. Existing offline fixture checks passed for Roxanna-only filtering, requests, caching, session isolation and bookings. No live database or browser visual test was performed.

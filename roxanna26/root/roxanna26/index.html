@@ -1,0 +1,247 @@
+<!doctype html>
+<!-- Copyright © 2026 Roxanna. Public band site and Roxanna-only live audience tools. -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#080806">
+  <title>Roxanna — Live Music</title>
+  <meta name="description" content="Roxanna — live music, gigs, requests and live performance in Malta.">
+  <link rel="stylesheet" href="css/style.css?v=20260910-polish3">
+</head>
+<body>
+  <header class="site-shell hero" id="top">
+    <div class="hero-media" id="heroSlideshow" aria-hidden="true">
+      <img class="hero-slide is-active" id="heroSlideA" src="assets/hero-band-photo.png" alt="">
+      <img class="hero-slide" id="heroSlideB" alt="">
+    </div>
+    <div class="hero-noise" aria-hidden="true"></div>
+    <div class="ornament ornament-top" aria-hidden="true"></div>
+
+    <nav class="topbar" aria-label="Main navigation">
+      <a class="mini-brand" href="#top" aria-label="Roxanna home">ROXANNA</a>
+      <button class="share-btn" id="shareBtn" type="button" aria-label="Share Roxanna website">
+        <span>↗</span> SHARE
+      </button>
+    </nav>
+
+    <div class="hero-grid">
+      <div class="hero-copy">
+        <div class="hero-brand" aria-label="Roxanna logo">
+          <img class="hero-logo" src="assets/hero-logo.png" alt="ROXANNA logo">
+        </div>
+        <aside class="live-card hero-booking"><span class="eyebrow">NEXT ROXANNA GIG</span><div id="heroGigs" aria-live="polite"></div><div class="hero-actions"><a class="primary-btn" id="bookEnquireBtn" href="#book">BOOK / ENQUIRE →</a><a class="outline-btn" id="watchLiveBtn" href="#gigs">LIVE DATES →</a></div></aside>
+      </div>
+
+      
+    </div>
+  </header>
+
+  <main>
+
+    <section class="request-song-section" id="requestSongSection">
+      <div class="request-song-bg" aria-hidden="true"></div>
+      <div class="section-shell request-song-inner">
+        <div class="request-song-heading">
+          <div class="section-heading left"><span class="section-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 18V5l10-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="16" cy="16" r="3"/></svg></span><span>LIVE REQUEST PLAYER</span></div>
+          <h2>Hear your favourite song live tonight.</h2>
+          <p>Pick a song, send a request, and be part of the show.</p>
+        </div>
+        <section class="live-panel" id="livePanel" aria-live="polite">
+      <div class="player-main">
+        <img id="playerArt" class="player-art" src="assets/hero-logo.png" alt="Current song artwork">
+        <div class="player-copy">
+          <span class="eyebrow" id="liveStateLabel">NOT LIVE</span>
+          <h1 id="currentSongTitle">No active session</h1>
+          <p id="currentSongArtist">Check the upcoming gigs below.</p>
+          <div class="session-meta">
+            <span id="sessionVenue">—</span><i></i><span id="sessionType">—</span>
+          </div>
+          <p id="liveRequestStatus" role="status">Requests open during Roxanna performances.</p><div class="progress"><span id="progressBar"></span></div>
+        </div>
+        <div class="state-wrap"><div class="state-icon" id="stateIcon">♪</div><time id="elapsedTime" class="elapsed-time">00:00</time></div>
+      </div>
+      <div class="request-strip">
+        <div class="queue-summary"><b>♫</b><span><strong id="queueCount">0</strong> request(s) in queue</span></div>
+        <button id="requestSongBtn" class="primary-btn" disabled><span class="button-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 18V5l10-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="16" cy="16" r="3"/></svg></span><span>REQUEST A SONG →</span></button>
+      </div>
+        </section>
+      </div>
+    </section>
+    <section class="section-shell gigs-section" id="gigs">
+      <div class="gigs-heading-row">
+        <div class="section-heading"><span class="section-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18"/></svg></span><span>UPCOMING GIGS</span></div>
+        <button id="viewAllGigsBtn" class="view-all-gigs" type="button">VIEW ALL GIGS →</button>
+      </div>
+      <div class="gig-list" id="nextGigs"></div>
+    </section>
+
+    <div class="support-copy support-copy-below-player">Thanks for supporting live music.<span class="support-heart" aria-hidden="true"><svg viewBox="0 0 64 56"><path d="M32 50C26 42 8 31 8 17 8 9 13 4 20 4c6 0 10 4 12 9 2-5 6-9 12-9 7 0 12 5 12 13 0 14-18 25-24 33Z"/></svg></span></div>
+
+
+    <section class="watch section-shell" id="watch">
+      <div class="watch-head"><div class="section-heading left"><span class="section-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m10 9 5 3-5 3Z"/></svg></span><span>WATCH &amp; LISTEN</span></div><button class="section-link-action" type="button" id="viewMoreVideosBtn">VIEW MORE VIDS →</button></div>
+      <div class="video-grid" id="videoPreviewGrid"></div>
+    </section>
+
+    <section class="photos section-shell" id="photos">
+      <div class="photos-heading-row">
+        <div class="section-heading left"><span class="section-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m5 17 4-4 3 3 2-2 5 3"/></svg></span><span>PHOTOS</span></div>
+        <button class="section-link-action" type="button" id="viewMorePhotosBtn">VIEW MORE →</button>
+      </div>
+      <div class="photo-preview-grid" id="photoPreviewGrid"></div>
+    </section>
+
+    <section class="about section-shell" id="about">
+      <div class="about-heading-row"><div class="section-heading left about-heading"><span class="section-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3"/><path d="M5 20c.8-4.1 3.2-6 7-6s6.2 1.9 7 6"/></svg></span><span>ABOUT</span></div></div>
+      <div class="about-grid">
+        <img src="assets/herophotos/band1.png" alt="Roxanna live on stage">
+        <div class="about-copy">
+          <h2>ROCK CLASSICS. PLAYED LIVE.</h2>
+<p>Roxanna is a Malta-based hard rock band, bringing classic and modern rock to the stage.</p><p>Billy Lee on vocals and guitar, Billy B on bass and backing vocals, and Salvo on drums. Rock classics, live requests, and a night shared with the crowd.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="booking section-shell" id="book">
+      <div class="booking-intro">
+        <div class="section-heading left"><span class="section-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 7V5a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v2"/><rect x="3" y="7" width="18" height="14" rx="2"/><path d="M3 12h18M10 12v2h4v-2"/></svg></span><span>BOOK / ENQUIRE</span></div>
+        <div class="booking-content-row"><div class="booking-copy-wrap"><h2>Bring the show to your event.</h2>
+        <p>Venues, corporate events, weddings and private parties — send us the details and we’ll get back to you.</p></div>
+        <button id="openBookingDialogBtn" class="primary-btn booking-open-btn" type="button"><span class="button-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 7V5a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v2"/><rect x="3" y="7" width="18" height="14" rx="2"/><path d="M3 12h18"/></svg></span><span>BOOK / ENQUIRE →</span></button></div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    <div class="footer-crowd"></div>
+    <div class="footer-inner">
+      <div class="socials"><a id="instagramLink" aria-label="Roxanna on Instagram" title="Instagram" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg></a><a id="facebookLink" aria-label="Roxanna on Facebook" title="Facebook" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" stroke="none" d="M14 22v-9h3l.5-4H14V6.5c0-1.1.3-1.5 1.7-1.5H18V1.4c-.5-.1-1.8-.4-3.3-.4C11.5 1 10 3 10 6v3H7v4h3v9z"/></svg></a></div><p>© <span id="year"></span> ROXANNA · Powered by LiveSuite</p>
+    </div>
+  </footer>
+
+  <dialog id="eventDialog" class="modal event-modal"><button class="modal-close" data-close="eventDialog">×</button><div id="eventDialogBody"></div></dialog>
+  <dialog id="allGigsDialog" class="modal all-gigs-modal"><button class="modal-close" data-close="allGigsDialog">×</button><div class="all-gigs-head"><span class="eyebrow">LIVE DATES</span><h2>UPCOMING GIGS</h2></div><div id="allGigsList" class="all-gigs-list"></div></dialog>
+
+  <dialog id="bookingDialog" class="modal booking-modal">
+    <button class="modal-close" data-close="bookingDialog" aria-label="Close booking enquiry">×</button>
+    <div class="booking-modal-head">
+      <span class="eyebrow">BOOK / ENQUIRE</span>
+      <h2>Bring the show to your event.</h2>
+      <p>Tell us about your event and we’ll get back to you.</p>
+    </div>
+    <form id="bookingForm" class="booking-form">
+      <div class="booking-grid">
+        <label><span>YOUR NAME *</span><input id="enquiryName" name="name" type="text" maxlength="80" required autocomplete="name"></label>
+        <label><span>EMAIL *</span><input id="enquiryEmail" name="email" type="email" maxlength="120" required autocomplete="email"></label>
+        <label><span>PHONE</span><input id="enquiryPhone" name="phone" type="tel" maxlength="50" autocomplete="tel"></label>
+        <label><span>EVENT / BOOKING TYPE *</span><select id="enquiryEventType" name="eventType" required><option value="">Choose one…</option><option>Venue / Bar / Restaurant</option><option>Corporate Event</option><option>Wedding</option><option>Private Party</option><option>Hotel / Resort</option><option>Festival / Public Event</option><option>Other</option></select></label>
+        <label><span>PREFERRED DATE</span><input id="enquiryDate" name="preferredDate" type="date"></label>
+        <label><span>VENUE / LOCALITY</span><input id="enquiryVenue" name="venueOrLocality" type="text" maxlength="140" placeholder="Venue name or locality"></label>
+        <label><span>ESTIMATED GUESTS</span><input id="enquiryGuests" name="estimatedGuests" type="number" min="0" step="1" placeholder="Optional"></label>
+        <label><span>COMPANY / ORGANISATION</span><input id="enquiryCompany" name="company" type="text" maxlength="120" placeholder="Optional"></label>
+        <label class="wide"><span>MESSAGE / DETAILS *</span><textarea id="enquiryMessage" name="message" rows="5" maxlength="1500" required placeholder="Tell us about the event, timings, setup, music style, or anything else useful."></textarea></label>
+      </div>
+      <div class="booking-actions"><button id="bookingSubmitBtn" class="primary-btn booking-submit" type="submit">SEND ENQUIRY →</button><p id="bookingStatus" class="booking-status" aria-live="polite"></p></div>
+    </form>
+    <div id="bookingSuccess" class="booking-success" hidden>
+      <span class="eyebrow">ENQUIRY SENT</span>
+      <h2>Thank you!</h2>
+      <p id="bookingSuccessMessage">Your enquiry has been sent successfully.</p>
+      <button class="primary-btn booking-success-close" type="button" data-close="bookingDialog">CLOSE</button>
+    </div>
+  </dialog>
+
+
+  <dialog id="allVideosDialog" class="modal videos-modal">
+    <div class="videos-modal-sticky">
+      <div class="videos-modal-head"><span class="eyebrow">WATCH &amp; LISTEN</span><h2>VIDEOS</h2></div>
+      <button class="modal-close" data-close="allVideosDialog" aria-label="Close videos">×</button>
+    </div>
+    <div class="all-videos-grid" id="allVideosGrid"></div>
+  </dialog>
+
+  <dialog id="videoPlayerDialog" class="video-player-dialog">
+    <div class="video-player-top">
+      <div><span class="eyebrow">WATCH &amp; LISTEN</span><h2 id="videoPlayerTitle">VIDEO</h2></div>
+      <button class="modal-close video-player-close" data-close="videoPlayerDialog" aria-label="Close video">×</button>
+    </div>
+    <div class="video-player-frame-wrap">
+      <iframe id="youtubePlayerFrame" title="Roxanna video player" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" sandbox="allow-scripts allow-same-origin allow-presentation"></iframe>
+      <button id="videoPlayPauseBtn" class="video-play-pause" type="button" aria-label="Pause video">❚❚</button>
+    </div>
+  </dialog>
+
+  <dialog id="allPhotosDialog" class="modal photos-modal">
+    <div class="photos-modal-sticky">
+      <div class="photos-modal-head"><span class="eyebrow">GALLERY</span><h2>PHOTOS</h2></div>
+      <button class="modal-close" data-close="allPhotosDialog" aria-label="Close photos">×</button>
+    </div>
+    <div class="all-photos-grid" id="allPhotosGrid"></div>
+  </dialog>
+
+  <dialog id="photoLightboxDialog" class="photo-lightbox">
+    <button class="lightbox-close" data-close="photoLightboxDialog" aria-label="Close photo">×</button>
+    <button class="lightbox-nav lightbox-prev" id="photoPrevBtn" type="button" aria-label="Previous photo">‹</button>
+    <figure><img id="lightboxPhoto" alt="Roxanna gallery photo"><figcaption id="lightboxCaption"></figcaption></figure>
+    <button class="lightbox-nav lightbox-next" id="photoNextBtn" type="button" aria-label="Next photo">›</button>
+  </dialog>
+
+  <dialog id="requestDialog" class="modal request-modal">
+    <div class="request-modal-top">
+      <div class="request-header"><span class="eyebrow">LIVE REQUESTS</span><h2>REQUEST A SONG</h2></div>
+      <button class="modal-close request-modal-close" data-close="requestDialog" aria-label="Close">×</button>
+    </div>
+
+    <section id="requestNameStep" class="request-name-step">
+      <label for="singerName">YOUR NAME</label>
+      <input id="singerName" type="text" maxlength="60" placeholder="Enter your name" autocomplete="name">
+      <button id="continueRequestBtn" class="primary-btn" type="button">CONTINUE →</button>
+    </section>
+
+    <section id="requestSongStep" class="request-song-step" hidden>
+      <div class="requester-block">
+        <div class="requester-name-line">
+          <span class="requester-caption">REQUESTING AS</span>
+          <strong id="requesterNameLabel"></strong>
+          <button id="editRequesterNameBtn" class="icon-btn" type="button" aria-label="Edit name" title="Edit name">✎</button>
+        </div>
+        <div id="requesterNameEdit" class="requester-name-edit" hidden>
+          <input id="editSingerName" type="text" maxlength="60" autocomplete="name">
+          <button id="saveRequesterNameBtn" class="small-btn" type="button">SAVE</button>
+          <button id="cancelRequesterNameBtn" class="small-btn ghost" type="button">CANCEL</button>
+        </div>
+        <label class="request-note-label" for="requestNote">OPTIONAL NOTE / COMMENT</label>
+        <textarea id="requestNote" rows="2" maxlength="240" placeholder="A dedication or message for the band?"></textarea>
+      </div>
+
+      <div class="my-requests">
+        <h3>MY REQUESTS</h3>
+        <div id="myRequests" class="my-requests-scroll"></div>
+      </div>
+
+      <div id="requestBrowser" class="request-browser">
+        <h3 class="full-song-list-title">FULL SONG REQUEST LIST</h3>
+        <div class="request-controls"><input id="songSearch" type="search" placeholder="Search song or artist…" autocomplete="off" inputmode="search"></div>
+        <div id="requestNotice" class="request-notice"></div>
+        <div id="songResults" class="song-results"></div>
+      </div>
+
+      <div id="requestSuccess" class="request-success" hidden>
+        <div class="success-mark">✓</div>
+        <h3>REQUEST SENT</h3>
+        <p id="requestSuccessText">Your request has been sent and is awaiting approval.</p>
+        <button id="requestAnotherBtn" class="primary-btn" type="button">REQUEST ANOTHER SONG →</button>
+      </div>
+    </section>
+  </dialog>
+  <div id="toast" class="toast" role="status" hidden></div>
+  <script src="db/currentdb.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="js/firebase-config.js?v=20260910-roxanna26"></script>
+  <script src="assets/herophotos/photos.js"></script><script src="js/hero-slideshow.js?v=20260910-roxanna26"></script><script src="js/config.js?v=20260910-polish3"></script><script src="js/policy.js?v=20260910-roxanna26"></script>
+  <script src="js/app.js?v=20260910-polish3"></script>
+</body>
+</html>

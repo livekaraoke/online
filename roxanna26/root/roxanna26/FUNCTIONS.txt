@@ -1,0 +1,45 @@
+ROXANNA26 — FUNCTION REGISTER
+Copyright © 2026 Roxanna. Created 2026-09-10.
+Baseline: uploaded online-main(8).zip, roxanna visual assets and billylee26 flows.
+
+index.html: band home, repertoire, live player, gigs, media, booking and dialogs.
+css/style.css: unified gold/black styling, original hero, responsive cards/dialogs.
+js/config.js: dedicated Roxanna setlist mapping, media and public social links.
+js/policy.js: strict act classification, session identity and queue isolation.
+js/firebase-config.js + db/: preserved existing project selection/initialization.
+js/hero-slideshow.js + assets/herophotos/photos.js: preserved band-photo slideshow;
+  hidden-tab/reduced-motion pause; empty image requests removed.
+js/app.js: BillyLee26 public flows adapted to Roxanna:
+  listenEvents, syncLive, attachSessionDoc, listenLiveState — filtered snapshots,
+  lazy queue subscription, fail-closed errors, cleanup on navigation.
+  loadPublicSongs — dedicated repertoire, coalesced cache, no global fallback.
+  renderLive, renderHeroGig, renderEvents — Roxanna-only show and event rendering.
+  openRequestDialog, enterSongRequestStep, selectRequestSong, sendSelectedRequest —
+  named single-song confirmation, note, transactional active-act/gate validation.
+  renderMyRequests, clearRequestListeners — scoped status tracking, no reattachment
+  on unchanged ID sets, current-session-only local history.
+  showEventDetails, showCurrentEvent, showAllGigs — venue metadata cache and gigs.
+  submitBookingEnquiry — existing Admin collection with Roxanna classification.
+  renderVideos, openVideo, closeVideoPlayer — configurable Roxanna-only media.
+  renderAllPhotos, openPhoto, stepPhoto — local band gallery and lightbox.
+  renderRepertoire, toast — offline repertoire browse and custom status messages.
+
+Intentionally not carried across: Billy Lee images/videos/biography and mixed-act
+calendar/live fallback. Original cart replaced by requested BillyLee26 single-song
+flow. Original all-lyrics fetch removed in favour of dedicated setlist ID reads.
+No original source directory or database data modified. Append changes here after
+reviewing actual code and callers. Validation details are in README.md.
+
+2026-09-10 — Roxanna tablet polish
+Changed: smaller, raised hero logo; existing next-gig card moved beneath logo on left, compact translucent treatment.
+Changed: tighter gig rows, larger/bolder times, accessible SVG social icons, responsive spacing and reduced-motion support.
+Removed by request: quick-action navigation, standalone repertoire preview/browser, digital tips button, Billy Lee website button, hero/footer slogans.
+Removed: orphaned repertoire/tip handlers and automatic preview song fetch. Request dialog retains cached, on-demand song loading.
+Preserved: Roxanna-only filtering, live-session/request controls, event dialogs, booking form, galleries, social URLs and sharing. No database writes added.
+
+2026-09-10 — Roxanna gallery and header refinement
+Removed: About header Read More button and its unused dialog/handler.
+Changed: Photos preview and lightbox share js/config.js photo entries and accept only assets/gallery/ image paths; included current three photos in that folder. No remote or hero-image gallery fallback.
+Changed: upcoming-gig and All Gigs cards omit type badges below times; Roxanna-only data filtering unchanged.
+Changed: section headings increased to 16px; hero logo centered over next-gig card with 24px gap.
+Preserved: hero slideshow, event details, live requests, booking, social links and all act-isolation checks.
