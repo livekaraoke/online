@@ -29,3 +29,10 @@ calendar/live fallback. Original cart replaced by requested BillyLee26 single-so
 flow. Original all-lyrics fetch removed in favour of dedicated setlist ID reads.
 No original source directory or database data modified. Append changes here after
 reviewing actual code and callers. Validation details are in README.md.
+
+2026-09-10 — Roxanna tablet polish
+Changed: smaller, raised hero logo; existing next-gig card moved beneath logo on left, compact translucent treatment.
+Changed: tighter gig rows, larger/bolder times, accessible SVG social icons, responsive spacing and reduced-motion support.
+Removed by request: quick-action navigation, standalone repertoire preview/browser, digital tips button, Billy Lee website button, hero/footer slogans.
+Removed: orphaned repertoire/tip handlers and automatic preview song fetch. Request dialog retains cached, on-demand song loading.
+Preserved: Roxanna-only filtering, live-session/request controls, event dialogs, booking form, galleries, social URLs and sharing. No database writes added.

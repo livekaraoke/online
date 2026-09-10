@@ -705,12 +705,9 @@
   $("shareBtn").addEventListener("click",async()=>{try{if(navigator.share)await navigator.share({title:document.title,url:location.href});else{await navigator.clipboard.writeText(location.href);toast("Link copied.");}}catch{}});
 
   $('requestDialog').addEventListener('close',clearRequestListeners);
-  $('browseRepertoireBtn').onclick=async()=>{const d=$('repertoireDialog');if(!d.open)d.showModal();$('repertoireResults').textContent='Loading Roxanna songs…';try{await loadPublicSongs();renderRepertoire();}catch(e){$('repertoireResults').textContent=e.message;}};
-  function renderRepertoire(){const q=$('repertoireSearch').value.toLowerCase();$('repertoireResults').innerHTML=songs.filter(s=>(s.title+' '+s.artist).toLowerCase().includes(q)).map(s=>`<div class="song-row"><span><strong>${escapeHTML(s.title)}</strong><small>${escapeHTML(s.artist||'')}</small></span></div>`).join('')||'<p>No matching songs.</p>';}
-  $('repertoireSearch').oninput=renderRepertoire;
   $('year').textContent=new Date().getFullYear();$('instagramLink').href=cfg.instagramUrl;$('facebookLink').href=cfg.facebookUrl;
-  if(cfg.tipUrl){$('tipBtn').disabled=false;$('tipBtn').textContent='Digital tips ↗';$('tipBtn').onclick=()=>window.open(cfg.tipUrl,'_blank','noopener,noreferrer');}
-  if(db){listenEvents();listenLiveState();renderLive();loadPublicSongs().then(()=>{$('popularSongs').innerHTML=songs.slice(0,5).map(s=>`<div class="song-row"><span><strong>${escapeHTML(s.title)}</strong><small>${escapeHTML(s.artist||'')}</small></span></div>`).join('')||'<p>No songs published yet.</p>';}).catch(e=>{$('popularSongs').textContent=e.message;});}
+  // Song documents load on demand when the request dialog opens.
+  if(db){listenEvents();listenLiveState();renderLive();}
   else{$('liveRequestStatus').textContent='Live information is temporarily unavailable.';$('nextGigs').textContent='Gig dates are temporarily unavailable.';}
   window.addEventListener('pagehide',()=>{unsubs.forEach(fn=>fn());sessionUnsub?.();runUnsub?.();clearRequestListeners();clearInterval(elapsedTimer);});
   window.addEventListener('pageshow',event=>{if(event.persisted)location.reload();});

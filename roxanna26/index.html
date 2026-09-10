@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#080806">
   <title>Roxanna — Live Music</title>
   <meta name="description" content="Roxanna — live music, gigs, requests and live performance in Malta.">
-  <link rel="stylesheet" href="css/style.css?v=20260910-roxanna26">
+  <link rel="stylesheet" href="css/style.css?v=20260910-polish2">
 </head>
 <body>
   <header class="site-shell hero" id="top">
@@ -30,17 +30,15 @@
         <div class="hero-brand" aria-label="Roxanna logo">
           <img class="hero-logo" src="assets/hero-logo.png" alt="ROXANNA logo">
         </div>
-
-        <p class="hero-tagline">LIVE MUSIC.<br>GOOD PEOPLE.<br>GREAT TIMES.</p>
-        <p class="hero-thanks">THANK YOU FOR SUPPORTING<br>LIVE MUSIC ♥</p>
+        <aside class="live-card hero-booking"><span class="eyebrow">NEXT ROXANNA GIG</span><div id="heroGigs" aria-live="polite"></div><div class="hero-actions"><a class="primary-btn" id="bookEnquireBtn" href="#book">BOOK / ENQUIRE →</a><a class="outline-btn" id="watchLiveBtn" href="#gigs">LIVE DATES →</a></div></aside>
       </div>
 
-      <aside class="live-card hero-booking"><span class="eyebrow">NEXT ROXANNA GIG</span><div id="heroGigs" aria-live="polite"></div><div class="hero-actions"><a class="primary-btn" id="bookEnquireBtn" href="#book">BOOK / ENQUIRE →</a><a class="outline-btn" id="watchLiveBtn" href="#gigs">LIVE DATES →</a></div></aside>
+      
     </div>
   </header>
 
   <main>
-<nav class="quick-actions section-shell" aria-label="Roxanna quick links"><a href="#requestSongSection">♪ Song requests</a><button id="browseRepertoireBtn">≡ Full song list</button><a href="#gigs">Upcoming gigs</a><a href="#watch">Watch &amp; listen</a><a href="#book">Book the band</a><button id="tipBtn" disabled>Digital tips · coming soon</button></nav>
+
     <section class="request-song-section" id="requestSongSection">
       <div class="request-song-bg" aria-hidden="true"></div>
       <div class="section-shell request-song-inner">
@@ -70,8 +68,6 @@
         </section>
       </div>
     </section>
-
-    <section class="section-shell popular-section"><div class="section-heading">FROM OUR REPERTOIRE</div><div id="popularSongs"></div></section>
     <section class="section-shell gigs-section" id="gigs">
       <div class="gigs-heading-row">
         <div class="section-heading"><span class="section-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18"/></svg></span><span>UPCOMING GIGS</span></div>
@@ -125,8 +121,7 @@
   <footer>
     <div class="footer-crowd"></div>
     <div class="footer-inner">
-      <div class="footer-tag"><span></span>LIVE MUSIC. GOOD PEOPLE. GREAT TIMES.<span></span></div>
-      <div class="socials"><a id="instagramLink" target="_blank" rel="noopener noreferrer">Instagram ↗</a><a id="facebookLink" target="_blank" rel="noopener noreferrer">Facebook ↗</a></div><a class="outline-btn billy-link" href="../billylee26/">Visit Billy Lee’s website ↗</a><p>© <span id="year"></span> ROXANNA · Powered by LiveSuite</p>
+      <div class="socials"><a id="instagramLink" aria-label="Roxanna on Instagram" title="Instagram" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg></a><a id="facebookLink" aria-label="Roxanna on Facebook" title="Facebook" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" stroke="none" d="M14 22v-9h3l.5-4H14V6.5c0-1.1.3-1.5 1.7-1.5H18V1.4c-.5-.1-1.8-.4-3.3-.4C11.5 1 10 3 10 6v3H7v4h3v9z"/></svg></a></div><p>© <span id="year"></span> ROXANNA · Powered by LiveSuite</p>
     </div>
   </footer>
 
@@ -256,14 +251,12 @@
       </div>
     </section>
   </dialog>
-
-  <dialog id="repertoireDialog" class="modal"><button class="modal-close" data-close="repertoireDialog" aria-label="Close song list">×</button><span class="eyebrow">ROXANNA REPERTOIRE</span><h2>FULL SONG LIST</h2><input id="repertoireSearch" type="search" placeholder="Search song or artist…" aria-label="Search repertoire"><div id="repertoireResults"></div></dialog>
   <div id="toast" class="toast" role="status" hidden></div>
   <script src="db/currentdb.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
   <script src="js/firebase-config.js?v=20260910-roxanna26"></script>
   <script src="assets/herophotos/photos.js"></script><script src="js/hero-slideshow.js?v=20260910-roxanna26"></script><script src="js/config.js?v=20260910-roxanna26"></script><script src="js/policy.js?v=20260910-roxanna26"></script>
-  <script src="js/app.js?v=20260910-roxanna26"></script>
+  <script src="js/app.js?v=20260910-polish2"></script>
 </body>
 </html>
