@@ -379,10 +379,10 @@
             data-open="${song.firebaseId}"
             type="button"
             title="Play / Open song">
-            ▶
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3 21 12 7 21Z"/></svg>
           </button>
 
-          <button class="row-queue-btn" data-queue="${song.firebaseId}" type="button" title="Add to Run Order">＋ Queue</button>
+          <button class="row-edit-btn" data-edit="${song.firebaseId}" type="button" aria-label="Edit song" title="Edit song"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 16-1 5 5-1L21 7l-4-4Z" fill="none" stroke="currentColor" stroke-width="2"/></svg></button><button class="row-queue-btn" data-queue="${song.firebaseId}" type="button" title="Add to Run Order">＋ Q</button>
         </span>
       `;
 
@@ -589,6 +589,7 @@
   $("songRows").addEventListener('scroll',saveViewState,{passive:true});
 
   document.addEventListener("click", event => {
+    const edit=event.target.closest('[data-edit]');if(edit){location.href=LS26.url('host/lyricscreator.html?firebaseId='+encodeURIComponent(edit.dataset.edit));return;}
     const queue=event.target.closest('[data-queue]');if(queue){queueSong(queue.dataset.queue,queue);return;}
     const select=event.target.closest('[data-select]');if(select){selectedId=select.dataset.select;updateSelected();saveViewState();return;}
     const open = event.target.closest("[data-open]");

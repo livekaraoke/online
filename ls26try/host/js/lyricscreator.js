@@ -1257,6 +1257,7 @@
       syncSectionsFromDOM();
       const index = Number(duplicate.dataset.duplicate);
       sections.splice(index + 1, 0, JSON.parse(JSON.stringify(sections[index])));
+      revealSection(index + 1);
       markDirty();
       render();
       return;
@@ -1368,6 +1369,7 @@
       markDirty();
       render();
 
+      revealSection(newIndex);
       if (item.linkedSongTemplate) {
         requestAnimationFrame(async () => {
           const editor = document.querySelector(`[data-html="${newIndex}"]`);
@@ -1385,11 +1387,12 @@
     }
   });
 
-  $("addLyricsSectionBtn").onclick = () => { syncSectionsFromDOM(); sections.push(makeSection("lyrics")); markDirty(); render(); };
-  $("addTabSectionBtn").onclick = () => { syncSectionsFromDOM(); sections.push(makeSection("tab")); markDirty(); render(); };
-  $("addPerformanceNoteBtn").onclick = () => { syncSectionsFromDOM(); sections.push(makeSection("performanceNote")); markDirty(); render(); };
-  $("addHostNoteBtn").onclick = () => { syncSectionsFromDOM(); sections.push(makeSection("hostNote")); markDirty(); render(); };
-  $("addSeparatorBtn").onclick = () => { syncSectionsFromDOM(); sections.push(makeSection("separator")); markDirty(); render(); };
+  function revealSection(index=sections.length-1){requestAnimationFrame(()=>{const card=document.querySelector(`.creator-section-card[data-index="${index}"]`);if(!card)return;const offset=document.getElementById('ls26StickyHeader')?.getBoundingClientRect().height||0;window.scrollTo({top:Math.max(0,card.getBoundingClientRect().top+window.scrollY-offset-12),behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});});}
+  $("addLyricsSectionBtn").onclick = () => { syncSectionsFromDOM(); sections.push(makeSection("lyrics")); markDirty(); render(); revealSection(); };
+  $("addTabSectionBtn").onclick = () => { syncSectionsFromDOM(); sections.push(makeSection("tab")); markDirty(); render(); revealSection(); };
+  $("addPerformanceNoteBtn").onclick = () => { syncSectionsFromDOM(); sections.push(makeSection("performanceNote")); markDirty(); render(); revealSection(); };
+  $("addHostNoteBtn").onclick = () => { syncSectionsFromDOM(); sections.push(makeSection("hostNote")); markDirty(); render(); revealSection(); };
+  $("addSeparatorBtn").onclick = () => { syncSectionsFromDOM(); sections.push(makeSection("separator")); markDirty(); render(); revealSection(); };
   $("openTemplatesBtn").onclick = () => $("templatesModal").classList.remove("hidden");
   $("refreshSetlistsBtn").onclick = () => loadSetlistMembership(firebaseId);
   $("saveSectionDefaultsBtn").onclick = saveSectionTitleDefaults;

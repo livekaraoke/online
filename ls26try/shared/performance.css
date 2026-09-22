@@ -168,3 +168,12 @@ body.host-lyric-view-page{overflow:visible!important}
 .host-lyric-view-page .host-nav-pad .nav-down{grid-column:2!important;grid-row:3!important}
 .host-lyric-view-page .host-nav-pad .host-nav-btn .host-nav-icon{width:32px!important;height:32px!important}
 .host-lyric-view-page #ls26StickyHeader #topStatusBar,.host-lyric-view-page #ls26StickyHeader #topStatusContainer,.host-lyric-view-page #ls26StickyHeader #topStatusBar .host-compact-strip{box-shadow:none!important;filter:none!important}
+#performanceQuickInfo[hidden]{display:none!important}
+.host-lyric-view-page #performanceQuickInfo .performance-quick-karaoke{display:flex!important;flex-wrap:nowrap!important;gap:6px!important;align-items:center!important}
+.host-lyric-view-page #performanceQuickInfo .performance-quick-label{display:block!important;width:76px!important;flex:0 0 76px!important;font-size:10px!important}
+.host-lyric-view-page #performanceQuickInfo .performance-quick-primary{flex:1 1 160px!important;min-width:0!important}
+.host-lyric-view-page #performanceQuickInfo .performance-quick-slave{flex:1 1 220px!important;min-width:0!important}
+.host-lyric-view-page #performanceQuickInfo select{min-width:0!important;width:100%!important}
+.host-lyric-view-page #performanceQuickInfo .ls26-hide-karaoke{flex:0 0 40px!important;width:40px!important;min-width:40px!important;font-size:24px!important;color:var(--ls-muted)!important;background:transparent!important}
+.ls26-karaoke-toggle{display:flex;align-items:center;gap:10px;padding:12px;color:var(--ls-text)}.ls26-karaoke-toggle input{width:20px;height:20px}
+@media(max-width:600px){.host-lyric-view-page #performanceQuickInfo .performance-quick-karaoke{flex-wrap:wrap!important}.host-lyric-view-page #performanceQuickInfo .performance-quick-slave{flex-basis:65%!important}}

@@ -22,7 +22,11 @@
       d.addEventListener('close',()=>{d.remove();resolve(result);},{once:true});d.showModal();(input||ok).focus();
     });
   }
-  window.LS26Dialogs={alert:message=>ask('alert',message),confirm:(message,options)=>ask('confirm',message,'',options),prompt:(message,initial)=>ask('prompt',message,initial)};
+  function fadeClose(dialog){
+    if(dialog.dataset.closing)return;dialog.dataset.closing='true';dialog.classList.add('ls26-fading-out');
+    setTimeout(()=>{dialog.close();dialog.classList.remove('ls26-fading-out');delete dialog.dataset.closing;},matchMedia('(prefers-reduced-motion: reduce)').matches?0:160);
+  }
+  window.LS26Dialogs={fadeClose,alert:message=>ask('alert',message),confirm:(message,options)=>ask('confirm',message,'',options),prompt:(message,initial)=>ask('prompt',message,initial)};
   const overlays='dialog,.confirm-modal,.suite-modal,.admin-modal,.creator-modal,.session-modal,.events-modal,.venues-modal,.signup-modal,.custom-dialog,[role="dialog"]';
   function enhance(modal){
     if(modal.dataset.ls26Close)return;
@@ -31,7 +35,7 @@
     const bar=document.createElement('div');bar.className='ls26-modal-close-bar';
     const x=document.createElement('button');x.type='button';x.className='ls26-modal-x';x.textContent='×';x.setAttribute('aria-label','Close dialog');bar.append(x);panel.prepend(bar);
     x.onclick=()=>{
-      if(modal.tagName==='DIALOG'){modal.close();return;}
+      if(modal.tagName==='DIALOG'){fadeClose(modal);return;}
       // Invoke the existing cancellation handler so pending confirmation Promises resolve.
       const cancel=[...modal.querySelectorAll('button')].find(b=>b!==x&&(/cancel|close/i.test(b.id+' '+b.className+' '+(b.getAttribute('aria-label')||''))||/^(cancel|close|back|no)$/i.test(b.textContent.trim())));
       if(cancel){cancel.click();return;}modal.classList.add('hidden');modal.setAttribute('aria-hidden','true');

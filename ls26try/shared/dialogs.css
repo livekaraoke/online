@@ -12,3 +12,12 @@
 .ls26-confirm-dialog .ls26-dialog-actions{justify-content:flex-end;gap:8px}
 .ls26-confirm-dialog .ls26-dialog-actions button{font-size:15px;min-height:44px}
 .ls26-confirm-dialog .ls26-dialog-actions .primary{background:#003526;border-color:var(--ls-success,#00e88a);color:var(--ls-success,#00e88a);order:1}
+/* Consistent modal chrome and brief, reduced-motion-aware dismissal. */
+.ls26-dialog .ls26-modal-close-bar{background:transparent!important}
+.ls26-dialog[open]{animation:ls26-fade-in .16s ease-out}
+.ls26-dialog.ls26-fading-out{animation:ls26-fade-out .16s ease-in forwards;pointer-events:none}
+.ls26-dialog.ls26-fading-out::backdrop{animation:ls26-fade-out .16s ease-in forwards}
+.ls26-list-picker{width:min(480px,calc(100vw - 32px));padding:24px}.ls26-list-picker label{margin:20px 0}.ls26-list-picker select{min-height:52px}.ls26-list-picker [role=status]{margin-bottom:0}
+@keyframes ls26-fade-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes ls26-fade-out{to{opacity:0}}
+@media(prefers-reduced-motion:reduce){.ls26-dialog,.ls26-dialog::backdrop{animation:none!important}}
