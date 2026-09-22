@@ -177,7 +177,7 @@
   }
 
   function setTopTitle(song) {
-    $("topbarSongTitle").innerHTML = `<strong>${esc(song.title || "Untitled")}</strong><span>${esc(song.artist || "")}${song.year ? " · " + esc(song.year) : ""} <b class="ls26-title-bpm">${song.originalBpm ? esc(song.originalBpm) + " BPM original" : ""}</b></span>`;
+    $("topbarSongTitle").innerHTML = `<strong>${esc(song.title || "Untitled")}</strong><span>${esc(song.artist || "")}${song.year ? " · " + esc(song.year) : ""}</span>`;
     $("infoSongTitle").textContent = `${song.title || "Untitled"}${song.artist ? " — " + song.artist : ""}`;
   }
 
@@ -218,7 +218,10 @@
     if ($("quickTime")) $("quickTime").textContent = time;
     renderBpmValue($("quickTempo"), tempo);
     renderBpmValue($("quickOriginalBpm"), original);
-    if ($("quickCapo")) $("quickCapo").textContent = capo;
+    if ($("quickCapo")) {
+      $("quickCapo").textContent = capo;
+      $("quickCapo").dataset.zero = String(Number(capo) === 0);
+    }
 
     const tempoTargets = [$("infoTempo"), $("quickTempo")].filter(Boolean);
     const originalTargets = [$("infoOriginalBpm"), $("quickOriginalBpm")].filter(Boolean);
@@ -1684,6 +1687,15 @@
       drawer.setAttribute("aria-hidden", "true");
       $("songInfoBtn").classList.remove("active");
     };
+    document.querySelectorAll(".host-nav-btn").forEach(button => {
+      button.addEventListener("click", () => {
+        if (matchMedia("(prefers-reduced-motion: reduce)").matches || !button.animate) return;
+        button.getAnimations().forEach(animation => animation.cancel());
+        button.animate([{scale:"1.12", opacity:1}, {scale:"1", opacity:.72}], {
+          duration:650, easing:"ease-out"
+        });
+      });
+    });
     $("navUpBtn").onclick = () => smoothRelativeScroll(-1);
     $("navDownBtn").onclick = () => smoothRelativeScroll(1);
     $("navPrevBtn").onclick = () => scrollToSection(currentSectionIndex-1);

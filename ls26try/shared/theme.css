@@ -72,3 +72,36 @@
 .creator-page .creator-section-head{background:linear-gradient(110deg,#07394e,#032333)!important;border-bottom:2px solid #1387aa!important;border-radius:8px 8px 0 0}
 .creator-page .creator-section-head .section-title-input,.creator-page .creator-section-head button,.creator-page .creator-section-head select{background:#032333;border-color:#23637a}
 .creator-page .creator-section-card{border-color:#23637a!important;margin-bottom:18px;scroll-margin-top:calc(var(--ls-header-h,150px) + 12px)}
+
+/* Clean artwork. Screen compositing removes its black backdrop on our navy UI. */
+.ls26-nav a.ls26-brand{width:300px;min-width:240px;height:78px;background:none}
+.ls26-nav .ls26-brand img{mix-blend-mode:screen;filter:none;box-shadow:none}
+body .ls26-footer .ls26-brand.ls26-footer-icon{width:38px;height:38px;background:none;mix-blend-mode:screen}
+.ls26-footer-icon svg{display:block;width:100%;height:100%}
+@media(max-width:1100px){.ls26-nav a.ls26-brand{width:230px;min-width:230px;height:68px}}
+@media(max-width:800px){.ls26-nav a.ls26-brand{width:190px;min-width:190px;height:62px}}
+/* Creator details and section controls follow the stage palette. */
+.creator-page .creator-meta-grid input,.creator-page .creator-meta-grid textarea{font-size:18px!important;min-height:48px;padding:12px!important;background:#031722!important;border-color:#235064!important}
+.creator-page #userBpmInput{color:var(--ls-success)!important;font-weight:700}
+.creator-page #originalBpmInput{color:var(--ls-accent)!important;font-weight:700}
+.creator-page #capoInput{color:#ffdb58!important;font-weight:700}
+.creator-page #capoInput[data-zero="true"]{color:#fff!important}
+.creator-page .creator-setlist-chip{min-height:58px;padding:12px 14px!important;font-size:16px!important;background:#032333!important}
+.creator-page .creator-setlist-chip strong{font-size:16px!important}
+.creator-page .creator-setlist-chip.selected{background:#053628!important}
+.creator-page .creator-section-body,.creator-page .creator-rich-editor,.creator-page .creator-section-card,.creator-page .creator-section-tools .panel-title-row,.creator-page .creator-setlist-membership{background:#031722!important;border-color:#1e4b60!important}
+.creator-page .creator-section-body textarea,.creator-page .creator-rich-toolbar,.creator-page .editor-toolbar,.creator-page .section-visibility-strip{background:#052131!important;border-color:#1e4b60!important}
+.creator-page .section-align-control button,.creator-page .creator-section-actions button{display:inline-grid!important;place-items:center!important;line-height:1!important;padding:0!important;min-width:40px;min-height:40px;font-size:23px!important;font-weight:800!important;color:#e9f7ff!important;border-color:#378bad!important;background:#073449!important}
+.creator-page .section-align-control button.active{background:#0c6481!important;outline:1px solid #57d8f6}
+.creator-page .creator-section-actions [data-remove]{font-size:29px!important;color:#ff7a87!important;background:#3c1726!important;border-color:#a74358!important}
+.creator-section-navigator{display:flex;overflow-x:auto;overscroll-behavior:contain;padding:14px 8px 18px;gap:0;border:1px solid #235064;border-radius:8px;margin:16px 0 20px;background:#031722}
+.creator-section-navigator[hidden]{display:none}
+.creator-section-navigator button{position:relative;flex:1 0 110px;max-width:180px;min-height:54px;padding:0 8px;background:transparent;border:0;color:#ccdeea;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:space-between;font-size:11px;font-weight:700}
+.creator-section-navigator button::after{content:"";position:absolute;left:0;right:0;bottom:9px;height:3px;background:#375060}
+.creator-section-navigator button:first-child::after{left:50%}.creator-section-navigator button:last-child::after{right:50%}
+.creator-section-navigator button i{position:relative;z-index:1;width:20px;height:20px;border-radius:50%;background:#54717d;border:2px solid #6d8b98}
+.creator-section-navigator button.active{color:#27c9ef}.creator-section-navigator button.active i{background:#00cafa;border-color:#5cdefc;box-shadow:0 0 8px #00cafa55}
+.creator-section-navigator button:focus-visible{outline:2px solid #00cafa;outline-offset:-2px;border-radius:6px}
+
+.creator-page .rich-toolbar,.creator-page .rich-toolbar select,.creator-page .rich-toolbar input,.creator-page .rich-toolbar button,.creator-page .dash-colour-control{background:#052131!important;border-color:#235064!important}
+.creator-page .rich-toolbar button:hover{background:#0a3d54!important;border-color:#37b4da!important}

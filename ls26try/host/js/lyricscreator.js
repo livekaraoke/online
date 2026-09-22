@@ -609,10 +609,51 @@
       root.appendChild(card);
     });
 
+    renderSectionNavigator();
+    updateCapoColour();
     root.querySelectorAll("[data-placeholder]").forEach(updateEmptyEditor);
     // Preview each section's dash colour immediately in the creator.
     requestAnimationFrame(refreshAllDashColours);
   }
+
+  function updateCapoColour() {
+    const input = $("capoInput");
+    if (input) input.dataset.zero = String(!Number(input.value));
+  }
+
+  function renderSectionNavigator() {
+    const nav = $("creatorSectionNav");
+    if (!nav) return;
+    const previousScroll = nav.scrollLeft;
+    nav.innerHTML = sections.map((section, index) =>
+      `<button type="button" data-jump-section="${index}" aria-label="Go to section ${index + 1}: ${esc(section.title || section.type)}"><span>${esc(section.title || (section.type === "separator" ? "SEPARATOR" : "SECTION"))}</span><i aria-hidden="true"></i></button>`
+    ).join("");
+    nav.hidden = !sections.length;
+    nav.scrollLeft = previousScroll;
+    updateNavigatorPosition();
+  }
+
+  function updateNavigatorPosition() {
+    const cards = [...document.querySelectorAll(".creator-section-card")];
+    const top = (document.getElementById("ls26StickyHeader")?.getBoundingClientRect().bottom || 0) + 24;
+    let current = 0;
+    cards.forEach((card, index) => { if (card.getBoundingClientRect().top <= top) current = index; });
+    document.querySelectorAll("[data-jump-section]").forEach(button => {
+      const active = Number(button.dataset.jumpSection) === current;
+      button.classList.toggle("active", active);
+      if (active) button.setAttribute("aria-current", "step");
+      else button.removeAttribute("aria-current");
+    });
+  }
+  let navigatorFrame = 0;
+  window.addEventListener("scroll", () => {
+    if (navigatorFrame) return;
+    navigatorFrame = requestAnimationFrame(() => { navigatorFrame = 0; updateNavigatorPosition(); });
+  }, {passive:true});
+  document.addEventListener("click", event => {
+    const button = event.target.closest?.("[data-jump-section]");
+    if (button) revealSection(Number(button.dataset.jumpSection));
+  });
 
   function updateEmptyEditor(editor) {
     const empty = !editor.textContent.trim() && !editor.querySelector("img,svg,video,audio,iframe,table,.tab-block");
@@ -1030,6 +1071,7 @@
   document.addEventListener("input", event => {
     if (event.target.matches("input, textarea, [contenteditable='true']")) markDirty();
     if (event.target.id === "songTitleInput" || event.target.id === "artistInput") updateEditingStatus();
+    if (event.target.id === "capoInput") updateCapoColour();
     if (event.target.id === "chordInput") $("chordPreview").textContent = event.target.value || "—";
 
     if (event.target.matches("[data-title]")) {
@@ -1041,6 +1083,7 @@
         try { event.target.setSelectionRange(start, end); } catch (_) {}
       }
       syncSectionsFromDOM();
+      renderSectionNavigator();
       const index = Number(event.target.dataset.title);
       if (sections[index] && !sections[index].style?.titleColor) {
         event.target.style.color = getSystemSectionTitleColour(event.target.value);

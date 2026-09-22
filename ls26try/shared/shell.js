@@ -12,7 +12,7 @@
   function toast(message){let el=$('ls26Toast');if(!el){el=document.createElement('div');el.id='ls26Toast';el.className='ls26-toast';el.setAttribute('role','status');document.body.append(el);}el.textContent=message;el.hidden=false;clearTimeout(el.timer);el.timer=setTimeout(()=>el.hidden=true,5000);}
   const currentId=params.get('id')||params.get('firebaseId');
   if(location.pathname.endsWith('/lyricview.html')&&currentId) sessionStorage.setItem('ls26:lastSong',location.href);
-  window.LS26={url,escape,toast,themes:{blue:{label:'Blue',logo:url('assets/livesuite-logo-transparent.png')}},openInbox:()=>openInbox()};
+  window.LS26={url,escape,toast,themes:{blue:{label:'Blue',logo:url('assets/livesuite-logo-clean.png')}},openInbox:()=>openInbox()};
   // Call synchronously from the initiating tap, before playback's async work.
   const fullscreenElement=()=>document.fullscreenElement||document.webkitFullscreenElement;
   async function enterFullscreen(){
@@ -49,7 +49,7 @@
     const isLibrary=location.pathname.endsWith('/lyricsviewer.html')||location.pathname.endsWith('/library.html');
     const tab=location.pathname.endsWith('/setlist-editor.html')?'Setlists':isLibrary?'Library':isLyric?'LyricView':location.pathname.endsWith('/requests.html')?'Requests':'';
     const nav=document.createElement('nav');nav.className='ls26-nav';nav.setAttribute('aria-label','LiveSuite navigation');
-    nav.innerHTML=`<a class="ls26-brand" href="${url('library.html')}" aria-label="LiveSuite Library"><img src="${url('assets/livesuite-logo-transparent.png')}" alt="" width="2048" height="683"></a>${[['Library','library.html','♫'],['LyricView','host/lyricview.html','▣'],['Setlists','host/setlist-editor.html','☷'],['Requests','requests.html','♟']].map(([label,path,icon])=>`<a ${label==='LyricView'?'id="ls26LyricLink"':''} class="${label===tab?'active':''}" href="${url(path)}"><span class="ls26-nav-icon" aria-hidden="true">${icon}</span>${label}</a>`).join('')}<a href="${url('admin-new/admin.html')}" aria-label="Admin dashboard">⚙</a><button id="ls26Fullscreen" type="button" aria-label="Enter fullscreen" aria-pressed="false" title="Enter fullscreen">⛶</button><a class="ls26-host" href="${url('admin-new/admin.html')}"><span class="ls26-user-icon" aria-hidden="true"><svg viewBox="0 0 32 32"><circle cx="16" cy="10" r="6"/><path d="M5 29v-4a11 11 0 0 1 22 0v4Z"/></svg></span><span>Host Mode<small>Sing. Play. Repeat.</small></span></a><button id="ls26More" type="button" aria-label="Host menu" aria-expanded="false" aria-controls="ls26HostMenu">▼</button>`;
+    nav.innerHTML=`<a class="ls26-brand" href="${url('library.html')}" aria-label="LiveSuite Library"><img src="${url('assets/livesuite-logo-clean.png')}" alt="" width="2048" height="683"></a>${[['Library','library.html','♫'],['LyricView','host/lyricview.html','▣'],['Setlists','host/setlist-editor.html','☷'],['Requests','requests.html','♟']].map(([label,path,icon])=>`<a ${label==='LyricView'?'id="ls26LyricLink"':''} class="${label===tab?'active':''}" href="${url(path)}"><span class="ls26-nav-icon" aria-hidden="true">${icon}</span>${label}</a>`).join('')}<a href="${url('admin-new/admin.html')}" aria-label="Admin dashboard">⚙</a><button id="ls26Fullscreen" type="button" aria-label="Enter fullscreen" aria-pressed="false" title="Enter fullscreen">⛶</button><a class="ls26-host" href="${url('admin-new/admin.html')}"><span class="ls26-user-icon" aria-hidden="true"><svg viewBox="0 0 32 32"><circle cx="16" cy="10" r="6"/><path d="M5 29v-4a11 11 0 0 1 22 0v4Z"/></svg></span><span>Host Mode<small>Sing. Play. Repeat.</small></span></a><button id="ls26More" type="button" aria-label="Host menu" aria-expanded="false" aria-controls="ls26HostMenu">▼</button>`;
     let stack=$('ls26StickyHeader');
     if(!stack){stack=document.createElement('div');stack.id='ls26StickyHeader';document.body.prepend(stack);}
     stack.append(nav);const status=$('topStatusContainer');if(status)stack.append(status);
@@ -70,7 +70,7 @@
 
 
     if(location.pathname.includes('/admin-new/'))document.body.classList.add('ls26-admin');
-    const foot=document.createElement('footer');foot.className='ls26-footer';foot.innerHTML=`<div class="ls26-brand" role="img" aria-label="LiveSuite — Live Performance OS"><img src="${url('assets/livesuite-logo-transparent.png')}" alt="" width="2048" height="683"></div>`;document.body.append(foot);
+    const foot=document.createElement('footer');foot.className='ls26-footer';foot.innerHTML=`<div class="ls26-brand ls26-footer-icon" role="img" aria-label="LiveSuite"><svg viewBox="42 118 441 428" aria-hidden="true"><image href="${url('assets/livesuite-logo-clean.png')}" width="2048" height="683"/></svg></div>`;document.body.append(foot);
     if(location.pathname.endsWith('/lyricscreator.html')){LS26Data.invalidate('lyrics');const title=params.get('inboxTitle'),artist=params.get('inboxArtist');if(title&&!params.get('firebaseId')){$('songTitleInput').value=title;$('artistInput').value=artist||'';}}
     if(location.pathname.endsWith('/setlist-editor.html'))LS26Data.invalidate('lyricsSetlists');
   }
