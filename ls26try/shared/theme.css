@@ -26,3 +26,13 @@
 .ls26-footer .ls26-brand{width:150px}
 @media(max-width:1100px){.ls26-nav a.ls26-brand{width:156px;min-width:156px}}
 @media(max-width:800px){.ls26-nav a.ls26-brand{width:138px;min-width:138px}}
+
+/* Use the supplied single-logo image directly, without sprite cropping/distortion. */
+.ls26-brand::before{content:none}
+.ls26-brand img{display:block;width:100%;height:100%;object-fit:contain}
+.ls26-nav a.ls26-brand{width:240px;min-width:180px;height:64px;background:none}
+.ls26-footer .ls26-brand{width:135px;height:45px;background:none}
+.ls26-nav #ls26Fullscreen{width:44px;height:44px;min-width:44px;padding:9px;line-height:1}
+.ls26-nav #ls26Fullscreen svg{display:block;width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+@media(max-width:1100px){.ls26-nav a.ls26-brand{width:178px;min-width:178px;height:59px}}
+@media(max-width:800px){.ls26-nav a.ls26-brand{width:156px;min-width:156px;height:52px}}

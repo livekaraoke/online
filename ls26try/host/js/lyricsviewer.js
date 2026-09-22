@@ -659,7 +659,6 @@
       params.set("requestId", nextRunOrderItem.requestId);
     }
 
-    params.set("play","1");
     location.href = LS26.url(`host/lyricview.html?${params.toString()}`);
   };
 

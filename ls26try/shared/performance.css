@@ -139,3 +139,22 @@ body.host-lyric-view-page{overflow:visible!important}
 /* The closed drawer must be fully offscreen, including its right inset/shadow. */
 #songInfoDrawer.song-info-drawer:not(.open){visibility:hidden;pointer-events:none;transform:translateX(calc(100% + 30px))}
 #songInfoDrawer.song-info-drawer.open{visibility:visible;pointer-events:auto}
+
+/* Performance settings share the title strip; karaoke tools remain below it. */
+.host-lyric-view-page #ls26StickyHeader>.host-view-topbar{display:grid!important;grid-template-columns:minmax(160px,1fr) auto auto!important;gap:10px!important}
+.host-lyric-view-page #ls26StickyHeader .host-song-heading strong{font-size:clamp(19px,2.5vw,28px)!important}
+.ls26-title-meta{display:grid;grid-template-columns:repeat(4,minmax(42px,auto));gap:10px;align-items:center;text-align:center}
+.ls26-title-meta>div{min-width:0}
+.ls26-title-meta small{display:block;font-size:10px!important;font-weight:600;color:var(--ls-muted);white-space:nowrap}
+.ls26-title-meta strong,.ls26-title-meta .bpm-number{display:block;font-size:21px!important;line-height:1.3!important;white-space:nowrap}
+.ls26-title-meta .bpm-suffix{display:none!important}
+.host-lyric-view-page #ls26StickyHeader .ls26-actions button:first-child{border-color:var(--ls-border);color:var(--ls-text)}
+.library-page .ls26-footer .ls26-brand,.host-lyric-view-page .ls26-footer .ls26-brand{width:135px;height:45px}
+/* Larger independent touch targets, retaining the diamond navigation layout. */
+.host-lyric-view-page .host-nav-pad{width:310px!important;height:415px!important;grid-template-rows:148px 86px 148px!important;row-gap:16px!important}
+.host-lyric-view-page .host-nav-pad .host-nav-btn{width:84px!important;height:84px!important}
+.host-lyric-view-page .host-nav-pad .nav-up,.host-lyric-view-page .host-nav-pad .nav-down{width:148px!important;height:148px!important}
+.host-lyric-view-page .host-nav-pad .host-nav-icon{width:48px!important;height:48px!important}
+.host-lyric-view-page .host-nav-pad .nav-up .host-nav-icon,.host-lyric-view-page .host-nav-pad .nav-down .host-nav-icon{width:72px!important;height:72px!important}
+@media(max-width:760px){.ls26-title-meta{gap:6px;grid-template-columns:repeat(4,minmax(34px,auto))}.ls26-title-meta strong,.ls26-title-meta .bpm-number{font-size:18px!important}.host-lyric-view-page #ls26StickyHeader>.host-view-topbar{gap:6px!important}.host-lyric-view-page #ls26StickyHeader .ls26-actions{gap:4px}.host-lyric-view-page #ls26StickyHeader .ls26-actions button{font-size:11px;padding:6px}}
+@media(max-width:650px){.host-lyric-view-page #ls26StickyHeader>.host-view-topbar{grid-template-columns:1fr auto!important}.host-lyric-view-page #ls26StickyHeader .host-song-heading{grid-column:1/-1}.host-lyric-view-page #ls26StickyHeader .ls26-actions{width:auto}.host-lyric-view-page .host-nav-pad{width:280px!important;height:396px!important;grid-template-rows:140px 84px 140px!important}.host-lyric-view-page .host-nav-pad .nav-up,.host-lyric-view-page .host-nav-pad .nav-down{width:140px!important;height:140px!important}}

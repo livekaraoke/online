@@ -182,7 +182,7 @@
   }
 
   function setInfo(song) {
-    const tempo = toNumber(song.userBpm);
+    const tempo = toNumber(song.userBpm) || toNumber(song.originalBpm);
     const original = toNumber(song.originalBpm);
     const time = song.timeSignature || song.time || "4/4";
     const capo = song.capo === "" || song.capo == null ? "0" : song.capo;
@@ -213,7 +213,7 @@
     renderBpmValue($("infoTempo"), tempo);
     renderBpmValue($("infoOriginalBpm"), original);
 
-    // PERFORMANCE QUICK INFO above the first section
+    // Current performance values in the sticky song title bar
     if ($("quickKey")) $("quickKey").textContent = song.key || "–";
     if ($("quickTime")) $("quickTime").textContent = time;
     renderBpmValue($("quickTempo"), tempo);
@@ -1576,7 +1576,6 @@
     params.set("id",next.songId);
     if (next.requestId) params.set("requestId",next.requestId);
 
-    params.set("play","1");
     location.href = `lyricview.html?${params.toString()}`;
   }
 

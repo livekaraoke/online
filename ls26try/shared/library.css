@@ -41,3 +41,5 @@ body.library-page{height:100dvh;overflow:hidden;display:flex;flex-direction:colu
 .library-controls .library-search{grid-template-columns:minmax(0,1fr);flex-basis:260px}
 .library-controls .library-scope{flex-basis:420px}
 .library-page .ls26-footer .ls26-brand{width:150px;height:32px}
+
+.library-page .ls26-footer .ls26-brand{width:135px;height:45px}

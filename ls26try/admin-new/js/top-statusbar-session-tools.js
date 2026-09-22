@@ -754,7 +754,7 @@
   async function openRunOrderSong(itemId) {
     const item = queueItems().find(entry => entry.id === itemId);
     if (!item) return;
-    if(runOrderPlayingItem() && !await LS26Dialogs.confirm("Finish the current song and start this one?"))return;
+    if(runOrderPlayingItem() && !await LS26Dialogs.confirm("Load this song? Playback will wait until you press Play."))return;
 
     const song = findAuthoritativeSongForRunItem(item);
     const songId = song?.id || item.songId || "";
@@ -769,7 +769,6 @@
     params.set("id", songId);
     if (item.requestId) params.set("requestId", item.requestId);
 
-    params.set("play","1");
     location.href = LS26.url(`host/lyricview.html?${params.toString()}`);
   }
 
