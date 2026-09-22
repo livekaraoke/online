@@ -840,6 +840,8 @@
 
     const terminalStatuses = new Set([
       "played",
+      "completed",
+      "finished",
       "abandoned",
       "left",
       "deleted",
@@ -848,8 +850,8 @@
     ]);
 
     const previousPositions=new Map([...list.querySelectorAll('[data-ts-run-details]')].map(row=>[row.dataset.tsRunDetails,row.getBoundingClientRect().top]));
-    const all=queueItems();
-    const current=all.find(x=>x.status==='playing') || [...all].reverse().find(x=>x.status==='played');
+    const all=state.sessionId ? queueItems() : [];
+    const current=all.find(x=>String(x.status||'').toLowerCase()==='playing');
     const items=[...(current?[current]:[]),...all.filter(item => item!==current && !terminalStatuses.has(String(item?.status || '').toLowerCase()))];
 
     const movable=items.filter(x=>!['playing','played'].includes(String(x.status||'').toLowerCase()));

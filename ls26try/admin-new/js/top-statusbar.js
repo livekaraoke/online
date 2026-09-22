@@ -593,7 +593,10 @@
       return;
     }
 
-    if(!await LS26Dialogs.confirm(currentSession.breakOpen?"Resume this session?":"Start a break?"))return;
+    const resuming = currentSession.breakOpen;
+    if(!await LS26Dialogs.confirm(resuming ? "End the current break and return to the session." : "The session stays active while the break timer runs.", {
+      title:resuming ? "Resume session" : "Start break", confirmText:resuming ? "Resume session" : "Start break", compact:true
+    }))return;
     breakActionRunning = true;
     renderBreakStatus();
 
