@@ -43,3 +43,15 @@ body.library-page{height:100dvh;overflow:hidden;display:flex;flex-direction:colu
 .library-page .ls26-footer .ls26-brand{width:150px;height:32px}
 
 .library-page .ls26-footer .ls26-brand{width:135px;height:45px}
+
+/* Keep scope contrast independent of shared button hover styles. */
+.library-page .library-scope button.active,.library-page .library-scope button.active:hover{background:#07516c!important;color:#fff!important;border:2px solid var(--ls-accent);box-shadow:inset 0 -3px var(--ls-accent);font-weight:700}
+.library-page #libraryScrollTop{width:46px;height:46px;min-width:46px;padding:0;border-radius:50%;color:var(--ls-accent);font-size:28px}
+#libraryFilterPanel{padding:8px;border:1px solid var(--ls-border);border-radius:8px;margin-bottom:6px;background:var(--ls-panel);max-height:30dvh}
+.library-page .library-filters{gap:6px;margin:0 0 6px}
+.library-page #libraryFilterPanel select,.library-page #libraryFilterPanel button,.library-page #libraryFilterPanel input[type=number]{font-size:14px;min-height:40px;height:40px;padding:6px 8px}
+.library-page .library-bpm{margin:0 0 6px;gap:5px;font-size:14px;flex-wrap:wrap}
+.library-page .library-bpm input{width:60px}.library-page .library-bpm button{width:40px;padding:0!important;font-size:22px!important}
+.library-page .library-extra{display:flex;margin:0;padding:0;border:0;gap:6px;font-size:14px}
+.library-page .library-extra select{flex:1 1 135px;min-width:0}.library-page .library-extra label{white-space:nowrap}
+@media(max-width:650px){.library-page .library-filters{grid-template-columns:repeat(2,minmax(0,1fr))}.library-page .library-bpm small{display:none}.library-page .library-player-bar{gap:6px;padding:6px}.library-page .library-player-bar #openRunOrderBtn{font-size:12px;padding:6px}.library-page .run-order-player-info>span{font-size:16px}.library-page .run-order-player-info>small{font-size:12px}}

@@ -398,7 +398,12 @@
     updateSelected();
     const session=window.LK?.sessionTools?.getSession?.()||{},pub=window.LK?.sessionTools?.getPublicList?.()||{};
     const sessionList=setlists.find(x=>x.id===(session.setlistId||session.publicSetlistId||pub.setlistId));
-    const caption=$("ls26SessionSetlistName");caption.hidden=scope!=='session';caption.textContent=sessionList?.name||session.setlistName||pub.setlistName||'No session setlist selected';
+    const chosen=setlists.find(x=>x.id===filters.setlist.value);
+    const caption=$("ls26SessionSetlistName");caption.hidden=scope!=='session'&&!chosen;
+    const ids=scope==='session'?(session.setlistSongIds||sessionList?.songIds||[]):(chosen?.songIds||[]);
+    const count=songs.filter(x=>new Set(ids).has(x.firebaseId)).length;
+    const name=scope==='session'?(sessionList?.name||session.setlistName||pub.setlistName||'No session setlist selected'):chosen?.name;
+    caption.textContent=`${name||''} · ${count} songs`;
     document.querySelectorAll("[data-scope]").forEach(b=>b.classList.toggle("active",b.dataset.scope===scope));
     selectedIndex = Math.min(selectedIndex, visibleSongs.length - 1);
 
@@ -575,10 +580,9 @@
   }
 
   function syncSidebarButton(){const open=!$("libraryFilterPanel").hidden;$("sidebarToggleBtn").setAttribute('aria-expanded',String(open));}
-  function updateSelected(){const song=songs.find(x=>x.firebaseId===selectedId);$("ls26SelectedTitle").textContent=song?`${song.title} — ${song.artist}`:'Select a song';$("ls26OpenSelected").disabled=!song;$("ls26QueueSelected").disabled=!song;document.querySelectorAll('.song-table-row').forEach(x=>x.classList.toggle('is-selected',x.dataset.id===selectedId));}
+  function updateSelected(){document.querySelectorAll('.song-table-row').forEach(x=>x.classList.toggle('is-selected',x.dataset.id===selectedId));}
   async function queueSong(id,button){const song=songs.find(x=>x.firebaseId===id);if(!song)return;button.disabled=true;try{await LK.sessionTools.enqueueSong(song);window.LS26.toast('Added to Run Order');}catch(error){window.LS26.toast(error.message);}finally{button.disabled=false;}}
-  $("ls26OpenSelected").onclick=()=>selectedId&&openSong(selectedId);
-  $("ls26QueueSelected").onclick=e=>queueSong(selectedId,e.currentTarget);
+  $("libraryScrollTop").onclick=()=>$("songRows").scrollTo({top:0,behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"instant":"smooth"});
   document.querySelectorAll('[data-scope]').forEach(button=>button.onclick=()=>{scope=button.dataset.scope;filters.setlist.value='';render();saveViewState();});
   filters.setlist.addEventListener('change',()=>{scope='all';render();saveViewState();});
   document.querySelectorAll('[data-bpm]').forEach(button=>button.onclick=()=>{const [id,delta]=button.dataset.bpm.split(':');const input=$(id);input.value=Math.max(0,Math.min(400,(Number(input.value)||100)+Number(delta)));input.dispatchEvent(new Event('input'));});
