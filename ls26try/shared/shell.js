@@ -13,18 +13,49 @@
   const currentId=params.get('id')||params.get('firebaseId');
   if(location.pathname.endsWith('/lyricview.html')&&currentId) sessionStorage.setItem('ls26:lastSong',location.href);
   window.LS26={url,escape,toast,themes:{blue:{label:'Blue',logo:url('assets/livesuite-brand.png')}},openInbox:()=>openInbox()};
+  // Call synchronously from the initiating tap, before playback's async work.
+  const fullscreenElement=()=>document.fullscreenElement||document.webkitFullscreenElement;
+  async function enterFullscreen(){
+    if(fullscreenElement())return;
+    const element=document.documentElement;
+    const request=element.requestFullscreen||element.webkitRequestFullscreen;
+    if(!request){toast('Fullscreen is not supported in this browser.');return;}
+    try{await request.call(element);}catch(error){toast('Fullscreen could not start. Try the fullscreen button.');}
+  }
+  window.LS26.enterFullscreen=enterFullscreen;
+  function mountFullscreen(){
+    const button=$('ls26Fullscreen');
+    const supported=!!(document.documentElement.requestFullscreen||document.documentElement.webkitRequestFullscreen);
+    button.disabled=!supported;
+    function sync(){
+      const active=!!fullscreenElement();
+      const label=!supported?'Fullscreen is not supported in this browser':active?'Exit fullscreen':'Enter fullscreen';
+      button.setAttribute('aria-label',label);button.title=label;
+      button.setAttribute('aria-pressed',String(active));
+      button.textContent=active?'⤢':'⛶';
+    }
+    button.onclick=async()=>{
+      if(!fullscreenElement()){await enterFullscreen();return;}
+      try{await (document.exitFullscreen||document.webkitExitFullscreen).call(document);}
+      catch(error){toast('Use your browser controls to exit fullscreen.');}
+    };
+    document.addEventListener('fullscreenchange',sync);
+    document.addEventListener('webkitfullscreenchange',sync);
+    sync();
+  }
   function mount(){
     if(document.body.dataset.ls26Mounted)return;document.body.dataset.ls26Mounted='true';
     const isLyric=location.pathname.endsWith('/lyricview.html');
     const isLibrary=location.pathname.endsWith('/lyricsviewer.html')||location.pathname.endsWith('/library.html');
-    const tab=params.get('view')==='setlist'?'Setlist':isLibrary?'Library':isLyric?'LyricView':location.pathname.endsWith('/requests.html')?'Requests':'';
+    const tab=location.pathname.endsWith('/setlist-editor.html')?'SETLISTS':isLibrary?'Library':isLyric?'LyricView':location.pathname.endsWith('/requests.html')?'Requests':'';
     const nav=document.createElement('nav');nav.className='ls26-nav';nav.setAttribute('aria-label','LiveSuite navigation');
-    nav.innerHTML=`<a class="ls26-brand" href="${url('library.html')}" aria-label="LiveSuite Library"></a>${[['Library','library.html','♫'],['LyricView','host/lyricview.html','▣'],['Setlist','library.html?view=setlist','☷'],['Requests','requests.html','♟']].map(([label,path,icon])=>`<a ${label==='LyricView'?'id="ls26LyricLink"':''} class="${label===tab?'active':''}" href="${url(path)}"><span class="ls26-nav-icon" aria-hidden="true">${icon}</span>${label}</a>`).join('')}<button id="ls26InboxOpen" type="button">▣ INBOX</button><a href="${url('admin-new/admin.html')}" aria-label="Admin dashboard">⚙</a><a class="ls26-host" href="${url('admin-new/admin.html')}"><span class="ls26-user-icon" aria-hidden="true"><svg viewBox="0 0 32 32"><circle cx="16" cy="10" r="6"/><path d="M5 29v-4a11 11 0 0 1 22 0v4Z"/></svg></span><span>Host Mode<small>Sing. Play. Repeat.</small></span></a>`;
+    nav.innerHTML=`<a class="ls26-brand" href="${url('library.html')}" aria-label="LiveSuite Library"></a>${[['Library','library.html','♫'],['LyricView','host/lyricview.html','▣'],['SETLISTS','host/setlist-editor.html','☷'],['Requests','requests.html','♟']].map(([label,path,icon])=>`<a ${label==='LyricView'?'id="ls26LyricLink"':''} class="${label===tab?'active':''}" href="${url(path)}"><span class="ls26-nav-icon" aria-hidden="true">${icon}</span>${label}</a>`).join('')}<button id="ls26InboxOpen" type="button">▣ INBOX</button><a href="${url('admin-new/admin.html')}" aria-label="Admin dashboard">⚙</a><button id="ls26Fullscreen" type="button" aria-label="Enter fullscreen" aria-pressed="false" title="Enter fullscreen">⛶</button><a class="ls26-host" href="${url('admin-new/admin.html')}"><span class="ls26-user-icon" aria-hidden="true"><svg viewBox="0 0 32 32"><circle cx="16" cy="10" r="6"/><path d="M5 29v-4a11 11 0 0 1 22 0v4Z"/></svg></span><span>Host Mode<small>Sing. Play. Repeat.</small></span></a>`;
     let stack=$('ls26StickyHeader');
     if(!stack){stack=document.createElement('div');stack.id='ls26StickyHeader';document.body.prepend(stack);}
     stack.append(nav);const status=$('topStatusContainer');if(status)stack.append(status);
     new ResizeObserver(()=>document.documentElement.style.setProperty('--ls-header-h',stack.getBoundingClientRect().height+'px')).observe(stack);
     $('ls26InboxOpen').onclick=openInbox;
+    mountFullscreen();
     $('ls26LyricLink').onclick=e=>{e.preventDefault();const items=window.LK?.sessionTools?.getRunOrder?.()||[];const song=items.find(i=>i.status==='playing');const target=song?.songId?url('host/lyricview.html?id='+encodeURIComponent(song.songId)+(song.requestId?'&requestId='+encodeURIComponent(song.requestId):'')):sessionStorage.getItem('ls26:lastSong');if(target)location.href=target;else toast('Choose a song in Library first.');};
 
 

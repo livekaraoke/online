@@ -23,3 +23,16 @@ body.library-page{height:100dvh;overflow:hidden;display:flex;flex-direction:colu
 
 /* Filter controls are one collapsible block; the results retain remaining height. */
 #libraryFilterPanel{max-height:34dvh;overflow:auto;overscroll-behavior:contain}.library-page .library-extra{max-height:none;overflow:visible}.library-player-bar #playSelectedBtn{display:grid;place-items:center;padding:0}.ls26-play-icon{display:block;width:46%;height:46%;fill:currentColor;flex-shrink:0}
+
+/* Compact library tools: heading/actions, then search and scope controls. */
+.library-page .library-heading{padding:5px 0;gap:8px;flex-wrap:wrap}
+.library-page .library-heading h1{font-size:clamp(22px,2.7vw,30px)}
+.library-page .library-heading h1 small{font-size:14px;margin-left:8px}
+.library-page .library-heading a{min-height:44px;padding:6px 12px;font-size:14px}
+.library-controls{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px}
+.library-controls .library-search{flex:1 1 320px;grid-template-columns:minmax(100px,1fr) auto auto;gap:6px;margin:0}
+.library-controls .library-scope{flex:1 1 420px;gap:6px;margin:0;display:grid;grid-template-columns:auto auto auto minmax(120px,1fr)}
+.library-controls input,.library-controls button,.library-controls select{height:44px;min-height:44px;padding:6px 8px;font-size:14px;min-width:0}
+.library-controls .library-search input{font-size:16px;height:44px}
+.library-controls .library-scope select{min-width:0;width:100%}
+@media(max-width:500px){.library-controls .library-scope{grid-template-columns:1fr 1fr}.library-page .library-heading h1{white-space:normal}.library-controls .library-search{flex-basis:100%}}
