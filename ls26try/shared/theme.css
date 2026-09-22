@@ -20,3 +20,9 @@
 .ls26-nav #ls26Fullscreen{min-width:44px;min-height:44px;padding:6px;font-size:24px;flex-shrink:0}
 .ls26-nav #ls26Fullscreen[aria-pressed="true"]{color:var(--ls-accent)}
 @media(min-width:801px) and (max-width:1100px){.ls26-nav>a,.ls26-nav>button{font-size:15px;padding-inline:6px}.ls26-nav a.ls26-brand{width:125px;min-width:125px}.ls26-nav .ls26-user-icon{display:none}}
+
+/* Keep the wordmark prominent without changing navigation label sizing. */
+.ls26-nav a.ls26-brand{width:219px;min-width:160px}
+.ls26-footer .ls26-brand{width:150px}
+@media(max-width:1100px){.ls26-nav a.ls26-brand{width:156px;min-width:156px}}
+@media(max-width:800px){.ls26-nav a.ls26-brand{width:138px;min-width:138px}}

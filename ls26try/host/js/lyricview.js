@@ -193,7 +193,7 @@
     $("infoCapo").textContent = capo;
     $("infoYear").textContent = song.year || "–";
     $("infoSongNotes").textContent = song.note || song.songNote || "No song notes.";
-    $("capoDisplayValue").textContent = String(toNumber(song.capo) || 0);
+    if ($("capoDisplayValue")) $("capoDisplayValue").textContent = String(toNumber(song.capo) || 0);
 
     // Render BPM number and suffix separately so the number can be larger
     // while the "BPM" label stays smaller and centred beside it.
@@ -737,7 +737,7 @@
   function applyChordTranspose() {
     captureOriginalChordText();
     document.querySelectorAll("[data-original-chord]").forEach(el => el.textContent = transposeChordToken(el.dataset.originalChord, chordShift));
-    $("chordTransposeValue").textContent = String(chordShift);
+    if ($("chordTransposeValue")) $("chordTransposeValue").textContent = String(chordShift);
   }
 
   function captureOriginalTabCells() {
@@ -752,7 +752,7 @@
       const n = Number(el.dataset.originalFret);
       el.textContent = String(Math.max(0, n + tabShift));
     });
-    $("tabTransposeValue").textContent = String(tabShift);
+    if ($("tabTransposeValue")) $("tabTransposeValue").textContent = String(tabShift);
   }
 
   async function sendToKaraoke() {
@@ -1711,12 +1711,6 @@
     if ($("endNextRunOrderSongBtn")) {
       $("endNextRunOrderSongBtn").onclick = goToNextRunOrderSong;
     }
-    $("chordMinus").onclick = () => { chordShift--; applyChordTranspose(); };
-    $("chordPlus").onclick = () => { chordShift++; applyChordTranspose(); };
-    $("tabMinus").onclick = () => { tabShift--; applyTabTranspose(); };
-    $("tabPlus").onclick = () => { tabShift++; applyTabTranspose(); };
-    $("capoMinus").onclick = () => { capoDisplayShift--; $("capoDisplayValue").textContent = String((toNumber(currentSong?.capo)||0)+capoDisplayShift); };
-    $("capoPlus").onclick = () => { capoDisplayShift++; $("capoDisplayValue").textContent = String((toNumber(currentSong?.capo)||0)+capoDisplayShift); };
     $("sendToKaraokeBtn").onclick = sendToKaraoke;
     $("karaokeMenuBtn").onclick = () => $("karaokeMenu").classList.toggle("hidden");
     $("resetKaraokeBtn").onclick = resetKaraoke;

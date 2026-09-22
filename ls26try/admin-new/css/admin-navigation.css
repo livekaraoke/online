@@ -1,0 +1,31 @@
+/* Shared Admin and Enquiries navigation. */
+body.ls26-admin{--d26-side:210px}
+/* Sticky application navigation and independently scrollable, complete sidebar. */
+.ls26-admin #ls26StickyHeader { position:sticky; top:0; z-index:2200; }
+.ls26-admin .ls26-nav { border-radius:0; border-color:#1b4358; }
+.ls26-admin .ls26-nav>a[aria-label="Admin dashboard"] { color:#31d2f5; border:1px solid #24a8ce; border-radius:6px; background:#072c3e; }
+.ls26-admin #sidebarContainer { width:var(--d26-side); }
+.ls26-admin .admin-sidebar.suite-sidebar { width:var(--d26-side); top:var(--ls-header-h,68px); bottom:0; padding:14px 11px; gap:0; background:linear-gradient(110deg,#061925,#02101a); border-right:1px solid #1b3b50; scrollbar-width:thin; scrollbar-color:#286782 #04131e; }
+.ls26-admin .suite-brand-block { display:none; }
+.ls26-admin .suite-user-card { margin:0 0 15px; padding:10px 2px; grid-template-columns:44px minmax(0,1fr); gap:9px; }
+.ls26-admin .suite-user-card .avatar { width:42px; height:42px; border-color:#25b5d7; background:#062434; }
+.ls26-admin .suite-user-copy strong { font-size:15px; color:#fff; }
+.ls26-admin .suite-user-copy span { font-size:12px; }
+.ls26-admin .suite-user-copy small { color:#56e5a0; font-size:11px; }
+.ls26-admin .suite-user-copy .suite-live-badge { margin-top:6px; font-size:10px; color:#54eda9; background:#06392e; }
+.ls26-admin .suite-nav-section-title { color:#91adbf; border-top:1px solid #18384a; padding:18px 9px 9px; margin:13px 0 0; font-size:11px; letter-spacing:1.4px; }
+.ls26-admin .suite-nav-section-title.live-title { margin:0; padding-top:12px; }
+.ls26-admin .suite-nav { gap:4px; }
+.ls26-admin .suite-nav>a,.ls26-admin .suite-nav>button { min-height:44px; border:1px solid transparent; border-radius:6px; padding:9px 10px; font-size:13px; font-weight:500; text-transform:none; background:transparent; color:#eef6fc; }
+.ls26-admin .suite-nav>a.active,.ls26-admin .suite-nav>button.active,.ls26-admin .suite-nav>a:hover,.ls26-admin .suite-nav>button:hover { background:linear-gradient(90deg,#073b51,#052030); border-color:#26c8ea; box-shadow:inset 0 0 12px #16bcdd16; }
+.ls26-admin .suite-nav-icon { font-size:20px; width:25px; color:#a9d9ed; filter:none; }
+.ls26-admin .suite-nav-label { font-size:13px; }
+.ls26-admin .suite-footer { color:#89a3b5; }
+
+.ls26-admin .admin-sidebar.suite-sidebar{position:fixed!important;top:var(--ls-header-h,68px)!important;bottom:0!important;height:calc(100dvh - var(--ls-header-h,68px))!important;min-height:0!important;max-height:calc(100dvh - var(--ls-header-h,68px))!important;overflow-y:auto!important}
+.ls26-admin .admin-sidebar::-webkit-scrollbar-thumb{background:#286782}
+.ls26-admin .admin-sidebar::-webkit-scrollbar-track{background:#04131e}
+.ls26-admin .admin-shell{display:block}
+.ls26-admin .admin-main{margin-left:var(--d26-side);width:calc(100% - var(--d26-side));padding:20px}
+@media(max-width:760px){body.ls26-admin{--d26-side:0px}.ls26-admin #sidebarContainer{width:100%}.ls26-admin .admin-sidebar.suite-sidebar{position:relative!important;top:auto!important;bottom:auto!important;width:100%;height:auto!important;max-height:260px!important}.ls26-admin .suite-nav{display:grid;grid-template-columns:1fr 1fr}.ls26-admin .admin-main{margin-left:0;width:100%;padding:15px 10px}}
+body.ls26-admin{font-family:Arial,Helvetica,sans-serif;overflow-x:clip}

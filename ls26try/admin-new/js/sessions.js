@@ -182,7 +182,23 @@
     }
   }
 
+  let startingPerformance = false;
   async function startPerformance() {
+    if (startingPerformance) return;
+    startingPerformance = true;
+    try { await performStartSession(); }
+    catch (error) { setSessionStatus(error.message || "Could not start the session. Please try again."); }
+    finally { startingPerformance = false; }
+  }
+
+  async function performStartSession() {
+    const publicList = window.LS26PublicList?.selectionForStart();
+    if (!publicList) {
+      setSessionStatus("Choose a public song list before starting the Session.");
+      $("publicSetlistSelect")?.focus();
+      return;
+    }
+
     const event =
       typeof window.getSelectedSessionEvent === "function"
         ? window.getSelectedSessionEvent()
@@ -243,6 +259,8 @@
         : null;
 
     const sessionPayload = {
+      publicSetlistId: publicList.id,
+      publicSetlistName: publicList.name,
       title,
       venue,
       type: sessionType,
@@ -263,16 +281,7 @@
     if (scheduledStartAt) sessionPayload.scheduledStartAt = scheduledStartAt;
     if (scheduledEndAt) sessionPayload.scheduledEndAt = scheduledEndAt;
 
-    const ref = await LK.db.collection("performanceSessions").add(sessionPayload);
-
-    LK.state.currentSessionId = ref.id;
-    LK.state.currentSessionData = {
-      id: ref.id,
-      ...sessionPayload,
-      startedAt: localStartedAt
-    };
-
-    updateSessionUi(LK.state.currentSessionData);
+    const ref = LK.db.collection("performanceSessions").doc();
 
     const controlPayload = {
       active: true,
@@ -291,17 +300,31 @@
     if (scheduledStartAt) controlPayload.scheduledStartAt = scheduledStartAt;
     if (scheduledEndAt) controlPayload.scheduledEndAt = scheduledEndAt;
 
-    await LK.db.collection("karaokeControl").doc("currentSession").set(
-      controlPayload,
-      { merge: true }
-    );
-
-    // A Performance Session is the authoritative live state.
-    await LK.db.collection("karaoke").doc("state").set({
-      isLive: true,
-      manualOverride: true,
-      updatedAt: serverNow()
-    }, { merge:true });
+    // Publish the chosen list and start the session together, or change neither.
+    await LK.db.runTransaction(async transaction => {
+      const controlRef = LK.db.collection("karaokeControl").doc("currentSession");
+      const current = (await transaction.get(controlRef)).data() || {};
+      if (current.active || (current.active !== false && (current.sessionId || current.activeSessionId))) {
+        throw new Error("A session is already active. Refresh the dashboard.");
+      }
+      const listDoc = await transaction.get(LK.db.collection("lyricsSetlists").doc(publicList.id));
+      if (!listDoc.exists) throw new Error("The selected public song list is no longer available. Choose another list.");
+      const listData = listDoc.data() || {};
+      transaction.set(ref, {...sessionPayload, publicSetlistName:listData.name || publicList.name});
+      transaction.set(controlRef, controlPayload, {merge:true});
+      transaction.set(LK.db.collection("karaokeControl").doc("publicSongList"), {
+        setlistId:publicList.id, setlistName:listData.name || publicList.name,
+        songCount:Array.isArray(listData.songIds) ? listData.songIds.length : 0,
+        source:"lyricsSetlists", updatedAt:serverNow()
+      }, {merge:true});
+      transaction.set(LK.db.collection("karaoke").doc("state"), {
+        isLive:true, manualOverride:true, publicSongListSetlistId:publicList.id,
+        publicSongListSetlistName:listData.name || publicList.name, updatedAt:serverNow()
+      }, {merge:true});
+    });
+    LK.state.currentSessionId = ref.id;
+    LK.state.currentSessionData = {id:ref.id, ...sessionPayload, startedAt:localStartedAt};
+    updateSessionUi(LK.state.currentSessionData);
 
     setSessionStatus(`Session started: ${title}`);
   }
