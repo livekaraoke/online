@@ -215,7 +215,7 @@
 
   function renderSongResults(){
     const q=$("songSearch").value.trim().toLowerCase();
-    const list=(q?songs.filter(song=>`${song.title||""} ${song.artist||""}`.toLowerCase().includes(q)):songs).slice(0,120);
+    const list=q?songs.filter(song=>`${song.title||""} ${song.artist||""}`.toLowerCase().includes(q)):songs;
     $("songResults").innerHTML=list.map(song=>{
       const state=songSessionState(song);
       const selected=selectedRequestSongId===song.id;
