@@ -8,8 +8,8 @@ const root=path.join(__dirname,'..');
 function fixture({unsupported=false,reject=false,webkit=false}={}){
  const elements=new Map(),listeners={},calls=[];
  function element(){return {dataset:{},style:{setProperty(){}},setAttribute(k,v){this[k]=v;},append(){},prepend(){},classList:{add(){}},getBoundingClientRect(){return {height:100}}};}
- for(const id of ['ls26StickyHeader','ls26Fullscreen','ls26InboxOpen','ls26LyricLink'])elements.set(id,element());
- const document={readyState:'loading',currentScript:{src:'https://example.org/ls26try/shared/shell.js'},documentElement:element(),body:element(),getElementById:id=>elements.get(id),createElement:element,addEventListener:(n,f)=>listeners[n]=f};
+ for(const id of ['ls26StickyHeader','ls26Fullscreen','ls26InboxOpen','ls26LyricLink','ls26More','ls26UpdatesOpen'])elements.set(id,element());
+ const document={querySelector:()=>null,readyState:'loading',currentScript:{src:'https://example.org/ls26try/shared/shell.js'},documentElement:element(),body:element(),head:element(),getElementById:id=>elements.get(id),createElement:element,addEventListener:(n,f)=>listeners[n]=f};
  document.body.append=e=>elements.set(e.id,e);
  if(!unsupported)document.documentElement[webkit?'webkitRequestFullscreen':'requestFullscreen']=()=>{
   calls.push('request');if(reject)return Promise.reject(new Error('denied'));
@@ -17,7 +17,7 @@ function fixture({unsupported=false,reject=false,webkit=false}={}){
   listeners[webkit?'webkitfullscreenchange':'fullscreenchange']?.();return Promise.resolve();
  };
  document[webkit?'webkitExitFullscreen':'exitFullscreen']=()=>{document[webkit?'webkitFullscreenElement':'fullscreenElement']=null;listeners[webkit?'webkitfullscreenchange':'fullscreenchange']();return Promise.resolve();};
- const context={document,location:{pathname:'/ls26try/library.html',search:''},URL,URLSearchParams,ResizeObserver:class{observe(){}},setTimeout(){},clearTimeout(){},sessionStorage:{getItem(){return null}},console};
+ const context={addEventListener(){},document,location:{pathname:'/ls26try/library.html',search:''},URL,URLSearchParams,ResizeObserver:class{observe(){}},setTimeout(){},clearTimeout(){},sessionStorage:{getItem(){return null}},console};
  context.window=context;vm.createContext(context);vm.runInContext(fs.readFileSync(path.join(root,'shared/shell.js'),'utf8'),context);listeners.DOMContentLoaded();
  return {context,document,listeners,calls,button:elements.get('ls26Fullscreen'),elements};
 }

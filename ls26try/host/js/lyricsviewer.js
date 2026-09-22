@@ -369,10 +369,11 @@
         </strong>
 
         <span class="bpm-cell">
-          ${LyricsCommon.escapeHTML(song.userBpm || song.originalBpm || "—")}
+          ${LyricsCommon.escapeHTML(song.userBpm || "—")}
         </span>
 
-        <span class="capo-cell">${LyricsCommon.escapeHTML(song.capo || "0")}</span>
+        <span class="original-bpm-cell">${LyricsCommon.escapeHTML(song.originalBpm || "—")}</span>
+        <span class="capo-cell">${LyricsCommon.escapeHTML(Number(song.capo) ? song.capo : "-")}</span>
         <span class="row-actions">
           <button
             class="row-play-btn"
@@ -382,7 +383,7 @@
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3 21 12 7 21Z"/></svg>
           </button>
 
-          <button class="row-edit-btn" data-edit="${song.firebaseId}" type="button" aria-label="Edit song" title="Edit song"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 16-1 5 5-1L21 7l-4-4Z" fill="none" stroke="currentColor" stroke-width="2"/></svg></button><button class="row-queue-btn" data-queue="${song.firebaseId}" type="button" title="Add to Run Order">＋ Q</button>
+          <button class="row-edit-btn" data-edit="${song.firebaseId}" type="button" aria-label="Edit song" title="Edit song"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 16-1 5 5-1L21 7l-4-4Z" fill="none" stroke="currentColor" stroke-width="2"/></svg></button><button class="row-queue-btn" data-queue="${song.firebaseId}" type="button" title="Add to Run Order" aria-label="Add to Run Order"><svg viewBox="0 0 28 24" aria-hidden="true"><path d="M2 12h8M6 8v8M15 5h2m3 0h6M15 12h2m3 0h6M15 19h2m3 0h6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button>
         </span>
       `;
 
@@ -404,7 +405,13 @@
     const count=songs.filter(x=>new Set(ids).has(x.firebaseId)).length;
     const name=scope==='session'?(sessionList?.name||session.setlistName||pub.setlistName||'No session setlist selected'):chosen?.name;
     caption.textContent=`${name||''} · ${count} songs`;
-    document.querySelectorAll("[data-scope]").forEach(b=>b.classList.toggle("active",b.dataset.scope===scope));
+    $("libraryShowingCount").textContent = `Showing: ${visibleSongs.length}`;
+    filters.setlist.classList.toggle("active", !!chosen);
+    document.querySelectorAll("[data-scope]").forEach(b => {
+      const active = !chosen && b.dataset.scope === scope;
+      b.classList.toggle("active", active);
+      b.setAttribute("aria-pressed", String(active));
+    });
     selectedIndex = Math.min(selectedIndex, visibleSongs.length - 1);
 
     restoreScrollWhenReady();

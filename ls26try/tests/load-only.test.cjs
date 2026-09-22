@@ -19,8 +19,8 @@ test('Library next-in-run-order control also loads without an autoplay flag',()=
 });
 test('title metadata reflects user BPM and updates along with Song Info',()=>{
  const source=read('host/js/lyricview.js');const code=source.slice(source.indexOf('  function setInfo(song)'),source.indexOf('  function normaliseType('));
- const nodes=new Map();const get=id=>{if(!nodes.has(id))nodes.set(id,{classList:{add(){},remove(){}}});return nodes.get(id);};
+ const nodes=new Map();const get=id=>{if(!nodes.has(id))nodes.set(id,{dataset:{},classList:{add(){},remove(){}}});return nodes.get(id);};
  const c={$:get,toNumber:value=>value==null?null:Number(value),esc:String};vm.createContext(c);vm.runInContext(code,c);
- c.setInfo({userBpm:147,originalBpm:149,key:'C',capo:0,timeSignature:'4/4'});assert.match(get('quickTempo').innerHTML,/147/);assert.equal(get('quickKey').textContent,'C');assert.equal(get('quickCapo').textContent,0);assert.equal(get('quickTime').textContent,'4/4');
- c.setInfo({userBpm:150,originalBpm:149});assert.match(get('quickTempo').innerHTML,/150/);assert.equal(get('quickTempo').innerHTML,get('infoTempo').innerHTML);
+ c.setInfo({userBpm:147,originalBpm:149,key:'C',capo:0,timeSignature:'4/4'});assert.match(get('quickTempo').innerHTML,/147/);assert.equal(get('quickKey').textContent,'C');assert.equal(get('quickCapo').textContent,0);assert.equal(get('quickTime').textContent,'4/4');assert.match(get('quickOriginalBpm').innerHTML,/149/);assert.equal(get('quickCapo').dataset.zero,'true');
+ c.setInfo({userBpm:150,originalBpm:149,capo:2});assert.equal(get('quickCapo').dataset.zero,'false');assert.match(get('quickTempo').innerHTML,/150/);assert.equal(get('quickTempo').innerHTML,get('infoTempo').innerHTML);
 });
