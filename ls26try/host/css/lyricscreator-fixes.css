@@ -834,3 +834,7 @@
     flex-direction: column;
   }
 }
+
+/* Visual prompt only: it never becomes editable or saved song content. */
+.creator-rich-editor[data-placeholder]{position:relative}
+.creator-rich-editor[data-placeholder].is-empty::before{content:attr(data-placeholder);position:absolute;opacity:.5;pointer-events:none;font-style:italic}

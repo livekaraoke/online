@@ -253,64 +253,16 @@
 
   function stripLegacyMarkerFromText(value) {
     const original = String(value || "");
-    const cleaned = original.replace(/^[\s\u00a0]*(?:\*\*\s*●\s*\*\*|●)[ \t\u00a0]*/, "");
+    const cleaned = LS26SectionContent.cleanText(original);
     if (cleaned !== original) legacyMarkerWasRemoved = true;
     return cleaned;
   }
 
   function stripLegacyMarkerFromHtml(value) {
-    const holder = document.createElement("div");
-    holder.innerHTML = String(value || "");
-    let removed = false;
-
-    function trimLeadingWhitespace(container) {
-      while (container.firstChild && container.firstChild.nodeType === Node.TEXT_NODE) {
-        const text = container.firstChild.nodeValue || "";
-        const trimmed = text.replace(/^[\s\u00a0]+/, "");
-        if (trimmed === text) break;
-        if (trimmed) {
-          container.firstChild.nodeValue = trimmed;
-          break;
-        }
-        container.firstChild.remove();
-      }
-    }
-
-    function stripInside(container) {
-      trimLeadingWhitespace(container);
-      const first = container.firstChild;
-      if (!first) return false;
-
-      if (first.nodeType === Node.TEXT_NODE) {
-        const original = first.nodeValue || "";
-        const cleaned = original.replace(/^(?:\*\*\s*●\s*\*\*|●)[ \t\u00a0]*/, "");
-        if (cleaned !== original) {
-          first.nodeValue = cleaned;
-          if (!cleaned) first.remove();
-          trimLeadingWhitespace(container);
-          return true;
-        }
-        return false;
-      }
-
-      if (first.nodeType === Node.ELEMENT_NODE) {
-        const tag = first.tagName;
-        if ((tag === "STRONG" || tag === "B") && String(first.textContent || "").trim() === "●") {
-          first.remove();
-          trimLeadingWhitespace(container);
-          return true;
-        }
-
-        // Old creator versions sometimes wrapped the marker in the first block.
-        if (["DIV", "P", "SPAN"].includes(tag) && stripInside(first)) return true;
-      }
-
-      return false;
-    }
-
-    removed = stripInside(holder);
-    if (removed) legacyMarkerWasRemoved = true;
-    return holder.innerHTML;
+    const original = String(value || "");
+    const cleaned = LS26SectionContent.cleanHtml(original);
+    if (cleaned !== original) legacyMarkerWasRemoved = true;
+    return cleaned;
   }
 
   function normaliseVisibleForTypes(section) {
@@ -372,7 +324,7 @@
     return normalizeSection({
       type: "lyrics",
       title: template?.title || "VERSE",
-      html: template?.html || "Enter lyrics and chords here...",
+      html: template?.html || "",
       style: { ...defaultStyle("lyrics"), color: template?.colour || "#ffffff" }
     });
   }
@@ -651,15 +603,25 @@
             ${isTextNote ? "" : sectionToolbar(index, s)}
             ${isTextNote
               ? `<textarea class="${s.type === "hostNote" ? "host-note-editor" : "performance-note-editor"}" data-note="${index}" style="text-align:${esc(s.style?.textAlign || "left")}">${esc(s.text)}</textarea>`
-              : `<div class="creator-rich-editor ${s.type === "tab" ? "tab-editor" : ""}" data-html="${index}" contenteditable="true" style="font-family:${esc(s.style.fontFamily)};font-size:${Number(s.style.fontSize) || 18}px;color:${esc(s.style.color)};text-align:${esc(s.style?.textAlign || "left")}">${s.html || ""}</div>`}
+              : `<div class="creator-rich-editor ${s.type === "tab" ? "tab-editor" : ""}" data-html="${index}" data-placeholder="${s.type === "lyrics" ? "Enter lyrics and chords here..." : ""}" contenteditable="true" style="font-family:${esc(s.style.fontFamily)};font-size:${Number(s.style.fontSize) || 18}px;color:${esc(s.style.color)};text-align:${esc(s.style?.textAlign || "left")}">${s.html || ""}</div>`}
           </div>`;
       }
       root.appendChild(card);
     });
 
+    root.querySelectorAll("[data-placeholder]").forEach(updateEmptyEditor);
     // Preview each section's dash colour immediately in the creator.
     requestAnimationFrame(refreshAllDashColours);
   }
+
+  function updateEmptyEditor(editor) {
+    const empty = !editor.textContent.trim() && !editor.querySelector("img,svg,video,audio,iframe,table,.tab-block");
+    editor.classList.toggle("is-empty", empty);
+  }
+  document.addEventListener("input", event => {
+    const editor = event.target.closest?.(".creator-rich-editor[data-placeholder]");
+    if (editor) updateEmptyEditor(editor);
+  });
 
   function syncSectionsFromDOM() {
     document.querySelectorAll("[data-title]").forEach(el => {
@@ -672,7 +634,8 @@
     });
     document.querySelectorAll("[data-html]").forEach(el => {
       const i = Number(el.dataset.html);
-      if (sections[i]) sections[i].html = el.innerHTML;
+      updateEmptyEditor(el);
+      if (sections[i]) sections[i].html = el.classList.contains("is-empty") ? "" : el.innerHTML;
     });
     document.querySelectorAll("[data-load-collapsed]").forEach(el => {
       const i = Number(el.dataset.loadCollapsed);
@@ -855,7 +818,7 @@
       : [];
 
     // One-time migration for songs created by the old Lyrics Creator that
-    // prefixed every section with **●** / ●. The editor always opens clean,
+    // prefixed sections with **●** / ● or stored the prompt as lyrics. The editor opens clean,
     // and the cleaned sections are persisted silently when permissions allow.
     if (legacyMarkerWasRemoved) {
       try {
