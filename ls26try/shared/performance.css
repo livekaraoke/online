@@ -85,3 +85,18 @@ body.host-lyric-view-page{overflow-x:clip!important;background:var(--ls-bg)!impo
 #ls26StickyHeader #topStatusBar .host-status-expanded{border:1px solid var(--ls-accent)!important;border-top:0!important;border-radius:0 0 9px 9px!important;box-shadow:0 6px 16px #0007}
 .ls26-session-grid .ls26-public-list-name{font-size:20px;margin:12px 0 18px}.ls26-session-schedule{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:16px 0;border-block:1px solid var(--ls-border);margin-top:16px}.ls26-session-schedule small{color:var(--ls-muted);font-size:13px}.ls26-session-schedule strong{font-size:25px;display:flex;align-items:center;gap:8px}.ls26-session-grid .ls26-edit-end{width:42px;min-height:42px;margin:0;padding:4px;color:var(--ls-accent)}.ls26-session-lifecycle{display:flex;gap:12px}.ls26-session-lifecycle button{flex:1}.ls26-session-grid .ls26-break-action{font-size:25px}.ls26-requests-state{font-size:15px;color:var(--ls-success);margin:10px 0}.ls26-requests-state.is-closed{color:var(--ls-warning)}
 @media(max-width:650px){#hostStickyStack > .host-view-topbar{grid-template-columns:1fr!important}#hostStickyStack .ls26-actions{justify-content:stretch}#hostStickyStack .ls26-actions button{flex:1}#performanceQuickInfo .performance-quick-meta{width:100%}}
+
+/* Size the status strip by content so OFFLINE and the end-time hint fit. */
+#ls26StickyHeader #topStatusBar .host-compact-strip{grid-template-columns:max-content minmax(100px,1fr) minmax(65px,.6fr) minmax(65px,.6fr) minmax(112px,.9fr) 70px max-content 28px!important;height:auto!important;min-height:70px!important;padding:6px!important}
+#ls26StickyHeader #topStatusBar .host-strip-live{margin:0!important;padding:4px 7px!important;gap:6px;white-space:nowrap}
+#ls26StickyHeader #topStatusBar #tsLiveLabel{font-size:clamp(14px,1.8vw,20px)!important;overflow:visible!important}
+#ls26StickyHeader #topStatusBar .host-strip-live .dot{width:12px;height:12px;flex:0 0 12px}
+#ls26StickyHeader #topStatusBar #tsCompactScheduledEnd{white-space:normal!important;overflow-wrap:break-word;line-height:1.2;font-size:11px!important}
+#ls26StickyHeader #topStatusBar #tsCompactVenue{white-space:normal!important;overflow-wrap:anywhere}
+#ls26StickyHeader #ls26Clock{font-size:clamp(22px,3vw,32px);padding:0 8px}
+@media(max-width:700px){
+ #ls26StickyHeader #topStatusBar .host-compact-strip{grid-template-columns:repeat(4,minmax(0,1fr))!important;row-gap:6px!important}
+ #ls26StickyHeader #topStatusBar .host-strip-metric{padding:4px!important}
+ #ls26StickyHeader #topStatusBar .remaining-metric{grid-column:span 1}
+ #ls26StickyHeader #topStatusBar #tsToggleBtn{justify-self:end}
+}
