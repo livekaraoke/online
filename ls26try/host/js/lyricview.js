@@ -314,7 +314,7 @@
 
   function cleanSectionHtml(html) {
     const holder = document.createElement("div");
-    holder.innerHTML = String(html || "");
+    holder.innerHTML = LS26SectionContent.cleanHtml(html);
     holder.querySelectorAll(".tab-block-controls,.tab-insert-row,.delete-tab-line-btn,.delete-tab-time-btn,.delete-tab-btn,.delete-tab-btn-bottom,.move-tab-up-btn,.move-tab-down-btn,.duplicate-tab-btn").forEach(n => n.remove());
     holder.querySelectorAll("[contenteditable]").forEach(n => n.removeAttribute("contenteditable"));
     return holder.innerHTML;
