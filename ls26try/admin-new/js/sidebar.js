@@ -4,8 +4,11 @@
  */
 (function () {
   let sidebarRequestsUnsub = null;
+  let sidebarActiveSessionId = "";
+  let sidebarRequestsGeneration = 0;
   let sidebarSessionUnsub = null;
   let sidebarRunOrderUnsub = null;
+  let sidebarRunOrderData = {};
   let sidebarEnquiriesUnsub = null;
   let sidebarProfileUnsub = null;
 
@@ -210,7 +213,7 @@
       : "▲ Collapse";
   }
 
-  function listenSidebarSongRequests() {
+  function listenSidebarSongRequests(sessionId = sidebarActiveSessionId) {
     const badge = $("sidebarRequestBadge");
     const box = $("sidebarSongRequests");
 
@@ -221,11 +224,21 @@
       sidebarRequestsUnsub = null;
     }
 
+    const generation = ++sidebarRequestsGeneration;
+    if (badge) { badge.textContent = "0"; badge.classList.add("hidden"); }
+    if (box) box.innerHTML = "";
+    if (!sessionId) return;
+
     sidebarRequestsUnsub = LK.db
       .collection("publicSongRequests")
-      .where("status", "in", ["pending", "waiting", "active", "queued"])
+      .where("sessionId", "==", sessionId)
       .onSnapshot(snapshot => {
-        const count = snapshot.size;
+        if (generation !== sidebarRequestsGeneration) return;
+        const pending = snapshot.docs.filter(doc => {
+          const status = String(doc.data().status || "").toLowerCase();
+          return !status || ["pending", "waiting", "active"].includes(status);
+        });
+        const count = pending.length;
 
         if (badge) {
           badge.textContent = String(count);
@@ -237,7 +250,7 @@
         if (box) {
           box.innerHTML = "";
 
-          snapshot.docs.forEach(doc => {
+          pending.forEach(doc => {
             const req = { id: doc.id, ...doc.data() };
 
             const btn = document.createElement("button");
@@ -264,6 +277,9 @@
           });
         }
       }, error => {
+        if (generation !== sidebarRequestsGeneration) return;
+        if (badge) { badge.textContent = "0"; badge.classList.add("hidden"); }
+        if (box) box.innerHTML = "";
         console.warn("Could not load sidebar request count:", error);
       });
   }
@@ -283,12 +299,22 @@
       .doc("currentSession")
       .onSnapshot(doc => {
         const data = doc.exists ? (doc.data() || {}) : {};
-        const isLive = data.active === true;
+        const sessionId = data.active === false ? "" : (data.sessionId || data.activeSessionId || "");
+        const isLive = !!sessionId;
+        if (sidebarActiveSessionId !== sessionId) {
+          sidebarActiveSessionId = sessionId;
+          listenSidebarSongRequests(sessionId);
+          renderSidebarRunOrderCount();
+        }
 
         if (badge) {
           badge.classList.toggle("hidden", !isLive);
         }
       }, error => {
+        sidebarActiveSessionId = "";
+        listenSidebarSongRequests("");
+        renderSidebarRunOrderCount();
+        if (badge) badge.classList.add("hidden");
         console.warn("Could not load sidebar live-session status:", error);
       });
   }
@@ -335,6 +361,17 @@
       });
   }
 
+  function renderSidebarRunOrderCount() {
+    const badge = $("sidebarRunOrderBadge");
+    if (!badge) return;
+    const data = sidebarRunOrderData;
+    const terminal = new Set(["played","completed","finished","abandoned","left","deleted","deletedbyhost","declined"]);
+    const items = sidebarActiveSessionId && data.sessionId === sidebarActiveSessionId && Array.isArray(data.items) ? data.items : [];
+    const count = items.filter(item => !terminal.has(String(item.status || "").toLowerCase())).length;
+    badge.textContent = String(count);
+    badge.classList.toggle("hidden", count === 0);
+  }
+
   function listenSidebarRunOrder() {
     const badge = $("sidebarRunOrderBadge");
 
@@ -349,17 +386,8 @@
       .collection("karaokeControl")
       .doc("runOrder")
       .onSnapshot(doc => {
-        const data = doc.exists ? (doc.data() || {}) : {};
-        const items = Array.isArray(data.items) ? data.items : [];
-
-        const count = items.filter(item =>
-          String(item.status || "").toLowerCase() !== "played"
-        ).length;
-
-        if (badge) {
-          badge.textContent = String(count);
-          badge.classList.toggle("hidden", count === 0);
-        }
+        sidebarRunOrderData = doc.exists ? (doc.data() || {}) : {};
+        renderSidebarRunOrderCount();
       }, error => {
         console.warn("Could not load sidebar Run Order count:", error);
       });

@@ -132,3 +132,10 @@ body.host-lyric-view-page{overflow:visible!important}
 .host-lyric-view-page #sectionProgress.host-section-progress{width:100%!important;max-width:none!important;min-height:0!important;height:56px!important}
 .host-lyric-view-page .host-section{scroll-margin-top:calc(var(--ls-header-h) + 10px)!important}
 @media(max-width:650px){.host-lyric-view-page #sectionProgress.host-section-progress{height:44px!important}}
+
+/* Neutralize the legacy fixed title rule inside the unified sticky stack. */
+.host-lyric-view-page #ls26StickyHeader>.host-view-topbar{position:relative!important;inset:auto!important;order:1!important;width:100%!important;height:auto!important;min-height:72px!important;flex:0 0 auto!important;z-index:1!important;margin:0!important}
+.host-lyric-view-page #ls26StickyHeader>.ls26-nav{order:-1}
+/* The closed drawer must be fully offscreen, including its right inset/shadow. */
+#songInfoDrawer.song-info-drawer:not(.open){visibility:hidden;pointer-events:none;transform:translateX(calc(100% + 30px))}
+#songInfoDrawer.song-info-drawer.open{visibility:visible;pointer-events:auto}

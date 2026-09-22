@@ -12,6 +12,24 @@
   const esc=x=>LS26.escape(x);
   const pending=x=>!x.status||['active','pending','waiting'].includes(x.status.toLowerCase());
   function dialog(title,content){const d=document.createElement('dialog');d.className='ls26-dialog';d.innerHTML=`<h2>${esc(title)}</h2>${content}<div class="ls26-dialog-actions"><button type="button" data-close>Close</button></div>`;document.body.append(d);d.querySelector('[data-close]').onclick=()=>d.close();d.onclose=()=>d.remove();d.showModal();return d;}
+  function breakDurationMs(b, now = Date.now()) {
+    const start = date(b.start || b.startedAt)?.getTime();
+    const end = date(b.end || b.endedAt)?.getTime();
+    return Number.isFinite(start) ? Math.max(0, (Number.isFinite(end) ? end : now) - start) : 0;
+  }
+  function breakDurationText(ms) {
+    const seconds = Math.floor(ms / 1000);
+    return `${Math.floor(seconds / 60)}m ${String(seconds % 60).padStart(2,'0')}s`;
+  }
+  function refreshBreakTimers() {
+    const breaks = tools()?.getSession()?.breaks || [], now = Date.now();
+    document.querySelectorAll('[data-ls-break-time]').forEach(cell => {
+      const b = breaks[Number(cell.dataset.lsBreakTime)];
+      if (b) cell.textContent = breakDurationText(breakDurationMs(b, now));
+    });
+    const summary = $('ls26BreakSummary');
+    if (summary) summary.textContent = `${breaks.length} ${breaks.length === 1 ? 'break' : 'breaks'} · ${breakDurationText(breaks.reduce((sum,b)=>sum+breakDurationMs(b,now),0))} total`;
+  }
   function renderSession(){
     const pane=$('tsSessionStatusPane');if(!pane||!tools())return;
     const session=tools().getSession(),publicList=tools().getPublicList?.()||{};
@@ -21,7 +39,8 @@
     const requestsOpen=LK.topStatus?.getRequestsEnabled?.();
     const breaks=session.breaks||[],open=session.breakOpen||breaks.some(x=>(x.start||x.startedAt)&&!(x.end||x.endedAt));
     const total=breaks.reduce((sum,b)=>sum+Math.max(0,((date(b.end||b.endedAt)||new Date())-date(b.start||b.startedAt))/60000),0);
-    grid.innerHTML=`<section class="ls26-session-card"><small class="ls26-eyebrow">PERFORMANCE SESSION</small><p>${esc((start||date(session.startedAt)||new Date()).toLocaleDateString())}</p><strong>${esc(session.venue||session.venueName||'Venue')}</strong><small>${esc(session.locality||session.location||'')}</small><div class="ls26-session-schedule"><div><small>SCHEDULED START</small><strong>${clock(start)}</strong></div><div><small>PROJECTED END</small><strong>${clock(end)} <button class="ls26-edit-end" data-session="times" aria-label="Edit projected end time">✎</button></strong></div></div><p class="ls26-muted">Planned duration · ${Math.floor(duration/60)}h ${duration%60}m</p></section><section class="ls26-session-card"><small class="ls26-eyebrow">PUBLIC SONG LIST</small><strong class="ls26-public-list-name">${esc(publicList.setlistName||'Not selected')}</strong><button data-session="list">☷ Change song list</button><p class="ls26-requests-state ${requestsOpen===false?'is-closed':''}">${requestsOpen==null?'Loading request status…':requestsOpen?'● Requests OPEN — guests can submit songs':'● Requests CLOSED — new submissions disabled'}</p><button data-session="requests" ${requestsOpen==null?'disabled':''}>${requestsOpen?'🔒 Close requests':'🔓 Open requests'}</button><div class="ls26-session-lifecycle"><button class="ls26-break-action" data-session="break" aria-label="${open?'Resume session':'Start break'}" title="${open?'Resume session':'Start break'}">${open?'▶':'☕'}</button><button class="danger" data-session="end" aria-label="End session">■ SESSION</button></div></section><section class="ls26-session-card ls26-break-card"><div class="ls26-break-heading"><strong>Break history</strong><span>${breaks.length} breaks · ${Math.floor(total)}m total</span></div><div class="ls26-breaks"><table><thead><tr><th>#</th><th>Start</th><th>End</th><th>Time</th></tr></thead><tbody>${breaks.map((b,i)=>`<tr><td>${i+1}</td><td>${clock(b.start||b.startedAt)}</td><td>${clock(b.end||b.endedAt)}</td><td>${Math.floor(Math.max(0,((date(b.end||b.endedAt)||new Date())-date(b.start||b.startedAt))/60000))}m</td></tr>`).join('')}</tbody></table></div><p class="ls26-muted">${breaks.length?"All breaks recorded for this session":"No breaks taken yet"}</p></section>`;
+    grid.innerHTML=`<section class="ls26-session-card"><small class="ls26-eyebrow">PERFORMANCE SESSION</small><p>${esc((start||date(session.startedAt)||new Date()).toLocaleDateString())}</p><strong>${esc(session.venue||session.venueName||'Venue')}</strong><small>${esc(session.locality||session.location||'')}</small><div class="ls26-session-schedule"><div><small>SCHEDULED START</small><strong>${clock(start)}</strong></div><div><small>PROJECTED END</small><strong>${clock(end)} <button class="ls26-edit-end" data-session="times" aria-label="Edit projected end time">✎</button></strong></div></div><p class="ls26-muted">Planned duration · ${Math.floor(duration/60)}h ${duration%60}m</p></section><section class="ls26-session-card"><small class="ls26-eyebrow">PUBLIC SONG LIST</small><strong class="ls26-public-list-name">${esc(publicList.setlistName||'Not selected')}</strong><button data-session="list">☷ Change song list</button><p class="ls26-requests-state ${requestsOpen===false?'is-closed':''}">${requestsOpen==null?'Loading request status…':requestsOpen?'● Requests OPEN — guests can submit songs':'● Requests CLOSED — new submissions disabled'}</p><button data-session="requests" ${requestsOpen==null?'disabled':''}>${requestsOpen?'🔒 Close requests':'🔓 Open requests'}</button><div class="ls26-session-lifecycle"><button class="ls26-break-action" data-session="break" aria-label="${open?'Resume session':'Start break'}" title="${open?'Resume session':'Start break'}">${open?'▶':'☕'}</button><button class="danger" data-session="end" aria-label="End session">■ SESSION</button></div></section><section class="ls26-session-card ls26-break-card"><div class="ls26-break-heading"><strong>Break history</strong><span id="ls26BreakSummary">${breaks.length} breaks · ${Math.floor(total)}m total</span></div><div class="ls26-breaks"><table><thead><tr><th>#</th><th>Start</th><th>End</th><th>Time</th></tr></thead><tbody>${breaks.map((b,i)=>`<tr><td>${i+1}</td><td>${clock(b.start||b.startedAt)}</td><td>${clock(b.end||b.endedAt)}</td><td data-ls-break-time="${i}">${breakDurationText(breakDurationMs(b))}</td></tr>`).join('')}</tbody></table></div><p class="ls26-muted">${breaks.length?"All breaks recorded for this session":"No breaks taken yet"}</p></section>`;
+    refreshBreakTimers();
     grid.onclick=async e=>{const action=e.target.closest('[data-session]')?.dataset.session;if(!action)return;try{if(action==='break')return LK.topStatus.toggleBreak();if(action==='times')return editTimes(session);if(action==='list')return chooseList(session);if(action==='requests'){const enabled=!requestsOpen;if(await LS26Dialogs.confirm(`${enabled?'Open':'Close'} song requests? ${enabled?'Guests will be able to submit songs.':'Existing requests stay in the queue.'}`)){const button=e.target.closest('button');button.disabled=true;try{await db().collection('karaoke').doc('state').set({songsEnabled:enabled,updatedAt:stamp()},{merge:true});LS26.toast(enabled?'Song requests opened':'Song requests closed');}finally{button.disabled=false;}}}if(action==='end')await endSession(session);}catch(err){LS26.toast(err.message);}};
   }
   function editTimes(session){
@@ -83,6 +102,8 @@
     return true;
   }
   function init(){
+    setInterval(refreshBreakTimers,1000);
+    document.addEventListener('visibilitychange',refreshBreakTimers);
     if(!ready()){const observer=new MutationObserver(()=>{if(ready())observer.disconnect();});observer.observe(document.body,{childList:true,subtree:true});}
     window.addEventListener('lk:session-updated',renderSession);window.addEventListener('ls26:public-list',renderSession);window.addEventListener('ls26:requests-gate',renderSession);
     let nextTimer;window.addEventListener('lk:runorder-updated',()=>{const card=$('endNextSongDetailsCard');if(card&&!card.hidden){clearTimeout(nextTimer);nextTimer=setTimeout(()=>window.LS26Performance?.nextDetails(),150);}});
