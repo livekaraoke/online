@@ -11,6 +11,12 @@
     const row=document.createElement('div');row.className='ls26-actions';row.innerHTML='<button id="ls26EditSong">✎ EDIT SONG</button><button id="ls26SongInfo">ⓘ SONG INFO</button>';
     title.append(row);$('songInfoBtn').hidden=true;header.append(title);
     const drawer=$('songInfoDrawer');
+    const karaoke=$('performanceQuickInfo'),toggle=document.createElement('label');toggle.className='ls26-karaoke-toggle';toggle.innerHTML='<input type="checkbox" id="ls26ShowKaraoke"> Show karaoke tools';drawer.querySelector('.song-info-scroll').prepend(toggle);
+    const hide=document.createElement('button');hide.type='button';hide.className='ls26-hide-karaoke';hide.textContent='×';hide.setAttribute('aria-label','Hide karaoke tools');karaoke.querySelector('.performance-quick-karaoke').append(hide);
+    function showKaraoke(show){karaoke.hidden=!show;$('ls26ShowKaraoke').checked=show;try{localStorage.setItem('ls26:showKaraokeTools',String(show));}catch(_){}}
+    let show=true;try{show=localStorage.getItem('ls26:showKaraokeTools')!=='false';}catch(_){}showKaraoke(show);
+    hide.onclick=()=>showKaraoke(false);$('ls26ShowKaraoke').onchange=e=>showKaraoke(e.target.checked);
+
     const panel=document.createElement('section');panel.className='song-info-card ls26-bpm-panel';panel.innerHTML=`<label for="ls26CurrentBpm">Current BPM</label><div class="ls26-stepper"><button id="ls26BpmMinus" aria-label="Lower BPM">−</button><input id="ls26CurrentBpm" aria-label="Current BPM" type="number" min="1" max="400"><button id="ls26BpmPlus" aria-label="Raise BPM">＋</button></div><p>Original BPM <strong id="ls26OriginalBpm">—</strong></p><button id="ls26ResetBpm">↻ Reset</button>`;
     drawer.querySelector('.song-info-scroll').prepend(panel);
     function sync(){const song=window.LS26Performance?.song();if(!song)return;$('ls26CurrentBpm').value=song.userBpm||song.originalBpm||96;$('ls26OriginalBpm').textContent=song.originalBpm||'—';$('ls26ResetBpm').disabled=!(Number(song.originalBpm)>0);}
