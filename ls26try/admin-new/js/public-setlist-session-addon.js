@@ -26,6 +26,15 @@
   let publicSetlists = [];
   let currentPublicSetlistId = "";
   let currentSessionIdFromControl = "";
+  let sessionKnown = false;
+  let pendingSetlistId = "";
+  let currentPublicList = {};
+  // Idle selections are local drafts. Old published lists must never prefill a new session.
+  window.LS26PublicList = {
+    selectionForStart: () => sessionKnown && !currentSessionIdFromControl
+      ? publicSetlists.find(item => item.id === pendingSetlistId) || null : null
+  };
+
 
   function esc(value) {
     return String(value || "")
@@ -62,16 +71,17 @@
     if (!select) return;
 
     select.innerHTML =
-      `<option value="">Choose public setlist...</option>` +
+      `<option value="">Choose a public song list…</option>` +
       publicSetlists.map(setlist =>
         `<option value="${esc(setlist.id)}">${esc(setlist.name || "Untitled Setlist")} (${setlist.songIds.length})</option>`
       ).join("");
 
+    const selectedId = currentSessionIdFromControl ? currentPublicSetlistId : pendingSetlistId;
     if (
-      currentPublicSetlistId &&
-      [...select.options].some(option => option.value === currentPublicSetlistId)
+      selectedId &&
+      [...select.options].some(option => option.value === selectedId)
     ) {
-      select.value = currentPublicSetlistId;
+      select.value = selectedId;
     } else {
       select.value = "";
     }
@@ -108,11 +118,14 @@
   function listenForCurrentPublicList() {
     PUBLIC_LIST_DOC.onSnapshot(doc => {
       const data = doc.exists ? (doc.data() || {}) : {};
+      currentPublicList = data;
       currentPublicSetlistId = data.setlistId || "";
 
       populatePublicSetlistSelect();
 
-      if (data.setlistName) {
+      if (!currentSessionIdFromControl) {
+        setPublicListStatus(pendingSetlistId ? "Selected for the next session" : "Choose a public song list before starting a session.");
+      } else if (data.setlistName) {
         setPublicListStatus(`Current: ${data.setlistName}`);
       } else if (!currentPublicSetlistId) {
         setPublicListStatus("No setlist selected");
@@ -134,6 +147,11 @@
     const id = select.value || "";
     const setlist = publicSetlists.find(item => item.id === id) || null;
 
+    if (!currentSessionIdFromControl) {
+      pendingSetlistId = setlist?.id || "";
+      setPublicListStatus(setlist ? `Selected for next session: ${setlist.name}` : "Choose a public song list before starting a session.");
+      return;
+    }
     select.disabled = true;
     setPublicListStatus("Saving...");
 
@@ -173,7 +191,14 @@
   function listenCurrentSessionType() {
     db.collection("karaokeControl").doc("currentSession").onSnapshot(doc => {
       const data = doc.exists ? (doc.data() || {}) : {};
-      currentSessionIdFromControl = data.sessionId || data.activeSessionId || "";
+      const previousSessionId = currentSessionIdFromControl;
+      currentSessionIdFromControl = data.active === false ? "" : (data.sessionId || data.activeSessionId || "");
+      if (!sessionKnown || previousSessionId !== currentSessionIdFromControl) pendingSetlistId = "";
+      sessionKnown = true;
+      populatePublicSetlistSelect();
+      setPublicListStatus(currentSessionIdFromControl
+        ? (currentPublicList.setlistName ? `Current: ${currentPublicList.setlistName}` : "No setlist selected")
+        : (pendingSetlistId ? "Selected for the next session" : "Choose a public song list before starting a session."));
 
       const type = data.sessionType || data.type || "Live Karaoke";
 

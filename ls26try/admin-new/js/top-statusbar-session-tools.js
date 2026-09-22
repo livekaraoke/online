@@ -586,7 +586,7 @@
   }
 
   // Single owner for compact labels. Local ticks never write Firestore.
-  function compactText(id,value){const el=$(id);if(el&&el.textContent!==String(value))el.textContent=String(value);}
+  function compactText(id,value){const el=$(id);if(!el)return;if(el.textContent!==String(value))el.textContent=String(value);if(id==='tsCompactRequests')el.classList.toggle('has-requests',Number(value)>0);}
   function shortDuration(ms){const mins=Math.floor(Math.abs(ms)/60000);return (ms<0?'−':'')+(mins>=60?Math.floor(mins/60)+'h ':'')+(mins%60)+'m';}
   function renderCompactHostStrip() {
     const session=state.session, control=state.currentControl||{};

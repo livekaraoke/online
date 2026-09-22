@@ -100,3 +100,35 @@ body.host-lyric-view-page{overflow-x:clip!important;background:var(--ls-bg)!impo
  #ls26StickyHeader #topStatusBar .remaining-metric{grid-column:span 1}
  #ls26StickyHeader #topStatusBar #tsToggleBtn{justify-self:end}
 }
+
+/* Status badges retain their shape and communicate empty versus pending requests. */
+#ls26StickyHeader #topStatusBar #tsLiveDot{width:16px!important;min-width:16px!important;max-width:16px!important;height:16px!important;min-height:16px!important;max-height:16px!important;flex:0 0 16px!important;border-radius:50%!important;padding:0!important}
+#ls26StickyHeader #topStatusBar #tsCompactRequests{background:var(--ls-accent)!important;box-shadow:0 0 10px #00cafa40!important}
+#ls26StickyHeader #topStatusBar #tsCompactRequests.has-requests{background:var(--ls-danger)!important;box-shadow:0 0 10px #ff465e40!important}
+/* Song information overlays the full-width lyrics and starts closed. */
+.host-lyric-view-page.ls26-drawer-open #performanceQuickInfo,.host-lyric-view-page.ls26-drawer-open #lyricsContent{width:100%!important}
+.ls26-drawer-open #performanceQuickInfo .performance-quick-meta{width:60%}
+#songInfoDrawer.song-info-drawer{background:rgba(5,25,37,.92)!important;width:clamp(270px,30vw,380px)!important;max-width:calc(100vw - 28px);backdrop-filter:blur(4px)}
+#songInfoDrawer .song-info-card,#songInfoDrawer .song-info-head{background:transparent!important}
+.ls26-bpm-panel{padding:12px 4px;font-size:18px}
+.ls26-bpm-panel p{display:flex;justify-content:space-between}
+.ls26-bpm-panel>label{display:block;margin-bottom:12px}
+#ls26ResetBpm{width:100%;min-height:44px;border:1px solid var(--ls-accent);background:var(--ls-panel);color:var(--ls-text);border-radius:6px}
+/* The title travels with the existing sticky header, above the scrolling song. */
+.host-lyric-view-page #ls26StickyHeader>.host-view-topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:72px;padding:7px 12px;border:1px solid var(--ls-border);border-radius:9px;background:var(--ls-bg)}
+.host-lyric-view-page #ls26StickyHeader .host-song-heading{min-width:0;text-align:left}
+.host-lyric-view-page #ls26StickyHeader .host-song-heading strong{display:block;font-size:clamp(20px,2.8vw,32px);line-height:1.15;white-space:normal}
+.host-lyric-view-page #ls26StickyHeader .host-song-heading span{display:block;font-size:15px;color:var(--ls-muted)}
+.host-lyric-view-page #ls26StickyHeader .ls26-actions{padding:0;gap:7px;flex-shrink:0}
+.host-lyric-view-page #ls26StickyHeader .ls26-actions button{padding:8px;font-size:12px;min-height:44px}
+.host-lyric-view-page #hostStickyStack{min-height:0!important;height:auto!important;gap:0!important}
+.host-lyric-view-page .host-bottom-dock{height:68px!important;min-height:68px!important;grid-template-columns:55% 45%!important;align-items:center!important;overflow:visible!important}
+.host-lyric-view-page .host-scroll-player{height:56px!important;min-height:0!important;overflow:visible!important}
+.host-lyric-view-page .host-section-progress{height:56px!important;padding:4px 8px!important;align-self:center}
+.host-lyric-view-page .ls26-footer .ls26-brand{width:165px;height:35px}
+@media(max-width:650px){.host-lyric-view-page #ls26StickyHeader>.host-view-topbar{flex-wrap:wrap;gap:5px}.host-lyric-view-page #ls26StickyHeader .ls26-actions{width:100%}.host-lyric-view-page #ls26StickyHeader .ls26-actions button{flex:1}.host-lyric-view-page .host-bottom-dock{grid-template-columns:minmax(0,1fr)!important;height:116px!important}.host-lyric-view-page .host-section-progress{height:44px!important}.ls26-drawer-open #performanceQuickInfo .performance-quick-meta{width:100%}}
+/* Do not let legacy body overflow create a separate scrolling ancestor. */
+body.host-lyric-view-page{overflow:visible!important}
+.host-lyric-view-page #sectionProgress.host-section-progress{width:100%!important;max-width:none!important;min-height:0!important;height:56px!important}
+.host-lyric-view-page .host-section{scroll-margin-top:calc(var(--ls-header-h) + 10px)!important}
+@media(max-width:650px){.host-lyric-view-page #sectionProgress.host-section-progress{height:44px!important}}
