@@ -80,7 +80,7 @@
   function defaultStyle(type = "lyrics") {
     return {
       fontFamily: type === "tab" ? "Consolas" : "Verdana",
-      fontSize: type === "tab" ? 16 : 18,
+      fontSize: 23,
       color: type === "tab" ? "#ffd400" : "#ffffff",
 
       // NEW: every "-" character defaults to gray. This is especially useful
@@ -506,7 +506,7 @@
 
   function setSectionFontSize(index, rawValue) {
     if (!sections[index]) return;
-    const value = Math.max(6, Math.min(120, Math.round(Number(rawValue) || 18)));
+    const value = Math.max(6, Math.min(120, Math.round(Number(rawValue) || 23)));
     sections[index].style = { ...defaultStyle(sections[index].type), ...(sections[index].style || {}) };
     sections[index].style.fontSize = value;
     const input = document.querySelector(`[data-size="${index}"]`);
@@ -523,7 +523,7 @@
         <select class="toolbar-select" data-font="${index}" title="Font name">${renderFontOptions(style.fontFamily)}</select>
         <div class="font-size-stepper" title="Section font size">
           <button type="button" data-size-step="${index}" data-step="-1" title="Decrease font size by 1">▼</button>
-          <input class="toolbar-select size-select" data-size="${index}" type="number" min="6" max="120" step="1" list="fontSizePresets" value="${Number(style.fontSize) || 18}" aria-label="Font size">
+          <input class="toolbar-select size-select" data-size="${index}" type="number" min="6" max="120" step="1" list="fontSizePresets" value="${Number(style.fontSize) || 23}" aria-label="Font size">
           <button type="button" data-size-step="${index}" data-step="1" title="Increase font size by 1">▲</button>
         </div>
         <button type="button" data-command="bold" title="Bold"><b>B</b></button>
@@ -603,7 +603,7 @@
             ${isTextNote ? "" : sectionToolbar(index, s)}
             ${isTextNote
               ? `<textarea class="${s.type === "hostNote" ? "host-note-editor" : "performance-note-editor"}" data-note="${index}" style="text-align:${esc(s.style?.textAlign || "left")}">${esc(s.text)}</textarea>`
-              : `<div class="creator-rich-editor ${s.type === "tab" ? "tab-editor" : ""}" data-html="${index}" data-placeholder="${s.type === "lyrics" ? "Enter lyrics and chords here..." : ""}" contenteditable="true" style="font-family:${esc(s.style.fontFamily)};font-size:${Number(s.style.fontSize) || 18}px;color:${esc(s.style.color)};text-align:${esc(s.style?.textAlign || "left")}">${s.html || ""}</div>`}
+              : `<div class="creator-rich-editor ${s.type === "tab" ? "tab-editor" : ""}" data-html="${index}" data-placeholder="${s.type === "lyrics" ? "Enter lyrics and chords here..." : ""}" contenteditable="true" style="font-family:${esc(s.style.fontFamily)};font-size:${Number(s.style.fontSize) || 23}px;color:${esc(s.style.color)};text-align:${esc(s.style?.textAlign || "left")}">${s.html || ""}</div>`}
           </div>`;
       }
       root.appendChild(card);
@@ -1280,7 +1280,7 @@
     if (sizeStep) {
       syncSectionsFromDOM();
       const index = Number(sizeStep.dataset.sizeStep);
-      const current = Number(sections[index]?.style?.fontSize) || 18;
+      const current = Number(sections[index]?.style?.fontSize) || 23;
       setSectionFontSize(index, current + Number(sizeStep.dataset.step || 0));
       return;
     }
@@ -1417,7 +1417,7 @@
     $("saveMenuBtn").setAttribute("aria-expanded", menu.classList.contains("hidden") ? "false" : "true");
   };
   $("cancelChangesBtn").onclick = leaveWithoutSaving;
-  $("backToViewerBtn").onclick = leaveWithoutSaving;
+  if ($("backToViewerBtn")) $("backToViewerBtn").onclick = leaveWithoutSaving;
 
   $("confirmOkBtn").onclick = () => closeConfirm(true);
   $("confirmCancelBtn").onclick = () => closeConfirm(false);

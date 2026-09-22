@@ -36,3 +36,27 @@
 .ls26-nav #ls26Fullscreen svg{display:block;width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 @media(max-width:1100px){.ls26-nav a.ls26-brand{width:178px;min-width:178px;height:59px}}
 @media(max-width:800px){.ls26-nav a.ls26-brand{width:156px;min-width:156px;height:52px}}
+
+/* Host actions live outside the scrolling navigation to avoid clipped menus. */
+#ls26HostMenu{position:fixed;right:12px;z-index:6000;width:200px;padding:6px;background:var(--ls-panel);border:1px solid var(--ls-border);border-radius:9px;box-shadow:0 8px 24px #0007}
+#ls26HostMenu[hidden]{display:none}
+#ls26HostMenu button{display:block;width:100%;text-align:left;padding:12px;color:var(--ls-text);background:transparent;border:0;border-radius:5px;min-height:44px}
+#ls26HostMenu button:hover,#ls26HostMenu button:focus-visible{background:var(--ls-soft);color:var(--ls-accent)}
+#ls26More{min-width:44px;font-size:24px}
+#ls26UpdatesDialog{width:min(640px,calc(100vw - 32px));max-height:85dvh;overflow:auto;padding:22px;border:1px solid var(--ls-accent);border-radius:12px;background:var(--ls-bg);color:var(--ls-text)}
+#ls26UpdatesDialog::backdrop{background:#000a}
+#ls26UpdatesDialog textarea{box-sizing:border-box;width:100%;margin-top:8px;padding:12px;font:inherit;resize:vertical;background:var(--ls-panel);color:var(--ls-text);border:1px solid var(--ls-border);border-radius:6px}
+#ls26UpdatesDialog button{min-height:44px;padding:8px 14px;border:1px solid var(--ls-border);border-radius:6px;background:var(--ls-soft);color:var(--ls-text)}
+#ls26UpdatesDialog [type=submit]{border-color:var(--ls-accent);color:var(--ls-accent)}
+.ls26-updates-heading{display:flex;align-items:center;justify-content:space-between}
+#ls26UpdateRows article{padding:12px 0;border-top:1px solid var(--ls-border);display:grid;grid-template-columns:1fr auto;gap:8px}
+#ls26UpdateRows p{grid-column:1/-1;white-space:pre-wrap;overflow-wrap:anywhere;margin:0}
+#ls26UpdateRows small{color:var(--ls-muted);overflow-wrap:anywhere;align-self:center}
+#ls26UpdateRows .is-done p{text-decoration:line-through;color:var(--ls-muted)}
+/* Creator toolbar joins the shared sticky header, with no second sticky offset. */
+.creator-page #ls26StickyHeader .creator-topbar{position:relative!important;inset:auto!important;width:100%;margin:0!important;display:flex;flex-wrap:wrap;gap:8px;padding:8px 12px;min-height:64px;background:var(--ls-bg);border:1px solid var(--ls-border);box-shadow:none;z-index:auto}
+.creator-page .creator-brand-block{flex:1;min-width:150px}
+.creator-page .save-split-wrap .btn{background:var(--ls-soft)!important;border-color:var(--ls-accent)!important;color:var(--ls-text)!important;box-shadow:none!important}
+.creator-page .creator-topbar .btn{min-height:44px}
+.creator-page .panel,.creator-page .save-dropdown{background:var(--ls-panel);border-color:var(--ls-border)}
+.creator-page .save-dropdown button{color:var(--ls-text)}

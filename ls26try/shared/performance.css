@@ -158,3 +158,13 @@ body.host-lyric-view-page{overflow:visible!important}
 .host-lyric-view-page .host-nav-pad .nav-up .host-nav-icon,.host-lyric-view-page .host-nav-pad .nav-down .host-nav-icon{width:52px!important;height:52px!important}
 @media(max-width:760px){.ls26-title-meta{gap:6px;grid-template-columns:repeat(4,minmax(34px,auto))}.ls26-title-meta strong,.ls26-title-meta .bpm-number{font-size:18px!important}.host-lyric-view-page #ls26StickyHeader>.host-view-topbar{gap:6px!important}.host-lyric-view-page #ls26StickyHeader .ls26-actions{gap:4px}.host-lyric-view-page #ls26StickyHeader .ls26-actions button{font-size:11px;padding:6px}}
 @media(max-width:650px){.host-lyric-view-page #ls26StickyHeader>.host-view-topbar{grid-template-columns:1fr auto!important}.host-lyric-view-page #ls26StickyHeader .host-song-heading{grid-column:1/-1}.host-lyric-view-page #ls26StickyHeader .ls26-actions{width:auto}.host-lyric-view-page .host-nav-pad{width:280px!important;height:308px!important;grid-template-rows:100px 84px 100px!important}.host-lyric-view-page .host-nav-pad .nav-up,.host-lyric-view-page .host-nav-pad .nav-down{width:100px!important;height:100px!important}}
+
+/* Compact performance navigation; keep every target above the playback dock. */
+.host-lyric-view-page .host-nav-pad{right:max(4px,env(safe-area-inset-right))!important;bottom:calc(var(--ls-drawer-bottom,150px) + 2px)!important;width:184px!important;height:184px!important;grid-template-columns:repeat(3,60px)!important;grid-template-rows:repeat(3,60px)!important;gap:2px!important}
+.host-lyric-view-page .host-nav-pad .host-nav-btn{width:60px!important;height:60px!important;min-width:60px!important;min-height:60px!important;justify-self:center!important;border-width:1px!important}
+.host-lyric-view-page .host-nav-pad .nav-up{grid-column:2!important;grid-row:1!important}
+.host-lyric-view-page .host-nav-pad .nav-left{grid-column:1!important;grid-row:2!important}
+.host-lyric-view-page .host-nav-pad .nav-right{grid-column:3!important;grid-row:2!important}
+.host-lyric-view-page .host-nav-pad .nav-down{grid-column:2!important;grid-row:3!important}
+.host-lyric-view-page .host-nav-pad .host-nav-btn .host-nav-icon{width:32px!important;height:32px!important}
+.host-lyric-view-page #ls26StickyHeader #topStatusBar,.host-lyric-view-page #ls26StickyHeader #topStatusContainer,.host-lyric-view-page #ls26StickyHeader #topStatusBar .host-compact-strip{box-shadow:none!important;filter:none!important}

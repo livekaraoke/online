@@ -49,12 +49,22 @@
     const isLibrary=location.pathname.endsWith('/lyricsviewer.html')||location.pathname.endsWith('/library.html');
     const tab=location.pathname.endsWith('/setlist-editor.html')?'Setlists':isLibrary?'Library':isLyric?'LyricView':location.pathname.endsWith('/requests.html')?'Requests':'';
     const nav=document.createElement('nav');nav.className='ls26-nav';nav.setAttribute('aria-label','LiveSuite navigation');
-    nav.innerHTML=`<a class="ls26-brand" href="${url('library.html')}" aria-label="LiveSuite Library"><img src="${url('assets/livesuite-logo-hd.jpg')}" alt="" width="1536" height="512"></a>${[['Library','library.html','♫'],['LyricView','host/lyricview.html','▣'],['Setlists','host/setlist-editor.html','☷'],['Requests','requests.html','♟']].map(([label,path,icon])=>`<a ${label==='LyricView'?'id="ls26LyricLink"':''} class="${label===tab?'active':''}" href="${url(path)}"><span class="ls26-nav-icon" aria-hidden="true">${icon}</span>${label}</a>`).join('')}<button id="ls26InboxOpen" type="button">▣ Inbox</button><a href="${url('admin-new/admin.html')}" aria-label="Admin dashboard">⚙</a><button id="ls26Fullscreen" type="button" aria-label="Enter fullscreen" aria-pressed="false" title="Enter fullscreen">⛶</button><a class="ls26-host" href="${url('admin-new/admin.html')}"><span class="ls26-user-icon" aria-hidden="true"><svg viewBox="0 0 32 32"><circle cx="16" cy="10" r="6"/><path d="M5 29v-4a11 11 0 0 1 22 0v4Z"/></svg></span><span>Host Mode<small>Sing. Play. Repeat.</small></span></a>`;
+    nav.innerHTML=`<a class="ls26-brand" href="${url('library.html')}" aria-label="LiveSuite Library"><img src="${url('assets/livesuite-logo-hd.jpg')}" alt="" width="1536" height="512"></a>${[['Library','library.html','♫'],['LyricView','host/lyricview.html','▣'],['Setlists','host/setlist-editor.html','☷'],['Requests','requests.html','♟']].map(([label,path,icon])=>`<a ${label==='LyricView'?'id="ls26LyricLink"':''} class="${label===tab?'active':''}" href="${url(path)}"><span class="ls26-nav-icon" aria-hidden="true">${icon}</span>${label}</a>`).join('')}<a href="${url('admin-new/admin.html')}" aria-label="Admin dashboard">⚙</a><button id="ls26Fullscreen" type="button" aria-label="Enter fullscreen" aria-pressed="false" title="Enter fullscreen">⛶</button><a class="ls26-host" href="${url('admin-new/admin.html')}"><span class="ls26-user-icon" aria-hidden="true"><svg viewBox="0 0 32 32"><circle cx="16" cy="10" r="6"/><path d="M5 29v-4a11 11 0 0 1 22 0v4Z"/></svg></span><span>Host Mode<small>Sing. Play. Repeat.</small></span></a><button id="ls26More" type="button" aria-label="Host menu" aria-expanded="false" aria-controls="ls26HostMenu">⌄</button>`;
     let stack=$('ls26StickyHeader');
     if(!stack){stack=document.createElement('div');stack.id='ls26StickyHeader';document.body.prepend(stack);}
     stack.append(nav);const status=$('topStatusContainer');if(status)stack.append(status);
     new ResizeObserver(()=>document.documentElement.style.setProperty('--ls-header-h',stack.getBoundingClientRect().height+'px')).observe(stack);
-    $('ls26InboxOpen').onclick=openInbox;
+    const menu=document.createElement('div');menu.id='ls26HostMenu';menu.hidden=true;menu.innerHTML='<button id="ls26InboxOpen" type="button">▣ Inbox</button><button id="ls26UpdatesOpen" type="button">✎ App Updates</button>';document.body.append(menu);
+    function closeMenu(){menu.hidden=true;$('ls26More').setAttribute('aria-expanded','false');}
+    $('ls26More').onclick=()=>{menu.hidden=!menu.hidden;$('ls26More').setAttribute('aria-expanded',String(!menu.hidden));const rect=nav.getBoundingClientRect();menu.style.top=(rect.bottom+4)+'px';if(!menu.hidden)menu.querySelector('button').focus();};
+    $('ls26InboxOpen').onclick=()=>{closeMenu();openInbox();};
+    $('ls26UpdatesOpen').onclick=()=>{closeMenu();window.LS26.openAppUpdates();};
+    document.addEventListener('click',e=>{if(!menu.contains(e.target)&&!$('ls26More').contains(e.target))closeMenu();});
+    document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!menu.hidden){closeMenu();$('ls26More').focus();}});
+    window.addEventListener('resize',closeMenu);
+    const notesScript=document.createElement('script');notesScript.src=url('shared/app-updates.js?v=20260922-ui');document.head.append(notesScript);
+    window.LS26.openAppUpdates=()=>toast('App Updates is loading. Please try again.');
+    const creator=document.querySelector('.creator-topbar');if(creator)stack.append(creator);
     mountFullscreen();
     $('ls26LyricLink').onclick=e=>{e.preventDefault();const items=window.LK?.sessionTools?.getRunOrder?.()||[];const song=items.find(i=>i.status==='playing');const target=song?.songId?url('host/lyricview.html?id='+encodeURIComponent(song.songId)+(song.requestId?'&requestId='+encodeURIComponent(song.requestId):'')):sessionStorage.getItem('ls26:lastSong');if(target)location.href=target;else toast('Choose a song in Library first.');};
 
