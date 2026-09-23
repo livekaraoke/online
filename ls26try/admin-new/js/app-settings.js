@@ -29,7 +29,7 @@
   document.addEventListener("DOMContentLoaded",async()=>{
     window.LK?.sidebar?.loadSidebar?.();
     put(LS26Settings.get());
-    try{put(await LS26Settings.loadRemote());}catch(_){}
+    try{put(await LS26Settings.syncRemoteOncePerSession(true));}catch(_){}
     document.querySelectorAll("[data-setting]").forEach(el=>el.addEventListener("input",preview));
     $("saveSettingsBtn").onclick=async()=>{
       const b=$("saveSettingsBtn");b.disabled=true;$("settingsStatus").textContent="Saving…";
