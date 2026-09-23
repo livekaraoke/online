@@ -1,0 +1,22 @@
+/* LiveSuite App Settings page */
+.settings-main{max-width:1120px}
+.settings-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.settings-card{border:1px solid #1d4d63;border-radius:12px;background:#041722;padding:18px}
+.settings-card h2{margin:0 0 6px;color:#00cafa;font-size:19px}
+.settings-card>p{margin:0 0 16px;color:#8ca9ba}
+.setting-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(150px,220px);gap:16px;align-items:center;padding:12px 0;border-top:1px solid #14384a}
+.setting-row:first-of-type{border-top:0}
+.setting-copy strong{display:block;color:#eef8ff}
+.setting-copy small{display:block;margin-top:4px;color:#7994a5;line-height:1.35}
+.setting-control{display:flex;align-items:center;justify-content:flex-end;gap:8px}
+.setting-control input[type="number"]{width:92px}
+.setting-control input[type="color"]{width:54px;height:40px;padding:3px}
+.setting-control input[type="range"]{width:150px}
+.setting-control output{min-width:52px;text-align:right;color:#00cafa;font-weight:800}
+.setting-toggle{display:inline-flex;align-items:center;gap:9px}
+.setting-toggle input{width:20px;height:20px;accent-color:#00cafa}
+.settings-actions{display:flex;gap:10px;justify-content:flex-end;position:sticky;bottom:10px;margin-top:18px;padding:12px;border:1px solid #1d4d63;border-radius:10px;background:rgba(3,16,25,.94);backdrop-filter:blur(8px)}
+.settings-actions button{min-height:46px;padding:10px 18px;border-radius:8px;border:1px solid #265b72;background:#082638;color:#eef8ff;font-weight:800}
+.settings-actions .primary{border-color:#00cafa;background:#07506b}
+#settingsStatus{margin-right:auto;align-self:center;color:#79dfa8}
+@media(max-width:760px){.settings-grid{grid-template-columns:1fr}.setting-row{grid-template-columns:1fr}.setting-control{justify-content:flex-start}.settings-actions{flex-wrap:wrap}}

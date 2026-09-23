@@ -849,3 +849,15 @@
 .creator-youtube-link-row>[data-remove-youtube]{height:48px;min-height:48px;padding:0!important;display:grid;place-items:center;border:1px solid #7b3040;border-radius:7px;background:#34131e;color:#ff7a87;font-size:25px;font-weight:900}
 .creator-youtube-link-row>[data-remove-youtube]:disabled{opacity:.32;cursor:not-allowed}
 .creator-add-youtube-link{margin-top:8px;min-height:42px!important}
+
+/* 2026-09-24 section text tools and linked-song cards */
+.creator-page .creator-section-actions [data-select-section]{min-width:84px!important;padding-inline:9px!important;font-size:11px!important}
+.creator-page .creator-rich-editor a.lyrics-song-link{
+  display:block!important;width:min(100% - 28px,540px)!important;margin:14px auto!important;padding:14px 18px!important;
+  border:2px solid #ffe23d!important;border-radius:12px!important;background:rgba(255,226,61,.09)!important;
+  color:#ffe23d!important;text-align:center!important;font-weight:850!important;text-decoration:none!important;
+  box-shadow:inset 0 0 18px rgba(255,226,61,.035)!important
+}
+.creator-page .creator-rich-editor a.lyrics-song-link:hover{background:rgba(255,226,61,.16)!important;box-shadow:0 0 18px rgba(255,226,61,.10)!important}
+.creator-page .advanced-rich-toolbar [data-text-case],
+.creator-page .advanced-rich-toolbar [data-wrap-brackets]{font-weight:850!important;min-width:42px!important}

@@ -664,14 +664,9 @@
 
 
   function queueItems() {
-    if (
-      state.runOrder?.sessionId &&
-      state.sessionId &&
-      state.runOrder.sessionId !== state.sessionId
-    ) {
-      return [];
-    }
-
+    const expectedSessionId=state.sessionId||"";
+    const runSessionId=state.runOrder?.sessionId||"";
+    if(runSessionId!==expectedSessionId)return [];
     return Array.isArray(state.runOrder?.items) ? state.runOrder.items : [];
   }
 
@@ -849,7 +844,7 @@
     ]);
 
     const previousPositions=new Map([...list.querySelectorAll('[data-ts-run-details]')].map(row=>[row.dataset.tsRunDetails,row.getBoundingClientRect().top]));
-    const all=state.sessionId ? queueItems() : [];
+    const all=queueItems();
     const current=all.find(x=>String(x.status||'').toLowerCase()==='playing');
     const items=[...(current?[current]:[]),...all.filter(item => item!==current && !terminalStatuses.has(String(item?.status || '').toLowerCase()))];
 
@@ -864,14 +859,13 @@
       tabCount.classList.toggle("hidden", items.length === 0);
     }
 
-    if (!state.sessionId) {
-      list.innerHTML = `<div class="top-status-queue-empty">No active session.</div>`;
-      return;
-    }
+    const preSessionNotice=!state.sessionId
+      ? `<div class="top-status-queue-empty pre-session-runorder-note">PRE-SESSION RUN ORDER · Add and arrange songs now; choose what to do with this list when the session starts.</div>`
+      : "";
 
     const breakState = getBreakState();
     const hasPlayingSong = !!runOrderPlayingItem(items);
-    const showPlayButtons = !breakState.open;
+    const showPlayButtons = !!state.sessionId && !breakState.open;
 
     const breakRow = breakState.open
       ? `
@@ -892,12 +886,13 @@
 
     if (!items.length) {
       list.innerHTML =
-        breakRow ||
-        `<div class="top-status-queue-empty">Run Order is empty.</div>`;
+        preSessionNotice +
+        (breakRow || `<div class="top-status-queue-empty">Run Order is empty.</div>`);
       return;
     }
 
     list.innerHTML =
+      preSessionNotice +
       breakRow +
       items.map((item,index) => {
         const status = String(item?.status || "").toLowerCase();
@@ -966,13 +961,20 @@
   }
 
   async function saveRunOrder(items) {
-    if (!state.db || !state.sessionId) return;
-
-    await state.db.collection("karaokeControl").doc("runOrder").set({
-      sessionId: state.sessionId,
-      items,
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    }, { merge:true });
+    if (!state.db) return;
+    const expectedSessionId=state.sessionId||"";
+    const ref=state.db.collection("karaokeControl").doc("runOrder");
+    await state.db.runTransaction(async tx=>{
+      const snap=await tx.get(ref);
+      const data=snap.exists?(snap.data()||{}):{};
+      if((state.sessionId||"")!==expectedSessionId)throw new Error("Session changed. Please try again.");
+      if(expectedSessionId && data.sessionId && data.sessionId!==expectedSessionId)throw new Error("Run Order belongs to another session.");
+      tx.set(ref,{
+        sessionId:expectedSessionId,
+        items:Array.isArray(items)?items:[],
+        updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+      },{merge:true});
+    });
   }
 
   function makeQueueItemFromRequest(request) {
@@ -1006,11 +1008,12 @@
     });
   }
 
-  async function abandonRequest(requestId) {
+  async function abandonRequest(requestId, reason="") {
     if (!requestId || !state.db) return;
 
     await state.db.collection("publicSongRequests").doc(requestId).set({
       status: "abandoned",
+      reason:String(reason||"").trim(),
       abandonedAt: firebase.firestore.FieldValue.serverTimestamp(),
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     }, { merge:true });
@@ -1027,12 +1030,12 @@
   }
 
   async function moveRunOrder(itemId,direction) {
-    if(!state.sessionId)throw Error('Start a session before reordering.');
-    const sessionId=state.sessionId;
+    const sessionId=state.sessionId||"";
     const ref=state.db.collection('karaokeControl').doc('runOrder');
     return state.db.runTransaction(async tx=>{
       const snap=await tx.get(ref),data=snap.data()||{};
-      if(state.sessionId!==sessionId||data.sessionId!==sessionId)throw Error('Session changed. Refresh before reordering.');
+      if((state.sessionId||"")!==sessionId)throw Error('Session changed. Refresh before reordering.');
+      if((data.sessionId||"")!==sessionId)throw Error('Run Order changed. Refresh before reordering.');
       const items=(data.items||[]).map(x=>({...x}));
       const terminal=new Set(['playing','played','abandoned','left','declined','deleted','deletedbyhost']);
       const indexes=items.map((x,i)=>terminal.has(String(x.status||'').toLowerCase())?-1:i).filter(i=>i>=0);
@@ -1044,7 +1047,7 @@
     });
   }
 
-  async function abandonRunOrder(itemId) {
+  async function abandonRunOrder(itemId, reason="") {
     const items = queueItems().map(item => ({...item}));
     const item = items.find(entry => entry.id === itemId);
     if (!item) return;
@@ -1058,6 +1061,7 @@
         ? {
             ...entry,
             status: "abandoned",
+            abandonReason:String(reason||"").trim(),
             abandonedAtMs: Date.now()
           }
         : entry
@@ -1068,6 +1072,7 @@
     if (item.requestId) {
       await state.db.collection("publicSongRequests").doc(item.requestId).set({
         status: "abandoned",
+        reason:String(reason||"").trim(),
         abandonedAt: now,
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       }, { merge:true });
@@ -1092,7 +1097,7 @@
   async function addManualSong() {
     const songId = $("tsRunOrderSongSelect")?.value || "";
     const song = state.songs.find(entry => entry.id === songId);
-    if (!song || !state.sessionId) return;
+    if (!song) return;
 
     const items = queueItems().map(item => ({...item}));
     items.push({
@@ -1275,6 +1280,7 @@
 
         const candidateSessionId = data.sessionId || data.activeSessionId || "";
         const sessionId = (data.active === false && !data.activeSessionId) ? "" : candidateSessionId;
+        document.documentElement.dataset.ls26SessionActive=sessionId?"true":"false";
 
         if (sessionId !== state.sessionId) {
           subscribeSession(sessionId);
@@ -1488,7 +1494,12 @@
 
       const abandonRequestBtn = event.target.closest("[data-ts-abandon-request]");
       if (abandonRequestBtn) {
-        return abandonRequest(abandonRequestBtn.dataset.tsAbandonRequest);
+        event.preventDefault();
+        return (async()=>{
+          const reason=await LS26Dialogs.prompt("Mark this request abandoned. Add a custom message (optional):","");
+          if(reason===null)return;
+          await abandonRequest(abandonRequestBtn.dataset.tsAbandonRequest,reason);
+        })();
       }
 
       const deleteRequestBtn = event.target.closest("[data-ts-delete-request],[data-ts-decline]");
@@ -1503,7 +1514,14 @@
       if (down) return moveRunOrder(down.dataset.tsDown,1);
 
       const abandonRun = event.target.closest("[data-ts-abandon-run]");
-      if (abandonRun) return abandonRunOrder(abandonRun.dataset.tsAbandonRun);
+      if (abandonRun) {
+        event.preventDefault();
+        return (async()=>{
+          const reason=await LS26Dialogs.prompt("Abandon this song. Add a custom message (optional):","");
+          if(reason===null)return;
+          await abandonRunOrder(abandonRun.dataset.tsAbandonRun,reason);
+        })();
+      }
 
       const remove = event.target.closest("[data-ts-remove]");
       if (remove) return removeRunOrder(remove.dataset.tsRemove);
@@ -1565,10 +1583,16 @@
 
   // Shared Library enqueue command: one transaction, no extra subscriptions.
   LK.sessionTools.enqueueSong = async song => {
-    const sessionId=state.sessionId;if(!sessionId)throw new Error('Start a session before adding songs to Run Order.');
+    const sessionId=state.sessionId||"";
     const ref=state.db.collection('karaokeControl').doc('runOrder');
-    const item={id:'manual_'+Date.now()+'_'+Math.random().toString(36).slice(2,8),songId:song.firebaseId,songTitle:song.title||'',artist:song.artist||'',singerName:'',requestId:'',source:'manual',status:'queued',addedAtMs:Date.now()};
-    await state.db.runTransaction(async tx=>{const snap=await tx.get(ref),data=snap.data()||{};if(state.sessionId!==sessionId)throw new Error('Session changed. Please try again.');if(data.sessionId&&data.sessionId!==sessionId)throw new Error('Run Order belongs to another session. Open Admin to initialize the current session.');tx.set(ref,{sessionId,items:[...(data.items||[]),item],updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});});
+    const item={id:'manual_'+Date.now()+'_'+Math.random().toString(36).slice(2,8),songId:song.firebaseId||song.id,songTitle:song.title||'',artist:song.artist||'',singerName:'',requestId:'',source:'manual',status:'queued',addedAtMs:Date.now()};
+    await state.db.runTransaction(async tx=>{
+      const snap=await tx.get(ref),data=snap.exists?(snap.data()||{}):{};
+      if((state.sessionId||"")!==sessionId)throw new Error('Session changed. Please try again.');
+      if(sessionId && data.sessionId && data.sessionId!==sessionId)throw new Error('Run Order belongs to another session.');
+      const baseItems=!sessionId&&data.sessionId?[]:(Array.isArray(data.items)?data.items:[]);
+      tx.set(ref,{sessionId,items:[...baseItems,item],updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
+    });
   };
   LK.sessionTools.getControl = () => state.currentControl;
   LK.sessionTools.getRunOrderSnapshot = () => state.runOrderSnapshotReady ? state.runOrder : null;

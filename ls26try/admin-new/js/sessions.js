@@ -165,6 +165,53 @@
     if (message) LK.dashboard.logAdmin(message);
   }
 
+  async function choosePreSessionRunOrder(items) {
+    if(!Array.isArray(items)||!items.length)return {mode:"clear",name:""};
+    return new Promise(resolve=>{
+      const dialog=document.createElement("dialog");
+      dialog.className="ls26-dialog pre-session-runorder-dialog";
+      const rows=items.map((item,index)=>
+        `<li><span>${index+1}</span><div><strong>${LK.dashboard.escapeHTML(item.songTitle||item.title||"Untitled")}</strong><small>${LK.dashboard.escapeHTML(item.artist||"")}</small></div></li>`
+      ).join("");
+      dialog.innerHTML=`
+        <div class="pre-session-runorder-content">
+          <h2>Current Run Order</h2>
+          <p>You already have ${items.length} song${items.length===1?"":"s"} queued. How should this session start?</p>
+          <ol class="pre-session-runorder-list">${rows}</ol>
+          <div class="pre-session-runorder-actions">
+            <button type="button" data-run-choice="keep" class="primary">START WITH THIS RUN ORDER</button>
+            <button type="button" data-run-choice="clear">CLEAR &amp; START BLANK</button>
+            <button type="button" data-run-choice="save">SAVE AS SETLIST &amp; START BLANK</button>
+            <button type="button" data-run-choice="cancel">Cancel</button>
+          </div>
+        </div>`;
+      document.body.append(dialog);
+      let settled=false;
+      const finish=mode=>{if(settled)return;settled=true;try{dialog.close();}catch(_){}dialog.remove();resolve(mode?{mode,name:""}:null);};
+      dialog.querySelectorAll("[data-run-choice]").forEach(button=>button.onclick=()=>finish(button.dataset.runChoice==="cancel"?null:button.dataset.runChoice));
+      dialog.addEventListener("cancel",event=>{event.preventDefault();finish(null);});
+      dialog.addEventListener("close",()=>{if(!settled){settled=true;dialog.remove();resolve(null);}});
+      dialog.showModal();
+    });
+  }
+
+  async function getPreSessionRunOrderChoice() {
+    const snap=await LK.db.collection("karaokeControl").doc("runOrder").get();
+    const data=snap.exists?(snap.data()||{}):{};
+    const items=!data.sessionId&&Array.isArray(data.items)?data.items.filter(item=>!["played","abandoned","left","deleted","deletedbyhost","declined"].includes(String(item.status||"queued").toLowerCase())):[];
+    if(!items.length)return {mode:"clear",name:"",items:[]};
+    const choice=await choosePreSessionRunOrder(items);
+    if(!choice)return null;
+    choice.items=items;
+    if(choice.mode==="save"){
+      const fallback=`Run Order ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}`;
+      const name=await LS26Dialogs.prompt("Name the new setlist:",fallback);
+      if(name==null)return null;
+      choice.name=String(name).trim()||fallback;
+    }
+    return choice;
+  }
+
   async function confirmStartPerformance() {
   const ok = await LK.dashboard.showConfirm(
     "Start Session?",
@@ -217,6 +264,9 @@
     const venue = event.venue || "Unknown Venue";
     const sessionType = event.type || "Other";
     const notes = $("sessionNotesInput")?.value || event.notes || "";
+
+    const preRunChoice=await getPreSessionRunOrderChoice();
+    if(!preRunChoice){setSessionStatus("Session start cancelled.");return;}
 
     const localStartedAt = nowTimestamp();
 
@@ -282,6 +332,7 @@
     if (scheduledEndAt) sessionPayload.scheduledEndAt = scheduledEndAt;
 
     const ref = LK.db.collection("performanceSessions").doc();
+    const savedRunSetlistRef=preRunChoice.mode==="save"?LK.db.collection("lyricsSetlists").doc():null;
 
     const controlPayload = {
       active: true,
@@ -308,8 +359,15 @@
         throw new Error("A session is already active. Refresh the dashboard.");
       }
       const listDoc = await transaction.get(LK.db.collection("lyricsSetlists").doc(publicList.id));
+      const runRef=LK.db.collection("karaokeControl").doc("runOrder");
+      const runDoc=await transaction.get(runRef);
       if (!listDoc.exists) throw new Error("The selected public song list is no longer available. Choose another list.");
       const listData = listDoc.data() || {};
+      const runData=runDoc.exists?(runDoc.data()||{}):{};
+      const currentPreRun=!runData.sessionId&&Array.isArray(runData.items)?runData.items:[];
+      const sessionRunItems=preRunChoice.mode==="keep"
+        ? currentPreRun.map(item=>({...item,status:"queued",playingAtMs:null,playedAtMs:null}))
+        : [];
       transaction.set(ref, {...sessionPayload, publicSetlistName:listData.name || publicList.name});
       transaction.set(controlRef, controlPayload, {merge:true});
       transaction.set(LK.db.collection("karaokeControl").doc("publicSongList"), {
@@ -321,12 +379,35 @@
         isLive:true, manualOverride:true, publicSongListSetlistId:publicList.id,
         publicSongListSetlistName:listData.name || publicList.name, updatedAt:serverNow()
       }, {merge:true});
+      transaction.set(runRef,{
+        sessionId:ref.id,
+        items:sessionRunItems,
+        updatedAt:serverNow()
+      },{merge:true});
+      if(savedRunSetlistRef){
+        const user=firebase.auth().currentUser;
+        const songIds=[...new Set(currentPreRun.map(item=>item.songId).filter(Boolean))];
+        transaction.set(savedRunSetlistRef,{
+          name:preRunChoice.name,
+          notes:"Saved from pre-session Run Order.",
+          songIds,
+          createdBy:user?.uid||"",
+          createdByEmail:user?.email||"",
+          createdAt:serverNow(),
+          updatedAt:serverNow()
+        });
+      }
     });
     LK.state.currentSessionId = ref.id;
     LK.state.currentSessionData = {id:ref.id, ...sessionPayload, startedAt:localStartedAt};
     updateSessionUi(LK.state.currentSessionData);
 
-    setSessionStatus(`Session started: ${title}`);
+    const runStatus=preRunChoice.mode==="keep"&&preRunChoice.items?.length
+      ? ` · ${preRunChoice.items.length} queued song${preRunChoice.items.length===1?"":"s"} preloaded`
+      : preRunChoice.mode==="save"
+        ? ` · previous Run Order saved as ${preRunChoice.name}`
+        : "";
+    setSessionStatus(`Session started: ${title}${runStatus}`);
   }
 
   async function endPerformance() {

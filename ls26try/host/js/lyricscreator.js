@@ -48,9 +48,9 @@
   const FONTS = ["Verdana", "Arial", "Tahoma", "Trebuchet MS", "Georgia", "Times New Roman", "Courier New", "Consolas"];
   const FONT_SIZES = ["12", "14", "16", "18", "20", "24", "28", "32", "40", "48"];
   const COLOURS = [
-    ["White", "#ffffff"], ["Light Gray", "#cfcfcf"], ["Red", "#ff4f5e"],
-    ["Orange", "#ff982f"], ["Yellow", "#ffd400"], ["Green", "#42f35c"],
-    ["Teal", "#19e3c5"], ["Blue", "#4fa3ff"], ["Purple", "#ac70ff"], ["Pink", "#ff66ad"]
+    ["White", "#ffffff"], ["Gray", "#9aa3ad"], ["Light Gray", "#d4d9de"], ["Red", "#ff4f5e"],
+    ["Bright Orange", "#ff9d2e"], ["Dark Orange", "#d96b00"], ["Yellow", "#ffe23d"], ["Green", "#42f35c"],
+    ["Bright Teal", "#00ffd5"], ["Blue", "#4fa3ff"], ["Purple", "#9b5cff"], ["Bright Purple", "#c14cff"]
   ];
 
   const TEMPLATES = [
@@ -415,6 +415,67 @@
     applyCommand("foreColor", colour);
   }
 
+  function sectionEditorFor(index) {
+    return document.querySelector(`[data-index="${index}"] .creator-rich-editor, [data-index="${index}"] textarea[data-note]`);
+  }
+
+  function selectAllSection(index) {
+    const editor = sectionEditorFor(index);
+    if (!editor) return;
+    editor.focus();
+    if (editor instanceof HTMLTextAreaElement) {
+      editor.select();
+      return;
+    }
+    const range = document.createRange();
+    range.selectNodeContents(editor);
+    const selection = window.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+    captureSelection(editor);
+  }
+
+  function sentenceCaseText(text) {
+    return String(text || "").toLowerCase().replace(/(^|[.!?]\s+|\n\s*)([a-z])/g, (match, prefix, letter) => prefix + letter.toUpperCase());
+  }
+
+  function transformSelectedText(editor, mode) {
+    if (!editor) return;
+    if (editor instanceof HTMLTextAreaElement) {
+      const start=editor.selectionStart,end=editor.selectionEnd;
+      if(start===end)return;
+      const selected=editor.value.slice(start,end);
+      const next=mode==="upper"?selected.toUpperCase():mode==="lower"?selected.toLowerCase():sentenceCaseText(selected);
+      editor.setRangeText(next,start,end,"select");
+      syncSectionsFromDOM();markDirty();return;
+    }
+    captureSelection(editor);
+    if (!restoreSelection()) return;
+    const selection=window.getSelection();
+    if(!selection||selection.isCollapsed)return;
+    const selected=selection.toString();
+    const next=mode==="upper"?selected.toUpperCase():mode==="lower"?selected.toLowerCase():sentenceCaseText(selected);
+    document.execCommand("insertText",false,next);
+    captureSelection(editor);syncSectionsFromDOM();markDirty();
+  }
+
+  function wrapSelectedText(editor) {
+    if (!editor) return;
+    if (editor instanceof HTMLTextAreaElement) {
+      const start=editor.selectionStart,end=editor.selectionEnd;
+      if(start===end)return;
+      const selected=editor.value.slice(start,end);
+      editor.setRangeText(`[ ${selected.trim()} ]`,start,end,"select");
+      syncSectionsFromDOM();markDirty();return;
+    }
+    captureSelection(editor);
+    if (!restoreSelection()) return;
+    const selection=window.getSelection();
+    if(!selection||selection.isCollapsed)return;
+    document.execCommand("insertText",false,`[ ${selection.toString().trim()} ]`);
+    captureSelection(editor);syncSectionsFromDOM();markDirty();
+  }
+
   function renderFontOptions(selected) {
     return FONTS.map(font => `<option value="${esc(font)}" ${font === selected ? "selected" : ""}>${esc(font)}</option>`).join("");
   }
@@ -427,16 +488,10 @@
   function renderDashColourOptions(selected) {
     const value = selected || "#777777";
     const options = [
-      ["Gray (Default)", "#777777"],
-      ["Light Gray", "#b8b8b8"],
-      ["White", "#ffffff"],
-      ["Yellow", "#ffd400"],
-      ["Green", "#42f35c"],
-      ["Teal", "#19e3c5"],
-      ["Blue", "#4fa3ff"],
-      ["Red", "#ff4f5e"],
-      ["Orange", "#ff982f"],
-      ["Purple", "#ac70ff"]
+      ["Gray (Default)", "#777777"], ["Light Gray", "#b8b8b8"], ["White", "#ffffff"],
+      ["Yellow", "#ffe23d"], ["Green", "#42f35c"], ["Bright Teal", "#00ffd5"],
+      ["Blue", "#4fa3ff"], ["Red", "#ff4f5e"], ["Bright Orange", "#ff9d2e"],
+      ["Dark Orange", "#d96b00"], ["Purple", "#9b5cff"], ["Bright Purple", "#c14cff"]
     ];
     return options.map(([label, colour]) =>
       `<option value="${colour}" ${colour.toLowerCase() === String(value).toLowerCase() ? "selected" : ""}>${label}</option>`
@@ -446,17 +501,10 @@
   function renderTitleColourOptions(selected) {
     const value = selected || "";
     const options = [
-      ["Default", ""],
-      ["White", "#ffffff"],
-      ["Light Gray", "#cfcfcf"],
-      ["Red", "#ff4f5e"],
-      ["Light Orange", "#ffb45c"],
-      ["Yellow", "#ffd400"],
-      ["Green", "#42f35c"],
-      ["Teal", "#19e3c5"],
-      ["Blue", "#4fa3ff"],
-      ["Purple", "#ac70ff"],
-      ["Pink", "#ff66ad"]
+      ["Default", ""], ["White", "#ffffff"], ["Gray", "#9aa3ad"], ["Light Gray", "#d4d9de"],
+      ["Red", "#ff4f5e"], ["Bright Orange", "#ff9d2e"], ["Dark Orange", "#d96b00"],
+      ["Yellow", "#ffe23d"], ["Green", "#42f35c"], ["Bright Teal", "#00ffd5"],
+      ["Blue", "#4fa3ff"], ["Purple", "#9b5cff"], ["Bright Purple", "#c14cff"]
     ];
     return options.map(([label, colour]) =>
       `<option value="${colour}" ${colour.toLowerCase() === String(value).toLowerCase() ? "selected" : ""}>${label}</option>`
@@ -563,6 +611,10 @@
         <button type="button" data-command="underline" title="Underline"><u>U</u></button>
         <button type="button" data-command="insertUnorderedList" title="Bullet list">• LIST</button>
         <button type="button" data-command="insertOrderedList" title="Numbered list">1. LIST</button>
+        <button type="button" data-text-case="upper" title="Uppercase selected text">AA</button>
+        <button type="button" data-text-case="lower" title="Lowercase selected text">aa</button>
+        <button type="button" data-text-case="sentence" title="Sentence case selected text">Aa</button>
+        <button type="button" data-wrap-brackets="${index}" title="Wrap selected text in square brackets">[ ]</button>
         <label class="text-colour-control" title="Apply a colour to the selected text">
           <span class="text-colour-icon">T</span>
           <input type="color" data-text-colour="${index}" value="${esc(style.color || "#ffffff")}" aria-label="Selected text colour">
@@ -573,12 +625,25 @@
           <input type="color" data-dash-custom="${index}" value="${esc(style.dashColor || "#777777")}" title="Custom dash colour">
         </label>
         <button type="button" class="beat-colour beat-1" data-quick-colour="#42f35c" title="Bold green timing marker">BEAT 1</button>
-        <button type="button" class="beat-colour beat-2" data-quick-colour="#19e3c5" title="Bold teal timing marker">BEAT 2</button>
-        <button type="button" class="beat-colour beat-3" data-quick-colour="#ffd400" title="Bold yellow timing marker">BEAT 3</button>
-        <button type="button" class="beat-colour beat-4" data-quick-colour="#ffb45c" title="Bold light-orange timing marker">BEAT 4</button>
+        <button type="button" class="beat-colour beat-2" data-quick-colour="#00ffd5" title="Bold bright-teal timing marker">BEAT 2</button>
+        <button type="button" class="beat-colour beat-3" data-quick-colour="#ffe23d" title="Bold yellow timing marker">BEAT 3</button>
+        <button type="button" class="beat-colour beat-4" data-quick-colour="#ff9d2e" title="Bold bright-orange timing marker">BEAT 4</button>
+        <button type="button" class="beat-colour" data-quick-colour="#d96b00" title="Bold dark-orange timing marker">ORANGE</button>
+        <button type="button" class="beat-colour" data-quick-colour="#c14cff" title="Bold bright-purple timing marker">PURPLE</button>
+        <button type="button" class="beat-colour" data-quick-colour="#9aa3ad" title="Bold gray timing marker">GRAY</button>
         <button type="button" data-insert-chord="${index}">＋ CHORD</button>
         <button type="button" data-insert-tab="${index}">＋ BLANK TAB</button>
         <button type="button" data-insert-link="${index}">＋ LINK</button>
+      </div>`;
+  }
+
+  function noteTextToolbar(index) {
+    return `
+      <div class="rich-toolbar advanced-rich-toolbar note-text-toolbar">
+        <button type="button" data-text-case="upper" title="Uppercase selected text">AA</button>
+        <button type="button" data-text-case="lower" title="Lowercase selected text">aa</button>
+        <button type="button" data-text-case="sentence" title="Sentence case selected text">Aa</button>
+        <button type="button" data-wrap-brackets="${index}" title="Wrap selected text in square brackets">[ ]</button>
       </div>`;
   }
 
@@ -624,6 +689,7 @@
               <input type="color" data-title-custom="${index}" value="${esc(s.style?.titleColor || getSystemSectionTitleColour(s.title))}" title="Custom title colour">
             </label>
             <div class="creator-section-actions">
+              <button type="button" data-select-section="${index}" title="Select all text in this section">SELECT ALL</button>
               <button type="button" data-up="${index}">↑</button>
               <button type="button" data-down="${index}">↓</button>
               <button type="button" data-duplicate="${index}">⧉</button>
@@ -632,7 +698,7 @@
           </div>
           <div class="creator-section-body ${s.editorCollapsed ? "hidden" : ""}">
             ${renderSectionVisibility(index, s)}
-            ${isTextNote ? "" : sectionToolbar(index, s)}
+            ${isTextNote ? noteTextToolbar(index) : sectionToolbar(index, s)}
             ${isTextNote
               ? `<textarea class="${s.type === "hostNote" ? "host-note-editor" : "performance-note-editor"}" data-note="${index}" style="text-align:${esc(s.style?.textAlign || "left")}">${esc(s.text)}</textarea>`
               : `<div class="creator-rich-editor ${s.type === "tab" ? "tab-editor" : ""}" data-html="${index}" data-placeholder="${s.type === "lyrics" ? "Enter lyrics and chords here..." : ""}" contenteditable="true" style="font-family:${esc(s.style.fontFamily)};font-size:${Number(s.style.fontSize) || 23}px;color:${esc(s.style.color)};text-align:${esc(s.style?.textAlign || "left")}">${s.html || ""}</div>`}
@@ -1373,6 +1439,26 @@
       if (body) body.style.textAlign = value;
       document.querySelectorAll(`[data-section-align="${index}"]`).forEach(button => button.classList.toggle("active", button.dataset.align === value));
       markDirty();
+      return;
+    }
+
+    const selectSection = event.target.closest("[data-select-section]");
+    if (selectSection) {
+      selectAllSection(Number(selectSection.dataset.selectSection));
+      return;
+    }
+
+    const textCase = event.target.closest("[data-text-case]");
+    if (textCase) {
+      const editor = textCase.closest(".creator-section-body")?.querySelector(".creator-rich-editor, textarea[data-note]");
+      transformSelectedText(editor, textCase.dataset.textCase);
+      return;
+    }
+
+    const bracket = event.target.closest("[data-wrap-brackets]");
+    if (bracket) {
+      const editor = bracket.closest(".creator-section-body")?.querySelector(".creator-rich-editor, textarea[data-note]");
+      wrapSelectedText(editor);
       return;
     }
 

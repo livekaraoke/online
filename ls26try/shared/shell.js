@@ -13,6 +13,12 @@
   const currentId=params.get('id')||params.get('firebaseId');
   if(location.pathname.endsWith('/lyricview.html')&&currentId) sessionStorage.setItem('ls26:lastSong',location.href);
   window.LS26={url,escape,toast,themes:{blue:{label:'Blue',logo:url('assets/livesuite-logo-clean.png')}},openInbox:()=>openInbox()};
+  if(!document.querySelector('script[data-ls26-settings]')){
+    const settingsScript=document.createElement('script');
+    settingsScript.dataset.ls26Settings='1';
+    settingsScript.src=url('shared/app-settings.js?v=20260924-performance-tools');
+    document.head.append(settingsScript);
+  }
   // Call synchronously from the initiating tap, before playback's async work.
   const fullscreenElement=()=>document.fullscreenElement||document.webkitFullscreenElement;
   async function enterFullscreen(){
@@ -62,7 +68,7 @@
     document.addEventListener('click',e=>{if(!menu.contains(e.target)&&!$('ls26More').contains(e.target))closeMenu();});
     document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!menu.hidden){closeMenu();$('ls26More').focus();}});
     window.addEventListener('resize',closeMenu);
-    const notesScript=document.createElement('script');notesScript.src=url('shared/app-updates.js?v=20260924-ui-polish');document.head.append(notesScript);
+    const notesScript=document.createElement('script');notesScript.src=url('shared/app-updates.js?v=20260924-performance-tools');document.head.append(notesScript);
     window.LS26.openAppUpdates=()=>toast('App Updates is loading. Please try again.');
     const creator=document.querySelector('.creator-topbar');if(creator)stack.append(creator);
     mountFullscreen();
