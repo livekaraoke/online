@@ -40,11 +40,18 @@
   }
 
   async function saveItems(items) {
-    await RUN_ORDER_REF.set({
-      sessionId: currentSessionId || runOrder.sessionId || "",
-      items,
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    }, { merge:true });
+    const expectedSessionId=currentSessionId||"";
+    await db.runTransaction(async transaction=>{
+      const snap=await transaction.get(RUN_ORDER_REF);
+      const data=snap.exists?(snap.data()||{}):{};
+      if(currentSessionId!==expectedSessionId)throw new Error("Session changed. Refresh and try again.");
+      if(expectedSessionId&&data.sessionId&&data.sessionId!==expectedSessionId)throw new Error("Run Order belongs to another session.");
+      transaction.set(RUN_ORDER_REF,{
+        sessionId:expectedSessionId,
+        items:Array.isArray(items)?items:[],
+        updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+      },{merge:true});
+    });
   }
 
   function renderSongSelect() {
@@ -68,17 +75,16 @@
     const items = normaliseItems(runOrder);
     if ($("adminRunOrderCount")) $("adminRunOrderCount").textContent = `(${items.length})`;
 
-    if (!currentSessionId) {
-      box.innerHTML = `<div class="dashboard-event-empty">Start a Performance Session to use Run Order.</div>`;
-      return;
-    }
+    const preSessionNotice=!currentSessionId
+      ? `<div class="dashboard-event-empty pre-session-runorder-note">PRE-SESSION RUN ORDER · Build and arrange the list now. When you start the session, LiveSuite will ask whether to preload it, clear it, or save it as a setlist.</div>`
+      : "";
 
     if (!items.length) {
-      box.innerHTML = `<div class="dashboard-event-empty">Run Order is empty.</div>`;
+      box.innerHTML = preSessionNotice + `<div class="dashboard-event-empty">Run Order is empty.</div>`;
       return;
     }
 
-    box.innerHTML = items.map((item,index) => `
+    box.innerHTML = preSessionNotice + items.map((item,index) => `
       <div class="admin-run-order-row ${item.status === "played" ? "played" : ""}">
         <div class="admin-run-order-index">${index + 1}</div>
 
@@ -129,8 +135,6 @@
   }
 
   async function addManualSong() {
-    if (!currentSessionId) return;
-
     const select = $("adminRunOrderSongSelect");
     const songId = select?.value || "";
     const song = lyricsSongs.find(entry => entry.id === songId);
@@ -172,13 +176,12 @@
         ? { sessionId:"", items:[], ...(doc.data() || {}) }
         : { sessionId:"", items:[] };
 
-      // Never show another session's order as the current session's order.
+      // Never show a stale/other session's order as the current planning order.
       if (
-        currentSessionId &&
-        runOrder.sessionId &&
-        runOrder.sessionId !== currentSessionId
+        (currentSessionId && runOrder.sessionId && runOrder.sessionId !== currentSessionId) ||
+        (!currentSessionId && runOrder.sessionId)
       ) {
-        runOrder = { sessionId:currentSessionId, items:[] };
+        runOrder = { sessionId:currentSessionId || "", items:[] };
       }
 
       render();
