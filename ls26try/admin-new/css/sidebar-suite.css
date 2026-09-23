@@ -288,3 +288,15 @@
     font-size: 10px;
   }
 }
+
+/* 2026-09-24 unified thin-line sidebar icon system */
+.suite-icon-sprite{position:absolute!important;width:0!important;height:0!important;pointer-events:none}
+.suite-nav-icon{width:26px!important;min-width:26px!important;height:26px;display:grid!important;place-items:center!important;line-height:1!important}
+.suite-nav-icon>svg,.suite-brand-icon .suite-nav-icon>svg,.suite-user-card .suite-nav-icon>svg{width:18px;height:18px;display:block;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.suite-brand-icon{filter:none!important;color:var(--suite-cyan)!important}
+.suite-brand-icon .suite-nav-icon,.suite-brand-icon .suite-nav-icon>svg{width:38px!important;height:38px!important}
+.suite-user-card .avatar #sidebarProfileFallback{display:grid!important;place-items:center!important}
+.suite-user-card .avatar #sidebarProfileFallback .suite-nav-icon,.suite-user-card .avatar #sidebarProfileFallback svg{width:24px!important;height:24px!important}
+.suite-nav a,.suite-nav button{grid-template-columns:26px minmax(0,1fr) auto auto!important;column-gap:8px!important}
+.suite-nav-label{line-height:1.2!important}
+#membersNavLink .suite-nav-label{overflow:visible!important;text-overflow:clip!important}
