@@ -112,3 +112,15 @@ body.library-page{height:100dvh;overflow:hidden;display:flex;flex-direction:colu
   .library-page .library-heading-actions{width:100%;justify-content:flex-start;flex-wrap:wrap}
   .library-page .library-heading-copy{flex-basis:100%}
 }
+
+/* 2026-09-24 library performance density */
+.library-page .song-table-row{min-height:var(--ls26-library-row-height,62px)!important}
+.library-page #playSelectedBtn,
+.library-page #playSelectedBtn:disabled{opacity:1!important;filter:none!important}
+.library-page .library-results{margin-bottom:0!important;padding-bottom:0!important}
+.library-page .song-table-panel{height:100%!important;min-height:0!important}
+.library-page #songRows{padding-bottom:0!important}
+.library-page .library-player-bar{margin-top:2px!important}
+.library-page .song-table-row .bpm-cell.has-user-bpm{color:var(--ls26-user-bpm-color,#00e88a)!important}
+.library-page .song-table-row .key-cell{color:var(--ls26-key-color,#00cafa)!important}
+.library-page .song-table-row .capo-cell.has-capo{color:var(--ls26-capo-color,#ffdb58)!important}
