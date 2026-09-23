@@ -81,6 +81,17 @@
     }catch(error){console.warn("LiveSuite settings remote load skipped:",error);}
     return current;
   }
+  async function syncRemoteOncePerSession(force=false){
+    const syncKey="ls26:appSettings:remoteSynced";
+    try{
+      if(!force && sessionStorage.getItem(syncKey)==="1")return {...current};
+    }catch(_){}
+    const db=window.db||window.LK?.db||window.firebase?.firestore?.();
+    if(!db)return {...current};
+    const loaded=await loadRemote();
+    try{sessionStorage.setItem(syncKey,"1");}catch(_){}
+    return loaded;
+  }
   async function save(next){
     current=apply({...current,...next});
     writeLocal(current);
@@ -90,12 +101,16 @@
         ...current,
         updatedAt:firebase.firestore.FieldValue.serverTimestamp()
       },{merge:true});
+      try{sessionStorage.setItem("ls26:appSettings:remoteSynced","1");}catch(_){}
     }
     return {...current};
   }
   function reset(){current=apply({...DEFAULTS});writeLocal(current);return {...current};}
-  window.LS26Settings={DEFAULTS,get:()=>({...current}),normalise,apply,loadRemote,save,reset};
+  window.LS26Settings={DEFAULTS,get:()=>({...current}),normalise,apply,loadRemote,syncRemoteOncePerSession,save,reset};
 
-  // Normal pages use the locally cached settings without adding a Firestore
-  // read on every navigation. The App Settings page explicitly calls loadRemote().
+  // Sync once per browser session, not once per page. This keeps settings
+  // portable between devices without generating repeated Firestore reads.
+  const sync=()=>syncRemoteOncePerSession(false).catch(error=>console.warn("LiveSuite settings sync skipped:",error));
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",()=>setTimeout(sync,0));
+  else setTimeout(sync,0);
 })();
