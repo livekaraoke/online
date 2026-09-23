@@ -637,6 +637,16 @@
       </div>`;
   }
 
+  function noteTextToolbar(index) {
+    return `
+      <div class="rich-toolbar advanced-rich-toolbar note-text-toolbar">
+        <button type="button" data-text-case="upper" title="Uppercase selected text">AA</button>
+        <button type="button" data-text-case="lower" title="Lowercase selected text">aa</button>
+        <button type="button" data-text-case="sentence" title="Sentence case selected text">Aa</button>
+        <button type="button" data-wrap-brackets="${index}" title="Wrap selected text in square brackets">[ ]</button>
+      </div>`;
+  }
+
   function render() {
     const root = $("sectionEditorList");
     root.innerHTML = "";
@@ -688,7 +698,7 @@
           </div>
           <div class="creator-section-body ${s.editorCollapsed ? "hidden" : ""}">
             ${renderSectionVisibility(index, s)}
-            ${isTextNote ? "" : sectionToolbar(index, s)}
+            ${isTextNote ? noteTextToolbar(index) : sectionToolbar(index, s)}
             ${isTextNote
               ? `<textarea class="${s.type === "hostNote" ? "host-note-editor" : "performance-note-editor"}" data-note="${index}" style="text-align:${esc(s.style?.textAlign || "left")}">${esc(s.text)}</textarea>`
               : `<div class="creator-rich-editor ${s.type === "tab" ? "tab-editor" : ""}" data-html="${index}" data-placeholder="${s.type === "lyrics" ? "Enter lyrics and chords here..." : ""}" contenteditable="true" style="font-family:${esc(s.style.fontFamily)};font-size:${Number(s.style.fontSize) || 23}px;color:${esc(s.style.color)};text-align:${esc(s.style?.textAlign || "left")}">${s.html || ""}</div>`}
