@@ -83,3 +83,32 @@ body.library-page{height:100dvh;overflow:hidden;display:flex;flex-direction:colu
 .library-page .ls26-footer{margin-top:24px;flex-basis:42px;height:42px}
 @media(max-width:760px){.library-page .song-table-head,.library-page .song-table-row{grid-template-columns:28px minmax(60px,1fr) 38px 48px 42px 34px 138px;gap:2px}.library-page .song-table-head{font-size:10px}.library-page .row-actions{gap:2px}.library-page .row-actions button{width:44px;min-width:44px}.library-page .original-bpm-cell{font-size:16px}.library-page .library-player-bar{gap:10px;padding-inline:8px}}
 @media(max-width:520px){.library-page .library-player-bar{height:72px;min-height:72px;gap:7px}.library-page .library-player-bar #openRunOrderBtn{font-size:10px;max-width:72px;white-space:normal}.library-page .library-heading{flex-wrap:wrap}.library-page .library-heading h1{flex-basis:100%}.library-page .song-table-head,.library-page .song-table-row{grid-template-columns:24px minmax(70px,1fr) 33px 38px 33px 28px 44px}.library-page .row-actions{display:grid;gap:3px}.library-page .song-table-row{min-height:144px}}
+
+/* =========================================================
+   LIBRARY ALIGNMENT + HEADING REFINEMENT — 2026-09-24
+   ========================================================= */
+.library-page .library-heading{align-items:flex-start!important;gap:14px!important}
+.library-page .library-heading-copy{min-width:0;flex:1 1 auto}
+.library-page .library-heading-copy h1{margin:0!important;line-height:1.05}
+.library-page .library-heading-subline{display:flex;align-items:center;gap:12px;min-height:24px;margin-top:5px}
+.library-page .library-heading-subline #ls26SessionSetlistName{display:inline-block;margin:0!important;color:var(--ls-accent);font-size:16px;font-weight:650}
+.library-page .library-heading-subline #ls26SessionSetlistName[hidden]{display:none!important}
+.library-page .library-heading-subline #libraryShowingCount{display:inline-block;margin:0!important;color:var(--ls-muted);font-size:14px}
+.library-page .library-heading-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex:0 0 auto}
+.library-page .library-heading-actions #exportBtn{margin:0}
+.library-page .song-table-head>span:nth-child(3),
+.library-page .song-table-head>span:nth-child(4),
+.library-page .song-table-head>span:nth-child(5),
+.library-page .song-table-head>span:nth-child(6){display:flex;align-items:center;justify-content:center;text-align:center}
+.library-page .song-table-row .key-cell,
+.library-page .song-table-row .bpm-cell,
+.library-page .song-table-row .original-bpm-cell,
+.library-page .song-table-row .capo-cell{display:flex;align-items:center;justify-content:center;justify-self:stretch;text-align:center}
+.library-page .song-table-row .bpm-cell.has-user-bpm{color:var(--ls-success)!important;font-weight:900!important}
+.library-page .song-table-row .bpm-cell:not(.has-user-bpm){color:var(--ls-muted)!important;font-weight:500}
+.library-page .song-table-row .capo-cell.has-capo{color:#ffdb58!important;font-weight:900!important}
+.library-page .song-table-row .capo-cell:not(.has-capo){color:var(--ls-text)!important;font-weight:500}
+@media(max-width:700px){
+  .library-page .library-heading-actions{width:100%;justify-content:flex-start;flex-wrap:wrap}
+  .library-page .library-heading-copy{flex-basis:100%}
+}
