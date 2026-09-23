@@ -8,7 +8,7 @@
     </div>
   </div>
 
-  <button type="button" class="admin-user-card suite-user-card" onclick="openProfileModal()" title="Open profile">
+  <button type="button" class="admin-user-card suite-user-card" onclick="window.openProfileModal ? openProfileModal() : (location.href = new URL('admin.html', window.__ls26SidebarAdminBase || location.href).href)" title="Open profile">
     <div class="avatar">
       <img id="sidebarProfileImg" src="" alt="Profile photo" />
       <span id="sidebarProfileFallback">👤</span>
@@ -44,6 +44,7 @@
     <a href="upcoming-events.html" data-sidebar-nav="events"><span class="suite-nav-icon">📅</span><span class="suite-nav-label">Gigs &amp; Events</span><span class="suite-nav-chevron">›</span></a>
     <a href="venues.html" data-sidebar-nav="venues"><span class="suite-nav-icon">📍</span><span class="suite-nav-label">Venues</span><span class="suite-nav-chevron">›</span></a>
     <a href="performance-sessions.html" data-sidebar-nav="performance-sessions"><span class="suite-nav-icon">🗂️</span><span class="suite-nav-label">Session History</span><span class="suite-nav-chevron">›</span></a>
+    <a href="../song-inbox.html" data-sidebar-nav="song-inbox"><span class="suite-nav-icon">📥</span><span class="suite-nav-label">Song Inbox</span><span class="suite-nav-chevron">›</span></a>
   </nav>
 
   <div class="suite-nav-section-title karaoke-title">KARAOKE</div>
