@@ -844,7 +844,7 @@
     ]);
 
     const previousPositions=new Map([...list.querySelectorAll('[data-ts-run-details]')].map(row=>[row.dataset.tsRunDetails,row.getBoundingClientRect().top]));
-    const all=state.sessionId ? queueItems() : [];
+    const all=queueItems();
     const current=all.find(x=>String(x.status||'').toLowerCase()==='playing');
     const items=[...(current?[current]:[]),...all.filter(item => item!==current && !terminalStatuses.has(String(item?.status || '').toLowerCase()))];
 
@@ -859,14 +859,13 @@
       tabCount.classList.toggle("hidden", items.length === 0);
     }
 
-    if (!state.sessionId) {
-      list.innerHTML = `<div class="top-status-queue-empty">No active session.</div>`;
-      return;
-    }
+    const preSessionNotice=!state.sessionId
+      ? `<div class="top-status-queue-empty pre-session-runorder-note">PRE-SESSION RUN ORDER · Add and arrange songs now; choose what to do with this list when the session starts.</div>`
+      : "";
 
     const breakState = getBreakState();
     const hasPlayingSong = !!runOrderPlayingItem(items);
-    const showPlayButtons = !breakState.open;
+    const showPlayButtons = !!state.sessionId && !breakState.open;
 
     const breakRow = breakState.open
       ? `
@@ -887,12 +886,13 @@
 
     if (!items.length) {
       list.innerHTML =
-        breakRow ||
-        `<div class="top-status-queue-empty">Run Order is empty.</div>`;
+        preSessionNotice +
+        (breakRow || `<div class="top-status-queue-empty">Run Order is empty.</div>`);
       return;
     }
 
     list.innerHTML =
+      preSessionNotice +
       breakRow +
       items.map((item,index) => {
         const status = String(item?.status || "").toLowerCase();
