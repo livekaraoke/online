@@ -3,6 +3,12 @@
  * Original notices and functionality retained below. See FUNCTIONS.txt.
  */
 (function () {
+  const sidebarScriptUrl = document.currentScript?.src || "";
+  const sidebarAdminBase = sidebarScriptUrl ? new URL("../", sidebarScriptUrl) : new URL("./", location.href);
+  const sidebarIncludeUrl = new URL("includes/sidebar.html", sidebarAdminBase);
+  window.__ls26SidebarAdminBase = sidebarAdminBase.href;
+  const adminUrl = path => new URL(path, sidebarAdminBase).href;
+
   let sidebarRequestsUnsub = null;
   let sidebarActiveSessionId = "";
   let sidebarRequestsGeneration = 0;
@@ -21,12 +27,17 @@
     if (!target) return;
 
     try {
-      const response = await fetch("includes/sidebar.html", { cache: "no-store" });
+      const response = await fetch(sidebarIncludeUrl, { cache: "no-store" });
       if (!response.ok) {
         throw new Error(`Sidebar request failed: ${response.status}`);
       }
 
       target.innerHTML = await response.text();
+      target.querySelectorAll("a[href]").forEach(link => {
+        const href = link.getAttribute("href") || "";
+        if (!href || href.startsWith("#") || /^[a-z][a-z0-9+.-]*:/i.test(href)) return;
+        link.href = new URL(href, sidebarAdminBase).href;
+      });
 
       highlightCurrentPage();
       bindSidebarProfile();
@@ -182,7 +193,7 @@
 
     // If the user is on another admin page, route back to the dashboard first.
     if (!el) {
-      window.location.href = `admin.html#${encodeURIComponent(id)}`;
+      window.location.href = adminUrl(`admin.html#${encodeURIComponent(id)}`);
       return;
     }
 
@@ -269,8 +280,9 @@
               const songId = req.songId || req.lyricsId || "";
               if (!songId) return;
 
-              window.location.href =
-                `../host/lyricview.html?id=${encodeURIComponent(songId)}&requestId=${encodeURIComponent(req.id)}`;
+              window.location.href = adminUrl(
+                `../host/lyricview.html?id=${encodeURIComponent(songId)}&requestId=${encodeURIComponent(req.id)}`
+              );
             };
 
             box.appendChild(btn);

@@ -105,3 +105,41 @@ body .ls26-footer .ls26-brand.ls26-footer-icon{width:38px;height:38px;background
 
 .creator-page .rich-toolbar,.creator-page .rich-toolbar select,.creator-page .rich-toolbar input,.creator-page .rich-toolbar button,.creator-page .dash-colour-control{background:#052131!important;border-color:#235064!important}
 .creator-page .rich-toolbar button:hover{background:#0a3d54!important;border-color:#37b4da!important}
+
+/* =========================================================
+   LS26 SEPTEMBER UI POLISH — 2026-09-24
+   ========================================================= */
+#ls26StickyHeader{padding-top:5px!important;box-sizing:border-box}
+
+.ls26-update-group-title{margin:22px 0 8px;padding-bottom:7px;border-bottom:1px solid var(--ls-border);color:var(--ls-text);font-size:15px;letter-spacing:.06em;text-transform:uppercase}
+.ls26-update-group-title.incomplete{color:var(--ls-accent)}
+.ls26-update-group-title.completed{color:var(--ls-success);margin-top:30px}
+.ls26-update-card.is-completed{border-color:#28744d!important;background:linear-gradient(145deg,#08271d,#041812)!important;box-shadow:inset 0 0 0 1px rgba(0,232,138,.035)}
+.ls26-update-card.is-completed small{color:#7bc49f}
+
+#ls26UpdatesDialog[open]{position:fixed!important;top:12px!important;bottom:auto!important;left:0!important;right:0!important;margin:0 auto!important;max-height:calc(100dvh - 24px)!important;padding:14px 18px 16px!important}
+#ls26UpdatesDialog .ls26-modal-close-bar{position:absolute!important;top:10px!important;right:12px!important;height:42px!important;margin:0!important;background:transparent!important}
+#ls26UpdatesDialog .ls26-modal-close-bar .ls26-modal-x{width:42px!important;height:42px!important;min-height:42px!important}
+#ls26UpdatesDialog h2{display:flex;align-items:center;min-height:42px;margin:0 54px 4px 0!important}
+#ls26UpdatesDialog .ls26-update-intro{margin:0 0 10px;color:var(--ls-text);line-height:1.35}
+#ls26UpdatesDialog textarea{margin-top:0!important;min-height:108px!important;max-height:30dvh!important}
+#ls26UpdatesDialog #ls26UpdateSaveStatus{min-height:0;margin:5px 0}
+#ls26UpdatesDialog .ls26-save-note{position:sticky;bottom:0;margin-top:4px;background:#06435c!important}
+@media(max-height:720px){
+  #ls26UpdatesDialog[open]{top:6px!important;max-height:calc(100dvh - 12px)!important}
+  #ls26UpdatesDialog textarea{min-height:84px!important;max-height:22dvh!important}
+  #ls26UpdatesDialog .ls26-update-intro{font-size:15px}
+}
+
+.creator-page .section-align-control{align-items:center!important;align-self:center!important;height:40px!important}
+.creator-page .section-align-control button{display:inline-flex!important;align-items:center!important;justify-content:center!important;height:40px!important;min-height:40px!important;line-height:1!important;vertical-align:middle!important}
+.creator-page .creator-section-body{background:#010f18!important}
+.creator-page .creator-rich-editor,
+.creator-page .creator-section-body textarea{background:#010b12!important}
+
+body .ls26-footer .ls26-brand.ls26-footer-icon{width:44px!important;height:44px!important;mix-blend-mode:screen!important;filter:none!important;box-shadow:none!important}
+body .ls26-footer .ls26-footer-icon svg,
+body .ls26-footer .ls26-footer-icon image{filter:none!important;box-shadow:none!important}
+
+.ls26-inbox-page .song-inbox-main{max-width:none}
+.ls26-inbox-page .song-inbox-toolbar{margin-bottom:8px}

@@ -62,7 +62,7 @@
     document.addEventListener('click',e=>{if(!menu.contains(e.target)&&!$('ls26More').contains(e.target))closeMenu();});
     document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!menu.hidden){closeMenu();$('ls26More').focus();}});
     window.addEventListener('resize',closeMenu);
-    const notesScript=document.createElement('script');notesScript.src=url('shared/app-updates.js?v=20260923-polish');document.head.append(notesScript);
+    const notesScript=document.createElement('script');notesScript.src=url('shared/app-updates.js?v=20260924-ui-polish');document.head.append(notesScript);
     window.LS26.openAppUpdates=()=>toast('App Updates is loading. Please try again.');
     const creator=document.querySelector('.creator-topbar');if(creator)stack.append(creator);
     mountFullscreen();
@@ -70,7 +70,7 @@
 
 
     if(location.pathname.includes('/admin-new/'))document.body.classList.add('ls26-admin');
-    const foot=document.createElement('footer');foot.className='ls26-footer';foot.innerHTML=`<div class="ls26-brand ls26-footer-icon" role="img" aria-label="LiveSuite"><svg viewBox="42 118 441 428" aria-hidden="true"><image href="${url('assets/livesuite-logo-clean.png')}" width="2048" height="683"/></svg></div>`;document.body.append(foot);
+    const foot=document.createElement('footer');foot.className='ls26-footer';foot.innerHTML=`<div class="ls26-brand ls26-footer-icon" role="img" aria-label="LiveSuite"><svg viewBox="48 118 355 428" preserveAspectRatio="xMidYMid meet" aria-hidden="true"><image href="${url('assets/livesuite-logo-clean.png')}" width="2048" height="683"/></svg></div>`;document.body.append(foot);
     if(location.pathname.endsWith('/lyricscreator.html')){LS26Data.invalidate('lyrics');const title=params.get('inboxTitle'),artist=params.get('inboxArtist');if(title&&!params.get('firebaseId')){$('songTitleInput').value=title;$('artistInput').value=artist||'';}}
     if(location.pathname.endsWith('/setlist-editor.html'))LS26Data.invalidate('lyricsSetlists');
   }

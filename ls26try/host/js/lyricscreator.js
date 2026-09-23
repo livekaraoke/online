@@ -185,6 +185,37 @@
     render();
   }
 
+  function getYoutubeLinks() {
+    return [...document.querySelectorAll("[data-youtube-link]")]
+      .map(input => String(input.value || "").trim())
+      .filter(Boolean);
+  }
+
+  function setYoutubeLinks(values) {
+    const list = $("youtubeLinksList");
+    if (!list) return;
+    const links = (Array.isArray(values) ? values : [values])
+      .map(value => String(value || "").trim())
+      .filter(Boolean);
+    if (!links.length) links.push("");
+    list.innerHTML = links.map((value, index) => `
+      <div class="creator-youtube-link-row">
+        <input ${index === 0 ? 'id="youtubeInput"' : ""} data-youtube-link value="${esc(value)}" placeholder="https://www.youtube.com/...">
+        <button type="button" data-remove-youtube aria-label="Remove YouTube link" ${links.length === 1 ? "disabled" : ""}>×</button>
+      </div>`).join("");
+  }
+
+  function addYoutubeLink(value = "") {
+    const links = getYoutubeLinks();
+    links.push(value);
+    setYoutubeLinks(links);
+    markDirty();
+    requestAnimationFrame(() => {
+      const inputs = document.querySelectorAll("[data-youtube-link]");
+      inputs[inputs.length - 1]?.focus();
+    });
+  }
+
   function snapshotEditorState() {
     syncSectionsFromDOM();
     return JSON.stringify({
@@ -197,7 +228,8 @@
       capo: $("capoInput")?.value || "",
       year: $("yearInput")?.value || "",
       timeSignature: $("timeSignatureInput")?.value || "",
-      youtube: $("youtubeInput")?.value || "",
+      youtubeLinks: getYoutubeLinks(),
+      youtube: getYoutubeLinks()[0] || "",
       songNote: $("hostNoteInput")?.value || ""
     });
   }
@@ -230,7 +262,7 @@
     if ($("capoInput")) $("capoInput").value = state.capo || "";
     if ($("yearInput")) $("yearInput").value = state.year || "";
     if ($("timeSignatureInput")) $("timeSignatureInput").value = state.timeSignature || "";
-    if ($("youtubeInput")) $("youtubeInput").value = state.youtube || "";
+    setYoutubeLinks(state.youtubeLinks || [state.youtube || ""]);
     if ($("hostNoteInput")) $("hostNoteInput").value = state.songNote || "";
     render();
     updateEditingStatus();
@@ -884,7 +916,7 @@
     $("capoInput").value = loadedSong.capo || "";
     $("yearInput").value = loadedSong.year || "";
     $("timeSignatureInput").value = loadedSong.timeSignature || "4/4";
-    $("youtubeInput").value = loadedSong.youtubeLink || "";
+    setYoutubeLinks(Array.isArray(loadedSong.youtubeLinks) && loadedSong.youtubeLinks.length ? loadedSong.youtubeLinks : [loadedSong.youtubeLink || ""]);
     $("hostNoteInput").value = loadedSong.note || "";
     await loadSetlistMembership(firebaseId);
 
@@ -912,7 +944,8 @@
       capo: $("capoInput").value.trim(),
       year: $("yearInput").value,
       timeSignature: $("timeSignatureInput").value.trim() || "4/4",
-      youtubeLink: $("youtubeInput").value.trim(),
+      youtubeLink: getYoutubeLinks()[0] || "",
+      youtubeLinks: getYoutubeLinks(),
       note: $("hostNoteInput").value,
       sections: sections.map(normalizeSection),
       // Public Song List visibility is managed elsewhere.
@@ -1438,6 +1471,7 @@
   $("addSeparatorBtn").onclick = () => { syncSectionsFromDOM(); sections.push(makeSection("separator")); markDirty(); render(); revealSection(); };
   $("openTemplatesBtn").onclick = () => $("templatesModal").classList.remove("hidden");
   $("refreshSetlistsBtn").onclick = () => loadSetlistMembership(firebaseId);
+  $("addYoutubeLinkBtn").onclick = () => addYoutubeLink();
   $("saveSectionDefaultsBtn").onclick = saveSectionTitleDefaults;
   $("resetSectionDefaultsBtn").onclick = resetSectionTitleDefaults;
 
@@ -1486,6 +1520,16 @@
   $("templatesCancelBtn").onclick = () => $("templatesModal").classList.add("hidden");
 
   document.addEventListener("click", event => {
+    const removeYoutube = event.target.closest?.("[data-remove-youtube]");
+    if (removeYoutube) {
+      const row = removeYoutube.closest(".creator-youtube-link-row");
+      const links = [...document.querySelectorAll("[data-youtube-link]")]
+        .filter(input => !row?.contains(input))
+        .map(input => input.value);
+      setYoutubeLinks(links);
+      markDirty();
+      return;
+    }
     if (!event.target.closest(".save-split-wrap")) $("saveDropdown").classList.add("hidden");
   });
 

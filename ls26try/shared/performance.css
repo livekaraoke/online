@@ -208,3 +208,42 @@ body.host-lyric-view-page{overflow:visible!important}
 #quickOriginalBpm,#quickOriginalBpm .bpm-number{color:var(--ls-accent)!important}
 @media(max-width:950px){.ls26-title-meta>div{padding-inline:6px}.ls26-title-meta{margin-right:5px}}
 @media(max-width:650px){.ls26-title-meta{grid-template-columns:repeat(5,minmax(28px,auto))}.ls26-title-meta>div{padding-inline:3px}.ls26-title-meta small{font-size:9px!important}}
+
+/* =========================================================
+   TABLET META / NAV / STATUS POLISH — 2026-09-24
+   ========================================================= */
+@media(min-width:651px){
+  .host-lyric-view-page .ls26-title-meta{
+    grid-template-columns:repeat(5,minmax(48px,auto))!important;
+    gap:8px!important;
+    column-gap:8px!important;
+    margin-right:8px!important;
+  }
+  .host-lyric-view-page .ls26-title-meta>div{min-width:58px!important;padding-inline:8px!important;text-align:center!important}
+  .host-lyric-view-page .host-bottom-dock{height:70px!important;min-height:70px!important;align-items:center!important;padding-block:4px!important}
+  .host-lyric-view-page .host-scroll-player{height:58px!important;align-self:center!important;align-items:center!important;margin-block:auto!important}
+  .host-lyric-view-page #sectionProgress.host-section-progress{height:52px!important;min-height:52px!important;align-self:center!important;margin-top:0!important;margin-bottom:0!important;padding-top:0!important;padding-bottom:0!important}
+  .host-lyric-view-page #sectionProgress.host-section-progress .progress-section{align-self:center!important;justify-content:center!important}
+}
+@media(min-width:701px){
+  .host-lyric-view-page .host-nav-pad{width:240px!important;height:256px!important;grid-template-columns:72px 96px 72px!important;grid-template-rows:96px 64px 96px!important}
+  .host-lyric-view-page .host-nav-pad .nav-up,
+  .host-lyric-view-page .host-nav-pad .nav-down{width:96px!important;height:96px!important;min-width:96px!important;min-height:96px!important}
+  .host-lyric-view-page .host-nav-pad .nav-left,
+  .host-lyric-view-page .host-nav-pad .nav-right{width:72px!important;height:72px!important;min-width:72px!important;min-height:72px!important}
+  .host-lyric-view-page .host-nav-pad .nav-up .host-nav-icon,
+  .host-lyric-view-page .host-nav-pad .nav-down .host-nav-icon{width:48px!important;height:48px!important}
+  #ls26StickyHeader #topStatusBar .host-compact-strip{grid-template-columns:124px minmax(168px,1fr) 98px 118px 160px 72px max-content 44px!important}
+  #ls26StickyHeader #topStatusBar .host-strip-live{min-width:124px!important;justify-content:flex-start!important}
+  #ls26StickyHeader #topStatusBar .host-strip-metric:not(.venue-metric):not(.requests-metric):not(.alerts-metric){align-items:center!important;justify-content:center!important;text-align:center!important}
+  #ls26StickyHeader #topStatusBar .host-strip-metric:not(.venue-metric):not(.requests-metric):not(.alerts-metric) small,
+  #ls26StickyHeader #topStatusBar .host-strip-metric:not(.venue-metric):not(.requests-metric):not(.alerts-metric) strong,
+  #ls26StickyHeader #topStatusBar .host-strip-metric:not(.venue-metric):not(.requests-metric):not(.alerts-metric) em{width:100%!important;text-align:center!important}
+  #ls26StickyHeader #topStatusBar #tsCompactStarted,
+  #ls26StickyHeader #topStatusBar #tsCompactElapsed,
+  #ls26StickyHeader #topStatusBar #tsCompactRemaining{font-size:clamp(17px,2vw,23px)!important}
+  #ls26StickyHeader #topStatusBar .venue-metric,
+  #ls26StickyHeader #topStatusBar .venue-metric>div{align-items:flex-start!important;justify-items:start!important;text-align:left!important}
+  #ls26StickyHeader #topStatusBar .venue-metric #tsCompactVenue,
+  #ls26StickyHeader #topStatusBar .venue-metric #tsCompactType{width:100%!important;text-align:left!important}
+}

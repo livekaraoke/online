@@ -838,3 +838,14 @@
 /* Visual prompt only: it never becomes editable or saved song content. */
 .creator-rich-editor[data-placeholder]{position:relative}
 .creator-rich-editor[data-placeholder].is-empty::before{content:attr(data-placeholder);position:absolute;opacity:.5;pointer-events:none;font-style:italic}
+
+/* =========================================================
+   CREATOR YOUTUBE LINKS + SECTION POLISH — 2026-09-24
+   ========================================================= */
+.creator-youtube-field{display:block!important}
+.creator-youtube-links{display:grid;gap:8px;margin-top:6px}
+.creator-youtube-link-row{display:grid;grid-template-columns:minmax(0,1fr) 44px;gap:8px;align-items:center}
+.creator-youtube-link-row>input{min-width:0}
+.creator-youtube-link-row>[data-remove-youtube]{height:48px;min-height:48px;padding:0!important;display:grid;place-items:center;border:1px solid #7b3040;border-radius:7px;background:#34131e;color:#ff7a87;font-size:25px;font-weight:900}
+.creator-youtube-link-row>[data-remove-youtube]:disabled{opacity:.32;cursor:not-allowed}
+.creator-add-youtube-link{margin-top:8px;min-height:42px!important}

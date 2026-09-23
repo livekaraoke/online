@@ -15,7 +15,7 @@
   editing=note;
   if(!dialog){
    dialog=document.createElement('dialog');dialog.id='ls26UpdatesDialog';dialog.className='ls26-dialog ls26-capture-dialog';dialog.setAttribute('aria-labelledby','ls26UpdatesHeading');
-   dialog.innerHTML='<form id="ls26UpdateForm"><h2 id="ls26UpdatesHeading">App Updates</h2><p>Capture an idea or something to fix in LiveSuite.</p><label for="ls26UpdateText">Your note</label><textarea id="ls26UpdateText" required maxlength="5000" rows="5" placeholder="What would you like to improve?"></textarea><p id="ls26UpdateSaveStatus" role="status"></p><button class="ls26-save-note" type="submit">Save note</button></form>';
+   dialog.innerHTML='<form id="ls26UpdateForm"><h2 id="ls26UpdatesHeading">App Updates</h2><p class="ls26-update-intro">Capture an idea or something to fix in LiveSuite.</p><textarea id="ls26UpdateText" aria-label="Your note" required maxlength="5000" rows="4" placeholder="What would you like to improve?"></textarea><p id="ls26UpdateSaveStatus" role="status"></p><button class="ls26-save-note" type="submit">Save note</button></form>';
    document.body.append(dialog);
    $('ls26UpdateText').oninput=()=>{$('ls26UpdateText').setCustomValidity('');if(!editing)try{localStorage.setItem(key(),$('ls26UpdateText').value);}catch(_){}};
    $('ls26UpdateForm').onsubmit=async e=>{
@@ -38,11 +38,11 @@
  }
  function render(){
   const list=$('appUpdateRows'),filter=$('appUpdateFilter').value;list.replaceChildren();
-  const visible=rows.filter(n=>filter==='all'||Boolean(n.completed)===(filter==='completed'));
+  const visible=rows.filter(n=>filter==='all'||Boolean(n.completed)===(filter==='completed')).slice().sort((a,b)=>{const ac=Boolean(a.completed),bc=Boolean(b.completed);if(ac!==bc)return ac?1:-1;const at=a.createdAt?.toMillis?.()||Date.parse(a.createdAt||0)||0,bt=b.createdAt?.toMillis?.()||Date.parse(b.createdAt||0)||0;return bt-at;});
   $('appUpdateCount').textContent=`${visible.length} shown · ${rows.length} loaded`;
-  for(const note of visible){
+  let updateGroup='';for(const note of visible){const group=note.completed?'Completed':'Incomplete';if(filter==='all'&&group!==updateGroup){const heading=document.createElement('h3');heading.className='ls26-update-group-title '+(note.completed?'completed':'incomplete');heading.textContent=group;list.append(heading);updateGroup=group;}
    const article=document.createElement('article'),text=document.createElement('p'),meta=document.createElement('small'),actions=document.createElement('div'),edit=document.createElement('button'),done=document.createElement('button');
-   article.className='ls26-update-card';text.textContent=note.text;meta.textContent=`${note.completed?'Completed':'Pending'} · ${note.createdAt?.toDate?.().toLocaleString()||''} · ${note.page||''}`;
+   article.className='ls26-update-card'+(note.completed?' is-completed':'');text.textContent=note.text;meta.textContent=`${note.completed?'Completed':'Pending'} · ${note.createdAt?.toDate?.().toLocaleString()||''} · ${note.page||''}`;
    edit.textContent='Edit';edit.onclick=()=>open(note);done.textContent=note.completed?'Reopen':'Mark completed';done.onclick=async()=>{done.disabled=true;try{await collection().doc(note.id).update({completed:!note.completed,updatedAt:stamp()});note.completed=!note.completed;render();LS26.toast('Update saved successfully.');}catch(e){$('appUpdateStatus').textContent=errorText(e);done.disabled=false;}};
    actions.append(edit,done);article.append(text,meta,actions);list.append(article);
   }
