@@ -96,7 +96,6 @@
   function reset(){current=apply({...DEFAULTS});writeLocal(current);return {...current};}
   window.LS26Settings={DEFAULTS,get:()=>({...current}),normalise,apply,loadRemote,save,reset};
 
-  const retry=()=>loadRemote();
-  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",()=>setTimeout(retry,0));
-  else setTimeout(retry,0);
+  // Normal pages use the locally cached settings without adding a Firestore
+  // read on every navigation. The App Settings page explicitly calls loadRemote().
 })();
