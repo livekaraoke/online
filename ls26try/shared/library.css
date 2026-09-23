@@ -124,3 +124,5 @@ body.library-page{height:100dvh;overflow:hidden;display:flex;flex-direction:colu
 .library-page .song-table-row .bpm-cell.has-user-bpm{color:var(--ls26-user-bpm-color,#00e88a)!important}
 .library-page .song-table-row .key-cell{color:var(--ls26-key-color,#00cafa)!important}
 .library-page .song-table-row .capo-cell.has-capo{color:var(--ls26-capo-color,#ffdb58)!important}
+
+.library-page .song-table-row .original-bpm-cell{color:var(--ls26-original-bpm-color,#00cafa)!important}
