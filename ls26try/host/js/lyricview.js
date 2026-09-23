@@ -239,6 +239,80 @@
     }
 
     $("myNotesInput").value = song.myNotes || "";
+    renderPerformanceSongReference(song);
+  }
+
+  function songYoutubeLinks(song) {
+    const values = Array.isArray(song?.youtubeLinks) && song.youtubeLinks.length
+      ? song.youtubeLinks
+      : [song?.youtubeLink || ""];
+    return [...new Set(values.map(value=>String(value||"").trim()).filter(Boolean))];
+  }
+
+  function renderPerformanceSongReference(song) {
+    const root=$("performanceSongReference");
+    if(!root)return;
+    const note=String(song?.note||song?.songNote||"").trim();
+    const links=songYoutubeLinks(song);
+    const hostNotes=(song?.sections||[]).filter(section=>{
+      const isHost=`${section?.type||""} ${section?.title||""}`.toLowerCase().includes("host note");
+      return isHost&&(showAllSectionsOverride||sectionVisibleForActiveType(section));
+    });
+
+    const noteCard=$("performanceSongNoteCard");
+    noteCard.hidden=!note;
+    $("performanceSongNote").textContent=note;
+
+    const youtubeCard=$("performanceYoutubeCard");
+    youtubeCard.hidden=!links.length;
+    $("performanceYoutubeLinks").innerHTML=links.map((link,index)=>
+      `<a href="${esc(link)}" target="_blank" rel="noopener noreferrer">▶ YouTube${links.length>1?` ${index+1}`:""}</a>`
+    ).join("");
+
+    const hostCard=$("performanceHostNotesCard");
+    hostCard.hidden=!hostNotes.length;
+    $("performanceHostNotes").innerHTML=hostNotes.map(section=>
+      `<article><strong>${esc(section.title||"HOST NOTE")}</strong><div>${cleanSectionHtml(section.html||section.text||"")}</div></article>`
+    ).join("");
+
+    root.hidden=!note&&!links.length&&!hostNotes.length;
+  }
+
+  function openSongNoteModal() {
+    if(!currentSong)return;
+    $("songActionsMenu")?.classList.add("hidden");
+    $("songActionsBtn")?.setAttribute("aria-expanded","false");
+    $("songNoteEditInput").value=currentSong.note||currentSong.songNote||"";
+    $("songNoteSaveStatus").textContent="";
+    $("songNoteModal").classList.remove("hidden");
+    $("songNoteModal").setAttribute("aria-hidden","false");
+    requestAnimationFrame(()=>$("songNoteEditInput")?.focus());
+  }
+
+  function closeSongNoteModal() {
+    $("songNoteModal")?.classList.add("hidden");
+    $("songNoteModal")?.setAttribute("aria-hidden","true");
+  }
+
+  async function saveSongNoteFromPerformance() {
+    if(!currentSongId)return;
+    const button=$("songNoteSaveBtn");
+    const value=$("songNoteEditInput").value.trim();
+    button.disabled=true;
+    $("songNoteSaveStatus").textContent="Saving…";
+    try{
+      await db.collection("lyrics").doc(currentSongId).set({
+        note:value,
+        updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+      },{merge:true});
+      currentSong={...currentSong,note:value};
+      setInfo(currentSong);
+      $("songNoteSaveStatus").textContent="Saved";
+      setTimeout(closeSongNoteModal,250);
+    }catch(error){
+      console.error("Could not save song note:",error);
+      $("songNoteSaveStatus").textContent=error.message||"Could not save note.";
+    }finally{button.disabled=false;}
   }
 
   function normaliseType(value) {
@@ -1658,7 +1732,10 @@
       $("showAllSectionsBtn").onclick = () => {
         showAllSectionsOverride = !showAllSectionsOverride;
         applySectionVisibility(true);
-        if (currentSong) renderHostNotes(currentSong);
+        if (currentSong) {
+          renderHostNotes(currentSong);
+          renderPerformanceSongReference(currentSong);
+        }
         requestAnimationFrame(updateSectionProgress);
       };
     }
@@ -1679,7 +1756,25 @@
       drawer.classList.toggle("open", willOpen);
       drawer.setAttribute("aria-hidden", willOpen ? "false" : "true");
       $("songInfoBtn").classList.toggle("active", willOpen);
+      $("songActionsMenu")?.classList.add("hidden");
+      $("songActionsBtn")?.setAttribute("aria-expanded","false");
     };
+    $("songActionsBtn").onclick = event => {
+      event.stopPropagation();
+      const menu=$("songActionsMenu");
+      const opening=menu.classList.contains("hidden");
+      menu.classList.toggle("hidden",!opening);
+      $("songActionsBtn").setAttribute("aria-expanded",opening?"true":"false");
+    };
+    $("songNoteActionBtn").onclick=openSongNoteModal;
+    $("songNoteCancelBtn").onclick=closeSongNoteModal;
+    $("songNoteSaveBtn").onclick=saveSongNoteFromPerformance;
+    document.addEventListener("click",event=>{
+      if(!event.target.closest(".host-song-actions")){
+        $("songActionsMenu")?.classList.add("hidden");
+        $("songActionsBtn")?.setAttribute("aria-expanded","false");
+      }
+    });
     $("closeSongInfoBtn").onclick = () => {
       const drawer = $("songInfoDrawer");
       if (!drawer) return;
