@@ -368,12 +368,12 @@
           ${LyricsCommon.escapeHTML(song.key || "—")}
         </strong>
 
-        <span class="bpm-cell">
+        <span class="bpm-cell ${String(song.userBpm ?? "").trim() ? "has-user-bpm" : ""}">
           ${LyricsCommon.escapeHTML(song.userBpm || "—")}
         </span>
 
         <span class="original-bpm-cell">${LyricsCommon.escapeHTML(song.originalBpm || "—")}</span>
-        <span class="capo-cell">${LyricsCommon.escapeHTML(Number(song.capo) ? song.capo : "-")}</span>
+        <span class="capo-cell ${Number(song.capo) >= 1 ? "has-capo" : ""}">${LyricsCommon.escapeHTML(Number(song.capo) ? song.capo : "-")}</span>
         <span class="row-actions">
           <button
             class="row-play-btn"
