@@ -664,14 +664,9 @@
 
 
   function queueItems() {
-    if (
-      state.runOrder?.sessionId &&
-      state.sessionId &&
-      state.runOrder.sessionId !== state.sessionId
-    ) {
-      return [];
-    }
-
+    const expectedSessionId=state.sessionId||"";
+    const runSessionId=state.runOrder?.sessionId||"";
+    if(runSessionId!==expectedSessionId)return [];
     return Array.isArray(state.runOrder?.items) ? state.runOrder.items : [];
   }
 
@@ -966,13 +961,20 @@
   }
 
   async function saveRunOrder(items) {
-    if (!state.db || !state.sessionId) return;
-
-    await state.db.collection("karaokeControl").doc("runOrder").set({
-      sessionId: state.sessionId,
-      items,
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    }, { merge:true });
+    if (!state.db) return;
+    const expectedSessionId=state.sessionId||"";
+    const ref=state.db.collection("karaokeControl").doc("runOrder");
+    await state.db.runTransaction(async tx=>{
+      const snap=await tx.get(ref);
+      const data=snap.exists?(snap.data()||{}):{};
+      if((state.sessionId||"")!==expectedSessionId)throw new Error("Session changed. Please try again.");
+      if(expectedSessionId && data.sessionId && data.sessionId!==expectedSessionId)throw new Error("Run Order belongs to another session.");
+      tx.set(ref,{
+        sessionId:expectedSessionId,
+        items:Array.isArray(items)?items:[],
+        updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+      },{merge:true});
+    });
   }
 
   function makeQueueItemFromRequest(request) {
@@ -1027,12 +1029,12 @@
   }
 
   async function moveRunOrder(itemId,direction) {
-    if(!state.sessionId)throw Error('Start a session before reordering.');
-    const sessionId=state.sessionId;
+    const sessionId=state.sessionId||"";
     const ref=state.db.collection('karaokeControl').doc('runOrder');
     return state.db.runTransaction(async tx=>{
       const snap=await tx.get(ref),data=snap.data()||{};
-      if(state.sessionId!==sessionId||data.sessionId!==sessionId)throw Error('Session changed. Refresh before reordering.');
+      if((state.sessionId||"")!==sessionId)throw Error('Session changed. Refresh before reordering.');
+      if((data.sessionId||"")!==sessionId)throw Error('Run Order changed. Refresh before reordering.');
       const items=(data.items||[]).map(x=>({...x}));
       const terminal=new Set(['playing','played','abandoned','left','declined','deleted','deletedbyhost']);
       const indexes=items.map((x,i)=>terminal.has(String(x.status||'').toLowerCase())?-1:i).filter(i=>i>=0);
@@ -1092,7 +1094,7 @@
   async function addManualSong() {
     const songId = $("tsRunOrderSongSelect")?.value || "";
     const song = state.songs.find(entry => entry.id === songId);
-    if (!song || !state.sessionId) return;
+    if (!song) return;
 
     const items = queueItems().map(item => ({...item}));
     items.push({
@@ -1275,6 +1277,7 @@
 
         const candidateSessionId = data.sessionId || data.activeSessionId || "";
         const sessionId = (data.active === false && !data.activeSessionId) ? "" : candidateSessionId;
+        document.documentElement.dataset.ls26SessionActive=sessionId?"true":"false";
 
         if (sessionId !== state.sessionId) {
           subscribeSession(sessionId);
@@ -1565,10 +1568,16 @@
 
   // Shared Library enqueue command: one transaction, no extra subscriptions.
   LK.sessionTools.enqueueSong = async song => {
-    const sessionId=state.sessionId;if(!sessionId)throw new Error('Start a session before adding songs to Run Order.');
+    const sessionId=state.sessionId||"";
     const ref=state.db.collection('karaokeControl').doc('runOrder');
-    const item={id:'manual_'+Date.now()+'_'+Math.random().toString(36).slice(2,8),songId:song.firebaseId,songTitle:song.title||'',artist:song.artist||'',singerName:'',requestId:'',source:'manual',status:'queued',addedAtMs:Date.now()};
-    await state.db.runTransaction(async tx=>{const snap=await tx.get(ref),data=snap.data()||{};if(state.sessionId!==sessionId)throw new Error('Session changed. Please try again.');if(data.sessionId&&data.sessionId!==sessionId)throw new Error('Run Order belongs to another session. Open Admin to initialize the current session.');tx.set(ref,{sessionId,items:[...(data.items||[]),item],updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});});
+    const item={id:'manual_'+Date.now()+'_'+Math.random().toString(36).slice(2,8),songId:song.firebaseId||song.id,songTitle:song.title||'',artist:song.artist||'',singerName:'',requestId:'',source:'manual',status:'queued',addedAtMs:Date.now()};
+    await state.db.runTransaction(async tx=>{
+      const snap=await tx.get(ref),data=snap.exists?(snap.data()||{}):{};
+      if((state.sessionId||"")!==sessionId)throw new Error('Session changed. Please try again.');
+      if(sessionId && data.sessionId && data.sessionId!==sessionId)throw new Error('Run Order belongs to another session.');
+      const baseItems=!sessionId&&data.sessionId?[]:(Array.isArray(data.items)?data.items:[]);
+      tx.set(ref,{sessionId,items:[...baseItems,item],updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
+    });
   };
   LK.sessionTools.getControl = () => state.currentControl;
   LK.sessionTools.getRunOrderSnapshot = () => state.runOrderSnapshotReady ? state.runOrder : null;
