@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>App Settings · LiveSuite</title>
+  <link rel="stylesheet" href="../shared/dialogs.css?v=20260924-performance-tools">
+  <script src="../shared/dialogs.js?v=20260924-performance-tools"></script>
+  <link rel="stylesheet" href="css/admin.css?v=20260910-stage4">
+  <link rel="stylesheet" href="css/sidebar.css?v=20260910-stage4">
+  <link rel="stylesheet" href="css/sidebar-suite.css?v=20260924-performance-tools">
+  <link rel="stylesheet" href="css/enquiries.css?v=20260910-stage4">
+  <link rel="stylesheet" href="css/admin-navigation.css?v=20260922-batch">
+  <link rel="stylesheet" href="../shared/theme.css?v=20260924-ui-polish">
+  <link rel="stylesheet" href="../shared/performance.css?v=20260924-performance-tools">
+  <link rel="stylesheet" href="css/app-settings.css?v=20260924-performance-tools">
+  <script src="../shared/data.js?v=20260910-stage4"></script>
+</head>
+<body class="admin-body enquiries-page">
+<div class="admin-shell"><div id="sidebarContainer"></div><main class="admin-main enquiries-main settings-main">
+  <header class="enquiries-topbar"><div><h1>App Settings</h1><p>Performance and interface defaults for LiveSuite.</p></div></header>
+  <div class="settings-grid">
+    <section class="settings-card"><h2>Status Bar</h2><p>Control what the compact performance strip shows and how large it reads.</p>
+      <div class="setting-row"><div class="setting-copy"><strong>Show when no session is active</strong><small>Hide the top status strip entirely while LiveSuite is idle.</small></div><div class="setting-control"><label class="setting-toggle"><input id="showTopStatusWhenInactive" data-setting type="checkbox"> Show idle strip</label></div></div>
+      <div class="setting-row"><div class="setting-copy"><strong>Metric value font size</strong><small>Started, elapsed, remaining and other main values.</small></div><div class="setting-control"><input id="statusValueFontSize" data-setting type="range" min="14" max="34"><output data-output="statusValueFontSize"></output></div></div>
+      <div class="setting-row"><div class="setting-copy"><strong>Metric label font size</strong><small>STARTED, ELAPSED, REMAINING, REQUESTS labels.</small></div><div class="setting-control"><input id="statusLabelFontSize" data-setting type="range" min="8" max="18"><output data-output="statusLabelFontSize"></output></div></div>
+    </section>
+
+    <section class="settings-card"><h2>Song Value Colours</h2><p>Use the same performance colours across Library and LyricView.</p>
+      <div class="setting-row"><div class="setting-copy"><strong>User BPM</strong></div><div class="setting-control"><input id="userBpmColor" data-setting type="color"></div></div>
+      <div class="setting-row"><div class="setting-copy"><strong>Original BPM</strong></div><div class="setting-control"><input id="originalBpmColor" data-setting type="color"></div></div>
+      <div class="setting-row"><div class="setting-copy"><strong>Key</strong></div><div class="setting-control"><input id="keyColor" data-setting type="color"></div></div>
+      <div class="setting-row"><div class="setting-copy"><strong>Capo (1+)</strong></div><div class="setting-control"><input id="capoColor" data-setting type="color"></div></div>
+    </section>
+
+    <section class="settings-card"><h2>LyricView Controls</h2><p>Size the performance controls to suit the tablet and viewing distance.</p>
+      <div class="setting-row"><div class="setting-copy"><strong>Up / Down button size</strong></div><div class="setting-control"><input id="lyricNavVerticalSize" data-setting type="range" min="58" max="140"><output data-output="lyricNavVerticalSize"></output></div></div>
+      <div class="setting-row"><div class="setting-copy"><strong>Left / Right button size</strong></div><div class="setting-control"><input id="lyricNavHorizontalSize" data-setting type="range" min="52" max="120"><output data-output="lyricNavHorizontalSize"></output></div></div>
+      <div class="setting-row"><div class="setting-copy"><strong>Lyric text scale</strong><small>Scales the section content without changing saved song formatting.</small></div><div class="setting-control"><input id="lyricTextScale" data-setting type="range" min="75" max="150" step="5"><output data-output="lyricTextScale"></output></div></div>
+    </section>
+
+    <section class="settings-card"><h2>Library &amp; Effects</h2><p>Useful density and visibility preferences.</p>
+      <div class="setting-row"><div class="setting-copy"><strong>Library row height</strong><small>Smaller rows show more songs; larger rows are easier to tap.</small></div><div class="setting-control"><input id="libraryRowHeight" data-setting type="range" min="48" max="92" step="2"><output data-output="libraryRowHeight"></output></div></div>
+      <div class="setting-row"><div class="setting-copy"><strong>Reduce interface glow</strong><small>Turns down neon shadows while keeping LiveSuite colours.</small></div><div class="setting-control"><label class="setting-toggle"><input id="reduceGlow" data-setting type="checkbox"> Reduce glow</label></div></div>
+    </section>
+  </div>
+  <div class="settings-actions"><span id="settingsStatus"></span><button id="resetSettingsBtn" type="button">Reset defaults</button><button id="saveSettingsBtn" class="primary" type="button">Save Settings</button></div>
+</main></div>
+<script src="../firebase-projects.js?v=20260910-stage4"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="js/firebase.js?v=20260910-stage4"></script>
+<script src="js/sidebar.js?v=20260924-ui-polish"></script>
+<script src="js/profile.js?v=20260910-stage4"></script>
+<script src="js/auth.js?v=20260910-stage4"></script>
+<script src="../shared/app-settings.js?v=20260924-performance-tools"></script>
+<script src="../shared/shell.js?v=20260924-performance-tools"></script>
+<script src="js/app-settings.js?v=20260924-performance-tools"></script>
+</body></html>
