@@ -43,8 +43,10 @@
   let updateGroup='';for(const note of visible){const group=note.completed?'Completed':'Incomplete';if(filter==='all'&&group!==updateGroup){const heading=document.createElement('h3');heading.className='ls26-update-group-title '+(note.completed?'completed':'incomplete');heading.textContent=group;list.append(heading);updateGroup=group;}
    const article=document.createElement('article'),text=document.createElement('p'),meta=document.createElement('small'),actions=document.createElement('div'),edit=document.createElement('button'),done=document.createElement('button');
    article.className='ls26-update-card'+(note.completed?' is-completed':'');text.textContent=note.text;meta.textContent=`${note.completed?'Completed':'Pending'} · ${note.createdAt?.toDate?.().toLocaleString()||''} · ${note.page||''}`;
-   edit.textContent='Edit';edit.onclick=()=>open(note);done.textContent=note.completed?'Reopen':'Mark completed';done.onclick=async()=>{done.disabled=true;try{await collection().doc(note.id).update({completed:!note.completed,updatedAt:stamp()});note.completed=!note.completed;render();LS26.toast('Update saved successfully.');}catch(e){$('appUpdateStatus').textContent=errorText(e);done.disabled=false;}};
-   actions.append(edit,done);article.append(text,meta,actions);list.append(article);
+   edit.textContent='Edit';edit.onclick=()=>open(note);
+   const copy=document.createElement('button');copy.type='button';copy.className='ls26-update-copy';copy.innerHTML='<span aria-hidden="true">⧉</span> Copy';copy.title='Copy update text';copy.onclick=async()=>{try{if(navigator.clipboard?.writeText)await navigator.clipboard.writeText(note.text||'');else{const ta=document.createElement('textarea');ta.value=note.text||'';ta.style.position='fixed';ta.style.opacity='0';document.body.append(ta);ta.select();document.execCommand('copy');ta.remove();}LS26.toast('Update text copied.');}catch(error){$('appUpdateStatus').textContent='Could not copy this update.';}};
+   done.textContent=note.completed?'Reopen':'Mark completed';done.onclick=async()=>{done.disabled=true;try{await collection().doc(note.id).update({completed:!note.completed,updatedAt:stamp()});note.completed=!note.completed;render();LS26.toast('Update saved successfully.');}catch(e){$('appUpdateStatus').textContent=errorText(e);done.disabled=false;}};
+   actions.append(edit,copy,done);article.append(text,meta,actions);list.append(article);
   }
   if(!visible.length)list.textContent='No matching updates in the loaded notes.';
  }
