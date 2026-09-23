@@ -1008,11 +1008,12 @@
     });
   }
 
-  async function abandonRequest(requestId) {
+  async function abandonRequest(requestId, reason="") {
     if (!requestId || !state.db) return;
 
     await state.db.collection("publicSongRequests").doc(requestId).set({
       status: "abandoned",
+      reason:String(reason||"").trim(),
       abandonedAt: firebase.firestore.FieldValue.serverTimestamp(),
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     }, { merge:true });
@@ -1046,7 +1047,7 @@
     });
   }
 
-  async function abandonRunOrder(itemId) {
+  async function abandonRunOrder(itemId, reason="") {
     const items = queueItems().map(item => ({...item}));
     const item = items.find(entry => entry.id === itemId);
     if (!item) return;
@@ -1060,6 +1061,7 @@
         ? {
             ...entry,
             status: "abandoned",
+            abandonReason:String(reason||"").trim(),
             abandonedAtMs: Date.now()
           }
         : entry
@@ -1070,6 +1072,7 @@
     if (item.requestId) {
       await state.db.collection("publicSongRequests").doc(item.requestId).set({
         status: "abandoned",
+        reason:String(reason||"").trim(),
         abandonedAt: now,
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       }, { merge:true });
@@ -1491,7 +1494,12 @@
 
       const abandonRequestBtn = event.target.closest("[data-ts-abandon-request]");
       if (abandonRequestBtn) {
-        return abandonRequest(abandonRequestBtn.dataset.tsAbandonRequest);
+        event.preventDefault();
+        return (async()=>{
+          const reason=await LS26Dialogs.prompt("Mark this request abandoned. Add a custom message (optional):","");
+          if(reason===null)return;
+          await abandonRequest(abandonRequestBtn.dataset.tsAbandonRequest,reason);
+        })();
       }
 
       const deleteRequestBtn = event.target.closest("[data-ts-delete-request],[data-ts-decline]");
@@ -1506,7 +1514,14 @@
       if (down) return moveRunOrder(down.dataset.tsDown,1);
 
       const abandonRun = event.target.closest("[data-ts-abandon-run]");
-      if (abandonRun) return abandonRunOrder(abandonRun.dataset.tsAbandonRun);
+      if (abandonRun) {
+        event.preventDefault();
+        return (async()=>{
+          const reason=await LS26Dialogs.prompt("Abandon this song. Add a custom message (optional):","");
+          if(reason===null)return;
+          await abandonRunOrder(abandonRun.dataset.tsAbandonRun,reason);
+        })();
+      }
 
       const remove = event.target.closest("[data-ts-remove]");
       if (remove) return removeRunOrder(remove.dataset.tsRemove);
