@@ -143,3 +143,18 @@ body .ls26-footer .ls26-footer-icon image{filter:none!important;box-shadow:none!
 
 .ls26-inbox-page .song-inbox-main{max-width:none}
 .ls26-inbox-page .song-inbox-toolbar{margin-bottom:8px}
+
+/* 2026-09-24 pre-session Run Order flow */
+.pre-session-runorder-dialog{width:min(720px,calc(100vw - 28px));max-height:88dvh;overflow:auto;padding:20px;border:1px solid var(--ls-accent);border-radius:12px;background:#03141f;color:var(--ls-text)}
+.pre-session-runorder-content h2{margin:0 0 6px;color:var(--ls-accent)}
+.pre-session-runorder-content>p{margin:0 0 14px;color:var(--ls-muted)}
+.pre-session-runorder-list{margin:0 0 16px;padding:0;list-style:none;max-height:40dvh;overflow:auto;border:1px solid var(--ls-border);border-radius:9px;background:#021019}
+.pre-session-runorder-list li{display:grid;grid-template-columns:34px minmax(0,1fr);gap:10px;align-items:center;padding:10px 12px;border-bottom:1px solid var(--ls-border)}
+.pre-session-runorder-list li:last-child{border-bottom:0}
+.pre-session-runorder-list li>span{display:grid;place-items:center;width:28px;height:28px;border:1px solid #296079;border-radius:50%;color:var(--ls-accent);font-weight:800}
+.pre-session-runorder-list strong,.pre-session-runorder-list small{display:block}.pre-session-runorder-list small{color:var(--ls-muted);margin-top:2px}
+.pre-session-runorder-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.pre-session-runorder-actions button{min-height:48px;padding:10px 12px;border:1px solid var(--ls-border);border-radius:8px;background:var(--ls-soft);color:var(--ls-text);font-weight:800}
+.pre-session-runorder-actions button.primary{grid-column:1/-1;border-color:var(--ls-success);color:var(--ls-success);background:#053126}
+.pre-session-runorder-note{color:#ffe23d!important;border:1px solid #685d20!important;background:#2b2607!important}
+@media(max-width:600px){.pre-session-runorder-actions{grid-template-columns:1fr}.pre-session-runorder-actions button.primary{grid-column:auto}}
