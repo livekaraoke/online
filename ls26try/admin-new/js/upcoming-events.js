@@ -322,6 +322,7 @@
         </div>
       `;
       renderSummary();
+      renderCalendar();
       return;
     }
 
