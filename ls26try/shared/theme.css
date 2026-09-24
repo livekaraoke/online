@@ -168,7 +168,7 @@ body .ls26-footer .ls26-footer-icon image{filter:none!important;box-shadow:none!
   min-width:78px!important;
   height:60px!important;
   padding:2px 7px!important;
-  margin-right:8px!important;
+  margin-right:auto!important;
   border:0!important;
   background:none!important;
 }
@@ -301,4 +301,15 @@ body .ls26-footer .ls26-footer-icon image{filter:none!important;box-shadow:none!
     min-width:104px!important;
     font-size:15px!important;
   }
+}
+
+
+/* =========================================================
+   LYRICVIEW TOAST LOWER POSITION — 2026-09-24
+   Keep transient save messages below the player dock, at the lower-left.
+   ========================================================= */
+.host-lyric-view-page .ls26-toast{
+  left:18px!important;
+  bottom:max(10px,env(safe-area-inset-bottom,0px))!important;
+  max-width:min(420px,calc(100vw - 36px))!important;
 }
