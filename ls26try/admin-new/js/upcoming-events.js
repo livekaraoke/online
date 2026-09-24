@@ -47,6 +47,7 @@
   let currentActiveSessionId = "";
   let unsubscribeCurrentSession = null;
   let calendarMonthCursor = new Date();
+  let selectedCalendarDate = "";
   calendarMonthCursor = new Date(calendarMonthCursor.getFullYear(), calendarMonthCursor.getMonth(), 1);
 
   function escapeHTML(value) {
@@ -265,6 +266,52 @@
     }
   }
 
+  function renderSelectedCalendarDay() {
+    const card = $("eventsSelectedDayCard");
+    const title = $("eventsSelectedDayTitle");
+    const list = $("eventsSelectedDayList");
+    if (!card || !title || !list) return;
+
+    if (!selectedCalendarDate) {
+      card.classList.add("hidden");
+      list.innerHTML = "";
+      return;
+    }
+
+    const date = formatDate(selectedCalendarDate);
+    const dayEvents = events
+      .filter(event => event.date === selectedCalendarDate)
+      .sort((a,b) => eventSortValue(a).localeCompare(eventSortValue(b)));
+
+    title.textContent = date.full;
+
+    if (!dayEvents.length) {
+      list.innerHTML = `
+        <div class="events-selected-day-empty">
+          No gigs or events are scheduled for this date.
+        </div>
+      `;
+    } else {
+      list.innerHTML = dayEvents.map(event => {
+        const type = event.type || "Other";
+        const status = event.status || "Confirmed";
+        return `
+          <button type="button" class="events-selected-day-event" data-edit-event="${escapeHTML(event.id)}">
+            <span class="events-selected-day-time">${escapeHTML(formatTimeRange(event))}</span>
+            <span class="events-selected-day-main">
+              <strong>${escapeHTML(event.name || type || "Untitled Event")}</strong>
+              <small>${escapeHTML(event.venue || "Venue TBC")}</small>
+            </span>
+            <span class="events-selected-day-type" style="--selected-type:${escapeHTML(typeColor(type))}">${escapeHTML(type)}</span>
+            <span class="events-selected-day-status status-${slugClass(status)}">${escapeHTML(status)}</span>
+          </button>
+        `;
+      }).join("");
+    }
+
+    card.classList.remove("hidden");
+  }
+
   function renderCalendar() {
     const grid = $("eventsCalendarGrid");
     const label = $("eventsCalendarMonthLabel");
@@ -299,7 +346,7 @@
       const title = dayEvents.map(event => event.name || event.type || "Gig").join(" • ");
 
       cells.push(`
-        <button type="button" class="events-calendar-day${key === today ? " is-today" : ""}${dayEvents.length ? " has-events" : ""}" data-calendar-date="${key}" title="${escapeHTML(title)}">
+        <button type="button" class="events-calendar-day${key === today ? " is-today" : ""}${key === selectedCalendarDate ? " is-selected" : ""}${dayEvents.length ? " has-events" : ""}" data-calendar-date="${key}" aria-pressed="${key === selectedCalendarDate ? "true" : "false"}" title="${escapeHTML(title)}">
           <span>${day}</span>
           <div class="events-calendar-marks">${marks}${more}</div>
         </button>`);
@@ -374,6 +421,7 @@
 
     renderSummary();
     renderCalendar();
+    renderSelectedCalendarDay();
   }
 
   function venueCombinedContact(venue) {
@@ -978,12 +1026,21 @@
     };
     $("eventsCalendarPrevBtn").onclick = () => {
       calendarMonthCursor = new Date(calendarMonthCursor.getFullYear(), calendarMonthCursor.getMonth() - 1, 1);
+      selectedCalendarDate = "";
       renderCalendar();
+      renderSelectedCalendarDay();
     };
     $("eventsCalendarNextBtn").onclick = () => {
       calendarMonthCursor = new Date(calendarMonthCursor.getFullYear(), calendarMonthCursor.getMonth() + 1, 1);
+      selectedCalendarDate = "";
       renderCalendar();
+      renderSelectedCalendarDay();
     };
+    $("clearSelectedCalendarDayBtn")?.addEventListener("click", () => {
+      selectedCalendarDate = "";
+      renderCalendar();
+      renderSelectedCalendarDay();
+    });
 
     $("manageEventTypesBtn").onclick = openEventTypesModal;
     $("eventTypesCloseBtn").onclick = closeEventTypesModal;
@@ -1019,6 +1076,14 @@
       });
 
     document.addEventListener("click", event => {
+      const calendarDay = event.target.closest("[data-calendar-date]");
+      if (calendarDay) {
+        selectedCalendarDate = calendarDay.dataset.calendarDate || "";
+        renderCalendar();
+        renderSelectedCalendarDay();
+        return;
+      }
+
       const edit = event.target.closest("[data-edit-event]");
       if (edit) {
         openEditModal(edit.dataset.editEvent);
