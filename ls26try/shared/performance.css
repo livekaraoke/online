@@ -289,3 +289,42 @@ html.ls26-reduce-glow .host-nav-btn,
 html.ls26-reduce-glow .host-bottom-dock,
 html.ls26-reduce-glow .performance-quick-info{box-shadow:none!important;filter:none!important}
 @media(max-width:760px){.performance-song-reference{grid-template-columns:1fr;margin-inline:8px}}
+
+
+/* =========================================================
+   TOP STATUS BAR ALIGNMENT POLISH — 2026-09-24
+   Keep Requests + clock sizing untouched.
+   ========================================================= */
+#ls26StickyHeader #topStatusBar .host-strip-live{
+  padding-right:16px!important;
+}
+#ls26StickyHeader #topStatusBar .venue-metric,
+#ls26StickyHeader #topStatusBar .venue-metric>div{
+  align-items:flex-start!important;
+  justify-content:center!important;
+  text-align:left!important;
+}
+#ls26StickyHeader #topStatusBar .venue-metric strong,
+#ls26StickyHeader #topStatusBar .venue-metric span,
+#ls26StickyHeader #topStatusBar .venue-metric small{
+  width:100%!important;
+  text-align:left!important;
+}
+#ls26StickyHeader #topStatusBar .host-strip-metric:not(.venue-metric):not(.requests-metric){
+  align-items:center!important;
+  justify-content:center!important;
+  text-align:center!important;
+}
+#ls26StickyHeader #topStatusBar .host-strip-metric:not(.venue-metric):not(.requests-metric)>small,
+#ls26StickyHeader #topStatusBar .host-strip-metric:not(.venue-metric):not(.requests-metric)>strong,
+#ls26StickyHeader #topStatusBar .host-strip-metric:not(.venue-metric):not(.requests-metric)>em{
+  width:100%!important;
+  text-align:center!important;
+}
+.library-page #ls26StickyHeader,
+.library-page #topStatusContainer,
+.library-page #topStatusBar,
+.library-page #topStatusBar .host-compact-strip{
+  box-shadow:none!important;
+  filter:none!important;
+}
