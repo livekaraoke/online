@@ -50,6 +50,13 @@
     sync();
   }
   function mount(){
+    if(!document.querySelector('link[data-ls26-dialog-style]')){
+      const dialogStyle=document.createElement('link');
+      dialogStyle.rel='stylesheet';
+      dialogStyle.dataset.ls26DialogStyle='1';
+      dialogStyle.href=url('shared/dialogs.css?v=20260924-followup');
+      document.head.append(dialogStyle);
+    }
     if(document.body.dataset.ls26Mounted)return;document.body.dataset.ls26Mounted='true';
     const isLyric=location.pathname.endsWith('/lyricview.html');
     const isLibrary=location.pathname.endsWith('/lyricsviewer.html')||location.pathname.endsWith('/library.html');
