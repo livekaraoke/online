@@ -580,3 +580,59 @@ html.ls26-reduce-glow .performance-quick-info{box-shadow:none!important;filter:n
     font-size:12px!important;
   }
 }
+
+
+/* =========================================================
+   LYRICVIEW ACTION + DIVIDER FOLLOW-UP — 2026-09-24
+   ========================================================= */
+
+/* The legacy performance module used to inject a second EDIT/SONG INFO row. */
+.host-lyric-view-page #ls26StickyHeader .ls26-actions{
+  display:none!important;
+}
+
+/* Keep only one separator between metadata values. Earlier rules added both
+   left and right borders, which produced the doubled vertical lines. */
+.host-lyric-view-page .ls26-title-meta>div{
+  border-left:0!important;
+  border-right:1px solid #9ab8c522!important;
+}
+.host-lyric-view-page .ls26-title-meta>div:last-child{
+  border-right:0!important;
+}
+
+/* EDIT SONG + SONG INFO now occupy the right-side action group together,
+   immediately before the dropdown arrow. */
+.host-lyric-view-page #hostStickyStack .host-song-actions{
+  display:flex!important;
+  align-items:center!important;
+  flex-wrap:nowrap!important;
+  gap:5px!important;
+}
+.host-lyric-view-page #hostStickyStack #quickEditSongBtn,
+.host-lyric-view-page #hostStickyStack #songInfoBtn{
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  height:44px!important;
+  min-height:44px!important;
+  padding:0 10px!important;
+  margin:0!important;
+  font-size:12px!important;
+  font-weight:800!important;
+  white-space:nowrap!important;
+}
+.host-lyric-view-page #hostStickyStack #songActionsBtn{
+  height:44px!important;
+  min-height:44px!important;
+  width:44px!important;
+  min-width:44px!important;
+  margin:0!important;
+}
+@media(max-width:900px){
+  .host-lyric-view-page #hostStickyStack #quickEditSongBtn,
+  .host-lyric-view-page #hostStickyStack #songInfoBtn{
+    padding-inline:8px!important;
+    font-size:11px!important;
+  }
+}
