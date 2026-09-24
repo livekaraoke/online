@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="../admin-new/css/top-statusbar-session-tools.css?v=20260910-stage4">
   <!-- Lyric View-only overrides MUST load last -->
   <link rel="stylesheet" href="css/lyricview-fixes.css?v=20260910-stage4">
-<link rel="stylesheet" href="../shared/theme.css?v=20260924-performance-tools"><link rel="stylesheet" href="../shared/performance.css?v=20260924-followup2"><script src="../shared/data.js?v=20260910-stage4"></script></head>
+<link rel="stylesheet" href="../shared/theme.css?v=20260924-performance-tools"><link rel="stylesheet" href="../shared/performance.css?v=20260924-time-card"><script src="../shared/data.js?v=20260910-stage4"></script></head>
 <body class="host-lyric-view-page">
   <!-- Song title/actions; navigation and session move into shared sticky header -->
   <div id="hostStickyStack" class="host-sticky-stack">
@@ -26,11 +26,10 @@
         <div><small>BPM</small><strong id="quickOriginalBpm">–</strong></div>
         <div><small>Key</small><strong id="quickKey">–</strong></div>
         <div><small>Capo</small><strong id="quickCapo">–</strong></div>
-        <div><small>Time</small><strong id="quickTime">–</strong></div>
       </div>
       <div class="host-song-actions">
-        <button id="quickEditSongBtn" class="host-top-btn" type="button">✎ EDIT SONG</button>
-        <button id="songInfoBtn" class="host-top-btn" type="button">ⓘ SONG INFO</button>
+        <button id="quickEditSongBtn" class="host-top-btn" type="button">✎ EDIT</button>
+        <button id="songInfoBtn" class="host-top-btn" type="button">ⓘ INFO</button>
         <button id="songActionsBtn" class="host-top-btn host-song-actions-toggle" type="button" aria-label="Song actions" aria-expanded="false">▼</button>
         <div id="songActionsMenu" class="host-song-actions-menu hidden">
           <button id="songNoteActionBtn" type="button">SONG NOTE</button>
@@ -87,11 +86,15 @@
       <div id="performanceYoutubeCard" class="performance-reference-card" hidden>
         <small>YOUTUBE LINKS</small><div id="performanceYoutubeLinks" class="performance-youtube-links"></div>
       </div>
+      <div id="performanceTimeCard" class="performance-reference-card performance-time-card">
+        <small>TIME</small><strong id="quickTime" class="performance-time-value">–</strong>
+      </div>
       <div id="performanceHostNotesCard" class="performance-reference-card" hidden>
         <small>HOST NOTES</small><div id="performanceHostNotes"></div>
       </div>
     </section>
 
+    <div class="host-song-lead-in-spacer" aria-hidden="true"></div>
     <div id="lyricsContent" class="host-lyrics-content"></div>
     <div id="endMarker" class="host-end-marker">[ END ]</div>
     <div class="host-end-next-wrap">
@@ -236,7 +239,7 @@
   <!-- SONG INDEX FOR SEND LYRICS -->
   <script src="../oldadmin/files/song-data-kl.js?v=20260910-stage4"></script>
   <script src="../shared/section-content.js?v=20260922-clean-sections"></script>
-  <script src="js/lyricview.js?v=20260924-followup"></script>
+  <script src="js/lyricview.js?v=20260924-time-card"></script>
   <script src="../admin-new/js/top-statusbar.js?v=20260922-fixes" data-include="../admin-new/includes/top-statusbar.html?v=20260910-stage4"></script>
   <script src="../admin-new/js/top-statusbar-session-tools.js?v=20260924-performance-tools"></script>
   <script>
