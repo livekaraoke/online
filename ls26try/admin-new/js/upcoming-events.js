@@ -370,6 +370,7 @@
       `;
       renderSummary();
       renderCalendar();
+      renderSelectedCalendarDay();
       return;
     }
 
