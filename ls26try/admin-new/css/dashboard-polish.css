@@ -170,14 +170,12 @@
   gap:10px!important;
 }
 #confirmModalOk{
-  order:2!important;
   border-color:var(--ls-success,#00e88a)!important;
   background:#064b38!important;
   color:#eafff5!important;
   box-shadow:none!important;
 }
 #confirmModal .admin-action-btn.muted{
-  order:1!important;
   border-color:var(--ls-border,#23546a)!important;
   background:#071d29!important;
   color:var(--ls-text,#eef8ff)!important;
