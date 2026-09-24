@@ -733,7 +733,7 @@
     const fromSettings = Number(window.LS26Settings?.get?.().lyricSectionActivationOffset);
     if (Number.isFinite(fromSettings)) return fromSettings;
     const cssValue = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--ls26-section-activation-offset"));
-    return Number.isFinite(cssValue) ? cssValue : 180;
+    return Number.isFinite(cssValue) ? cssValue : 320;
   }
 
   function scrollToSection(index) {
