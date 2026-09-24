@@ -20,7 +20,21 @@
     let show=true;try{show=localStorage.getItem('ls26:showKaraokeTools')!=='false';}catch(_){}showKaraoke(show);
     hide.onclick=()=>showKaraoke(false);$('ls26ShowKaraoke').onchange=e=>showKaraoke(e.target.checked);
 
-    const panel=document.createElement('section');panel.className='song-info-card ls26-bpm-panel';panel.innerHTML=`<label for="ls26CurrentBpm">Current BPM</label><div class="ls26-stepper"><button id="ls26BpmMinus" aria-label="Lower BPM">−</button><input id="ls26CurrentBpm" aria-label="Current BPM" type="number" min="1" max="400"><button id="ls26BpmPlus" aria-label="Raise BPM">＋</button></div><p>Original BPM <strong id="ls26OriginalBpm">—</strong></p><button id="ls26ResetBpm">↻ Reset</button>`;
+    const panel=document.createElement('section');panel.className='song-info-card ls26-bpm-panel';panel.innerHTML=`
+      <div class="ls26-bpm-panel-head">
+        <div><small>PERFORMANCE TEMPO</small><strong>Current BPM</strong></div>
+        <span class="ls26-bpm-live-label">LIVE</span>
+      </div>
+      <div class="ls26-stepper ls26-bpm-stepper">
+        <button id="ls26BpmMinus" aria-label="Lower BPM">−</button>
+        <label class="ls26-bpm-current-value" for="ls26CurrentBpm">
+          <input id="ls26CurrentBpm" aria-label="Current BPM" type="number" min="1" max="400">
+          <small>BPM</small>
+        </label>
+        <button id="ls26BpmPlus" aria-label="Raise BPM">＋</button>
+      </div>
+      <div class="ls26-bpm-original-row"><span>Original BPM</span><strong id="ls26OriginalBpm">—</strong></div>
+      <button id="ls26ResetBpm" type="button">↻ RESET TO ORIGINAL</button>`;
     drawer.querySelector('.song-info-scroll').prepend(panel);
     function sync(){const song=window.LS26Performance?.song();if(!song)return;$('ls26CurrentBpm').value=song.userBpm||song.originalBpm||96;$('ls26OriginalBpm').textContent=song.originalBpm||'—';$('ls26ResetBpm').disabled=!(Number(song.originalBpm)>0);}
     function close(){drawer.classList.remove('open');drawer.setAttribute('aria-hidden','true');infoAction?.setAttribute('aria-expanded','false');}
