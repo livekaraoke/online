@@ -961,3 +961,26 @@
  .creator-page .creator-section-head .section-title-input{max-width:260px!important}
  .creator-youtube-link-row{grid-template-columns:minmax(120px,.7fr) minmax(170px,1.3fr) 42px!important}
 }
+
+
+/* Creator modal chrome: remove the legacy red prototype frame. */
+.creator-page .creator-modal-box{
+  border-color:var(--ls-border,#23546a)!important;
+  background:linear-gradient(155deg,#061d2a,#03121b)!important;
+  color:var(--ls-text,#eef8ff)!important;
+  box-shadow:0 24px 70px rgba(0,0,0,.62)!important;
+}
+.creator-page .creator-modal-box h3{color:var(--ls-accent,#00cafa)!important}
+.creator-page .creator-modal-box input,
+.creator-page .creator-modal-box select,
+.creator-page .creator-modal-box textarea{
+  border-color:#285d75!important;
+  background:#02121b!important;
+  color:#fff!important;
+}
+.creator-page .creator-modal-box input:focus,
+.creator-page .creator-modal-box select:focus,
+.creator-page .creator-modal-box textarea:focus{
+  border-color:var(--ls-accent,#00cafa)!important;
+  outline-color:var(--ls-accent,#00cafa)!important;
+}
