@@ -351,3 +351,63 @@ body .ls26-footer .ls26-footer-icon image{filter:none!important;box-shadow:none!
     height:54px!important;
   }
 }
+
+
+/* =========================================================
+   FINAL HEADER ICON / RIGHT NAV ALIGNMENT — 2026-09-24
+   ========================================================= */
+.ls26-nav{
+  justify-content:flex-end!important;
+}
+.ls26-nav a.ls26-brand.ls26-brand-icon{
+  flex:0 0 78px!important;
+  width:78px!important;
+  min-width:78px!important;
+  max-width:78px!important;
+  margin-right:auto!important;
+  padding:3px 8px!important;
+  overflow:hidden!important;
+}
+.ls26-nav a.ls26-brand.ls26-brand-icon svg{
+  width:100%!important;
+  height:100%!important;
+  display:block!important;
+}
+.ls26-nav a.ls26-brand.ls26-brand-icon image{
+  filter:none!important;
+  box-shadow:none!important;
+}
+@media(max-width:1100px){
+  .ls26-nav a.ls26-brand.ls26-brand-icon{
+    flex-basis:70px!important;
+    width:70px!important;
+    min-width:70px!important;
+    max-width:70px!important;
+  }
+}
+@media(max-width:800px){
+  .ls26-nav a.ls26-brand.ls26-brand-icon{
+    flex-basis:64px!important;
+    width:64px!important;
+    min-width:64px!important;
+    max-width:64px!important;
+  }
+}
+
+/* Put LyricView save confirmations in the open lower-left space, below the
+   fixed performance dock instead of over the player controls. */
+.host-lyric-view-page #ls26Toast.ls26-toast{
+  position:fixed!important;
+  left:max(16px,env(safe-area-inset-left,0px))!important;
+  right:auto!important;
+  top:auto!important;
+  bottom:max(8px,env(safe-area-inset-bottom,0px))!important;
+  z-index:2300!important;
+  max-width:min(420px,calc(100vw - 32px))!important;
+}
+
+/* The dashboard live circle is an indicator only, never an action. */
+#liveCircleBtn.status-indicator,
+#liveCircleBtn:disabled{
+  cursor:default!important;
+}
