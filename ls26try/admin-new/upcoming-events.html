@@ -12,9 +12,9 @@
   <link rel="stylesheet" href="css/sidebar.css?v=20260910-stage4">
   <link rel="stylesheet" href="css/sidebar-suite.css?v=20260910-stage4">
   <link rel="stylesheet" href="css/modal.css?v=20260910-stage4">
-  <link rel="stylesheet" href="css/upcoming-events.css?v=20260924-admin-polish">
+  <link rel="stylesheet" href="css/upcoming-events.css?v=20260924-session-ux">
 <link rel="stylesheet" href="../shared/theme.css?v=20260924-stage-controls"><link rel="stylesheet" href="../shared/performance.css?v=20260924-stage-controls"><script src="../shared/data.js?v=20260910-stage4"></script><link rel="stylesheet" href="css/admin-navigation.css?v=20260922-fixes">
-<link rel="stylesheet" href="css/upcoming-events-polish.css?v=20260924-admin-polish">
+<link rel="stylesheet" href="css/upcoming-events-polish.css?v=20260924-session-ux">
 </head>
 
 <body class="admin-body events-page">
@@ -58,6 +58,17 @@
           </div>
           <div id="eventsCalendarGrid" class="events-calendar-grid"></div>
         </div>
+      </section>
+
+      <section id="eventsSelectedDayCard" class="events-selected-day-card hidden" aria-live="polite">
+        <div class="events-selected-day-head">
+          <div>
+            <span>SELECTED DATE</span>
+            <h2 id="eventsSelectedDayTitle">Gigs &amp; Events</h2>
+          </div>
+          <button id="clearSelectedCalendarDayBtn" type="button" aria-label="Clear selected date">×</button>
+        </div>
+        <div id="eventsSelectedDayList" class="events-selected-day-list"></div>
       </section>
 
       <section class="events-summary-grid">
@@ -300,6 +311,6 @@
   <script src="js/sidebar.js?v=20260924-admin-polish"></script>
   <script src="js/profile.js?v=20260910-stage4"></script>
   <script src="js/auth.js?v=20260910-stage4"></script>
-  <script src="js/upcoming-events.js?v=20260924-admin-polish"></script>
-<script src="../shared/shell.js?v=20260924-stage-controls"></script><script src="../shared/inbox.js?v=20260910-stage4"></script><script src="../shared/session-ui.js?v=20260923-polish"></script><script src="../shared/performance.js?v=20260923-polish"></script></body>
+  <script src="js/upcoming-events.js?v=20260924-session-ux"></script>
+<script src="../shared/shell.js?v=20260924-session-ux"></script><script src="../shared/inbox.js?v=20260910-stage4"></script><script src="../shared/session-ui.js?v=20260923-polish"></script><script src="../shared/performance.js?v=20260923-polish"></script></body>
 </html>
