@@ -58,6 +58,7 @@
 .status-live-box.session-forced-live #liveCircleBtn{font-size:18px!important;text-indent:0}
 
 /* Active-session information: a deliberate four-column dashboard. */
+#activeSessionLabels.hidden{display:none!important}
 #activeSessionLabels.session-live-details{
   display:grid!important;
   grid-template-columns:repeat(4,minmax(0,1fr))!important;
@@ -202,3 +203,5 @@
   #activeSessionLabels .session-live-detail:nth-child(8){grid-column:auto!important}
   #activeSessionLabels .session-live-detail:nth-child(9){grid-column:1 / 3!important}
 }
+
+#clearSessionEventSuggestionBtn svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
