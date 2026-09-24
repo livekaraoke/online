@@ -313,3 +313,41 @@ body .ls26-footer .ls26-footer-icon image{filter:none!important;box-shadow:none!
   bottom:max(10px,env(safe-area-inset-bottom,0px))!important;
   max-width:min(420px,calc(100vw - 36px))!important;
 }
+
+
+/* =========================================================
+   TOP NAV ICON + RIGHT ALIGNMENT — 2026-09-24 B
+   ========================================================= */
+.ls26-nav{
+  display:flex!important;
+  align-items:center!important;
+}
+.ls26-nav a.ls26-brand.ls26-brand-icon{
+  width:64px!important;
+  min-width:64px!important;
+  height:60px!important;
+  margin-right:auto!important;
+  padding:2px 5px!important;
+  overflow:hidden!important;
+}
+.ls26-nav a.ls26-brand.ls26-brand-icon svg{
+  width:64px!important;
+  min-width:64px!important;
+  height:60px!important;
+}
+.ls26-nav>a:not(.ls26-brand),
+.ls26-nav>button{
+  flex:0 0 auto!important;
+}
+@media(max-width:800px){
+  .ls26-nav a.ls26-brand.ls26-brand-icon{
+    width:58px!important;
+    min-width:58px!important;
+    height:54px!important;
+  }
+  .ls26-nav a.ls26-brand.ls26-brand-icon svg{
+    width:58px!important;
+    min-width:58px!important;
+    height:54px!important;
+  }
+}
