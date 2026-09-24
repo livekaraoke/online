@@ -285,7 +285,9 @@
       `<article><strong>${esc(section.title||"HOST NOTE")}</strong><div>${cleanSectionHtml(section.html||section.text||"")}</div></article>`
     ).join("");
 
-    root.hidden=!note&&!links.length&&!hostNotes.length;
+    // TIME is now a permanent reference card beside the YouTube/notes cards,
+    // so keep this reference row available even when a song has no note/link.
+    root.hidden=false;
   }
 
   function openSongNoteModal() {
