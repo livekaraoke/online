@@ -48,6 +48,7 @@
     const el = $("publicSetlistSaveStatus");
     if (!el) return;
     el.textContent = text || "";
+    el.classList.toggle("is-error", !!error);
     el.style.color = error ? "#ff6d72" : "#6fbd79";
   }
 
