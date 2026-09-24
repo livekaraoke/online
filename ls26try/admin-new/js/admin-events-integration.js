@@ -43,6 +43,7 @@
   let activeSessionUnsubscribe = null;
   let statusCountdownTimer = null;
   let lastActiveSessionForCompletion = null;
+  let initialSessionEventSelectionDone = false;
 
   // upcomingEvents is the authoritative gig source.
   // karaoke/state.nextEvent is maintained ONLY as a compatibility mirror
@@ -826,8 +827,10 @@
     } catch {}
 
     if (updateNotes && $("sessionNotesInput")) {
-      $("sessionNotesInput").value = buildSessionNotes(event);
-      $("sessionNotesInput").dispatchEvent(new Event("input", { bubbles:true }));
+      const notes = $("sessionNotesInput");
+      notes.value = buildSessionNotes(event);
+      notes.dataset.prepareNewLine = notes.value.trim() ? "1" : "0";
+      notes.dispatchEvent(new Event("input", { bubbles:true }));
     }
 
     renderSessionSuggestion(event);
@@ -869,7 +872,10 @@
     if (!select) return;
 
     const available = upcomingExcludingActive();
-    let selectedId = selectedUpcomingEventId();
+    const isInitialSelection = !initialSessionEventSelectionDone;
+    let selectedId = isInitialSelection
+      ? (available[0]?.id || "")
+      : selectedUpcomingEventId();
 
     if (selectedId && !available.some(event => event.id === selectedId)) {
       selectedId = "";
@@ -878,6 +884,8 @@
     if (!selectedId && available.length) {
       selectedId = available[0].id;
     }
+
+    initialSessionEventSelectionDone = true;
 
     select.innerHTML =
       (available.length
@@ -892,7 +900,7 @@
       `).join("");
 
     if (selectedId) {
-      selectSessionEvent(selectedId, { updateNotes:false });
+      selectSessionEvent(selectedId, { updateNotes:isInitialSelection });
     } else {
       if ($("sessionEventIdInput")) $("sessionEventIdInput").value = "";
       try { sessionStorage.removeItem("lkSelectedUpcomingEventId"); } catch {}
@@ -1153,6 +1161,15 @@
     $("sessionEventSelect")?.addEventListener("change", event => {
       const eventId = event.target.value || "";
       if (eventId) selectSessionEvent(eventId);
+    });
+
+    $("sessionNotesInput")?.addEventListener("focus", event => {
+      const notes = event.currentTarget;
+      if (activeSessionControl?.active || notes.dataset.prepareNewLine !== "1") return;
+      if (notes.value && !notes.value.endsWith("\n")) notes.value += "\n";
+      notes.dataset.prepareNewLine = "0";
+      const end = notes.value.length;
+      requestAnimationFrame(() => notes.setSelectionRange(end, end));
     });
 
     $("clearSessionEventSuggestionBtn")?.addEventListener("click", () => {
