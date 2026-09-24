@@ -21,3 +21,58 @@
 @keyframes ls26-fade-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 @keyframes ls26-fade-out{to{opacity:0}}
 @media(prefers-reduced-motion:reduce){.ls26-dialog,.ls26-dialog::backdrop{animation:none!important}}
+
+
+/* 2026-09-24 unified popup header alignment */
+.ls26-dialog,
+.suite-modal-box,
+.admin-modal-box,
+.creator-modal-box,
+.session-modal-box,
+.events-modal-card,
+.venues-modal-card,
+.signup-box,
+.dialog-box{
+  position:relative!important;
+}
+.ls26-modal-close-bar{
+  position:absolute!important;
+  top:10px!important;
+  right:10px!important;
+  z-index:30!important;
+  width:42px!important;
+  height:42px!important;
+  margin:0!important;
+  padding:0!important;
+  background:transparent!important;
+}
+.ls26-modal-close-bar .ls26-modal-x{
+  width:42px!important;
+  height:42px!important;
+  min-height:42px!important;
+  background:#041925!important;
+  border:1px solid var(--ls-border,#23546a)!important;
+  font-size:28px!important;
+}
+.ls26-dialog h2,
+.ls26-dialog h3,
+.suite-modal-box>h2,
+.suite-modal-box>h3,
+.admin-modal-box>h2,
+.admin-modal-box>h3,
+.creator-modal-box>h2,
+.creator-modal-box>h3,
+.session-modal-box>h2,
+.session-modal-box>h3,
+.events-modal-card>h2,
+.events-modal-card>h3,
+.venues-modal-card>h2,
+.venues-modal-card>h3,
+.dialog-box>h2,
+.dialog-box>h3{
+  display:flex!important;
+  align-items:center!important;
+  min-height:42px!important;
+  margin-top:0!important;
+  margin-right:54px!important;
+}
