@@ -608,7 +608,7 @@
   }
 
   function wrapPerformanceLifecycle() {
-    if (typeof window.startPerformance === "function" && !window.startPerformance.__eventLifecycleWrapped) {
+    if (typeof window.startPerformance === "function" && !window.startPerformance.__eventLinkLifecycleWrapped) {
       const originalStart = window.startPerformance;
       const wrappedStart = async function (...args) {
         const eventId = selectedUpcomingEventId();
@@ -620,11 +620,12 @@
         await forceSystemLiveForPerformance();
         return result;
       };
-      wrappedStart.__eventLifecycleWrapped = true;
+      wrappedStart.__eventLinkLifecycleWrapped = true;
+      wrappedStart.__sessionArchiveLifecycleWrapped = !!originalStart.__sessionArchiveLifecycleWrapped;
       window.startPerformance = wrappedStart;
     }
 
-    if (typeof window.endPerformance === "function" && !window.endPerformance.__eventLifecycleWrapped) {
+    if (typeof window.endPerformance === "function" && !window.endPerformance.__eventLinkLifecycleWrapped) {
       const originalEnd = window.endPerformance;
       const wrappedEnd = async function (...args) {
         const sessionId = activeSessionData?.id || activeSessionControl?.sessionId || activeSessionControl?.activeSessionId || "";
@@ -636,7 +637,8 @@
         }
         return result;
       };
-      wrappedEnd.__eventLifecycleWrapped = true;
+      wrappedEnd.__eventLinkLifecycleWrapped = true;
+      wrappedEnd.__sessionArchiveLifecycleWrapped = !!originalEnd.__sessionArchiveLifecycleWrapped;
       window.endPerformance = wrappedEnd;
     }
   }
