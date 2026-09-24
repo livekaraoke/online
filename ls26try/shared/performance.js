@@ -59,13 +59,27 @@
   }
   function adminHandoff(){
     const id=new URLSearchParams(location.search).get('endSession');if(!id||!location.pathname.endsWith('/admin.html'))return;
-    let done=false;
-    const observer=new MutationObserver(()=>{
-      if(done||!window.LK?.state?.currentSessionId||!window.confirmEndPerformance)return;
-      done=true;observer.disconnect();
-      if(LK.state.currentSessionId!==id){LS26.toast('The active session changed. Review it before ending.');return;}
-      window.confirmEndPerformance();
-    });observer.observe(document.body,{subtree:true,childList:true,attributes:true});
+    let done=false,attempts=0,timer=null,observer=null;
+    const finish=()=>{
+      if(timer)clearInterval(timer);
+      observer?.disconnect();
+    };
+    const attempt=()=>{
+      if(done)return;
+      attempts++;
+      const activeId=window.LK?.state?.currentSessionId||"";
+      if(activeId&&typeof window.confirmEndPerformance==="function"){
+        done=true;finish();
+        if(activeId!==id){LS26.toast('The active session changed. Review it before ending.');return;}
+        window.confirmEndPerformance();
+        return;
+      }
+      if(attempts>=40)finish();
+    };
+    observer=new MutationObserver(attempt);
+    observer.observe(document.body,{subtree:true,childList:true,attributes:true});
+    timer=setInterval(attempt,250);
+    attempt();
   }
   document.addEventListener('DOMContentLoaded',()=>{setup();adminHandoff();});
 })();
