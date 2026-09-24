@@ -1220,3 +1220,63 @@
   opacity:1!important;
   background:rgba(7,56,77,.90)!important;
 }
+
+
+/* =========================================================
+   CREATOR / LYRICVIEW TEXT-WIDTH PARITY — 2026-09-24
+   Make the editable text measure the same as the performance view so a
+   line that wraps here wraps at the same place in LyricView.
+   ========================================================= */
+.creator-page .creator-section-tools{
+  width:calc(100vw - 24px)!important;
+  max-width:none!important;
+  margin-left:calc(50% - 50vw + 12px)!important;
+  margin-right:0!important;
+}
+.creator-page .creator-section-card,
+.creator-page .creator-section-body{
+  width:100%!important;
+  max-width:none!important;
+  box-sizing:border-box!important;
+}
+.creator-page .creator-rich-editor{
+  width:100%!important;
+  max-width:none!important;
+  box-sizing:border-box!important;
+  padding-left:16px!important;
+  padding-right:16px!important;
+  white-space:break-spaces!important;
+  overflow-wrap:anywhere!important;
+  word-break:normal!important;
+  hyphens:none!important;
+  font-kerning:none!important;
+  font-variant-ligatures:none!important;
+  font-feature-settings:"kern" 0,"liga" 0,"clig" 0!important;
+}
+.creator-page .creator-rich-editor *{
+  white-space:inherit!important;
+  overflow-wrap:inherit!important;
+  word-break:inherit!important;
+  hyphens:inherit!important;
+  font-kerning:inherit!important;
+  font-variant-ligatures:inherit!important;
+  font-feature-settings:inherit!important;
+}
+
+/* Return-to-top button stays fixed over the lower edge, bold/semi-transparent,
+   and JS only reveals it while the user is scrolling upward. */
+.creator-page .creator-scroll-top{
+  bottom:max(18px,env(safe-area-inset-bottom,0px))!important;
+  background:rgba(3,39,57,.72)!important;
+  border-width:2px!important;
+  font-weight:1000!important;
+}
+.creator-page .creator-scroll-top span{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  line-height:1!important;
+  font-weight:1000!important;
+  text-align:center!important;
+  transform:none!important;
+}
