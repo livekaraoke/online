@@ -490,7 +490,7 @@
 
   function wrapStartPerformance() {
     if (typeof window.startPerformance !== "function") return;
-    if (window.startPerformance.__eventLifecycleWrapped) return;
+    if (window.startPerformance.__sessionArchiveLifecycleWrapped) return;
 
     const original = window.startPerformance;
 
@@ -529,13 +529,14 @@
       return result;
     };
 
-    wrapped.__eventLifecycleWrapped = true;
+    wrapped.__sessionArchiveLifecycleWrapped = true;
+    wrapped.__eventLinkLifecycleWrapped = !!original.__eventLinkLifecycleWrapped;
     window.startPerformance = wrapped;
   }
 
   function wrapEndPerformance() {
     if (typeof window.endPerformance !== "function") return;
-    if (window.endPerformance.__eventLifecycleWrapped) return;
+    if (window.endPerformance.__sessionArchiveLifecycleWrapped) return;
 
     const original = window.endPerformance;
 
@@ -569,7 +570,8 @@
       return result;
     };
 
-    wrapped.__eventLifecycleWrapped = true;
+    wrapped.__sessionArchiveLifecycleWrapped = true;
+    wrapped.__eventLinkLifecycleWrapped = !!original.__eventLinkLifecycleWrapped;
     window.endPerformance = wrapped;
   }
 

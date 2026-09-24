@@ -1596,6 +1596,15 @@
     $("sectionDefaultsToggleBtn").closest(".section-defaults-panel")
       ?.classList.toggle("defaults-collapsed", !opening);
   };
+  if ($("lyricsCreatorScrollTop")) {
+    $("lyricsCreatorScrollTop").onclick = () => {
+      window.scrollTo({
+        top:0,
+        behavior:matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth"
+      });
+    };
+  }
+
   $("undoBtn").onclick = performUndo;
   $("redoBtn").onclick = performRedo;
 

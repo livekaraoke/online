@@ -1107,3 +1107,28 @@
   .creator-page #colourModal .colour-palette{gap:7px!important}
   .creator-page #colourModal .colour-palette button{min-height:64px!important;font-size:9px!important}
 }
+
+
+/* Bottom-of-editor return-to-top control. */
+.creator-page .creator-scroll-top{
+  display:grid!important;
+  place-items:center!important;
+  width:64px!important;
+  height:64px!important;
+  min-width:64px!important;
+  min-height:64px!important;
+  margin:22px auto 86px!important;
+  padding:0!important;
+  border:1px solid var(--ls-accent,#00cafa)!important;
+  border-radius:50%!important;
+  background:#04283a!important;
+  color:#fff!important;
+  box-shadow:0 0 18px rgba(0,202,250,.16)!important;
+  font-size:33px!important;
+  font-weight:900!important;
+  line-height:1!important;
+}
+.creator-page .creator-scroll-top:hover{
+  background:#07384d!important;
+  box-shadow:0 0 22px rgba(0,202,250,.26)!important;
+}

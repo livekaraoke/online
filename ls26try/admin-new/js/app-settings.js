@@ -5,6 +5,7 @@
     "showTopStatusWhenInactive","statusValueFontSize","statusLabelFontSize",
     "userBpmColor","originalBpmColor","keyColor","capoColor",
     "lyricNavVerticalSize","lyricNavHorizontalSize","lyricTextScale",
+    "lyricLeadInHeight","lyricSectionActivationOffset",
     "libraryRowHeight","reduceGlow"
   ];
   function put(settings){

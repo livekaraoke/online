@@ -10,8 +10,8 @@
   <link rel="stylesheet" href="css/sidebar-suite.css?v=20260924-performance-tools">
   <link rel="stylesheet" href="css/enquiries.css?v=20260910-stage4">
   <link rel="stylesheet" href="css/admin-navigation.css?v=20260922-batch">
-  <link rel="stylesheet" href="../shared/theme.css?v=20260924-ui-polish">
-  <link rel="stylesheet" href="../shared/performance.css?v=20260924-followup">
+  <link rel="stylesheet" href="../shared/theme.css?v=20260924-session-ux">
+  <link rel="stylesheet" href="../shared/performance.css?v=20260924-session-ux">
   <link rel="stylesheet" href="css/app-settings.css?v=20260924-followup">
   <script src="../shared/data.js?v=20260910-stage4"></script>
 </head>
@@ -36,6 +36,8 @@
       <div class="setting-row"><div class="setting-copy"><strong>Up / Down button size</strong></div><div class="setting-control"><input id="lyricNavVerticalSize" data-setting type="range" min="58" max="140"><output data-output="lyricNavVerticalSize"></output></div></div>
       <div class="setting-row"><div class="setting-copy"><strong>Left / Right button size</strong></div><div class="setting-control"><input id="lyricNavHorizontalSize" data-setting type="range" min="52" max="120"><output data-output="lyricNavHorizontalSize"></output></div></div>
       <div class="setting-row"><div class="setting-copy"><strong>Lyric text scale</strong><small>Scales the section content without changing saved song formatting.</small></div><div class="setting-control"><input id="lyricTextScale" data-setting type="range" min="75" max="150" step="5"><output data-output="lyricTextScale"></output></div></div>
+      <div class="setting-row"><div class="setting-copy"><strong>Opening runway before first section</strong><small>Blank scrolling space before the first lyric section. Increase this for more preparation time before section 1 reaches the reading area.</small></div><div class="setting-control"><input id="lyricLeadInHeight" data-setting type="range" min="80" max="360" step="8"><output data-output="lyricLeadInHeight"></output></div></div>
+      <div class="setting-row"><div class="setting-copy"><strong>Current-section activation position</strong><small>How far below the sticky LyricView header a section must reach before it becomes the highlighted current section.</small></div><div class="setting-control"><input id="lyricSectionActivationOffset" data-setting type="range" min="0" max="520" step="10"><output data-output="lyricSectionActivationOffset"></output></div></div>
     </section>
 
     <section class="settings-card"><h2>Library &amp; Effects</h2><p>Useful density and visibility preferences.</p>
@@ -53,7 +55,7 @@
 <script src="js/sidebar.js?v=20260924-ui-polish"></script>
 <script src="js/profile.js?v=20260910-stage4"></script>
 <script src="js/auth.js?v=20260910-stage4"></script>
-<script data-ls26-settings="1" src="../shared/app-settings.js?v=20260924-performance-tools"></script>
-<script src="../shared/shell.js?v=20260924-followup"></script>
-<script src="js/app-settings.js?v=20260924-followup"></script>
+<script data-ls26-settings="1" src="../shared/app-settings.js?v=20260924-session-ux"></script>
+<script src="../shared/shell.js?v=20260924-session-ux"></script>
+<script src="js/app-settings.js?v=20260924-session-ux"></script>
 </body></html>
