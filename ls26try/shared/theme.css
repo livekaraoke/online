@@ -158,3 +158,85 @@ body .ls26-footer .ls26-footer-icon image{filter:none!important;box-shadow:none!
 .pre-session-runorder-actions button.primary{grid-column:1/-1;border-color:var(--ls-success);color:var(--ls-success);background:#053126}
 .pre-session-runorder-note{color:#ffe23d!important;border:1px solid #685d20!important;background:#2b2607!important}
 @media(max-width:600px){.pre-session-runorder-actions{grid-template-columns:1fr}.pre-session-runorder-actions button.primary{grid-column:auto}}
+
+
+/* =========================================================
+   SESSION NAVIGATION & BRANDING — 2026-09-24
+   ========================================================= */
+.ls26-nav a.ls26-brand.ls26-brand-icon{
+  width:78px!important;
+  min-width:78px!important;
+  height:60px!important;
+  padding:2px 7px!important;
+  margin-right:8px!important;
+  border:0!important;
+  background:none!important;
+}
+.ls26-nav a.ls26-brand.ls26-brand-icon svg{
+  display:block!important;
+  width:100%!important;
+  height:100%!important;
+  overflow:visible!important;
+}
+.ls26-nav>a:not(.ls26-brand),.ls26-nav>button{
+  min-height:52px!important;
+  padding-inline:15px!important;
+  font-size:19px!important;
+}
+.ls26-nav>a[aria-label="Admin dashboard"]{
+  min-width:58px!important;
+  font-size:32px!important;
+}
+.ls26-nav #ls26Fullscreen{
+  width:58px!important;
+  min-width:58px!important;
+  height:52px!important;
+  padding:11px!important;
+}
+.ls26-footer{
+  position:relative!important;
+  align-items:center!important;
+  justify-content:center!important;
+}
+.ls26-footer .ls26-footer-brand{
+  background:none!important;
+}
+.ls26-footer .ls26-footer-brand img{
+  display:block!important;
+  width:100%!important;
+  height:100%!important;
+  object-fit:contain!important;
+}
+.ls26-footer .ls26-exit-fullscreen-session{
+  position:absolute!important;
+  right:max(12px,env(safe-area-inset-right))!important;
+  top:50%!important;
+  transform:translateY(-50%)!important;
+  min-height:38px!important;
+  padding:7px 12px!important;
+  border:1px solid var(--ls-accent,#00cafa)!important;
+  border-radius:7px!important;
+  background:#042335!important;
+  color:var(--ls-accent,#00cafa)!important;
+  font-size:11px!important;
+  font-weight:900!important;
+  letter-spacing:.035em!important;
+}
+.ls26-footer .ls26-exit-fullscreen-session:hover{
+  background:#073047!important;
+  color:#fff!important;
+}
+.host-lyric-view-page .ls26-footer .ls26-footer-brand{
+  width:165px!important;
+  height:35px!important;
+}
+@media(min-width:801px) and (max-width:1100px){
+  .ls26-nav>a:not(.ls26-brand),.ls26-nav>button{font-size:17px!important;padding-inline:10px!important}
+  .ls26-nav a.ls26-brand.ls26-brand-icon{width:70px!important;min-width:70px!important}
+}
+@media(max-width:800px){
+  .ls26-nav{overflow-x:auto!important}
+  .ls26-nav>a:not(.ls26-brand),.ls26-nav>button{font-size:16px!important;padding-inline:9px!important}
+  .ls26-nav a.ls26-brand.ls26-brand-icon{width:66px!important;min-width:66px!important;height:54px!important}
+  .ls26-footer .ls26-exit-fullscreen-session{font-size:10px!important;padding-inline:9px!important}
+}
