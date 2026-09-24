@@ -46,6 +46,8 @@
   let currentActiveEventId = "";
   let currentActiveSessionId = "";
   let unsubscribeCurrentSession = null;
+  let calendarMonthCursor = new Date();
+  calendarMonthCursor = new Date(calendarMonthCursor.getFullYear(), calendarMonthCursor.getMonth(), 1);
 
   function escapeHTML(value) {
     return String(value || "")
@@ -263,6 +265,49 @@
     }
   }
 
+  function renderCalendar() {
+    const grid = $("eventsCalendarGrid");
+    const label = $("eventsCalendarMonthLabel");
+    if (!grid || !label) return;
+
+    const year = calendarMonthCursor.getFullYear();
+    const month = calendarMonthCursor.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const leading = (firstDay.getDay() + 6) % 7;
+    const cellCount = Math.ceil((leading + daysInMonth) / 7) * 7;
+    const today = localDateKey();
+
+    label.textContent = firstDay.toLocaleDateString(undefined, { month:"long", year:"numeric" });
+
+    const cells = [];
+    for (let cell = 0; cell < cellCount; cell += 1) {
+      const day = cell - leading + 1;
+      if (day < 1 || day > daysInMonth) {
+        cells.push('<div class="events-calendar-day is-empty" aria-hidden="true"></div>');
+        continue;
+      }
+
+      const key = `${year}-${String(month + 1).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
+      const dayEvents = events
+        .filter(event => event.date === key && String(event.status || "").toLowerCase() !== "cancelled")
+        .sort((a,b) => eventSortValue(a).localeCompare(eventSortValue(b)));
+      const marks = dayEvents.slice(0,4).map(event =>
+        `<i class="events-calendar-mark" style="--calendar-mark:${escapeHTML(typeColor(event.type || "Other"))}" title="${escapeHTML(event.name || event.type || "Gig")}"></i>`
+      ).join("");
+      const more = dayEvents.length > 4 ? `<small>+${dayEvents.length - 4}</small>` : "";
+      const title = dayEvents.map(event => event.name || event.type || "Gig").join(" • ");
+
+      cells.push(`
+        <button type="button" class="events-calendar-day${key === today ? " is-today" : ""}${dayEvents.length ? " has-events" : ""}" data-calendar-date="${key}" title="${escapeHTML(title)}">
+          <span>${day}</span>
+          <div class="events-calendar-marks">${marks}${more}</div>
+        </button>`);
+    }
+
+    grid.innerHTML = cells.join("");
+  }
+
   function renderEvents() {
     const list = $("eventsList");
     if (!list) return;
@@ -277,6 +322,7 @@
         </div>
       `;
       renderSummary();
+      renderCalendar();
       return;
     }
 
@@ -303,26 +349,19 @@
               <span><b>Start:</b> ${escapeHTML(event.startTime || "TBC")}</span>
               <span><b>Length:</b> ${escapeHTML(formatEventLength(event))}</span>
             </div>
-
-            <span class="event-notes-preview">${notesPreview}</span>
+            <div class="event-extra-meta">
+              <span><b>Arrival / Setup:</b> ${escapeHTML(event.arrivalTime || "—")}</span>
+              <span><b>Contact:</b> ${escapeHTML([event.contactName, event.contact].filter(Boolean).join(" • ") || "—")}</span>
+            </div>
+            <span class="event-notes-preview"><b>Notes:</b> ${notesPreview}</span>
           </div>
 
-          <div class="event-venue">
-            <strong>${escapeHTML(event.venue || "Venue TBC")}</strong>
-            <span>${escapeHTML(event.address || "No address")}</span>
-          </div>
-
-          <div class="event-time">
-            <strong>${escapeHTML(formatTimeRange(event))}</strong>
-            <span>${event.arrivalTime ? `Setup ${escapeHTML(event.arrivalTime)}` : "No setup time"}</span>
-          </div>
-
-          <div>
+          <div class="event-badges">
             <span
               class="event-type-badge ${typeClass}"
               style="--event-type-color:${escapeHTML(typeColor(event.type || "Live Karaoke"))};--event-type-bg:${escapeHTML(hexToRgba(typeColor(event.type || "Live Karaoke"), .13))}"
             >${escapeHTML(event.type || "Live Karaoke")}</span>
-            <span class="event-status-badge ${statusClass}" style="margin-top:5px">${escapeHTML(event.status || "Confirmed")}</span>
+            <span class="event-status-badge ${statusClass}">${escapeHTML(event.status || "Confirmed")}</span>
           </div>
 
           <div class="event-actions">
@@ -334,6 +373,7 @@
     }).join("");
 
     renderSummary();
+    renderCalendar();
   }
 
   function venueCombinedContact(venue) {
@@ -927,6 +967,23 @@
     $("newEventBtn").onclick = openCreateModal;
     $("eventsBackBtn").onclick = () => { window.location.href = "admin.html"; };
     $("refreshEventsBtn").onclick = renderEvents;
+    $("toggleEventsCalendarBtn").onclick = () => {
+      const panel = $("eventsCalendarPanel");
+      const button = $("toggleEventsCalendarBtn");
+      const opening = panel.classList.contains("hidden");
+      panel.classList.toggle("hidden", !opening);
+      button.textContent = opening ? "HIDE CALENDAR" : "SHOW CALENDAR";
+      button.setAttribute("aria-expanded", opening ? "true" : "false");
+      if (opening) renderCalendar();
+    };
+    $("eventsCalendarPrevBtn").onclick = () => {
+      calendarMonthCursor = new Date(calendarMonthCursor.getFullYear(), calendarMonthCursor.getMonth() - 1, 1);
+      renderCalendar();
+    };
+    $("eventsCalendarNextBtn").onclick = () => {
+      calendarMonthCursor = new Date(calendarMonthCursor.getFullYear(), calendarMonthCursor.getMonth() + 1, 1);
+      renderCalendar();
+    };
 
     $("manageEventTypesBtn").onclick = openEventTypesModal;
     $("eventTypesCloseBtn").onclick = closeEventTypesModal;
@@ -1030,7 +1087,11 @@
     $("eventsAuthGate").classList.add("hidden");
     $("eventsApp").hidden = false;
 
-    loadSidebarFallback();
+    if (window.LK?.sidebar?.loadSidebar) {
+      LK.sidebar.loadSidebar();
+    } else {
+      loadSidebarFallback();
+    }
     markEventsSidebarLink();
     startEventTypesListener();
     startVenueListener();

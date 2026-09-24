@@ -861,3 +861,126 @@
 .creator-page .creator-rich-editor a.lyrics-song-link:hover{background:rgba(255,226,61,.16)!important;box-shadow:0 0 18px rgba(255,226,61,.10)!important}
 .creator-page .advanced-rich-toolbar [data-text-case],
 .creator-page .advanced-rich-toolbar [data-wrap-brackets]{font-weight:850!important;min-width:42px!important}
+
+
+/* =========================================================
+   CREATOR TOOLBAR + HEADER ALIGNMENT POLISH — 2026-09-24
+   ========================================================= */
+.creator-page .creator-section-head{
+  display:flex!important;
+  align-items:center!important;
+  flex-wrap:wrap!important;
+  gap:7px!important;
+}
+.creator-page .creator-section-head .editor-collapse-btn{flex:0 0 auto!important}
+.creator-page .creator-section-head .section-title-input{
+  flex:1 1 180px!important;
+  width:auto!important;
+  min-width:140px!important;
+  max-width:280px!important;
+}
+.creator-page .creator-section-head .creator-section-actions{
+  display:flex!important;
+  align-items:center!important;
+  flex:0 0 auto!important;
+  flex-wrap:nowrap!important;
+  gap:5px!important;
+  margin-left:0!important;
+}
+.creator-page .creator-section-head .creator-section-actions button{
+  display:grid!important;
+  place-items:center!important;
+  min-height:40px!important;
+  height:40px!important;
+  line-height:1!important;
+}
+.creator-page .creator-section-head .creator-section-actions [data-select-section]{
+  min-width:88px!important;
+}
+.creator-page .section-align-control{
+  height:40px!important;
+  align-items:center!important;
+  align-self:center!important;
+}
+.creator-page .section-align-control button{
+  display:grid!important;
+  place-items:center!important;
+  height:40px!important;
+  min-height:40px!important;
+  line-height:1!important;
+  font-family:Arial,sans-serif!important;
+  padding:0!important;
+}
+.creator-page .section-title-colour-control{
+  flex-basis:100%!important;
+  width:100%!important;
+  order:10!important;
+}
+.creator-page .advanced-rich-toolbar{
+  align-items:center!important;
+}
+.creator-page .advanced-rich-toolbar>button,
+.creator-page .advanced-rich-toolbar .text-colour-control,
+.creator-page .advanced-rich-toolbar .dash-colour-control{
+  align-self:center!important;
+}
+.creator-page .text-colour-control{
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  min-height:40px!important;
+  height:40px!important;
+  padding:0 6px!important;
+  border:1px solid #315266!important;
+  border-radius:6px!important;
+  background:#071925!important;
+}
+.creator-page .text-colour-control input[type="color"]{
+  width:38px!important;
+  height:30px!important;
+  padding:2px!important;
+}
+.creator-page .dash-colour-control{
+  min-height:40px!important;
+  height:40px!important;
+}
+
+/* URL is deliberately shorter so each YouTube row has a display label. */
+.creator-youtube-link-row{
+  display:grid!important;
+  grid-template-columns:minmax(240px,1.28fr) minmax(150px,.72fr) 44px!important;
+  gap:8px!important;
+  align-items:center!important;
+}
+.creator-youtube-label-input,
+.creator-youtube-url-input{min-width:0!important;width:100%!important}
+.creator-youtube-label-input{font-weight:700!important}
+.creator-youtube-url-input{font-size:15px!important}
+
+@media(max-width:760px){
+ .creator-page .creator-section-head .section-title-input{max-width:220px!important}
+ .creator-youtube-link-row{grid-template-columns:minmax(170px,1.3fr) minmax(120px,.7fr) 42px!important}
+}
+
+
+/* Creator modal chrome: remove the legacy red prototype frame. */
+.creator-page .creator-modal-box{
+  border-color:var(--ls-border,#23546a)!important;
+  background:linear-gradient(155deg,#061d2a,#03121b)!important;
+  color:var(--ls-text,#eef8ff)!important;
+  box-shadow:0 24px 70px rgba(0,0,0,.62)!important;
+}
+.creator-page .creator-modal-box h3{color:var(--ls-accent,#00cafa)!important}
+.creator-page .creator-modal-box input,
+.creator-page .creator-modal-box select,
+.creator-page .creator-modal-box textarea{
+  border-color:#285d75!important;
+  background:#02121b!important;
+  color:#fff!important;
+}
+.creator-page .creator-modal-box input:focus,
+.creator-page .creator-modal-box select:focus,
+.creator-page .creator-modal-box textarea:focus{
+  border-color:var(--ls-accent,#00cafa)!important;
+  outline-color:var(--ls-accent,#00cafa)!important;
+}

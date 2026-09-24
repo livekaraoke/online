@@ -185,34 +185,49 @@
     render();
   }
 
-  function getYoutubeLinks() {
-    return [...document.querySelectorAll("[data-youtube-link]")]
-      .map(input => String(input.value || "").trim())
-      .filter(Boolean);
+  function getYoutubeLinkRows() {
+    return [...document.querySelectorAll(".creator-youtube-link-row")]
+      .map(row => ({
+        url: String(row.querySelector("[data-youtube-link]")?.value || "").trim(),
+        label: String(row.querySelector("[data-youtube-label]")?.value || "").trim()
+      }))
+      .filter(row => row.url);
   }
 
-  function setYoutubeLinks(values) {
+  function getYoutubeLinks() {
+    return getYoutubeLinkRows().map(row => row.url);
+  }
+
+  function getYoutubeLinkLabels() {
+    return getYoutubeLinkRows().map(row => row.label);
+  }
+
+  function setYoutubeLinks(values, labels = []) {
     const list = $("youtubeLinksList");
     if (!list) return;
     const links = (Array.isArray(values) ? values : [values])
-      .map(value => String(value || "").trim())
-      .filter(Boolean);
+      .map(value => String(value || "").trim());
+    const displayLabels = Array.isArray(labels) ? labels : [];
     if (!links.length) links.push("");
     list.innerHTML = links.map((value, index) => `
       <div class="creator-youtube-link-row">
-        <input ${index === 0 ? 'id="youtubeInput"' : ""} data-youtube-link value="${esc(value)}" placeholder="https://www.youtube.com/...">
+        <input class="creator-youtube-url-input" ${index === 0 ? 'id="youtubeInput"' : ""} data-youtube-link value="${esc(value)}" placeholder="https://www.youtube.com/...">
+        <input class="creator-youtube-label-input" data-youtube-label value="${esc(displayLabels[index] || "")}" placeholder="Display label">
         <button type="button" data-remove-youtube aria-label="Remove YouTube link" ${links.length === 1 ? "disabled" : ""}>×</button>
       </div>`).join("");
   }
 
-  function addYoutubeLink(value = "") {
-    const links = getYoutubeLinks();
-    links.push(value);
-    setYoutubeLinks(links);
+  function addYoutubeLink(value = "", label = "") {
+    const rows = [...document.querySelectorAll(".creator-youtube-link-row")].map(row => ({
+      url: String(row.querySelector("[data-youtube-link]")?.value || "").trim(),
+      label: String(row.querySelector("[data-youtube-label]")?.value || "").trim()
+    }));
+    rows.push({ url:value, label });
+    setYoutubeLinks(rows.map(row => row.url), rows.map(row => row.label));
     markDirty();
     requestAnimationFrame(() => {
-      const inputs = document.querySelectorAll("[data-youtube-link]");
-      inputs[inputs.length - 1]?.focus();
+      const urls = document.querySelectorAll("[data-youtube-link]");
+      urls[urls.length - 1]?.focus();
     });
   }
 
@@ -229,6 +244,7 @@
       year: $("yearInput")?.value || "",
       timeSignature: $("timeSignatureInput")?.value || "",
       youtubeLinks: getYoutubeLinks(),
+      youtubeLinkLabels: getYoutubeLinkLabels(),
       youtube: getYoutubeLinks()[0] || "",
       songNote: $("hostNoteInput")?.value || ""
     });
@@ -262,7 +278,7 @@
     if ($("capoInput")) $("capoInput").value = state.capo || "";
     if ($("yearInput")) $("yearInput").value = state.year || "";
     if ($("timeSignatureInput")) $("timeSignatureInput").value = state.timeSignature || "";
-    setYoutubeLinks(state.youtubeLinks || [state.youtube || ""]);
+    setYoutubeLinks(state.youtubeLinks || [state.youtube || ""], state.youtubeLinkLabels || []);
     if ($("hostNoteInput")) $("hostNoteInput").value = state.songNote || "";
     render();
     updateEditingStatus();
@@ -606,6 +622,10 @@
           <input class="toolbar-select size-select" data-size="${index}" type="number" min="6" max="120" step="1" list="fontSizePresets" value="${Number(style.fontSize) || 23}" aria-label="Font size">
           <button type="button" data-size-step="${index}" data-step="1" title="Increase font size by 1">▲</button>
         </div>
+        <label class="text-colour-control" title="Apply a colour to the selected text">
+          <span class="text-colour-icon">T</span>
+          <input type="color" data-text-colour="${index}" value="${esc(style.color || "#ffffff")}" aria-label="Selected text colour">
+        </label>
         <button type="button" data-command="bold" title="Bold"><b>B</b></button>
         <button type="button" data-command="italic" title="Italic"><i>I</i></button>
         <button type="button" data-command="underline" title="Underline"><u>U</u></button>
@@ -615,15 +635,6 @@
         <button type="button" data-text-case="lower" title="Lowercase selected text">aa</button>
         <button type="button" data-text-case="sentence" title="Sentence case selected text">Aa</button>
         <button type="button" data-wrap-brackets="${index}" title="Wrap selected text in square brackets">[ ]</button>
-        <label class="text-colour-control" title="Apply a colour to the selected text">
-          <span class="text-colour-icon">T</span>
-          <input type="color" data-text-colour="${index}" value="${esc(style.color || "#ffffff")}" aria-label="Selected text colour">
-        </label>
-        <label class="dash-colour-control" title="Colour every dash / hyphen character in this section">
-          DASHES
-          <select data-dash-colour="${index}">${renderDashColourOptions(style.dashColor)}</select>
-          <input type="color" data-dash-custom="${index}" value="${esc(style.dashColor || "#777777")}" title="Custom dash colour">
-        </label>
         <button type="button" class="beat-colour beat-1" data-quick-colour="#42f35c" title="Bold green timing marker">BEAT 1</button>
         <button type="button" class="beat-colour beat-2" data-quick-colour="#00ffd5" title="Bold bright-teal timing marker">BEAT 2</button>
         <button type="button" class="beat-colour beat-3" data-quick-colour="#ffe23d" title="Bold yellow timing marker">BEAT 3</button>
@@ -634,6 +645,11 @@
         <button type="button" data-insert-chord="${index}">＋ CHORD</button>
         <button type="button" data-insert-tab="${index}">＋ BLANK TAB</button>
         <button type="button" data-insert-link="${index}">＋ LINK</button>
+        <label class="dash-colour-control" title="Colour every dash / hyphen character in this section">
+          DASHES
+          <select data-dash-colour="${index}">${renderDashColourOptions(style.dashColor)}</select>
+          <input type="color" data-dash-custom="${index}" value="${esc(style.dashColor || "#777777")}" title="Custom dash colour">
+        </label>
       </div>`;
   }
 
@@ -674,6 +690,13 @@
           <div class="creator-section-head">
             <button class="editor-collapse-btn" type="button" data-editor-collapse="${index}" title="Collapse editor section">${s.editorCollapsed ? "▼" : "▲"}</button>
             <input class="section-title-input" data-title="${index}" value="${esc(s.title)}" style="color:${esc(getEffectiveSectionTitleColour(s))}">
+            <div class="creator-section-actions">
+              <button type="button" data-select-section="${index}" title="Select all text in this section">SELECT ALL</button>
+              <button type="button" data-up="${index}">↑</button>
+              <button type="button" data-down="${index}">↓</button>
+              <button type="button" data-duplicate="${index}">⧉</button>
+              <button type="button" data-remove="${index}">×</button>
+            </div>
             <label class="load-collapsed-check" title="Checked = load this section closed in Lyric View">
               <input type="checkbox" data-load-collapsed="${index}" ${s.collapsed ? "checked" : ""}>
             </label>
@@ -688,13 +711,6 @@
               <select data-title-colour="${index}">${renderTitleColourOptions(s.style?.titleColor)}</select>
               <input type="color" data-title-custom="${index}" value="${esc(s.style?.titleColor || getSystemSectionTitleColour(s.title))}" title="Custom title colour">
             </label>
-            <div class="creator-section-actions">
-              <button type="button" data-select-section="${index}" title="Select all text in this section">SELECT ALL</button>
-              <button type="button" data-up="${index}">↑</button>
-              <button type="button" data-down="${index}">↓</button>
-              <button type="button" data-duplicate="${index}">⧉</button>
-              <button type="button" data-remove="${index}">×</button>
-            </div>
           </div>
           <div class="creator-section-body ${s.editorCollapsed ? "hidden" : ""}">
             ${renderSectionVisibility(index, s)}
@@ -982,7 +998,10 @@
     $("capoInput").value = loadedSong.capo || "";
     $("yearInput").value = loadedSong.year || "";
     $("timeSignatureInput").value = loadedSong.timeSignature || "4/4";
-    setYoutubeLinks(Array.isArray(loadedSong.youtubeLinks) && loadedSong.youtubeLinks.length ? loadedSong.youtubeLinks : [loadedSong.youtubeLink || ""]);
+    setYoutubeLinks(
+      Array.isArray(loadedSong.youtubeLinks) && loadedSong.youtubeLinks.length ? loadedSong.youtubeLinks : [loadedSong.youtubeLink || ""],
+      Array.isArray(loadedSong.youtubeLinkLabels) ? loadedSong.youtubeLinkLabels : []
+    );
     $("hostNoteInput").value = loadedSong.note || "";
     await loadSetlistMembership(firebaseId);
 
@@ -1012,6 +1031,7 @@
       timeSignature: $("timeSignatureInput").value.trim() || "4/4",
       youtubeLink: getYoutubeLinks()[0] || "",
       youtubeLinks: getYoutubeLinks(),
+      youtubeLinkLabels: getYoutubeLinkLabels(),
       note: $("hostNoteInput").value,
       sections: sections.map(normalizeSection),
       // Public Song List visibility is managed elsewhere.
@@ -1609,10 +1629,13 @@
     const removeYoutube = event.target.closest?.("[data-remove-youtube]");
     if (removeYoutube) {
       const row = removeYoutube.closest(".creator-youtube-link-row");
-      const links = [...document.querySelectorAll("[data-youtube-link]")]
-        .filter(input => !row?.contains(input))
-        .map(input => input.value);
-      setYoutubeLinks(links);
+      const remaining = [...document.querySelectorAll(".creator-youtube-link-row")]
+        .filter(item => item !== row)
+        .map(item => ({
+          url:item.querySelector("[data-youtube-link]")?.value || "",
+          label:item.querySelector("[data-youtube-label]")?.value || ""
+        }));
+      setYoutubeLinks(remaining.map(item => item.url), remaining.map(item => item.label));
       markDirty();
       return;
     }

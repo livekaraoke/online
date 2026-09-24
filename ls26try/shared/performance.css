@@ -289,3 +289,120 @@ html.ls26-reduce-glow .host-nav-btn,
 html.ls26-reduce-glow .host-bottom-dock,
 html.ls26-reduce-glow .performance-quick-info{box-shadow:none!important;filter:none!important}
 @media(max-width:760px){.performance-song-reference{grid-template-columns:1fr;margin-inline:8px}}
+
+
+/* =========================================================
+   TOP STATUS BAR ALIGNMENT POLISH — 2026-09-24
+   Keep Requests + clock sizing untouched.
+   ========================================================= */
+#ls26StickyHeader #topStatusBar .host-strip-live{
+  padding-right:16px!important;
+}
+#ls26StickyHeader #topStatusBar .venue-metric,
+#ls26StickyHeader #topStatusBar .venue-metric>div{
+  align-items:flex-start!important;
+  justify-content:center!important;
+  text-align:left!important;
+}
+#ls26StickyHeader #topStatusBar .venue-metric strong,
+#ls26StickyHeader #topStatusBar .venue-metric span,
+#ls26StickyHeader #topStatusBar .venue-metric small{
+  width:100%!important;
+  text-align:left!important;
+}
+#ls26StickyHeader #topStatusBar .host-strip-metric:not(.venue-metric):not(.requests-metric){
+  align-items:center!important;
+  justify-content:center!important;
+  text-align:center!important;
+}
+#ls26StickyHeader #topStatusBar .host-strip-metric:not(.venue-metric):not(.requests-metric)>small,
+#ls26StickyHeader #topStatusBar .host-strip-metric:not(.venue-metric):not(.requests-metric)>strong,
+#ls26StickyHeader #topStatusBar .host-strip-metric:not(.venue-metric):not(.requests-metric)>em{
+  width:100%!important;
+  text-align:center!important;
+}
+.library-page #ls26StickyHeader,
+.library-page #topStatusContainer,
+.library-page #topStatusBar,
+.library-page #topStatusBar .host-compact-strip{
+  box-shadow:none!important;
+  filter:none!important;
+}
+
+
+/* =========================================================
+   SONG NOTE MODAL — LIVESUITE CHROME — 2026-09-24
+   ========================================================= */
+#songNoteModal .song-note-modal-box{
+  position:relative!important;
+  width:min(590px,calc(100vw - 34px))!important;
+  padding:20px!important;
+  border:1px solid var(--ls-border,#23546a)!important;
+  border-radius:12px!important;
+  background:linear-gradient(155deg,#061d2a,#03121b)!important;
+  color:var(--ls-text,#eef8ff)!important;
+  box-shadow:0 24px 70px rgba(0,0,0,.62)!important;
+}
+#songNoteModal .song-note-modal-box>.ls26-modal-close-bar{
+  position:absolute!important;
+  top:11px!important;
+  right:11px!important;
+  width:42px!important;
+  height:42px!important;
+  margin:0!important;
+  padding:0!important;
+  border:0!important;
+  background:transparent!important;
+}
+#songNoteModal .song-note-modal-box>.ls26-modal-close-bar .ls26-modal-x{
+  width:42px!important;
+  height:42px!important;
+  min-height:42px!important;
+  border:1px solid var(--ls-border,#23546a)!important;
+  border-radius:8px!important;
+  background:#041925!important;
+  color:#fff!important;
+  font-size:28px!important;
+}
+#songNoteModal .song-note-modal-box>h3{
+  min-height:42px!important;
+  display:flex!important;
+  align-items:center!important;
+  margin:0 54px 7px 0!important;
+  color:var(--ls-accent,#00cafa)!important;
+  font-size:22px!important;
+  line-height:1.2!important;
+}
+#songNoteModal .song-note-modal-box>p:not(#songNoteSaveStatus){
+  margin:0 0 12px!important;
+  color:#b7cdd9!important;
+}
+#songNoteModal #songNoteEditInput{
+  border-color:#2c647d!important;
+  background:#02121b!important;
+  color:#fff!important;
+  box-shadow:none!important;
+}
+#songNoteModal #songNoteEditInput:focus{
+  border-color:var(--ls-accent,#00cafa)!important;
+  outline:1px solid var(--ls-accent,#00cafa)!important;
+}
+#songNoteModal .suite-modal-actions{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:flex-end!important;
+  gap:10px!important;
+}
+#songNoteModal #songNoteCancelBtn{
+  border:1px solid var(--ls-border,#23546a)!important;
+  background:#071d29!important;
+  color:var(--ls-text,#eef8ff)!important;
+}
+#songNoteModal #songNoteSaveBtn{
+  border:1px solid var(--ls-success,#00e88a)!important;
+  background:#07523d!important;
+  color:#effff7!important;
+  font-weight:900!important;
+  box-shadow:0 0 0 1px rgba(0,232,138,.08)!important;
+}
+#songNoteModal #songNoteSaveBtn:hover{background:#08684c!important}

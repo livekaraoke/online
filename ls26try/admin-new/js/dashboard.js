@@ -108,6 +108,15 @@
     return data?.songsOverride ? data.songsEnabled === true : live;
   }
 
+  function statusCircleIcon(kind) {
+    if (kind === "stop") return '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="7" width="10" height="10" rx="1"/></svg>';
+    if (kind === "lock") return '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>';
+    if (kind === "unlock") return '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M16 10V7a4 4 0 0 0-7.5-2"/></svg>';
+    return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 5 11 7-11 7V5Z"/></svg>';
+  }
+
+  window.LS26StatusCircleIcon = statusCircleIcon;
+
   function updateAdminButtons(data) {
     const live = getIsLive(data);
     const songs = getSongsAvailable(data, live);
@@ -116,13 +125,13 @@
 
     if (liveBtn) {
       liveBtn.className = live ? "circle-status-btn stop" : "circle-status-btn go";
-      liveBtn.innerText = live ? "■" : "▶";
+      liveBtn.innerHTML = statusCircleIcon(live ? "stop" : "play");
       liveBtn.title = live ? "Go offline" : "Go live";
     }
 
     if (songsBtn) {
       songsBtn.className = songs ? "circle-status-btn stop" : "circle-status-btn go";
-      songsBtn.innerText = songs ? "🔒" : "🔓";
+      songsBtn.innerHTML = statusCircleIcon(songs ? "lock" : "unlock");
       songsBtn.title = songs ? "Lock public song list" : "Unlock public song list";
     }
   }

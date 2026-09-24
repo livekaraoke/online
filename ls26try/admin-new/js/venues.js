@@ -286,6 +286,10 @@
   }
 
   async function loadSidebar() {
+    if (window.LK?.sidebar?.loadSidebar) {
+      await LK.sidebar.loadSidebar();
+      return;
+    }
     const container = $("sidebarContainer");
     if (!container) return;
 
