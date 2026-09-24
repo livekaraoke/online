@@ -233,19 +233,6 @@ body.host-lyric-view-page{overflow:visible!important}
   .host-lyric-view-page .host-nav-pad .nav-right{width:72px!important;height:72px!important;min-width:72px!important;min-height:72px!important}
   .host-lyric-view-page .host-nav-pad .nav-up .host-nav-icon,
   .host-lyric-view-page .host-nav-pad .nav-down .host-nav-icon{width:48px!important;height:48px!important}
-  #ls26StickyHeader #topStatusBar .host-compact-strip{grid-template-columns:124px minmax(168px,1fr) 98px 118px 160px 72px max-content 44px!important}
-  #ls26StickyHeader #topStatusBar .host-strip-live{min-width:124px!important;justify-content:flex-start!important}
-  #ls26StickyHeader #topStatusBar .host-strip-metric:not(.venue-metric):not(.requests-metric):not(.alerts-metric){align-items:center!important;justify-content:center!important;text-align:center!important}
-  #ls26StickyHeader #topStatusBar .host-strip-metric:not(.venue-metric):not(.requests-metric):not(.alerts-metric) small,
-  #ls26StickyHeader #topStatusBar .host-strip-metric:not(.venue-metric):not(.requests-metric):not(.alerts-metric) strong,
-  #ls26StickyHeader #topStatusBar .host-strip-metric:not(.venue-metric):not(.requests-metric):not(.alerts-metric) em{width:100%!important;text-align:center!important}
-  #ls26StickyHeader #topStatusBar #tsCompactStarted,
-  #ls26StickyHeader #topStatusBar #tsCompactElapsed,
-  #ls26StickyHeader #topStatusBar #tsCompactRemaining{font-size:clamp(17px,2vw,23px)!important}
-  #ls26StickyHeader #topStatusBar .venue-metric,
-  #ls26StickyHeader #topStatusBar .venue-metric>div{align-items:flex-start!important;justify-items:start!important;text-align:left!important}
-  #ls26StickyHeader #topStatusBar .venue-metric #tsCompactVenue,
-  #ls26StickyHeader #topStatusBar .venue-metric #tsCompactType{width:100%!important;text-align:left!important}
 }
 
 /* =========================================================
