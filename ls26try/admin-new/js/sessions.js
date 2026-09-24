@@ -220,12 +220,12 @@
 
   if (!ok) return;
 
-  await startPerformance();
+  await (window.startPerformance || startPerformance)();
 }
 
   async function confirmEndPerformance() {
     if (await LK.dashboard.showConfirm("End Session?", "This will end the current session. Are you sure?")) {
-      endPerformance();
+      await (window.endPerformance || endPerformance)();
     }
   }
 
@@ -588,6 +588,8 @@ console.log("END break clicked", {
   }
 
   LK.sessions = { initSessions, listenCurrentSession, updateDashboard, setSessionStatus };
+  window.startPerformance = startPerformance;
+  window.endPerformance = endPerformance;
   window.confirmStartPerformance = confirmStartPerformance;
   window.confirmEndPerformance = confirmEndPerformance;
   window.startBreak = startBreak;
