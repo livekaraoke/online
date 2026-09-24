@@ -880,3 +880,122 @@ html.ls26-reduce-glow .performance-quick-info{box-shadow:none!important;filter:n
   .host-lyric-view-page .host-end-session-actions{gap:6px!important}
   .host-lyric-view-page .host-end-action{font-size:11px!important;padding-inline:7px!important}
 }
+
+
+/* =========================================================
+   INFO TOOLS FIT + GREEN TOGGLE — 2026-09-24
+   ========================================================= */
+.host-lyric-view-page #songInfoDrawer .ls26-bpm-panel{
+  width:100%!important;
+  min-width:0!important;
+  max-width:100%!important;
+  box-sizing:border-box!important;
+  overflow:hidden!important;
+  gap:11px!important;
+  padding:13px!important;
+}
+.host-lyric-view-page #songInfoDrawer .ls26-bpm-panel-head{
+  min-width:0!important;
+  align-items:center!important;
+}
+.host-lyric-view-page #songInfoDrawer .ls26-bpm-panel-head>div{
+  min-width:0!important;
+}
+.host-lyric-view-page #songInfoDrawer .ls26-bpm-panel-head strong{
+  font-size:17px!important;
+  white-space:nowrap!important;
+}
+.host-lyric-view-page #songInfoDrawer .ls26-bpm-stepper{
+  width:100%!important;
+  min-width:0!important;
+  grid-template-columns:48px minmax(0,1fr) 48px!important;
+  gap:8px!important;
+}
+.host-lyric-view-page #songInfoDrawer .ls26-bpm-stepper button{
+  width:48px!important;
+  height:48px!important;
+  min-width:48px!important;
+  min-height:48px!important;
+  padding:0!important;
+  font-size:30px!important;
+}
+.host-lyric-view-page #songInfoDrawer .ls26-bpm-current-value{
+  min-width:0!important;
+}
+.host-lyric-view-page #songInfoDrawer .ls26-bpm-current-value input{
+  min-width:0!important;
+  max-width:100%!important;
+  font-size:34px!important;
+}
+.host-lyric-view-page #songInfoDrawer .ls26-bpm-original-row{
+  min-width:0!important;
+  gap:10px!important;
+}
+.host-lyric-view-page #songInfoDrawer #ls26ResetBpm{
+  width:100%!important;
+  min-width:0!important;
+  max-width:100%!important;
+  box-sizing:border-box!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+  padding-inline:9px!important;
+  font-size:10px!important;
+}
+.host-lyric-view-page #songInfoDrawer .ls26-karaoke-toggle{
+  display:flex!important;
+  align-items:center!important;
+  gap:11px!important;
+  width:100%!important;
+  min-height:52px!important;
+  margin:0 0 10px!important;
+  padding:11px 13px!important;
+  box-sizing:border-box!important;
+  border:1px solid #168e5b!important;
+  border-radius:9px!important;
+  background:linear-gradient(180deg,#073d2e,#04291f)!important;
+  color:#74f4b6!important;
+  font-size:14px!important;
+  font-weight:850!important;
+  cursor:pointer!important;
+}
+.host-lyric-view-page #songInfoDrawer .ls26-karaoke-toggle input{
+  width:21px!important;
+  height:21px!important;
+  margin:0!important;
+  accent-color:var(--ls-success,#00e88a)!important;
+  flex:0 0 21px!important;
+}
+
+
+/* =========================================================
+   INFO TEMPO FINAL CONTAINMENT — 2026-09-24
+   ========================================================= */
+.host-lyric-view-page #songInfoDrawer .ls26-bpm-panel,
+.host-lyric-view-page #songInfoDrawer .ls26-bpm-panel *{
+  box-sizing:border-box!important;
+}
+.host-lyric-view-page #songInfoDrawer .ls26-bpm-current-value{
+  display:grid!important;
+  grid-template-rows:auto auto!important;
+  place-items:center!important;
+  min-width:0!important;
+  overflow:hidden!important;
+}
+.host-lyric-view-page #songInfoDrawer .ls26-bpm-current-value input{
+  display:block!important;
+  min-width:0!important;
+  width:100%!important;
+  padding:0!important;
+  border:0!important;
+  background:transparent!important;
+  text-align:center!important;
+  line-height:1!important;
+}
+.host-lyric-view-page #songInfoDrawer .ls26-bpm-current-value small{
+  margin-top:4px!important;
+  text-align:center!important;
+}
+.host-lyric-view-page #songInfoDrawer .ls26-karaoke-toggle{
+  cursor:pointer!important;
+}

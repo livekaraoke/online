@@ -1132,3 +1132,54 @@
   background:#07384d!important;
   box-shadow:0 0 22px rgba(0,202,250,.26)!important;
 }
+
+
+/* The return-to-top control lives over the bottom edge, appears only while
+   the performer/editor is scrolling upward, and never reserves page space. */
+.creator-page .creator-scroll-top{
+  position:fixed!important;
+  left:50%!important;
+  bottom:max(16px,env(safe-area-inset-bottom,0px))!important;
+  z-index:4200!important;
+  display:grid!important;
+  place-items:center!important;
+  width:68px!important;
+  height:68px!important;
+  min-width:68px!important;
+  min-height:68px!important;
+  margin:0!important;
+  padding:0!important;
+  transform:translateX(-50%) translateY(12px)!important;
+  border:2px solid rgba(0,202,250,.86)!important;
+  border-radius:50%!important;
+  background:rgba(4,40,58,.76)!important;
+  color:#fff!important;
+  box-shadow:0 0 22px rgba(0,202,250,.20)!important;
+  opacity:0!important;
+  visibility:hidden!important;
+  pointer-events:none!important;
+  transition:opacity .16s ease,transform .16s ease,visibility .16s ease!important;
+  backdrop-filter:blur(3px)!important;
+  -webkit-backdrop-filter:blur(3px)!important;
+}
+.creator-page .creator-scroll-top.is-visible{
+  opacity:.86!important;
+  visibility:visible!important;
+  pointer-events:auto!important;
+  transform:translateX(-50%) translateY(0)!important;
+}
+.creator-page .creator-scroll-top span{
+  display:grid!important;
+  place-items:center!important;
+  width:100%!important;
+  height:100%!important;
+  font-size:38px!important;
+  font-weight:1000!important;
+  line-height:1!important;
+  text-align:center!important;
+  transform:translateY(-2px)!important;
+}
+.creator-page .creator-scroll-top:hover{
+  opacity:1!important;
+  background:rgba(7,56,77,.90)!important;
+}

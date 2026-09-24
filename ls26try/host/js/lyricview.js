@@ -320,7 +320,10 @@
       currentSong={...currentSong,note:value};
       setInfo(currentSong);
       $("songNoteSaveStatus").textContent="Saved";
-      setTimeout(closeSongNoteModal,250);
+      setTimeout(() => {
+        closeSongNoteModal();
+        window.LS26?.toast("Song note saved successfully.");
+      },250);
     }catch(error){
       console.error("Could not save song note:",error);
       $("songNoteSaveStatus").textContent=error.message||"Could not save note.";
@@ -575,7 +578,7 @@
       const body = document.createElement("div");
       body.className = "host-section-body";
       body.style.fontFamily = section.style?.fontFamily || "Verdana, Arial, sans-serif";
-      if (section.style?.fontSize) body.style.fontSize = `${Number(section.style.fontSize) || 18}px`;
+      body.style.fontSize = `${Number(section.style?.fontSize) || 23}px`;
       if (section.style?.color) body.style.color = section.style.color;
       body.style.textAlign = ["left","center","right"].includes(section.style?.textAlign) ? section.style.textAlign : "left";
 
@@ -813,15 +816,22 @@
     return m ? {root:m[1]+m[2], suffix:m[3]} : null;
   }
   const NOTES_SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
+  const NOTES_FLAT = ["C","Db","D","Eb","E","F","Gb","G","Ab","A","Bb","B"];
   const NOTE_INDEX = {C:0,"B#":0,"C#":1,Db:1,D:2,"D#":3,Eb:3,E:4,Fb:4,F:5,"E#":5,"F#":6,Gb:6,G:7,"G#":8,Ab:8,A:9,"A#":10,Bb:10,B:11,Cb:11};
   function transposeChordToken(token, shift) {
+    const normalizedShift = ((Number(shift) || 0) % 12 + 12) % 12;
+    // Zero transpose is identity: never rewrite Bb as A# (or vice versa).
+    if (normalizedShift === 0) return token;
     const split = token.split("/");
     const main = chordParts(split[0]);
     if (!main || NOTE_INDEX[main.root] == null) return token;
-    const root = NOTES_SHARP[(NOTE_INDEX[main.root]+shift+120)%12] + main.suffix;
+    const mainNotes = main.root.includes("b") ? NOTES_FLAT : NOTES_SHARP;
+    const root = mainNotes[(NOTE_INDEX[main.root]+normalizedShift)%12] + main.suffix;
     if (!split[1]) return root;
     const bass = chordParts(split[1]);
-    return bass && NOTE_INDEX[bass.root] != null ? `${root}/${NOTES_SHARP[(NOTE_INDEX[bass.root]+shift+120)%12]}${bass.suffix}` : root;
+    if (!bass || NOTE_INDEX[bass.root] == null) return root;
+    const bassNotes = bass.root.includes("b") ? NOTES_FLAT : NOTES_SHARP;
+    return `${root}/${bassNotes[(NOTE_INDEX[bass.root]+normalizedShift)%12]}${bass.suffix}`;
   }
 
   function captureOriginalChordText() {

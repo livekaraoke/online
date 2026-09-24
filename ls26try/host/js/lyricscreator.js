@@ -1597,7 +1597,40 @@
       ?.classList.toggle("defaults-collapsed", !opening);
   };
   if ($("lyricsCreatorScrollTop")) {
-    $("lyricsCreatorScrollTop").onclick = () => {
+    const scrollTopButton = $("lyricsCreatorScrollTop");
+    let lastCreatorScrollY = window.scrollY;
+    let creatorScrollTopHideTimer = 0;
+    let returningToTop = false;
+
+    const setCreatorScrollTopVisible = visible => {
+      scrollTopButton.classList.toggle("is-visible", !!visible);
+      scrollTopButton.setAttribute("aria-hidden", visible ? "false" : "true");
+    };
+
+    setCreatorScrollTopVisible(false);
+
+    window.addEventListener("scroll", () => {
+      const y = Math.max(0, window.scrollY);
+      const scrollingUp = y < lastCreatorScrollY;
+      if (y === 0) returningToTop = false;
+
+      if (y < 140 || returningToTop) {
+        setCreatorScrollTopVisible(false);
+      } else if (scrollingUp) {
+        setCreatorScrollTopVisible(true);
+        clearTimeout(creatorScrollTopHideTimer);
+        creatorScrollTopHideTimer = setTimeout(() => setCreatorScrollTopVisible(false), 1300);
+      } else if (y > lastCreatorScrollY) {
+        setCreatorScrollTopVisible(false);
+      }
+
+      lastCreatorScrollY = y;
+    }, { passive:true });
+
+    scrollTopButton.onclick = () => {
+      returningToTop = true;
+      clearTimeout(creatorScrollTopHideTimer);
+      setCreatorScrollTopVisible(false);
       window.scrollTo({
         top:0,
         behavior:matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth"

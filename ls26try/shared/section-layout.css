@@ -1,0 +1,80 @@
+/* Shared lyric canvas: identical text measure on the same viewport and settings.
+   Use containing-block percentages, not 100vw (which includes scrollbars).
+   Keep the editor's toolbars outside the scaled text surface. */
+:root { --ls26-section-gutter: 20px; }
+@media (max-width: 900px) { :root { --ls26-section-gutter: 10px; } }
+.creator-page .creator-shell,
+.host-lyric-view-page #hostLyricsStage {
+  box-sizing: border-box !important;
+  width: 100% !important;
+  max-width: none !important;
+  padding-left: var(--ls26-section-gutter) !important;
+  padding-right: var(--ls26-section-gutter) !important;
+}
+/* LyricView's body has an existing 12px inset around its shared header. */
+.creator-page .creator-shell {
+  padding-left: calc(var(--ls26-section-gutter) + 12px) !important;
+  padding-right: calc(var(--ls26-section-gutter) + 12px) !important;
+}
+.creator-page .creator-section-tools {
+  width: 100%;
+  padding: 0;
+  border: 0;
+}
+.creator-page .creator-sections,
+.creator-page .creator-section-body,
+.host-lyric-view-page #lyricsContent {
+  width: 100% !important;
+  margin-inline: 0 !important;
+  padding-inline: 0 !important;
+  border-inline: 0 !important;
+}
+.creator-page .creator-section-card,
+.host-lyric-view-page .host-section {
+  box-sizing: border-box !important;
+  width: 100% !important;
+  margin-inline: 0 !important;
+  padding-inline: 0 !important;
+  border-inline: 0 !important;
+}
+.creator-page .creator-rich-editor,
+.host-lyric-view-page .host-section-body {
+  box-sizing: border-box !important;
+  width: auto !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  margin-inline: 0 !important;
+  border-inline: 0 !important;
+  padding-left: 16px !important;
+  padding-right: 16px !important;
+  zoom: var(--ls26-lyric-text-scale, 1);
+  line-height: 1.5;
+  white-space: break-spaces !important;
+  overflow-wrap: anywhere !important;
+  word-break: normal !important;
+  hyphens: none !important;
+  tab-size: 4;
+  font-kerning: none !important;
+  font-variant-ligatures: none !important;
+  font-feature-settings: "kern" 0, "liga" 0, "clig" 0 !important;
+  letter-spacing: normal;
+  text-rendering: geometricPrecision;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+.creator-page .type-lyrics .creator-rich-editor { font-weight: 600; }
+.creator-page .creator-rich-editor * {
+  white-space: inherit !important;
+  overflow-wrap: inherit !important;
+  word-break: inherit !important;
+  hyphens: inherit !important;
+  font-kerning: inherit !important;
+  font-variant-ligatures: inherit !important;
+  font-feature-settings: inherit !important;
+}
+.creator-page .creator-rich-editor ul,
+.creator-page .creator-rich-editor ol {
+  margin: .35em 0 .35em 1.45em !important;
+  padding-left: 1.1em !important;
+}
+.creator-page .creator-rich-editor .chord-token { font-weight: 900; }
