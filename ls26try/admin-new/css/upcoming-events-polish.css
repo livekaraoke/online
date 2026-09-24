@@ -390,3 +390,158 @@
     grid-row:3!important;
   }
 }
+
+
+/* =========================================================
+   GIG LIST DETAIL POLISH — 2026-09-24 B
+   ========================================================= */
+.event-row{
+  grid-template-columns:82px minmax(0,1fr) 118px auto!important;
+  grid-template-rows:auto auto!important;
+  align-items:start!important;
+}
+.event-date-block{
+  grid-column:1!important;
+  grid-row:1 / span 2!important;
+  align-self:stretch!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:2px!important;
+  min-height:78px!important;
+}
+.event-date-block .event-date-weekday{
+  color:var(--ls-accent,#00cafa)!important;
+  font-size:8px!important;
+  font-weight:950!important;
+  letter-spacing:.10em!important;
+  line-height:1!important;
+}
+.event-date-block strong{
+  margin:3px 0 1px!important;
+  font-size:25px!important;
+}
+.event-date-block .event-date-month{
+  margin:0!important;
+  color:#a9c2d1!important;
+  font-size:9px!important;
+  font-weight:950!important;
+  line-height:1!important;
+  letter-spacing:.08em!important;
+}
+.event-date-block .event-date-year{
+  margin-top:1px!important;
+  color:#7892a1!important;
+  font-size:8px!important;
+  font-weight:900!important;
+  letter-spacing:.08em!important;
+  line-height:1!important;
+}
+.event-row-title{
+  grid-column:2 / -1!important;
+  grid-row:1!important;
+  display:block!important;
+  min-width:0!important;
+  padding:1px 4px 8px 0!important;
+  color:#f0f8fd!important;
+  font-size:16px!important;
+  font-weight:900!important;
+  line-height:1.25!important;
+}
+.event-main{
+  grid-column:2!important;
+  grid-row:2!important;
+  min-width:0!important;
+}
+.event-badges{
+  grid-column:3!important;
+  grid-row:2!important;
+  align-self:start!important;
+}
+.event-actions{
+  grid-column:4!important;
+  grid-row:2!important;
+  align-self:start!important;
+}
+/* Values bright, labels deliberately quieter. */
+.event-main .event-schedule-meta,
+.event-main .event-extra-meta,
+.event-main .event-notes-preview{
+  color:#e0f0f8!important;
+}
+.event-main .event-schedule-meta b,
+.event-main .event-extra-meta b,
+.event-main .event-notes-preview b{
+  color:#7892a1!important;
+  font-weight:850!important;
+}
+.event-main em{
+  color:#e6f4fb!important;
+  font-style:normal!important;
+  font-weight:650!important;
+}
+.event-main .event-notes-preview{
+  margin-top:5px!important;
+}
+
+/* Full-width next-gig card immediately above calendar toggle. */
+.events-next-gig-hero{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) auto!important;
+  gap:18px!important;
+  align-items:center!important;
+  width:100%!important;
+  box-sizing:border-box!important;
+  margin:0 0 10px!important;
+  padding:15px 17px!important;
+  border:1px solid #27617a!important;
+  border-radius:10px!important;
+  background:linear-gradient(135deg,#062536,#031722)!important;
+}
+.events-next-gig-copy,
+.events-next-gig-countdown{display:grid!important;gap:3px!important}
+.events-next-gig-copy>span,
+.events-next-gig-countdown>span{
+  color:var(--ls-accent,#00cafa)!important;
+  font-size:9px!important;
+  font-weight:950!important;
+  letter-spacing:.09em!important;
+}
+.events-next-gig-copy>strong{
+  color:#f2f9fc!important;
+  font-size:20px!important;
+  line-height:1.15!important;
+}
+.events-next-gig-copy>small{color:#91adbd!important}
+.events-next-gig-countdown{
+  min-width:190px!important;
+  padding-left:18px!important;
+  border-left:1px solid #23546a!important;
+  text-align:right!important;
+}
+.events-next-gig-countdown>strong{
+  color:#ffd45c!important;
+  font-size:25px!important;
+  line-height:1.05!important;
+}
+.events-next-gig-countdown>small{color:#8ea7b7!important}
+
+@media(max-width:720px){
+  .event-row{
+    grid-template-columns:68px minmax(0,1fr) auto!important;
+  }
+  .event-row-title{grid-column:2/-1!important}
+  .event-main{grid-column:2/-1!important}
+  .event-badges{grid-column:2!important;grid-row:3!important;display:flex!important;gap:6px!important}
+  .event-actions{grid-column:3!important;grid-row:3!important}
+  .event-date-block{grid-row:1 / span 3!important}
+  .events-next-gig-hero{grid-template-columns:1fr!important}
+  .events-next-gig-countdown{
+    min-width:0!important;
+    padding:10px 0 0!important;
+    border-left:0!important;
+    border-top:1px solid #23546a!important;
+    text-align:left!important;
+  }
+}
