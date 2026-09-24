@@ -729,6 +729,13 @@
     });
   }
 
+  function sectionActivationOffset() {
+    const fromSettings = Number(window.LS26Settings?.get?.().lyricSectionActivationOffset);
+    if (Number.isFinite(fromSettings)) return fromSettings;
+    const cssValue = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--ls26-section-activation-offset"));
+    return Number.isFinite(cssValue) ? cssValue : 180;
+  }
+
   function scrollToSection(index) {
     if (!sectionEls.length) return;
     cancelAnimationFrame(relativeScrollFrame);
@@ -757,7 +764,7 @@
     if (!sectionEls.length || Date.now()<manualSectionUntil) return;
 
     const header=document.getElementById("ls26StickyHeader"),quick=document.getElementById("performanceQuickInfo");
-    const anchor=(header?.getBoundingClientRect().height||0)+(quick&&!quick.classList.contains("ls26-released")?quick.getBoundingClientRect().height:0)+24;
+    const anchor=(header?.getBoundingClientRect().height||0)+(quick&&!quick.classList.contains("ls26-released")?quick.getBoundingClientRect().height:0)+sectionActivationOffset();
     let bestIndex = 0;
     sectionEls.forEach((el,i)=>{if(el.getBoundingClientRect().top<=anchor)bestIndex=i;});
 
@@ -1478,6 +1485,7 @@
 
     await finalizeCurrentSongPlayed();
     showEndNextSongButton(true);
+    if ($("endSessionActions")) $("endSessionActions").hidden = false;
     await renderEndNextSongDetails();
   }
 
@@ -1681,6 +1689,7 @@
       window.LS26?.enterFullscreen?.();
       autoScrollEndHandled = false;
       showEndNextSongButton(false);
+      if ($("endSessionActions")) $("endSessionActions").hidden = true;
       if ($("endNextSongDetailsCard")) {
         $("endNextSongDetailsCard").hidden = true;
         $("endNextSongDetailsCard").innerHTML = "";
@@ -1853,10 +1862,40 @@
     if ($("quickSendSlaveLyricsBtn")) {
       $("quickSendSlaveLyricsBtn").onclick = () => sendSlaveLyrics("quickSlaveLyricsSelect");
     }
-    $("adminShortcutBtn").onclick = () => window.open("../admin-new/admin.html","_blank","noopener");
+    if ($("endGoLibraryBtn")) {
+      $("endGoLibraryBtn").onclick = () => location.href = "../library.html";
+    }
+    if ($("endStartBreakBtn")) {
+      $("endStartBreakBtn").onclick = async () => {
+        const sessionId = window.LK?.sessionTools?.getSessionId?.() || "";
+        if (!sessionId) {
+          await showModal("No Active Session", "There is no active Performance Session to put on break.");
+          return;
+        }
+        const breakButton = $("tsBreakActionBtn");
+        if (!breakButton || breakButton.disabled) {
+          await showModal("Break Unavailable", "The break control is not available right now.");
+          return;
+        }
+        breakButton.click();
+      };
+    }
+    if ($("endSessionBtn")) {
+      $("endSessionBtn").onclick = async () => {
+        const sessionId = window.LK?.sessionTools?.getSessionId?.() || "";
+        if (!sessionId) {
+          await showModal("No Active Session", "There is no active Performance Session to end.");
+          return;
+        }
+        const ok = await showModal("End Session?", "This will end the current Performance Session and return to Admin.", true);
+        if (!ok) return;
+        location.href = `../admin-new/admin.html?endSession=${encodeURIComponent(sessionId)}`;
+      };
+    }
     $("myNotesInput").addEventListener("input",() => { clearTimeout(notesSaveTimer); notesSaveTimer=setTimeout(saveMyNotes,5000); });
     window.addEventListener("scroll",updateSectionProgress,{passive:true});
     window.addEventListener("resize",updateSectionProgress);
+    window.addEventListener("ls26:settings-applied",() => requestAnimationFrame(updateSectionProgress));
     document.addEventListener("keydown", e => {
       if (e.key === "ArrowDown" && e.altKey) smoothRelativeScroll(1);
       if (e.key === "ArrowUp" && e.altKey) smoothRelativeScroll(-1);
