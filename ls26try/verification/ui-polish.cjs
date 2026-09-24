@@ -51,6 +51,26 @@ __fixture.data['upcomingEvents/past']={name:'Old unclosed booking',date:'2020-01
  }
  await page.setViewportSize({width:1024,height:900});
  await page.goto(url+'/ls26try/host/lyricview.html?id=song0');await page.waitForTimeout(400);
+ const checkFooter=async()=>{
+  const geometry=await page.evaluate(()=>{
+   const footer=document.querySelector('.ls26-footer').getBoundingClientRect();
+   const dock=document.querySelector('.host-bottom-dock').getBoundingClientRect();
+   const nav=document.querySelector('.host-nav-pad').getBoundingClientRect();
+   return {footerBottom:footer.bottom,footerTop:footer.top,dockBottom:dock.bottom,dockTop:dock.top,navBottom:nav.bottom,height:innerHeight};
+  });
+  assert.equal(geometry.footerBottom,geometry.height,'footer touches viewport bottom');
+  assert.ok(geometry.dockBottom<=geometry.footerTop,'player sits above footer');
+  assert.ok(geometry.navBottom<=geometry.dockTop,'arrows stay above the player');
+ };
+ await checkFooter();
+ await page.evaluate(()=>scrollTo(0,document.body.scrollHeight));await page.waitForTimeout(100);await checkFooter();
+ assert.equal((await page.locator('.ls26-admin-nav').innerText()).trim(),'⚙');
+ assert.equal((await page.locator('#ls26Fullscreen').innerText()).trim(),'');
+ await page.locator('#ls26Fullscreen').click();await page.waitForTimeout(100);await checkFooter();
+ assert.equal(await page.locator('#ls26Fullscreen').getAttribute('aria-pressed'),'true');
+ await page.locator('#ls26Fullscreen').click();await page.waitForTimeout(100);
+ await page.evaluate(()=>scrollTo(0,0));
+ console.log('PASS footer/player/arrow ordering while scrolled and fullscreen; icon navigation');
  assert.equal(await page.locator('[data-original-chord="Bb"]').first().textContent(),'Bb');
  await page.locator('#songInfoBtn').click();await page.waitForTimeout(200);
  assert.equal(await page.locator('#songInfoDrawer').getAttribute('aria-hidden'),'false');
@@ -75,13 +95,14 @@ __fixture.data['upcomingEvents/past']={name:'Old unclosed booking',date:'2020-01
  console.log('PASS Bb spelling, tempo controls, karaoke checkbox and note save/toast');
  await page.goto(url+'/ls26try/host/lyricscreator.html?firebaseId=song0');await page.waitForTimeout(300);
  await page.evaluate(()=>window.scrollTo(0,1400));await page.waitForTimeout(120);
- assert.equal(await page.locator('#lyricsCreatorScrollTop').isVisible(),false);
+ assert.equal(await page.locator('#lyricsCreatorScrollTop').isVisible(),true);
  await page.evaluate(()=>window.scrollTo(0,1200));await page.waitForTimeout(120);
  assert.equal(await page.locator('#lyricsCreatorScrollTop').isVisible(),true);
  if(artifacts)await page.screenshot({path:path.join(artifacts,'creator.png')});
  await page.locator('#lyricsCreatorScrollTop').click();await page.waitForFunction(()=>window.scrollY===0);
- assert.equal(await page.locator('#lyricsCreatorScrollTop').isVisible(),false);
- console.log('PASS upward-only sticky return control');
+ assert.equal(await page.locator('#lyricsCreatorScrollTop').isVisible(),true);
+ assert.equal(await page.locator('.creator-section-card').first().evaluate(el=>getComputedStyle(el).borderLeftWidth),'1px');
+ console.log('PASS always-visible sticky return control and restored section outline');
  await page.goto(url+'/ls26try/admin-new/upcoming-events.html');await page.waitForTimeout(400);
  assert.equal(await page.locator('#eventsNextGigHeroTitle').innerText(),'Evening at the harbour');
  assert.equal(await page.locator('#eventsNextGigCountdownDate').innerText(),'FRI 25 SEP 2026');
@@ -92,11 +113,32 @@ __fixture.data['upcomingEvents/past']={name:'Old unclosed booking',date:'2020-01
  await page.locator('[data-event-id="next"]').first().scrollIntoViewIfNeeded();
  if(artifacts)await page.screenshot({path:path.join(artifacts,'events-row.png')});
  const date=await page.locator('[data-event-id="next"] .event-date-block').innerText();assert.match(date,/FRI\s+25\s+SEP\s+2026/);
+ for(const width of [768,1024,1280]){
+  await page.setViewportSize({width,height:900});
+  const row=page.locator('article[data-event-id="next"]');
+  const badges=await row.locator('.event-badges').boundingBox(),actions=await row.locator('.event-actions').boundingBox();
+  assert.equal(await row.locator('.event-schedule-meta span').first().evaluate(el=>getComputedStyle(el).fontSize),'12px');
+  assert.equal(await row.locator('.event-date-block strong').evaluate(el=>getComputedStyle(el).fontSize),'34px');
+  assert.ok(badges.y+badges.height<=actions.y+1,'badges above edit/delete at '+width);
+  assert.ok(Math.abs((badges.x+badges.width/2)-(actions.x+actions.width/2))<2,'actions aligned below badges');
+ }
  await page.locator('#toggleEventsCalendarBtn').click();assert.equal(await page.locator('#eventsCalendarPanel').isVisible(),true);
  console.log('PASS next gig, separate date rows, local countdown and calendar toggle');
  await page.goto(url+'/ls26try/admin-new/admin.html');await page.waitForTimeout(400);
  assert.equal(await page.locator('#liveCircleBtn').isDisabled(),true);
  assert.equal(await page.locator('#liveCircleBtn').getAttribute('onclick'),null);
  console.log('PASS read-only dashboard indicator');
+ await page.goto(url+'/ls26try/admin-new/app-settings.html');await page.waitForTimeout(400);
+ await page.locator('#lyricNavHorizontalGap').fill('12');await page.locator('#lyricNavHorizontalGap').dispatchEvent('input');
+ await page.locator('#lyricNavVerticalGap').fill('18');await page.locator('#lyricNavVerticalGap').dispatchEvent('input');
+ await page.locator('#saveSettingsBtn').click();await page.waitForFunction(()=>document.getElementById('settingsStatus').textContent==='Settings saved');
+ assert.equal(await page.evaluate(()=>__fixture.data['noteSettings/livesuiteAppSettings'].lyricNavHorizontalGap),12);
+ assert.equal(await page.evaluate(()=>__fixture.data['noteSettings/livesuiteAppSettings'].lyricNavVerticalGap),18);
+ await page.goto(url+'/ls26try/host/lyricview.html?id=song0');await page.waitForTimeout(400);
+ const spacing=await page.locator('.host-nav-pad').evaluate(el=>{const s=getComputedStyle(el);return {x:s.columnGap,y:s.rowGap,width:el.getBoundingClientRect().width,height:el.getBoundingClientRect().height};});
+ assert.deepEqual(spacing,{x:'12px',y:'18px',width:264,height:300});
+ await checkFooter();
+ if(artifacts)await page.screenshot({path:path.join(artifacts,'footer-spacing.png')});
+ console.log('PASS saved horizontal/vertical spacing applied on LyricView navigation');
  await browser.close();server.close();
 })().catch(e=>{console.error(e);server.close();process.exit(1)});

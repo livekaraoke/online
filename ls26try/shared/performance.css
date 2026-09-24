@@ -272,8 +272,8 @@ body.host-lyric-view-page{overflow:visible!important}
 .host-lyric-view-page .host-section-body{zoom:var(--ls26-lyric-text-scale,1)}
 @media(min-width:701px){
   .host-lyric-view-page .host-nav-pad{
-    width:calc(var(--ls26-nav-horizontal-size,72px) * 2 + var(--ls26-nav-vertical-size,96px))!important;
-    height:calc(var(--ls26-nav-vertical-size,96px) * 2 + var(--ls26-nav-horizontal-size,72px))!important;
+    width:calc(var(--ls26-nav-horizontal-size,72px) * 2 + var(--ls26-nav-vertical-size,96px) + var(--ls26-nav-horizontal-gap,0px) * 2)!important;
+    height:calc(var(--ls26-nav-vertical-size,96px) * 2 + var(--ls26-nav-horizontal-size,72px) + var(--ls26-nav-vertical-gap,0px) * 2)!important;
     grid-template-columns:var(--ls26-nav-horizontal-size,72px) var(--ls26-nav-vertical-size,96px) var(--ls26-nav-horizontal-size,72px)!important;
     grid-template-rows:var(--ls26-nav-vertical-size,96px) var(--ls26-nav-horizontal-size,72px) var(--ls26-nav-vertical-size,96px)!important;
   }
@@ -998,4 +998,27 @@ html.ls26-reduce-glow .performance-quick-info{box-shadow:none!important;filter:n
 }
 .host-lyric-view-page #songInfoDrawer .ls26-karaoke-toggle{
   cursor:pointer!important;
+}
+
+/* Pin branding below the player, including the device's bottom safe area. */
+.host-lyric-view-page{--ls26-footer-height:calc(64px + env(safe-area-inset-bottom,0px))}
+.host-lyric-view-page > .ls26-footer{
+  position:fixed!important;
+  inset:auto 0 0!important;
+  height:var(--ls26-footer-height)!important;
+  margin:0!important;
+  padding:8px 12px calc(8px + env(safe-area-inset-bottom,0px))!important;
+  background:var(--ls-bg)!important;
+  z-index:2200!important;
+}
+.host-lyric-view-page .host-bottom-dock{bottom:calc(var(--ls26-footer-height) + 8px)!important}
+.host-lyric-view-page .host-nav-pad{
+  column-gap:var(--ls26-nav-horizontal-gap,0px)!important;
+  row-gap:var(--ls26-nav-vertical-gap,0px)!important;
+}
+@media(max-width:700px){
+  .host-lyric-view-page .host-nav-pad{
+    width:calc(195px + var(--ls26-nav-horizontal-gap,0px) * 2)!important;
+    height:calc(200px + var(--ls26-nav-vertical-gap,0px) * 2)!important;
+  }
 }

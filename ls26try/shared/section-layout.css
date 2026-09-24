@@ -1,8 +1,8 @@
 /* Shared lyric canvas: identical text measure on the same viewport and settings.
    Use containing-block percentages, not 100vw (which includes scrollbars).
    Keep the editor's toolbars outside the scaled text surface. */
-:root { --ls26-section-gutter: 20px; }
-@media (max-width: 900px) { :root { --ls26-section-gutter: 10px; } }
+:root { --ls26-section-gutter: 8px; }
+@media (max-width: 900px) { :root { --ls26-section-gutter: 4px; } }
 .creator-page .creator-shell,
 .host-lyric-view-page #hostLyricsStage {
   box-sizing: border-box !important;
@@ -35,7 +35,11 @@
   width: 100% !important;
   margin-inline: 0 !important;
   padding-inline: 0 !important;
-  border-inline: 0 !important;
+  border-inline: 1px solid transparent !important;
+}
+.creator-page .creator-section-card {
+  border: 1px solid #1e4b60 !important;
+  border-radius: 8px;
 }
 .creator-page .creator-rich-editor,
 .host-lyric-view-page .host-section-body {
@@ -45,8 +49,8 @@
   max-width: none !important;
   margin-inline: 0 !important;
   border-inline: 0 !important;
-  padding-left: 16px !important;
-  padding-right: 16px !important;
+  padding-left: 10px !important;
+  padding-right: 10px !important;
   zoom: var(--ls26-lyric-text-scale, 1);
   line-height: 1.5;
   white-space: break-spaces !important;

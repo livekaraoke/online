@@ -5,6 +5,7 @@
     "showTopStatusWhenInactive","statusValueFontSize","statusLabelFontSize",
     "userBpmColor","originalBpmColor","keyColor","capoColor",
     "lyricNavVerticalSize","lyricNavHorizontalSize","lyricTextScale",
+    "lyricNavHorizontalGap","lyricNavVerticalGap",
     "lyricLeadInHeight","lyricSectionActivationOffset",
     "libraryRowHeight","reduceGlow"
   ];
