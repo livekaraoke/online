@@ -219,3 +219,12 @@
   pointer-events:none!important;
   filter:none!important;
 }
+
+
+/* LIVE STATUS INDICATOR ONLY — 2026-09-24 */
+#liveCircleBtn.status-indicator,
+#liveCircleBtn:disabled{
+  pointer-events:none!important;
+  cursor:default!important;
+  opacity:1!important;
+}
