@@ -208,7 +208,6 @@
     const links = (Array.isArray(values) ? values : [values])
       .map(value => String(value || "").trim());
     const displayLabels = Array.isArray(labels) ? labels : [];
-    while (links.length > 1 && !links[links.length - 1]) links.pop();
     if (!links.length) links.push("");
     list.innerHTML = links.map((value, index) => `
       <div class="creator-youtube-link-row">
