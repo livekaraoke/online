@@ -255,6 +255,32 @@
     return result;
   }
 
+  function timestampMs(value) {
+    const date = tsDate(value);
+    return date ? date.getTime() : 0;
+  }
+
+  function requestOrderMs(item) {
+    return Number(item?.requestedAtMs || item?.createdAtMs || 0) ||
+      timestampMs(item?.requestedAt || item?.createdAt || item?.submittedAt || item?.timestamp);
+  }
+
+  function playedOrderMs(item) {
+    return Number(item?.playingAtMs || item?.playedAtMs || item?.startedAtMs || 0) ||
+      timestampMs(item?.playedAt || item?.startedAt || item?.playingAt || item?.createdAt || item?.updatedAt);
+  }
+
+  function chronological(items, getter) {
+    return (Array.isArray(items) ? items : [])
+      .map((item,index) => ({item,index,time:getter(item)}))
+      .sort((a,b) => {
+        const at = a.time || Number.MAX_SAFE_INTEGER;
+        const bt = b.time || Number.MAX_SAFE_INTEGER;
+        return at - bt || a.index - b.index;
+      })
+      .map(entry => entry.item);
+  }
+
   function requestStatusLabel(status) {
     const value = String(status || "").toLowerCase();
 
@@ -315,6 +341,9 @@
       console.warn("Could not load complete session records:", error);
     }
 
+    requests = chronological(requests, requestOrderMs);
+    played = chronological(played, playedOrderMs);
+
     return { requests, played, runOrder };
   }
 
@@ -337,7 +366,7 @@
       ? records.requests.map(request => `
           <div class="dashboard-record-row">
             <strong>${esc(request.songTitle || request.title || "Untitled Song")} — ${esc(request.artist || request.songArtist || "")}</strong>
-            <span>${esc(request.singerName || request.name || "Singer")}</span>
+            <span>${esc(request.singerName || request.name || "Singer")} · ${esc(formatTime(tsDate(request.requestedAt || request.createdAt || request.submittedAt || request.timestamp)))}</span>
             <span>${esc(requestStatusLabel(request.status))}</span>
           </div>
         `).join("")
@@ -353,15 +382,19 @@
         `).join("")
       : `<div class="dashboard-detail-copy">No played-song records.</div>`;
 
-    const runRows = records.runOrder.length
-      ? records.runOrder.map((item, index) => `
-          <div class="dashboard-record-row">
-            <strong>${index + 1}. ${esc(item.songTitle || item.songId || "Untitled Song")}</strong>
-            <span>${esc(item.singerName || item.source || "")}</span>
-            <span>${esc(item.status || "queued")}</span>
-          </div>
-        `).join("")
-      : `<div class="dashboard-detail-copy">No Run Order snapshot.</div>`;
+    const runOrderSection = records.runOrder.length
+      ? `
+        <div class="dashboard-detail-section">
+          <h3>FINAL RUN ORDER (${records.runOrder.length})</h3>
+          <div class="dashboard-record-list">${records.runOrder.map((item,index) => `
+            <div class="dashboard-record-row">
+              <strong>${index + 1}. ${esc(item.songTitle || item.songId || "Untitled Song")}</strong>
+              <span>${esc(item.singerName || item.source || "")}</span>
+              <span>${esc(item.status || "queued")}</span>
+            </div>
+          `).join("")}</div>
+        </div>`
+      : "";
 
     openDetailModal(`
       <div class="dashboard-detail-head">
@@ -404,10 +437,7 @@
         <div class="dashboard-record-list">${playedRows}</div>
       </div>
 
-      <div class="dashboard-detail-section">
-        <h3>FINAL RUN ORDER (${records.runOrder.length})</h3>
-        <div class="dashboard-record-list">${runRows}</div>
-      </div>
+      ${runOrderSection}
 
       <div class="admin-modal-actions">
         <button
