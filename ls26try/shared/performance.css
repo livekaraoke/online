@@ -406,3 +406,177 @@ html.ls26-reduce-glow .performance-quick-info{box-shadow:none!important;filter:n
   box-shadow:0 0 0 1px rgba(0,232,138,.08)!important;
 }
 #songNoteModal #songNoteSaveBtn:hover{background:#08684c!important}
+
+
+/* =========================================================
+   FOLLOW-UP PERFORMANCE LAYOUT — 2026-09-24
+   ========================================================= */
+
+/* Compact strip: slightly stronger timing values, same size, without touching requests/clock. */
+#ls26StickyHeader #topStatusBar #tsCompactStarted,
+#ls26StickyHeader #topStatusBar #tsCompactElapsed,
+#ls26StickyHeader #topStatusBar #tsCompactRemaining{
+  font-size:21px!important;
+  line-height:1.05!important;
+}
+#ls26StickyHeader #topStatusBar #tsCompactType{
+  font-size:16px!important;
+  line-height:1.15!important;
+}
+
+/* Session Status tab must fit as a dashboard, not make the whole expanded area scroll. */
+#ls26StickyHeader #topStatusBar:not(.collapsed) .host-status-expanded:has(#tsSessionStatusPane:not([hidden])){
+  height:auto!important;
+  max-height:none!important;
+  overflow:visible!important;
+}
+#ls26StickyHeader #topStatusBar #tsSessionStatusPane:not([hidden]){
+  min-height:0!important;
+  height:auto!important;
+  max-height:none!important;
+  overflow:visible!important;
+  padding:6px!important;
+}
+#topStatusBar #tsSessionStatusPane .ls26-session-grid{
+  gap:8px!important;
+}
+#topStatusBar #tsSessionStatusPane .ls26-session-card{
+  padding:11px 13px!important;
+  min-height:0!important;
+}
+#topStatusBar #tsSessionStatusPane .ls26-session-card .ls26-eyebrow{
+  font-size:11px!important;
+  line-height:1!important;
+  white-space:nowrap!important;
+}
+#topStatusBar #tsSessionStatusPane .ls26-session-card>p{
+  margin:4px 0!important;
+  font-size:15px!important;
+  line-height:1.2!important;
+}
+#topStatusBar #tsSessionStatusPane .ls26-session-card>strong{
+  margin:5px 0!important;
+  font-size:23px!important;
+  line-height:1.12!important;
+}
+#topStatusBar #tsSessionStatusPane .ls26-session-card>small:not(.ls26-eyebrow){
+  font-size:13px!important;
+}
+#topStatusBar #tsSessionStatusPane .ls26-session-schedule{
+  gap:8px!important;
+  margin-top:8px!important;
+  padding:9px 0!important;
+}
+#topStatusBar #tsSessionStatusPane .ls26-session-schedule small{
+  font-size:11px!important;
+}
+#topStatusBar #tsSessionStatusPane .ls26-session-schedule strong{
+  font-size:21px!important;
+  line-height:1!important;
+}
+#topStatusBar #tsSessionStatusPane .ls26-public-list-name{
+  margin:5px 0 7px!important;
+  font-size:18px!important;
+  line-height:1.1!important;
+}
+#topStatusBar #tsSessionStatusPane .ls26-requests-state{
+  margin:6px 0!important;
+  font-size:12px!important;
+  line-height:1.15!important;
+  white-space:nowrap!important;
+}
+#topStatusBar #tsSessionStatusPane .ls26-session-grid button{
+  min-height:42px!important;
+  margin-top:5px!important;
+  font-size:15px!important;
+}
+#topStatusBar #tsSessionStatusPane .ls26-session-lifecycle{
+  gap:8px!important;
+}
+#topStatusBar #tsSessionStatusPane .ls26-session-lifecycle button{
+  display:grid!important;
+  place-items:center!important;
+  align-items:center!important;
+  justify-content:center!important;
+  padding:0!important;
+  line-height:1!important;
+}
+#topStatusBar #tsSessionStatusPane .ls26-session-grid .ls26-break-action{
+  font-size:23px!important;
+  line-height:1!important;
+}
+#topStatusBar #tsSessionStatusPane .ls26-break-card{
+  padding:9px 13px!important;
+}
+#topStatusBar #tsSessionStatusPane .ls26-break-heading{
+  margin-bottom:4px!important;
+}
+#topStatusBar #tsSessionStatusPane .ls26-break-heading strong{
+  font-size:18px!important;
+}
+#topStatusBar #tsSessionStatusPane .ls26-break-heading span{
+  font-size:14px!important;
+}
+#ls26StickyHeader #tsSessionStatusPane .ls26-breaks{
+  max-height:118px!important;
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+  overscroll-behavior:contain!important;
+}
+#topStatusBar #tsSessionStatusPane .ls26-break-card table{
+  font-size:14px!important;
+}
+#topStatusBar #tsSessionStatusPane .ls26-break-card td,
+#topStatusBar #tsSessionStatusPane .ls26-break-card th{
+  padding:5px 7px!important;
+}
+#topStatusBar #tsSessionStatusPane .ls26-break-card>.ls26-muted{
+  margin:5px 0 0!important;
+  font-size:12px!important;
+}
+
+/* LyricView title row: title/meta/edit/info/dropdown all stay on one line on tablet. */
+.host-lyric-view-page #hostStickyStack>.host-view-topbar{
+  display:grid!important;
+  grid-template-columns:minmax(190px,1fr) minmax(360px,auto) auto!important;
+  align-items:center!important;
+  gap:8px!important;
+}
+.host-lyric-view-page #hostStickyStack .host-song-actions{
+  display:flex!important;
+  flex-wrap:nowrap!important;
+  align-items:center!important;
+  justify-content:flex-end!important;
+  gap:5px!important;
+  margin-left:auto!important;
+}
+.host-lyric-view-page #hostStickyStack #quickEditSongBtn,
+.host-lyric-view-page #hostStickyStack #songInfoBtn,
+.host-lyric-view-page #hostStickyStack #songActionsBtn{
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  min-height:48px!important;
+  margin:0!important;
+  white-space:nowrap!important;
+}
+.host-lyric-view-page #hostStickyStack #quickEditSongBtn,
+.host-lyric-view-page #hostStickyStack #songInfoBtn{
+  padding-inline:12px!important;
+  font-size:13px!important;
+}
+.host-lyric-view-page #hostStickyStack #songActionsBtn{
+  width:44px!important;
+  min-width:44px!important;
+  padding:0!important;
+}
+@media(max-width:900px){
+  .host-lyric-view-page #hostStickyStack>.host-view-topbar{
+    grid-template-columns:minmax(150px,1fr) minmax(330px,auto) auto!important;
+  }
+  .host-lyric-view-page #hostStickyStack #quickEditSongBtn,
+  .host-lyric-view-page #hostStickyStack #songInfoBtn{
+    padding-inline:9px!important;
+    font-size:12px!important;
+  }
+}

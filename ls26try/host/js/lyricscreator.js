@@ -48,9 +48,9 @@
   const FONTS = ["Verdana", "Arial", "Tahoma", "Trebuchet MS", "Georgia", "Times New Roman", "Courier New", "Consolas"];
   const FONT_SIZES = ["12", "14", "16", "18", "20", "24", "28", "32", "40", "48"];
   const COLOURS = [
-    ["White", "#ffffff"], ["Gray", "#9aa3ad"], ["Light Gray", "#d4d9de"], ["Red", "#ff4f5e"],
-    ["Bright Orange", "#ff9d2e"], ["Dark Orange", "#d96b00"], ["Yellow", "#ffe23d"], ["Green", "#42f35c"],
-    ["Bright Teal", "#00ffd5"], ["Blue", "#4fa3ff"], ["Purple", "#9b5cff"], ["Bright Purple", "#c14cff"]
+    ["Red", "#ff3131"], ["Cyan", "#00dfe8"], ["Blue", "#1828ff"], ["Green", "#00f033"],
+    ["Magenta", "#f000dc"], ["Yellow", "#fff200"], ["Black", "#000000"], ["White", "#ffffff"],
+    ["Orange", "#ff8a24"], ["Gray", "#777777"], ["Light Gray", "#d7d7d7"], ["Bright Purple", "#c14cff"]
   ];
 
   const TEMPLATES = [
@@ -622,10 +622,10 @@
           <input class="toolbar-select size-select" data-size="${index}" type="number" min="6" max="120" step="1" list="fontSizePresets" value="${Number(style.fontSize) || 23}" aria-label="Font size">
           <button type="button" data-size-step="${index}" data-step="1" title="Increase font size by 1">▲</button>
         </div>
-        <label class="text-colour-control" title="Apply a colour to the selected text">
+        <button type="button" class="text-colour-control" data-colour="${index}" title="Apply a colour to the selected text" aria-label="Selected text colour">
           <span class="text-colour-icon">T</span>
-          <input type="color" data-text-colour="${index}" value="${esc(style.color || "#ffffff")}" aria-label="Selected text colour">
-        </label>
+          <span class="text-colour-swatch" style="background:${esc(style.color || "#ffffff")}"></span>
+        </button>
         <button type="button" data-command="bold" title="Bold"><b>B</b></button>
         <button type="button" data-command="italic" title="Italic"><i>I</i></button>
         <button type="button" data-command="underline" title="Underline"><u>U</u></button>
@@ -650,6 +650,7 @@
           <select data-dash-colour="${index}">${renderDashColourOptions(style.dashColor)}</select>
           <input type="color" data-dash-custom="${index}" value="${esc(style.dashColor || "#777777")}" title="Custom dash colour">
         </label>
+        <button type="button" class="toolbar-select-all" data-select-section="${index}" title="Select all text in this section">SELECT ALL</button>
       </div>`;
   }
 
@@ -660,6 +661,7 @@
         <button type="button" data-text-case="lower" title="Lowercase selected text">aa</button>
         <button type="button" data-text-case="sentence" title="Sentence case selected text">Aa</button>
         <button type="button" data-wrap-brackets="${index}" title="Wrap selected text in square brackets">[ ]</button>
+        <button type="button" class="toolbar-select-all" data-select-section="${index}" title="Select all text in this section">SELECT ALL</button>
       </div>`;
   }
 
@@ -690,22 +692,23 @@
           <div class="creator-section-head">
             <button class="editor-collapse-btn" type="button" data-editor-collapse="${index}" title="Collapse editor section">${s.editorCollapsed ? "▼" : "▲"}</button>
             <input class="section-title-input" data-title="${index}" value="${esc(s.title)}" style="color:${esc(getEffectiveSectionTitleColour(s))}">
+            <div class="creator-section-positioning">
+              <label class="load-collapsed-check" title="Checked = load this section closed in Lyric View">
+                <input type="checkbox" data-load-collapsed="${index}" ${s.collapsed ? "checked" : ""}>
+              </label>
+              <div class="section-align-control" title="Align this whole section">
+                <button type="button" data-section-align="${index}" data-align="left" class="${(s.style?.textAlign || "left") === "left" ? "active" : ""}" aria-label="Align left">⇤</button>
+                <button type="button" data-section-align="${index}" data-align="center" class="${s.style?.textAlign === "center" ? "active" : ""}" aria-label="Align center">↔</button>
+                <button type="button" data-section-align="${index}" data-align="right" class="${s.style?.textAlign === "right" ? "active" : ""}" aria-label="Align right">⇥</button>
+              </div>
+              <span class="section-type-badge ${s.type === "hostNote" ? "host-note-badge" : ""}">${s.type === "tab" ? "TAB" : s.type === "performanceNote" ? "SINGER NOTE" : s.type === "hostNote" ? "HOST ONLY" : "LYRICS"}</span>
+            </div>
             <div class="creator-section-actions">
-              <button type="button" data-select-section="${index}" title="Select all text in this section">SELECT ALL</button>
               <button type="button" data-up="${index}">↑</button>
               <button type="button" data-down="${index}">↓</button>
               <button type="button" data-duplicate="${index}">⧉</button>
               <button type="button" data-remove="${index}">×</button>
             </div>
-            <label class="load-collapsed-check" title="Checked = load this section closed in Lyric View">
-              <input type="checkbox" data-load-collapsed="${index}" ${s.collapsed ? "checked" : ""}>
-            </label>
-            <div class="section-align-control" title="Align this whole section">
-              <button type="button" data-section-align="${index}" data-align="left" class="${(s.style?.textAlign || "left") === "left" ? "active" : ""}" aria-label="Align left">⇤</button>
-              <button type="button" data-section-align="${index}" data-align="center" class="${s.style?.textAlign === "center" ? "active" : ""}" aria-label="Align center">↔</button>
-              <button type="button" data-section-align="${index}" data-align="right" class="${s.style?.textAlign === "right" ? "active" : ""}" aria-label="Align right">⇥</button>
-            </div>
-            <span class="section-type-badge ${s.type === "hostNote" ? "host-note-badge" : ""}">${s.type === "tab" ? "TAB" : s.type === "performanceNote" ? "SINGER NOTE" : s.type === "hostNote" ? "HOST ONLY" : "LYRICS"}</span>
             <label class="section-title-colour-control" title="Section title font colour">
               TITLE
               <select data-title-colour="${index}">${renderTitleColourOptions(s.style?.titleColor)}</select>
