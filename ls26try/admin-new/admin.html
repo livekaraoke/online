@@ -24,7 +24,7 @@
 
 
 
-<link rel="stylesheet" href="css/dashboard-compat.css?v=20260910-admin26">
+<link rel="stylesheet" href="css/dashboard-compat.css?v=20260924-session-shell">
 <link rel="stylesheet" href="../shared/theme.css?v=20260924-ui-polish"><link rel="stylesheet" href="../shared/performance.css?v=20260924-performance-tools"><script src="../shared/data.js?v=20260910-stage4"></script>
 <link rel="stylesheet" href="css/dashboard26.css?v=20260910-admin26">
 <link rel="stylesheet" href="css/admin-navigation.css?v=20260922-batch">
@@ -86,7 +86,6 @@
   <!-- DASHBOARD EVENT / SESSION DETAIL POPUP -->
   <div id="dashboardDetailModal" class="admin-modal hidden">
     <div class="admin-modal-box dashboard-detail-modal-box">
-      <button id="dashboardDetailCloseBtn" type="button" class="dashboard-modal-close" aria-label="Close">✕</button>
       <div id="dashboardDetailModalContent"></div>
     </div>
   </div>
@@ -248,7 +247,7 @@
             </div>
 
             <div class="session-lyrics-suite-row">
-              <button type="button" class="session-btn lyrics-suite-session-btn" onclick="window.location.href='../library.html'">
+              <button type="button" class="session-btn lyrics-suite-session-btn" onclick="window.open('../session.html','_blank','noopener')">
                 ↗ OPEN LYRICS SUITE
               </button>
             </div>
@@ -465,7 +464,7 @@
 <script src="js/admin-events-integration.js?v=20260924-admin-polish"></script>
 <script src="js/run-order.js?v=20260924-performance-tools"></script>
 <script src="js/admin-session-lifecycle.js?v=20260910-stage4"></script>
-<script src="js/admin-dashboard-enhancements.js?v=20260910-stage4"></script>
+<script src="js/admin-dashboard-enhancements.js?v=20260924-session-shell"></script>
 
 
 <script src="../shared/shell.js?v=20260924-performance-tools"></script><script src="../shared/inbox.js?v=20260910-stage4"></script><script src="../shared/session-ui.js?v=20260923-polish"></script><script src="../shared/performance.js?v=20260923-polish"></script><script src="js/dashboard26.js?v=20260910-admin26"></script></body>
