@@ -636,3 +636,75 @@ html.ls26-reduce-glow .performance-quick-info{box-shadow:none!important;filter:n
     font-size:11px!important;
   }
 }
+
+
+/* =========================================================
+   LYRICVIEW TIME CARD + ACTION REFINEMENT — 2026-09-24
+   ========================================================= */
+
+/* TIME moved out of the sticky metadata row, leaving one divider only
+   between User BPM / BPM / Key / Capo. */
+.host-lyric-view-page .ls26-title-meta{
+  grid-template-columns:repeat(4,minmax(48px,auto))!important;
+}
+.host-lyric-view-page .ls26-title-meta>div{
+  border-left:0!important;
+  border-right:1px solid #9ab8c522!important;
+}
+.host-lyric-view-page .ls26-title-meta>div:last-child{
+  border-right:0!important;
+}
+
+/* TIME uses the same reference-card language as the YouTube card. */
+.host-lyric-view-page .performance-time-card{
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:flex-start!important;
+  justify-content:flex-start!important;
+}
+.host-lyric-view-page .performance-time-value{
+  display:block!important;
+  margin-top:2px!important;
+  color:var(--ls-text,#eef8ff)!important;
+  font-size:26px!important;
+  line-height:1.1!important;
+  font-weight:900!important;
+  white-space:nowrap!important;
+}
+
+/* Compact action labels requested for the performance header. */
+.host-lyric-view-page #hostStickyStack #quickEditSongBtn{
+  border-color:#20b96b!important;
+  background:rgba(0,232,138,.10)!important;
+  color:#68f0a5!important;
+  box-shadow:inset 0 0 0 1px rgba(0,232,138,.05)!important;
+}
+.host-lyric-view-page #hostStickyStack #quickEditSongBtn:hover,
+.host-lyric-view-page #hostStickyStack #quickEditSongBtn:focus-visible{
+  border-color:#39dc86!important;
+  background:rgba(0,232,138,.16)!important;
+  color:#9dffc7!important;
+}
+.host-lyric-view-page #hostStickyStack #quickEditSongBtn,
+.host-lyric-view-page #hostStickyStack #songInfoBtn{
+  min-width:auto!important;
+  padding-inline:13px!important;
+}
+
+/* Lead-in runway before the first lyric section. Auto-scroll consumes this
+   first, giving the performer a few seconds before section 1 reaches the top. */
+.host-lyric-view-page .host-song-lead-in-spacer{
+  height:96px!important;
+  min-height:96px!important;
+  pointer-events:none!important;
+}
+
+@media(max-width:900px){
+  .host-lyric-view-page .ls26-title-meta{
+    grid-template-columns:repeat(4,minmax(42px,auto))!important;
+  }
+  .host-lyric-view-page .host-song-lead-in-spacer{
+    height:82px!important;
+    min-height:82px!important;
+  }
+}
