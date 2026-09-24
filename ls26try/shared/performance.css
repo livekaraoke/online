@@ -708,3 +708,175 @@ html.ls26-reduce-glow .performance-quick-info{box-shadow:none!important;filter:n
     min-height:82px!important;
   }
 }
+
+
+/* =========================================================
+   LYRICS SESSION UX — 2026-09-24
+   ========================================================= */
+.host-lyric-view-page .host-song-lead-in-spacer{
+  height:var(--ls26-lyric-lead-in-height,192px)!important;
+  min-height:var(--ls26-lyric-lead-in-height,192px)!important;
+}
+
+/* The active INFO control stays in the LiveSuite cyan family, never legacy red. */
+.host-lyric-view-page #songInfoBtn[aria-expanded="true"],
+.host-lyric-view-page #songInfoBtn.active{
+  border-color:var(--ls-accent,#00cafa)!important;
+  background:rgba(0,202,250,.12)!important;
+  color:var(--ls-accent,#00cafa)!important;
+  box-shadow:inset 0 0 0 1px rgba(0,202,250,.08)!important;
+}
+
+/* INFO & TOOLS drawer breathing room and tempo hierarchy. */
+.host-lyric-view-page #songInfoDrawer .song-info-head{
+  padding:22px 16px 16px!important;
+  border-bottom-color:var(--ls-border,#23546a)!important;
+}
+.host-lyric-view-page #songInfoDrawer .song-info-head strong{
+  color:var(--ls-accent,#00cafa)!important;
+  letter-spacing:.025em!important;
+}
+.host-lyric-view-page #songInfoDrawer .song-info-scroll{
+  padding:10px 16px 16px!important;
+}
+.host-lyric-view-page .ls26-bpm-panel{
+  display:grid!important;
+  gap:13px!important;
+  padding:14px!important;
+  border:1px solid #24566d!important;
+  border-radius:10px!important;
+  background:#031722!important;
+  font-size:16px!important;
+}
+.host-lyric-view-page .ls26-bpm-panel-head{
+  display:flex!important;
+  align-items:flex-end!important;
+  justify-content:space-between!important;
+  gap:10px!important;
+}
+.host-lyric-view-page .ls26-bpm-panel-head small{
+  display:block!important;
+  margin-bottom:2px!important;
+  color:#6f91a4!important;
+  font-size:9px!important;
+  font-weight:900!important;
+  letter-spacing:.08em!important;
+}
+.host-lyric-view-page .ls26-bpm-panel-head strong{
+  display:block!important;
+  color:#eaf7fd!important;
+  font-size:18px!important;
+}
+.host-lyric-view-page .ls26-bpm-live-label{
+  padding:4px 7px!important;
+  border:1px solid #0a7256!important;
+  border-radius:999px!important;
+  background:#053425!important;
+  color:var(--ls-success,#00e88a)!important;
+  font-size:9px!important;
+  font-weight:900!important;
+}
+.host-lyric-view-page .ls26-bpm-stepper{
+  display:grid!important;
+  grid-template-columns:56px minmax(90px,1fr) 56px!important;
+  align-items:center!important;
+  gap:10px!important;
+}
+.host-lyric-view-page .ls26-bpm-stepper button{
+  width:56px!important;
+  height:56px!important;
+  border-radius:50%!important;
+  border:1px solid var(--ls-accent,#00cafa)!important;
+  background:#05283a!important;
+  color:#fff!important;
+  font-size:34px!important;
+}
+.host-lyric-view-page .ls26-bpm-current-value{
+  display:grid!important;
+  place-items:center!important;
+  gap:0!important;
+  margin:0!important;
+  text-align:center!important;
+}
+.host-lyric-view-page .ls26-bpm-current-value input{
+  width:100%!important;
+  min-width:0!important;
+  padding:0!important;
+  border:0!important;
+  background:transparent!important;
+  color:#fff!important;
+  font-size:38px!important;
+  font-weight:950!important;
+  line-height:1!important;
+  text-align:center!important;
+  appearance:textfield!important;
+}
+.host-lyric-view-page .ls26-bpm-current-value small{
+  color:#7596a9!important;
+  font-size:9px!important;
+  font-weight:900!important;
+  letter-spacing:.08em!important;
+}
+.host-lyric-view-page .ls26-bpm-original-row{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  padding-top:10px!important;
+  border-top:1px solid #173d50!important;
+  color:#9cb4c2!important;
+}
+.host-lyric-view-page .ls26-bpm-original-row strong{
+  color:var(--ls-original-bpm-color,#00cafa)!important;
+  font-size:20px!important;
+}
+.host-lyric-view-page #ls26ResetBpm{
+  min-height:42px!important;
+  border:1px solid #2b6078!important;
+  background:#041d2a!important;
+  color:#ddecf4!important;
+  font-size:12px!important;
+  font-weight:850!important;
+}
+
+/* End-of-song host actions. */
+.host-lyric-view-page .host-end-session-actions{
+  display:grid!important;
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  gap:10px!important;
+  width:100%!important;
+  margin-top:12px!important;
+}
+.host-lyric-view-page .host-end-session-actions[hidden]{display:none!important}
+.host-lyric-view-page .host-end-action{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:8px!important;
+  min-height:52px!important;
+  padding:10px 12px!important;
+  border:1px solid #285d75!important;
+  border-radius:8px!important;
+  background:#041d2a!important;
+  color:#eef8ff!important;
+  font-weight:900!important;
+}
+.host-lyric-view-page .host-end-action.break{
+  border-color:#9a741c!important;
+  background:#2b2307!important;
+  color:#ffd56a!important;
+}
+.host-lyric-view-page .host-end-action.end{
+  border-color:#984150!important;
+  background:#2b1018!important;
+  color:#ff8996!important;
+}
+.host-lyric-view-page .host-end-action-icon{font-size:20px!important}
+
+@media(max-width:650px){
+  .host-lyric-view-page .host-song-lead-in-spacer{
+    height:var(--ls26-lyric-lead-in-height,192px)!important;
+    min-height:var(--ls26-lyric-lead-in-height,192px)!important;
+  }
+  .host-lyric-view-page .host-end-session-actions{gap:6px!important}
+  .host-lyric-view-page .host-end-action{font-size:11px!important;padding-inline:7px!important}
+}
