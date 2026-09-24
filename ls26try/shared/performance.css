@@ -1065,3 +1065,36 @@ html.ls26-reduce-glow .performance-quick-info{box-shadow:none!important;filter:n
   z-index:2600!important;
   max-width:min(360px,calc(100vw - 36px))!important;
 }
+
+
+/* =========================================================
+   INFO TEMPO FINAL CONTAINMENT — 2026-09-24
+   ========================================================= */
+.host-lyric-view-page #songInfoDrawer .ls26-bpm-panel,
+.host-lyric-view-page #songInfoDrawer .ls26-bpm-panel *{
+  box-sizing:border-box!important;
+}
+.host-lyric-view-page #songInfoDrawer .ls26-bpm-current-value{
+  display:grid!important;
+  grid-template-rows:auto auto!important;
+  place-items:center!important;
+  min-width:0!important;
+  overflow:hidden!important;
+}
+.host-lyric-view-page #songInfoDrawer .ls26-bpm-current-value input{
+  display:block!important;
+  min-width:0!important;
+  width:100%!important;
+  padding:0!important;
+  border:0!important;
+  background:transparent!important;
+  text-align:center!important;
+  line-height:1!important;
+}
+.host-lyric-view-page #songInfoDrawer .ls26-bpm-current-value small{
+  margin-top:4px!important;
+  text-align:center!important;
+}
+.host-lyric-view-page #songInfoDrawer .ls26-karaoke-toggle{
+  cursor:pointer!important;
+}
