@@ -415,6 +415,19 @@
     selectedIndex = Math.min(selectedIndex, visibleSongs.length - 1);
 
     restoreScrollWhenReady();
+    requestAnimationFrame(syncSongTableHeaderAlignment);
+  }
+
+  function syncSongTableHeaderAlignment() {
+    const list = $("songRows");
+    const head = document.querySelector(".song-table-head");
+    if (!list || !head) return;
+
+    // Match the heading grid to the actual scrollable row width. Android uses
+    // overlay scrollbars (0px gutter), while desktop browsers may reserve one.
+    const scrollbarGutter = Math.max(0, list.offsetWidth - list.clientWidth);
+    head.style.paddingLeft = "7px";
+    head.style.paddingRight = `${7 + scrollbarGutter}px`;
   }
 
   function terminalRunOrderStatus(status) {
@@ -675,6 +688,8 @@
   };
 
   $("openRunOrderBtn").onclick = openRunOrderPanel;
+
+  window.addEventListener("resize", () => requestAnimationFrame(syncSongTableHeaderAlignment), { passive:true });
 
   window.addEventListener("lk:runorder-updated", event => {
     updateRunOrderPlayer(event.detail?.items || []);
