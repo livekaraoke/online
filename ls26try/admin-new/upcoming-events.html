@@ -33,8 +33,7 @@
     <main class="admin-main events-main">
       <header class="events-topbar">
         <div>
-          <p class="events-eyebrow">LIVE KARAOKE ADMIN</p>
-          <h1>Upcoming Gigs &amp; Events</h1>
+          <h1>Gigs &amp; Events</h1>
           <p class="events-subtitle">Plan upcoming performances and keep Live Karaoke, Roxanna and Solo bookings in one place.</p>
         </div>
 
@@ -46,6 +45,18 @@
       </header>
 
       <section class="events-calendar-section">
+        <article id="eventsNextGigHero" class="events-next-gig-hero" aria-live="polite">
+          <div class="events-next-gig-copy">
+            <span>NEXT GIG</span>
+            <strong id="eventsNextGigHeroTitle">Loading next gig…</strong>
+            <small id="eventsNextGigHeroMeta">Checking schedule…</small>
+          </div>
+          <div class="events-next-gig-countdown">
+            <span>STARTS IN</span>
+            <strong id="eventsNextGigCountdown">—</strong>
+            <small id="eventsNextGigCountdownDate">—</small>
+          </div>
+        </article>
         <button id="toggleEventsCalendarBtn" class="events-calendar-toggle" type="button" aria-expanded="false">SHOW CALENDAR</button>
         <div id="eventsCalendarPanel" class="events-calendar-panel hidden">
           <div class="events-calendar-head">
