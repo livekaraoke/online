@@ -1597,7 +1597,36 @@
       ?.classList.toggle("defaults-collapsed", !opening);
   };
   if ($("lyricsCreatorScrollTop")) {
-    $("lyricsCreatorScrollTop").onclick = () => {
+    const scrollTopButton = $("lyricsCreatorScrollTop");
+    let lastCreatorScrollY = window.scrollY;
+    let creatorScrollTopHideTimer = 0;
+
+    const setCreatorScrollTopVisible = visible => {
+      scrollTopButton.classList.toggle("is-visible", !!visible);
+      scrollTopButton.setAttribute("aria-hidden", visible ? "false" : "true");
+    };
+
+    setCreatorScrollTopVisible(false);
+
+    window.addEventListener("scroll", () => {
+      const y = Math.max(0, window.scrollY);
+      const scrollingUp = y < lastCreatorScrollY - 2;
+
+      if (y < 140) {
+        setCreatorScrollTopVisible(false);
+      } else if (scrollingUp) {
+        setCreatorScrollTopVisible(true);
+        clearTimeout(creatorScrollTopHideTimer);
+        creatorScrollTopHideTimer = setTimeout(() => setCreatorScrollTopVisible(false), 1300);
+      } else if (y > lastCreatorScrollY + 2) {
+        setCreatorScrollTopVisible(false);
+      }
+
+      lastCreatorScrollY = y;
+    }, { passive:true });
+
+    scrollTopButton.onclick = () => {
+      setCreatorScrollTopVisible(false);
       window.scrollTo({
         top:0,
         behavior:matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth"
