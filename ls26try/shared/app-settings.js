@@ -15,7 +15,7 @@
     lyricNavHorizontalSize: 72,
     lyricTextScale: 100,
     lyricLeadInHeight: 192,
-    lyricSectionActivationOffset: 180,
+    lyricSectionActivationOffset: 320,
     libraryRowHeight: 62,
     reduceGlow: false
   });
@@ -41,7 +41,7 @@
       lyricNavHorizontalSize: clamp(raw.lyricNavHorizontalSize,52,120,DEFAULTS.lyricNavHorizontalSize),
       lyricTextScale: clamp(raw.lyricTextScale,75,150,DEFAULTS.lyricTextScale),
       lyricLeadInHeight: clamp(raw.lyricLeadInHeight,80,360,DEFAULTS.lyricLeadInHeight),
-      lyricSectionActivationOffset: clamp(raw.lyricSectionActivationOffset,0,360,DEFAULTS.lyricSectionActivationOffset),
+      lyricSectionActivationOffset: clamp(raw.lyricSectionActivationOffset,0,520,DEFAULTS.lyricSectionActivationOffset),
       libraryRowHeight: clamp(raw.libraryRowHeight,48,92,DEFAULTS.libraryRowHeight),
       reduceGlow: raw.reduceGlow === true
     };
