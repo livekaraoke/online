@@ -278,8 +278,6 @@ body.host-lyric-view-page{overflow:visible!important}
 }
 
 /* Variables controlled by App Settings. */
-#ls26StickyHeader #topStatusBar .host-strip-metric small{font-size:var(--ls26-status-label-size,11px)!important}
-#ls26StickyHeader #topStatusBar .host-strip-metric strong{font-size:var(--ls26-status-value-size,22px)!important}
 .host-lyric-view-page #quickTempo,.host-lyric-view-page #quickTempo .bpm-number{color:var(--ls26-user-bpm-color,#00e88a)!important}
 .host-lyric-view-page #quickOriginalBpm,.host-lyric-view-page #quickOriginalBpm .bpm-number{color:var(--ls26-original-bpm-color,#00cafa)!important}
 .host-lyric-view-page #quickKey{color:var(--ls26-key-color,#00cafa)!important}
