@@ -48,6 +48,8 @@
   let unsubscribeCurrentSession = null;
   let calendarMonthCursor = new Date();
   let selectedCalendarDate = "";
+  let nextGigHeroStartMs = 0;
+  let nextGigCountdownTimer = null;
   calendarMonthCursor = new Date(calendarMonthCursor.getFullYear(), calendarMonthCursor.getMonth(), 1);
 
   function escapeHTML(value) {
@@ -107,16 +109,20 @@
   }
 
   function formatDate(dateString) {
-    if (!dateString) return { day: "—", month: "NO DATE", full: "No date" };
+    if (!dateString) {
+      return { day:"—", month:"NO DATE", year:"", weekday:"", full:"No date" };
+    }
 
     const date = new Date(`${dateString}T12:00:00`);
     if (Number.isNaN(date.getTime())) {
-      return { day: "—", month: dateString, full: dateString };
+      return { day:"—", month:String(dateString).toUpperCase(), year:"", weekday:"", full:dateString };
     }
 
     return {
       day: String(date.getDate()).padStart(2, "0"),
-      month: date.toLocaleDateString(undefined, { month: "short", year: "numeric" }).toUpperCase(),
+      month: date.toLocaleDateString(undefined, { month:"short" }).toUpperCase().replace(/^SEPT$/,"SEP"),
+      year: String(date.getFullYear()),
+      weekday: date.toLocaleDateString(undefined, { weekday:"short" }).toUpperCase(),
       full: date.toLocaleDateString(undefined, {
         weekday: "short",
         day: "numeric",
@@ -124,6 +130,65 @@
         year: "numeric"
       })
     };
+  }
+
+  function nextGigStartDate(event) {
+    if (!event?.date || !event?.startTime) return null;
+    const date = new Date(`${event.date}T${event.startTime}:00`);
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
+
+  function formatGigCountdown(ms) {
+    if (!Number.isFinite(ms)) return "—";
+    if (ms <= 0) return "START TIME PASSED";
+
+    const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+    const days = Math.floor(totalSeconds / 86400);
+    const hours = Math.floor((totalSeconds % 86400) / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+
+    if (days > 0) return `${days}d ${hours}h ${minutes}m`;
+    if (hours > 0) return `${hours}h ${minutes}m ${seconds}s`;
+    return `${minutes}m ${seconds}s`;
+  }
+
+  function tickNextGigCountdown() {
+    const output = $("eventsNextGigCountdown");
+    if (!output) return;
+    output.textContent = nextGigHeroStartMs
+      ? formatGigCountdown(nextGigHeroStartMs - Date.now())
+      : "TIME TBC";
+  }
+
+  function renderNextGigHero(event) {
+    const title = $("eventsNextGigHeroTitle");
+    const meta = $("eventsNextGigHeroMeta");
+    const dateLine = $("eventsNextGigCountdownDate");
+    if (!title || !meta || !dateLine) return;
+
+    if (!event) {
+      nextGigHeroStartMs = 0;
+      title.textContent = "Nothing scheduled";
+      meta.textContent = "No upcoming gigs or events.";
+      dateLine.textContent = "—";
+      tickNextGigCountdown();
+      return;
+    }
+
+    const date = formatDate(event.date);
+    const start = nextGigStartDate(event);
+    nextGigHeroStartMs = start ? start.getTime() : 0;
+    title.textContent = event.name || event.type || "Untitled Event";
+    meta.textContent = [
+      event.venue || "Venue TBC",
+      event.startTime || "Time TBC",
+      event.type || "Other"
+    ].join(" • ");
+    dateLine.textContent = [date.weekday, date.day, date.month, date.year]
+      .filter(Boolean)
+      .join(" ");
+    tickNextGigCountdown();
   }
 
   function formatTimeRange(event) {
@@ -258,12 +323,14 @@
 
     if (next) {
       const date = formatDate(next.date);
-      $("nextGigDate").textContent = `${date.day} ${date.month.split(" ")[0]}`;
+      $("nextGigDate").textContent = `${date.day} ${date.month}`;
       $("nextGigName").textContent = `${next.name || "Untitled Event"}${next.venue ? " • " + next.venue : ""}`;
     } else {
       $("nextGigDate").textContent = "—";
       $("nextGigName").textContent = "Nothing scheduled";
     }
+
+    renderNextGigHero(next);
   }
 
   function renderSelectedCalendarDay() {
@@ -385,23 +452,25 @@
       return `
         <article class="event-row" data-event-id="${escapeHTML(event.id)}">
           <div class="event-date-block" title="${escapeHTML(date.full)}">
+            <small class="event-date-weekday">${escapeHTML(date.weekday)}</small>
             <strong>${escapeHTML(date.day)}</strong>
-            <span>${escapeHTML(date.month)}</span>
+            <span class="event-date-month">${escapeHTML(date.month)}</span>
+            <small class="event-date-year">${escapeHTML(date.year)}</small>
           </div>
 
-          <div class="event-main">
-            <strong>${escapeHTML(event.name || "Untitled Event")}</strong>
+          <strong class="event-row-title">${escapeHTML(event.name || "Untitled Event")}</strong>
 
+          <div class="event-main">
             <div class="event-schedule-meta">
-              <span><b>Venue:</b> ${escapeHTML(event.venue || "TBC")}</span>
-              <span><b>Start:</b> ${escapeHTML(event.startTime || "TBC")}</span>
-              <span><b>Length:</b> ${escapeHTML(formatEventLength(event))}</span>
+              <span><b>Venue:</b> <em>${escapeHTML(event.venue || "TBC")}</em></span>
+              <span><b>Start:</b> <em>${escapeHTML(event.startTime || "TBC")}</em></span>
+              <span><b>Length:</b> <em>${escapeHTML(formatEventLength(event))}</em></span>
             </div>
             <div class="event-extra-meta">
-              <span><b>Arrival / Setup:</b> ${escapeHTML(event.arrivalTime || "—")}</span>
-              <span><b>Contact:</b> ${escapeHTML([event.contactName, event.contact].filter(Boolean).join(" • ") || "—")}</span>
+              <span><b>Arrival / Setup:</b> <em>${escapeHTML(event.arrivalTime || "—")}</em></span>
+              <span><b>Contact:</b> <em>${escapeHTML([event.contactName, event.contact].filter(Boolean).join(" • ") || "—")}</em></span>
             </div>
-            <span class="event-notes-preview"><b>Notes:</b> ${notesPreview}</span>
+            <span class="event-notes-preview"><b>Notes:</b> <em>${notesPreview}</em></span>
           </div>
 
           <div class="event-badges">
@@ -1167,6 +1236,9 @@
 
   function init() {
     bindUI();
+    if (!nextGigCountdownTimer) {
+      nextGigCountdownTimer = setInterval(tickNextGigCountdown, 1000);
+    }
 
     // Reuse the existing Firebase Admin auth session. No second login page.
     firebase.auth().onAuthStateChanged(user => {
