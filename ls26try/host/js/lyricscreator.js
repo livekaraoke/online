@@ -227,8 +227,8 @@
     setYoutubeLinks(rows.map(row => row.url), rows.map(row => row.label));
     markDirty();
     requestAnimationFrame(() => {
-      const labels = document.querySelectorAll("[data-youtube-label]");
-      labels[labels.length - 1]?.focus();
+      const urls = document.querySelectorAll("[data-youtube-link]");
+      urls[urls.length - 1]?.focus();
     });
   }
 
