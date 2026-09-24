@@ -124,7 +124,10 @@
       populatePublicSetlistSelect();
 
       if (!currentSessionIdFromControl) {
-        setPublicListStatus(pendingSetlistId ? "Selected for the next session" : "Choose a public song list before starting a session.");
+        setPublicListStatus(
+          pendingSetlistId ? "Selected for the next session" : "Choose a public song list before starting a session.",
+          !pendingSetlistId
+        );
       } else if (data.setlistName) {
         setPublicListStatus(`Current: ${data.setlistName}`);
       } else if (!currentPublicSetlistId) {
@@ -149,7 +152,10 @@
 
     if (!currentSessionIdFromControl) {
       pendingSetlistId = setlist?.id || "";
-      setPublicListStatus(setlist ? `Selected for next session: ${setlist.name}` : "Choose a public song list before starting a session.");
+      setPublicListStatus(
+        setlist ? `Selected for next session: ${setlist.name}` : "Choose a public song list before starting a session.",
+        !setlist
+      );
       return;
     }
     select.disabled = true;
@@ -196,9 +202,12 @@
       if (!sessionKnown || previousSessionId !== currentSessionIdFromControl) pendingSetlistId = "";
       sessionKnown = true;
       populatePublicSetlistSelect();
-      setPublicListStatus(currentSessionIdFromControl
-        ? (currentPublicList.setlistName ? `Current: ${currentPublicList.setlistName}` : "No setlist selected")
-        : (pendingSetlistId ? "Selected for the next session" : "Choose a public song list before starting a session."));
+      setPublicListStatus(
+        currentSessionIdFromControl
+          ? (currentPublicList.setlistName ? `Current: ${currentPublicList.setlistName}` : "No setlist selected")
+          : (pendingSetlistId ? "Selected for the next session" : "Choose a public song list before starting a session."),
+        !currentSessionIdFromControl && !pendingSetlistId
+      );
 
       const type = data.sessionType || data.type || "Live Karaoke";
 
