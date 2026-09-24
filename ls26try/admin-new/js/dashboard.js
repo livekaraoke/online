@@ -124,9 +124,11 @@
     const songsBtn = $("songsCircleBtn");
 
     if (liveBtn) {
-      liveBtn.className = live ? "circle-status-btn stop" : "circle-status-btn go";
+      liveBtn.className = `circle-status-btn ${live ? "stop" : "go"} status-indicator`;
       liveBtn.innerHTML = statusCircleIcon(live ? "stop" : "play");
-      liveBtn.title = live ? "Go offline" : "Go live";
+      liveBtn.disabled = true;
+      liveBtn.title = live ? "System is live" : "System is offline";
+      liveBtn.setAttribute("aria-label", liveBtn.title);
     }
 
     if (songsBtn) {
