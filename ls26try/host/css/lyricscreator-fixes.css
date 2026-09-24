@@ -948,7 +948,7 @@
 /* URL is deliberately shorter so each YouTube row has a display label. */
 .creator-youtube-link-row{
   display:grid!important;
-  grid-template-columns:minmax(150px,.72fr) minmax(240px,1.28fr) 44px!important;
+  grid-template-columns:minmax(240px,1.28fr) minmax(150px,.72fr) 44px!important;
   gap:8px!important;
   align-items:center!important;
 }
@@ -959,7 +959,7 @@
 
 @media(max-width:760px){
  .creator-page .creator-section-head .section-title-input{max-width:260px!important}
- .creator-youtube-link-row{grid-template-columns:minmax(120px,.7fr) minmax(170px,1.3fr) 42px!important}
+ .creator-youtube-link-row{grid-template-columns:minmax(170px,1.3fr) minmax(120px,.7fr) 42px!important}
 }
 
 
