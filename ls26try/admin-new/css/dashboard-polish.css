@@ -188,7 +188,7 @@
 
 /* Missing public list is a blocking requirement, so make the warning unmistakable. */
 #publicSetlistSaveStatus{font-weight:750!important}
-#publicSetlistSaveStatus[style*="ff6d72"]{color:#ff6376!important}
+#publicSetlistSaveStatus.is-error{color:#ff6376!important}
 
 /* Session notes have a comfortable line height for appended notes. */
 #sessionNotesInput{line-height:1.5!important}
