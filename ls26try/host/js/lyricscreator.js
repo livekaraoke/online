@@ -212,8 +212,8 @@
     if (!links.length) links.push("");
     list.innerHTML = links.map((value, index) => `
       <div class="creator-youtube-link-row">
-        <input class="creator-youtube-label-input" data-youtube-label value="${esc(displayLabels[index] || "")}" placeholder="Display label">
         <input class="creator-youtube-url-input" ${index === 0 ? 'id="youtubeInput"' : ""} data-youtube-link value="${esc(value)}" placeholder="https://www.youtube.com/...">
+        <input class="creator-youtube-label-input" data-youtube-label value="${esc(displayLabels[index] || "")}" placeholder="Display label">
         <button type="button" data-remove-youtube aria-label="Remove YouTube link" ${links.length === 1 ? "disabled" : ""}>×</button>
       </div>`).join("");
   }
