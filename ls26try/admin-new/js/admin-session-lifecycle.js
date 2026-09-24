@@ -59,6 +59,38 @@
     return summary;
   }
 
+  function snapshotTimeMs(value) {
+    if (!value) return 0;
+    if (typeof value.toMillis === "function") return value.toMillis();
+    if (typeof value.toDate === "function") return value.toDate().getTime();
+    if (value instanceof Date) return value.getTime();
+    const numeric = Number(value);
+    if (Number.isFinite(numeric) && numeric > 0) return numeric;
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? 0 : date.getTime();
+  }
+
+  function requestOrderMs(item) {
+    return Number(item?.requestedAtMs || item?.createdAtMs || 0) ||
+      snapshotTimeMs(item?.requestedAt || item?.createdAt || item?.submittedAt || item?.timestamp);
+  }
+
+  function playedOrderMs(item) {
+    return Number(item?.playingAtMs || item?.playedAtMs || item?.startedAtMs || 0) ||
+      snapshotTimeMs(item?.playedAt || item?.startedAt || item?.playingAt || item?.createdAt || item?.updatedAt);
+  }
+
+  function chronological(items, getter) {
+    return (Array.isArray(items) ? items : [])
+      .map((item,index) => ({item,index,time:getter(item)}))
+      .sort((a,b) => {
+        const at = a.time || Number.MAX_SAFE_INTEGER;
+        const bt = b.time || Number.MAX_SAFE_INTEGER;
+        return at - bt || a.index - b.index;
+      })
+      .map(entry => entry.item);
+  }
+
   function cleanSnapshot(value) {
     if (value == null) return value;
 
@@ -339,20 +371,20 @@
       db.collection("karaokeControl").doc("runOrder").get()
     ]);
 
-    const requests = requestSnap.docs.map(doc => ({
+    const requests = chronological(requestSnap.docs.map(doc => ({
       id: doc.id,
       ...(doc.data() || {})
-    }));
+    })), requestOrderMs);
 
-    const logs = logSnap.docs.map(doc => ({
+    const logs = chronological(logSnap.docs.map(doc => ({
       id: doc.id,
       ...(doc.data() || {})
-    }));
+    })), playedOrderMs);
 
-    const performedSongs = performedSnap.docs.map(doc => ({
+    const performedSongs = chronological(performedSnap.docs.map(doc => ({
       id: doc.id,
       ...(doc.data() || {})
-    }));
+    })), playedOrderMs);
 
     const runOrderData = runOrderSnap.exists ? (runOrderSnap.data() || {}) : {};
     const runOrderItems =

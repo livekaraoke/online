@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>LiveSuite Session</title>
+  <style>
+    :root{color-scheme:dark}
+    *{box-sizing:border-box}
+    html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#00121b}
+    body{font-family:Arial,Helvetica,sans-serif}
+    #liveSuiteFrame{position:fixed;inset:0;width:100%;height:100%;border:0;background:#00121b}
+    #fullscreenGate{position:fixed;inset:0;z-index:20;display:grid;place-items:center;padding:24px;background:rgba(0,13,20,.94);backdrop-filter:blur(6px)}
+    #fullscreenGate[hidden]{display:none}
+    .fullscreen-card{width:min(460px,calc(100vw - 36px));padding:28px;border:1px solid #23546a;border-radius:14px;background:linear-gradient(155deg,#061d2a,#03121b);text-align:center;box-shadow:0 24px 70px #000a}
+    .fullscreen-card strong{display:block;color:#00cafa;font-size:24px;margin-bottom:10px}
+    .fullscreen-card p{margin:0 0 18px;color:#9eb6c4;font-size:14px;line-height:1.45}
+    .fullscreen-card button{width:100%;min-height:52px;border:1px solid #00cafa;border-radius:9px;background:#07536f;color:white;font-size:16px;font-weight:900;cursor:pointer}
+  </style>
+</head>
+<body>
+  <iframe id="liveSuiteFrame" src="library.html" title="LiveSuite" allow="fullscreen" allowfullscreen></iframe>
+
+  <div id="fullscreenGate" hidden>
+    <div class="fullscreen-card">
+      <strong>LiveSuite Session</strong>
+      <p>Your browser needs one tap to restore fullscreen mode.</p>
+      <button id="enterFullscreenBtn" type="button">ENTER FULLSCREEN</button>
+    </div>
+  </div>
+
+  <script src="firebase-projects.js?v=20260910-stage4"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="host/js/firebase-config.js?v=20260910-stage4"></script>
+  <script>
+    (() => {
+      "use strict";
+
+      const frame = document.getElementById("liveSuiteFrame");
+      const gate = document.getElementById("fullscreenGate");
+      const enterButton = document.getElementById("enterFullscreenBtn");
+      let sawActiveSession = false;
+      let leaving = false;
+
+      function fullscreenElement() {
+        return document.fullscreenElement || document.webkitFullscreenElement || null;
+      }
+
+      async function enterFullscreen() {
+        if (fullscreenElement() || leaving) {
+          gate.hidden = true;
+          return;
+        }
+
+        try {
+          const root = document.documentElement;
+          if (root.requestFullscreen) {
+            await root.requestFullscreen({ navigationUI:"hide" });
+          } else if (root.webkitRequestFullscreen) {
+            root.webkitRequestFullscreen();
+          }
+        } catch (_) {
+          // Browsers may require the fallback button's user gesture.
+        }
+
+        gate.hidden = !!fullscreenElement();
+      }
+
+      async function exitFullscreen() {
+        try {
+          if (document.fullscreenElement && document.exitFullscreen) {
+            await document.exitFullscreen();
+          } else if (document.webkitFullscreenElement && document.webkitExitFullscreen) {
+            document.webkitExitFullscreen();
+          }
+        } catch (_) {}
+      }
+
+      async function leaveFor(url) {
+        if (leaving) return;
+        leaving = true;
+        gate.hidden = true;
+        await exitFullscreen();
+        location.replace(url || "admin-new/admin.html");
+      }
+
+      function inspectFrameLocation() {
+        if (leaving) return;
+        try {
+          const href = frame.contentWindow.location.href;
+          const url = new URL(href);
+          if (url.origin === location.origin && url.pathname.includes("/admin-new/")) {
+            leaveFor(href);
+          }
+        } catch (_) {
+          // Same-origin LiveSuite pages are readable; ignore transient navigation states.
+        }
+      }
+
+      frame.addEventListener("load", inspectFrameLocation);
+      setInterval(inspectFrameLocation, 700);
+
+      document.addEventListener("fullscreenchange", () => {
+        gate.hidden = !!fullscreenElement() || leaving;
+      });
+      document.addEventListener("webkitfullscreenchange", () => {
+        gate.hidden = !!fullscreenElement() || leaving;
+      });
+      enterButton.addEventListener("click", enterFullscreen);
+
+      // Try automatically first. If the browser requires a direct user gesture,
+      // the one-tap fallback overlay appears.
+      window.addEventListener("load", () => requestAnimationFrame(enterFullscreen));
+
+      try {
+        window.db.collection("karaokeControl").doc("currentSession").onSnapshot(snapshot => {
+          const data = snapshot.exists ? (snapshot.data() || {}) : {};
+          const active = data.active === true && !!(data.sessionId || data.activeSessionId);
+
+          if (active) {
+            sawActiveSession = true;
+            return;
+          }
+
+          if (sawActiveSession) {
+            leaveFor("admin-new/admin.html");
+          }
+        }, error => console.warn("Session fullscreen watcher unavailable:", error));
+      } catch (error) {
+        console.warn("Session fullscreen watcher unavailable:", error);
+      }
+    })();
+  </script>
+</body>
+</html>

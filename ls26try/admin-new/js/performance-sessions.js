@@ -38,6 +38,32 @@
     return Number.isNaN(date.getTime()) ? null : date;
   }
 
+  function timestampMs(value) {
+    const date = tsDate(value);
+    return date ? date.getTime() : 0;
+  }
+
+  function requestOrderMs(item) {
+    return Number(item?.requestedAtMs || item?.createdAtMs || 0) ||
+      timestampMs(item?.requestedAt || item?.createdAt || item?.submittedAt || item?.timestamp);
+  }
+
+  function playedOrderMs(item) {
+    return Number(item?.playingAtMs || item?.playedAtMs || item?.startedAtMs || 0) ||
+      timestampMs(item?.playedAt || item?.startedAt || item?.playingAt || item?.createdAt || item?.updatedAt);
+  }
+
+  function chronological(items, getter) {
+    return (Array.isArray(items) ? items : [])
+      .map((item,index) => ({item,index,time:getter(item)}))
+      .sort((a,b) => {
+        const at = a.time || Number.MAX_SAFE_INTEGER;
+        const bt = b.time || Number.MAX_SAFE_INTEGER;
+        return at - bt || a.index - b.index;
+      })
+      .map(entry => entry.item);
+  }
+
   function formatDate(date) {
     if (!date) return "-";
     return date.toLocaleDateString(undefined, {
@@ -170,7 +196,7 @@
       merged.push(item);
     });
 
-    return merged;
+    return chronological(merged, playedOrderMs);
   }
 
   function averageBpm(session) {
@@ -374,7 +400,11 @@
       runOrder:Array.isArray(session.runOrderSnapshot) ? session.runOrderSnapshot : []
     };
 
-    if (result.requests.length && result.played.length) return result;
+    if (result.requests.length && result.played.length) {
+      result.requests = chronological(result.requests, requestOrderMs);
+      result.played = chronological(result.played, playedOrderMs);
+      return result;
+    }
 
     try {
       const [requestsSnap,logsSnap,performedSnap] = await Promise.all([
@@ -396,6 +426,8 @@
       console.warn("Could not load live fallback session detail:",error);
     }
 
+    result.requests = chronological(result.requests, requestOrderMs);
+    result.played = chronological(result.played, playedOrderMs);
     return result;
   }
 
@@ -421,7 +453,7 @@
       ? detail.requests.map(req => `
           <div class="detail-row">
             <strong>${esc(req.songTitle || req.title || "Untitled Song")} — ${esc(req.artist || req.songArtist || "")}</strong>
-            <span>${esc(req.singerName || req.name || "Singer")}</span>
+            <span>${esc(req.singerName || req.name || "Singer")} · ${formatTime(tsDate(req.requestedAt || req.createdAt || req.submittedAt || req.timestamp))}</span>
             <span class="status-chip ${esc(requestStatusBucket(req.status))}">${esc(requestStatusLabel(req.status))}</span>
           </div>
         `).join("")
@@ -437,15 +469,19 @@
         `).join("")
       : `<div class="detail-row"><span>No played songs recorded.</span></div>`;
 
-    const runRows = detail.runOrder.length
-      ? detail.runOrder.map((item,index) => `
-          <div class="detail-row">
-            <strong>${index+1}. ${esc(item.songTitle || item.songId || "Untitled Song")}</strong>
-            <span>${esc(item.singerName || item.source || "")}</span>
-            <span class="status-chip ${item.status === "played" ? "played" : ""}">${esc(item.status || "queued")}</span>
-          </div>
-        `).join("")
-      : `<div class="detail-row"><span>No Run Order snapshot.</span></div>`;
+    const runOrderSection = detail.runOrder.length
+      ? `
+        <div class="detail-section">
+          <h3>FINAL RUN ORDER (${detail.runOrder.length})</h3>
+          <div class="detail-list">${detail.runOrder.map((item,index) => `
+            <div class="detail-row">
+              <strong>${index+1}. ${esc(item.songTitle || item.songId || "Untitled Song")}</strong>
+              <span>${esc(item.singerName || item.source || "")}</span>
+              <span class="status-chip ${item.status === "played" ? "played" : ""}">${esc(item.status || "queued")}</span>
+            </div>
+          `).join("")}</div>
+        </div>`
+      : "";
 
     $("sessionModalContent").innerHTML = `
       <div class="session-detail-header">
@@ -483,10 +519,7 @@
         <div class="detail-list">${playedRows}</div>
       </div>
 
-      <div class="detail-section">
-        <h3>RUN ORDER (${detail.runOrder.length})</h3>
-        <div class="detail-list">${runRows}</div>
-      </div>
+      ${runOrderSection}
     `;
 
     $("sessionDetailModal").classList.remove("hidden");

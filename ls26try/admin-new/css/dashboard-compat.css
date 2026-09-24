@@ -1295,3 +1295,18 @@
     overflow-x: auto;
   }
 }
+
+
+/* Past-session detail popup uses current LiveSuite colours. */
+#dashboardDetailModal .dashboard-detail-head span{
+  color:var(--ls-accent,#00cafa)!important;
+}
+#dashboardDetailModal .dashboard-detail-cell,
+#dashboardDetailModal .dashboard-record-row,
+#dashboardDetailModal .dashboard-detail-copy{
+  border-color:#1d465a!important;
+  background:#031722!important;
+}
+#dashboardDetailModal .dashboard-detail-section h3{
+  color:var(--ls-accent,#00cafa)!important;
+}
