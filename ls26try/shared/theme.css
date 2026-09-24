@@ -246,63 +246,28 @@ body .ls26-footer .ls26-footer-icon image{filter:none!important;box-shadow:none!
 }
 
 
-/* =========================================================
-   HEADER LABELLED TAP TARGETS — 2026-09-24
-   ========================================================= */
-.ls26-nav .ls26-admin-nav{
-  min-width:92px!important;
-  min-height:52px!important;
-  padding-inline:13px!important;
-  font-size:19px!important;
-  font-weight:700!important;
+/* Compact icon actions leave more room for the primary song navigation. */
+.ls26-nav a.ls26-primary-nav{
+  font-weight:800!important;
+  min-width:122px!important;
+  padding-inline:17px!important;
 }
-.ls26-nav .ls26-admin-nav .ls26-nav-icon{
-  font-size:24px!important;
-}
+.ls26-nav a.ls26-admin-nav,
 .ls26-nav #ls26Fullscreen{
   display:flex!important;
   align-items:center!important;
   justify-content:center!important;
-  gap:7px!important;
-  width:auto!important;
-  min-width:122px!important;
+  flex:0 0 54px!important;
+  width:54px!important;
+  min-width:54px!important;
   height:52px!important;
-  padding:8px 13px!important;
-  font-size:18px!important;
-  font-weight:700!important;
+  padding:10px!important;
 }
-.ls26-nav #ls26Fullscreen svg{
-  width:23px!important;
-  height:23px!important;
-  flex:0 0 23px!important;
-}
-.ls26-nav .ls26-fullscreen-label{
-  display:inline!important;
-  white-space:nowrap!important;
-}
-@media(min-width:801px) and (max-width:1100px){
-  .ls26-nav .ls26-admin-nav{
-    min-width:82px!important;
-    font-size:17px!important;
-    padding-inline:9px!important;
-  }
-  .ls26-nav #ls26Fullscreen{
-    min-width:108px!important;
-    font-size:16px!important;
-    padding-inline:9px!important;
-  }
-}
+.ls26-nav .ls26-admin-nav .ls26-nav-icon{font-size:28px!important}
+.ls26-nav #ls26Fullscreen svg{width:26px!important;height:26px!important}
 @media(max-width:800px){
-  .ls26-nav .ls26-admin-nav{
-    min-width:80px!important;
-    font-size:16px!important;
-  }
-  .ls26-nav #ls26Fullscreen{
-    min-width:104px!important;
-    font-size:15px!important;
-  }
+  .ls26-nav a.ls26-primary-nav{min-width:114px!important;padding-inline:13px!important}
 }
-
 
 /* =========================================================
    FINAL HEADER ICON / RIGHT NAV ALIGNMENT — 2026-09-24

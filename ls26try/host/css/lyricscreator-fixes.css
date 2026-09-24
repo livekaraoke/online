@@ -1134,8 +1134,7 @@
 }
 
 
-/* The return-to-top control lives over the bottom edge, appears only while
-   the performer/editor is scrolling upward, and never reserves page space. */
+/* The return-to-top control lives over the bottom edge, stays visible while editing, and never reserves page space. */
 .creator-page .creator-scroll-top{
   position:fixed!important;
   left:50%!important;
@@ -1149,24 +1148,18 @@
   min-height:68px!important;
   margin:0!important;
   padding:0!important;
-  transform:translateX(-50%) translateY(12px)!important;
+  transform:translateX(-50%)!important;
   border:2px solid rgba(0,202,250,.86)!important;
   border-radius:50%!important;
   background:rgba(4,40,58,.76)!important;
   color:#fff!important;
   box-shadow:0 0 22px rgba(0,202,250,.20)!important;
-  opacity:0!important;
-  visibility:hidden!important;
-  pointer-events:none!important;
-  transition:opacity .16s ease,transform .16s ease,visibility .16s ease!important;
-  backdrop-filter:blur(3px)!important;
-  -webkit-backdrop-filter:blur(3px)!important;
-}
-.creator-page .creator-scroll-top.is-visible{
   opacity:.86!important;
   visibility:visible!important;
   pointer-events:auto!important;
-  transform:translateX(-50%) translateY(0)!important;
+  transition:opacity .16s ease,transform .16s ease,visibility .16s ease!important;
+  backdrop-filter:blur(3px)!important;
+  -webkit-backdrop-filter:blur(3px)!important;
 }
 .creator-page .creator-scroll-top span{
   display:grid!important;

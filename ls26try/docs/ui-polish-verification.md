@@ -1,4 +1,25 @@
-# PR 21 verification
+# LiveSuite UI verification
+
+## Screenshot follow-up after PR 21
+
+The follow-up starts from merged main `0b05c56`. The four supplied screenshots
+guide these additional refinements:
+
+- Pin the logo/Exit Fullscreen footer to the viewport bottom below the player.
+- Add saved horizontal and vertical arrow spacing settings (0–32px each).
+- Keep Creator's return button always visible; restore its section outlines and
+  widen the shared text canvas without losing Creator/LyricView wrapping parity.
+- Restore icon-only Admin/Fullscreen controls and widen/bolden Library/LyricView.
+- Enlarge gig dates/details, bring details closer to the title, and stack badges
+  above the edit/delete buttons at the right.
+
+The browser script below additionally verifies footer/player/arrow ordering while
+scrolled and fullscreen, saved spacing values applied after navigation, the restored
+outline, always-visible return control, computed gig font sizes, and stacked actions.
+Screenshots of the updated Creator, LyricView and gig rows were visually reviewed.
+All checks use fixture data; no live Firebase records are changed.
+
+## Original PR 21 verification
 
 The PR branch has been reconciled with main at `46885271b696792a4ab060cf598d3c9d3420c9b8`.
 

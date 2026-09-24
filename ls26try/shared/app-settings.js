@@ -13,6 +13,8 @@
     capoColor: "#ffdb58",
     lyricNavVerticalSize: 96,
     lyricNavHorizontalSize: 72,
+    lyricNavHorizontalGap: 0,
+    lyricNavVerticalGap: 0,
     lyricTextScale: 100,
     lyricLeadInHeight: 192,
     lyricSectionActivationOffset: 320,
@@ -39,6 +41,8 @@
       capoColor: colour(raw.capoColor,DEFAULTS.capoColor),
       lyricNavVerticalSize: clamp(raw.lyricNavVerticalSize,58,140,DEFAULTS.lyricNavVerticalSize),
       lyricNavHorizontalSize: clamp(raw.lyricNavHorizontalSize,52,120,DEFAULTS.lyricNavHorizontalSize),
+      lyricNavHorizontalGap: clamp(raw.lyricNavHorizontalGap,0,32,DEFAULTS.lyricNavHorizontalGap),
+      lyricNavVerticalGap: clamp(raw.lyricNavVerticalGap,0,32,DEFAULTS.lyricNavVerticalGap),
       lyricTextScale: clamp(raw.lyricTextScale,75,150,DEFAULTS.lyricTextScale),
       lyricLeadInHeight: clamp(raw.lyricLeadInHeight,80,360,DEFAULTS.lyricLeadInHeight),
       lyricSectionActivationOffset: clamp(raw.lyricSectionActivationOffset,0,520,DEFAULTS.lyricSectionActivationOffset),
@@ -64,6 +68,8 @@
     root.style.setProperty("--ls26-capo-color",s.capoColor);
     root.style.setProperty("--ls26-nav-vertical-size",s.lyricNavVerticalSize+"px");
     root.style.setProperty("--ls26-nav-horizontal-size",s.lyricNavHorizontalSize+"px");
+    root.style.setProperty("--ls26-nav-horizontal-gap",s.lyricNavHorizontalGap+"px");
+    root.style.setProperty("--ls26-nav-vertical-gap",s.lyricNavVerticalGap+"px");
     root.style.setProperty("--ls26-lyric-text-scale",String(s.lyricTextScale/100));
     root.style.setProperty("--ls26-lyric-lead-in-height",s.lyricLeadInHeight+"px");
     root.style.setProperty("--ls26-section-activation-offset",s.lyricSectionActivationOffset+"px");
