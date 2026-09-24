@@ -209,3 +209,13 @@
   fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round
 }
 .circle-status-btn svg rect{fill:currentColor;stroke:currentColor}
+
+
+/* DISPLAY-ONLY LIVE STATUS INDICATOR — 2026-09-24 */
+#liveCircleBtn.status-indicator,
+#liveCircleBtn.status-indicator:disabled{
+  opacity:1!important;
+  cursor:default!important;
+  pointer-events:none!important;
+  filter:none!important;
+}
