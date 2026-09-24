@@ -71,9 +71,40 @@
   }
   function rejectDialog(requestId,itemId,mode){
     const options=mode==='abandoned'?['Requester has left','Requester withdrew','Singer not available']:['Not suitable for this session','Not enough time tonight','Song unavailable','Duplicate request'];
-    const d=dialog(mode==='abandoned'?'Abandon request':'Reject request',`<p>Select the message to attach to this request.</p><div class="ls26-dialog-actions">${options.map(x=>`<button data-reason="${esc(x)}">${esc(x)}</button>`).join('')}</div><p role="status"></p>`);
-    d.addEventListener('click',async e=>{const reason=e.target.closest('[data-reason]')?.dataset.reason;if(!reason)return;d.querySelectorAll('button:not(.ls26-modal-x)').forEach(b=>b.disabled=true);try{await db().runTransaction(async tx=>{const runRef=db().collection('karaokeControl').doc('runOrder');let run;if(itemId){const snap=await tx.get(runRef);run=snap.data()||{};if(run.sessionId!==tools().getSessionId())throw Error('Session changed. Please reopen this action.');}const fields={status:mode,reason,updatedAt:stamp()};if(requestId)tx.set(db().collection('publicSongRequests').doc(requestId),fields,{merge:true});if(run)tx.set(runRef,{items:(run.items||[]).map(x=>x.id===itemId?{...x,status:mode,reason}:x),updatedAt:stamp()},{merge:true});});d.close();}catch(err){d.querySelector('[role=status]').textContent=err.message;d.querySelectorAll('button').forEach(b=>b.disabled=false);}});
+    const custom=mode==='abandoned'?'<button type="button" class="ls26-custom-reason" data-custom-reason="1">Custom note</button>':'';
+    const d=dialog(mode==='abandoned'?'Abandon request':'Reject request',`<p>Select the message to attach to this request.</p><div class="ls26-dialog-actions ls26-reason-actions">${options.map(x=>`<button type="button" data-reason="${esc(x)}">${esc(x)}</button>`).join('')}${custom}</div><p role="status"></p>`);
+    const saveReason=async reason=>{
+      if(!reason)return;
+      d.querySelectorAll('button:not(.ls26-modal-x)').forEach(b=>b.disabled=true);
+      try{
+        await db().runTransaction(async tx=>{
+          const runRef=db().collection('karaokeControl').doc('runOrder');
+          let run;
+          if(itemId){
+            const snap=await tx.get(runRef);
+            run=snap.data()||{};
+            if(run.sessionId!==tools().getSessionId())throw Error('Session changed. Please reopen this action.');
+          }
+          const fields={status:mode,reason,updatedAt:stamp()};
+          if(requestId)tx.set(db().collection('publicSongRequests').doc(requestId),fields,{merge:true});
+          if(run)tx.set(runRef,{items:(run.items||[]).map(x=>x.id===itemId?{...x,status:mode,reason}:x),updatedAt:stamp()},{merge:true});
+        });
+        LS26Dialogs.fadeClose(d);
+      }catch(err){
+        d.querySelector('[role=status]').textContent=err.message;
+        d.querySelectorAll('button').forEach(b=>b.disabled=false);
+      }
+    };
+    d.addEventListener('click',async e=>{
+      const preset=e.target.closest('[data-reason]')?.dataset.reason;
+      if(preset){await saveReason(preset);return;}
+      if(e.target.closest('[data-custom-reason]')){
+        const reason=await LS26Dialogs.prompt('Write the reason for abandoning this request:','');
+        if(reason!==null&&String(reason).trim())await saveReason(String(reason).trim());
+      }
+    });
   }
+
   function mirror(){
     const end=$('endMarker');if(!end||!tools())return;
     for(const [kind,title,source] of [['run','RUN ORDER','tsRunOrderList'],['requests','PENDING REQUESTS','tsPendingRequestsList']]){
