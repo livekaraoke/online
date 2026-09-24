@@ -755,7 +755,7 @@
     const quick=document.getElementById('performanceQuickInfo');
     quick?.classList.toggle('ls26-released',currentSectionIndex>0);
     const header=document.getElementById('ls26StickyHeader');
-    const offset=(header?.getBoundingClientRect().height||0)+(currentSectionIndex===0&&!quick?.classList.contains('ls26-released')?(quick?.getBoundingClientRect().height||0):0)+12;
+    const offset=(header?.getBoundingClientRect().height||0)+(currentSectionIndex===0&&!quick?.classList.contains('ls26-released')?(quick?.getBoundingClientRect().height||0):0)+sectionActivationOffset();
     window.scrollTo({top:Math.max(0,sectionEls[currentSectionIndex].getBoundingClientRect().top+window.scrollY-offset),behavior:'instant'});
     setTimeout(updateSectionProgress,700);
   }
