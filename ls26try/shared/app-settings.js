@@ -14,6 +14,8 @@
     lyricNavVerticalSize: 96,
     lyricNavHorizontalSize: 72,
     lyricTextScale: 100,
+    lyricLeadInHeight: 192,
+    lyricSectionActivationOffset: 180,
     libraryRowHeight: 62,
     reduceGlow: false
   });
@@ -38,6 +40,8 @@
       lyricNavVerticalSize: clamp(raw.lyricNavVerticalSize,58,140,DEFAULTS.lyricNavVerticalSize),
       lyricNavHorizontalSize: clamp(raw.lyricNavHorizontalSize,52,120,DEFAULTS.lyricNavHorizontalSize),
       lyricTextScale: clamp(raw.lyricTextScale,75,150,DEFAULTS.lyricTextScale),
+      lyricLeadInHeight: clamp(raw.lyricLeadInHeight,80,360,DEFAULTS.lyricLeadInHeight),
+      lyricSectionActivationOffset: clamp(raw.lyricSectionActivationOffset,0,360,DEFAULTS.lyricSectionActivationOffset),
       libraryRowHeight: clamp(raw.libraryRowHeight,48,92,DEFAULTS.libraryRowHeight),
       reduceGlow: raw.reduceGlow === true
     };
@@ -61,6 +65,8 @@
     root.style.setProperty("--ls26-nav-vertical-size",s.lyricNavVerticalSize+"px");
     root.style.setProperty("--ls26-nav-horizontal-size",s.lyricNavHorizontalSize+"px");
     root.style.setProperty("--ls26-lyric-text-scale",String(s.lyricTextScale/100));
+    root.style.setProperty("--ls26-lyric-lead-in-height",s.lyricLeadInHeight+"px");
+    root.style.setProperty("--ls26-section-activation-offset",s.lyricSectionActivationOffset+"px");
     root.style.setProperty("--ls26-library-row-height",s.libraryRowHeight+"px");
     root.classList.toggle("ls26-hide-inactive-status",!s.showTopStatusWhenInactive);
     root.classList.toggle("ls26-reduce-glow",s.reduceGlow);
