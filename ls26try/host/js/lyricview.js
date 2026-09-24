@@ -1887,8 +1887,7 @@
           await showModal("No Active Session", "There is no active Performance Session to end.");
           return;
         }
-        const ok = await showModal("End Session?", "This will end the current Performance Session and return to Admin.", true);
-        if (!ok) return;
+        // Admin owns the single end-session confirmation and the full archive lifecycle.
         location.href = `../admin-new/admin.html?endSession=${encodeURIComponent(sessionId)}`;
       };
     }
