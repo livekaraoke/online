@@ -1600,6 +1600,7 @@
     const scrollTopButton = $("lyricsCreatorScrollTop");
     let lastCreatorScrollY = window.scrollY;
     let creatorScrollTopHideTimer = 0;
+    let returningToTop = false;
 
     const setCreatorScrollTopVisible = visible => {
       scrollTopButton.classList.toggle("is-visible", !!visible);
@@ -1610,15 +1611,16 @@
 
     window.addEventListener("scroll", () => {
       const y = Math.max(0, window.scrollY);
-      const scrollingUp = y < lastCreatorScrollY - 2;
+      const scrollingUp = y < lastCreatorScrollY;
+      if (y === 0) returningToTop = false;
 
-      if (y < 140) {
+      if (y < 140 || returningToTop) {
         setCreatorScrollTopVisible(false);
       } else if (scrollingUp) {
         setCreatorScrollTopVisible(true);
         clearTimeout(creatorScrollTopHideTimer);
         creatorScrollTopHideTimer = setTimeout(() => setCreatorScrollTopVisible(false), 1300);
-      } else if (y > lastCreatorScrollY + 2) {
+      } else if (y > lastCreatorScrollY) {
         setCreatorScrollTopVisible(false);
       }
 
@@ -1626,6 +1628,8 @@
     }, { passive:true });
 
     scrollTopButton.onclick = () => {
+      returningToTop = true;
+      clearTimeout(creatorScrollTopHideTimer);
       setCreatorScrollTopVisible(false);
       window.scrollTo({
         top:0,

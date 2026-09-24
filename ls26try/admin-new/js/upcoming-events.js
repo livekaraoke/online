@@ -49,6 +49,7 @@
   let calendarMonthCursor = new Date();
   let selectedCalendarDate = "";
   let nextGigHeroStartMs = 0;
+  let nextGigHeroKey = "";
   let nextGigCountdownTimer = null;
   calendarMonthCursor = new Date(calendarMonthCursor.getFullYear(), calendarMonthCursor.getMonth(), 1);
 
@@ -120,9 +121,9 @@
 
     return {
       day: String(date.getDate()).padStart(2, "0"),
-      month: date.toLocaleDateString(undefined, { month:"short" }).toUpperCase().replace(/^SEPT$/,"SEP"),
+      month: date.toLocaleDateString("en-GB", { month:"short" }).toUpperCase().replace(/^SEPT$/,"SEP"),
       year: String(date.getFullYear()),
-      weekday: date.toLocaleDateString(undefined, { weekday:"short" }).toUpperCase(),
+      weekday: date.toLocaleDateString("en-GB", { weekday:"short" }).toUpperCase(),
       full: date.toLocaleDateString(undefined, {
         weekday: "short",
         day: "numeric",
@@ -134,7 +135,8 @@
 
   function nextGigStartDate(event) {
     if (!event?.date || !event?.startTime) return null;
-    const date = new Date(`${event.date}T${event.startTime}:00`);
+    const time = /^\d{2}:\d{2}$/.test(event.startTime) ? `${event.startTime}:00` : event.startTime;
+    const date = new Date(`${event.date}T${time}`);
     return Number.isNaN(date.getTime()) ? null : date;
   }
 
@@ -154,11 +156,28 @@
   }
 
   function tickNextGigCountdown() {
+    // Work from the existing snapshot: ticking never causes a Firebase read.
+    const next = findNextGig();
+    const key = next ? `${next.id}|${next.date}|${next.startTime}` : "";
+    if (key !== nextGigHeroKey) {
+      renderNextGigHero(next);
+      return;
+    }
     const output = $("eventsNextGigCountdown");
     if (!output) return;
     output.textContent = nextGigHeroStartMs
       ? formatGigCountdown(nextGigHeroStartMs - Date.now())
-      : "TIME TBC";
+      : next ? "TIME TBC" : "—";
+  }
+
+  function findNextGig(now = new Date()) {
+    const today = localDateKey(now);
+    return events.filter(eventStillUpcoming)
+      .filter(event => {
+        const start = nextGigStartDate(event);
+        return start ? start.getTime() >= now.getTime() : event.date >= today;
+      })
+      .sort((a, b) => eventSortValue(a).localeCompare(eventSortValue(b)))[0] || null;
   }
 
   function renderNextGigHero(event) {
@@ -166,6 +185,7 @@
     const meta = $("eventsNextGigHeroMeta");
     const dateLine = $("eventsNextGigCountdownDate");
     if (!title || !meta || !dateLine) return;
+    nextGigHeroKey = event ? `${event.id}|${event.date}|${event.startTime}` : "";
 
     if (!event) {
       nextGigHeroStartMs = 0;
@@ -310,7 +330,7 @@
       .filter(eventStillUpcoming)
       .sort((a, b) => eventSortValue(a).localeCompare(eventSortValue(b)));
 
-    const next = upcoming[0] || null;
+    const next = findNextGig(now);
 
     $("upcomingCount").textContent = String(upcoming.length);
     $("thisMonthCount").textContent = String(
@@ -330,7 +350,7 @@
       $("nextGigName").textContent = "Nothing scheduled";
     }
 
-    renderNextGigHero(next);
+    renderNextGigHero(findNextGig(now));
   }
 
   function renderSelectedCalendarDay() {
