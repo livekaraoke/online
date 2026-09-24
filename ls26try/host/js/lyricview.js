@@ -246,7 +246,16 @@
     const values = Array.isArray(song?.youtubeLinks) && song.youtubeLinks.length
       ? song.youtubeLinks
       : [song?.youtubeLink || ""];
-    return [...new Set(values.map(value=>String(value||"").trim()).filter(Boolean))];
+    const labels = Array.isArray(song?.youtubeLinkLabels) ? song.youtubeLinkLabels : [];
+    const seen = new Set();
+    return values.map((value,index)=>({
+      url:String(value||"").trim(),
+      label:String(labels[index]||"").trim()
+    })).filter(item=>{
+      if(!item.url||seen.has(item.url))return false;
+      seen.add(item.url);
+      return true;
+    });
   }
 
   function renderPerformanceSongReference(song) {
@@ -265,9 +274,10 @@
 
     const youtubeCard=$("performanceYoutubeCard");
     youtubeCard.hidden=!links.length;
-    $("performanceYoutubeLinks").innerHTML=links.map((link,index)=>
-      `<a href="${esc(link)}" target="_blank" rel="noopener noreferrer">▶ YouTube${links.length>1?` ${index+1}`:""}</a>`
-    ).join("");
+    $("performanceYoutubeLinks").innerHTML=links.map((link,index)=>{
+      const label=link.label||`YouTube${links.length>1?` ${index+1}`:""}`;
+      return `<a href="${esc(link.url)}" target="_blank" rel="noopener noreferrer">▶ ${esc(label)}</a>`;
+    }).join("");
 
     const hostCard=$("performanceHostNotesCard");
     hostCard.hidden=!hostNotes.length;
