@@ -205,3 +205,9 @@
 }
 
 #clearSessionEventSuggestionBtn svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+.circle-status-btn svg{
+  width:19px!important;height:19px!important;display:block!important;
+  fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round
+}
+.circle-status-btn svg rect{fill:currentColor;stroke:currentColor}
