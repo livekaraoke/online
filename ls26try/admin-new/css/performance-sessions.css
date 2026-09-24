@@ -556,3 +556,45 @@ body.sessions-body {
     grid-template-columns:1fr;
   }
 }
+
+
+/* =========================================================
+   SESSION DETAIL MODAL — LIVESUITE CHROME — 2026-09-24
+   ========================================================= */
+.session-modal .session-modal-box{
+  border:1px solid #23546a!important;
+  background:linear-gradient(155deg,#061d2a,#03121b)!important;
+  box-shadow:0 24px 70px rgba(0,0,0,.62)!important;
+}
+.session-modal .session-detail-header{
+  padding-right:54px!important;
+}
+.session-modal .session-detail-header h2{
+  color:#eef8ff!important;
+}
+.session-modal .session-detail-header p{
+  color:#8faabd!important;
+}
+.session-modal .detail-card,
+.session-modal .detail-row{
+  border-color:#1d465a!important;
+  background:#031722!important;
+}
+.session-modal .detail-card span{
+  color:#7898aa!important;
+}
+.session-modal .detail-card strong,
+.session-modal .detail-row strong{
+  color:#e8f5fb!important;
+}
+.session-modal .detail-row span{
+  color:#9bb2c0!important;
+}
+.session-modal .detail-section h3{
+  color:#00cafa!important;
+}
+.session-modal .ls26-modal-close-bar .ls26-modal-x{
+  border-color:#23546a!important;
+  background:#041925!important;
+  color:#fff!important;
+}
