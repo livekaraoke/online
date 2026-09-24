@@ -877,7 +877,7 @@
   flex:1 1 180px!important;
   width:auto!important;
   min-width:140px!important;
-  max-width:360px!important;
+  max-width:280px!important;
 }
 .creator-page .creator-section-head .creator-section-actions{
   display:flex!important;
@@ -958,7 +958,7 @@
 .creator-youtube-url-input{font-size:15px!important}
 
 @media(max-width:760px){
- .creator-page .creator-section-head .section-title-input{max-width:260px!important}
+ .creator-page .creator-section-head .section-title-input{max-width:220px!important}
  .creator-youtube-link-row{grid-template-columns:minmax(170px,1.3fr) minmax(120px,.7fr) 42px!important}
 }
 
