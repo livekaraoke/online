@@ -76,3 +76,24 @@
   margin-top:0!important;
   margin-right:54px!important;
 }
+
+
+.ls26-reason-actions{
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:8px!important;
+}
+.ls26-reason-actions button{
+  width:100%!important;
+  min-height:48px!important;
+  text-align:center!important;
+}
+.ls26-reason-actions .ls26-custom-reason{
+  border-color:var(--ls-accent,#00cafa)!important;
+  color:var(--ls-accent,#00cafa)!important;
+  background:#052333!important;
+  font-weight:850!important;
+}
+@media(max-width:560px){
+  .ls26-reason-actions{grid-template-columns:1fr!important}
+}
