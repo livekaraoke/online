@@ -16,7 +16,7 @@
   if(!document.querySelector('script[data-ls26-settings]')){
     const settingsScript=document.createElement('script');
     settingsScript.dataset.ls26Settings='1';
-    settingsScript.src=url('shared/app-settings.js?v=20260924-performance-tools');
+    settingsScript.src=url('shared/app-settings.js?v=20260924-session-ux');
     document.head.append(settingsScript);
   }
   // Call synchronously from the initiating tap, before playback's async work.
