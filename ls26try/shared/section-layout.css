@@ -89,7 +89,7 @@
 .creator-page .ls26-lyric-green-bold *,
 .host-lyric-view-page .ls26-lyric-green-bold,
 .host-lyric-view-page .ls26-lyric-green-bold *{
-  color:#00f033!important;
+  color:#42f35c!important;
   font-weight:900!important;
   text-decoration:none!important;
   text-decoration-line:none!important;
@@ -102,4 +102,13 @@
 .host-lyric-view-page .host-section-body b,
 .host-lyric-view-page .host-section-body strong {
   font-weight: 900 !important;
+}
+
+
+/* Explicit heavy-bold spans created by the toolbar match the reference lyric weight. */
+.creator-page .creator-rich-editor .ls26-heavy-bold,
+.creator-page .creator-rich-editor .ls26-heavy-bold *,
+.host-lyric-view-page .host-section-body .ls26-heavy-bold,
+.host-lyric-view-page .host-section-body .ls26-heavy-bold * {
+  font-weight:900 !important;
 }
