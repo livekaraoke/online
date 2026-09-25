@@ -208,6 +208,26 @@
     return Math.round(values.reduce((a,b)=>a+b,0)/values.length);
   }
 
+  function finishedEdit(session, field) {
+    return String(session?.finishedSessionEdits?.[field] || "").trim();
+  }
+
+  function originalWithEdit(session, field, original) {
+    const edit = finishedEdit(session, field);
+    return edit ? `${original} (EDIT: ${edit})` : original;
+  }
+
+  function editableFinishedCard(session, field, label, original) {
+    return `
+      <div class="detail-card finished-session-editable">
+        <span>${esc(label)}</span>
+        <div class="finished-session-value-row">
+          <strong>${esc(originalWithEdit(session, field, original))}</strong>
+          <button type="button" class="finished-session-edit-btn" onclick="editFinishedSessionField('${esc(session.id)}','${esc(field)}','${esc(label)}')" aria-label="Edit ${esc(label)}" title="Add an edit annotation">✎</button>
+        </div>
+      </div>`;
+  }
+
   function sessionSearchText(session) {
     return [
       session.title,
@@ -490,10 +510,10 @@
       </div>
 
       <div class="detail-grid">
-        <div class="detail-card"><span>SCHEDULED START</span><strong>${formatDate(scheduledStart(session))} ${formatTime(scheduledStart(session))}</strong></div>
-        <div class="detail-card"><span>SCHEDULED END</span><strong>${formatDate(scheduledEnd(session))} ${formatTime(scheduledEnd(session))}</strong></div>
-        <div class="detail-card"><span>ACTUAL START</span><strong>${formatDate(actualStart(session))} ${formatTime(actualStart(session))}</strong></div>
-        <div class="detail-card"><span>ACTUAL END</span><strong>${formatDate(actualEnd(session))} ${formatTime(actualEnd(session))}</strong></div>
+        ${editableFinishedCard(session,"scheduledStart","SCHEDULED START",`${formatDate(scheduledStart(session))} ${formatTime(scheduledStart(session))}`)}
+        ${editableFinishedCard(session,"scheduledEnd","SCHEDULED END",`${formatDate(scheduledEnd(session))} ${formatTime(scheduledEnd(session))}`)}
+        ${editableFinishedCard(session,"actualStart","ACTUAL START",`${formatDate(actualStart(session))} ${formatTime(actualStart(session))}`)}
+        ${editableFinishedCard(session,"actualEnd","ACTUAL END",`${formatDate(actualEnd(session))} ${formatTime(actualEnd(session))}`)}
         <div class="detail-card"><span>DURATION X/BREAKS</span><strong>${formatHours(duration.activeMs)}</strong></div>
         <div class="detail-card"><span>TOTAL ELAPSED</span><strong>${formatHours(duration.totalMs)}</strong></div>
         <div class="detail-card"><span>BREAKS</span><strong>${(session.breaks || []).length} • ${formatHours(getBreakMs(session))}</strong></div>
@@ -506,7 +526,12 @@
 
       <div class="detail-section">
         <h3>SESSION NOTES</h3>
-        <div class="detail-card">${esc(session.notes || "No notes.")}</div>
+        <div class="detail-card finished-session-notes-card">
+          <div class="finished-session-value-row">
+            <strong>${esc(originalWithEdit(session,"notes",session.notes || "No notes."))}</strong>
+            <button type="button" class="finished-session-edit-btn" onclick="editFinishedSessionField('${esc(session.id)}','notes','SESSION NOTES')" aria-label="Edit session notes" title="Add an edit annotation">✎</button>
+          </div>
+        </div>
       </div>
 
       <div class="detail-section">
@@ -523,6 +548,52 @@
     `;
 
     $("sessionDetailModal").classList.remove("hidden");
+  };
+
+  window.editFinishedSessionField = async function editFinishedSessionField(sessionId, field, label) {
+    const session = sessions.find(item => item.id === sessionId);
+    if (!session) return;
+
+    const ended = String(session.status || "").toLowerCase() === "ended" || !!actualEnd(session);
+    if (!ended) {
+      await LS26Dialogs.alert("Only finished sessions can use edit annotations.");
+      return;
+    }
+
+    const proceed = await LS26Dialogs.confirm(
+      `This is a finished session. Add or change the EDIT annotation for ${label}? The original recorded value will not be changed.`
+    );
+    if (!proceed) return;
+
+    const current = finishedEdit(session, field);
+    const value = await LS26Dialogs.prompt(
+      `Enter the corrected value for ${label}. This will be shown in brackets as (EDIT: …) while the original stays unchanged.`,
+      current
+    );
+    if (value === null) return;
+
+    const clean = String(value).trim();
+    const confirmSave = await LS26Dialogs.confirm(
+      clean
+        ? `Save this annotation for ${label}?\n\nEDIT: ${clean}`
+        : `Clear the EDIT annotation for ${label}? The original recorded value will remain unchanged.`
+    );
+    if (!confirmSave) return;
+
+    const update = {
+      [`finishedSessionEdits.${field}`]: clean,
+      finishedSessionEditedAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+
+    await db.collection("performanceSessions").doc(sessionId).update(update);
+
+    session.finishedSessionEdits = {
+      ...(session.finishedSessionEdits || {}),
+      [field]: clean
+    };
+
+    showToast(clean ? "Finished-session edit annotation saved." : "Edit annotation cleared.");
+    await window.viewSessionDetails(sessionId);
   };
 
   window.closeSessionModal = function closeSessionModal() {
