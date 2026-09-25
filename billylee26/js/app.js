@@ -144,7 +144,7 @@
     label.classList.remove("is-playing"); title.classList.remove("between-songs-title");
     if(!active){label.textContent="NOT LIVE";title.textContent="No active session";$("currentSongArtist").textContent="Check the upcoming gigs below.";$("stateIcon").textContent="♪";return;}
     if(breakOpen){label.textContent="ON BREAK";title.textContent="- WE\'LL BE BACK SHORTLY -";title.classList.add("between-songs-title");$("currentSongArtist").textContent="Requests remain open during the break.";$("stateIcon").textContent="☕";return;}
-    if(playing){label.textContent="NOW PLAYING";label.classList.add("is-playing");title.textContent=playing.songTitle||playing.title||"Current song";$("currentSongArtist").textContent=playing.artist||playing.songArtist||"";$("stateIcon").innerHTML='<span class="pause-bars"><i></i><i></i></span>';return;}
+    if(playing){label.textContent="NOW PLAYING";label.classList.add("is-playing");title.textContent=playing.songTitle||playing.title||"Current song";$("currentSongArtist").textContent=ArtistNames.display(playing.artist||playing.songArtist||"");$("stateIcon").innerHTML='<span class="pause-bars"><i></i><i></i></span>';return;}
     label.textContent="LIVE NOW";title.textContent="- BETWEEN SONGS -";title.classList.add("between-songs-title");$("currentSongArtist").textContent="The next song will start shortly.";$("stateIcon").textContent="♪";
   }
 
@@ -198,8 +198,8 @@
     const a=normaliseSongIdentity(item.songTitle||item.title);
     const b=normaliseSongIdentity(song.title);
     if(!a||a!==b)return false;
-    const ia=normaliseSongIdentity(item.artist||item.songArtist);
-    const sa=normaliseSongIdentity(song.artist);
+    const ia=normaliseSongIdentity(ArtistNames.display(item.artist||item.songArtist));
+    const sa=normaliseSongIdentity(ArtistNames.display(song.artist));
     return !ia||!sa||ia===sa;
   }
   function songSessionState(song){
@@ -215,7 +215,7 @@
 
   function renderSongResults(){
     const q=$("songSearch").value.trim().toLowerCase();
-    const list=q?songs.filter(song=>`${song.title||""} ${song.artist||""}`.toLowerCase().includes(q)):songs;
+    const list=q?songs.filter(song=>ArtistNames.matchesSong(song,q)):songs;
     $("songResults").innerHTML=list.map(song=>{
       const state=songSessionState(song);
       const selected=selectedRequestSongId===song.id;
@@ -223,7 +223,7 @@
       if(state==="playing"){action="NOW PLAYING";disabled=" disabled";stateClass=" is-playing";}
       else if(state==="played"){action="ALREADY PLAYED";disabled=" disabled";stateClass=" is-played";}
       else if(selected){action="SEND REQUEST";stateClass=" selected";}
-      return `<div class="song-row${stateClass}" data-song-row-id="${escapeHTML(song.id)}"><span><strong>${escapeHTML(song.title||"Untitled")}</strong><small>${escapeHTML(song.artist||"")}</small></span><button class="song-action" type="button" data-song-id="${escapeHTML(song.id)}"${disabled}>${escapeHTML(action)}</button></div>`;
+      return `<div class="song-row${stateClass}" data-song-row-id="${escapeHTML(song.id)}"><span><strong>${escapeHTML(song.title||"Untitled")}</strong><small>${escapeHTML(ArtistNames.display(song.artist||""))}</small></span><button class="song-action" type="button" data-song-id="${escapeHTML(song.id)}"${disabled}>${escapeHTML(action)}</button></div>`;
     }).join("") || `<div class="empty-box">No songs found.</div>`;
   }
 
@@ -307,7 +307,7 @@
         const runStatus=runOrderStatusForRequest(id);
         const effectiveStatus=runStatus||String(r.status||"active").toLowerCase();
         const playing=effectiveStatus==="playing";
-        return `<div class="my-request${playing?" is-playing":""}"><span><strong>${escapeHTML(r.songTitle||"Song")}</strong><small>${escapeHTML(r.songArtist||r.artist||"")}</small></span><em class="request-status status-${escapeHTML(effectiveStatus)}">${statusLabel(effectiveStatus)}</em></div>`;
+        return `<div class="my-request${playing?" is-playing":""}"><span><strong>${escapeHTML(r.songTitle||"Song")}</strong><small>${escapeHTML(ArtistNames.display(r.songArtist||r.artist||""))}</small></span><em class="request-status status-${escapeHTML(effectiveStatus)}">${statusLabel(effectiveStatus)}</em></div>`;
       }).join("");
     };
     paint();

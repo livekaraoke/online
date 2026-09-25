@@ -115,7 +115,7 @@
         location.href=url('admin-new/admin.html');
       }
     };
-    if(location.pathname.endsWith('/lyricscreator.html')){LS26Data.invalidate('lyrics');const title=params.get('inboxTitle'),artist=params.get('inboxArtist');if(title&&!params.get('firebaseId')){$('songTitleInput').value=title;$('artistInput').value=artist||'';}}
+    if(location.pathname.endsWith('/lyricscreator.html')){LS26Data.invalidate('lyrics');const title=params.get('inboxTitle'),artist=params.get('inboxArtist');if(title&&!params.get('firebaseId')){$('songTitleInput').value=title;$('artistInput').value=ArtistNames.display(artist);}}
     if(location.pathname.endsWith('/setlist-editor.html'))LS26Data.invalidate('lyricsSetlists');
   }
   function openInbox(){

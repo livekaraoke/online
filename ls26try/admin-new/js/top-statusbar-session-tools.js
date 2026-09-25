@@ -635,7 +635,7 @@
       <div class="ts-pending-request-row" data-ls-request="${esc(request.id)}">
         <div class="ts-pending-main">
           <strong>${esc(request.songTitle || request.title || "Untitled Song")}</strong>
-          <small>${esc(request.artist || request.songArtist || "")} · ${esc(request.singerName || request.name || "Singer")} · ${esc(request.location || "")}</small>
+          <small>${esc(ArtistNames.display(request.artist || request.songArtist || ""))} · ${esc(request.singerName || request.name || "Singer")} · ${esc(request.location || "")}</small>
         </div>
         ${request.note?`<div class="ls26-request-note">${esc(request.note)}</div>`:''}
         <div class="ts-pending-actions">
@@ -709,7 +709,7 @@
     // Existing Run Order rows may contain a migrated legacy song.id field
     // (title+artist slug) instead of the actual Firestore document ID.
     const titleKey = normaliseSongIdentity(item.songTitle || item.title);
-    const artistKey = normaliseSongIdentity(item.artist || item.songArtist);
+    const artistKey = normaliseSongIdentity(ArtistNames.display(item.artist || item.songArtist));
 
     let matches = state.songs.filter(song =>
       normaliseSongIdentity(song.title) === titleKey
@@ -717,7 +717,7 @@
 
     if (artistKey) {
       const exactArtist = matches.find(song =>
-        normaliseSongIdentity(song.artist) === artistKey
+        normaliseSongIdentity(ArtistNames.display(song.artist)) === artistKey
       );
       if (exactArtist) return exactArtist;
     }
@@ -799,7 +799,7 @@
     if (!request) {
       body.innerHTML = `
         ${detailValue("Song", item.songTitle || item.title || item.songId)}
-        ${detailValue("Artist", item.artist)}
+        ${detailValue("Artist", ArtistNames.display(item.artist))}
         ${detailValue("Added by", item.source === "manual" ? "Host" : item.singerName)}
         <div class="ts-run-detail-empty">
           This Run Order item was added manually and has no singer signup details.
@@ -816,7 +816,7 @@
         ${detailValue("Age range", request.ageRange)}
         ${detailValue("Rating tonight", rating)}
         ${detailValue("Song", request.songTitle || request.title || item.songTitle)}
-        ${detailValue("Artist", request.songArtist || request.artist || item.artist)}
+        ${detailValue("Artist", ArtistNames.display(request.songArtist || request.artist || item.artist))}
         ${detailValue("Comment / note", request.note)}
       ` || `<div class="ts-run-detail-empty">No additional signup details.</div>`;
     }
@@ -909,7 +909,7 @@
             <div class="ts-run-main">
               <strong>${esc(item.songTitle || item.title || item.songId || "Untitled Song")}</strong>
               <small>
-                ${esc(item.artist || "")} · ${esc(item.singerName || "Host choice")} · ${esc(requestForRunItem(item)?.location || "")}
+                ${esc(ArtistNames.display(item.artist || ""))} · ${esc(item.singerName || "Host choice")} · ${esc(requestForRunItem(item)?.location || "")}
                 ${isPlaying ? `<em class="ts-playing-label">${status === "played" ? "FINISHED" : "PLAYING"}</em>` : ""}
               </small>
             </div>
@@ -954,7 +954,7 @@
     select.innerHTML =
       `<option value="">Add a song…</option>` +
       state.songs.map(song =>
-        `<option value="${esc(song.id)}">${esc(song.title || song.id)}${song.artist ? ` — ${esc(song.artist)}` : ""}</option>`
+        `<option value="${esc(song.id)}">${esc(song.title || song.id)}${song.artist ? ` — ${esc(ArtistNames.display(song.artist))}` : ""}</option>`
       ).join("");
 
     if (state.songs.some(song => song.id === current)) select.value = current;

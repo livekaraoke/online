@@ -490,7 +490,7 @@
     const requestRows = records.requests.length
       ? records.requests.map(request => `
           <div class="dashboard-record-row">
-            <strong>${esc(request.songTitle || request.title || "Untitled Song")} — ${esc(request.artist || request.songArtist || "")}</strong>
+            <strong>${esc(request.songTitle || request.title || "Untitled Song")} — ${esc(ArtistNames.display(request.artist || request.songArtist || ""))}</strong>
             <span>${esc(request.singerName || request.name || "Singer")} · ${esc(formatTime(tsDate(request.requestedAt || request.createdAt || request.submittedAt || request.timestamp)))}</span>
             <span>${esc(requestStatusLabel(request.status))}</span>
           </div>
@@ -500,7 +500,7 @@
     const playedRows = records.played.length
       ? records.played.map(song => `
           <div class="dashboard-record-row">
-            <strong>${esc(song.songTitle || song.title || song.songId || "Untitled Song")} — ${esc(song.artist || song.songArtist || "")}</strong>
+            <strong>${esc(song.songTitle || song.title || song.songId || "Untitled Song")} — ${esc(ArtistNames.display(song.artist || song.songArtist || ""))}</strong>
             <span>${esc(song.singerName || "")}</span>
             <span>${esc(formatTime(tsDate(song.playedAt || song.createdAt)))}</span>
           </div>

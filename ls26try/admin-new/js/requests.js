@@ -57,7 +57,7 @@
 
       row.innerHTML = `
         <div class="request-number">${i + 1}</div>
-        <div class="request-main"><strong>${LK.dashboard.escapeHTML(title)}</strong><span>${LK.dashboard.escapeHTML(artist)}</span></div>
+        <div class="request-main"><strong>${LK.dashboard.escapeHTML(title)}</strong><span>${LK.dashboard.escapeHTML(ArtistNames.display(artist))}</span></div>
         <div class="request-person"><strong>${LK.dashboard.escapeHTML(name)}</strong><span>${LK.dashboard.escapeHTML(locationAge)}</span></div>
         <div>${LK.dashboard.escapeHTML(bpm)}</div>
         <div>${LK.dashboard.minutesAgo(req.createdAt)} mins ago</div>

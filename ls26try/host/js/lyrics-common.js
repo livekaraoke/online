@@ -29,7 +29,7 @@ window.LyricsCommon = (() => {
       ...song,
       firebaseId: id || song.firebaseId || song.id || "",
       title: song.title || "Untitled",
-      artist: song.artist || "Unknown Artist",
+      artist: ArtistNames.display(song.artist) || "Unknown Artist",
       userBpm: song.userBpm || "",
       originalBpm: song.originalBpm || "",
       key: song.key || "",

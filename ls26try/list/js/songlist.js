@@ -141,7 +141,7 @@ function sortByOrderThenTitle(a, b) {
   if (orderA !== orderB) return orderA - orderB;
   return sortByTitle(a, b);
 }
-function getSongText(song) { return `${song.title || ""} ${song.artist || ""} ${song.year || ""}`.toLowerCase(); }
+function getSongText(song) { return ArtistNames.searchText(song); }
 function getLyricsSongById(id) { return lyricsSongs.find(song => song.id === id) || null; }
 function getVisibleFullSongs() {
   // When a Lyrics Suite setlist has been selected in Admin, that setlist is
@@ -492,7 +492,7 @@ function renderCartPreview() {
   if (!box) return;
   box.innerHTML = requestCart.map(item => `
     <div class="signup-cart-row">
-      <div><strong>${escapeHTML(item.title)}</strong><span>${escapeHTML(item.artist)}${item.year ? " • " + escapeHTML(item.year) : ""}</span>${item.alreadyPlayedToday ? `<small>Request anyway after already played</small>` : ""}</div>
+      <div><strong>${escapeHTML(item.title)}</strong><span>${escapeHTML(ArtistNames.display(item.artist))}${item.year ? " • " + escapeHTML(item.year) : ""}</span>${item.alreadyPlayedToday ? `<small>Request anyway after already played</small>` : ""}</div>
       <button type="button" onclick="removeSongFromCart('${escapeHTML(songKey(item))}')">×</button>
     </div>`).join("");
 }
@@ -555,13 +555,13 @@ function renderSearchResults() {
   if (!search) { box.classList.add("hidden"); box.innerHTML = ""; return; }
   const unique = new Map();
   getVisibleFullSongs().forEach(song => unique.set(song.id || `${song.title}-${song.artist}`, song));
-  const results = [...unique.values()].filter(song => getSongText(song).includes(search)).sort(sortByTitle);
+  const results = [...unique.values()].filter(song => getSongText(song).includes(ArtistNames.normalizeSearch(search))).sort(sortByTitle);
   box.innerHTML = "";
   if (!results.length) { box.innerHTML = `<div class="search-result-row empty">No songs found</div>`; box.classList.remove("hidden"); return; }
   results.slice(0, 20).forEach(song => {
     const row = document.createElement("div");
     row.className = "search-result-row";
-    row.innerHTML = `<div class="song-text-main"><strong>${escapeHTML(song.title)}</strong><span>${escapeHTML(song.artist)}</span></div>${signupButtonHTML(song)}`;
+    row.innerHTML = `<div class="song-text-main"><strong>${escapeHTML(song.title)}</strong><span>${escapeHTML(ArtistNames.display(song.artist))}</span></div>${signupButtonHTML(song)}`;
     box.appendChild(row);
   });
   box.classList.remove("hidden");
@@ -645,7 +645,7 @@ function renderPublicSongList() {
 }
 function renderPublicCustomSections(container, search) {
   sections.filter(section => section.visible !== false).sort(sortByOrderThenTitle).forEach((section, sectionIndex) => {
-    const items = getSectionSongs(section.id).map(getSectionSongDisplay).filter(song => song.visible !== false).filter(song => !search || getSongText(song).includes(search));
+    const items = getSectionSongs(section.id).map(getSectionSongDisplay).filter(song => song.visible !== false).filter(song => !search || getSongText(song).includes(ArtistNames.normalizeSearch(search)));
     if (!items.length && search) return;
     const sectionEl = document.createElement("section");
     sectionEl.className = "song-section public-section custom-section";
@@ -669,7 +669,7 @@ function renderPublicCustomSections(container, search) {
   });
 }
 function renderPublicFullList(container, search) {
-  const fullSongs = getVisibleFullSongs().filter(song => !search || getSongText(song).includes(search));
+  const fullSongs = getVisibleFullSongs().filter(song => !search || getSongText(song).includes(ArtistNames.normalizeSearch(search)));
   const wrapper = document.createElement("section");
   wrapper.id = "fullSongListSection";
   wrapper.className = `full-song-list-wrapper ${fullSongListOpen ? "open" : "closed"}`;
@@ -692,7 +692,7 @@ function renderPublicFullList(container, search) {
     groupSongs.forEach(song => {
       const li = document.createElement("li");
       li.className = isAlreadyPlayedToday(song) ? "already-played-song" : "";
-      li.innerHTML = `<div class="song-info song-info-with-year"><div class="song-text-main"><span>${escapeHTML(song.title)}</span><em>${escapeHTML(song.artist)}</em></div>${signupButtonHTML(song)}</div>`;
+      li.innerHTML = `<div class="song-info song-info-with-year"><div class="song-text-main"><span>${escapeHTML(song.title)}</span><em>${escapeHTML(ArtistNames.display(song.artist))}</em></div>${signupButtonHTML(song)}</div>`;
       ol.appendChild(li); counter++;
     });
     wrapper.appendChild(section);
@@ -705,7 +705,7 @@ function renderPlainSongList(container, list) {
   list.forEach((song, idx) => {
     const li = document.createElement("li");
     li.className = isAlreadyPlayedToday(song) ? "already-played-song" : "";
-    li.innerHTML = `<div class="song-info song-info-with-year"><div class="song-text-main"><span>${escapeHTML(song.title)}</span><em>${escapeHTML(song.artist)}</em></div>${signupButtonHTML(song)}</div>`;
+    li.innerHTML = `<div class="song-info song-info-with-year"><div class="song-text-main"><span>${escapeHTML(song.title)}</span><em>${escapeHTML(ArtistNames.display(song.artist))}</em></div>${signupButtonHTML(song)}</div>`;
     ol.appendChild(li);
   });
   container.appendChild(ol);
@@ -776,7 +776,7 @@ function buildLyricsOptionsForSection(sectionId) {
   const existingIds = new Set(sectionSongs.filter(item => item.sectionId === sectionId).map(item => item.lyricsId));
   const available = lyricsSongs.filter(song => !existingIds.has(song.id)).sort(sortByTitle);
   if (!available.length) return `<option value="">No available songs</option>`;
-  return [`<option value="">Choose a song from database...</option>`, ...available.map(song => `<option value="${song.id}">${escapeHTML(song.title)}${song.artist ? " - " + escapeHTML(song.artist) : ""}${song.year ? " (" + escapeHTML(song.year) + ")" : ""}</option>`)].join("");
+  return [`<option value="">Choose a song from database...</option>`, ...available.map(song => `<option value="${song.id}">${escapeHTML(song.title)}${song.artist ? " - " + escapeHTML(ArtistNames.display(song.artist)) : ""}${song.year ? " (" + escapeHTML(song.year) + ")" : ""}</option>`)].join("");
 }
 
 function createSectionSongRow(song, sectionId) {
@@ -791,7 +791,7 @@ function createSectionSongRow(song, sectionId) {
 
     <div class="editor-song-main">
       <strong>${escapeHTML(song.title)}</strong>
-      <span>${escapeHTML(song.artist)}</span>
+      <span>${escapeHTML(ArtistNames.display(song.artist))}</span>
     </div>
 
     <span class="song-year">${escapeHTML(song.year)}</span>
@@ -827,7 +827,7 @@ function renderFullSongEditor() {
     row.innerHTML = `
   <div class="editor-song-main">
     <strong>${escapeHTML(song.title)}</strong>
-    <span>${escapeHTML(song.artist)}</span>
+    <span>${escapeHTML(ArtistNames.display(song.artist))}</span>
   </div>
 
   <span class="song-year">${escapeHTML(song.year)}</span>
@@ -1120,7 +1120,7 @@ function renderQueuePanel() {
     <div class="queue-row">
       <div>
         <strong>${index + 1}. ${escapeHTML(item.title)}</strong>
-        <span>${escapeHTML(item.artist)}${item.year ? " • " + escapeHTML(item.year) : ""}${item.sent ? " • sent to host" : " • not sent yet"}</span>
+        <span>${escapeHTML(ArtistNames.display(item.artist))}${item.year ? " • " + escapeHTML(item.year) : ""}${item.sent ? " • sent to host" : " • not sent yet"}</span>
       </div>
       ${item.pendingCart ? `<button class="signup-song-btn" type="button" onclick="removeSongFromCart('${escapeHTML(songKey(item))}'); renderQueuePanel();">×</button>` : `<span class="song-year">✓</span>`}
     </div>
@@ -1135,7 +1135,7 @@ function renderFavouritesPanel() {
     const suggestions = getVisibleFullSongs().slice(0, 8);
     box.innerHTML = `<p class="queue-empty">No favourites saved yet. Here are quick picks:</p>` + suggestions.map(song => `
       <div class="fav-row">
-        <div><strong>${escapeHTML(song.title)}</strong><span>${escapeHTML(song.artist)}${song.year ? " • " + escapeHTML(song.year) : ""}</span></div>
+        <div><strong>${escapeHTML(song.title)}</strong><span>${escapeHTML(ArtistNames.display(song.artist))}${song.year ? " • " + escapeHTML(song.year) : ""}</span></div>
         <button type="button" onclick='toggleFavouriteFromJson("${encodeURIComponent(JSON.stringify(song))}"); renderFavouritesPanel();'>☆</button>
       </div>
     `).join("");
@@ -1144,7 +1144,7 @@ function renderFavouritesPanel() {
 
   box.innerHTML = favouriteSongs.map(song => `
     <div class="fav-row">
-      <div><strong>${escapeHTML(song.title)}</strong><span>${escapeHTML(song.artist)}${song.year ? " • " + escapeHTML(song.year) : ""}</span></div>
+      <div><strong>${escapeHTML(song.title)}</strong><span>${escapeHTML(ArtistNames.display(song.artist))}${song.year ? " • " + escapeHTML(song.year) : ""}</span></div>
       <button type="button" onclick='addSongToCartFromButton("${encodeURIComponent(JSON.stringify(song))}", false); switchBottomTab("queue");'>+</button>
     </div>
   `).join("");
@@ -1205,7 +1205,7 @@ function renderPublicCustomSections(container, search) {
     const items = getSectionSongs(section.id)
       .map(getSectionSongDisplay)
       .filter(song => song.visible !== false)
-      .filter(song => !search || getSongText(song).includes(search));
+      .filter(song => !search || getSongText(song).includes(ArtistNames.normalizeSearch(search)));
 
     if (!items.length && search) return;
 
@@ -1244,7 +1244,7 @@ function renderPublicCustomSections(container, search) {
 }
 
 function renderPublicFullList(container, search) {
-  const fullSongs = getVisibleFullSongs().filter(song => !search || getSongText(song).includes(search));
+  const fullSongs = getVisibleFullSongs().filter(song => !search || getSongText(song).includes(ArtistNames.normalizeSearch(search)));
   const wrapper = document.createElement("section");
   wrapper.id = "fullSongListSection";
   wrapper.className = `full-song-list-wrapper ${fullSongListOpen ? "open" : "closed"}`;
@@ -1273,7 +1273,7 @@ function renderPublicFullList(container, search) {
     groupSongs.forEach(song => {
       const li = document.createElement("li");
       li.className = isAlreadyPlayedToday(song) ? "already-played-song" : "";
-      li.innerHTML = `<div class="song-info song-info-with-year"><div class="song-text-main"><span>${escapeHTML(song.title)}</span><em>${escapeHTML(song.artist)}</em></div>${signupButtonHTML(song)}</div>`;
+      li.innerHTML = `<div class="song-info song-info-with-year"><div class="song-text-main"><span>${escapeHTML(song.title)}</span><em>${escapeHTML(ArtistNames.display(song.artist))}</em></div>${signupButtonHTML(song)}</div>`;
       ol.appendChild(li);
       counter++;
     });
@@ -1289,7 +1289,7 @@ function renderPlainSongList(container, list) {
   list.forEach(song => {
     const li = document.createElement("li");
     li.className = isAlreadyPlayedToday(song) ? "already-played-song" : "";
-    li.innerHTML = `<div class="song-info song-info-with-year"><div class="song-text-main"><span>${escapeHTML(song.title)}</span><em>${escapeHTML(song.artist)}</em></div>${signupButtonHTML(song)}</div>`;
+    li.innerHTML = `<div class="song-info song-info-with-year"><div class="song-text-main"><span>${escapeHTML(song.title)}</span><em>${escapeHTML(ArtistNames.display(song.artist))}</em></div>${signupButtonHTML(song)}</div>`;
     ol.appendChild(li);
   });
   container.appendChild(ol);
@@ -1384,21 +1384,11 @@ window.toggleFavouriteFromJson = toggleFavouriteFromJson;
  * - Compact search controls + artist-only search dropdown
  ************************************************************/
 function formatArtistName(artist) {
-  let value = String(artist || "").trim();
-  if (!value) return "";
-
-  const match = value.match(/^(.+),\s*(The|A|An)$/i);
-  if (match) {
-    const name = match[1].trim();
-    const article = match[2].trim();
-    return `${article.charAt(0).toUpperCase()}${article.slice(1).toLowerCase()} ${name}`;
-  }
-
-  return value;
+  return ArtistNames.display(artist);
 }
 
 function getSongText(song) {
-  return `${song.title || ""} ${formatArtistName(song.artist)} ${song.year || ""}`.toLowerCase();
+  return ArtistNames.searchText(song);
 }
 
 async function loadLyricsSongs() {
@@ -1482,8 +1472,8 @@ function renderSearchResults() {
   const results = [...unique.values()]
     .filter(song => {
       const artistText = formatArtistName(song.artist).toLowerCase();
-      if (mode === "artist") return artistText.includes(search);
-      return `${song.title || ""} ${artistText} ${song.year || ""}`.toLowerCase().includes(search);
+      if (mode === "artist") return ArtistNames.matchesArtist(song.artist, search);
+      return ArtistNames.matchesSong(song, search);
     })
     .sort(sortByTitle);
 
@@ -1683,7 +1673,7 @@ function populateArtistFilter() {
   const artists = [...new Set(getVisibleFullSongs().map(song => formatArtistName(song.artist)).filter(Boolean))]
     .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
   select.innerHTML = `<option value="">Search by artist</option>` + artists.map(artist =>
-    `<option value="${escapeHTML(artist)}">${escapeHTML(artist)}</option>`
+    `<option value="${escapeHTML(ArtistNames.display(artist))}">${escapeHTML(ArtistNames.display(artist))}</option>`
   ).join("");
   if (artists.includes(previous)) select.value = previous;
 }
@@ -1765,7 +1755,7 @@ function renderSearchResults() {
   const results = [...unique.values()].filter(song => {
     const artist = formatArtistName(song.artist);
     if (selectedArtist) return artist.toLowerCase() === selectedArtist.toLowerCase();
-    return `${song.title || ""} ${artist} ${song.year || ""}`.toLowerCase().includes(search);
+    return ArtistNames.matchesSong(song, search);
   }).sort(sortByTitle);
 
   box.innerHTML = "";
@@ -1884,7 +1874,7 @@ function populateArtistFilter() {
     .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
 
   select.innerHTML = `<option value="">Search by artist</option>` + artists.map(artist =>
-    `<option value="${escapeHTML(artist)}">${escapeHTML(artist)}</option>`
+    `<option value="${escapeHTML(ArtistNames.display(artist))}">${escapeHTML(ArtistNames.display(artist))}</option>`
   ).join("");
 
   if (previous && artists.includes(previous)) select.value = previous;
@@ -1928,7 +1918,7 @@ function renderSearchResults() {
   const results = [...unique.values()].filter(song => {
     const artist = formatArtistName(song.artist);
     if (selectedArtist) return artist.toLowerCase() === selectedArtist.toLowerCase();
-    return `${song.title || ""} ${artist} ${song.year || ""}`.toLowerCase().includes(search);
+    return ArtistNames.matchesSong(song, search);
   }).sort(sortByTitle);
 
   box.innerHTML = "";
@@ -2066,7 +2056,7 @@ function renderPublicCustomSections(container, search) {
         !(selectedPublicSongIds instanceof Set) ||
         selectedPublicSongIds.has(song.id)
       )
-      .filter(song => !search || getSongText(song).includes(search));
+      .filter(song => !search || getSongText(song).includes(ArtistNames.normalizeSearch(search)));
 
     const sectionEl = document.createElement("section");
     sectionEl.className = "song-section public-section custom-section featured-public-category";
@@ -2112,7 +2102,7 @@ function renderPublicCustomSections(container, search) {
 
 
 function renderPublicFullList(container, search) {
-  const fullSongs = getVisibleFullSongs().filter(song => !search || getSongText(song).includes(search));
+  const fullSongs = getVisibleFullSongs().filter(song => !search || getSongText(song).includes(ArtistNames.normalizeSearch(search)));
   const wrapper = document.createElement("section");
   wrapper.id = "fullSongListSection";
   wrapper.className = `full-song-list-wrapper ${fullSongListOpen ? "open" : "closed"}`;

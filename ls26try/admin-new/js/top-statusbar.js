@@ -861,7 +861,7 @@
 
             <div class="queue-song-details">
               <strong>${escapeHTML(songTitle)}</strong>
-              <span>${escapeHTML(artist)}</span>
+              <span>${escapeHTML(ArtistNames.display(artist))}</span>
             </div>
 
             <div class="queue-singer-details">

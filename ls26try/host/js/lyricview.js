@@ -75,8 +75,8 @@
 
     if (!itemTitle || itemTitle !== songTitle) return false;
 
-    const itemArtist = normaliseSongIdentity(item.artist || item.songArtist);
-    const songArtist = normaliseSongIdentity(song.artist);
+    const itemArtist = normaliseSongIdentity(ArtistNames.display(item.artist || item.songArtist));
+    const songArtist = normaliseSongIdentity(ArtistNames.display(song.artist));
 
     return !itemArtist || !songArtist || itemArtist === songArtist;
   }
@@ -117,10 +117,10 @@
 
       if (!candidates.length) return null;
 
-      const artistKey = normaliseSongIdentity(item.artist || item.songArtist);
+      const artistKey = normaliseSongIdentity(ArtistNames.display(item.artist || item.songArtist));
       if (artistKey) {
         const exact = candidates.find(song =>
-          normaliseSongIdentity(song.artist) === artistKey
+          normaliseSongIdentity(ArtistNames.display(song.artist)) === artistKey
         );
         if (exact) return exact;
       }
@@ -177,8 +177,8 @@
   }
 
   function setTopTitle(song) {
-    $("topbarSongTitle").innerHTML = `<strong>${esc(song.title || "Untitled")}</strong><span>${esc(song.artist || "")}${song.year ? " · " + esc(song.year) : ""}</span>`;
-    $("infoSongTitle").textContent = `${song.title || "Untitled"}${song.artist ? " — " + song.artist : ""}`;
+    $("topbarSongTitle").innerHTML = `<strong>${esc(song.title || "Untitled")}</strong><span>${esc(ArtistNames.display(song.artist || ""))}${song.year ? " · " + esc(song.year) : ""}</span>`;
+    $("infoSongTitle").textContent = `${song.title || "Untitled"}${song.artist ? " — " + ArtistNames.display(song.artist) : ""}`;
   }
 
   function setInfo(song) {
@@ -1079,7 +1079,7 @@
     const options =
       `<option value="">Choose lyrics to send…</option>` +
       entries.map(song => {
-        const artist = song.artist ? ` — ${song.artist}` : "";
+        const artist = song.artist ? ` — ${ArtistNames.display(song.artist)}` : "";
 
         return (
           `<option value="${esc(dVal(song.id))}" ` +
@@ -1653,7 +1653,7 @@
 
       <div class="host-next-song-hero">
         <strong>${esc(song.title || next.songTitle || next.title || "Untitled Song")}</strong>
-        <span>${esc(song.artist || next.artist || "")}</span>
+        <span>${esc(ArtistNames.display(song.artist || next.artist || ""))}</span>
       </div>
 
       <div class="host-next-song-detail-grid">
