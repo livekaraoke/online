@@ -82,3 +82,15 @@
   padding-left: 1.1em !important;
 }
 .creator-page .creator-rich-editor .chord-token { font-weight: 900; }
+
+
+/* Exact green/bold lyric emphasis shared by Creator and LyricView. */
+.creator-page .ls26-lyric-green-bold,
+.creator-page .ls26-lyric-green-bold *,
+.host-lyric-view-page .ls26-lyric-green-bold,
+.host-lyric-view-page .ls26-lyric-green-bold *{
+  color:#00f033!important;
+  font-weight:900!important;
+  text-decoration:none!important;
+  text-decoration-line:none!important;
+}
