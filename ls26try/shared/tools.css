@@ -1,0 +1,27 @@
+/* Scoped styles for Reminders and Metronome; comfortable tablet touch targets. */
+.tool-page .tool-main{max-width:1200px;min-width:0;padding-bottom:48px}
+.tool-heading{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:20px;flex-wrap:wrap}
+.tool-heading h1{margin:0;color:var(--ls-accent,#00cafa);font-size:30px}.tool-heading p{color:var(--ls-muted,#91afbf);margin:8px 0 0}
+.tool-page button,.tool-page input,.tool-page select,.reminder-dialog button,.reminder-dialog input,.reminder-dialog textarea,.reminder-dialog select{font:inherit;border:1px solid #285668;border-radius:8px;background:#042230;color:#e7f4fb;min-height:44px;padding:10px 12px;box-sizing:border-box}
+.tool-page button,.reminder-dialog button{cursor:pointer;font-weight:700}.tool-page button:hover,.reminder-dialog button:hover{border-color:#00cafa;background:#07364a}
+.tool-page button:disabled,.reminder-dialog button:disabled{opacity:.5;cursor:default}
+.tool-page :focus-visible,.reminder-dialog :focus-visible{outline:2px solid #ffdb78;outline-offset:3px}
+.tool-card,.reminder-card{border:1px solid #285668;background:#031c29;border-radius:12px;padding:20px;margin-bottom:16px}
+.tool-card h2{font-size:20px;margin:0 0 16px}
+.tool-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.tool-form-grid label,.tool-filters label,.reminder-dialog label{display:flex;flex-direction:column;gap:7px;font-size:14px;font-weight:650;min-width:0}
+.tool-form-grid input,.tool-form-grid select,.tool-filters input,.tool-filters select,.reminder-dialog input,.reminder-dialog select,.reminder-dialog textarea{width:100%;min-width:0}
+.tool-filters{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap}.tool-filters label{flex:1 1 155px}.tool-filters .tool-check{flex-direction:row;align-items:center;flex:0 1 auto;min-height:44px}.tool-check input{width:20px;min-height:20px;height:20px}
+.tool-actions{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin-top:14px}.tool-actions a,.tool-list-status a,.reminder-card a{color:#4dddff}.tool-hint,.tool-form-grid small{font-size:13px;font-weight:400;line-height:1.5;color:#a1b9c6}
+.tool-list-status,.reminder-meta{display:flex;align-items:center;flex-wrap:wrap;gap:12px;color:#a1b9c6;font-size:13px}.tool-list-status{justify-content:space-between}
+.reminder-card.overdue{border-left:4px solid #ff8472}.reminder-card.completed{opacity:.78}.reminder-meta span,.reminder-meta strong{text-transform:capitalize;background:#123c48;padding:4px 8px;border-radius:5px}.reminder-text{white-space:pre-wrap;overflow-wrap:anywhere;font-size:18px;line-height:1.5;margin:14px 0}.reminder-due{color:#c4d7e0}.overdue .reminder-due{color:#ffb3a7}.reminder-due small{font-size:12px}
+.reminder-dialog{width:min(600px,calc(100vw - 24px));max-height:calc(100dvh - 24px);padding:22px;overflow:auto}
+.reminder-dialog label{margin-bottom:12px}.reminder-dialog textarea{resize:vertical;line-height:1.5}.reminder-dialog small{color:#a1b9c6;line-height:1.5}.reminder-dialog h2{color:#00cafa}
+.reminder-dialog #reminderSave,.tool-heading #reminderAdd{border-color:#00dc88;background:#003326;color:#5affbb}
+.metro-main{text-align:center}.metro-tempo{display:flex;align-items:center;justify-content:center;gap:18px}.metro-tempo>button{width:60px;height:60px;font-size:32px;padding:0}.metro-tempo label{display:flex;flex-direction:column;color:#a1b9c6;font-size:14px}.metro-tempo #metroBpm{width:160px;font-size:64px;line-height:1;font-weight:850;text-align:center;border:0;background:transparent;color:#00e88a;padding:0;appearance:textfield}.metro-tempo #metroBpm::-webkit-inner-spin-button{appearance:none}
+.metro-main #metroSlider{width:100%;accent-color:#00cafa;padding:0;margin:16px 0}.metro-tempo-actions{justify-content:center}
+.metro-beats{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin:26px 0 10px}.metro-beat{border-radius:50%!important;width:48px;height:48px;padding:0!important;font-size:20px!important}
+.metro-beat[data-accent="2"]{border-color:#ffdb78;color:#ffdb78}.metro-beat[data-accent="0"]{color:#8595a0;border-style:dashed;text-decoration:line-through}.metro-beat.playing{background:#00617c!important;border-color:#4be4ff!important;box-shadow:0 0 0 3px #0b5066;color:white}
+.metro-position{display:flex;justify-content:space-between;color:#a1b9c6;font-variant-numeric:tabular-nums;margin:18px 0}.metro-transport{display:grid;grid-template-columns:1fr 1fr;gap:14px}.metro-transport button{min-height:68px;font-size:21px}.metro-transport #metroStart{background:#003326;color:#5affbb;border-color:#00dc88}.metro-transport #metroStart[aria-pressed="true"]{background:#402121;color:#ffb4a5;border-color:#d57070}.metro-transport #metroTap{background:#073952;color:#4dddff;border-color:#00cafa}
+.tool-page input[type="range"]{accent-color:#00cafa;padding:0}.tool-page output{color:#4dddff;font-variant-numeric:tabular-nums}
+@media(max-width:600px){.tool-form-grid{grid-template-columns:1fr}.tool-card,.reminder-card{padding:14px}.metro-tempo #metroBpm{font-size:54px;width:140px}.metro-transport button{font-size:17px}.tool-heading h1{font-size:26px}}

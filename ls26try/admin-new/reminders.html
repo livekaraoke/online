@@ -1,0 +1,38 @@
+<!-- Copyright © 2026 LiveSuite. All rights reserved.
+ Reminders — task capture and organisation with shared LiveSuite navigation.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head><link rel="stylesheet" href="../shared/dialogs.css?v=20260924-followup"><script src="../shared/dialogs.js?v=20260924-followup"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reminders · LiveSuite</title>
+  <link rel="stylesheet" href="css/admin.css?v=20260910-stage4">
+  <link rel="stylesheet" href="css/sidebar.css?v=20260910-stage4">
+  <link rel="stylesheet" href="css/sidebar-suite.css?v=20260910-stage4">
+  <link rel="stylesheet" href="../shared/tools.css?v=20260925-tools">
+<link rel="stylesheet" href="../shared/theme.css?v=20260924-layout-refinements"><link rel="stylesheet" href="../shared/performance.css?v=20260924-layout-refinements"><script src="../shared/data.js?v=20260910-stage4"></script><link rel="stylesheet" href="css/admin-navigation.css?v=20260922-batch">
+</head>
+<body class="admin-body tool-page">
+  <div class="admin-shell"><div id="sidebarContainer"></div><main class="admin-main tool-main">
+<header class="tool-heading"><div><h1>Reminders</h1><p>Keep track of the next thing to do.</p></div><button id="reminderAdd" type="button">＋ Add reminder</button></header>
+<div class="tool-card tool-filters">
+<label>View<select id="reminderFilter"><option value="pending">Pending</option><option value="completed">Completed</option><option value="archived">Archived</option><option value="all">All reminders</option></select></label>
+<label>Search<input id="reminderSearch" type="search" placeholder="Search reminders…"></label>
+<label>Priority<select id="reminderPriorityFilter"><option value="">All priorities</option><option value="high">High</option><option value="normal">Normal</option><option value="low">Low</option></select></label>
+<label>Category<select id="reminderCategoryFilter"><option value="">All categories</option></select></label>
+<label>Sort<select id="reminderSort"><option value="due">Due date first</option><option value="priority">Priority first</option><option value="newest">Newest first</option></select></label>
+<label class="tool-check"><input id="reminderOverdue" type="checkbox"> Overdue only</label><button id="reminderRefresh" type="button">Refresh</button></div>
+<div class="tool-list-status"><span id="reminderCount"></span><a href="admin.html">Admin / sign in</a></div><p id="reminderPageStatus" role="status"></p><div id="reminderRows" aria-live="polite"></div><button id="reminderMore" hidden type="button">Load more reminders</button>
+</main></div>
+  <script src="../firebase-projects.js?v=20260910-stage4"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="js/firebase.js?v=20260910-stage4"></script>
+  <script src="js/sidebar.js?v=20260925-tools"></script>
+  <script src="js/profile.js?v=20260910-stage4"></script>
+  <script src="js/auth.js?v=20260910-stage4"></script>
+
+<script src="../shared/shell.js?v=20260925-tools"></script><script src="../shared/inbox.js?v=20260910-stage4"></script><script src="../shared/session-ui.js?v=20260924-followup"></script><script src="../shared/performance.js?v=20260923-polish"></script></body>
+</html>
