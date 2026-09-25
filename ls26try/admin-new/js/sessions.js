@@ -3,6 +3,86 @@
  * Original notices and functionality retained below. See FUNCTIONS.txt.
  */
 (function () {
+  let livePerformedSongs = [];
+  let performedSongsUnsubscribe = null;
+  const playedSongBpmCache = new Map();
+
+  function performanceBpm(record) {
+    const direct = Number(
+      record?.userBpm ??
+      record?.performanceBpm ??
+      record?.songUserBpm ??
+      record?.bpm ??
+      record?.originalBpm
+    );
+    if (Number.isFinite(direct) && direct > 0) return direct;
+
+    const cached = Number(playedSongBpmCache.get(record?.songId));
+    return Number.isFinite(cached) && cached > 0 ? cached : 0;
+  }
+
+  function averagePlayedBpm() {
+    const values = livePerformedSongs.map(performanceBpm).filter(value => value > 0);
+    return values.length
+      ? Math.round(values.reduce((sum,value) => sum + value, 0) / values.length)
+      : "-";
+  }
+
+  async function hydratePlayedSongBpms(records) {
+    const ids = [...new Set(
+      (records || [])
+        .filter(record => !performanceBpm(record) && record?.songId && !playedSongBpmCache.has(record.songId))
+        .map(record => record.songId)
+    )];
+
+    if (!ids.length) return;
+
+    await Promise.all(ids.map(async id => {
+      try {
+        const snap = await LK.db.collection("lyrics").doc(id).get();
+        const song = snap.exists ? (snap.data() || {}) : {};
+        const bpm = Number(song.userBpm ?? song.originalBpm ?? song.bpm);
+        playedSongBpmCache.set(id, Number.isFinite(bpm) && bpm > 0 ? bpm : 0);
+      } catch (_) {
+        playedSongBpmCache.set(id, 0);
+      }
+    }));
+  }
+
+  function bindPerformedSongs(sessionId) {
+    if (performedSongsUnsubscribe) {
+      performedSongsUnsubscribe();
+      performedSongsUnsubscribe = null;
+    }
+
+    livePerformedSongs = [];
+
+    if (!sessionId) {
+      setDashValue("sessionAvgBpmLiveLabel", "-");
+      return;
+    }
+
+    performedSongsUnsubscribe = LK.db
+      .collection("performanceSessions")
+      .doc(sessionId)
+      .collection("performedSongs")
+      .onSnapshot(async snapshot => {
+        livePerformedSongs = snapshot.docs.map(doc => ({ id:doc.id, ...(doc.data() || {}) }));
+
+        if (LK.state.currentSessionData?.id === sessionId) {
+          updateDashboard(LK.state.currentSessionData);
+        }
+
+        await hydratePlayedSongBpms(livePerformedSongs);
+
+        if (LK.state.currentSessionData?.id === sessionId) {
+          updateDashboard(LK.state.currentSessionData);
+        }
+      }, error => {
+        console.warn("Could not load performed songs for live BPM average:", error);
+      });
+  }
+
   function calculateBreakMs(session) {
     let total = 0;
     (session?.breaks || []).forEach(b => {
@@ -142,13 +222,16 @@
     const elapsedMs = started ? Math.max(0, Date.now() - started.getTime()) : 0;
     const playingMs = Math.max(0, elapsedMs - breakMs);
 
-    const avgBpmArr = requests
+    const requestBpms = requests
       .map(r => Number(r.userBpm || r.songUserBpm || r.bpm))
-      .filter(Boolean);
+      .filter(value => Number.isFinite(value) && value > 0);
 
-    const avgBpm = avgBpmArr.length
-      ? Math.round(avgBpmArr.reduce((a,b) => a + b, 0) / avgBpmArr.length)
+    const requestAverage = requestBpms.length
+      ? Math.round(requestBpms.reduce((a,b) => a + b, 0) / requestBpms.length)
       : "-";
+
+    const playedAverage = averagePlayedBpm();
+    const avgBpm = playedAverage !== "-" ? playedAverage : requestAverage;
 
     updateLiveSessionDetails(
       session,
@@ -512,6 +595,7 @@ console.log("END break clicked", {
 
       if (!nextSessionId) {
         boundSessionId = "";
+        bindPerformedSongs(null);
 
         if (LK.state.sessionUnsubscribe) {
           LK.state.sessionUnsubscribe();
@@ -532,6 +616,7 @@ console.log("END break clicked", {
       }
 
       boundSessionId = nextSessionId;
+      bindPerformedSongs(nextSessionId);
 
       if (LK.state.sessionUnsubscribe) {
         LK.state.sessionUnsubscribe();
