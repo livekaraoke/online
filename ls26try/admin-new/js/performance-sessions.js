@@ -200,9 +200,12 @@
   }
 
   function averageBpm(session) {
+    const saved = Number(session.averageBpm);
+    if (Number.isFinite(saved) && saved > 0) return Math.round(saved);
+
     const values = playedSnapshot(session)
-      .map(item => Number(item.userBpm || item.bpm))
-      .filter(Number.isFinite);
+      .map(item => Number(item.userBpm ?? item.performanceBpm ?? item.songUserBpm ?? item.bpm ?? item.originalBpm))
+      .filter(value => Number.isFinite(value) && value > 0);
 
     if (!values.length) return "-";
     return Math.round(values.reduce((a,b)=>a+b,0)/values.length);
