@@ -1387,3 +1387,320 @@
     grid-template-columns:repeat(2,minmax(0,1fr));
   }
 }
+
+
+/* =========================================================
+   PREVIOUS SESSION — visual hierarchy refresh 2026-09-26
+   ========================================================= */
+.previous-session-card{
+  border-color:#1e566e!important;
+  background:
+    radial-gradient(circle at 92% 0%,rgba(0,202,250,.08),transparent 20rem),
+    linear-gradient(160deg,#061c28 0%,#03121b 100%)!important;
+}
+.previous-session-title-row{
+  margin-bottom:14px!important;
+  padding-bottom:13px!important;
+  border-bottom:1px solid rgba(80,171,207,.18)!important;
+}
+.previous-session-title-row h2{
+  color:#12d2ff!important;
+  font-size:20px!important;
+  letter-spacing:.015em!important;
+}
+.previous-session-title-row .small-outline{
+  min-height:40px!important;
+  padding:0 15px!important;
+  border-color:#2a667f!important;
+  background:#082534!important;
+  color:#e9f8ff!important;
+  font-size:12px!important;
+}
+.previous-session-summary{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) auto!important;
+  gap:16px!important;
+  align-items:center!important;
+  padding:2px 2px 4px!important;
+}
+.previous-session-summary-main{
+  display:grid;
+  min-width:0;
+  gap:3px;
+}
+.previous-session-kicker{
+  color:#6d9eb4!important;
+  font-size:9px!important;
+  font-weight:950!important;
+  letter-spacing:.13em!important;
+}
+.previous-session-summary-main strong{
+  overflow:hidden;
+  color:#f4fbff!important;
+  font-size:21px!important;
+  font-weight:950!important;
+  line-height:1.15!important;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.previous-session-summary-venue{
+  color:#a9c4d2!important;
+  font-size:13px!important;
+  font-weight:750!important;
+}
+.previous-session-summary-meta{
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+  gap:7px;
+}
+.previous-session-date-chip,
+.previous-session-type-chip{
+  display:inline-flex!important;
+  align-items:center;
+  min-height:30px;
+  padding:5px 9px;
+  border:1px solid #285d73;
+  border-radius:999px;
+  background:#071d28;
+  color:#d8edf7!important;
+  font-size:10px!important;
+  font-weight:900!important;
+  white-space:nowrap;
+}
+.previous-session-type-chip{
+  border-color:#4e5730;
+  background:#181c0d;
+  color:#e3da72!important;
+}
+.previous-session-details{
+  margin-top:17px!important;
+  padding-top:17px!important;
+  border-top:1px solid #1d526b!important;
+}
+.previous-session-metrics{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:10px;
+}
+.previous-session-metric{
+  position:relative;
+  min-width:0;
+  min-height:112px;
+  padding:14px 14px 12px;
+  overflow:hidden;
+  border:1px solid #234d60;
+  border-radius:10px;
+  background:linear-gradient(150deg,#08202d,#04151e);
+}
+.previous-session-metric::after{
+  content:"";
+  position:absolute;
+  right:-24px;
+  bottom:-34px;
+  width:82px;
+  height:82px;
+  border-radius:50%;
+  background:currentColor;
+  opacity:.055;
+}
+.previous-session-metric>span{
+  display:block;
+  color:#789cad;
+  font-size:9px;
+  font-weight:950;
+  letter-spacing:.09em;
+}
+.previous-session-metric>strong{
+  display:block;
+  margin-top:8px;
+  color:#f4fbff;
+  font-size:28px;
+  font-weight:1000;
+  line-height:1;
+  overflow-wrap:anywhere;
+}
+.previous-session-metric>small{
+  display:block;
+  margin-top:7px;
+  color:#7894a3;
+  font-size:10px;
+  font-weight:700;
+}
+.previous-session-metric.tone-green{color:#62e78d;border-color:#276846}
+.previous-session-metric.tone-green>strong{color:#73ee9a}
+.previous-session-metric.tone-cyan{color:#00cafa;border-color:#25667e}
+.previous-session-metric.tone-cyan>strong{color:#4fddff}
+.previous-session-metric.tone-amber{color:#f0c859;border-color:#66562b}
+.previous-session-metric.tone-amber>strong{color:#f4d56f}
+.previous-session-metric.tone-purple{color:#b78cff;border-color:#544477}
+.previous-session-metric.tone-purple>strong{color:#c6a5ff}
+
+.previous-session-info-layout{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+  margin-top:10px;
+}
+.previous-session-info-group,
+.previous-session-request-group{
+  overflow:hidden;
+  border:1px solid #20495c;
+  border-radius:10px;
+  background:#041721;
+}
+.previous-session-group-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  min-height:38px;
+  padding:9px 12px;
+  border-bottom:1px solid #1b3e4f;
+  background:#08202c;
+}
+.previous-session-group-head>span{
+  color:#52dfff;
+  font-size:10px;
+  font-weight:1000;
+  letter-spacing:.10em;
+}
+.previous-session-group-head>strong{
+  color:#b7d2df;
+  font-size:10px;
+  font-weight:900;
+}
+.previous-session-info-list{
+  display:grid;
+}
+.previous-session-info-row{
+  display:grid;
+  grid-template-columns:minmax(90px,.7fr) minmax(0,1.3fr);
+  gap:12px;
+  align-items:center;
+  min-height:47px;
+  padding:9px 12px;
+  border-top:1px solid rgba(47,92,112,.38);
+}
+.previous-session-info-row:first-child{border-top:0}
+.previous-session-info-row>span{
+  color:#718f9f;
+  font-size:10px;
+  font-weight:850;
+}
+.previous-session-info-row>strong{
+  color:#eef8fc;
+  font-size:13px;
+  font-weight:900;
+  text-align:right;
+  overflow-wrap:anywhere;
+}
+.previous-session-info-row>strong:is(:where(*)){
+  line-height:1.25;
+}
+.previous-session-request-group{
+  margin-top:10px;
+}
+.previous-session-request-grid{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:0;
+}
+.previous-session-request-stat{
+  min-width:0;
+  padding:13px 10px 14px;
+  border-left:1px solid #1d4050;
+  text-align:center;
+}
+.previous-session-request-stat:first-child{border-left:0}
+.previous-session-request-stat>strong{
+  display:block;
+  color:#eef8fc;
+  font-size:22px;
+  font-weight:1000;
+}
+.previous-session-request-stat>span{
+  display:block;
+  margin-top:4px;
+  color:#7594a4;
+  font-size:9px;
+  font-weight:850;
+  line-height:1.2;
+}
+.previous-session-request-stat.tone-green>strong{color:#6fe99a}
+.previous-session-request-stat.tone-amber>strong{color:#f0c85b}
+.previous-session-request-stat.tone-red>strong{color:#ff7b84}
+.previous-session-request-stat.tone-muted>strong{color:#b2c2ca}
+
+.previous-session-notes{
+  margin-top:10px!important;
+  padding:13px 14px!important;
+  border-color:#285367!important;
+  border-radius:10px!important;
+  background:#061b26!important;
+}
+.previous-session-notes span{
+  margin-bottom:6px!important;
+  color:#52dfff!important;
+  font-size:9px!important;
+  letter-spacing:.10em!important;
+}
+.previous-session-notes strong{
+  color:#dcebf2!important;
+  font-size:13px!important;
+  font-weight:750!important;
+  line-height:1.5!important;
+}
+.previous-session-view-btn{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  width:100%!important;
+  min-height:48px!important;
+  margin-top:10px!important;
+  padding:0 16px!important;
+  border-color:#2b6f8b!important;
+  background:linear-gradient(180deg,#0a3143,#072534)!important;
+  color:#effbff!important;
+  font-size:12px!important;
+  font-weight:950!important;
+  letter-spacing:.035em!important;
+}
+.previous-session-view-btn:hover{
+  border-color:#00cafa!important;
+  background:linear-gradient(180deg,#0c4056,#082d3e)!important;
+}
+
+@media(max-width:1100px){
+  .previous-session-metrics{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+}
+@media(max-width:820px){
+  .previous-session-summary{
+    grid-template-columns:1fr!important;
+    gap:9px!important;
+  }
+  .previous-session-summary-meta{justify-content:flex-start}
+  .previous-session-info-layout{
+    grid-template-columns:1fr;
+  }
+}
+@media(max-width:620px){
+  .previous-session-metrics{
+    grid-template-columns:1fr;
+  }
+  .previous-session-metric{
+    min-height:92px;
+  }
+  .previous-session-request-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+  .previous-session-request-stat:nth-child(3){
+    border-left:0;
+    border-top:1px solid #1d4050;
+  }
+  .previous-session-request-stat:nth-child(4){
+    border-top:1px solid #1d4050;
+  }
+}
