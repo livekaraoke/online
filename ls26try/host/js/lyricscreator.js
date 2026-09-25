@@ -610,6 +610,60 @@
     return true;
   }
 
+  function selectionIsHeavyBold(editor = activeEditor) {
+    if (!editor || !restoreSelection()) return false;
+    const selection = window.getSelection();
+    if (!selection || !selection.rangeCount || selection.isCollapsed) return false;
+    let node = selection.anchorNode;
+    if (node?.nodeType === Node.ELEMENT_NODE) {
+      node = node.childNodes?.[selection.anchorOffset] || node.firstChild || node;
+    }
+    const element = node?.nodeType === Node.TEXT_NODE ? node.parentElement : node;
+    if (!element || !editor.contains(element)) return false;
+    const weight = String(getComputedStyle(element).fontWeight || "");
+    return weight === "bold" || Number(weight) >= 700;
+  }
+
+  function clearBoldMarkup(root) {
+    if (!root?.querySelectorAll) return;
+    root.querySelectorAll("b,strong,.ls26-heavy-bold").forEach(element => unwrapElement(element));
+    root.querySelectorAll("[style]").forEach(element => {
+      if (element.style?.fontWeight) element.style.fontWeight = "";
+    });
+  }
+
+  function toggleHeavyBold(editor = activeEditor) {
+    if (!editor) return false;
+    captureSelection(editor);
+    if (!restoreSelection()) return false;
+    const selection = window.getSelection();
+    if (!selection || !selection.rangeCount || selection.isCollapsed) return false;
+    const range = selection.getRangeAt(0);
+    if (!editor.contains(range.commonAncestorContainer)) return false;
+
+    const turningOff = selectionIsHeavyBold(editor);
+    if (!restoreSelection()) return false;
+    const activeRange = window.getSelection().getRangeAt(0);
+    const fragment = activeRange.extractContents();
+
+    if (turningOff) clearBoldMarkup(fragment);
+
+    const span = document.createElement("span");
+    span.className = turningOff ? "ls26-normal-bold" : "ls26-heavy-bold";
+    span.style.fontWeight = turningOff ? "600" : "900";
+    span.appendChild(fragment);
+    activeRange.insertNode(span);
+
+    const selectedRange = document.createRange();
+    selectedRange.selectNodeContents(span);
+    selection.removeAllRanges();
+    selection.addRange(selectedRange);
+    captureSelection(editor);
+    syncSectionsFromDOM();
+    markDirty();
+    return true;
+  }
+
   function applyQuickColour(colour) {
     if (!applyTextColour(colour)) return;
     applyHeavyBold(activeEditor);
@@ -1739,7 +1793,7 @@
     if (command) {
       const editor = command.closest(".creator-section-body")?.querySelector(".creator-rich-editor");
       captureSelection(editor);
-      if (command.dataset.command === "bold") applyHeavyBold(editor);
+      if (command.dataset.command === "bold") toggleHeavyBold(editor);
       else applyCommand(command.dataset.command);
       return;
     }
