@@ -94,3 +94,12 @@
   text-decoration:none!important;
   text-decoration-line:none!important;
 }
+
+
+/* Toolbar bold formatting must match the heavy lyric emphasis used in performance text. */
+.creator-page .creator-rich-editor b,
+.creator-page .creator-rich-editor strong,
+.host-lyric-view-page .host-section-body b,
+.host-lyric-view-page .host-section-body strong {
+  font-weight: 900 !important;
+}
