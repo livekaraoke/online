@@ -421,7 +421,102 @@
     markDirty();
   }
 
+  function parseCssRgb(value) {
+    const match = String(value || "").match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i);
+    return match ? [Number(match[1]), Number(match[2]), Number(match[3])] : null;
+  }
+
+  function rgbToHex(rgb) {
+    return "#" + rgb.map(value => Math.max(0, Math.min(255, value)).toString(16).padStart(2, "0")).join("");
+  }
+
+  function isGreenish(rgb) {
+    return !!rgb && rgb[1] >= 150 && rgb[1] - rgb[0] >= 35 && rgb[1] - rgb[2] >= 35;
+  }
+
+  function hasUnderlineStyle(element, editor) {
+    let node = element;
+    while (node && node !== editor) {
+      if (node.tagName === "U") return true;
+      const inline = String(node.style?.textDecoration || node.style?.textDecorationLine || "");
+      if (/underline/i.test(inline)) return true;
+      try {
+        if (/underline/i.test(getComputedStyle(node).textDecorationLine || "")) return true;
+      } catch (_) {}
+      node = node.parentElement;
+    }
+    return false;
+  }
+
+  function resolveSectionLyricGreen(editor = activeEditor) {
+    if (!editor) return LYRIC_HIGHLIGHT_GREEN;
+    const totals = new Map();
+    const walker = document.createTreeWalker(editor, NodeFilter.SHOW_TEXT, {
+      acceptNode(node) {
+        if (!node.nodeValue || !node.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+        const parent = node.parentElement;
+        if (!parent || hasUnderlineStyle(parent, editor)) return NodeFilter.FILTER_REJECT;
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    });
+    while (walker.nextNode()) {
+      const node = walker.currentNode;
+      let rgb = null;
+      try { rgb = parseCssRgb(getComputedStyle(node.parentElement).color); } catch (_) {}
+      if (!isGreenish(rgb)) continue;
+      const hex = rgbToHex(rgb);
+      const weight = node.nodeValue.replace(/\s+/g, "").length || 1;
+      totals.set(hex, (totals.get(hex) || 0) + weight);
+    }
+    if (totals.size) return [...totals.entries()].sort((a,b) => b[1] - a[1])[0][0];
+    try {
+      const inherited = parseCssRgb(getComputedStyle(editor).color);
+      if (isGreenish(inherited)) return rgbToHex(inherited);
+    } catch (_) {}
+    return LYRIC_HIGHLIGHT_GREEN;
+  }
+
+  function selectionUnderlineElements(editor = activeEditor) {
+    if (!editor) return [];
+    const selection = window.getSelection();
+    if (!selection || !selection.rangeCount || selection.isCollapsed) return [];
+    const range = selection.getRangeAt(0);
+    const found = new Set();
+    const addAncestors = node => {
+      let element = node?.nodeType === Node.ELEMENT_NODE ? node : node?.parentElement;
+      while (element && element !== editor) {
+        const inline = String(element.style?.textDecoration || element.style?.textDecorationLine || "");
+        if (element.tagName === "U" || /underline/i.test(inline)) found.add(element);
+        element = element.parentElement;
+      }
+    };
+    addAncestors(range.startContainer);
+    addAncestors(range.endContainer);
+    editor.querySelectorAll("u,[style*='text-decoration']").forEach(element => {
+      try { if (range.intersectsNode(element)) found.add(element); } catch (_) {}
+    });
+    return [...found];
+  }
+
+  function applyTextColour(colour) {
+    if (!restoreSelection()) return false;
+    const underlines = selectionUnderlineElements(activeEditor);
+    document.execCommand("foreColor", false, colour);
+    underlines.forEach(element => {
+      element.style.textDecorationColor = colour;
+      element.style.webkitTextDecorationColor = colour;
+    });
+    captureSelection(activeEditor);
+    syncSectionsFromDOM();
+    markDirty();
+    return true;
+  }
+
   function applyCommand(command, value = null) {
+    if (command === "foreColor") {
+      applyTextColour(value);
+      return;
+    }
     if (!restoreSelection()) return;
     document.execCommand(command, false, value);
     captureSelection(activeEditor);
@@ -462,7 +557,7 @@
     const fragment = range.extractContents();
     const span = document.createElement("span");
     span.className = "ls26-lyric-green-bold";
-    span.style.color = LYRIC_HIGHLIGHT_GREEN;
+    span.style.color = resolveSectionLyricGreen(editor);
     span.style.fontWeight = "900";
     span.style.textDecoration = "none";
     span.appendChild(fragment);
@@ -516,9 +611,7 @@
   }
 
   function applyQuickColour(colour) {
-    if (!restoreSelection()) return;
-    document.execCommand("foreColor", false, colour);
-    captureSelection(activeEditor);
+    if (!applyTextColour(colour)) return;
     applyHeavyBold(activeEditor);
   }
 
@@ -758,7 +851,7 @@
         <button type="button" data-text-case="lower" title="Lowercase selected text">aa</button>
         <button type="button" data-text-case="sentence" title="Sentence case selected text">Aa</button>
         <button type="button" data-wrap-brackets="${index}" title="Wrap selected text in square brackets">[ ]</button>
-        <button type="button" class="beat-colour beat-1" data-quick-colour="${LYRIC_HIGHLIGHT_GREEN}" title="Bold standard lyric green timing marker">BEAT 1</button>
+        <button type="button" class="beat-colour beat-1" data-quick-colour="${LYRIC_HIGHLIGHT_GREEN}" data-match-section-green="1" title="Match this section's existing green + bold">BEAT 1</button>
         <button type="button" class="beat-colour beat-2" data-quick-colour="#00ffd5" title="Bold bright-teal timing marker">BEAT 2</button>
         <button type="button" class="beat-colour beat-3" data-quick-colour="#ffe23d" title="Bold yellow timing marker">BEAT 3</button>
         <button type="button" class="beat-colour beat-4" data-quick-colour="#ff9d2e" title="Bold bright-orange timing marker">BEAT 4</button>
@@ -1274,6 +1367,18 @@
   function openColourModal(editor) {
     captureSelection(editor);
 
+    // "Green" means: match the green already used by the normal, non-underlined
+    // lyric text in this section. This avoids hard-coding a shade that differs
+    // from older songs with their own saved lyric green.
+    const sectionGreen = resolveSectionLyricGreen(editor);
+    const greenButton = $("colourPalette")?.querySelector('[data-palette-name="Green"]');
+    if (greenButton) {
+      greenButton.dataset.paletteColour = sectionGreen;
+      const swatch = greenButton.querySelector("span");
+      if (swatch) swatch.style.background = sectionGreen;
+      greenButton.title = "Green · match this section (" + sectionGreen + ")";
+    }
+
     // Keep the selected range internally, but dismiss Android/Chrome's native
     // selection toolbar and handles so they do not overlap the LiveSuite modal.
     const selection = window.getSelection();
@@ -1286,7 +1391,7 @@
   function renderModals() {
     if ($("fontSizePresets")) $("fontSizePresets").innerHTML = renderSizeOptions();
     $("chordQuickGrid").innerHTML = ["C", "D", "E", "F", "G", "A", "B", "Am", "Em", "Dm", "G7", "Cmaj7", "F#m", "Bb"].map(chord => `<button type="button" data-chord-quick="${esc(chord)}">${esc(chord)}</button>`).join("");
-    $("colourPalette").innerHTML = COLOURS.map(([name, colour]) => `<button type="button" data-palette-colour="${colour}" title="${esc(name)}"><span style="background:${colour}"></span>${esc(name)}</button>`).join("");
+    $("colourPalette").innerHTML = COLOURS.map(([name, colour]) => `<button type="button" data-palette-name="${esc(name)}" data-palette-colour="${colour}" title="${esc(name)}"><span style="background:${colour}"></span>${esc(name)}</button>`).join("");
     $("templateGrid").innerHTML = TEMPLATES.map((template, index) => `<button type="button" data-template="${index}"><strong>${esc(template.label)}</strong><span>${esc(template.type)}</span></button>`).join("");
   }
 
@@ -1643,7 +1748,10 @@
     if (quickColour) {
       const editor = quickColour.closest(".creator-section-body")?.querySelector(".creator-rich-editor");
       captureSelection(editor);
-      applyQuickColour(quickColour.dataset.quickColour);
+      const colour = quickColour.hasAttribute("data-match-section-green")
+        ? resolveSectionLyricGreen(editor)
+        : quickColour.dataset.quickColour;
+      applyQuickColour(colour);
       return;
     }
 

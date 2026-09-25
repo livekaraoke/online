@@ -112,3 +112,10 @@
 .host-lyric-view-page .host-section-body .ls26-heavy-bold * {
   font-weight:900 !important;
 }
+
+
+/* Underlines recoloured by LyricsCreator keep their saved colour in both views. */
+.creator-page .creator-rich-editor u,
+.host-lyric-view-page .host-section-body u {
+  text-decoration-thickness: from-font;
+}
