@@ -24,7 +24,7 @@
 
 
 
-<link rel="stylesheet" href="css/dashboard-compat.css?v=20260924-session-history">
+<link rel="stylesheet" href="css/dashboard-compat.css?v=20260925-previous-session">
 <link rel="stylesheet" href="../shared/theme.css?v=20260924-layout-refinements"><link rel="stylesheet" href="../shared/performance.css?v=20260924-layout-refinements"><script src="../shared/data.js?v=20260910-stage4"></script>
 <link rel="stylesheet" href="css/dashboard26.css?v=20260910-admin26">
 <link rel="stylesheet" href="css/admin-navigation.css?v=20260922-batch">
@@ -260,6 +260,17 @@
         </div>
       </section>
 
+      <section id="previousSessionPanel" class="admin-card previous-session-card collapsed">
+        <div class="card-title-row split previous-session-title-row">
+          <h2>◷ PREVIOUS SESSION</h2>
+          <button id="previousSessionToggleBtn" type="button" class="small-outline" aria-expanded="false">▼ Expand</button>
+        </div>
+        <div id="previousSessionSummary" class="previous-session-summary">
+          <span>No completed session yet.</span>
+        </div>
+        <div id="previousSessionDetails" class="previous-session-details" hidden></div>
+      </section>
+
       <section id="requestsPanel" class="admin-card requests-card">
         <div class="card-title-row split">
           <h2>♟ ACTIVE REQUESTS <span id="activeRequestCount">(0)</span></h2>
@@ -456,16 +467,16 @@
 <script src="js/sidebar.js?v=20260922-fixes"></script>
 <script src="js/profile.js?v=20260910-stage4"></script>
 <script src="js/auth.js?v=20260910-stage4"></script>
-<script src="js/sessions.js?v=20260924-performance-tools"></script>
+<script src="js/sessions.js?v=20260925-session-average"></script>
 <script src="js/requests.js?v=20260910-stage4"></script>
 <script src="js/members.js?v=20260910-stage4"></script>
 <script src="js/admin.js?v=20260910-stage4"></script>
 <script src="js/public-setlist-session-addon.js?v=20260924-admin-polish"></script>
 <script src="js/admin-events-integration.js?v=20260924-pr21-review"></script>
 <script src="js/run-order.js?v=20260924-performance-tools"></script>
-<script src="js/admin-session-lifecycle.js?v=20260924-session-history"></script>
-<script src="js/admin-dashboard-enhancements.js?v=20260924-session-history"></script>
+<script src="js/admin-session-lifecycle.js?v=20260925-bpm-archive"></script>
+<script src="js/admin-dashboard-enhancements.js?v=20260925-previous-session"></script>
 
 
-<script src="../shared/shell.js?v=20260924-layout-refinements"></script><script src="../shared/inbox.js?v=20260910-stage4"></script><script src="../shared/session-ui.js?v=20260923-polish"></script><script src="../shared/performance.js?v=20260924-final3"></script><script src="js/dashboard26.js?v=20260910-admin26"></script></body>
+<script src="../shared/shell.js?v=20260925-fullscreen-persist"></script><script src="../shared/inbox.js?v=20260910-stage4"></script><script src="../shared/session-ui.js?v=20260923-polish"></script><script src="../shared/performance.js?v=20260924-final3"></script><script src="js/dashboard26.js?v=20260910-admin26"></script></body>
 </html>

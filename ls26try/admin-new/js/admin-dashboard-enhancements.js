@@ -19,6 +19,8 @@
 
   let pastSessions = [];
   let pastSessionUnsubscribe = null;
+  let previousSessionExpanded = false;
+  const previousBpmCache = new Map();
 
   function esc(value) {
     return String(value ?? "")
@@ -281,6 +283,129 @@
       .map(entry => entry.item);
   }
 
+  async function averageBpmFromPlayed(played) {
+    const rows = Array.isArray(played) ? played : [];
+    const missingIds = [...new Set(rows
+      .filter(item => {
+        const value = Number(item?.userBpm ?? item?.performanceBpm ?? item?.songUserBpm ?? item?.bpm ?? item?.originalBpm);
+        return !(Number.isFinite(value) && value > 0) && item?.songId && !previousBpmCache.has(item.songId);
+      })
+      .map(item => item.songId))];
+
+    await Promise.all(missingIds.map(async songId => {
+      try {
+        const snap = await db.collection("lyrics").doc(songId).get();
+        const song = snap.exists ? (snap.data() || {}) : {};
+        const value = Number(song.userBpm ?? song.originalBpm ?? song.bpm);
+        previousBpmCache.set(songId, Number.isFinite(value) && value > 0 ? value : 0);
+      } catch (_) {
+        previousBpmCache.set(songId, 0);
+      }
+    }));
+
+    const values = rows.map(item => {
+      const direct = Number(item?.userBpm ?? item?.performanceBpm ?? item?.songUserBpm ?? item?.bpm ?? item?.originalBpm);
+      if (Number.isFinite(direct) && direct > 0) return direct;
+      const cached = Number(previousBpmCache.get(item?.songId));
+      return Number.isFinite(cached) && cached > 0 ? cached : 0;
+    }).filter(Boolean);
+
+    return values.length
+      ? Math.round(values.reduce((sum,value) => sum + value, 0) / values.length)
+      : "-";
+  }
+
+  function endedSessionsNewestFirst() {
+    return pastSessions
+      .filter(session => {
+        const status = String(session.status || "").toLowerCase();
+        return status === "ended" || !!session.actualEndedAt || !!session.endedAt;
+      })
+      .sort((a,b) => {
+        const ad = sessionActualEnd(a) || sessionActualStart(a) || new Date(0);
+        const bd = sessionActualEnd(b) || sessionActualStart(b) || new Date(0);
+        return bd - ad;
+      });
+  }
+
+  async function renderPreviousSession() {
+    const panel = $("previousSessionPanel");
+    const summaryEl = $("previousSessionSummary");
+    const detailsEl = $("previousSessionDetails");
+    const button = $("previousSessionToggleBtn");
+    if (!panel || !summaryEl || !detailsEl || !button) return;
+
+    const latest = endedSessionsNewestFirst()[0];
+    if (!latest) {
+      summaryEl.innerHTML = "<span>No completed session yet.</span>";
+      detailsEl.hidden = true;
+      detailsEl.innerHTML = "";
+      button.disabled = true;
+      return;
+    }
+
+    button.disabled = false;
+    summaryEl.innerHTML = `
+      <strong>${esc(latest.title || "Performance Session")}</strong>
+      <span>${esc(latest.venue || "-")} • ${esc(formatLongDate(sessionActualEnd(latest) || sessionActualStart(latest)))}</span>
+    `;
+
+    panel.classList.toggle("collapsed", !previousSessionExpanded);
+    button.textContent = previousSessionExpanded ? "▲ Collapse" : "▼ Expand";
+    button.setAttribute("aria-expanded", String(previousSessionExpanded));
+    detailsEl.hidden = !previousSessionExpanded;
+    if (!previousSessionExpanded) return;
+
+    detailsEl.innerHTML = '<div class="dashboard-event-empty">Loading previous session…</div>';
+
+    const records = await loadSessionRecords(latest);
+    const summary = sessionRequestSummary(latest, records.requests);
+    const savedAverage = Number(latest.averageBpm);
+    const avgBpm = Number.isFinite(savedAverage) && savedAverage > 0
+      ? Math.round(savedAverage)
+      : await averageBpmFromPlayed(records.played);
+    if (!previousSessionExpanded || endedSessionsNewestFirst()[0]?.id !== latest.id) return;
+
+    const previousStart = sessionActualStart(latest);
+    const previousEnd = sessionActualEnd(latest);
+    const previousTotalMs = previousStart && previousEnd ? Math.max(0, previousEnd - previousStart) : null;
+    const previousActiveMs = Number.isFinite(previousTotalMs)
+      ? Math.max(0, previousTotalMs - breakDurationMs(latest))
+      : null;
+
+    detailsEl.innerHTML = `
+      <div class="previous-session-detail-grid">
+        ${detailCell("SESSION", latest.title || "-")}
+        ${detailCell("VENUE", latest.venue || "-")}
+        ${detailCell("TYPE", latest.sessionType || latest.type || "-")}
+        ${detailCell("STATUS", latest.status || "ended")}
+        ${detailCell("DATE", formatLongDate(sessionActualEnd(latest) || sessionActualStart(latest)))}
+        ${detailCell("SCHEDULED", `${formatTime(sessionScheduledStart(latest))}–${formatTime(sessionScheduledEnd(latest))}`)}
+        ${detailCell("ACTUAL", `${formatTime(sessionActualStart(latest))}–${formatTime(sessionActualEnd(latest))}`)}
+        ${detailCell("ACTIVE TIME", formatDurationMs(previousActiveMs))}
+        ${detailCell("TOTAL ELAPSED", formatDurationMs(previousTotalMs))}
+        ${detailCell("AVERAGE BPM", avgBpm)}
+        ${detailCell("SONGS PLAYED", records.played.length)}
+        ${detailCell("BREAKS", `${(latest.breaks || []).length} • ${formatDurationMs(breakDurationMs(latest))}`)}
+        ${detailCell("REQUESTS", summary.total || 0)}
+        ${detailCell("PLAYED REQUESTS", summary.completed || 0)}
+        ${detailCell("LEFT / NOT PLAYED", summary.left || 0)}
+        ${detailCell("SINGER LEFT", summary.abandoned || 0)}
+        ${detailCell("DELETED / DECLINED", summary.deleted || 0)}
+      </div>
+      <div class="previous-session-notes">
+        <span>SESSION NOTES</span>
+        <strong>${esc(displayFinishedEdit(latest,"notes",latest.notes || "No notes."))}</strong>
+      </div>
+      <button type="button" class="small-outline previous-session-view-btn" data-view-past-session="${esc(latest.id)}">VIEW FULL SESSION</button>
+    `;
+  }
+
+  function displayFinishedEdit(session, field, original) {
+    const edit = String(session?.finishedSessionEdits?.[field] || "").trim();
+    return edit ? `${original} (EDIT: ${edit})` : original;
+  }
+
   function requestStatusLabel(status) {
     const value = String(status || "").toLowerCase();
 
@@ -406,10 +531,10 @@
       <div class="dashboard-detail-grid">
         ${detailCell("VENUE", session.venue || "-")}
         ${detailCell("TYPE", session.sessionType || session.type || "-")}
-        ${detailCell("SCHED. START", `${formatLongDate(sessionScheduledStart(session))} ${formatTime(sessionScheduledStart(session))}`)}
-        ${detailCell("SCHED. END", `${formatLongDate(sessionScheduledEnd(session))} ${formatTime(sessionScheduledEnd(session))}`)}
-        ${detailCell("ACTUAL START", `${formatLongDate(sessionActualStart(session))} ${formatTime(sessionActualStart(session))}`)}
-        ${detailCell("ACTUAL END", `${formatLongDate(sessionActualEnd(session))} ${formatTime(sessionActualEnd(session))}`)}
+        ${detailCell("SCHED. START", displayFinishedEdit(session,"scheduledStart",`${formatLongDate(sessionScheduledStart(session))} ${formatTime(sessionScheduledStart(session))}`))}
+        ${detailCell("SCHED. END", displayFinishedEdit(session,"scheduledEnd",`${formatLongDate(sessionScheduledEnd(session))} ${formatTime(sessionScheduledEnd(session))}`))}
+        ${detailCell("ACTUAL START", displayFinishedEdit(session,"actualStart",`${formatLongDate(sessionActualStart(session))} ${formatTime(sessionActualStart(session))}`))}
+        ${detailCell("ACTUAL END", displayFinishedEdit(session,"actualEnd",`${formatLongDate(sessionActualEnd(session))} ${formatTime(sessionActualEnd(session))}`))}
         ${detailCell("DURATION", sessionDuration(session))}
         ${detailCell("BREAKS", `${(session.breaks || []).length} • ${formatDurationMs(breakDurationMs(session))}`)}
         ${detailCell("REQUESTS", summary.total || 0)}
@@ -424,7 +549,7 @@
 
       <div class="dashboard-detail-section">
         <h3>SESSION NOTES</h3>
-        <div class="dashboard-detail-copy">${esc(session.notes || "No notes.")}</div>
+        <div class="dashboard-detail-copy">${esc(displayFinishedEdit(session,"notes",session.notes || "No notes."))}</div>
       </div>
 
       <div class="dashboard-detail-section">
@@ -518,6 +643,7 @@
       }));
 
       renderPastSessions();
+      renderPreviousSession();
     }, error => {
       console.warn("Could not load Past Sessions dashboard:", error);
       if ($("dashboardPastSessionsList")) {
@@ -664,6 +790,11 @@
 
     $("dashboardDetailModal")?.addEventListener("click", event => {
       if (event.target === $("dashboardDetailModal")) closeDetailModal();
+    });
+
+    $("previousSessionToggleBtn")?.addEventListener("click", () => {
+      previousSessionExpanded = !previousSessionExpanded;
+      renderPreviousSession();
     });
 
     $("addMemberUserBtn")?.addEventListener("click", openNewUserModal);

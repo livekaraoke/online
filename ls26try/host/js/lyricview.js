@@ -1422,6 +1422,11 @@
       const startedAt = firebase.firestore.Timestamp.fromMillis(actualStartedMs);
       const performedId = `${currentSongId}_${actualStartedMs}`;
 
+      const performanceBpm =
+        toNumber(currentSong.userBpm) ||
+        toNumber(currentSong.originalBpm) ||
+        toNumber(currentSong.bpm);
+
       const record = {
         songId: currentSongId,
         songTitle: currentSong.title || "",
@@ -1429,6 +1434,9 @@
         artist: currentSong.artist || "",
         requestId: requestId || "",
         source: "lyricview-autoscroll",
+        userBpm: performanceBpm || null,
+        performanceBpm: performanceBpm || null,
+        originalBpm: toNumber(currentSong.originalBpm) || null,
         startedAt,
         playingAtMs: actualStartedMs,
         playedAt: startedAt,

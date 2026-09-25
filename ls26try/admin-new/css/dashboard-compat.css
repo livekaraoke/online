@@ -1310,3 +1310,80 @@
 #dashboardDetailModal .dashboard-detail-section h3{
   color:var(--ls-accent,#00cafa)!important;
 }
+
+
+/* =========================================================
+   PREVIOUS SESSION CARD — 2026-09-25
+   ========================================================= */
+.previous-session-card{
+  overflow:hidden;
+}
+.previous-session-title-row{
+  align-items:center!important;
+}
+.previous-session-summary{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:4px 2px 2px;
+  color:#8faabd;
+}
+.previous-session-summary strong{
+  color:#eaf7fd;
+  font-size:16px;
+}
+.previous-session-summary span{
+  color:#7897a9;
+  font-size:13px;
+}
+.previous-session-card.collapsed .previous-session-summary{
+  padding-bottom:0;
+}
+.previous-session-details{
+  margin-top:14px;
+  padding-top:14px;
+  border-top:1px solid #194258;
+}
+.previous-session-detail-grid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:9px;
+}
+.previous-session-detail-grid .dashboard-detail-cell{
+  min-height:72px;
+}
+.previous-session-notes{
+  margin-top:10px;
+  padding:11px 13px;
+  border:1px solid #1d465a;
+  border-radius:8px;
+  background:#031722;
+}
+.previous-session-notes span{
+  display:block;
+  margin-bottom:5px;
+  color:#00cafa;
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:.08em;
+}
+.previous-session-notes strong{
+  display:block;
+  color:#dcecf5;
+  font-size:13px;
+  line-height:1.4;
+}
+.previous-session-view-btn{
+  width:100%;
+  margin-top:10px;
+}
+@media(max-width:900px){
+  .previous-session-summary{
+    align-items:flex-start;
+    flex-direction:column;
+    gap:3px;
+  }
+  .previous-session-detail-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+}

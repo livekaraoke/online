@@ -598,3 +598,42 @@ body.sessions-body {
   background:#041925!important;
   color:#fff!important;
 }
+
+
+/* Finished-session edit annotations — originals remain immutable. */
+.finished-session-value-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+.finished-session-value-row>strong{
+  min-width:0;
+  flex:1 1 auto;
+}
+.finished-session-edit-btn{
+  flex:0 0 34px;
+  width:34px;
+  height:34px;
+  min-height:34px;
+  display:grid;
+  place-items:center;
+  padding:0;
+  border:1px solid #2b6077;
+  border-radius:7px;
+  background:#06202e;
+  color:#00cafa;
+  font-size:18px;
+  font-weight:900;
+  cursor:pointer;
+}
+.finished-session-edit-btn:hover,
+.finished-session-edit-btn:focus-visible{
+  border-color:#00cafa;
+  background:#083148;
+  color:#fff;
+}
+.finished-session-notes-card strong{
+  white-space:pre-wrap;
+  line-height:1.4;
+}

@@ -41,8 +41,23 @@
       const frame = document.getElementById("liveSuiteFrame");
       const gate = document.getElementById("fullscreenGate");
       const enterButton = document.getElementById("enterFullscreenBtn");
-      let sawActiveSession = false;
       let leaving = false;
+
+      function allowedInnerUrl(raw) {
+        try {
+          const candidate = new URL(raw || "library.html", location.href);
+          const root = new URL("./", location.href);
+          if (candidate.origin !== location.origin) return root.href + "library.html";
+          if (!candidate.pathname.startsWith(root.pathname)) return root.href + "library.html";
+          if (candidate.pathname.endsWith("/session.html")) return root.href + "library.html";
+          return candidate.href;
+        } catch (_) {
+          return new URL("library.html", location.href).href;
+        }
+      }
+
+      const requested = new URLSearchParams(location.search).get("src");
+      frame.src = allowedInnerUrl(requested || "library.html");
 
       function fullscreenElement() {
         return document.fullscreenElement || document.webkitFullscreenElement || null;
@@ -56,51 +71,43 @@
 
         try {
           const root = document.documentElement;
-          if (root.requestFullscreen) {
-            await root.requestFullscreen({ navigationUI:"hide" });
-          } else if (root.webkitRequestFullscreen) {
-            root.webkitRequestFullscreen();
-          }
-        } catch (_) {
-          // Browsers may require the fallback button's user gesture.
-        }
+          if (root.requestFullscreen) await root.requestFullscreen({ navigationUI:"hide" });
+          else if (root.webkitRequestFullscreen) root.webkitRequestFullscreen();
+        } catch (_) {}
 
         gate.hidden = !!fullscreenElement();
       }
 
       async function exitFullscreen() {
         try {
-          if (document.fullscreenElement && document.exitFullscreen) {
-            await document.exitFullscreen();
-          } else if (document.webkitFullscreenElement && document.webkitExitFullscreen) {
-            document.webkitExitFullscreen();
-          }
+          if (document.fullscreenElement && document.exitFullscreen) await document.exitFullscreen();
+          else if (document.webkitFullscreenElement && document.webkitExitFullscreen) document.webkitExitFullscreen();
         } catch (_) {}
       }
 
-      async function leaveFor(url) {
+      async function exitWrapper(targetHref) {
         if (leaving) return;
         leaving = true;
         gate.hidden = true;
         await exitFullscreen();
-        location.replace(url || "admin-new/admin.html");
+        location.replace(allowedInnerUrl(targetHref || frame.src));
       }
 
-      function inspectFrameLocation() {
-        if (leaving) return;
-        try {
-          const href = frame.contentWindow.location.href;
-          const url = new URL(href);
-          if (url.origin === location.origin && url.pathname.includes("/admin-new/")) {
-            leaveFor(href);
-          }
-        } catch (_) {
-          // Same-origin LiveSuite pages are readable; ignore transient navigation states.
+      window.LS26Session = {
+        enterFullscreen,
+        exitWrapper,
+        currentPage: () => {
+          try { return frame.contentWindow.location.href; }
+          catch (_) { return frame.src; }
         }
-      }
+      };
 
-      frame.addEventListener("load", inspectFrameLocation);
-      setInterval(inspectFrameLocation, 700);
+      window.addEventListener("message", event => {
+        if (event.origin !== location.origin) return;
+        const data = event.data || {};
+        if (data.type === "ls26-session-enter-fullscreen") enterFullscreen();
+        if (data.type === "ls26-session-exit") exitWrapper(data.href);
+      });
 
       document.addEventListener("fullscreenchange", () => {
         gate.hidden = !!fullscreenElement() || leaving;
@@ -108,29 +115,9 @@
       document.addEventListener("webkitfullscreenchange", () => {
         gate.hidden = !!fullscreenElement() || leaving;
       });
+
       enterButton.addEventListener("click", enterFullscreen);
-
-      // Try automatically first. If the browser requires a direct user gesture,
-      // the one-tap fallback overlay appears.
       window.addEventListener("load", () => requestAnimationFrame(enterFullscreen));
-
-      try {
-        window.db.collection("karaokeControl").doc("currentSession").onSnapshot(snapshot => {
-          const data = snapshot.exists ? (snapshot.data() || {}) : {};
-          const active = data.active === true && !!(data.sessionId || data.activeSessionId);
-
-          if (active) {
-            sawActiveSession = true;
-            return;
-          }
-
-          if (sawActiveSession) {
-            leaveFor("admin-new/admin.html");
-          }
-        }, error => console.warn("Session fullscreen watcher unavailable:", error));
-      } catch (error) {
-        console.warn("Session fullscreen watcher unavailable:", error);
-      }
     })();
   </script>
 </body>
