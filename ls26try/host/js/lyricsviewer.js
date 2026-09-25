@@ -243,7 +243,7 @@
   }
 
   function populateFilters() {
-    const currentArtist = filters.artist.value || restoredState?.artist || "";
+    const currentArtist = ArtistNames.display(filters.artist.value || restoredState?.artist || "");
     const currentKey = filters.key.value || restoredState?.key || "";
 
     const artists = [...new Set(songs.map(song => song.artist).filter(Boolean))]
@@ -300,9 +300,7 @@
       if (notesVisible && noteCategory && (!note || (noteCategory !== "notes" && note.category !== noteCategory))) return false;
       const matchesSearch =
         !query ||
-        `${song.title} ${song.artist} ${song.key} ${song.year} ${song.sections.map(s=>s.content||s.html||s.text||" ").join(" ")}`
-          .toLowerCase()
-          .includes(query);
+        ArtistNames.matchesSong(song, query, `${song.key} ${song.sections.map(s=>s.content||s.html||s.text||" ").join(" ")}`);
 
       const matchesArtist =
         !filters.artist.value || song.artist === filters.artist.value;
@@ -435,7 +433,7 @@
           data-select="${song.firebaseId}"
           type="button">
           <strong>${LyricsCommon.escapeHTML(song.title)}</strong>
-          <small>${LyricsCommon.escapeHTML(song.artist)}${song.year ? " · "+LyricsCommon.escapeHTML(song.year) : ""}${note ? ` <span class="personal-note-badge" title="${LyricsCommon.escapeHTML(note.label)}">Note · ${LyricsCommon.escapeHTML(note.label)}</span>` : ""}</small>
+          <small>${LyricsCommon.escapeHTML(ArtistNames.display(song.artist))}${song.year ? " · "+LyricsCommon.escapeHTML(song.year) : ""}${note ? ` <span class="personal-note-badge" title="${LyricsCommon.escapeHTML(note.label)}">Note · ${LyricsCommon.escapeHTML(note.label)}</span>` : ""}</small>
         </button>
 
         <strong class="key-cell">
@@ -545,7 +543,7 @@
     if (exact) return exact;
 
     const titleKey = normaliseRunSongIdentity(item.songTitle || item.title);
-    const artistKey = normaliseRunSongIdentity(item.artist || item.songArtist);
+    const artistKey = normaliseRunSongIdentity(ArtistNames.display(item.artist || item.songArtist));
 
     const matches = songs.filter(song =>
       normaliseRunSongIdentity(song.title) === titleKey
@@ -553,7 +551,7 @@
 
     if (artistKey) {
       const artistMatch = matches.find(song =>
-        normaliseRunSongIdentity(song.artist) === artistKey
+        normaliseRunSongIdentity(ArtistNames.display(song.artist)) === artistKey
       );
       if (artistMatch) return artistMatch;
     }
@@ -597,7 +595,7 @@
 
     if (meta) {
       const parts = [
-        nextRunOrderItem.artist || "",
+        ArtistNames.display(nextRunOrderItem.artist || ""),
         nextRunOrderItem.singerName
           ? `Requested by ${nextRunOrderItem.singerName}`
           : ""

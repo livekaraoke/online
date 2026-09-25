@@ -62,7 +62,7 @@
     select.innerHTML =
       `<option value="">Choose song to add…</option>` +
       lyricsSongs.map(song =>
-        `<option value="${esc(song.id)}">${esc(song.title || song.id)}${song.artist ? ` — ${esc(song.artist)}` : ""}</option>`
+        `<option value="${esc(song.id)}">${esc(song.title || song.id)}${song.artist ? ` — ${esc(ArtistNames.display(song.artist))}` : ""}</option>`
       ).join("");
 
     if (lyricsSongs.some(song => song.id === current)) select.value = current;
@@ -90,7 +90,7 @@
 
         <div class="admin-run-order-main">
           <strong>${esc(item.songTitle || item.title || item.songId || "Untitled Song")}</strong>
-          <small>${esc(item.artist || item.songArtist || "")}${item.status === "played" ? " • PLAYED" : ""}</small>
+          <small>${esc(ArtistNames.display(item.artist || item.songArtist || ""))}${item.status === "played" ? " • PLAYED" : ""}</small>
         </div>
 
         <div class="admin-run-order-singer">

@@ -254,7 +254,7 @@
       const dialog=document.createElement("dialog");
       dialog.className="ls26-dialog pre-session-runorder-dialog";
       const rows=items.map((item,index)=>
-        `<li><span>${index+1}</span><div><strong>${LK.dashboard.escapeHTML(item.songTitle||item.title||"Untitled")}</strong><small>${LK.dashboard.escapeHTML(item.artist||"")}</small></div></li>`
+        `<li><span>${index+1}</span><div><strong>${LK.dashboard.escapeHTML(item.songTitle||item.title||"Untitled")}</strong><small>${LK.dashboard.escapeHTML(ArtistNames.display(item.artist||""))}</small></div></li>`
       ).join("");
       dialog.innerHTML=`
         <div class="pre-session-runorder-content">

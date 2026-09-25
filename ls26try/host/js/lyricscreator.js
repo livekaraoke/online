@@ -271,7 +271,7 @@
     historyApplying = true;
     sections = JSON.parse(JSON.stringify(state.sections || []));
     if ($("songTitleInput")) $("songTitleInput").value = state.title || "";
-    if ($("artistInput")) $("artistInput").value = state.artist || "";
+    if ($("artistInput")) $("artistInput").value = ArtistNames.display(state.artist);
     if ($("userBpmInput")) $("userBpmInput").value = state.userBpm || "";
     if ($("originalBpmInput")) $("originalBpmInput").value = state.originalBpm || "";
     if ($("keyInput")) $("keyInput").value = state.key || "";
@@ -379,7 +379,7 @@
 
   function updateEditingStatus() {
     const title = $("songTitleInput").value.trim() || "New Song";
-    const artist = $("artistInput").value.trim();
+    const artist = ArtistNames.display($("artistInput").value);
     $("creatorStatus").textContent = `Editing: ${title}${artist ? ` - ${artist}` : ""}`;
   }
 
@@ -994,7 +994,7 @@
 
     $("creatorHeading").textContent = "✎ EDIT SONG";
     $("songTitleInput").value = loadedSong.title || "";
-    $("artistInput").value = loadedSong.artist || "";
+    $("artistInput").value = ArtistNames.display(loadedSong.artist);
     $("userBpmInput").value = loadedSong.userBpm || "";
     $("originalBpmInput").value = loadedSong.originalBpm || "";
     $("keyInput").value = loadedSong.key || "";
@@ -1016,7 +1016,7 @@
   async function save() {
     syncSectionsFromDOM();
     const title = $("songTitleInput").value.trim();
-    const artist = $("artistInput").value.trim();
+    const artist = ArtistNames.display($("artistInput").value);
     if (!title || !artist) {
       await LS26Dialogs.alert("Title and artist are required.");
       return;
@@ -1086,7 +1086,7 @@
         return {
           id: doc.id,
           title: data.title || "Untitled",
-          artist: data.artist || ""
+          artist: ArtistNames.display(data.artist)
         };
       })
       .sort((a, b) =>
@@ -1112,7 +1112,7 @@
       select.innerHTML =
         `<option value="">Choose a song...</option>` +
         songs.map(song =>
-          `<option value="${esc(song.id)}">${esc(song.title)}${song.artist ? ` — ${esc(song.artist)}` : ""}</option>`
+          `<option value="${esc(song.id)}">${esc(song.title)}${song.artist ? ` — ${esc(ArtistNames.display(song.artist))}` : ""}</option>`
         ).join("");
 
       // Do not default to the current song; user deliberately chooses target.

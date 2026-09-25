@@ -28,7 +28,7 @@
     return {
       firebaseId: id,
       title: String(data?.title || "Untitled").trim(),
-      artist: String(data?.artist || "").trim(),
+      artist: ArtistNames.display(data?.artist),
       year: String(data?.year || "").trim()
     };
   }
@@ -176,7 +176,7 @@
           <span class="drag" title="Drag to reorder">☰</span>
           <div>
             <strong>${esc(song.title)}</strong>
-            <small>${esc(song.artist)}${song.year ? ` · ${esc(song.year)}` : ""}</small>
+            <small>${esc(ArtistNames.display(song.artist))}${song.year ? ` · ${esc(song.year)}` : ""}</small>
           </div>
           <button data-up="${esc(id)}" type="button" title="Move up">↑</button>
           <button data-down="${esc(id)}" type="button" title="Move down">↓</button>
@@ -196,14 +196,14 @@
     const selected = new Set(songOrder);
     const available = songs.filter(song => {
       if (selected.has(song.firebaseId)) return false;
-      return !query || `${song.title} ${song.artist} ${song.year}`.toLowerCase().includes(query);
+      return !query || ArtistNames.matchesSong(song, query);
     });
 
     $("availableSongs").innerHTML = available.map(song => `
       <div class="setlist-song-row">
         <div>
           <strong>${esc(song.title)}</strong>
-          <small>${esc(song.artist)}${song.year ? ` · ${esc(song.year)}` : ""}</small>
+          <small>${esc(ArtistNames.display(song.artist))}${song.year ? ` · ${esc(song.year)}` : ""}</small>
         </div>
         <button data-add="${esc(song.firebaseId)}" type="button" title="Add to setlist">＋</button>
       </div>

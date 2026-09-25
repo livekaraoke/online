@@ -92,7 +92,7 @@
     const query = ($("leSearchInput").value || "").trim().toLowerCase();
     const songs = state.songs.filter(song =>
       !query ||
-      `${song.title||""} ${song.artist||""}`.toLowerCase().includes(query)
+      ArtistNames.matchesSong(song, query)
     );
 
     $("leSongRows").innerHTML = songs.length
@@ -100,7 +100,7 @@
         <div class="le-song-row" data-song-id="${esc(song.id)}">
           <div class="le-song-main">
             <strong>${esc(song.title || "Untitled Song")}</strong>
-            <span>${esc(song.artist || "")}${song.year ? ` · ${esc(song.year)}` : ""}</span>
+            <span>${esc(ArtistNames.display(song.artist || ""))}${song.year ? ` · ${esc(song.year)}` : ""}</span>
           </div>
           ${CATEGORY_DEFS.map(([key,label]) => `
             <label class="le-check" title="${esc(label)}">

@@ -475,7 +475,7 @@
     const requestRows = detail.requests.length
       ? detail.requests.map(req => `
           <div class="detail-row">
-            <strong>${esc(req.songTitle || req.title || "Untitled Song")} — ${esc(req.artist || req.songArtist || "")}</strong>
+            <strong>${esc(req.songTitle || req.title || "Untitled Song")} — ${esc(ArtistNames.display(req.artist || req.songArtist || ""))}</strong>
             <span>${esc(req.singerName || req.name || "Singer")} · ${formatTime(tsDate(req.requestedAt || req.createdAt || req.submittedAt || req.timestamp))}</span>
             <span class="status-chip ${esc(requestStatusBucket(req.status))}">${esc(requestStatusLabel(req.status))}</span>
           </div>
@@ -485,7 +485,7 @@
     const playedRows = detail.played.length
       ? detail.played.map(item => `
           <div class="detail-row">
-            <strong>${esc(item.songTitle || item.title || item.songId || "Untitled Song")} — ${esc(item.songArtist || item.artist || "")}</strong>
+            <strong>${esc(item.songTitle || item.title || item.songId || "Untitled Song")} — ${esc(ArtistNames.display(item.songArtist || item.artist || ""))}</strong>
             <span>${formatTime(tsDate(item.playedAt || item.createdAt))}</span>
             <span class="status-chip played">Played</span>
           </div>

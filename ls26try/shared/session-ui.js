@@ -66,7 +66,7 @@
     let song=tools().getSongs?.().find(s=>s.id===(request?.songId||item?.songId))||{};
     const songId=request?.songId||item?.songId;
     if(songId&&!song.id){try{if(!detailCache.has(songId)){const snap=await db().collection('lyrics').doc(songId).get();detailCache.set(songId,snap.data()||{});}song=detailCache.get(songId);}catch(error){LS26.toast('Song metadata unavailable: '+error.message);}}
-    const fields={'Song':request?.songTitle||item?.songTitle||song.title,'Artist':request?.songArtist||request?.artist||item?.artist||song.artist,'Requester':request?.singerName||request?.name||item?.singerName||'Host choice','Note':request?.note,'Locality':request?.location,'Rating':request?.rating,'Age range':request?.ageRange,'Key':song.key,'Year':song.year,'BPM':song.bpm||song.originalBpm||song.tempo,'Capo':song.capo};
+    const fields={'Song':request?.songTitle||item?.songTitle||song.title,'Artist':ArtistNames.display(request?.songArtist||request?.artist||item?.artist||song.artist),'Requester':request?.singerName||request?.name||item?.singerName||'Host choice','Note':request?.note,'Locality':request?.location,'Rating':request?.rating,'Age range':request?.ageRange,'Key':song.key,'Year':song.year,'BPM':song.bpm||song.originalBpm||song.tempo,'Capo':song.capo};
     dialog('Song & requester details',Object.entries(fields).filter(([,v])=>v!==undefined&&v!=='').map(([k,v])=>`<p><small class="ls26-muted">${esc(k)}</small><br><strong>${esc(v)}</strong></p>`).join(''));
   }
   function rejectDialog(requestId,itemId,mode){
@@ -120,7 +120,7 @@
       const chosen=lists.find(x=>x.id===(session.setlistId||session.publicSetlistId||publicList.setlistId));
       const ids=new Set(session.setlistSongIds||chosen?.songIds||[]),songs=tools().getSongs().filter(x=>ids.has(x.id)).sort((a,b)=>String(a.title).localeCompare(String(b.title)));
       d.querySelector('#ls26PickerListName').textContent=chosen?.name||session.setlistName||publicList.setlistName||'No session setlist selected';
-      const render=()=>{const q=d.querySelector('input').value.toLowerCase();d.querySelector('.ls26-picker-list').innerHTML=songs.filter(x=>(x.title+' '+x.artist).toLowerCase().includes(q)).map(x=>`<button data-picker-song="${esc(x.id)}"><span><strong>${esc(x.title)}</strong><small>${esc(x.artist||'')}</small></span><span>＋ Add</span></button>`).join('')||'<p>No matching session songs. Choose a session setlist or open the Library.</p>';};
+      const render=()=>{const q=d.querySelector('input').value.toLowerCase();d.querySelector('.ls26-picker-list').innerHTML=songs.filter(x=>ArtistNames.matchesSong(x,q)).map(x=>`<button data-picker-song="${esc(x.id)}"><span><strong>${esc(x.title)}</strong><small>${esc(ArtistNames.display(x.artist||''))}</small></span><span>＋ Add</span></button>`).join('')||'<p>No matching session songs. Choose a session setlist or open the Library.</p>';};
       d.querySelector('input').oninput=render;render();
       d.addEventListener('click',async e=>{const button=e.target.closest('[data-picker-song]');if(!button)return;button.disabled=true;try{const song=songs.find(x=>x.id===button.dataset.pickerSong);await tools().enqueueSong({...song,firebaseId:song.id});button.lastElementChild.textContent='✓ Added';}catch(error){LS26.toast(error.message);button.disabled=false;}});
     }catch(error){d.querySelector('.ls26-picker-list').textContent=error.message;}

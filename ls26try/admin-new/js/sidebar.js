@@ -274,7 +274,7 @@
 
             btn.innerHTML = `
               ${escapeHTML(title)}
-              <span>${escapeHTML(artist)}</span>
+              <span>${escapeHTML(ArtistNames.display(artist))}</span>
             `;
 
             btn.onclick = () => {

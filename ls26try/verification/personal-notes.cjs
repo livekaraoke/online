@@ -6,7 +6,7 @@ function boot(){
   const elements={};
   const el=id=>elements[id]||(elements[id]={value:'',checked:false,handlers:{},addEventListener(name,fn){this.handlers[name]=fn;}});
   const ctx={console,URLSearchParams,location:{search:''},localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)},document:{getElementById:el},window:{addEventListener(){}},LyricsCommon:{hasTabs:()=>true,hasLyrics:()=>true,toDate:()=>null},LK:{sessionTools:{getSession:()=>({setlistSongIds:['a','n2']}),getPublicList:()=>({})}}};
-  ctx.window.LK=ctx.LK;vm.createContext(ctx);
+  ctx.window.LK=ctx.LK;ctx.ArtistNames=require('../shared/artist-names.js');vm.createContext(ctx);
   const handlers=source.slice(source.indexOf('  $("personalNotesToggle")?.addEventListener'),source.indexOf('  $("refreshBtn").onclick'));
   vm.runInContext(source.slice(0,source.indexOf('  function syncSidebarButton()'))+`render=()=>{};saveViewState=()=>{};`+handlers+`window.test={
     set:data=>songs=data, classify:personalNote,

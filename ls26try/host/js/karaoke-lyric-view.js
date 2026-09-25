@@ -221,9 +221,9 @@
     $("songLoadingView").classList.remove("hidden");
 
     $("loadingSongTitle").textContent = nextSong.title || "Untitled Song";
-    $("loadingSongArtist").textContent = nextSong.artist || "Unknown Artist";
+    $("loadingSongArtist").textContent = ArtistNames.display(nextSong.artist) || "Unknown Artist";
     $("singerTitle").textContent = "CURRENTLY LOADING";
-    $("singerArtist").textContent = `${nextSong.title || "Untitled Song"} — ${nextSong.artist || "Unknown Artist"}`;
+    $("singerArtist").textContent = `${nextSong.title || "Untitled Song"} — ${ArtistNames.display(nextSong.artist) || "Unknown Artist"}`;
 
     setSettingsEnabled(false);
     window.scrollTo(0, 0);
@@ -373,7 +373,7 @@
     $("singerControls").classList.remove("hidden");
 
     $("singerTitle").textContent = song.title;
-    $("singerArtist").textContent = song.artist;
+    $("singerArtist").textContent = ArtistNames.display(song.artist);
     setSettingsEnabled(true);
 
     const content = $("singerLyrics");
