@@ -59,6 +59,7 @@
     // Reuse the original admin lifecycle (archive/event/request normalization).
     // Navigate with an explicit action; admin authentication remains authoritative.
     if(!await LS26Dialogs.confirm('End this session? The Admin dashboard will open to complete and archive it.'))return;
+    await window.LS26Performance?.flushTempo?.();
     location.href=LS26.url('admin-new/admin.html?endSession='+encodeURIComponent(session.id));
   }
   const detailCache=new Map();

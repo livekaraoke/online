@@ -1022,3 +1022,22 @@ html.ls26-reduce-glow .performance-quick-info{box-shadow:none!important;filter:n
     height:calc(200px + var(--ls26-nav-vertical-gap,0px) * 2)!important;
   }
 }
+
+/* Compact LyricView click and startup preference; scoped to the Info drawer. */
+#songInfoDrawer .lv-metronome{position:relative;padding:14px;min-width:0}
+#songInfoDrawer .lv-metronome h3{margin:0 0 8px;font-size:16px}
+#songInfoDrawer .lv-metro-tempo{font-size:13px;color:var(--ls-muted);margin:0 0 12px}
+#songInfoDrawer .lv-metro-tempo strong{color:var(--ls-success)}
+#songInfoDrawer .lv-metro-actions,#songInfoDrawer .lv-metro-settings{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}
+#songInfoDrawer .lv-metronome button,#songInfoDrawer .lv-metronome select{box-sizing:border-box;width:100%;min-width:0;min-height:44px;padding:8px 5px;font:inherit;font-size:13px;color:var(--ls-text);background:var(--ls-bg);border:1px solid var(--ls-border);border-radius:7px}
+#songInfoDrawer #lvMetroStart{border-color:var(--ls-success);color:var(--ls-success)}
+#songInfoDrawer #lvMetroStart[aria-pressed="true"]{border-color:var(--ls-warning);color:var(--ls-warning)}
+#songInfoDrawer .lv-metronome button:disabled{opacity:.5}
+#songInfoDrawer .lv-metro-check,#songInfoDrawer .ls26-info-startup{display:flex;align-items:center;gap:10px;min-height:44px;font-size:13px;line-height:1.4;cursor:pointer}
+#songInfoDrawer .lv-metro-check input,#songInfoDrawer .ls26-info-startup input{width:20px;height:20px;min-width:20px;margin:0;accent-color:var(--ls-success)}
+#songInfoDrawer .lv-metro-settings label,#songInfoDrawer .lv-metro-volume{display:flex;flex-direction:column;gap:6px;font-size:12px;color:var(--ls-muted)}
+#songInfoDrawer .lv-metro-volume input{width:100%;min-width:0;accent-color:var(--ls-accent);min-height:32px}
+#songInfoDrawer #lvMetroStatus{font-size:12px;color:var(--ls-muted);min-height:18px;margin:8px 35px 0 0}
+#songInfoDrawer .lv-metro-beat{position:absolute;right:14px;bottom:14px;width:26px;height:26px;display:grid;place-items:center;border:1px solid var(--ls-border);border-radius:50%;color:var(--ls-muted);font-size:12px}
+#songInfoDrawer .lv-metro-beat.active{color:var(--ls-bg);background:var(--ls-accent);border-color:var(--ls-accent)}
+#songInfoDrawer .ls26-info-startup{padding:12px;border:1px solid var(--ls-border);border-radius:8px;margin-top:16px;background:var(--ls-soft)}

@@ -12,6 +12,8 @@
 
   let currentSong = null;
   let currentSongId = songId;
+  let performanceTempo = null;
+  async function flushPerformanceTempo(){await performanceRecordPromise;return performanceTempo?.flush();}
   let sectionTitleDefaults = {
     verse: "#ffffff",
     preChorus: "#ffb45c",
@@ -181,8 +183,9 @@
     $("infoSongTitle").textContent = `${song.title || "Untitled"}${song.artist ? " — " + ArtistNames.display(song.artist) : ""}`;
   }
 
-  function setInfo(song) {
-    const tempo = toNumber(song.userBpm) || toNumber(song.originalBpm);
+  function setInfo(song, tempoOnly=false) {
+    const savedTempo = toNumber(song.userBpm) || toNumber(song.originalBpm);
+    const tempo = performanceTempo?.get() || savedTempo;
     const original = toNumber(song.originalBpm);
     const time = song.timeSignature || song.time || "4/4";
     const capo = song.capo === "" || song.capo == null ? "0" : song.capo;
@@ -216,7 +219,7 @@
     // Current performance values in the sticky song title bar
     if ($("quickKey")) $("quickKey").textContent = song.key || "–";
     if ($("quickTime")) $("quickTime").textContent = time;
-    renderBpmValue($("quickTempo"), tempo);
+    renderBpmValue($("quickTempo"), savedTempo);
     renderBpmValue($("quickOriginalBpm"), original);
     if ($("quickCapo")) {
       $("quickCapo").textContent = capo;
@@ -229,17 +232,14 @@
     tempoTargets.forEach(el => el.classList.remove("tempo-match", "tempo-different"));
     originalTargets.forEach(el => el.classList.remove("original-different"));
 
-    if (tempo != null && original != null) {
-      if (tempo === original) {
-        tempoTargets.forEach(el => el.classList.add("tempo-match"));
-      } else {
-        tempoTargets.forEach(el => el.classList.add("tempo-different"));
-        originalTargets.forEach(el => el.classList.add("original-different"));
+    for(const [el,value] of [[$("infoTempo"),tempo],[$("quickTempo"),savedTempo]]){
+      if(el&&value!=null&&original!=null){
+        el.classList.add(value===original?'tempo-match':'tempo-different');
+        if(value!==original)originalTargets.forEach(target=>target.classList.add('original-different'));
       }
     }
 
-    $("myNotesInput").value = song.myNotes || "";
-    renderPerformanceSongReference(song);
+    if(!tempoOnly){$("myNotesInput").value = song.myNotes || "";renderPerformanceSongReference(song);}
   }
 
   function songYoutubeLinks(song) {
@@ -1413,19 +1413,17 @@
     if (performanceRecordCreated) return performanceRecordPromise;
     performanceRecordCreated = true;
 
+    const startingBpm=performanceTempo.get();
     performanceRecordPromise = (async () => {
       const { sessionId } = await getActiveSessionContext();
-      if (!sessionId) return;
+      if (!sessionId) {performanceRecordCreated=false;return;}
 
       const startedMs = await ensureCurrentSongPlaying();
       const actualStartedMs = startedMs || Date.now();
       const startedAt = firebase.firestore.Timestamp.fromMillis(actualStartedMs);
       const performedId = `${currentSongId}_${actualStartedMs}`;
 
-      const performanceBpm =
-        toNumber(currentSong.userBpm) ||
-        toNumber(currentSong.originalBpm) ||
-        toNumber(currentSong.bpm);
+      const performanceBpm = performanceTempo.get();
 
       const record = {
         songId: currentSongId,
@@ -1434,7 +1432,8 @@
         artist: currentSong.artist || "",
         requestId: requestId || "",
         source: "lyricview-autoscroll",
-        userBpm: performanceBpm || null,
+        userBpm: toNumber(currentSong.userBpm) || null,
+        startingBpm,
         performanceBpm: performanceBpm || null,
         originalBpm: toNumber(currentSong.originalBpm) || null,
         startedAt,
@@ -1446,16 +1445,16 @@
       try {
         // Keep the per-session performed-song record used by Session History.
         // Use a deterministic id so the same play cannot be duplicated by a race.
-        await db.collection("performanceSessions")
-          .doc(sessionId)
-          .collection("performedSongs")
-          .doc(performedId)
-          .set(record, { merge:true });
+        const recordRef=db.collection("performanceSessions").doc(sessionId).collection("performedSongs").doc(performedId);
+        await recordRef.set(record, { merge:true });
+        await performanceTempo.attach(recordRef,performanceBpm);
 
         // Intentionally DO NOT also add to performanceLogs. That second global
         // log duplicated every play and is unnecessary for lyricview operation.
       } catch (error) {
+        performanceRecordCreated=false;
         console.error("Could not create performance record:", error);
+        window.LS26?.toast("Could not save this performance. Press Play again to retry.");
       }
     })();
 
@@ -1463,6 +1462,7 @@
   }
 
   async function finalizeCurrentSongPlayed() {
+    await flushPerformanceTempo();
     try {
       const matched = await setCurrentRunOrderStatus("played");
       const linkedRequestId = requestId || matched?.requestId || "";
@@ -1492,6 +1492,8 @@
     autoScrollEndHandled = true;
 
     autoScrollOn = false;
+    window.dispatchEvent(new CustomEvent("ls26:scroll-state",{detail:{playing:false}}));
+    window.dispatchEvent(new Event("ls26:song-finished"));
 
     if (scrollTimer) {
       cancelAnimationFrame(scrollTimer);
@@ -1698,6 +1700,8 @@
   function startAutoScroll() {
     const wasOff = !autoScrollOn;
     autoScrollOn = !autoScrollOn;
+    // Synchronous gesture event: linked audio can unlock before any awaited work.
+    window.dispatchEvent(new CustomEvent("ls26:scroll-state",{detail:{playing:autoScrollOn}}));
 
     $("autoScrollBtn").classList.toggle("active", autoScrollOn);
     $("autoScrollBtn").innerHTML = autoScrollOn ? '<svg class="ls26-play-icon" viewBox="0 0 32 32" aria-hidden="true"><path d="M7 4h6v24H7zM19 4h6v24h-6z"/></svg>' : '<svg class="ls26-play-icon" viewBox="0 0 32 32" aria-hidden="true"><path d="M7 3 29 16 7 29Z"/></svg>';
@@ -1759,6 +1763,7 @@
         scrollTimer = null;
       }
 
+      flushPerformanceTempo();
       // LS26: pausing affects scrolling only; current song remains playing.
     }
   }
@@ -1881,7 +1886,7 @@
       $("quickSendSlaveLyricsBtn").onclick = () => sendSlaveLyrics("quickSlaveLyricsSelect");
     }
     if ($("endGoLibraryBtn")) {
-      $("endGoLibraryBtn").onclick = () => location.href = "../library.html";
+      $("endGoLibraryBtn").onclick = () => {performanceTempo?.flush();location.href = "../library.html";};
     }
     if ($("endStartBreakBtn")) {
       $("endStartBreakBtn").onclick = async () => {
@@ -1895,6 +1900,8 @@
           await showModal("Break Unavailable", "The break control is not available right now.");
           return;
         }
+        performanceTempo?.flush();
+        window.dispatchEvent(new Event("ls26:song-finished"));
         breakButton.click();
       };
     }
@@ -1905,6 +1912,7 @@
           await showModal("No Active Session", "There is no active Performance Session to end.");
           return;
         }
+        await flushPerformanceTempo();
         // Admin owns the single end-session confirmation and the full archive lifecycle.
         location.href = `../admin-new/admin.html?endSession=${encodeURIComponent(sessionId)}`;
       };
@@ -1980,7 +1988,11 @@
 
       currentSong = { ...(doc.data() || {}), id:doc.id };
 
-      const performanceBpm=sessionStorage.getItem("ls26:bpm:"+currentSongId);if(performanceBpm)currentSong.userBpm=Number(performanceBpm);
+      performanceTempo=LS26PerformanceTempo.create({
+        song:currentSong,storage:sessionStorage,key:`ls26:currentBpm:${firebase.app().options.projectId}:${currentSongId}`,
+        onChange:()=>{setInfo(currentSong,true);window.dispatchEvent(new Event('ls26:tempo-changed'));},
+        onError:()=>window.LS26?.toast('Current BPM could not be saved to session history. Check your connection and try again.')
+      });
       loadSongScrollSpeed(currentSong);
       setTopTitle(currentSong);
       setInfo(currentSong);
@@ -1989,7 +2001,9 @@
       window.LS26Performance = {
         song:()=>currentSong, sections:()=>sectionEls, isScrolling:()=>autoScrollOn,
         play:()=>{if(!autoScrollOn)startAutoScroll();},
-        setBpm:value=>{currentSong.userBpm=Math.max(1,Math.min(400,Number(value)||96));sessionStorage.setItem("ls26:bpm:"+currentSongId,String(currentSong.userBpm));setInfo(currentSong);},
+        getBpm:()=>performanceTempo.get(),
+        setBpm:value=>performanceTempo.set(value),
+        flushTempo:flushPerformanceTempo,
         nextDetails:renderEndNextSongDetails
       };
       window.dispatchEvent(new Event("ls26:song-ready"));
@@ -1999,6 +2013,8 @@
     }
   }
 
+  window.addEventListener("pagehide",()=>{performanceTempo?.flush();});
+  document.addEventListener("visibilitychange",()=>{if(document.hidden)performanceTempo?.flush();});
   document.addEventListener("DOMContentLoaded", init);
 })();
 

@@ -1,0 +1,36 @@
+const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
+const {create}=require('../shared/performance-tempo.js');
+(async()=>{
+  const song=Object.freeze({userBpm:138,originalBpm:140}),writes=[],storage=new Map();let failures=0,fail=false;
+  const options={song,key:'test:song',storage:{getItem:k=>storage.get(k),setItem:(k,v)=>storage.set(k,v)},onError:()=>failures++};
+  const tempo=create(options);assert.equal(tempo.get(),138);tempo.set(126);assert.equal(song.userBpm,138);assert.equal(writes.length,0,'preview changes do not write');
+  assert.equal(create(options).get(),126,'reload restores current tempo separately');
+  const ref={set:async(data,opts)=>{assert.deepEqual(opts,{merge:true});if(fail)throw Error('offline');writes.push(data);}};
+  await tempo.attach(ref,138);assert.deepEqual(writes,[{performanceBpm:126}]);
+  tempo.set(127);tempo.set(128);await tempo.flush();assert.equal(writes.length,2);assert.deepEqual(writes.at(-1),{performanceBpm:128});
+  await tempo.flush();assert.equal(writes.length,2,'unchanged tempo avoids writes');
+  fail=true;tempo.set(129);assert.equal(await tempo.flush(),false);assert.equal(failures,1);assert.equal(tempo.get(),129);
+  fail=false;await tempo.flush();assert.equal(writes.at(-1).performanceBpm,129,'failed write retries on flush');
+  tempo.set('');assert.equal(tempo.get(),129);tempo.set(900);assert.equal(tempo.get(),400);await tempo.flush();
+  assert.ok(writes.every(row=>Object.keys(row).join(',')==='performanceBpm'),'never write User BPM or song fields');
+  // Exercise the actual played-record routine: a change during the first asynchronous write is retained.
+  const source=fs.readFileSync(path.join(__dirname,'../host/js/lyricview.js'),'utf8');
+  const record=source.slice(source.indexOf('  async function recordCurrentSongPlayed()'),source.indexOf('  async function finalizeCurrentSongPlayed()'));
+  const records=[];let initialSaved=false;const live=create({song,storage:null,key:'live'});live.set(130);
+  const recordRef={set:async data=>{records.push(data);if(!initialSaved){initialSaved=true;live.set(132);}}};
+  const node={doc(){return this;},collection(){return this;},set:data=>recordRef.set(data)};
+  const ctx={performanceTempo:live,currentSong:song,currentSongId:'song1',requestId:'',performanceRecordCreated:false,performanceRecordPromise:null,getActiveSessionContext:async()=>({sessionId:'session1'}),ensureCurrentSongPlaying:async()=>1000,db:{collection:name=>{assert.equal(name,'performanceSessions');return node;}},firebase:{firestore:{Timestamp:{fromMillis:ms=>ms}}},toNumber:Number,console,window:{LS26:{toast(){}}}};
+  vm.createContext(ctx);vm.runInContext(record,ctx);await ctx.recordCurrentSongPlayed();
+  assert.equal(records[0].userBpm,138);assert.equal(records[0].startingBpm,130);assert.equal(records[0].performanceBpm,130);assert.equal(records.at(-1).performanceBpm,132);
+  await ctx.recordCurrentSongPlayed();assert.equal(records.length,2,'Play/Pause does not create duplicate history');
+  const sessionCode=fs.readFileSync(path.join(__dirname,'../admin-new/js/sessions.js'),'utf8');
+  const bpmFunction=sessionCode.slice(sessionCode.indexOf('  function performanceBpm(record)'),sessionCode.indexOf('  function averagePlayedBpm()'));
+  const averages={playedSongBpmCache:new Map()};vm.createContext(averages);vm.runInContext(bpmFunction,averages);
+  assert.equal(averages.performanceBpm({userBpm:138,performanceBpm:120}),120);
+  assert.equal(averages.performanceBpm({userBpm:138}),138,'legacy records still work');
+  const historyCode=fs.readFileSync(path.join(__dirname,'../admin-new/js/performance-sessions.js'),'utf8');
+  averages.playedSnapshot=session=>session.rows;
+  vm.runInContext(historyCode.slice(historyCode.indexOf('  function averageBpm(session)'),historyCode.indexOf('  function finishedEdit(')),averages);
+  assert.equal(averages.averageBpm({rows:[{userBpm:138,performanceBpm:120},{userBpm:150,performanceBpm:130}]}),125);
+  console.log('PASS: independent tempo, no song writes, local reload, coalesced history updates, failure retry, Play snapshot, mid-save tempo changes and duplicate-record guard.');
+})().catch(error=>{console.error(error);process.exitCode=1;});

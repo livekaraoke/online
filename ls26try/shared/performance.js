@@ -36,9 +36,15 @@
       <div class="ls26-bpm-original-row"><span>Original BPM</span><strong id="ls26OriginalBpm">—</strong></div>
       <button id="ls26ResetBpm" type="button">↻ RESET TO ORIGINAL</button>`;
     drawer.querySelector('.song-info-scroll').prepend(panel);
-    function sync(){const song=window.LS26Performance?.song();if(!song)return;$('ls26CurrentBpm').value=song.userBpm||song.originalBpm||96;$('ls26OriginalBpm').textContent=song.originalBpm||'—';$('ls26ResetBpm').disabled=!(Number(song.originalBpm)>0);}
+    function sync(){const song=window.LS26Performance?.song();if(!song)return;$('ls26CurrentBpm').value=window.LS26Performance.getBpm();$('ls26OriginalBpm').textContent=song.originalBpm||'—';$('ls26ResetBpm').disabled=!(Number(song.originalBpm)>0);}
     function close(){drawer.classList.remove('open');drawer.setAttribute('aria-hidden','true');infoAction?.setAttribute('aria-expanded','false');}
-    close();
+    const startup=document.createElement('label');startup.className='ls26-info-startup';startup.innerHTML='<input id="ls26InfoStartup" type="checkbox"> Open on LyricView startup';drawer.querySelector('.song-info-scroll').append(startup);
+    const preferenceKey='ls26:infoOpenOnStartup';
+    try{$('ls26InfoStartup').checked=localStorage.getItem(preferenceKey)==='true';}catch(_){}
+    $('ls26InfoStartup').onchange=e=>{try{localStorage.setItem(preferenceKey,String(e.target.checked));}catch(_){}};
+    function applyStartup(){const open=$('ls26InfoStartup').checked;drawer.classList.toggle('open',open);drawer.setAttribute('aria-hidden',String(!open));infoAction?.setAttribute('aria-expanded',String(open));infoAction?.classList.toggle('active',open);sync();}
+    const metro=document.createElement('section');metro.className='song-info-card lv-metronome';toggle.before(metro);window.LS26LyricMetronome?.mount(metro);
+    applyStartup();
     if(infoAction){
       infoAction.setAttribute('aria-controls','songInfoDrawer');
       infoAction.onclick=()=>{if(drawer.classList.contains('open')){close();return;}drawer.classList.add('open');drawer.setAttribute('aria-hidden','false');infoAction.setAttribute('aria-expanded','true');sync();};
@@ -51,8 +57,9 @@
     function measure(){const h=header?.getBoundingClientRect().height||0;document.documentElement.style.setProperty('--ls-stack-h',h+'px');document.documentElement.style.setProperty('--ls-drawer-top',(h+6)+'px');const dock=document.querySelector('.host-bottom-dock'),height=dock?.getBoundingClientRect().height||100;document.documentElement.style.setProperty('--ls-dock-h',height+'px');document.documentElement.style.setProperty('--ls-drawer-bottom',Math.max(12,innerHeight-(dock?.getBoundingClientRect().top||innerHeight)+12)+'px');}
     new MutationObserver(()=>{infoAction?.setAttribute('aria-expanded',String(drawer.classList.contains('open')));measure();}).observe(drawer,{attributes:true,attributeFilter:['class']});
     const observer=new ResizeObserver(measure);observer.observe(stack);if(header)observer.observe(header);const dock=document.querySelector(".host-bottom-dock");if(dock)observer.observe(dock);window.addEventListener("resize",measure);measure();
-    window.addEventListener('ls26:song-ready',()=>{close();sync();sticky();});
-    window.addEventListener('ls26:song-started',()=>{$('closeSongInfoBtn').click();});
+    window.addEventListener('ls26:song-ready',()=>{applyStartup();sticky();});
+    window.addEventListener('ls26:tempo-changed',sync);
+    window.addEventListener('ls26:song-started',()=>{if(!$('ls26InfoStartup').checked)$('closeSongInfoBtn').click();});
     let frame;
     function sticky(){cancelAnimationFrame(frame);frame=requestAnimationFrame(()=>{const sections=window.LS26Performance?.sections()||[],quick=$('performanceQuickInfo');if(!quick||sections.length<2)return;const threshold=sections[1].getBoundingClientRect().top+scrollY-(header?.getBoundingClientRect().height||0)-24;quick.classList.toggle('ls26-released',scrollY>=threshold);});}
     window.addEventListener('scroll',sticky,{passive:true});

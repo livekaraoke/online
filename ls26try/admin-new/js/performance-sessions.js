@@ -204,7 +204,7 @@
     if (Number.isFinite(saved) && saved > 0) return Math.round(saved);
 
     const values = playedSnapshot(session)
-      .map(item => Number(item.userBpm ?? item.performanceBpm ?? item.songUserBpm ?? item.bpm ?? item.originalBpm))
+      .map(item => Number(item.performanceBpm ?? item.userBpm ?? item.songUserBpm ?? item.bpm ?? item.originalBpm))
       .filter(value => Number.isFinite(value) && value > 0);
 
     if (!values.length) return "-";
@@ -486,7 +486,7 @@
       ? detail.played.map(item => `
           <div class="detail-row">
             <strong>${esc(item.songTitle || item.title || item.songId || "Untitled Song")} — ${esc(ArtistNames.display(item.songArtist || item.artist || ""))}</strong>
-            <span>${formatTime(tsDate(item.playedAt || item.createdAt))}</span>
+            <span>${formatTime(tsDate(item.playedAt || item.createdAt))}${Number(item.performanceBpm || item.userBpm)>0 ? ` · ${esc(item.performanceBpm || item.userBpm)} BPM used` : ""}</span>
             <span class="status-chip played">Played</span>
           </div>
         `).join("")

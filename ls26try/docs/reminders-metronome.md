@@ -96,3 +96,29 @@ with a simulated DOM, Firestore and audio context (install the test-only
 No tests connect to the live database or emit sound. Real tablet audio and the
 rendered layout still need device/browser verification; the cloud browser could
 not access the local preview in this session.
+
+## LyricView integration
+
+Info & Tools now places a compact metronome below Current BPM and above Show
+karaoke tools. Start/Stop works independently; Follow bottom Play / Pause links
+it to scrolling. It uses Current BPM, with tap tempo, meter, subdivisions, first
+beat accent and volume. The existing scroll-speed multiplier remains separate.
+No audio starts on page load, including when Follow is remembered.
+
+Open on LyricView startup is stored on this browser. Checked opens the sidebar
+when a song loads and keeps it open on Play; unchecked starts closed. Manual
+opening/closing does not change this preference.
+
+Current BPM has separate per-song, per-project tab storage. The saved song's
+User BPM and Original BPM are never changed by performance tempo controls. The
+top User BPM remains the saved value; sidebar Current BPM is the live value.
+Performed-song records retain userBpm as the saved preference, startingBpm as the
+value at Play, and performanceBpm as the latest used tempo. Changes after Play
+are coalesced for 400 ms and saved to the performed-song record only. Next/song
+completion and the end-session handoff flush pending tempo changes before the
+archive is built. History and averages prefer performanceBpm, with legacy
+fallbacks. History displays BPM used beside each performed song.
+
+Browser back/close triggers a best-effort flush; a forced browser termination or
+lost network before Firebase acknowledges a write cannot guarantee persistence.
+Live audio and the rendered tablet layout still require device verification.
