@@ -380,10 +380,15 @@
       </div>
       <div class="previous-session-notes">
         <span>SESSION NOTES</span>
-        <strong>${esc(latest.notes || "No notes.")}</strong>
+        <strong>${esc(displayFinishedEdit(latest,"notes",latest.notes || "No notes."))}</strong>
       </div>
       <button type="button" class="small-outline previous-session-view-btn" data-view-past-session="${esc(latest.id)}">VIEW FULL SESSION</button>
     `;
+  }
+
+  function displayFinishedEdit(session, field, original) {
+    const edit = String(session?.finishedSessionEdits?.[field] || "").trim();
+    return edit ? `${original} (EDIT: ${edit})` : original;
   }
 
   function requestStatusLabel(status) {
@@ -511,10 +516,10 @@
       <div class="dashboard-detail-grid">
         ${detailCell("VENUE", session.venue || "-")}
         ${detailCell("TYPE", session.sessionType || session.type || "-")}
-        ${detailCell("SCHED. START", `${formatLongDate(sessionScheduledStart(session))} ${formatTime(sessionScheduledStart(session))}`)}
-        ${detailCell("SCHED. END", `${formatLongDate(sessionScheduledEnd(session))} ${formatTime(sessionScheduledEnd(session))}`)}
-        ${detailCell("ACTUAL START", `${formatLongDate(sessionActualStart(session))} ${formatTime(sessionActualStart(session))}`)}
-        ${detailCell("ACTUAL END", `${formatLongDate(sessionActualEnd(session))} ${formatTime(sessionActualEnd(session))}`)}
+        ${detailCell("SCHED. START", displayFinishedEdit(session,"scheduledStart",`${formatLongDate(sessionScheduledStart(session))} ${formatTime(sessionScheduledStart(session))}`))}
+        ${detailCell("SCHED. END", displayFinishedEdit(session,"scheduledEnd",`${formatLongDate(sessionScheduledEnd(session))} ${formatTime(sessionScheduledEnd(session))}`))}
+        ${detailCell("ACTUAL START", displayFinishedEdit(session,"actualStart",`${formatLongDate(sessionActualStart(session))} ${formatTime(sessionActualStart(session))}`))}
+        ${detailCell("ACTUAL END", displayFinishedEdit(session,"actualEnd",`${formatLongDate(sessionActualEnd(session))} ${formatTime(sessionActualEnd(session))}`))}
         ${detailCell("DURATION", sessionDuration(session))}
         ${detailCell("BREAKS", `${(session.breaks || []).length} • ${formatDurationMs(breakDurationMs(session))}`)}
         ${detailCell("REQUESTS", summary.total || 0)}
@@ -529,7 +534,7 @@
 
       <div class="dashboard-detail-section">
         <h3>SESSION NOTES</h3>
-        <div class="dashboard-detail-copy">${esc(session.notes || "No notes.")}</div>
+        <div class="dashboard-detail-copy">${esc(displayFinishedEdit(session,"notes",session.notes || "No notes."))}</div>
       </div>
 
       <div class="dashboard-detail-section">
