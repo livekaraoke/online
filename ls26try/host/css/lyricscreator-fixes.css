@@ -1182,8 +1182,8 @@
    ONE-SHOT LYRIC GREEN HIGHLIGHT — 2026-09-25
    ========================================================= */
 .creator-page .advanced-rich-toolbar .beat-1{
-  border-color:#00f033!important;
-  color:#00f033!important;
+  border-color:#42f35c!important;
+  color:#42f35c!important;
   font-weight:900!important;
 }
 /* B and all BEAT shortcuts should visually indicate the same heavy weight they apply. */
@@ -1198,8 +1198,8 @@
   font-weight:900!important;
 }
 .creator-page .advanced-rich-toolbar .one-shot-green.is-armed{
-  border-color:#00f033!important;
+  border-color:#42f35c!important;
   background:#073619!important;
   color:#82ff9b!important;
-  box-shadow:0 0 0 2px rgba(0,240,51,.18) inset,0 0 14px rgba(0,240,51,.24)!important;
+  box-shadow:0 0 0 2px rgba(66,243,92,.18) inset,0 0 14px rgba(66,243,92,.24)!important;
 }
