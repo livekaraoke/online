@@ -18,7 +18,7 @@ function setup(){
   vm.createContext(ctx);for(const file of ['shared/lyricview-metronome.js','shared/performance.js'])vm.runInContext(fs.readFileSync(path.join(root,file),'utf8'),ctx);
   document.dispatchEvent(new window.Event('DOMContentLoaded'));
   window.dispatchEvent(new window.Event('ls26:song-ready'));
-  return {el,ctx,window,document,sounds,timers,audio:()=>audio,scroll(value){scrolling=value;window.dispatchEvent(new window.CustomEvent('ls26:scroll-state',{detail:{playing:value}}));}};
+  return {el,ctx,window,document,sounds,timers,frames,audio:()=>audio,runFrame(){const callbacks=[...frames.values()];frames.clear();callbacks.forEach(fn=>fn());},scroll(value){scrolling=value;window.dispatchEvent(new window.CustomEvent('ls26:scroll-state',{detail:{playing:value}}));}};
 }
 const tick=()=>new Promise(resolve=>setImmediate(resolve));
 (async()=>{
@@ -33,7 +33,10 @@ const tick=()=>new Promise(resolve=>setImmediate(resolve));
   env.scroll(false);assert.equal(env.timers.size,1,'independent click survives scroll pause');
   el('lvMetroStart').onclick();assert.equal(env.timers.size,0);
   el('lvMetroFollow').checked=true;el('lvMetroFollow').onchange({target:el('lvMetroFollow')});
-  env.scroll(true);await tick();assert.equal(env.timers.size,1);env.scroll(false);assert.equal(env.timers.size,0,'linked pause cancels audio');
+  el('lvMetroVisual').checked=true;el('lvMetroVisual').onchange({target:el('lvMetroVisual')});
+  env.scroll(true);await tick();assert.equal(env.timers.size,1);
+  env.audio().currentTime=.06;env.runFrame();assert.equal(el('lvMetroScreenBeat').classList.contains('pulse'),true,'scroll-started click flashes the screen edges');assert.equal(el('lvMetroScreenBeat').classList.contains('accented'),true,'accented first beat uses distinct flash styling');assert.equal(el('lvMetroScreenBeat').querySelector('.lv-metro-screen-number').textContent,'1');
+  env.scroll(false);assert.equal(env.timers.size,0,'linked pause cancels audio');assert.equal(el('lvMetroScreenBeat').classList.contains('pulse'),false,'stopping clears the visual flash');
   ctx.now=0;el('lvMetroTap').onclick();ctx.now=500;el('lvMetroTap').onclick();assert.equal(el('ls26CurrentBpm').value,'120');assert.equal(el('lvMetroBpm').textContent,'120');
   env.scroll(true);await tick();window.dispatchEvent(new window.Event('ls26:song-finished'));assert.equal(env.timers.size,0);
   await el('lvMetroStart').onclick();Object.defineProperty(document,'hidden',{value:true});document.dispatchEvent(new window.Event('visibilitychange'));assert.equal(env.timers.size,0);
@@ -42,5 +45,5 @@ const tick=()=>new Promise(resolve=>setImmediate(resolve));
   const pending=el('lvMetroStart').onclick();window.dispatchEvent(new window.Event('pagehide'));env.audio().finishResume();await pending;assert.equal(env.timers.size,0,'cancelled audio startup must not resume later');
   el('ls26InfoStartup').checked=false;el('ls26InfoStartup').onchange({target:el('ls26InfoStartup')});
   env=setup();assert.equal(env.el('songInfoDrawer').classList.contains('open'),false);assert.equal(env.timers.size,0,'remembering Follow never autoplays');
-  console.log('PASS: placement, startup preference across reloads, independent/linked playback, tap BPM sync, end/hidden-page stop and no autoplay.');
+  console.log('PASS: placement, startup preference, independent/linked playback, visual beat/accent flash, tap BPM sync, end/hidden-page stop and no autoplay.');
 })().catch(error=>{console.error(error);process.exitCode=1;});
