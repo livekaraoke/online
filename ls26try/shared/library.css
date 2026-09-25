@@ -151,6 +151,18 @@ body.library-page{height:100dvh;overflow:hidden;display:flex;flex-direction:colu
 }
 .library-page #exportBtn{text-transform:uppercase!important}
 
+/* Personal notes: the remembered visibility control sits beside the BPM range. */
+.library-page .library-bpm #personalNotesToggle{width:auto;margin-left:auto;padding:6px 12px!important;font-size:14px!important;font-weight:750;line-height:1.2;color:#ffdb78;border-color:#9c812c;background:#30280b;white-space:nowrap}
+.library-page .library-bpm #personalNotesToggle[aria-pressed="false"]{color:var(--ls-muted);background:var(--ls-soft);border-color:var(--ls-border)}
+.personal-notes-tools{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:0 0 6px;font-size:13px}
+.personal-notes-tools[hidden]{display:none!important}
+.personal-notes-tools label{color:#ffdb78;font-weight:700}
+.personal-notes-tools select{min-width:0;max-width:100%;flex:0 1 280px}
+.personal-notes-tools small{color:var(--ls-muted)}
+.library-page .personal-note-row .personal-note-badge{display:inline-block;max-width:100%;vertical-align:middle;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:1px 5px;margin-left:4px;border:1px solid #746333;border-radius:4px;color:#ffdb78;font-size:10px;line-height:1.3;background:#30280b}
+.library-page #libraryFilterPanel{overflow-y:auto}
+@media(max-width:650px){.library-page .library-bpm #personalNotesToggle{flex-basis:100%;margin-left:0}.personal-notes-tools small{display:none}.personal-notes-tools select{flex:1 1 160px}}
+
 .library-page #ls26StickyHeader,
 .library-page #topStatusContainer,
 .library-page #topStatusBar,
