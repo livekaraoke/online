@@ -1,8 +1,21 @@
 /* LiveSuite App Settings — tablet-first admin layout */
 .settings-main{
-  max-width:1180px!important;
-  width:100%!important;
+  box-sizing:border-box!important;
+  min-width:0!important;
+  max-width:none!important;
+  width:calc(100% - 245px)!important;
+  margin-left:245px!important;
   padding-bottom:34px!important;
+}
+.settings-main>*{
+  min-width:0!important;
+  max-width:100%!important;
+}
+.settings-grid,
+.settings-card,
+.setting-row,
+.setting-control{
+  max-width:100%!important;
 }
 .settings-main .enquiries-topbar{
   margin-bottom:18px!important;
@@ -183,6 +196,12 @@
   .setting-row{
     grid-template-columns:minmax(180px,1fr) minmax(190px,250px)!important;
     gap:14px!important;
+  }
+}
+@media(max-width:699px){
+  .settings-main{
+    width:100%!important;
+    margin-left:0!important;
   }
 }
 @media(max-width:760px){
