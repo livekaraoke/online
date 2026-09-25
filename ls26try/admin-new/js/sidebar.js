@@ -40,6 +40,7 @@
       });
 
       highlightCurrentPage();
+      window.dispatchEvent(new CustomEvent('ls26:sidebar-ready'));
       bindSidebarProfile();
 
       if (window.LK?.profile?.applyProfileToDashboard) {

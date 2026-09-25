@@ -1,0 +1,26 @@
+const assert=require('node:assert/strict');
+const {normalize,tapTempo,stepDuration,Clock}=require('../shared/metronome-engine.js');
+assert.deepEqual(normalize(null),normalize(),'recover malformed stored settings');
+let settings=normalize({bpm:120,beats:4,division:2,swing:60,countIn:1});
+assert.equal(stepDuration(settings,0),.3);assert.equal(stepDuration(settings,1),.2);
+assert.equal(stepDuration(settings,0)+stepDuration(settings,1),.5);
+assert.equal(normalize({bpm:999}).bpm,300);assert.equal(normalize({bpm:1}).bpm,30);
+assert.deepEqual(normalize({beats:3}).accents,[2,1,1]);
+assert.equal(normalize({division:7}).division,1);
+let taps=[];for(const time of [0,500,1000,1500]){const result=tapTempo(taps,time);taps=result.times;if(time)assert.equal(result.bpm,120);}
+assert.equal(tapTempo(taps,1550).bpm,null,'ignore accidental rapid double taps');
+assert.deepEqual(tapTempo(taps,5000).times,[5000],'reset after a pause');
+assert.equal(tapTempo([0,1000,2000],3000).bpm,60);
+const events=[];const clock=new Clock(()=>settings,event=>events.push(event));clock.start(0);
+for(let now=0;now<4.1;now+=.025)clock.schedule(now);
+assert.equal(events[0].countIn,true);assert.equal(events[8].countIn,false);
+assert.equal(events[8].bar,1);assert.equal(events[16].bar,2);
+assert.equal(events[0].accent,2);assert.equal(events[2].accent,1);
+assert.ok(events.every((event,i)=>!i||event.time>events[i-1].time));
+const before=events.length;clock.schedule(100);assert.ok(events.length-before<=2,'no catch-up click burst');
+settings=normalize({bpm:60,beats:3,division:3});const triplets=[];const other=new Clock(()=>settings,e=>triplets.push(e));other.start(0);
+for(let now=0;now<3.1;now+=.025)other.schedule(now);
+assert.ok(Math.abs(triplets[9].time-3)<.00001);assert.equal(triplets[9].bar,2);
+settings=normalize({bpm:100});const tempo=[];const changed=new Clock(()=>settings,e=>tempo.push(e));changed.start(0);changed.schedule(0);settings=normalize({bpm:200});changed.schedule(.55);changed.schedule(.85);
+assert.ok(Math.abs(tempo[2].time-tempo[1].time-.3)<.00001,'tempo updates alter subsequent intervals');
+console.log('PASS: tempo bounds, tap averaging/reset, swing totals, triplet subdivision, count-in, live tempo changes and stall recovery.');

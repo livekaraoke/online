@@ -83,16 +83,20 @@
     if(!stack){stack=document.createElement('div');stack.id='ls26StickyHeader';document.body.prepend(stack);}
     stack.append(nav);const status=$('topStatusContainer');if(status)stack.append(status);
     new ResizeObserver(()=>document.documentElement.style.setProperty('--ls-header-h',stack.getBoundingClientRect().height+'px')).observe(stack);
-    const menu=document.createElement('div');menu.id='ls26HostMenu';menu.hidden=true;menu.innerHTML='<button id="ls26InboxOpen" type="button">▣ Inbox</button><button id="ls26UpdatesOpen" type="button">✎ App Updates</button>';document.body.append(menu);
+    const menu=document.createElement('div');menu.id='ls26HostMenu';menu.hidden=true;menu.innerHTML='<button id="ls26InboxOpen" type="button">▣ Inbox</button><button id="ls26UpdatesOpen" type="button">✎ App Updates</button><button id="ls26ReminderOpen" type="button">☑ Add Reminder</button>';document.body.append(menu);
     function closeMenu(){menu.hidden=true;$('ls26More').setAttribute('aria-expanded','false');}
     $('ls26More').onclick=()=>{menu.hidden=!menu.hidden;$('ls26More').setAttribute('aria-expanded',String(!menu.hidden));const rect=nav.getBoundingClientRect();menu.style.top=(rect.bottom+4)+'px';if(!menu.hidden)menu.querySelector('button').focus();};
     $('ls26InboxOpen').onclick=()=>{closeMenu();openInbox();};
     $('ls26UpdatesOpen').onclick=()=>{closeMenu();window.LS26.openAppUpdates();};
+    $('ls26ReminderOpen').onclick=()=>{closeMenu();window.LS26.openReminder();};
     document.addEventListener('click',e=>{if(!menu.contains(e.target)&&!$('ls26More').contains(e.target))closeMenu();});
     document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!menu.hidden){closeMenu();$('ls26More').focus();}});
     window.addEventListener('resize',closeMenu);
     const notesScript=document.createElement('script');notesScript.src=url('shared/app-updates.js?v=20260924-performance-tools');document.head.append(notesScript);
     window.LS26.openAppUpdates=()=>toast('App Updates is loading. Please try again.');
+    window.LS26.openReminder=()=>toast('Reminders is loading. Please try again.');
+    const reminderStyle=document.createElement('link');reminderStyle.rel='stylesheet';reminderStyle.href=url('shared/tools.css?v=20260925-tools');document.head.append(reminderStyle);
+    const reminderScript=document.createElement('script');reminderScript.src=url('shared/reminders.js?v=20260925-tools');document.head.append(reminderScript);
     const creator=document.querySelector('.creator-topbar');if(creator)stack.append(creator);
     mountFullscreen();
     $('ls26LyricLink').onclick=e=>{e.preventDefault();const items=window.LK?.sessionTools?.getRunOrder?.()||[];const song=items.find(i=>i.status==='playing');const target=song?.songId?url('host/lyricview.html?id='+encodeURIComponent(song.songId)+(song.requestId?'&requestId='+encodeURIComponent(song.requestId):'')):sessionStorage.getItem('ls26:lastSong');if(target)location.href=target;else toast('Choose a song in Library first.');};

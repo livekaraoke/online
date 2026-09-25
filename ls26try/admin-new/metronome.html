@@ -1,0 +1,43 @@
+<!-- Copyright © 2026 LiveSuite. All rights reserved.
+ Metronome — tap tempo and adjustable click with shared LiveSuite navigation.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head><link rel="stylesheet" href="../shared/dialogs.css?v=20260924-followup"><script src="../shared/dialogs.js?v=20260924-followup"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Metronome / Click · LiveSuite</title>
+  <link rel="stylesheet" href="css/admin.css?v=20260910-stage4">
+  <link rel="stylesheet" href="css/sidebar.css?v=20260910-stage4">
+  <link rel="stylesheet" href="css/sidebar-suite.css?v=20260910-stage4">
+  <link rel="stylesheet" href="../shared/tools.css?v=20260925-tools">
+<link rel="stylesheet" href="../shared/theme.css?v=20260924-layout-refinements"><link rel="stylesheet" href="../shared/performance.css?v=20260924-layout-refinements"><script src="../shared/data.js?v=20260910-stage4"></script><link rel="stylesheet" href="css/admin-navigation.css?v=20260922-batch">
+</head>
+<body class="admin-body tool-page">
+  <div class="admin-shell"><div id="sidebarContainer"></div><main class="admin-main tool-main">
+<header class="tool-heading"><div><h1>Metronome / Click</h1><p>Find a tempo, lock in the groove and practise your timing.</p></div></header>
+<section class="tool-card metro-main" aria-label="Tempo and playback"><div class="metro-tempo"><button type="button" data-metro-delta="-1" aria-label="Decrease BPM">−</button><label><input id="metroBpm" type="number" min="30" max="300" step="1" aria-label="Tempo BPM"><span>BPM</span></label><button type="button" data-metro-delta="1" aria-label="Increase BPM">＋</button></div>
+<input id="metroSlider" type="range" min="30" max="300" step="1" aria-label="Tempo slider"><div class="tool-actions metro-tempo-actions"><button type="button" data-metro-delta="-5">−5 BPM</button><button id="metroHalf" type="button">½ tempo</button><button id="metroDouble" type="button">2× tempo</button><button type="button" data-metro-delta="5">+5 BPM</button></div>
+<div id="metroBeatLights" class="metro-beats" aria-label="Beat accents"></div><p class="tool-hint">Tap a beat to cycle: normal → accent → silent.</p><div class="metro-position"><span id="metroPosition">Ready</span><span id="metroElapsed">0:00</span></div>
+<div class="metro-transport"><button id="metroStart" type="button" aria-pressed="false">Start click</button><button id="metroTap" type="button">Tap tempo</button></div><p id="metroTapStatus" role="status">Tap at least twice, or press T.</p><button id="metroTapReset" type="button">Reset taps</button><p id="metroStatus" role="status">Stopped</p></section>
+<section class="tool-card tool-form-grid" aria-label="Click settings">
+<label>Beats per bar<select id="metroBeats"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option></select></label>
+<label>Clicks per beat<select id="metroDivision"><option value="1">1 · straight beat</option><option value="2">2 · eighth notes</option><option value="3">3 · triplets</option><option value="4">4 · sixteenth notes</option></select></label>
+<label>Sound<select id="metroSound"><option value="beep">Soft beep</option><option value="wood">Wood click</option></select></label>
+<label>Count-in on start<select id="metroCountIn"><option value="0">None</option><option value="1">1 bar</option><option value="2">2 bars</option></select></label>
+<label>Swing <output id="metroSwingValue">50%</output><input id="metroSwing" type="range" min="50" max="75" step="1"><small>Available with two clicks per beat.</small></label>
+<label>Volume <output id="metroVolumeValue">65%</output><input id="metroVolume" type="range" min="0" max="100" step="1"><small>0% gives a silent visual metronome.</small></label></section>
+<section class="tool-card" aria-label="Saved metronome presets"><h2>My presets</h2><div class="tool-form-grid"><label>Load preset<select id="metroPreset"><option value="">Choose preset…</option></select></label><label>Preset name<input id="metroPresetName" maxlength="60" placeholder="Roxanna rehearsal, warm-up…"></label></div><div class="tool-actions"><button id="metroSavePreset" type="button">Save current settings</button><button id="metroDeletePreset" type="button">Remove selected preset</button></div><p class="tool-hint">Presets stay on this browser. Saving the same name replaces that preset.</p></section>
+<p class="tool-hint">Space: start/stop · T: tap tempo. The click pauses when you leave or hide this page. Use your device volume to adjust listening level.</p>
+</main></div>
+  <script src="../firebase-projects.js?v=20260910-stage4"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="js/firebase.js?v=20260910-stage4"></script>
+  <script src="js/sidebar.js?v=20260925-tools"></script>
+  <script src="js/profile.js?v=20260910-stage4"></script>
+  <script src="js/auth.js?v=20260910-stage4"></script>
+
+<script src="../shared/shell.js?v=20260925-tools"></script><script src="../shared/inbox.js?v=20260910-stage4"></script><script src="../shared/session-ui.js?v=20260924-followup"></script><script src="../shared/performance.js?v=20260923-polish"></script><script src="../shared/metronome-engine.js?v=20260925-tools"></script><script src="js/metronome.js?v=20260925-tools"></script></body>
+</html>
