@@ -30,11 +30,11 @@ for(const webkit of [false,true])test(`fullscreen enter/exit and external exit (
 test('denied and unsupported fullscreen resolve without blocking playback',async()=>{
  for(const opts of [{reject:true},{unsupported:true}]){const f=fixture(opts);await assert.doesNotReject(()=>f.context.LS26.enterFullscreen());assert.ok(f.elements.get('ls26Toast'));if(opts.unsupported)assert.equal(f.button.disabled,true);}
 });
-test('LyricView Play requests fullscreen synchronously; Pause does not',()=>{
+test('LyricView Play never enters fullscreen; top fullscreen control is the only entry point',()=>{
  const source=fs.readFileSync(path.join(root,'host/js/lyricview.js'),'utf8');
  const start=source.indexOf('  function startAutoScroll() {');let level=1,end=source.indexOf('{',start)+1;
  for(;level;end++){if(source[end]==='{')level++;if(source[end]==='}')level--;}
  const calls=[],button={classList:{toggle(){}},setAttribute(){}};
  const c={autoScrollOn:false,$:id=>id==='autoScrollBtn'?button:null,window:{LS26:{enterFullscreen(){calls.push('fullscreen')}},dispatchEvent(){}},showEndNextSongButton(){},recordCurrentSongPlayed(){calls.push('record')},performance:{now:()=>0},requestAnimationFrame:()=>1,cancelAnimationFrame(){},clearInterval(){},Event:class{}};
- vm.createContext(c);vm.runInContext(source.slice(start,end),c);c.startAutoScroll();assert.deepEqual(calls,['fullscreen','record']);assert.equal(c.autoScrollOn,true);c.startAutoScroll();assert.equal(c.autoScrollOn,false);assert.equal(calls.length,2);
+ vm.createContext(c);vm.runInContext(source.slice(start,end),c);c.startAutoScroll();assert.deepEqual(calls,['record']);assert.equal(c.autoScrollOn,true);c.startAutoScroll();assert.equal(c.autoScrollOn,false);assert.equal(calls.length,1);
 });

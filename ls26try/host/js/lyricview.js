@@ -1708,7 +1708,6 @@
     $("autoScrollBtn").setAttribute('aria-label', autoScrollOn ? 'Pause auto-scroll (song stays playing)' : 'Start or resume auto-scroll');
 
     if (wasOff && autoScrollOn) {
-      window.LS26?.enterFullscreen?.();
       autoScrollEndHandled = false;
       showEndNextSongButton(false);
       if ($("endSessionActions")) $("endSessionActions").hidden = true;
