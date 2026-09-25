@@ -18,6 +18,17 @@
     lyricTextScale: 100,
     lyricLeadInHeight: 192,
     lyricSectionActivationOffset: 320,
+    metronomeBeat1Color: "#ffd05a",
+    metronomeBeat2Color: "#00cafa",
+    metronomeBeat3Color: "#00cafa",
+    metronomeBeat4Color: "#00cafa",
+    metronomeFlashBrightness: 72,
+    metronomeEdgeThickness: 8,
+    metronomeFlashDuration: 120,
+    metronomeShowBeatNumber: true,
+    metronomeNumberSize: 220,
+    metronomeNumberOpacity: 42,
+    metronomeNumberVerticalPosition: 31,
     libraryRowHeight: 62,
     reduceGlow: false
   });
@@ -46,6 +57,17 @@
       lyricTextScale: clamp(raw.lyricTextScale,75,150,DEFAULTS.lyricTextScale),
       lyricLeadInHeight: clamp(raw.lyricLeadInHeight,80,360,DEFAULTS.lyricLeadInHeight),
       lyricSectionActivationOffset: clamp(raw.lyricSectionActivationOffset,0,520,DEFAULTS.lyricSectionActivationOffset),
+      metronomeBeat1Color: colour(raw.metronomeBeat1Color,DEFAULTS.metronomeBeat1Color),
+      metronomeBeat2Color: colour(raw.metronomeBeat2Color,DEFAULTS.metronomeBeat2Color),
+      metronomeBeat3Color: colour(raw.metronomeBeat3Color,DEFAULTS.metronomeBeat3Color),
+      metronomeBeat4Color: colour(raw.metronomeBeat4Color,DEFAULTS.metronomeBeat4Color),
+      metronomeFlashBrightness: clamp(raw.metronomeFlashBrightness,10,100,DEFAULTS.metronomeFlashBrightness),
+      metronomeEdgeThickness: clamp(raw.metronomeEdgeThickness,3,18,DEFAULTS.metronomeEdgeThickness),
+      metronomeFlashDuration: clamp(raw.metronomeFlashDuration,60,260,DEFAULTS.metronomeFlashDuration),
+      metronomeShowBeatNumber: raw.metronomeShowBeatNumber !== false,
+      metronomeNumberSize: clamp(raw.metronomeNumberSize,100,320,DEFAULTS.metronomeNumberSize),
+      metronomeNumberOpacity: clamp(raw.metronomeNumberOpacity,10,100,DEFAULTS.metronomeNumberOpacity),
+      metronomeNumberVerticalPosition: clamp(raw.metronomeNumberVerticalPosition,18,72,DEFAULTS.metronomeNumberVerticalPosition),
       libraryRowHeight: clamp(raw.libraryRowHeight,48,92,DEFAULTS.libraryRowHeight),
       reduceGlow: raw.reduceGlow === true
     };
@@ -73,6 +95,17 @@
     root.style.setProperty("--ls26-lyric-text-scale",String(s.lyricTextScale/100));
     root.style.setProperty("--ls26-lyric-lead-in-height",s.lyricLeadInHeight+"px");
     root.style.setProperty("--ls26-section-activation-offset",s.lyricSectionActivationOffset+"px");
+    root.style.setProperty("--ls26-metro-beat-1-color",s.metronomeBeat1Color);
+    root.style.setProperty("--ls26-metro-beat-2-color",s.metronomeBeat2Color);
+    root.style.setProperty("--ls26-metro-beat-3-color",s.metronomeBeat3Color);
+    root.style.setProperty("--ls26-metro-beat-4-color",s.metronomeBeat4Color);
+    root.style.setProperty("--ls26-metro-flash-opacity",String(s.metronomeFlashBrightness/100));
+    root.style.setProperty("--ls26-metro-edge-thickness",s.metronomeEdgeThickness+"px");
+    root.style.setProperty("--ls26-metro-number-size",s.metronomeNumberSize+"px");
+    root.style.setProperty("--ls26-metro-number-font-size",Math.round(s.metronomeNumberSize*.45)+"px");
+    root.style.setProperty("--ls26-metro-number-opacity",String(s.metronomeNumberOpacity/100));
+    root.style.setProperty("--ls26-metro-number-top",s.metronomeNumberVerticalPosition+"%");
+    root.classList.toggle("ls26-hide-metro-number",!s.metronomeShowBeatNumber);
     root.style.setProperty("--ls26-library-row-height",s.libraryRowHeight+"px");
     root.classList.toggle("ls26-hide-inactive-status",!s.showTopStatusWhenInactive);
     root.classList.toggle("ls26-reduce-glow",s.reduceGlow);
