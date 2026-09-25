@@ -1181,10 +1181,14 @@
 /* =========================================================
    ONE-SHOT LYRIC GREEN HIGHLIGHT — 2026-09-25
    ========================================================= */
-.creator-page .advanced-rich-toolbar .lyric-green-control,
 .creator-page .advanced-rich-toolbar .beat-1{
   border-color:#00f033!important;
   color:#00f033!important;
+  font-weight:900!important;
+}
+/* B and all BEAT shortcuts should visually indicate the same heavy weight they apply. */
+.creator-page .advanced-rich-toolbar [data-command="bold"],
+.creator-page .advanced-rich-toolbar .beat-colour{
   font-weight:900!important;
 }
 .creator-page .advanced-rich-toolbar .one-shot-green{
