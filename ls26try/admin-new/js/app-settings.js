@@ -7,6 +7,9 @@
     "lyricNavVerticalSize","lyricNavHorizontalSize","lyricTextScale",
     "lyricNavHorizontalGap","lyricNavVerticalGap",
     "lyricLeadInHeight","lyricSectionActivationOffset",
+    "metronomeBeat1Color","metronomeBeat2Color","metronomeBeat3Color","metronomeBeat4Color",
+    "metronomeFlashBrightness","metronomeEdgeThickness","metronomeFlashDuration",
+    "metronomeShowBeatNumber","metronomeNumberSize","metronomeNumberOpacity","metronomeNumberVerticalPosition",
     "libraryRowHeight","reduceGlow"
   ];
   function put(settings){
@@ -15,7 +18,13 @@
       if(el.type==="checkbox")el.checked=!!settings[id];
       else el.value=settings[id];
       const out=document.querySelector(`[data-output="${id}"]`);
-      if(out)out.value=el.value+(id.includes("Color")?"":id==="lyricTextScale"?"%":"px");
+      if(out){
+        const units={
+          lyricTextScale:"%",metronomeFlashBrightness:"%",metronomeNumberOpacity:"%",
+          metronomeNumberVerticalPosition:"%",metronomeFlashDuration:"ms"
+        };
+        out.value=el.value+(id.includes("Color")?"":units[id]||"px");
+      }
     });
   }
   function collect(){
