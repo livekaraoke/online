@@ -366,20 +366,32 @@
       : await averageBpmFromPlayed(records.played);
     if (!previousSessionExpanded || endedSessionsNewestFirst()[0]?.id !== latest.id) return;
 
+    const previousStart = sessionActualStart(latest);
+    const previousEnd = sessionActualEnd(latest);
+    const previousTotalMs = previousStart && previousEnd ? Math.max(0, previousEnd - previousStart) : null;
+    const previousActiveMs = Number.isFinite(previousTotalMs)
+      ? Math.max(0, previousTotalMs - breakDurationMs(latest))
+      : null;
+
     detailsEl.innerHTML = `
       <div class="previous-session-detail-grid">
         ${detailCell("SESSION", latest.title || "-")}
         ${detailCell("VENUE", latest.venue || "-")}
+        ${detailCell("TYPE", latest.sessionType || latest.type || "-")}
+        ${detailCell("STATUS", latest.status || "ended")}
         ${detailCell("DATE", formatLongDate(sessionActualEnd(latest) || sessionActualStart(latest)))}
         ${detailCell("SCHEDULED", `${formatTime(sessionScheduledStart(latest))}–${formatTime(sessionScheduledEnd(latest))}`)}
         ${detailCell("ACTUAL", `${formatTime(sessionActualStart(latest))}–${formatTime(sessionActualEnd(latest))}`)}
-        ${detailCell("DURATION", sessionDuration(latest))}
+        ${detailCell("ACTIVE TIME", formatDurationMs(previousActiveMs))}
+        ${detailCell("TOTAL ELAPSED", formatDurationMs(previousTotalMs))}
         ${detailCell("AVERAGE BPM", avgBpm)}
         ${detailCell("SONGS PLAYED", records.played.length)}
         ${detailCell("BREAKS", `${(latest.breaks || []).length} • ${formatDurationMs(breakDurationMs(latest))}`)}
         ${detailCell("REQUESTS", summary.total || 0)}
         ${detailCell("PLAYED REQUESTS", summary.completed || 0)}
         ${detailCell("LEFT / NOT PLAYED", summary.left || 0)}
+        ${detailCell("SINGER LEFT", summary.abandoned || 0)}
+        ${detailCell("DELETED / DECLINED", summary.deleted || 0)}
       </div>
       <div class="previous-session-notes">
         <span>SESSION NOTES</span>
