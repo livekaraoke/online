@@ -360,7 +360,10 @@
 
     const records = await loadSessionRecords(latest);
     const summary = sessionRequestSummary(latest, records.requests);
-    const avgBpm = await averageBpmFromPlayed(records.played);
+    const savedAverage = Number(latest.averageBpm);
+    const avgBpm = Number.isFinite(savedAverage) && savedAverage > 0
+      ? Math.round(savedAverage)
+      : await averageBpmFromPlayed(records.played);
     if (!previousSessionExpanded || endedSessionsNewestFirst()[0]?.id !== latest.id) return;
 
     detailsEl.innerHTML = `
