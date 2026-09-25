@@ -489,9 +489,20 @@
     return true;
   }
 
+  function ensureBoldSelection() {
+    if (!restoreSelection()) return false;
+    let alreadyBold = false;
+    try { alreadyBold = document.queryCommandState("bold"); } catch (_) {}
+    if (!alreadyBold) document.execCommand("bold", false, null);
+    return true;
+  }
+
   function applyQuickColour(colour) {
-    applyCommand("bold");
-    applyCommand("foreColor", colour);
+    if (!ensureBoldSelection()) return;
+    document.execCommand("foreColor", false, colour);
+    captureSelection(activeEditor);
+    syncSectionsFromDOM();
+    markDirty();
   }
 
   function updateOneShotGreenButtons() {
@@ -717,9 +728,9 @@
           <input class="toolbar-select size-select" data-size="${index}" type="number" min="6" max="120" step="1" list="fontSizePresets" value="${Number(style.fontSize) || 23}" aria-label="Font size">
           <button type="button" data-size-step="${index}" data-step="1" title="Increase font size by 1">▲</button>
         </div>
-        <button type="button" class="text-colour-control lyric-green-control" data-lyric-green="${index}" title="Apply the standard lyric green and bold to selected text" aria-label="Apply lyric green and bold">
+        <button type="button" class="text-colour-control" data-colour="${index}" title="Apply a colour to the selected text" aria-label="Selected text colour">
           <span class="text-colour-icon">T</span>
-          <span class="text-colour-swatch" style="background:${LYRIC_HIGHLIGHT_GREEN}"></span>
+          <span class="text-colour-swatch" style="background:${esc(style.color || "#ffffff")}"></span>
         </button>
         <button type="button" data-command="bold" title="Bold"><b>B</b></button>
         <button type="button" data-command="italic" title="Italic"><i>I</i></button>
@@ -730,7 +741,7 @@
         <button type="button" data-text-case="lower" title="Lowercase selected text">aa</button>
         <button type="button" data-text-case="sentence" title="Sentence case selected text">Aa</button>
         <button type="button" data-wrap-brackets="${index}" title="Wrap selected text in square brackets">[ ]</button>
-        <button type="button" class="beat-colour beat-1" data-lyric-green="${index}" title="Standard lyric green + bold">BEAT 1</button>
+        <button type="button" class="beat-colour beat-1" data-quick-colour="${LYRIC_HIGHLIGHT_GREEN}" title="Bold standard lyric green timing marker">BEAT 1</button>
         <button type="button" class="beat-colour beat-2" data-quick-colour="#00ffd5" title="Bold bright-teal timing marker">BEAT 2</button>
         <button type="button" class="beat-colour beat-3" data-quick-colour="#ffe23d" title="Bold yellow timing marker">BEAT 3</button>
         <button type="button" class="beat-colour beat-4" data-quick-colour="#ff9d2e" title="Bold bright-orange timing marker">BEAT 4</button>
