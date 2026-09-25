@@ -47,6 +47,9 @@
   const DEFAULT_EVENT_TYPES = ["Live Karaoke", "Roxanna", "Solo", "Texanna", "Other"];
   const FONTS = ["Verdana", "Arial", "Tahoma", "Trebuchet MS", "Georgia", "Times New Roman", "Courier New", "Consolas"];
   const FONT_SIZES = ["12", "14", "16", "18", "20", "24", "28", "32", "40", "48"];
+  const LYRIC_HIGHLIGHT_GREEN = "#00f033";
+  let oneShotGreenArmed = false;
+  let oneShotGreenTimer = 0;
   const COLOURS = [
     ["Red", "#ff3131"], ["Cyan", "#00dfe8"], ["Blue", "#1828ff"], ["Green", "#00f033"],
     ["Magenta", "#f000dc"], ["Yellow", "#fff200"], ["Black", "#000000"], ["White", "#ffffff"],
@@ -426,9 +429,101 @@
     markDirty();
   }
 
+  function unwrapElement(element) {
+    if (!element?.parentNode) return;
+    const parent = element.parentNode;
+    while (element.firstChild) parent.insertBefore(element.firstChild, element);
+    element.remove();
+  }
+
+  function clearUnderlineAncestors(node, editor) {
+    let parent = node?.parentElement;
+    while (parent && parent !== editor) {
+      const next = parent.parentElement;
+      if (parent.tagName === "U") {
+        unwrapElement(parent);
+      } else if (parent.style && /underline/i.test(parent.style.textDecoration || parent.style.textDecorationLine || "")) {
+        parent.style.textDecoration = "none";
+        parent.style.textDecorationLine = "none";
+      }
+      parent = next;
+    }
+  }
+
+  function applyLyricGreenBold(editor = activeEditor) {
+    if (!editor) return false;
+    captureSelection(editor);
+    if (!restoreSelection()) return false;
+    const selection = window.getSelection();
+    if (!selection || !selection.rangeCount || selection.isCollapsed) return false;
+    const range = selection.getRangeAt(0);
+    if (!editor.contains(range.commonAncestorContainer)) return false;
+
+    const fragment = range.extractContents();
+    const span = document.createElement("span");
+    span.className = "ls26-lyric-green-bold";
+    span.style.color = LYRIC_HIGHLIGHT_GREEN;
+    span.style.fontWeight = "900";
+    span.style.textDecoration = "none";
+    span.appendChild(fragment);
+    range.insertNode(span);
+
+    // Remove explicit underline markup from the selected content. If the
+    // selection sat inside an older <u> wrapper, unwrap that ancestor too.
+    span.querySelectorAll("u").forEach(unwrapElement);
+    span.querySelectorAll("[style]").forEach(element => {
+      if (/underline/i.test(element.style.textDecoration || element.style.textDecorationLine || "")) {
+        element.style.textDecoration = "none";
+        element.style.textDecorationLine = "none";
+      }
+    });
+    clearUnderlineAncestors(span, editor);
+
+    const selectedRange = document.createRange();
+    selectedRange.selectNodeContents(span);
+    selection.removeAllRanges();
+    selection.addRange(selectedRange);
+    captureSelection(editor);
+    syncSectionsFromDOM();
+    markDirty();
+    return true;
+  }
+
   function applyQuickColour(colour) {
     applyCommand("bold");
     applyCommand("foreColor", colour);
+  }
+
+  function updateOneShotGreenButtons() {
+    document.querySelectorAll("[data-one-shot-green]").forEach(button => {
+      button.classList.toggle("is-armed", oneShotGreenArmed);
+      button.setAttribute("aria-pressed", String(oneShotGreenArmed));
+      button.textContent = oneShotGreenArmed ? "HIGHLIGHT ON" : "HIGHLIGHT";
+    });
+  }
+
+  function setOneShotGreenArmed(value) {
+    oneShotGreenArmed = Boolean(value);
+    clearTimeout(oneShotGreenTimer);
+    updateOneShotGreenButtons();
+  }
+
+  function scheduleOneShotGreen(selectionEditor) {
+    if (!oneShotGreenArmed || !selectionEditor) return;
+    clearTimeout(oneShotGreenTimer);
+    oneShotGreenTimer = setTimeout(() => {
+      if (!oneShotGreenArmed) return;
+      const selection = window.getSelection();
+      if (!selection || !selection.rangeCount || selection.isCollapsed) return;
+      const node = selection.anchorNode;
+      const editor = node && (node.nodeType === Node.TEXT_NODE ? node.parentElement : node)?.closest?.(".creator-rich-editor");
+      if (!editor || editor !== selectionEditor || !editor.contains(selection.focusNode)) return;
+
+      // Turn the mode off before changing the DOM so selectionchange events
+      // caused by formatting cannot trigger it a second time.
+      setOneShotGreenArmed(false);
+      applyLyricGreenBold(editor);
+    }, 500);
   }
 
   function sectionEditorFor(index) {
@@ -622,9 +717,9 @@
           <input class="toolbar-select size-select" data-size="${index}" type="number" min="6" max="120" step="1" list="fontSizePresets" value="${Number(style.fontSize) || 23}" aria-label="Font size">
           <button type="button" data-size-step="${index}" data-step="1" title="Increase font size by 1">▲</button>
         </div>
-        <button type="button" class="text-colour-control" data-colour="${index}" title="Apply a colour to the selected text" aria-label="Selected text colour">
+        <button type="button" class="text-colour-control lyric-green-control" data-lyric-green="${index}" title="Apply the standard lyric green and bold to selected text" aria-label="Apply lyric green and bold">
           <span class="text-colour-icon">T</span>
-          <span class="text-colour-swatch" style="background:${esc(style.color || "#ffffff")}"></span>
+          <span class="text-colour-swatch" style="background:${LYRIC_HIGHLIGHT_GREEN}"></span>
         </button>
         <button type="button" data-command="bold" title="Bold"><b>B</b></button>
         <button type="button" data-command="italic" title="Italic"><i>I</i></button>
@@ -635,13 +730,10 @@
         <button type="button" data-text-case="lower" title="Lowercase selected text">aa</button>
         <button type="button" data-text-case="sentence" title="Sentence case selected text">Aa</button>
         <button type="button" data-wrap-brackets="${index}" title="Wrap selected text in square brackets">[ ]</button>
-        <button type="button" class="beat-colour beat-1" data-quick-colour="#42f35c" title="Bold green timing marker">BEAT 1</button>
+        <button type="button" class="beat-colour beat-1" data-lyric-green="${index}" title="Standard lyric green + bold">BEAT 1</button>
         <button type="button" class="beat-colour beat-2" data-quick-colour="#00ffd5" title="Bold bright-teal timing marker">BEAT 2</button>
         <button type="button" class="beat-colour beat-3" data-quick-colour="#ffe23d" title="Bold yellow timing marker">BEAT 3</button>
         <button type="button" class="beat-colour beat-4" data-quick-colour="#ff9d2e" title="Bold bright-orange timing marker">BEAT 4</button>
-        <button type="button" class="beat-colour" data-quick-colour="#d96b00" title="Bold dark-orange timing marker">ORANGE</button>
-        <button type="button" class="beat-colour" data-quick-colour="#c14cff" title="Bold bright-purple timing marker">PURPLE</button>
-        <button type="button" class="beat-colour" data-quick-colour="#9aa3ad" title="Bold gray timing marker">GRAY</button>
         <button type="button" data-insert-chord="${index}">＋ CHORD</button>
         <button type="button" data-insert-tab="${index}">＋ BLANK TAB</button>
         <button type="button" data-insert-link="${index}">＋ LINK</button>
@@ -650,6 +742,7 @@
           <select data-dash-colour="${index}">${renderDashColourOptions(style.dashColor)}</select>
           <input type="color" data-dash-custom="${index}" value="${esc(style.dashColor || "#777777")}" title="Custom dash colour">
         </label>
+        <button type="button" class="one-shot-green ${oneShotGreenArmed ? "is-armed" : ""}" data-one-shot-green="${index}" aria-pressed="${String(oneShotGreenArmed)}" title="Turn on, then select the next text or spaces to apply lyric green + bold once">${oneShotGreenArmed ? "HIGHLIGHT ON" : "HIGHLIGHT"}</button>
         <button type="button" class="toolbar-select-all" data-select-section="${index}" title="Select all text in this section">SELECT ALL</button>
       </div>`;
   }
@@ -729,6 +822,7 @@
     renderSectionNavigator();
     updateCapoColour();
     root.querySelectorAll("[data-placeholder]").forEach(updateEmptyEditor);
+    updateOneShotGreenButtons();
     // Preview each section's dash colour immediately in the creator.
     requestAnimationFrame(refreshAllDashColours);
   }
@@ -1187,7 +1281,10 @@
     const selection = window.getSelection();
     const node = selection?.anchorNode;
     const editor = node && (node.nodeType === Node.TEXT_NODE ? node.parentElement : node)?.closest?.(".creator-rich-editor");
-    if (editor) captureSelection(editor);
+    if (editor) {
+      captureSelection(editor);
+      if (oneShotGreenArmed && selection && !selection.isCollapsed) scheduleOneShotGreen(editor);
+    }
   });
 
   document.addEventListener("input", event => {
@@ -1482,6 +1579,19 @@
     if (bracket) {
       const editor = bracket.closest(".creator-section-body")?.querySelector(".creator-rich-editor, textarea[data-note]");
       wrapSelectedText(editor);
+      return;
+    }
+
+    const oneShotGreen = event.target.closest("[data-one-shot-green]");
+    if (oneShotGreen) {
+      setOneShotGreenArmed(!oneShotGreenArmed);
+      return;
+    }
+
+    const lyricGreen = event.target.closest("[data-lyric-green]");
+    if (lyricGreen) {
+      const editor = lyricGreen.closest(".creator-section-body")?.querySelector(".creator-rich-editor");
+      if (editor) applyLyricGreenBold(editor);
       return;
     }
 
