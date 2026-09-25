@@ -31,23 +31,39 @@
   window.LS26.enterFullscreen=enterFullscreen;
   function mountFullscreen(){
     const button=$('ls26Fullscreen');
-    const supported=!!(document.documentElement.requestFullscreen||document.documentElement.webkitRequestFullscreen);
-    button.disabled=!supported;
-    function sync(){
-      const active=!!fullscreenElement();
-      const label=!supported?'Fullscreen is not supported in this browser':active?'Exit fullscreen':'Enter fullscreen';
-      button.setAttribute('aria-label',label);button.title=label;
-      button.setAttribute('aria-pressed',String(active));
-      button.innerHTML=`<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="${active?'M3 8h5V3M16 3v5h5M21 16h-5v5M8 21v-5H3':'M8 3H3v5M16 3h5v5M21 16v5h-5M8 21H3v-5'}"/></svg>`;
+    if(!button)return;
+
+    const framed=window.self!==window.top;
+    const exitPath='M3 8h5V3M16 3v5h5M21 16h-5v5M8 21v-5H3';
+
+    function renderFramed(){
+      button.disabled=false;
+      button.setAttribute('aria-label','Exit fullscreen session');
+      button.title='Exit fullscreen session';
+      button.setAttribute('aria-pressed','true');
+      button.innerHTML=`<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="${exitPath}"/></svg>`;
     }
-    button.onclick=async()=>{
-      if(!fullscreenElement()){await enterFullscreen();return;}
-      try{await (document.exitFullscreen||document.webkitExitFullscreen).call(document);}
-      catch(error){toast('Use your browser controls to exit fullscreen.');}
+
+    if(framed){
+      renderFramed();
+      button.onclick=()=>{
+        try{
+          window.parent.postMessage({type:'ls26-session-exit',href:location.href},location.origin);
+        }catch(_){}
+      };
+      return;
+    }
+
+    const supported=!!(document.documentElement.requestFullscreen||document.documentElement.webkitRequestFullscreen);
+    button.disabled=false;
+    button.setAttribute('aria-label','Open current page in fullscreen session');
+    button.title='Open current page in fullscreen session';
+    button.setAttribute('aria-pressed','false');
+    button.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M8 3H3v5M16 3h5v5M21 16v5h-5M8 21H3v-5"/></svg>';
+    button.onclick=()=>{
+      const wrapper=url('session.html')+'?src='+encodeURIComponent(location.href);
+      location.href=wrapper;
     };
-    document.addEventListener('fullscreenchange',sync);
-    document.addEventListener('webkitfullscreenchange',sync);
-    sync();
   }
   function mount(){
     if(!document.querySelector('link[data-ls26-dialog-style]')){
