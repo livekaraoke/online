@@ -47,11 +47,11 @@
   const DEFAULT_EVENT_TYPES = ["Live Karaoke", "Roxanna", "Solo", "Texanna", "Other"];
   const FONTS = ["Verdana", "Arial", "Tahoma", "Trebuchet MS", "Georgia", "Times New Roman", "Courier New", "Consolas"];
   const FONT_SIZES = ["12", "14", "16", "18", "20", "24", "28", "32", "40", "48"];
-  const LYRIC_HIGHLIGHT_GREEN = "#00f033";
+  const LYRIC_HIGHLIGHT_GREEN = "#42f35c";
   let oneShotGreenArmed = false;
   let oneShotGreenTimer = 0;
   const COLOURS = [
-    ["Red", "#ff3131"], ["Cyan", "#00dfe8"], ["Blue", "#1828ff"], ["Green", "#00f033"],
+    ["Red", "#ff3131"], ["Cyan", "#00dfe8"], ["Blue", "#1828ff"], ["Green", "#42f35c"],
     ["Magenta", "#f000dc"], ["Yellow", "#fff200"], ["Black", "#000000"], ["White", "#ffffff"],
     ["Orange", "#ff8a24"], ["Gray", "#777777"], ["Light Gray", "#d7d7d7"], ["Bright Purple", "#c14cff"]
   ];
@@ -489,20 +489,37 @@
     return true;
   }
 
-  function ensureBoldSelection() {
+  function applyHeavyBold(editor = activeEditor) {
+    if (!editor) return false;
+    captureSelection(editor);
     if (!restoreSelection()) return false;
-    let alreadyBold = false;
-    try { alreadyBold = document.queryCommandState("bold"); } catch (_) {}
-    if (!alreadyBold) document.execCommand("bold", false, null);
+    const selection = window.getSelection();
+    if (!selection || !selection.rangeCount || selection.isCollapsed) return false;
+    const range = selection.getRangeAt(0);
+    if (!editor.contains(range.commonAncestorContainer)) return false;
+
+    const fragment = range.extractContents();
+    const span = document.createElement("span");
+    span.className = "ls26-heavy-bold";
+    span.style.fontWeight = "900";
+    span.appendChild(fragment);
+    range.insertNode(span);
+
+    const selectedRange = document.createRange();
+    selectedRange.selectNodeContents(span);
+    selection.removeAllRanges();
+    selection.addRange(selectedRange);
+    captureSelection(editor);
+    syncSectionsFromDOM();
+    markDirty();
     return true;
   }
 
   function applyQuickColour(colour) {
-    if (!ensureBoldSelection()) return;
+    if (!restoreSelection()) return;
     document.execCommand("foreColor", false, colour);
     captureSelection(activeEditor);
-    syncSectionsFromDOM();
-    markDirty();
+    applyHeavyBold(activeEditor);
   }
 
   function updateOneShotGreenButtons() {
@@ -1256,6 +1273,13 @@
 
   function openColourModal(editor) {
     captureSelection(editor);
+
+    // Keep the selected range internally, but dismiss Android/Chrome's native
+    // selection toolbar and handles so they do not overlap the LiveSuite modal.
+    const selection = window.getSelection();
+    if (selection?.rangeCount) selection.removeAllRanges();
+    try { editor?.blur?.(); } catch (_) {}
+
     $("colourModal").classList.remove("hidden");
   }
 
@@ -1610,7 +1634,8 @@
     if (command) {
       const editor = command.closest(".creator-section-body")?.querySelector(".creator-rich-editor");
       captureSelection(editor);
-      applyCommand(command.dataset.command);
+      if (command.dataset.command === "bold") applyHeavyBold(editor);
+      else applyCommand(command.dataset.command);
       return;
     }
 
