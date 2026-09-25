@@ -381,10 +381,42 @@
       ...(doc.data() || {})
     })), playedOrderMs);
 
-    const performedSongs = chronological(performedSnap.docs.map(doc => ({
+    let performedSongs = chronological(performedSnap.docs.map(doc => ({
       id: doc.id,
       ...(doc.data() || {})
     })), playedOrderMs);
+
+    const missingBpmIds = [...new Set(performedSongs
+      .filter(item => {
+        const bpm = Number(item.userBpm ?? item.performanceBpm ?? item.songUserBpm ?? item.bpm ?? item.originalBpm);
+        return !(Number.isFinite(bpm) && bpm > 0) && item.songId;
+      })
+      .map(item => item.songId))];
+
+    const bpmBySongId = new Map();
+    await Promise.all(missingBpmIds.map(async songId => {
+      try {
+        const songSnap = await db.collection("lyrics").doc(songId).get();
+        const song = songSnap.exists ? (songSnap.data() || {}) : {};
+        const bpm = Number(song.userBpm ?? song.originalBpm ?? song.bpm);
+        bpmBySongId.set(songId, Number.isFinite(bpm) && bpm > 0 ? bpm : 0);
+      } catch (_) {
+        bpmBySongId.set(songId, 0);
+      }
+    }));
+
+    performedSongs = performedSongs.map(item => {
+      const direct = Number(item.userBpm ?? item.performanceBpm ?? item.songUserBpm ?? item.bpm ?? item.originalBpm);
+      const bpm = Number.isFinite(direct) && direct > 0 ? direct : Number(bpmBySongId.get(item.songId) || 0);
+      return bpm ? { ...item, userBpm:bpm, performanceBpm:bpm } : item;
+    });
+
+    const archivedBpms = performedSongs
+      .map(item => Number(item.userBpm ?? item.performanceBpm ?? item.bpm))
+      .filter(value => Number.isFinite(value) && value > 0);
+    const archivedAverageBpm = archivedBpms.length
+      ? Math.round(archivedBpms.reduce((sum,value) => sum + value, 0) / archivedBpms.length)
+      : null;
 
     const runOrderData = runOrderSnap.exists ? (runOrderSnap.data() || {}) : {};
     const runOrderItems =
@@ -397,6 +429,7 @@
       requestSummary: requestSummary(requests),
       performanceLogSnapshot: cleanSnapshot(logs),
       playedSongsSnapshot: cleanSnapshot(performedSongs),
+      averageBpm: archivedAverageBpm,
       runOrderSnapshot: cleanSnapshot(runOrderItems),
       dataSnapshotUpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
     }, { merge:true });
