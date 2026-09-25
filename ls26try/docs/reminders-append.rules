@@ -1,0 +1,27 @@
+// Paste inside match /databases/{database}/documents in your existing Firestore rules.
+// Replace YOUR_HOST_UID with your Firebase Authentication user UID.
+function reminderHost() {
+  return request.auth != null && request.auth.uid in ['YOUR_HOST_UID'];
+}
+function validReminder(data) {
+  return data.text is string && data.text.size() > 0 && data.text.size() <= 5000
+    && data.status in ['pending', 'completed', 'archived']
+    && data.priority in ['low', 'normal', 'high']
+    && data.category is string && data.category.size() <= 80
+    && data.link is string && data.link.size() <= 2000
+    && (data.dueAt == null || data.dueAt is timestamp);
+}
+match /reminders/{id} {
+  allow read: if reminderHost() && resource.data.createdBy == request.auth.uid;
+  allow create: if reminderHost()
+    && request.resource.data.createdBy == request.auth.uid
+    && request.resource.data.createdAt == request.time
+    && validReminder(request.resource.data);
+  allow update: if reminderHost()
+    && resource.data.createdBy == request.auth.uid
+    && request.resource.data.createdBy == resource.data.createdBy
+    && request.resource.data.createdAt == resource.data.createdAt
+    && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+      'text','date','time','dueAt','timeZone','priority','category','link','status','updatedAt'
+    ]) && validReminder(request.resource.data);
+}

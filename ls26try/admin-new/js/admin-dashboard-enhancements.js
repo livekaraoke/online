@@ -287,7 +287,7 @@
     const rows = Array.isArray(played) ? played : [];
     const missingIds = [...new Set(rows
       .filter(item => {
-        const value = Number(item?.userBpm ?? item?.performanceBpm ?? item?.songUserBpm ?? item?.bpm ?? item?.originalBpm);
+        const value = Number(item?.performanceBpm ?? item?.userBpm ?? item?.songUserBpm ?? item?.bpm ?? item?.originalBpm);
         return !(Number.isFinite(value) && value > 0) && item?.songId && !previousBpmCache.has(item.songId);
       })
       .map(item => item.songId))];
@@ -304,7 +304,7 @@
     }));
 
     const values = rows.map(item => {
-      const direct = Number(item?.userBpm ?? item?.performanceBpm ?? item?.songUserBpm ?? item?.bpm ?? item?.originalBpm);
+      const direct = Number(item?.performanceBpm ?? item?.userBpm ?? item?.songUserBpm ?? item?.bpm ?? item?.originalBpm);
       if (Number.isFinite(direct) && direct > 0) return direct;
       const cached = Number(previousBpmCache.get(item?.songId));
       return Number.isFinite(cached) && cached > 0 ? cached : 0;
@@ -502,7 +502,7 @@
           <div class="dashboard-record-row">
             <strong>${esc(song.songTitle || song.title || song.songId || "Untitled Song")} — ${esc(ArtistNames.display(song.artist || song.songArtist || ""))}</strong>
             <span>${esc(song.singerName || "")}</span>
-            <span>${esc(formatTime(tsDate(song.playedAt || song.createdAt)))}</span>
+            <span>${esc(formatTime(tsDate(song.playedAt || song.createdAt)))}${Number(song.performanceBpm || song.userBpm)>0 ? ` · ${esc(song.performanceBpm || song.userBpm)} BPM used` : ""}</span>
           </div>
         `).join("")
       : `<div class="dashboard-detail-copy">No played-song records.</div>`;

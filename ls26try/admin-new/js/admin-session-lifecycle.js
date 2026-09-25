@@ -388,7 +388,7 @@
 
     const missingBpmIds = [...new Set(performedSongs
       .filter(item => {
-        const bpm = Number(item.userBpm ?? item.performanceBpm ?? item.songUserBpm ?? item.bpm ?? item.originalBpm);
+        const bpm = Number(item.performanceBpm ?? item.userBpm ?? item.songUserBpm ?? item.bpm ?? item.originalBpm);
         return !(Number.isFinite(bpm) && bpm > 0) && item.songId;
       })
       .map(item => item.songId))];
@@ -406,13 +406,13 @@
     }));
 
     performedSongs = performedSongs.map(item => {
-      const direct = Number(item.userBpm ?? item.performanceBpm ?? item.songUserBpm ?? item.bpm ?? item.originalBpm);
+      const direct = Number(item.performanceBpm ?? item.userBpm ?? item.songUserBpm ?? item.bpm ?? item.originalBpm);
       const bpm = Number.isFinite(direct) && direct > 0 ? direct : Number(bpmBySongId.get(item.songId) || 0);
-      return bpm ? { ...item, userBpm:bpm, performanceBpm:bpm } : item;
+      return bpm ? { ...item, performanceBpm:bpm } : item;
     });
 
     const archivedBpms = performedSongs
-      .map(item => Number(item.userBpm ?? item.performanceBpm ?? item.bpm))
+      .map(item => Number(item.performanceBpm ?? item.userBpm ?? item.bpm))
       .filter(value => Number.isFinite(value) && value > 0);
     const archivedAverageBpm = archivedBpms.length
       ? Math.round(archivedBpms.reduce((sum,value) => sum + value, 0) / archivedBpms.length)

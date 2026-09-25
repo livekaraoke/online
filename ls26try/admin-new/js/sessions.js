@@ -9,8 +9,7 @@
 
   function performanceBpm(record) {
     const direct = Number(
-      record?.userBpm ??
-      record?.performanceBpm ??
+      record?.performanceBpm ?? record?.userBpm ??
       record?.songUserBpm ??
       record?.bpm ??
       record?.originalBpm
