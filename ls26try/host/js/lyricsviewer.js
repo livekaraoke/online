@@ -19,6 +19,74 @@
   let restoredState = null;
   let initialScrollRestored = false;
 
+  // A device preference, independent of search/scope and Clear filters.
+  const NOTES_STATE_KEY = "ls26:libraryPersonalNotesV1";
+  let notesVisible = true;
+  let noteCategory = "";
+  try {
+    const saved = JSON.parse(localStorage.getItem(NOTES_STATE_KEY) || "{}");
+    notesVisible = saved?.visible !== false;
+    noteCategory = typeof saved?.category === "string" ? saved.category : "";
+  } catch (_) {}
+
+  function personalNote(song) {
+    const title = String(song.title || "").trim();
+    if (!title || /^\p{L}/u.test(title)) return null;
+    const section = title.match(/^0\s*[-–—]\s*(\d+)(?=[.\s]|$)/u);
+    if (section) {
+      const number = String(Number(section[1]));
+      const name = { "1": "Live Karaoke", "2": "Roxanna" }[number];
+      return { category: `section:${number}`, label: `0 - ${number}${name ? " · " + name : ""}` };
+    }
+    const group = title.match(/^(\d+)/u);
+    if (group) return { category: `group:${Number(group[1])}`, label: `Group ${Number(group[1])}` };
+    return { category: "symbols", label: "Symbols / other notes" };
+  }
+
+  function saveNotesState() {
+    try { localStorage.setItem(NOTES_STATE_KEY, JSON.stringify({ visible: notesVisible, category: noteCategory })); }
+    catch (error) { console.warn("Could not save personal-note preference:", error); }
+  }
+
+  function populateNoteCategories() {
+    const select = $("personalNotesCategory");
+    if (!select) return;
+    const categories = new Map();
+    songs.forEach(song => {
+      const note = personalNote(song);
+      if (!note) return;
+      const entry = categories.get(note.category) || { ...note, count: 0 };
+      entry.count++;
+      categories.set(note.category, entry);
+    });
+    const options = [...categories.values()].sort((a,b) => a.label.localeCompare(b.label, undefined, { numeric:true }));
+    select.innerHTML = '<option value="">Songs &amp; all notes</option><option value="notes">Notes only · all categories</option>' +
+      options.map(note => `<option value="${LyricsCommon.escapeHTML(note.category)}">${LyricsCommon.escapeHTML(note.label)} (${note.count})</option>`).join("");
+    if (noteCategory && noteCategory !== "notes" && !categories.has(noteCategory)) {
+      noteCategory = "";
+      saveNotesState();
+    }
+    select.value = noteCategory;
+  }
+
+  function syncNotesControls() {
+    const button = $("personalNotesToggle"), category = $("personalNotesCategory");
+    if (!button || !category) return;
+    const count = songs.filter(song => personalNote(song)).length;
+    button.textContent = `${notesVisible ? "Hide" : "Show"} personal notes (${count})`;
+    button.setAttribute("aria-pressed", String(notesVisible));
+    button.title = `Personal notes are ${notesVisible ? "shown" : "hidden"}. This choice is remembered on this browser, including after Clear filters.`;
+    $("personalNotesTools").hidden = !notesVisible;
+    category.value = noteCategory;
+  }
+
+  function compareTitles(a, b) {
+    // Keep song ordering intact; sort numbered notes as 1.2, 1.3, 1.10.
+    return personalNote(a) && personalNote(b)
+      ? a.title.localeCompare(b.title, undefined, { numeric:true })
+      : a.title.localeCompare(b.title);
+  }
+
   function readViewState() {
     try {
       return JSON.parse(localStorage.getItem(VIEW_STATE_KEY) || "null") || {};
@@ -139,6 +207,7 @@
       populateExtraFilters();
       populateFilters();
       populateSetlists();
+      populateNoteCategories();
       render();
     }).catch(showError);
   }
@@ -226,6 +295,9 @@
       allowedIds=new Set(session?.setlistSongIds||selected?.songIds||[]);
     }
     let list = songs.filter(song => {
+      const note = personalNote(song);
+      if (!notesVisible && note) return false;
+      if (notesVisible && noteCategory && (!note || (noteCategory !== "notes" && note.category !== noteCategory))) return false;
       const matchesSearch =
         !query ||
         `${song.title} ${song.artist} ${song.key} ${song.year} ${song.sections.map(s=>s.content||s.html||s.text||" ").join(" ")}`
@@ -270,12 +342,12 @@
       list.sort((a, b) =>
         Number(favourites.has(b.firebaseId)) -
           Number(favourites.has(a.firebaseId)) ||
-        a.title.localeCompare(b.title)
+        compareTitles(a, b)
       );
     } else if (filters.sort.value === "artist") {
       list.sort((a, b) =>
         a.artist.localeCompare(b.artist) ||
-        a.title.localeCompare(b.title)
+        compareTitles(a, b)
       );
     } else if (filters.sort.value === "recent") {
       list.sort((a, b) =>
@@ -288,7 +360,7 @@
         (Number(b.userBpm) || 9999)
       );
     } else {
-      list.sort((a, b) => a.title.localeCompare(b.title));
+      list.sort(compareTitles);
     }
 
     return list;
@@ -313,6 +385,7 @@
   }
 
   function render() {
+    syncNotesControls();
     visibleSongs = filteredSongs();
 
     $("resultCount").textContent = visibleSongs.length.toLocaleString();
@@ -336,13 +409,14 @@
         const header = document.createElement("div");
         header.className = "letter-row";
         header.id = `letter-${group === "#" ? "number" : group}`;
-        header.textContent = group === "#" ? "0–9" : group;
+        header.textContent = group === "#" ? "Numbers & symbols" : group;
         $("songRows").appendChild(header);
         lastGroup = group;
       }
 
       const row = document.createElement("div");
-      row.className = "song-table-row"+(song.firebaseId===selectedId?" is-selected":"");
+      const note = personalNote(song);
+      row.className = "song-table-row"+(song.firebaseId===selectedId?" is-selected":"")+(note?" personal-note-row":"");
       row.dataset.id = song.firebaseId;
 
       row.innerHTML = `
@@ -361,7 +435,7 @@
           data-select="${song.firebaseId}"
           type="button">
           <strong>${LyricsCommon.escapeHTML(song.title)}</strong>
-          <small>${LyricsCommon.escapeHTML(song.artist)}${song.year ? " · "+LyricsCommon.escapeHTML(song.year) : ""}</small>
+          <small>${LyricsCommon.escapeHTML(song.artist)}${song.year ? " · "+LyricsCommon.escapeHTML(song.year) : ""}${note ? ` <span class="personal-note-badge" title="${LyricsCommon.escapeHTML(note.label)}">Note · ${LyricsCommon.escapeHTML(note.label)}</span>` : ""}</small>
         </button>
 
         <strong class="key-cell">
@@ -657,6 +731,21 @@
     saveViewState();
   });
 
+  $("personalNotesToggle")?.addEventListener("click", () => {
+    notesVisible = !notesVisible;
+    saveNotesState();
+    $("songRows").scrollTop = 0;
+    render();
+    saveViewState();
+  });
+  $("personalNotesCategory")?.addEventListener("change", event => {
+    noteCategory = event.target.value;
+    saveNotesState();
+    $("songRows").scrollTop = 0;
+    render();
+    saveViewState();
+  });
+
   $("clearFiltersBtn").onclick = () => {
     filters.search.value = "";
     filters.artist.value = "";
@@ -665,6 +754,8 @@
     filters.content.value = "";
     filters.setlist.value = "";
     filters.sort.value = "title";
+    noteCategory = "";
+    saveNotesState(); // Clear category/search without revealing hidden notes.
     filters.genre.value="";filters.decade.value="";filters.bpmMin.value="";filters.bpmMax.value="";scope="all";$("stickyFavToggle").checked=false;
     render();
     saveViewState();
