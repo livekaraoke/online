@@ -166,6 +166,38 @@
     `;
   }
 
+  function previousDisplay(value) {
+    return value === null || value === undefined || value === "" ? "-" : value;
+  }
+
+  function previousMetric(label, value, note = "", tone = "") {
+    return `
+      <div class="previous-session-metric ${tone ? `tone-${tone}` : ""}">
+        <span>${esc(label)}</span>
+        <strong>${esc(previousDisplay(value))}</strong>
+        ${note ? `<small>${esc(note)}</small>` : ""}
+      </div>
+    `;
+  }
+
+  function previousInfoRow(label, value) {
+    return `
+      <div class="previous-session-info-row">
+        <span>${esc(label)}</span>
+        <strong>${esc(previousDisplay(value))}</strong>
+      </div>
+    `;
+  }
+
+  function previousRequestStat(label, value, tone = "") {
+    return `
+      <div class="previous-session-request-stat ${tone ? `tone-${tone}` : ""}">
+        <strong>${esc(previousDisplay(value))}</strong>
+        <span>${esc(label)}</span>
+      </div>
+    `;
+  }
+
   function viewUpcomingEvent(eventId) {
     const event = window.LKAdminEvents?.getUpcomingEvent?.(eventId);
     if (!event) return;
@@ -346,8 +378,15 @@
 
     button.disabled = false;
     summaryEl.innerHTML = `
-      <strong>${esc(latest.title || "Performance Session")}</strong>
-      <span>${esc(latest.venue || "-")} • ${esc(formatLongDate(sessionActualEnd(latest) || sessionActualStart(latest)))}</span>
+      <div class="previous-session-summary-main">
+        <span class="previous-session-kicker">LAST COMPLETED SESSION</span>
+        <strong>${esc(latest.title || "Performance Session")}</strong>
+        <span class="previous-session-summary-venue">${esc(latest.venue || "-")}</span>
+      </div>
+      <div class="previous-session-summary-meta">
+        <span class="previous-session-date-chip">${esc(formatLongDate(sessionActualEnd(latest) || sessionActualStart(latest)))}</span>
+        <span class="previous-session-type-chip">${esc(latest.sessionType || latest.type || "Session")}</span>
+      </div>
     `;
 
     panel.classList.toggle("collapsed", !previousSessionExpanded);
@@ -373,31 +412,65 @@
       ? Math.max(0, previousTotalMs - breakDurationMs(latest))
       : null;
 
+    const breakCount = (latest.breaks || []).length;
+    const breakDuration = formatDurationMs(breakDurationMs(latest));
+
     detailsEl.innerHTML = `
-      <div class="previous-session-detail-grid">
-        ${detailCell("SESSION", latest.title || "-")}
-        ${detailCell("VENUE", latest.venue || "-")}
-        ${detailCell("TYPE", latest.sessionType || latest.type || "-")}
-        ${detailCell("STATUS", latest.status || "ended")}
-        ${detailCell("DATE", formatLongDate(sessionActualEnd(latest) || sessionActualStart(latest)))}
-        ${detailCell("SCHEDULED", `${formatTime(sessionScheduledStart(latest))}–${formatTime(sessionScheduledEnd(latest))}`)}
-        ${detailCell("ACTUAL", `${formatTime(sessionActualStart(latest))}–${formatTime(sessionActualEnd(latest))}`)}
-        ${detailCell("ACTIVE TIME", formatDurationMs(previousActiveMs))}
-        ${detailCell("TOTAL ELAPSED", formatDurationMs(previousTotalMs))}
-        ${detailCell("AVERAGE BPM", avgBpm)}
-        ${detailCell("SONGS PLAYED", records.played.length)}
-        ${detailCell("BREAKS", `${(latest.breaks || []).length} • ${formatDurationMs(breakDurationMs(latest))}`)}
-        ${detailCell("REQUESTS", summary.total || 0)}
-        ${detailCell("PLAYED REQUESTS", summary.completed || 0)}
-        ${detailCell("LEFT / NOT PLAYED", summary.left || 0)}
-        ${detailCell("SINGER LEFT", summary.abandoned || 0)}
-        ${detailCell("DELETED / DECLINED", summary.deleted || 0)}
+      <div class="previous-session-metrics">
+        ${previousMetric("SONGS PLAYED", records.played.length, "performed", "green")}
+        ${previousMetric("ACTIVE TIME", formatDurationMs(previousActiveMs), "excluding breaks", "cyan")}
+        ${previousMetric("AVERAGE BPM", avgBpm, "performance average", "amber")}
+        ${previousMetric("REQUESTS", summary.total || 0, "received", "purple")}
       </div>
+
+      <div class="previous-session-info-layout">
+        <section class="previous-session-info-group">
+          <div class="previous-session-group-head">
+            <span>SESSION</span>
+          </div>
+          <div class="previous-session-info-list">
+            ${previousInfoRow("Venue", latest.venue || "-")}
+            ${previousInfoRow("Type", latest.sessionType || latest.type || "-")}
+            ${previousInfoRow("Status", latest.status || "ended")}
+            ${previousInfoRow("Date", formatLongDate(sessionActualEnd(latest) || sessionActualStart(latest)))}
+          </div>
+        </section>
+
+        <section class="previous-session-info-group">
+          <div class="previous-session-group-head">
+            <span>TIMING</span>
+          </div>
+          <div class="previous-session-info-list">
+            ${previousInfoRow("Scheduled", `${formatTime(sessionScheduledStart(latest))}–${formatTime(sessionScheduledEnd(latest))}`)}
+            ${previousInfoRow("Actual", `${formatTime(sessionActualStart(latest))}–${formatTime(sessionActualEnd(latest))}`)}
+            ${previousInfoRow("Total elapsed", formatDurationMs(previousTotalMs))}
+            ${previousInfoRow("Breaks", `${breakCount} • ${breakDuration}`)}
+          </div>
+        </section>
+      </div>
+
+      <section class="previous-session-request-group">
+        <div class="previous-session-group-head request-head">
+          <span>REQUEST BREAKDOWN</span>
+          <strong>${esc(summary.total || 0)} total</strong>
+        </div>
+        <div class="previous-session-request-grid">
+          ${previousRequestStat("Played", summary.completed || 0, "green")}
+          ${previousRequestStat("Left / not played", summary.left || 0, "muted")}
+          ${previousRequestStat("Singer left", summary.abandoned || 0, "amber")}
+          ${previousRequestStat("Deleted / declined", summary.deleted || 0, "red")}
+        </div>
+      </section>
+
       <div class="previous-session-notes">
         <span>SESSION NOTES</span>
         <strong>${esc(displayFinishedEdit(latest,"notes",latest.notes || "No notes."))}</strong>
       </div>
-      <button type="button" class="small-outline previous-session-view-btn" data-view-past-session="${esc(latest.id)}">VIEW FULL SESSION</button>
+
+      <button type="button" class="small-outline previous-session-view-btn" data-view-past-session="${esc(latest.id)}">
+        <span>VIEW FULL SESSION</span>
+        <span aria-hidden="true">→</span>
+      </button>
     `;
   }
 
