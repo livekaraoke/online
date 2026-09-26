@@ -101,7 +101,9 @@
   }
 
   function sessionActualStart(session) {
-    return tsDate(session.actualStartedAt || session.startedAt);
+    // Prefer the immutable session-start timestamp. Older lifecycle repair code
+    // could overwrite actualStartedAt long after the performance had begun.
+    return tsDate(session.startedAt || session.actualStartedAt);
   }
 
   function sessionActualEnd(session) {
