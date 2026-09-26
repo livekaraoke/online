@@ -108,7 +108,10 @@
   }
 
   function actualStart(session) {
-    return tsDate(session.actualStartedAt || session.startedAt);
+    // startedAt is written atomically when Start Session is pressed.
+    // actualStartedAt existed as an event-link metadata field and older code
+    // could overwrite it during a later repair, so it is only a fallback.
+    return tsDate(session.startedAt || session.actualStartedAt);
   }
 
   function actualEnd(session) {
