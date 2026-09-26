@@ -167,8 +167,8 @@
     const sessionVenue = normalise(session.venue || currentData.venue);
     const sessionType = normalise(session.sessionType || session.type || currentData.sessionType || currentData.type);
     const actualStart =
-      session.actualStartedAt?.toDate?.() ||
       session.startedAt?.toDate?.() ||
+      session.actualStartedAt?.toDate?.() ||
       currentData.startedAt?.toDate?.() ||
       new Date();
 
@@ -274,6 +274,16 @@
     const sessionRef = db.collection("performanceSessions").doc(sessionId);
     const currentRef = db.collection("karaokeControl").doc("currentSession");
 
+    // The base session-start transaction already records the true moment the
+    // user pressed Start Session in `startedAt`. Event-link repair can happen
+    // minutes or hours later, so it must never replace that with "now".
+    const existingSessionSnap = await sessionRef.get();
+    const existingSession = existingSessionSnap.exists ? (existingSessionSnap.data() || {}) : {};
+    const canonicalActualStart =
+      existingSession.startedAt ||
+      existingSession.actualStartedAt ||
+      firebase.firestore.FieldValue.serverTimestamp();
+
     let event = null;
     let scheduledStartAt = null;
     let scheduledEndAt = null;
@@ -309,7 +319,9 @@
         await db.collection("upcomingEvents").doc(eventId).set({
           linkedSessionId: sessionId,
           sessionStatus: "active",
-          actualStartedAt: firebase.firestore.FieldValue.serverTimestamp(),
+          // Preserve a previously-recorded event start; otherwise mirror the
+          // canonical session start instead of stamping the repair time.
+          actualStartedAt: event.actualStartedAt || canonicalActualStart,
           updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         }, { merge:true });
       }
@@ -321,7 +333,7 @@
       scheduledStartAt: scheduledStartAt || null,
       scheduledEndAt: scheduledEndAt || null,
       scheduledDurationMs: Number.isFinite(scheduledDurationMs) ? scheduledDurationMs : null,
-      actualStartedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      actualStartedAt: canonicalActualStart,
       sessionType:
         $("sessionTypeInput")?.value ||
         event?.type ||
