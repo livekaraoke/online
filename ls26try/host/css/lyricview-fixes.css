@@ -1797,3 +1797,60 @@ body.host-lyric-view-page {
   }
 }
 
+
+
+/* =========================================================
+   STICKY GUITAR TUNING CARD — 2026-09-28
+   ========================================================= */
+.host-guitar-tuning-card{
+  position:sticky!important;
+  top:calc(var(--host-sticky-stack-height,var(--lv-stack-h)) + 8px)!important;
+  z-index:120!important;
+  display:grid!important;
+  justify-items:center!important;
+  width:min(430px,calc(100% - 36px))!important;
+  margin:8px auto 14px!important;
+  padding:11px 18px 12px!important;
+  box-sizing:border-box!important;
+  border:1px solid #2a6078!important;
+  border-radius:10px!important;
+  background:linear-gradient(145deg,rgba(5,31,43,.97),rgba(3,18,27,.97))!important;
+  box-shadow:0 8px 26px rgba(0,0,0,.34),0 0 18px rgba(0,202,250,.07)!important;
+  transition:opacity .16s ease,transform .16s ease,visibility .16s ease!important;
+}
+.host-guitar-tuning-card>small{
+  color:#5aa9c6!important;
+  font-size:8px!important;
+  font-weight:950!important;
+  letter-spacing:.12em!important;
+}
+.host-guitar-tuning-card>strong{
+  margin-top:2px!important;
+  color:#f4fbff!important;
+  font-size:20px!important;
+  font-weight:1000!important;
+  line-height:1.12!important;
+  text-align:center!important;
+}
+.host-guitar-tuning-card>span{
+  margin-top:5px!important;
+  color:#9eb7c2!important;
+  font-size:12px!important;
+  font-weight:850!important;
+  letter-spacing:.045em!important;
+  text-align:center!important;
+}
+.host-guitar-tuning-card.past-second-verse{
+  opacity:0!important;
+  visibility:hidden!important;
+  pointer-events:none!important;
+  transform:translateY(-8px)!important;
+}
+@media(max-width:700px){
+  .host-guitar-tuning-card{
+    width:min(390px,calc(100% - 20px))!important;
+    padding:9px 12px 10px!important;
+  }
+  .host-guitar-tuning-card>strong{font-size:18px!important}
+  .host-guitar-tuning-card>span{font-size:11px!important}
+}
