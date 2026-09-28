@@ -402,6 +402,7 @@
       capo: $("capoInput")?.value || "",
       year: $("yearInput")?.value || "",
       timeSignature: $("timeSignatureInput")?.value || "",
+      guitarTuning: readGuitarTuning(),
       youtubeLinks: getYoutubeLinks(),
       youtubeLinkLabels: getYoutubeLinkLabels(),
       youtube: getYoutubeLinks()[0] || "",
@@ -437,6 +438,7 @@
     if ($("capoInput")) $("capoInput").value = state.capo || "";
     if ($("yearInput")) $("yearInput").value = state.year || "";
     if ($("timeSignatureInput")) $("timeSignatureInput").value = state.timeSignature || "";
+    setGuitarTuningState(state.guitarTuning || STANDARD_GUITAR_TUNING);
     setYoutubeLinks(state.youtubeLinks || [state.youtube || ""], state.youtubeLinkLabels || []);
     if ($("hostNoteInput")) $("hostNoteInput").value = state.songNote || "";
     render();
@@ -1378,9 +1380,10 @@
   }
 
   async function load() {
-    await Promise.all([loadSectionTitleDefaults(), loadEventTypes()]);
+    await Promise.all([loadSectionTitleDefaults(), loadEventTypes(), loadGuitarTuningPresets()]);
     if (!firebaseId) {
       sections = [makeSection("lyrics")];
+      setGuitarTuningState(STANDARD_GUITAR_TUNING);
       updateEditingStatus();
       render();
       dirty = false;
@@ -1426,6 +1429,7 @@
     $("capoInput").value = loadedSong.capo || "";
     $("yearInput").value = loadedSong.year || "";
     $("timeSignatureInput").value = loadedSong.timeSignature || "4/4";
+    setGuitarTuningState(songGuitarTuning(loadedSong));
     setYoutubeLinks(
       Array.isArray(loadedSong.youtubeLinks) && loadedSong.youtubeLinks.length ? loadedSong.youtubeLinks : [loadedSong.youtubeLink || ""],
       Array.isArray(loadedSong.youtubeLinkLabels) ? loadedSong.youtubeLinkLabels : []
@@ -1457,6 +1461,7 @@
       capo: $("capoInput").value.trim(),
       year: $("yearInput").value,
       timeSignature: $("timeSignatureInput").value.trim() || "4/4",
+      guitarTuning: readGuitarTuning(),
       youtubeLink: getYoutubeLinks()[0] || "",
       youtubeLinks: getYoutubeLinks(),
       youtubeLinkLabels: getYoutubeLinkLabels(),
@@ -1642,6 +1647,7 @@
     if (event.target.id === "songTitleInput" || event.target.id === "artistInput") updateEditingStatus();
     if (event.target.id === "capoInput") updateCapoColour();
     if (event.target.id === "chordInput") $("chordPreview").textContent = event.target.value || "—";
+    if (event.target.matches("[data-guitar-string]")) syncGuitarPresetFromStrings();
 
     if (event.target.matches("[data-title]")) {
       const start = event.target.selectionStart;
@@ -1704,6 +1710,13 @@
   });
 
   document.addEventListener("change", event => {
+    if (event.target.id === "guitarTuningPresetInput") {
+      const preset = findGuitarTuningPreset(event.target.value);
+      if (preset) setGuitarStringInputs(preset.strings);
+      markDirty();
+      return;
+    }
+
     const font = event.target.closest("[data-font]");
     if (font) {
       const index = Number(font.dataset.font);
@@ -2045,6 +2058,7 @@
   $("openTemplatesBtn").onclick = () => $("templatesModal").classList.remove("hidden");
   $("refreshSetlistsBtn").onclick = () => loadSetlistMembership(firebaseId);
   $("addYoutubeLinkBtn").onclick = () => addYoutubeLink();
+  $("addGuitarTuningPresetBtn").onclick = saveCurrentAsGuitarTuningPreset;
   $("saveSectionDefaultsBtn").onclick = saveSectionTitleDefaults;
   $("resetSectionDefaultsBtn").onclick = resetSectionTitleDefaults;
 
