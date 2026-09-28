@@ -9,7 +9,7 @@
   <title>Lyrics &amp; Chords Creator</title>
   <link rel="stylesheet" href="css/lyrics-suite_OLDER.css?v=20260910-stage4">
   <link rel="stylesheet" href="css/lyrics-suite.css?v=20260910-stage4">
-  <link rel="stylesheet" href="css/lyricscreator-fixes.css?v=20260925-exact-green-bold-popup">
+  <link rel="stylesheet" href="css/lyricscreator-fixes.css?v=20260928-guitar-tuning">
 <link rel="stylesheet" href="../shared/theme.css?v=20260924-layout-refinements"><link rel="stylesheet" href="../shared/performance.css?v=20260925-live-click"><script src="../shared/data.js?v=20260910-stage4"></script><link rel="stylesheet" href="../shared/section-layout.css?v=20260925-match-section-green"></head>
 <body class="creator-page advanced-creator-page">
   <header class="app-topbar creator-topbar">
@@ -46,6 +46,25 @@
         <label>Capo<input id="capoInput"></label>
         <label>Year<input id="yearInput" type="number"></label>
         <label>Time Signature<input id="timeSignatureInput" value="4/4"></label>
+
+        <div class="wide creator-tuning-field">
+          <div class="creator-tuning-head">
+            <label>Guitar Tuning
+              <select id="guitarTuningPresetInput" aria-label="Guitar tuning preset"></select>
+            </label>
+            <button id="addGuitarTuningPresetBtn" class="btn ghost compact-btn" type="button">＋ ADD TUNING</button>
+          </div>
+          <div class="creator-tuning-strings" aria-label="Individual guitar string tunings">
+            <label><span>6th</span><input data-guitar-string="0" value="E" aria-label="6th string tuning"></label>
+            <label><span>5th</span><input data-guitar-string="1" value="A" aria-label="5th string tuning"></label>
+            <label><span>4th</span><input data-guitar-string="2" value="D" aria-label="4th string tuning"></label>
+            <label><span>3rd</span><input data-guitar-string="3" value="G" aria-label="3rd string tuning"></label>
+            <label><span>2nd</span><input data-guitar-string="4" value="B" aria-label="2nd string tuning"></label>
+            <label><span>1st</span><input data-guitar-string="5" value="e" aria-label="1st string tuning"></label>
+          </div>
+          <small class="creator-tuning-hint">Low string → high string. Editing a string switches the preset to Custom.</small>
+        </div>
+
         <label class="wide creator-youtube-field">YouTube Links<div id="youtubeLinksList" class="creator-youtube-links"><div class="creator-youtube-link-row"><input class="creator-youtube-url-input" id="youtubeInput" data-youtube-link placeholder="https://www.youtube.com/..."><input class="creator-youtube-label-input" data-youtube-label placeholder="Display label"><button type="button" data-remove-youtube aria-label="Remove YouTube link" disabled>×</button></div></div><button id="addYoutubeLinkBtn" class="btn ghost creator-add-youtube-link" type="button">＋ ADD YOUTUBE LINK</button></label>
         <label class="wide">Song Notes / Host Notes<textarea id="hostNoteInput"></textarea></label>
       </div>
@@ -197,6 +216,6 @@
   <script src="js/firebase-config.js?v=20260910-stage4"></script>
   <script src="js/lyrics-common.js?v=20260925-artist-names"></script>
   <script src="../shared/section-content.js?v=20260922-clean-sections"></script>
-  <script src="js/lyricscreator.js?v=20260925-bold-toggle"></script>
+  <script src="js/lyricscreator.js?v=20260928-guitar-tuning"></script>
 <script src="../shared/shell.js?v=20260925-artist-names"></script><script src="../shared/inbox.js?v=20260925-artist-names"></script><script src="../shared/session-ui.js?v=20260925-live-click"></script><script src="../shared/performance.js?v=20260925-live-click"></script></body>
 </html>
