@@ -461,13 +461,14 @@
     requestAnimationFrame(updateGuitarTuningStickyState);
   }
 
-  function secondVisibleVerseIndex() {
+  function secondVisibleSectionIndex() {
     let count = 0;
     for (const item of sectionItems) {
       if (item.hiddenBySession) continue;
-      if (normaliseSectionTitleKey(item.section?.title) !== "verse") continue;
+      const index = sectionEls.indexOf(item.el);
+      if (index < 0) continue;
       count++;
-      if (count === 2) return sectionEls.indexOf(item.el);
+      if (count === 2) return index;
     }
     return -1;
   }
@@ -475,9 +476,9 @@
   function updateGuitarTuningStickyState() {
     const card = $("guitarTuningCard");
     if (!card || card.hidden) return;
-    const secondVerse = secondVisibleVerseIndex();
-    const released = secondVerse >= 0 && currentSectionIndex >= secondVerse;
-    card.classList.toggle("past-second-verse", released);
+    const secondSection = secondVisibleSectionIndex();
+    const released = secondSection >= 0 && currentSectionIndex >= secondSection;
+    card.classList.toggle("past-tuning-window", released);
   }
 
   function guitarTuningStickyHeight() {
