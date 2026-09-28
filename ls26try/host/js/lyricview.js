@@ -482,7 +482,10 @@
 
   function guitarTuningStickyHeight() {
     const card = $("guitarTuningCard");
-    if (!card || card.hidden || card.classList.contains("past-second-verse")) return 0;
+    if (!card || card.hidden) return 0;
+    // Keep the section activation anchor stable at the release boundary. The
+    // card remains in document flow while visually hidden, so using its height
+    // here prevents the active section from bouncing between Verse 1/Verse 2.
     return Math.ceil(card.getBoundingClientRect().height || 0) + 8;
   }
 
