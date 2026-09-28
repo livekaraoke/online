@@ -248,8 +248,16 @@
   function applyGuitarTuningState(value) {
     const tuning = value && typeof value === "object" ? value : {};
     const name = String(tuning.name || "Standard Tuning").trim() || "Standard Tuning";
-    const preset = guitarTunings.find(item => item.name.toLowerCase() === name.toLowerCase());
-    renderGuitarTuningOptions(preset?.name || (name.toLowerCase() === "custom" ? "Custom" : "Custom"));
+    let preset = guitarTunings.find(item => item.name.toLowerCase() === name.toLowerCase());
+
+    // Preserve a song-specific named tuning even if it was created on another
+    // device before the shared preset list has loaded/synced there.
+    if (!preset && name.toLowerCase() !== "custom") {
+      preset = {name,strings:normaliseTuningStrings(tuning.strings)};
+      guitarTunings.splice(Math.max(0,guitarTunings.length - 1),0,preset);
+    }
+
+    renderGuitarTuningOptions(preset?.name || "Custom");
     if ($("guitarTuningSelect")) $("guitarTuningSelect").value = preset?.name || "Custom";
     setTuningStrings(Array.isArray(tuning.strings) ? tuning.strings : (preset?.strings || DEFAULT_GUITAR_TUNINGS[0].strings));
   }
