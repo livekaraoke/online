@@ -52,6 +52,10 @@
   const AUTO_SCROLL_BASE_PX_PER_MS = 0.006; // one-third of old 0.018 base
   let chordShift = 0;
   let tabShift = 0;
+  const DEFAULT_GUITAR_TUNING = {
+    name:"Standard Tuning",
+    strings:["E","A","D","G","B","e"]
+  };
   let capoDisplayShift = 0;
   let notesSaveTimer = null;
 
@@ -435,6 +439,53 @@
     return sectionTitleDefaults[normaliseSectionTitleKey(title)] || sectionTitleDefaults.fallback || "#ffffff";
   }
 
+  function normaliseGuitarTuning(song) {
+    const tuning = song?.guitarTuning && typeof song.guitarTuning === "object"
+      ? song.guitarTuning
+      : DEFAULT_GUITAR_TUNING;
+    const name = String(tuning.name || DEFAULT_GUITAR_TUNING.name).trim() || DEFAULT_GUITAR_TUNING.name;
+    const source = Array.isArray(tuning.strings) ? tuning.strings : DEFAULT_GUITAR_TUNING.strings;
+    const strings = DEFAULT_GUITAR_TUNING.strings.map((fallback,index) =>
+      String(source[index] ?? fallback).trim() || fallback
+    );
+    return {name,strings};
+  }
+
+  function renderGuitarTuning(song) {
+    const card = $("guitarTuningCard");
+    if (!card) return;
+    const tuning = normaliseGuitarTuning(song);
+    $("guitarTuningName").textContent = tuning.name;
+    $("guitarTuningStrings").textContent = tuning.strings.join(" - ");
+    card.hidden = false;
+    requestAnimationFrame(updateGuitarTuningStickyState);
+  }
+
+  function secondVisibleVerseIndex() {
+    let count = 0;
+    for (const item of sectionItems) {
+      if (item.hiddenBySession) continue;
+      if (normaliseSectionTitleKey(item.section?.title) !== "verse") continue;
+      count++;
+      if (count === 2) return sectionEls.indexOf(item.el);
+    }
+    return -1;
+  }
+
+  function updateGuitarTuningStickyState() {
+    const card = $("guitarTuningCard");
+    if (!card || card.hidden) return;
+    const secondVerse = secondVisibleVerseIndex();
+    const released = secondVerse >= 0 && currentSectionIndex >= secondVerse;
+    card.classList.toggle("past-second-verse", released);
+  }
+
+  function guitarTuningStickyHeight() {
+    const card = $("guitarTuningCard");
+    if (!card || card.hidden || card.classList.contains("past-second-verse")) return 0;
+    return Math.ceil(card.getBoundingClientRect().height || 0) + 8;
+  }
+
   async function loadSectionTitleDefaultsForView() {
     try {
       const snap = await db.collection("noteSettings").doc("lyricsCreatorSectionTitleDefaults").get();
@@ -627,6 +678,7 @@
       currentSectionIndex = Math.min(currentSectionIndex, Math.max(0, sectionEls.length - 1));
     }
 
+    updateGuitarTuningStickyState();
     renderSectionProgress();
     updateSectionVisibilityUi();
   }
@@ -744,6 +796,7 @@
     cancelAnimationFrame(relativeScrollFrame);
     manualSectionUntil=Date.now()+650;
     currentSectionIndex = Math.max(0, Math.min(sectionEls.length - 1, index));
+    updateGuitarTuningStickyState();
 
     // Update/centre the guide immediately when Prev/Next or a guide item is used.
     [...$("sectionProgress").children]
@@ -758,7 +811,7 @@
     const quick=document.getElementById('performanceQuickInfo');
     quick?.classList.toggle('ls26-released',currentSectionIndex>0);
     const header=document.getElementById('ls26StickyHeader');
-    const offset=(header?.getBoundingClientRect().height||0)+(currentSectionIndex===0&&!quick?.classList.contains('ls26-released')?(quick?.getBoundingClientRect().height||0):0)+sectionActivationOffset();
+    const offset=(header?.getBoundingClientRect().height||0)+(currentSectionIndex===0&&!quick?.classList.contains('ls26-released')?(quick?.getBoundingClientRect().height||0):0)+guitarTuningStickyHeight()+sectionActivationOffset();
     window.scrollTo({top:Math.max(0,sectionEls[currentSectionIndex].getBoundingClientRect().top+window.scrollY-offset),behavior:'instant'});
     setTimeout(updateSectionProgress,700);
   }
@@ -767,12 +820,13 @@
     if (!sectionEls.length || Date.now()<manualSectionUntil) return;
 
     const header=document.getElementById("ls26StickyHeader"),quick=document.getElementById("performanceQuickInfo");
-    const anchor=(header?.getBoundingClientRect().height||0)+(quick&&!quick.classList.contains("ls26-released")?quick.getBoundingClientRect().height:0)+sectionActivationOffset();
+    const anchor=(header?.getBoundingClientRect().height||0)+(quick&&!quick.classList.contains("ls26-released")?quick.getBoundingClientRect().height:0)+guitarTuningStickyHeight()+sectionActivationOffset();
     let bestIndex = 0;
     sectionEls.forEach((el,i)=>{if(el.getBoundingClientRect().top<=anchor)bestIndex=i;});
 
     const changed = bestIndex !== currentSectionIndex;
     currentSectionIndex = bestIndex;
+    updateGuitarTuningStickyState();
 
     [...$("sectionProgress").children]
       .forEach(el => el.classList.toggle("active", Number(el.dataset.visibleIndex) === currentSectionIndex && !el.classList.contains("session-hidden")));
@@ -1995,6 +2049,7 @@
       loadSongScrollSpeed(currentSong);
       setTopTitle(currentSong);
       setInfo(currentSong);
+      renderGuitarTuning(currentSong);
       renderSections(currentSong);
       loadSlaveLyricsOptions();
       window.LS26Performance = {
