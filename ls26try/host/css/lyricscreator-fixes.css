@@ -1269,3 +1269,13 @@
   .creator-add-tuning{grid-template-columns:1fr!important}
   .creator-tuning-strings{grid-template-columns:repeat(3,minmax(0,1fr))!important}
 }
+
+
+/* Guitar tuning is a full-width Song Details block, aligned with the full metadata grid. */
+.creator-meta-grid > .creator-guitar-tuning-field{
+  grid-column:1 / -1!important;
+  width:100%!important;
+  max-width:100%!important;
+  min-width:0!important;
+  box-sizing:border-box!important;
+}
