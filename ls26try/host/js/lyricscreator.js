@@ -222,6 +222,145 @@
     return getYoutubeLinkRows().map(row => row.label);
   }
 
+  function normaliseGuitarTuningStrings(values) {
+    const input = Array.isArray(values) ? values : [];
+    return STANDARD_GUITAR_TUNING.strings.map((fallback,index) => {
+      const value = String(input[index] ?? "").trim();
+      return value || fallback;
+    });
+  }
+
+  function tuningStringsEqual(a,b) {
+    const left = normaliseGuitarTuningStrings(a);
+    const right = normaliseGuitarTuningStrings(b);
+    return left.every((value,index) => value === right[index]);
+  }
+
+  function allGuitarTuningPresets() {
+    const seen = new Set();
+    return [...BUILTIN_GUITAR_TUNINGS, ...customGuitarTunings].filter(preset => {
+      const key = String(preset?.name || "").trim().toLowerCase();
+      if (!key || key === "custom" || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    }).map(preset => ({
+      name:String(preset.name).trim(),
+      strings:normaliseGuitarTuningStrings(preset.strings)
+    }));
+  }
+
+  function findGuitarTuningPreset(name) {
+    const key = String(name || "").trim().toLowerCase();
+    return allGuitarTuningPresets().find(preset => preset.name.toLowerCase() === key) || null;
+  }
+
+  function readGuitarStringInputs() {
+    return [...document.querySelectorAll("[data-guitar-string]")]
+      .sort((a,b) => Number(a.dataset.guitarString) - Number(b.dataset.guitarString))
+      .map((input,index) => String(input.value || "").trim() || STANDARD_GUITAR_TUNING.strings[index]);
+  }
+
+  function setGuitarStringInputs(values) {
+    const strings = normaliseGuitarTuningStrings(values);
+    document.querySelectorAll("[data-guitar-string]").forEach(input => {
+      input.value = strings[Number(input.dataset.guitarString)] || "";
+    });
+  }
+
+  function renderGuitarTuningOptions(selectedName = STANDARD_GUITAR_TUNING.name, selectedStrings = STANDARD_GUITAR_TUNING.strings) {
+    const select = $("guitarTuningPresetInput");
+    if (!select) return;
+    const presets = allGuitarTuningPresets();
+    const selected = String(selectedName || STANDARD_GUITAR_TUNING.name).trim();
+    if (selected && selected.toLowerCase() !== "custom" && !presets.some(preset => preset.name.toLowerCase() === selected.toLowerCase())) {
+      presets.push({ name:selected, strings:normaliseGuitarTuningStrings(selectedStrings) });
+    }
+    select.replaceChildren();
+    presets.forEach(preset => {
+      const option = document.createElement("option");
+      option.value = preset.name;
+      option.textContent = preset.name;
+      select.appendChild(option);
+    });
+    const custom = document.createElement("option");
+    custom.value = "Custom";
+    custom.textContent = "Custom";
+    select.appendChild(custom);
+    select.value = [...select.options].some(option => option.value === selected) ? selected : STANDARD_GUITAR_TUNING.name;
+  }
+
+  function songGuitarTuning(song = {}) {
+    const saved = song?.guitarTuning && typeof song.guitarTuning === "object" ? song.guitarTuning : {};
+    const name = String(saved.name || song.guitarTuningName || song.tuningName || song.tuning || STANDARD_GUITAR_TUNING.name).trim() || STANDARD_GUITAR_TUNING.name;
+    const strings = normaliseGuitarTuningStrings(saved.strings || song.guitarTuningStrings || song.tuningStrings || STANDARD_GUITAR_TUNING.strings);
+    return { name, strings };
+  }
+
+  function setGuitarTuningState(tuning) {
+    const clean = songGuitarTuning({ guitarTuning:tuning });
+    renderGuitarTuningOptions(clean.name, clean.strings);
+    setGuitarStringInputs(clean.strings);
+  }
+
+  function readGuitarTuning() {
+    const select = $("guitarTuningPresetInput");
+    return {
+      name:String(select?.value || STANDARD_GUITAR_TUNING.name).trim() || STANDARD_GUITAR_TUNING.name,
+      strings:normaliseGuitarTuningStrings(readGuitarStringInputs())
+    };
+  }
+
+  function syncGuitarPresetFromStrings() {
+    const select = $("guitarTuningPresetInput");
+    if (!select) return;
+    const strings = readGuitarStringInputs();
+    const exact = allGuitarTuningPresets().find(preset => tuningStringsEqual(preset.strings, strings));
+    select.value = exact?.name || "Custom";
+  }
+
+  async function loadGuitarTuningPresets() {
+    customGuitarTunings = [];
+    try {
+      const snap = await db.collection("noteSettings").doc("lyricsCreatorGuitarTunings").get();
+      const rows = snap.exists && Array.isArray(snap.data()?.customPresets) ? snap.data().customPresets : [];
+      customGuitarTunings = rows.map(row => ({
+        name:String(row?.name || "").trim(),
+        strings:normaliseGuitarTuningStrings(row?.strings)
+      })).filter(row => row.name && row.name.toLowerCase() !== "custom");
+    } catch (error) {
+      console.warn("Could not load custom guitar tunings:", error);
+    }
+    renderGuitarTuningOptions();
+  }
+
+  async function saveCurrentAsGuitarTuningPreset() {
+    const current = readGuitarTuning();
+    const suggested = current.name === "Custom" || current.name === STANDARD_GUITAR_TUNING.name ? "" : current.name;
+    const answer = await LS26Dialogs.prompt("Name this guitar tuning. It will be added to the tuning dropdown.", suggested);
+    if (answer === null) return;
+    const name = String(answer || "").trim();
+    if (!name) { await LS26Dialogs.alert("Enter a name for the tuning."); return; }
+    if (name.toLowerCase() === "custom") { await LS26Dialogs.alert("\"Custom\" is reserved. Choose another name."); return; }
+    const builtin = BUILTIN_GUITAR_TUNINGS.find(preset => preset.name.toLowerCase() === name.toLowerCase());
+    if (builtin) { await LS26Dialogs.alert("That built-in tuning name already exists."); return; }
+    const preset = { name, strings:normaliseGuitarTuningStrings(current.strings) };
+    const existing = customGuitarTunings.findIndex(item => item.name.toLowerCase() === name.toLowerCase());
+    if (existing >= 0) customGuitarTunings[existing] = preset; else customGuitarTunings.push(preset);
+    try {
+      await db.collection("noteSettings").doc("lyricsCreatorGuitarTunings").set({
+        customPresets:customGuitarTunings,
+        updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge:true });
+      renderGuitarTuningOptions(name, preset.strings);
+      $("guitarTuningPresetInput").value = name;
+      setGuitarStringInputs(preset.strings);
+      markDirty();
+    } catch (error) {
+      console.error("Could not save guitar tuning preset:", error);
+      await LS26Dialogs.alert("Could not add that tuning to the dropdown.");
+    }
+  }
+
   function setYoutubeLinks(values, labels = []) {
     const list = $("youtubeLinksList");
     if (!list) return;
