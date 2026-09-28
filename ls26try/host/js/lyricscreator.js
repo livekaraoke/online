@@ -48,6 +48,23 @@
   const FONTS = ["Verdana", "Arial", "Tahoma", "Trebuchet MS", "Georgia", "Times New Roman", "Courier New", "Consolas"];
   const FONT_SIZES = ["12", "14", "16", "18", "20", "24", "28", "32", "40", "48"];
   const LYRIC_HIGHLIGHT_GREEN = "#42f35c";
+
+  const STANDARD_GUITAR_TUNING = {
+    name: "Standard Tuning",
+    strings: ["E", "A", "D", "G", "B", "e"]
+  };
+  const BUILTIN_GUITAR_TUNINGS = [
+    STANDARD_GUITAR_TUNING,
+    { name:"Drop D", strings:["D","A","D","G","B","e"] },
+    { name:"Half Step Down", strings:["Eb","Ab","Db","Gb","Bb","eb"] },
+    { name:"D Standard", strings:["D","G","C","F","A","d"] },
+    { name:"Drop C", strings:["C","G","C","F","A","d"] },
+    { name:"DADGAD", strings:["D","A","D","G","A","d"] },
+    { name:"Open G", strings:["D","G","D","G","B","d"] },
+    { name:"Open D", strings:["D","A","D","F#","A","d"] }
+  ];
+  let customGuitarTunings = [];
+
   let oneShotGreenArmed = false;
   let oneShotGreenTimer = 0;
   const COLOURS = [
