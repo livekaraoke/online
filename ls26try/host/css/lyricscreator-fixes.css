@@ -1203,3 +1203,69 @@
   color:#82ff9b!important;
   box-shadow:0 0 0 2px rgba(66,243,92,.18) inset,0 0 14px rgba(66,243,92,.24)!important;
 }
+
+
+/* =========================================================
+   GUITAR TUNING METADATA — 2026-09-28
+   ========================================================= */
+.creator-guitar-tuning-field{
+  display:grid!important;
+  gap:10px!important;
+  padding:12px!important;
+  border:1px solid #28566b!important;
+  border-radius:9px!important;
+  background:linear-gradient(145deg,#061c28,#04131c)!important;
+}
+.creator-tuning-head{
+  display:grid!important;
+  grid-template-columns:minmax(220px,.75fr) minmax(320px,1.25fr)!important;
+  gap:12px!important;
+  align-items:end!important;
+}
+.creator-tuning-head label,
+.creator-tuning-strings label{
+  display:grid!important;
+  gap:5px!important;
+}
+.creator-tuning-head select,
+.creator-tuning-head input,
+.creator-tuning-strings input{
+  min-height:40px!important;
+  box-sizing:border-box!important;
+}
+.creator-add-tuning{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) auto!important;
+  gap:8px!important;
+  align-items:end!important;
+}
+.creator-add-tuning .btn{
+  min-height:40px!important;
+  white-space:nowrap!important;
+}
+.creator-tuning-strings{
+  display:grid!important;
+  grid-template-columns:repeat(6,minmax(64px,1fr))!important;
+  gap:7px!important;
+}
+.creator-tuning-strings span{
+  color:#7ea0b1!important;
+  font-size:8px!important;
+  font-weight:900!important;
+  letter-spacing:.07em!important;
+}
+.creator-tuning-strings input{
+  text-align:center!important;
+  font-size:16px!important;
+  font-weight:950!important;
+}
+.creator-tuning-help{
+  color:#7893a0!important;
+  font-size:9px!important;
+  line-height:1.4!important;
+}
+@media(max-width:760px){
+  .creator-tuning-head{grid-template-columns:1fr!important}
+  .creator-add-tuning{grid-template-columns:1fr!important}
+  .creator-tuning-strings{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+}
