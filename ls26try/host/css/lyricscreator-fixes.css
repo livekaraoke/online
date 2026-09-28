@@ -1203,3 +1203,17 @@
   color:#82ff9b!important;
   box-shadow:0 0 0 2px rgba(66,243,92,.18) inset,0 0 14px rgba(66,243,92,.24)!important;
 }
+
+/* =========================================================
+   GUITAR TUNING — SONG METADATA
+   ========================================================= */
+.creator-page .creator-tuning-field{box-sizing:border-box;display:grid;gap:10px;margin-top:2px;padding:12px;border:1px solid #2a5263;border-radius:9px;background:linear-gradient(145deg,#071b25,#031218)}
+.creator-page .creator-tuning-head{display:grid;grid-template-columns:minmax(210px,1fr) auto;gap:10px;align-items:end}
+.creator-page .creator-tuning-head>label{display:grid;gap:6px;color:#a9c6d2;font-size:11px;font-weight:900;letter-spacing:.04em}
+.creator-page #guitarTuningPresetInput{width:100%;min-height:40px;border:1px solid #2c647a;border-radius:6px;background:#06141c;color:#f4fbff;font-size:14px;font-weight:800}
+.creator-page #addGuitarTuningPresetBtn{min-height:40px!important;white-space:nowrap}
+.creator-page .creator-tuning-strings{display:grid;grid-template-columns:repeat(6,minmax(58px,1fr));gap:7px}
+.creator-page .creator-tuning-strings label{display:grid;gap:4px;color:#6f94a4;font-size:9px;font-weight:900;text-align:center}
+.creator-page .creator-tuning-strings input{box-sizing:border-box;width:100%;min-width:0;height:38px;padding:5px 6px;border:1px solid #27576a;border-radius:6px;background:#031017;color:#7ef5ff;font-size:16px;font-weight:950;text-align:center}
+.creator-page .creator-tuning-hint{color:#708e9b;font-size:10px}
+@media(max-width:720px){.creator-page .creator-tuning-head{grid-template-columns:1fr}.creator-page .creator-tuning-strings{grid-template-columns:repeat(3,minmax(70px,1fr))}}
