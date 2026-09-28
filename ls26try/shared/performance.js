@@ -34,9 +34,27 @@
         <button id="ls26BpmPlus" aria-label="Raise BPM">＋</button>
       </div>
       <div class="ls26-bpm-original-row"><span>Original BPM</span><strong id="ls26OriginalBpm">—</strong></div>
+      <label class="ls26-bpm-nav-toggle"><input id="ls26ShowNavBpm" type="checkbox"> Show current BPM between navigation arrows</label>
       <button id="ls26ResetBpm" type="button">↻ RESET TO ORIGINAL</button>`;
     drawer.querySelector('.song-info-scroll').prepend(panel);
-    function sync(){const song=window.LS26Performance?.song();if(!song)return;$('ls26CurrentBpm').value=window.LS26Performance.getBpm();$('ls26OriginalBpm').textContent=song.originalBpm||'—';$('ls26ResetBpm').disabled=!(Number(song.originalBpm)>0);}
+    function sync(){
+      const song=window.LS26Performance?.song();if(!song)return;
+      const current=window.LS26Performance.getBpm();
+      $('ls26CurrentBpm').value=current;
+      $('ls26OriginalBpm').textContent=song.originalBpm||'—';
+      $('ls26ResetBpm').disabled=!(Number(song.originalBpm)>0);
+      const navValue=$('navCurrentBpmValue');if(navValue)navValue.textContent=current||'—';
+    }
+    const navBpmLabel=$('navCurrentBpmLabel');
+    function showNavBpm(show){
+      if(navBpmLabel)navBpmLabel.hidden=!show;
+      if($('ls26ShowNavBpm'))$('ls26ShowNavBpm').checked=show;
+      try{localStorage.setItem('ls26:showNavCurrentBpm',String(show));}catch(_){}
+    }
+    let showNavBpmPreference=true;
+    try{showNavBpmPreference=localStorage.getItem('ls26:showNavCurrentBpm')!=='false';}catch(_){}
+    showNavBpm(showNavBpmPreference);
+    $('ls26ShowNavBpm').onchange=e=>showNavBpm(e.target.checked);
     function close(){drawer.classList.remove('open');drawer.setAttribute('aria-hidden','true');infoAction?.setAttribute('aria-expanded','false');}
     const startup=document.createElement('label');startup.className='ls26-info-startup';startup.innerHTML='<input id="ls26InfoStartup" type="checkbox"> Open on LyricView startup';drawer.querySelector('.song-info-scroll').append(startup);
     const preferenceKey='ls26:infoOpenOnStartup';
