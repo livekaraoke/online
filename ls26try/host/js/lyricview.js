@@ -55,6 +55,11 @@
   let capoDisplayShift = 0;
   let notesSaveTimer = null;
 
+  const STANDARD_GUITAR_TUNING = {
+    name:"Standard Tuning",
+    strings:["E","A","D","G","B","e"]
+  };
+
   const $ = id => document.getElementById(id);
   const esc = value => String(value ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
   const toNumber = value => {
@@ -183,6 +188,43 @@
     $("infoSongTitle").textContent = `${song.title || "Untitled"}${song.artist ? " — " + ArtistNames.display(song.artist) : ""}`;
   }
 
+  function normaliseGuitarTuningStrings(values) {
+    const input = Array.isArray(values) ? values : [];
+    return STANDARD_GUITAR_TUNING.strings.map((fallback,index) => {
+      const value = String(input[index] ?? "").trim();
+      return value || fallback;
+    });
+  }
+
+  function songGuitarTuning(song = {}) {
+    const saved = song?.guitarTuning && typeof song.guitarTuning === "object" ? song.guitarTuning : {};
+    return {
+      name:String(saved.name || song.guitarTuningName || song.tuningName || song.tuning || STANDARD_GUITAR_TUNING.name).trim() || STANDARD_GUITAR_TUNING.name,
+      strings:normaliseGuitarTuningStrings(saved.strings || song.guitarTuningStrings || song.tuningStrings || STANDARD_GUITAR_TUNING.strings)
+    };
+  }
+
+  function renderGuitarTuning(song) {
+    const card = $("performanceTuningCard");
+    if (!card) return;
+    const tuning = songGuitarTuning(song);
+    $("performanceTuningName").textContent = tuning.name;
+    $("performanceTuningStrings").textContent = tuning.strings.join(" – ");
+    card.hidden = false;
+  }
+
+  function syncGuitarTuningCardVisibility() {
+    const card = $("performanceTuningCard");
+    if (!card) return;
+    const verseIndexes = sectionEls
+      .map((el,index) => normaliseSectionTitleKey(el.dataset.sectionTitle || "") === "verse" ? index : -1)
+      .filter(index => index >= 0);
+    const secondVerseIndex = verseIndexes.length >= 2 ? verseIndexes[1] : -1;
+    const hide = secondVerseIndex >= 0 && currentSectionIndex >= secondVerseIndex;
+    card.classList.toggle("is-past-second-verse", hide);
+    card.setAttribute("aria-hidden", hide ? "true" : "false");
+  }
+
   function setInfo(song, tempoOnly=false) {
     const savedTempo = toNumber(song.userBpm) || toNumber(song.originalBpm);
     const tempo = performanceTempo?.get() || savedTempo;
@@ -239,7 +281,11 @@
       }
     }
 
-    if(!tempoOnly){$("myNotesInput").value = song.myNotes || "";renderPerformanceSongReference(song);}
+    if(!tempoOnly){
+      $("myNotesInput").value = song.myNotes || "";
+      renderGuitarTuning(song);
+      renderPerformanceSongReference(song);
+    }
   }
 
   function songYoutubeLinks(song) {
@@ -629,6 +675,7 @@
 
     renderSectionProgress();
     updateSectionVisibilityUi();
+    syncGuitarTuningCardVisibility();
   }
 
   function updateSectionVisibilityUi() {
@@ -754,6 +801,7 @@
     });
 
     centerActiveProgressSection(true);
+    syncGuitarTuningCardVisibility();
 
     const quick=document.getElementById('performanceQuickInfo');
     quick?.classList.toggle('ls26-released',currentSectionIndex>0);
@@ -788,6 +836,7 @@
     if (changed) {
       centerActiveProgressSection(true);
     }
+    syncGuitarTuningCardVisibility();
   }
 
   window.addEventListener("resize", () => {
