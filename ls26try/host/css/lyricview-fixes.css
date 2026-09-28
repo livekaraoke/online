@@ -1797,3 +1797,14 @@ body.host-lyric-view-page {
   }
 }
 
+
+/* =========================================================
+   GUITAR TUNING PERFORMANCE CARD
+   Stays under the sticky song/session header until the second visible VERSE.
+   ========================================================= */
+.performance-tuning-card{box-sizing:border-box;position:sticky;top:calc(var(--lv-stack-h) + 10px);z-index:1650;display:grid;width:min(440px,calc(100% - 32px));min-height:82px;margin:12px auto 18px;padding:11px 18px 12px;border:1px solid #2e7188;border-radius:11px;background:linear-gradient(145deg,rgba(7,35,47,.96),rgba(2,17,24,.96));box-shadow:0 8px 28px rgba(0,0,0,.34),0 0 16px rgba(0,202,250,.08);text-align:center;transition:opacity .18s ease,visibility .18s ease,transform .18s ease}
+.performance-tuning-card>small{color:#62bfd9;font-size:9px;font-weight:950;letter-spacing:.13em}
+.performance-tuning-card>strong{margin-top:2px;color:#f7fcff;font-size:23px;font-weight:950;line-height:1.12}
+.performance-tuning-card>span{margin-top:5px;color:#9ed8e8;font-size:13px;font-weight:800;letter-spacing:.035em}
+.performance-tuning-card.is-past-second-verse{visibility:hidden;opacity:0;pointer-events:none;transform:translateY(-7px)}
+@media(max-width:700px){.performance-tuning-card{top:calc(var(--lv-stack-h) + 7px);width:min(390px,calc(100% - 20px));min-height:72px;padding:9px 13px 10px}.performance-tuning-card>strong{font-size:20px}.performance-tuning-card>span{font-size:12px}}
