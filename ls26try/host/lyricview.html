@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="../admin-new/css/top-statusbar.css?v=20260910-stage4">
   <link rel="stylesheet" href="../admin-new/css/top-statusbar-session-tools.css?v=20260910-stage4">
   <!-- Lyric View-only overrides MUST load last -->
-  <link rel="stylesheet" href="css/lyricview-fixes.css?v=20260928-guitar-tuning">
+  <link rel="stylesheet" href="css/lyricview-fixes.css?v=20260928-tuning-fixed-nav-bpm">
 <link rel="stylesheet" href="../shared/theme.css?v=20260924-layout-refinements"><link rel="stylesheet" href="../shared/performance.css?v=20260925-live-click"><script src="../shared/data.js?v=20260910-stage4"></script><link rel="stylesheet" href="../shared/section-layout.css?v=20260925-match-section-green"></head>
 <body class="host-lyric-view-page">
   <!-- Song title/actions; navigation and session move into shared sticky header -->
@@ -54,6 +54,7 @@
       <strong id="guitarTuningName">Standard Tuning</strong>
       <span id="guitarTuningStrings">E - A - D - G - B - e</span>
     </section>
+    <div class="host-guitar-tuning-spacer" aria-hidden="true"></div>
 
     <!-- PERFORMANCE QUICK INFO
          Copy of the most useful SONG INFO details/tools.
@@ -129,6 +130,10 @@
     <button id="navPrevBtn" class="host-nav-btn nav-left" type="button" aria-label="Previous section">
       <svg class="host-nav-icon" viewbox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"></path></svg>
     </button>
+    <div id="navCurrentBpmLabel" class="host-nav-bpm-label" aria-label="Current BPM">
+      <strong id="navCurrentBpmValue">–</strong>
+      <small>BPM</small>
+    </div>
     <button id="navNextBtn" class="host-nav-btn nav-right" type="button" aria-label="Next section">
       <svg class="host-nav-icon" viewbox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"></path></svg>
     </button>
@@ -266,5 +271,5 @@
       }
     });
   </script>
-<script src="../shared/shell.js?v=20260925-artist-names"></script><script src="../shared/inbox.js?v=20260925-artist-names"></script><script src="../shared/session-ui.js?v=20260925-live-click"></script><script src="../shared/performance.js?v=20260925-live-click"></script></body>
+<script src="../shared/shell.js?v=20260925-artist-names"></script><script src="../shared/inbox.js?v=20260925-artist-names"></script><script src="../shared/session-ui.js?v=20260925-live-click"></script><script src="../shared/performance.js?v=20260928-nav-bpm-toggle"></script></body>
 </html>
