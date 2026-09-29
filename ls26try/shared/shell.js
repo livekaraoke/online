@@ -138,8 +138,8 @@
 
     if(location.pathname.includes('/admin-new/'))document.body.classList.add('ls26-admin');
     const footerVersion=()=>{
-      const value=String(window.LS26Settings?.get?.().appVersion||"3.1.48").trim();
-      return /^\d\.\d\.\d{2}$/.test(value)?value:"3.1.48";
+      const value=String(window.LS26Settings?.get?.().appVersion||"3.1.55").trim();
+      return /^\d\.\d\.\d{2}$/.test(value)?value:"3.1.55";
     };
     const foot=document.createElement('footer');foot.className='ls26-footer';foot.innerHTML=`<div class="ls26-brand ls26-footer-brand" role="img" aria-label="LiveSuite"><img src="${url('assets/livesuite-logo-clean.png')}" alt="" width="2048" height="683"></div><span id="ls26VersionLabel" class="ls26-version-label" aria-label="LiveSuite version">v${footerVersion()}</span>`;document.body.append(foot);
     const syncFooterVersion=()=>{const label=$('ls26VersionLabel');if(label)label.textContent='v'+footerVersion();};
