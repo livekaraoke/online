@@ -1279,7 +1279,7 @@
         state.currentControl = data;
 
         const candidateSessionId = data.sessionId || data.activeSessionId || "";
-        const sessionId = (data.active === false && !data.activeSessionId) ? "" : candidateSessionId;
+        const sessionId = data.active === false ? "" : candidateSessionId;
         document.documentElement.dataset.ls26SessionActive=sessionId?"true":"false";
 
         if (sessionId !== state.sessionId) {
@@ -1586,13 +1586,19 @@
     const sessionId=state.sessionId||"";
     const ref=state.db.collection('karaokeControl').doc('runOrder');
     const item={id:'manual_'+Date.now()+'_'+Math.random().toString(36).slice(2,8),songId:song.firebaseId||song.id,songTitle:song.title||'',artist:song.artist||'',singerName:'',requestId:'',source:'manual',status:'queued',addedAtMs:Date.now()};
-    await state.db.runTransaction(async tx=>{
+    const result=await state.db.runTransaction(async tx=>{
       const snap=await tx.get(ref),data=snap.exists?(snap.data()||{}):{};
       if((state.sessionId||"")!==sessionId)throw new Error('Session changed. Please try again.');
       if(sessionId && data.sessionId && data.sessionId!==sessionId)throw new Error('Run Order belongs to another session.');
       const baseItems=!sessionId&&data.sessionId?[]:(Array.isArray(data.items)?data.items:[]);
-      tx.set(ref,{sessionId,items:[...baseItems,item],updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
+      const items=[...baseItems,item];
+      tx.set(ref,{sessionId,items,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
+      return {sessionId,items,item};
     });
+    state.runOrder={...(state.runOrder||{}),sessionId:result.sessionId,items:result.items};
+    renderRunOrder();
+    window.dispatchEvent(new CustomEvent("lk:runorder-updated",{detail:{sessionId:result.sessionId,items:result.items.map(entry=>({...entry}))}}));
+    return result;
   };
   LK.sessionTools.getControl = () => state.currentControl;
   LK.sessionTools.getRunOrderSnapshot = () => state.runOrderSnapshotReady ? state.runOrder : null;
