@@ -6,7 +6,7 @@
   max-width:none!important;
   width:calc(100% - var(--d26-side,210px) - var(--settings-sidebar-gap))!important;
   margin-left:calc(var(--d26-side,210px) + var(--settings-sidebar-gap))!important;
-  padding-bottom:112px!important;
+  padding-bottom:176px!important;
 }
 .settings-main>*{
   min-width:0!important;
@@ -151,7 +151,7 @@
   position:fixed!important;
   left:calc(var(--d26-side,210px) + var(--settings-sidebar-gap,18px) + 20px)!important;
   right:20px!important;
-  bottom:max(25px,calc(env(safe-area-inset-bottom,0px) + 15px))!important;
+  bottom:max(88px,calc(env(safe-area-inset-bottom,0px) + 78px))!important;
   z-index:2300!important;
   display:flex!important;
   align-items:center!important;
@@ -252,7 +252,7 @@
   .settings-actions{
     left:10px!important;
     right:10px!important;
-    bottom:max(23px,calc(env(safe-area-inset-bottom,0px) + 15px))!important;
+    bottom:max(82px,calc(env(safe-area-inset-bottom,0px) + 72px))!important;
   }
 }
 
