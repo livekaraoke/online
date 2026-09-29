@@ -16,7 +16,7 @@
   minor:{label:'Minor',rank:1},
   patch:{label:'Patch',rank:2}
  });
- const VERSION_RE=/^\d+\.\d+\.\d{2}$/;
+ const VERSION_RE=/^\d\.\d\.\d{2}$/;
  const normaliseType=value=>UPDATE_TYPES[String(value||'').toLowerCase()]?String(value).toLowerCase():'patch';
  const normaliseVersion=value=>{const clean=String(value||'').trim();return VERSION_RE.test(clean)?clean:'';};
  const normalisePr=value=>{
@@ -310,6 +310,7 @@
      <textarea id="ls26ReleaseSummary" rows="4" maxlength="5000" placeholder="Summary of this LiveSuite version"></textarea>
     </label>
     <label class="ls26-release-assign"><input id="ls26ReleaseAssign" type="checkbox" checked> Assign all completed updates that do not yet have a version to this release</label>
+    <label class="ls26-release-assign"><input id="ls26ReleaseMakeCurrent" type="checkbox" checked> Make this the current LiveSuite version shown in the app footer</label>
     <p id="ls26ReleaseStatus" role="status"></p>
     <div class="ls26-dialog-actions"><button class="primary" type="submit">Create Version</button><button id="ls26ReleaseCancel" type="button">Cancel</button></div>
    </form>`;
@@ -325,6 +326,7 @@
    const pullRequestUrl=normalisePr(rawPr);
    const summary=String($('ls26ReleaseSummary').value||'').trim();
    const assign=$('ls26ReleaseAssign').checked;
+   const makeCurrent=$('ls26ReleaseMakeCurrent').checked;
    if(!version){$('ls26ReleaseStatus').textContent='Use the LiveSuite version format 0.0.00, for example 3.1.56.';return;}
    if(rawPr&&!pullRequestUrl){$('ls26ReleaseStatus').textContent='Enter a GitHub pull-request URL.';return;}
    if(!window.LS26Settings?.save){$('ls26ReleaseStatus').textContent='App Settings has not loaded yet. Reload the page and try again.';return;}
@@ -366,7 +368,7 @@
      createdBy:user.uid
     });
 
-    await window.LS26Settings.save({appVersion:version});
+    if(makeCurrent)await window.LS26Settings.save({appVersion:version});
     versionDialog.close();
     LS26.toast(`LiveSuite v${version} created · ${assigned} update${assigned===1?'':'s'} assigned.`);
     await load(true);
@@ -377,14 +379,16 @@
   return versionDialog;
  }
 
- function openCreateVersion(){
+ async function openCreateVersion(){
   const dlg=ensureVersionDialog();
+  try{await window.LS26Settings?.syncRemoteOncePerSession?.(true);}catch(_){}
   const type='patch';
   $('ls26ReleaseType').value=type;
   $('ls26ReleaseVersion').value=bumpVersion(currentVersion(),type);
   $('ls26ReleasePr').value='';
   $('ls26ReleaseSummary').value='';
   $('ls26ReleaseAssign').checked=true;
+  $('ls26ReleaseMakeCurrent').checked=true;
   $('ls26ReleaseStatus').textContent='';
   if(!dlg.open)dlg.showModal();
  }
