@@ -1009,7 +1009,7 @@
     const height=quick&&!quick.hidden&&!quick.classList.contains("ls26-released")
       ? Math.ceil(quick.getBoundingClientRect().height||0)
       : 0;
-    document.documentElement.style.setProperty("--ls26-karaoke-tools-h",height+"px");
+    document.documentElement?.style?.setProperty?.("--ls26-karaoke-tools-h",height+"px");
   }
 
   function setQuickToolsReleased(released) {
@@ -1080,7 +1080,6 @@
     const changed = bestIndex !== currentSectionIndex;
     currentSectionIndex = bestIndex;
     updateGuitarTuningStickyState();
-    setQuickToolsReleased(currentSectionIndex>0);
 
     [...$("sectionProgress").children]
       .forEach(el => el.classList.toggle("active", Number(el.dataset.visibleIndex) === currentSectionIndex && !el.classList.contains("session-hidden")));
@@ -1095,6 +1094,7 @@
     // As the performer scrolls through the song, automatically bring the
     // current section marker into view and keep it roughly centred.
     if (changed) {
+      setQuickToolsReleased(currentSectionIndex>0);
       centerActiveProgressSection(true);
       beginSectionAutoScrollPause(currentSectionIndex,false);
     }
