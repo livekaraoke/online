@@ -19,6 +19,9 @@
     lyricNavActiveOpacity: 60,
     lyricNavPressedOpacity: 90,
     lyricNavFeedbackDuration: 1800,
+    lyricPastSectionOpacity: 50,
+    lyricUpcomingSectionOpacity: 50,
+    lyricUpcomingFadeDistance: 180,
     lyricTextScale: 100,
     lyricLeadInHeight: 192,
     lyricSectionActivationOffset: 320,
@@ -61,7 +64,10 @@
       lyricNavIdleOpacity: clamp(raw.lyricNavIdleOpacity,10,90,DEFAULTS.lyricNavIdleOpacity),
       lyricNavActiveOpacity: clamp(raw.lyricNavActiveOpacity,20,95,DEFAULTS.lyricNavActiveOpacity),
       lyricNavPressedOpacity: clamp(raw.lyricNavPressedOpacity,40,100,DEFAULTS.lyricNavPressedOpacity),
-      lyricNavFeedbackDuration: clamp(raw.lyricNavFeedbackDuration,500,5000,DEFAULTS.lyricNavFeedbackDuration),
+      lyricNavFeedbackDuration: clamp(raw.lyricNavFeedbackDuration,500,10000,DEFAULTS.lyricNavFeedbackDuration),
+      lyricPastSectionOpacity: clamp(raw.lyricPastSectionOpacity,0,100,DEFAULTS.lyricPastSectionOpacity),
+      lyricUpcomingSectionOpacity: clamp(raw.lyricUpcomingSectionOpacity,0,100,DEFAULTS.lyricUpcomingSectionOpacity),
+      lyricUpcomingFadeDistance: clamp(raw.lyricUpcomingFadeDistance,0,800,DEFAULTS.lyricUpcomingFadeDistance),
       lyricTextScale: clamp(raw.lyricTextScale,75,150,DEFAULTS.lyricTextScale),
       lyricLeadInHeight: clamp(raw.lyricLeadInHeight,80,360,DEFAULTS.lyricLeadInHeight),
       lyricSectionActivationOffset: clamp(raw.lyricSectionActivationOffset,0,520,DEFAULTS.lyricSectionActivationOffset),
@@ -104,6 +110,9 @@
     root.style.setProperty("--ls26-nav-active-opacity",String(s.lyricNavActiveOpacity/100));
     root.style.setProperty("--ls26-nav-pressed-opacity",String(s.lyricNavPressedOpacity/100));
     root.style.setProperty("--ls26-nav-feedback-duration",s.lyricNavFeedbackDuration+"ms");
+    root.style.setProperty("--ls26-past-section-opacity",String(s.lyricPastSectionOpacity/100));
+    root.style.setProperty("--ls26-upcoming-section-opacity",String(s.lyricUpcomingSectionOpacity/100));
+    root.style.setProperty("--ls26-upcoming-fade-distance",s.lyricUpcomingFadeDistance+"px");
     root.style.setProperty("--ls26-lyric-text-scale",String(s.lyricTextScale/100));
     root.style.setProperty("--ls26-lyric-lead-in-height",s.lyricLeadInHeight+"px");
     root.style.setProperty("--ls26-section-activation-offset",s.lyricSectionActivationOffset+"px");

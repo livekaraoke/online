@@ -38,8 +38,17 @@ test('creator navigation scrolls below sticky header and respects reduced motion
  let scroll,reduced=false;const c={sections:[{}],document:{querySelector:()=>({getBoundingClientRect:()=>({top:500})}),getElementById:()=>({getBoundingClientRect:()=>({height:160})})},window:{scrollY:300,scrollTo:opts=>scroll=opts},requestAnimationFrame:fn=>fn(),matchMedia:()=>({matches:reduced})};
  vm.createContext(c);vm.runInContext(code,c);c.revealSection(0);assert.equal(scroll.top,628);assert.equal(scroll.behavior,'smooth');reduced=true;c.revealSection(0);assert.equal(scroll.behavior,'instant');
 });
-test('navigation feedback cancels previous pulse and restores opacity and scale together',()=>{
- const source=read('host/js/lyricview.js'),start=source.indexOf('    document.querySelectorAll(".host-nav-btn")');
- let click,animation,cancelled=0,reduced=false;const button={addEventListener:(event,fn)=>click=fn,getAnimations:()=>[{cancel(){cancelled++}}],animate:(frames,options)=>animation={frames,options}};
- const c={document:{querySelectorAll:()=>[button]},matchMedia:()=>({matches:reduced})};vm.createContext(c);vm.runInContext(source.slice(start,source.indexOf('    $("navUpBtn").onclick',start)),c);click();assert.equal(cancelled,1);assert.equal(animation.options.duration,650);assert.equal(animation.frames[0].opacity,1);assert.equal(animation.frames[1].opacity,.72);assert.equal(animation.frames[0].scale,'1.12');assert.equal(animation.frames[1].scale,'1');reduced=true;click();assert.equal(cancelled,1);
+test('navigation feedback uses configured opacities and supports up to 10s fade',()=>{
+ const source=read('host/js/lyricview.js'),start=source.indexOf('    const navButtons=[');
+ let clicks=[],animations=[],cancelled=0,reduced=false;
+ const makeButton=()=>({addEventListener:(event,fn)=>{if(event==='click')clicks.push(fn)},getAnimations:()=>[{cancel(){cancelled++}}],animate:(frames,options)=>animations.push({frames,options})});
+ const buttons=[makeButton(),makeButton()];
+ const c={document:{querySelectorAll:()=>buttons},matchMedia:()=>({matches:reduced}),LS26Settings:{get:()=>({lyricNavIdleOpacity:40,lyricNavActiveOpacity:60,lyricNavPressedOpacity:90,lyricNavFeedbackDuration:10000})}};c.window=c;
+ vm.createContext(c);vm.runInContext(source.slice(start,source.indexOf('    $("navUpBtn").onclick',start)),c);
+ clicks[0]();
+ assert.equal(cancelled,2);assert.equal(animations.length,2);assert.equal(animations[0].options.duration,10000);
+ assert.equal(animations[0].frames[0].opacity,.9);assert.equal(animations[0].frames[1].opacity,.6);assert.equal(animations[0].frames[2].opacity,.4);
+ assert.equal(animations[0].frames[0].scale,'1.08');assert.equal(animations[0].frames[2].scale,'1');
+ assert.equal(animations[1].frames[0].opacity,.6);assert.equal(animations[1].frames[2].opacity,.4);
+ reduced=true;clicks[0]();assert.equal(cancelled,4);assert.equal(animations.length,2);
 });
