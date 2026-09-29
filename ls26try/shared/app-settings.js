@@ -22,6 +22,7 @@
     lyricSongValueFontSize: 21,
     lyricSectionHeaderSize: 3,
     lyricPauseCountdownFontSize: 56,
+    lyricPauseCountdownColor: "#78e7ff",
     lyricPastSectionOpacity: 50,
     lyricUpcomingSectionOpacity: 50,
     lyricUpcomingFadeDistance: 180,
@@ -79,6 +80,7 @@
       lyricSongValueFontSize: clamp(raw.lyricSongValueFontSize,16,32,DEFAULTS.lyricSongValueFontSize),
       lyricSectionHeaderSize: clamp(raw.lyricSectionHeaderSize,1,5,DEFAULTS.lyricSectionHeaderSize),
       lyricPauseCountdownFontSize: clamp(raw.lyricPauseCountdownFontSize,24,96,DEFAULTS.lyricPauseCountdownFontSize),
+      lyricPauseCountdownColor: colour(raw.lyricPauseCountdownColor,DEFAULTS.lyricPauseCountdownColor),
       lyricPastSectionOpacity: clamp(raw.lyricPastSectionOpacity,0,100,DEFAULTS.lyricPastSectionOpacity),
       lyricUpcomingSectionOpacity: clamp(raw.lyricUpcomingSectionOpacity,0,100,DEFAULTS.lyricUpcomingSectionOpacity),
       lyricUpcomingFadeDistance: clamp(raw.lyricUpcomingFadeDistance,0,800,DEFAULTS.lyricUpcomingFadeDistance),
@@ -130,6 +132,7 @@
     root.style.setProperty("--ls26-nav-feedback-duration",s.lyricNavFeedbackDuration+"ms");
     root.style.setProperty("--ls26-title-meta-value-size",s.lyricSongValueFontSize+"px");
     root.style.setProperty("--ls26-pause-countdown-font-size",s.lyricPauseCountdownFontSize+"px");
+    root.style.setProperty("--ls26-pause-countdown-color",s.lyricPauseCountdownColor);
 
     const sectionHeaderSizes={
       1:{font:15,height:34,padY:4,indicator:4,arrow:11,hint:7},
