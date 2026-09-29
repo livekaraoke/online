@@ -995,6 +995,37 @@
     });
   }
 
+  async function reconcileRequesterCancellations(requests=state.requests) {
+    if(!state.sessionId||!state.db)return;
+    const cancelled=new Set(
+      (Array.isArray(requests)?requests:[])
+        .filter(request=>String(request?.status||"").toLowerCase()==="cancelled")
+        .map(request=>String(request.id||""))
+        .filter(Boolean)
+    );
+    if(!cancelled.size)return;
+
+    const items=queueItems().map(item=>({...item}));
+    let changed=false;
+    const next=items.map(item=>{
+      if(!item?.requestId||!cancelled.has(String(item.requestId)))return item;
+      const status=String(item.status||"").toLowerCase();
+      if(["playing","played","completed","finished","cancelled"].includes(status))return item;
+      changed=true;
+      return {
+        ...item,
+        status:"cancelled",
+        reason:item.reason||"Cancelled by requester",
+        cancelledAtMs:item.cancelledAtMs||Date.now()
+      };
+    });
+
+    if(changed){
+      try{await saveRunOrder(next);}
+      catch(error){console.warn("Could not reconcile requester cancellation with Run Order:",error);}
+    }
+  }
+
   function makeQueueItemFromRequest(request) {
     return {
       id: `req_${request.id}`,
@@ -1281,6 +1312,7 @@
             });
           }
           state.requests = nextRequests;
+          void reconcileRequesterCancellations(nextRequests);
           window.dispatchEvent(new Event("ls26:requests-updated"));
           state.knownRequestIds = new Set(nextRequests.map(req => req.id));
           state.requestSnapshotReady = true;
