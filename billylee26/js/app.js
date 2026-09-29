@@ -948,6 +948,10 @@
     const video=e.target.closest("[data-video-index]"); if(video)openVideo(Number(video.dataset.videoIndex));
     const photo=e.target.closest("[data-photo-index]"); if(photo)openPhoto(Number(photo.dataset.photoIndex));
     const song=e.target.closest("[data-song-id]"); if(song)selectRequestSong(song.dataset.songId);
+    const tab=e.target.closest("[data-request-tab]"); if(tab)switchRequestTab(tab.dataset.requestTab);
+    const category=e.target.closest("[data-song-category]"); if(category)setSongCategory(category.dataset.songCategory);
+    const cancelRequest=e.target.closest("[data-cancel-request]"); if(cancelRequest)void cancelMyRequest(cancelRequest.dataset.cancelRequest);
+    const editRequestNote=e.target.closest("[data-edit-request-note]"); if(editRequestNote)void editMyRequestNote(editRequestNote.dataset.editRequestNote);
     const close=e.target.closest("[data-close]");
     if(close){
       const dialogId=close.dataset.close;
@@ -959,10 +963,11 @@
   $("continueRequestBtn").addEventListener("click",continueToSongs);
   $("singerName").addEventListener("keydown",e=>{if(e.key==="Enter")continueToSongs();});
   $("editRequesterNameBtn").addEventListener("click",beginEditRequesterName);
-  $("saveRequesterNameBtn").addEventListener("click",saveRequesterName);
-  $("cancelRequesterNameBtn").addEventListener("click",()=>{$("requesterNameEdit").hidden=true;});
-  $("editSingerName").addEventListener("keydown",e=>{if(e.key==="Enter")saveRequesterName();});
+  $("clearSongCategoryBtn").addEventListener("click",()=>setSongCategory("all"));
+  $("backToSongListBtn").addEventListener("click",()=>switchRequestTab("songs"));
+  $("sendRequestBtn").addEventListener("click",sendSelectedRequest);
   $("requestAnotherBtn").addEventListener("click",showRequestBrowser);
+  $("viewMyRequestsBtn").addEventListener("click",()=>switchRequestTab("requests"));
   $("viewAllGigsBtn").addEventListener("click",showAllGigs);
   $("requestSongBtn").addEventListener("click",openRequestDialog);
   $("openBookingDialogBtn").addEventListener("click",()=>{
@@ -988,6 +993,8 @@
   document.addEventListener("keydown",e=>{if(!$("photoLightboxDialog")?.open)return;if(e.key==="ArrowLeft")stepPhoto(-1);if(e.key==="ArrowRight")stepPhoto(1);});
   renderVideos();
   renderAllPhotos();
+  populateProfileForm();
+  syncRequesterUi();
   $("shareBtn").addEventListener("click",async()=>{try{if(navigator.share)await navigator.share({title:document.title,url:location.href});else{await navigator.clipboard.writeText(location.href);alert("Link copied.");}}catch{}});
 
   listenEventTypes(); listenEvents(); listenLiveState(); renderLive();
