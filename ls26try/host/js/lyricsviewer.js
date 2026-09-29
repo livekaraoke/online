@@ -673,7 +673,18 @@
 
   function syncSidebarButton(){const open=!$("libraryFilterPanel").hidden;$("sidebarToggleBtn").setAttribute('aria-expanded',String(open));}
   function updateSelected(){document.querySelectorAll('.song-table-row').forEach(x=>x.classList.toggle('is-selected',x.dataset.id===selectedId));}
-  async function queueSong(id,button){const song=songs.find(x=>x.firebaseId===id);if(!song)return;button.disabled=true;try{await LK.sessionTools.enqueueSong(song);window.LS26.toast('Added to Run Order');}catch(error){window.LS26.toast(error.message);}finally{button.disabled=false;}}
+  async function queueSong(id,button){
+    const song=songs.find(x=>x.firebaseId===id);
+    if(!song)return;
+    button.disabled=true;
+    try{
+      const result=await LK.sessionTools.enqueueSong(song);
+      if(Array.isArray(result?.items))updateRunOrderPlayer(result.items);
+      else refreshRunOrderPlayerFromTools();
+      window.LS26.toast('Added to Run Order');
+    }catch(error){window.LS26.toast(error.message);}
+    finally{button.disabled=false;}
+  }
   $("libraryScrollTop").onclick=()=>$("songRows").scrollTo({top:0,behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"instant":"smooth"});
   document.querySelectorAll('[data-scope]').forEach(button=>button.onclick=()=>{scope=button.dataset.scope;filters.setlist.value='';render();saveViewState();});
   filters.setlist.addEventListener('change',()=>{scope='all';render();saveViewState();});

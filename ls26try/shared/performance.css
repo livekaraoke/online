@@ -184,7 +184,7 @@ body.host-lyric-view-page{overflow:visible!important}
 .host-lyric-view-page .host-scroll-player #autoScrollBtn{width:104px!important;height:104px!important;min-width:104px!important;min-height:104px!important}
 .host-lyric-view-page .host-scroll-player #scrollSpeedDown,.host-lyric-view-page .host-scroll-player #scrollSpeedUp{height:54px!important;min-height:54px!important;width:46px!important;min-width:46px!important;font-size:30px!important;font-weight:800!important;line-height:1!important;padding:0!important;display:grid!important;place-items:center!important}
 .host-lyric-view-page .host-nav-pad{width:195px!important;height:200px!important;grid-template-columns:60px 75px 60px!important;grid-template-rows:75px 50px 75px!important;gap:0!important;align-items:center!important;bottom:calc(var(--ls-drawer-bottom,150px) + 12px)!important}
-.host-lyric-view-page .host-nav-pad .host-nav-btn{opacity:.72;backdrop-filter:none!important;filter:none!important;scale:1}
+.host-lyric-view-page .host-nav-pad .host-nav-btn{opacity:var(--ls26-nav-idle-opacity,.4);backdrop-filter:none!important;filter:none!important;scale:1}
 .host-lyric-view-page .host-nav-pad .nav-up,.host-lyric-view-page .host-nav-pad .nav-down{width:75px!important;height:75px!important;min-width:75px!important;min-height:75px!important}
 .host-lyric-view-page .host-nav-pad .nav-up .host-nav-icon,.host-lyric-view-page .host-nav-pad .nav-down .host-nav-icon{width:40px!important;height:40px!important}
 .host-lyric-view-page .host-nav-pad .host-nav-btn:focus-visible{opacity:1;outline:2px solid #fff;outline-offset:3px}
