@@ -996,7 +996,7 @@
         return;
       }
 
-      output.textContent=(remaining/1000).toFixed(1);
+      output.textContent=String(Math.max(1,Math.round(remaining/1000)));
       output.hidden=false;
       sectionPauseCountdownFrame=requestAnimationFrame(tick);
     };
@@ -1039,6 +1039,66 @@
     return pauseMs;
   }
 
+  function activateUpcomingPausedSection(anchor) {
+    if(!autoScrollOn||!sectionEls.length)return false;
+
+    const nextIndex=currentSectionIndex+1;
+    if(
+      nextIndex>=sectionEls.length ||
+      nextIndex===lastSectionPauseIndex ||
+      sectionPauseMsForIndex(nextIndex)<=0
+    )return false;
+
+    const nextEl=sectionEls[nextIndex];
+    const triggerDistance=sectionFocusSettings().upcomingFadeDistance;
+    if(nextEl.getBoundingClientRect().top>anchor+triggerDistance)return false;
+
+    // A programmed pause takes ownership of the transition just before the
+    // upcoming-section fade would begin. Make that section current, align it
+    // to the reading position, then hold scrolling for its saved pause.
+    cancelAnimationFrame(relativeScrollFrame);
+    currentSectionIndex=nextIndex;
+    updateGuitarTuningStickyState();
+
+    [...$("sectionProgress").children]
+      .forEach(el=>el.classList.toggle(
+        "active",
+        Number(el.dataset.visibleIndex)===currentSectionIndex &&
+        !el.classList.contains("session-hidden")
+      ));
+
+    sectionEls.forEach((el,index)=>{
+      el.classList.toggle("current-section",index===currentSectionIndex);
+    });
+
+    setQuickToolsReleased(currentSectionIndex>0);
+    centerActiveProgressSection(true);
+
+    const quick=document.getElementById("performanceQuickInfo");
+    const header=document.getElementById("ls26StickyHeader");
+    const offset=
+      (header?.getBoundingClientRect().height||0) +
+      (currentSectionIndex===0&&!quick?.classList.contains("ls26-released")
+        ? (quick?.getBoundingClientRect().height||0)
+        : 0) +
+      guitarTuningStickyHeight() +
+      sectionActivationOffset();
+
+    window.scrollTo({
+      top:Math.max(
+        0,
+        sectionEls[currentSectionIndex].getBoundingClientRect().top +
+        window.scrollY -
+        offset
+      ),
+      behavior:"instant"
+    });
+
+    beginSectionAutoScrollPause(currentSectionIndex,false);
+    updateSectionFocusOpacity(performanceActivationAnchor());
+    return true;
+  }
+
   function scrollToSection(index) {
     if (!sectionEls.length) return;
     cancelAnimationFrame(relativeScrollFrame);
@@ -1074,6 +1134,9 @@
       updateSectionFocusOpacity(anchor);
       return;
     }
+
+    if(activateUpcomingPausedSection(anchor))return;
+
     let bestIndex = 0;
     sectionEls.forEach((el,i)=>{if(el.getBoundingClientRect().top<=anchor)bestIndex=i;});
 
