@@ -47,7 +47,7 @@
       <div class="setting-row"><div class="setting-copy"><strong>Previous / next section fading during playback</strong><small>Turn the LyricView previous/next section fading on or off while Play / auto-scroll is running.</small></div><div class="setting-control"><label class="setting-toggle"><input id="lyricSectionFocusDuringPlayback" data-setting type="checkbox"> Enable while playing / scrolling</label></div></div>
       <div class="setting-row"><div class="setting-copy"><strong>Previous / next section fading while stopped</strong><small>Turn the same fading on or off while a song is not playing / auto-scrolling. Off keeps every section at 100% opacity while stopped.</small></div><div class="setting-control"><label class="setting-toggle"><input id="lyricSectionFocusWhenStopped" data-setting type="checkbox"> Enable while not playing / scrolling</label></div></div>
       <div class="setting-row"><div class="setting-copy"><strong>Previous-section opacity</strong><small>Target opacity after a section is passed. The fade starts only when the following section becomes active.</small></div><div class="setting-control"><input id="lyricPastSectionOpacity" data-setting type="range" min="0" max="100" step="5"><output data-output="lyricPastSectionOpacity"></output></div></div>
-      <div class="setting-row"><div class="setting-copy"><strong>Previous-section fade duration</strong><small>How long the section that just became previous takes to fade to the Previous-section opacity. Lower is faster; 0ms is immediate.</small></div><div class="setting-control"><input id="lyricPreviousFadeDuration" data-setting type="range" min="0" max="5000" step="100"><output data-output="lyricPreviousFadeDuration"></output></div></div>
+      <div class="setting-row"><div class="setting-copy"><strong>Previous-section fade distance</strong><small>How many pixels of scrolling after the new section becomes active the previous section takes to reach the Previous-section opacity. 0px makes the change immediate.</small></div><div class="setting-control"><input id="lyricPreviousFadeDistance" data-setting type="range" min="0" max="800" step="10"><output data-output="lyricPreviousFadeDistance"></output></div></div>
       <div class="setting-row"><div class="setting-copy"><strong>Upcoming-section opacity</strong><small>Base opacity of sections below the active section. The immediately next section fades upward from this value before it becomes active.</small></div><div class="setting-control"><input id="lyricUpcomingSectionOpacity" data-setting type="range" min="0" max="100" step="5"><output data-output="lyricUpcomingSectionOpacity"></output></div></div>
       <div class="setting-row"><div class="setting-copy"><strong>Next-section fade lead distance</strong><small>How many pixels before the activation line the next section begins fading toward 100%. Set 0 to wait until activation.</small></div><div class="setting-control"><input id="lyricUpcomingFadeDistance" data-setting type="range" min="0" max="800" step="10"><output data-output="lyricUpcomingFadeDistance"></output></div></div>
     </section>
@@ -82,7 +82,7 @@
 <script src="js/sidebar.js?v=20260925-artist-names"></script>
 <script src="js/profile.js?v=20260910-stage4"></script>
 <script src="js/auth.js?v=20260910-stage4"></script>
-<script data-ls26-settings="1" src="../shared/app-settings.js?v=20260929-section-fade-v2"></script>
+<script data-ls26-settings="1" src="../shared/app-settings.js?v=20260929-previous-fade-distance"></script>
 <script src="../shared/shell.js?v=20260929-version-footer"></script>
-<script src="js/app-settings.js?v=20260929-section-fade-v2"></script>
+<script src="js/app-settings.js?v=20260929-previous-fade-distance"></script>
 </body></html>

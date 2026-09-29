@@ -833,9 +833,10 @@
     const past=Math.max(0,Math.min(1,Number(settings.lyricPastSectionOpacity??50)/100));
     const upcoming=Math.max(0,Math.min(1,Number(settings.lyricUpcomingSectionOpacity??50)/100));
     const upcomingFadeDistance=Math.max(0,Math.min(800,Number(settings.lyricUpcomingFadeDistance??180)));
+    const previousFadeDistance=Math.max(0,Math.min(800,Number(settings.lyricPreviousFadeDistance??180)));
     const duringPlayback=settings.lyricSectionFocusDuringPlayback!==false;
     const whenStopped=settings.lyricSectionFocusWhenStopped===true;
-    return {past,upcoming,upcomingFadeDistance,duringPlayback,whenStopped};
+    return {past,upcoming,upcomingFadeDistance,previousFadeDistance,duringPlayback,whenStopped};
   }
 
   function sectionFadeProgress(distance,leadDistance) {
@@ -846,7 +847,7 @@
   function updateSectionFocusOpacity(anchor=performanceActivationAnchor()) {
     if(!sectionEls.length)return;
     const {
-      past,upcoming,upcomingFadeDistance,
+      past,upcoming,upcomingFadeDistance,previousFadeDistance,
       duringPlayback,whenStopped
     }=sectionFocusSettings();
     const focusEnabled=autoScrollOn?duringPlayback:whenStopped;
@@ -861,20 +862,29 @@
 
     const nextIndex=currentSectionIndex+1;
     const nextEl=sectionEls[nextIndex]||null;
+    const activeEl=sectionEls[currentSectionIndex]||null;
     const nextDistance=nextEl?nextEl.getBoundingClientRect().top-anchor:Infinity;
     const upcomingProgress=nextEl?sectionFadeProgress(nextDistance,upcomingFadeDistance):0;
+    const activeTravel=activeEl?Math.max(0,anchor-activeEl.getBoundingClientRect().top):0;
+    const previousProgress=previousFadeDistance<=0
+      ? (currentSectionIndex>0?1:0)
+      : Math.max(0,Math.min(1,activeTravel/previousFadeDistance));
 
     sectionEls.forEach((el,index)=>{
       let opacity=1;
       let state="active";
 
       if(index<currentSectionIndex){
-        opacity=past;
-        state="past";
+        if(index===currentSectionIndex-1){
+          opacity=1-((1-past)*previousProgress);
+          state="previous";
+        }else{
+          opacity=past;
+          state="past";
+        }
       }else if(index===currentSectionIndex){
-        // The active section remains fully visible until the following section
-        // actually becomes active. Only then does this section become "past"
-        // and CSS fades it down over the configured duration.
+        // The active section remains fully visible. Once it becomes previous,
+        // its fade is driven by scroll distance travelled after activation.
         opacity=1;
         state="active";
       }else{
