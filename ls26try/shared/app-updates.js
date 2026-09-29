@@ -390,7 +390,23 @@
  }
  window.LS26.openAppUpdates=open;
  if(manage){
-  $('appUpdateAdd').onclick=()=>open();$('appUpdateFilter').onchange=render;$('appUpdateMore').onclick=()=>load();$('appUpdateRefresh').onclick=()=>load(true);
-  auth().onAuthStateChanged(user=>{if(user){window.LK?.sidebar?.loadSidebar?.();$('appUpdateStatus').textContent='';load(true);}else{$('appUpdateRows').replaceChildren();$('appUpdateStatus').textContent='Sign in using Admin to manage app updates.';}});
+  $('appUpdateAdd').onclick=()=>open();
+  $('appUpdateCreateVersion').onclick=openCreateVersion;
+  ['appUpdateFilter','appUpdateTypeFilter','appUpdateVersionFilter','appUpdateSort'].forEach(id=>{
+   const element=$(id);
+   if(element)element.onchange=render;
+  });
+  if($('appUpdateMore'))$('appUpdateMore').onclick=()=>load();
+  $('appUpdateRefresh').onclick=()=>load(true);
+  auth().onAuthStateChanged(user=>{
+   if(user){
+    window.LK?.sidebar?.loadSidebar?.();
+    $('appUpdateStatus').textContent='';
+    load(true);
+   }else{
+    $('appUpdateRows').replaceChildren();
+    $('appUpdateStatus').textContent='Sign in using Admin to manage app updates.';
+   }
+  });
  }
 })();
