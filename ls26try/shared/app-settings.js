@@ -19,6 +19,8 @@
     lyricNavActiveOpacity: 60,
     lyricNavPressedOpacity: 90,
     lyricNavFeedbackDuration: 1800,
+    lyricSongValueFontSize: 21,
+    lyricSectionHeaderSize: 3,
     lyricPastSectionOpacity: 50,
     lyricUpcomingSectionOpacity: 50,
     lyricUpcomingFadeDistance: 180,
@@ -73,6 +75,8 @@
       lyricNavActiveOpacity: clamp(raw.lyricNavActiveOpacity,20,95,DEFAULTS.lyricNavActiveOpacity),
       lyricNavPressedOpacity: clamp(raw.lyricNavPressedOpacity,40,100,DEFAULTS.lyricNavPressedOpacity),
       lyricNavFeedbackDuration: clamp(raw.lyricNavFeedbackDuration,500,10000,DEFAULTS.lyricNavFeedbackDuration),
+      lyricSongValueFontSize: clamp(raw.lyricSongValueFontSize,16,32,DEFAULTS.lyricSongValueFontSize),
+      lyricSectionHeaderSize: clamp(raw.lyricSectionHeaderSize,1,5,DEFAULTS.lyricSectionHeaderSize),
       lyricPastSectionOpacity: clamp(raw.lyricPastSectionOpacity,0,100,DEFAULTS.lyricPastSectionOpacity),
       lyricUpcomingSectionOpacity: clamp(raw.lyricUpcomingSectionOpacity,0,100,DEFAULTS.lyricUpcomingSectionOpacity),
       lyricUpcomingFadeDistance: clamp(raw.lyricUpcomingFadeDistance,0,800,DEFAULTS.lyricUpcomingFadeDistance),
@@ -122,6 +126,23 @@
     root.style.setProperty("--ls26-nav-active-opacity",String(s.lyricNavActiveOpacity/100));
     root.style.setProperty("--ls26-nav-pressed-opacity",String(s.lyricNavPressedOpacity/100));
     root.style.setProperty("--ls26-nav-feedback-duration",s.lyricNavFeedbackDuration+"ms");
+    root.style.setProperty("--ls26-title-meta-value-size",s.lyricSongValueFontSize+"px");
+
+    const sectionHeaderSizes={
+      1:{font:15,height:34,padY:4,indicator:4,arrow:11,hint:7},
+      2:{font:17,height:39,padY:5,indicator:6,arrow:12,hint:8},
+      3:{font:19,height:44,padY:7,indicator:8,arrow:14,hint:9},
+      4:{font:22,height:51,padY:8,indicator:10,arrow:16,hint:10},
+      5:{font:25,height:58,padY:10,indicator:12,arrow:18,hint:11}
+    };
+    const headerSize=sectionHeaderSizes[Math.round(s.lyricSectionHeaderSize)]||sectionHeaderSizes[3];
+    root.style.setProperty("--ls26-section-header-font-size",headerSize.font+"px");
+    root.style.setProperty("--ls26-section-header-height",headerSize.height+"px");
+    root.style.setProperty("--ls26-section-header-pad-y",headerSize.padY+"px");
+    root.style.setProperty("--ls26-section-indicator-height",headerSize.indicator+"px");
+    root.style.setProperty("--ls26-section-header-arrow-size",headerSize.arrow+"px");
+    root.style.setProperty("--ls26-section-header-hint-size",headerSize.hint+"px");
+
     root.style.setProperty("--ls26-past-section-opacity",String(s.lyricPastSectionOpacity/100));
     root.style.setProperty("--ls26-upcoming-section-opacity",String(s.lyricUpcomingSectionOpacity/100));
     root.style.setProperty("--ls26-upcoming-fade-distance",s.lyricUpcomingFadeDistance+"px");
