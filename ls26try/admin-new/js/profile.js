@@ -58,7 +58,7 @@
     const membersNav = $("membersNavLink");
     const showMembers = isOwner();
     if (membersPanel) membersPanel.style.display = showMembers ? "block" : "none";
-    if (membersNav) membersNav.style.display = showMembers ? "block" : "none";
+    if (membersNav) membersNav.style.display = showMembers ? "grid" : "none";
   }
 
   function openProfileModal() {
