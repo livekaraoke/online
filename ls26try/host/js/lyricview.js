@@ -38,6 +38,8 @@
   let relativeScrollFrame = 0;
   let scrollTimer = null;
   let autoScrollOn = false;
+  let sectionPauseUntil = 0;
+  let lastSectionPauseIndex = -1;
   let performanceRecordCreated = false;
   let performanceRecordPromise = null;
   let ensurePlayingPromise = null;
@@ -934,6 +936,31 @@
     relativeScrollFrame=requestAnimationFrame(step);
   }
 
+  function sectionPauseMsForIndex(index) {
+    const el=sectionEls[index];
+    if(!el)return 0;
+    const item=sectionItems.find(entry=>entry.el===el);
+    const value=Number(item?.section?.pauseMs);
+    return Number.isFinite(value)&&value>0?Math.round(value):0;
+  }
+
+  function beginSectionAutoScrollPause(index,afterManualNavigation=false) {
+    if(!autoScrollOn||index<0||index>=sectionEls.length||index===lastSectionPauseIndex)return 0;
+    lastSectionPauseIndex=index;
+
+    const pauseMs=sectionPauseMsForIndex(index);
+    if(pauseMs<=0){
+      sectionPauseUntil=0;
+      return 0;
+    }
+
+    const base=afterManualNavigation
+      ? Math.max(Date.now(),manualSectionUntil)
+      : Date.now();
+    sectionPauseUntil=base+pauseMs;
+    return pauseMs;
+  }
+
   function scrollToSection(index) {
     if (!sectionEls.length) return;
     cancelAnimationFrame(relativeScrollFrame);
@@ -956,6 +983,7 @@
     const header=document.getElementById('ls26StickyHeader');
     const offset=(header?.getBoundingClientRect().height||0)+(currentSectionIndex===0&&!quick?.classList.contains('ls26-released')?(quick?.getBoundingClientRect().height||0):0)+guitarTuningStickyHeight()+sectionActivationOffset();
     window.scrollTo({top:Math.max(0,sectionEls[currentSectionIndex].getBoundingClientRect().top+window.scrollY-offset),behavior:'instant'});
+    beginSectionAutoScrollPause(currentSectionIndex,true);
     requestAnimationFrame(()=>updateSectionFocusOpacity(performanceActivationAnchor()));
     setTimeout(updateSectionProgress,700);
   }
@@ -989,6 +1017,7 @@
     // current section marker into view and keep it roughly centred.
     if (changed) {
       centerActiveProgressSection(true);
+      beginSectionAutoScrollPause(currentSectionIndex,false);
     }
 
     // [ END ] completes lower in the viewport than ordinary section changes.
@@ -2025,6 +2054,11 @@
       // visible and highlighted in the Top Status Bar.
       recordCurrentSongPlayed();
       window.dispatchEvent(new Event("ls26:song-started"));
+
+      // The first/current section is already active before the first scroll
+      // event, so apply its programmed pause on initial Play. Resuming in the
+      // same section does not restart a pause that already fired.
+      beginSectionAutoScrollPause(currentSectionIndex,false);
     }
 
     if (autoScrollOn) {
@@ -2037,7 +2071,7 @@
         const dt = Math.min(50, Math.max(0, now - last));
         last = now;
 
-        if (!document.hidden && Date.now()>=manualSectionUntil) {
+        if (!document.hidden && Date.now()>=manualSectionUntil && Date.now()>=sectionPauseUntil) {
           fractionalY += dt * AUTO_SCROLL_BASE_PX_PER_MS * scrollSpeed;
 
           const wholePixels = Math.floor(fractionalY);
@@ -2071,6 +2105,7 @@
         cancelAnimationFrame(scrollTimer);
         scrollTimer = null;
       }
+      sectionPauseUntil = 0;
 
       flushPerformanceTempo();
       // LS26: pausing affects scrolling only; current song remains playing.

@@ -9,7 +9,7 @@ ctx.test.tick();const count=el('tsCompactType').writes;for(let i=0;i<120;i++){no
 now=Date.parse('2026-09-10T23:09:59Z');ctx.test.tick();assert.equal(el('tsCompactRemaining').classList.contains('is-overdue'),false);now+=1000;ctx.test.tick();assert.equal(el('tsCompactRemaining').classList.contains('is-overdue'),true);assert.equal(el('tsCompactRemaining').textContent,'−5m');
 console.log('PASS: stable labels for 120 local ticks, no database access, late-start label and exact minus-five-minute threshold.');
 let source=fs.readFileSync(path.join(__dirname,'../host/js/lyricview.js'),'utf8');source=source.slice(source.indexOf('  function sectionActivationOffset()'),source.indexOf('  window.addEventListener("resize"',source.indexOf('  function scrollToSection(index)')));
-const nav={console,Date:Clock,currentSectionIndex:0,manualSectionUntil:0,relativeScrollFrame:0,autoScrollOn:false,autoScrollEndHandled:false,setTimeout(){},requestAnimationFrame:fn=>fn(),cancelAnimationFrame(){},centerActiveProgressSection(){},guitarTuningStickyHeight:()=>0,updateGuitarTuningStickyState(){},document:{getElementById:id=>id==='ls26StickyHeader'?{getBoundingClientRect:()=>({height:150})}:id==='performanceQuickInfo'?{classList:{toggle(){},contains:()=>true},getBoundingClientRect:()=>({height:60})}:null},$:()=>({children:[]}),window:{LS26Settings:{get:()=>({lyricSectionActivationOffset:12,lyricPastSectionOpacity:50,lyricUpcomingSectionOpacity:50,lyricUpcomingFadeDistance:180,lyricPreviousFadeDistance:180,lyricSectionFocusDuringPlayback:true,lyricSectionFocusWhenStopped:true})},scrollY:0,scrollTo({top}){this.scrollY=top}}};nav.sectionEls=[200,500,1100].map(top=>({getBoundingClientRect:()=>({top:top-nav.window.scrollY}),classList:{toggle(){}},dataset:{},style:{opacity:'1'}}));vm.createContext(nav);vm.runInContext(source,nav);now=0;nav.scrollToSection(1);nav.updateSectionProgress();assert.equal(nav.currentSectionIndex,1);nav.scrollToSection(nav.currentSectionIndex+1);assert.equal(nav.currentSectionIndex,2);now=1000;nav.updateSectionProgress();assert.equal(nav.currentSectionIndex,2);assert.equal(nav.window.scrollY,938);
+const nav={console,Date:Clock,currentSectionIndex:0,manualSectionUntil:0,relativeScrollFrame:0,autoScrollOn:false,autoScrollEndHandled:false,sectionPauseUntil:0,lastSectionPauseIndex:-1,setTimeout(){},requestAnimationFrame:fn=>fn(),cancelAnimationFrame(){},centerActiveProgressSection(){},guitarTuningStickyHeight:()=>0,updateGuitarTuningStickyState(){},document:{getElementById:id=>id==='ls26StickyHeader'?{getBoundingClientRect:()=>({height:150})}:id==='performanceQuickInfo'?{classList:{toggle(){},contains:()=>true},getBoundingClientRect:()=>({height:60})}:null},$:()=>({children:[]}),window:{LS26Settings:{get:()=>({lyricSectionActivationOffset:12,lyricPastSectionOpacity:50,lyricUpcomingSectionOpacity:50,lyricUpcomingFadeDistance:180,lyricPreviousFadeDistance:180,lyricSectionFocusDuringPlayback:true,lyricSectionFocusWhenStopped:true})},scrollY:0,scrollTo({top}){this.scrollY=top}}};nav.sectionEls=[200,500,1100].map(top=>({getBoundingClientRect:()=>({top:top-nav.window.scrollY}),classList:{toggle(){}},dataset:{},style:{opacity:'1'}}));nav.sectionItems=nav.sectionEls.map((el,index)=>({el,section:{pauseMs:index===1?1200:0}}));vm.createContext(nav);vm.runInContext(source,nav);now=0;nav.scrollToSection(1);nav.updateSectionProgress();assert.equal(nav.currentSectionIndex,1);nav.scrollToSection(nav.currentSectionIndex+1);assert.equal(nav.currentSectionIndex,2);now=1000;nav.updateSectionProgress();assert.equal(nav.currentSectionIndex,2);assert.equal(nav.window.scrollY,938);
 console.log('PASS: consecutive Next Section commands retain their destination through progress tracking.');
 nav.currentSectionIndex=0;nav.manualSectionUntil=0;nav.window.scrollY=0;nav.updateSectionProgress();
 assert.equal(nav.sectionEls[0].style.opacity,'1');
@@ -45,3 +45,23 @@ nav.autoScrollOn=false;nav.updateSectionProgress();
 assert.equal(nav.sectionEls[0].style.opacity,'1');
 assert.equal(Number(nav.sectionEls[1].style.opacity).toFixed(2),'0.75');
 console.log('PASS: playback and stopped fading modes can be enabled or disabled independently.');
+
+
+/* Per-section auto-scroll pause regression. */
+now=0;
+nav.autoScrollOn=true;
+nav.currentSectionIndex=0;
+nav.lastSectionPauseIndex=0;
+nav.sectionPauseUntil=0;
+nav.manualSectionUntil=0;
+nav.window.scrollY=338;
+nav.updateSectionProgress();
+assert.equal(nav.currentSectionIndex,1);
+assert.equal(nav.sectionPauseUntil,1200);
+assert.equal(nav.lastSectionPauseIndex,1);
+now=400;
+nav.updateSectionProgress();
+assert.equal(nav.sectionPauseUntil,1200);
+now=1200;
+assert.equal(now>=nav.sectionPauseUntil,true);
+console.log('PASS: section pause starts once on activation and does not restart while the same section remains active.');

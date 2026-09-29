@@ -506,6 +506,7 @@
       text: stripLegacyMarkerFromText(section.text || ""),
       visibleForTypes: normaliseVisibleForTypes(section),
       displayAsCard: type === "hostNote" && section.displayAsCard === true,
+      pauseMs: Math.max(0, Math.round(Number(section.pauseMs) || 0)),
       collapsed: section.collapsed === true,
       editorCollapsed: section.editorCollapsed === true,
       style: {
@@ -1173,6 +1174,16 @@
           </div>
           <div class="creator-section-body ${s.editorCollapsed ? "hidden" : ""}">
             ${renderSectionVisibility(index, s)}
+            <label class="section-scroll-pause-control">
+              <span class="section-scroll-pause-copy">
+                <strong>AUTO-SCROLL PAUSE</strong>
+                <small>Pause scrolling when this section becomes active.</small>
+              </span>
+              <span class="section-scroll-pause-value">
+                <input type="number" min="0" step="100" inputmode="numeric" data-section-pause-ms="${index}" value="${s.pauseMs || 0}" aria-label="Section auto-scroll pause in milliseconds">
+                <em>ms</em>
+              </span>
+            </label>
             ${s.type === "hostNote" ? `
               <label class="host-note-display-card-toggle">
                 <input type="checkbox" data-host-note-card="${index}" ${s.displayAsCard ? "checked" : ""}>
@@ -1274,6 +1285,13 @@
     document.querySelectorAll("[data-host-note-card]").forEach(el => {
       const i = Number(el.dataset.hostNoteCard);
       if (sections[i]?.type === "hostNote") sections[i].displayAsCard = el.checked;
+    });
+
+    document.querySelectorAll("[data-section-pause-ms]").forEach(el => {
+      const i = Number(el.dataset.sectionPauseMs);
+      if (!sections[i]) return;
+      const value = Number(el.value);
+      sections[i].pauseMs = Number.isFinite(value) && value > 0 ? Math.round(value) : 0;
     });
 
     document.querySelectorAll("[data-visibility-strip]").forEach(strip => {
@@ -1721,7 +1739,7 @@
         const custom = document.querySelector(`[data-title-custom="${index}"]`);
         if (custom) custom.value = getSystemSectionTitleColour(event.target.value);
       }
-    } else if (event.target.matches("[data-note],[data-html],[data-load-collapsed],[data-visible-type],[data-host-note-card]")) {
+    } else if (event.target.matches("[data-note],[data-html],[data-load-collapsed],[data-visible-type],[data-host-note-card],[data-section-pause-ms]")) {
       syncSectionsFromDOM();
     }
 
