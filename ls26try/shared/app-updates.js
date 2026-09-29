@@ -123,25 +123,270 @@
   if(!dialog.open)dialog.showModal();
   $('ls26UpdateText').focus();
  }
- function render(){
-  const list=$('appUpdateRows'),filter=$('appUpdateFilter').value;list.replaceChildren();
-  const visible=rows.filter(n=>filter==='all'||Boolean(n.completed)===(filter==='completed')).slice().sort((a,b)=>{const ac=Boolean(a.completed),bc=Boolean(b.completed);if(ac!==bc)return ac?1:-1;const at=a.createdAt?.toMillis?.()||Date.parse(a.createdAt||0)||0,bt=b.createdAt?.toMillis?.()||Date.parse(b.createdAt||0)||0;return bt-at;});
-  $('appUpdateCount').textContent=`${visible.length} shown · ${rows.length} loaded`;
-  let updateGroup='';for(const note of visible){const group=note.completed?'Completed':'Incomplete';if(filter==='all'&&group!==updateGroup){const heading=document.createElement('h3');heading.className='ls26-update-group-title '+(note.completed?'completed':'incomplete');heading.textContent=group;list.append(heading);updateGroup=group;}
-   const article=document.createElement('article'),text=document.createElement('p'),meta=document.createElement('small'),actions=document.createElement('div'),edit=document.createElement('button'),done=document.createElement('button');
-   article.className='ls26-update-card'+(note.completed?' is-completed':'');text.textContent=note.text;meta.textContent=`${note.completed?'Completed':'Pending'} · ${note.createdAt?.toDate?.().toLocaleString()||''} · ${note.page||''}`;
-   edit.textContent='Edit';edit.onclick=()=>open(note);
-   const copy=document.createElement('button');copy.type='button';copy.className='ls26-update-copy';copy.innerHTML='<span aria-hidden="true">⧉</span> Copy';copy.title='Copy update text';copy.onclick=async()=>{try{if(navigator.clipboard?.writeText)await navigator.clipboard.writeText(note.text||'');else{const ta=document.createElement('textarea');ta.value=note.text||'';ta.style.position='fixed';ta.style.opacity='0';document.body.append(ta);ta.select();document.execCommand('copy');ta.remove();}LS26.toast('Update text copied.');}catch(error){$('appUpdateStatus').textContent='Could not copy this update.';}};
-   done.textContent=note.completed?'Reopen':'Mark completed';done.onclick=async()=>{done.disabled=true;try{await collection().doc(note.id).update({completed:!note.completed,updatedAt:stamp()});note.completed=!note.completed;render();LS26.toast('Update saved successfully.');}catch(e){$('appUpdateStatus').textContent=errorText(e);done.disabled=false;}};
-   actions.append(edit,copy,done);article.append(text,meta,actions);list.append(article);
-  }
-  if(!visible.length)list.textContent='No matching updates in the loaded notes.';
+ function refreshVersionFilter(){
+  const select=$('appUpdateVersionFilter');
+  if(!select)return;
+  const selected=select.value||'all';
+  const versions=[...new Set(rows.map(item=>normaliseVersion(item.version)).filter(Boolean))]
+    .sort((a,b)=>compareVersion(b,a));
+  select.replaceChildren();
+  const all=document.createElement('option');all.value='all';all.textContent='All versions';select.append(all);
+  const unassigned=document.createElement('option');unassigned.value='unassigned';unassigned.textContent='Unassigned';select.append(unassigned);
+  versions.forEach(version=>{
+   const option=document.createElement('option');
+   option.value=version;option.textContent='v'+version;select.append(option);
+  });
+  select.value=[...select.options].some(option=>option.value===selected)?selected:'all';
  }
+
+ function updateSortComparator(sort){
+  const byNewest=(a,b)=>dateMs(b.createdAt)-dateMs(a.createdAt);
+  if(sort==='oldest')return (a,b)=>dateMs(a.createdAt)-dateMs(b.createdAt);
+  if(sort==='type-major')return (a,b)=>typeRank(a.updateType)-typeRank(b.updateType)||byNewest(a,b);
+  if(sort==='type-patch')return (a,b)=>typeRank(b.updateType)-typeRank(a.updateType)||byNewest(a,b);
+  return byNewest;
+ }
+
+ function releaseLink(url,label='GitHub PR'){
+  const clean=normalisePr(url);
+  if(!clean)return null;
+  const link=document.createElement('a');
+  link.href=clean;link.target='_blank';link.rel='noopener noreferrer';
+  link.className='ls26-update-pr-link';link.textContent=label+' ↗';
+  return link;
+ }
+
+ function renderUpdateCard(note){
+  const article=document.createElement('article');
+  article.className='ls26-update-card'+(note.completed?' is-completed':'');
+  article.dataset.updateType=normaliseType(note.updateType);
+
+  const badges=document.createElement('div');badges.className='ls26-update-badges';
+  const type=document.createElement('span');type.className='ls26-update-type type-'+normaliseType(note.updateType);type.textContent=typeLabel(note.updateType);
+  badges.append(type);
+  if(normaliseVersion(note.version)){
+   const version=document.createElement('span');version.className='ls26-update-version-badge';version.textContent='v'+normaliseVersion(note.version);badges.append(version);
+  }
+  const status=document.createElement('span');status.className='ls26-update-status-badge '+(note.completed?'completed':'pending');status.textContent=note.completed?'Completed':'Pending';badges.append(status);
+
+  const text=document.createElement('p');text.textContent=note.text||'';
+  const meta=document.createElement('small');
+  meta.textContent=`${note.createdAt?.toDate?.().toLocaleString()||''}${note.page?' · '+note.page:''}`;
+
+  const pr=releaseLink(note.pullRequestUrl);
+  const metaRow=document.createElement('div');metaRow.className='ls26-update-meta-row';metaRow.append(meta);if(pr)metaRow.append(pr);
+
+  const actions=document.createElement('div');actions.className='ls26-update-actions';
+  const edit=document.createElement('button');edit.type='button';edit.textContent='Edit';edit.onclick=()=>open(note);
+  const copy=document.createElement('button');copy.type='button';copy.className='ls26-update-copy';copy.innerHTML='<span aria-hidden="true">⧉</span> Copy';copy.title='Copy update text';
+  copy.onclick=async()=>{try{if(navigator.clipboard?.writeText)await navigator.clipboard.writeText(note.text||'');else{const ta=document.createElement('textarea');ta.value=note.text||'';ta.style.position='fixed';ta.style.opacity='0';document.body.append(ta);ta.select();document.execCommand('copy');ta.remove();}LS26.toast('Update text copied.');}catch(error){$('appUpdateStatus').textContent='Could not copy this update.';}};
+  const done=document.createElement('button');done.type='button';done.textContent=note.completed?'Reopen':'Mark completed';
+  done.onclick=async()=>{done.disabled=true;try{await collection().doc(note.id).update({completed:!note.completed,updatedAt:stamp()});note.completed=!note.completed;render();LS26.toast('Update saved successfully.');}catch(e){$('appUpdateStatus').textContent=errorText(e);done.disabled=false;}};
+  actions.append(edit,copy,done);
+  article.append(badges,text,metaRow,actions);
+  return article;
+ }
+
+ function render(){
+  if(!manage)return;
+  const list=$('appUpdateRows');
+  const statusFilter=$('appUpdateFilter')?.value||'all';
+  const typeFilter=$('appUpdateTypeFilter')?.value||'all';
+  const versionFilter=$('appUpdateVersionFilter')?.value||'all';
+  const sort=$('appUpdateSort')?.value||'newest';
+
+  refreshVersionFilter();
+
+  const visible=rows.filter(note=>{
+   if(statusFilter!=='all'&&Boolean(note.completed)!==(statusFilter==='completed'))return false;
+   if(typeFilter!=='all'&&normaliseType(note.updateType)!==typeFilter)return false;
+   const version=normaliseVersion(note.version);
+   if(versionFilter==='unassigned'&&version)return false;
+   if(versionFilter!=='all'&&versionFilter!=='unassigned'&&version!==versionFilter)return false;
+   return true;
+  });
+
+  const updateCount=visible.filter(note=>note.kind!=='release').length;
+  $('appUpdateCount').textContent=`${updateCount} update${updateCount===1?'':'s'} shown · ${rows.filter(note=>note.kind!=='release').length} loaded`;
+  list.replaceChildren();
+
+  if(!visible.length){
+   list.textContent='No matching updates.';
+   return;
+  }
+
+  const groups=new Map();
+  visible.forEach(note=>{
+   const version=normaliseVersion(note.version)||'unassigned';
+   if(!groups.has(version))groups.set(version,[]);
+   groups.get(version).push(note);
+  });
+
+  const groupKeys=[...groups.keys()].sort((a,b)=>{
+   if(a==='unassigned')return 1;
+   if(b==='unassigned')return -1;
+   return sort==='oldest'?compareVersion(a,b):compareVersion(b,a);
+  });
+
+  for(const version of groupKeys){
+   const notes=groups.get(version)||[];
+   const release=notes.find(note=>note.kind==='release')||null;
+   const updates=notes.filter(note=>note.kind!=='release').sort(updateSortComparator(sort));
+
+   const section=document.createElement('section');
+   section.className='ls26-update-version-group'+(version==='unassigned'?' is-unassigned':'');
+   const head=document.createElement('header');head.className='ls26-update-version-head';
+
+   const titleWrap=document.createElement('div');
+   const title=document.createElement('h2');title.textContent=version==='unassigned'?'Unassigned updates':'LiveSuite v'+version;
+   titleWrap.append(title);
+
+   const releaseMeta=document.createElement('div');releaseMeta.className='ls26-update-release-meta';
+   if(release){
+    const badge=document.createElement('span');badge.className='ls26-update-type type-'+normaliseType(release.updateType);badge.textContent=typeLabel(release.updateType)+' release';releaseMeta.append(badge);
+    const pr=releaseLink(release.pullRequestUrl,'Release PR');if(pr)releaseMeta.append(pr);
+    if(release.createdAt?.toDate){
+     const date=document.createElement('small');date.textContent='Released '+release.createdAt.toDate().toLocaleString();releaseMeta.append(date);
+    }
+    const editRelease=document.createElement('button');editRelease.type='button';editRelease.className='ls26-edit-release';editRelease.textContent='Edit release';editRelease.onclick=()=>open(release);releaseMeta.append(editRelease);
+   }else if(version!=='unassigned'){
+    const badge=document.createElement('span');badge.className='ls26-update-version-badge';badge.textContent='Version history';releaseMeta.append(badge);
+   }
+
+   head.append(titleWrap,releaseMeta);
+   section.append(head);
+
+   if(release?.text){
+    const summary=document.createElement('p');summary.className='ls26-release-summary';summary.textContent=release.text;section.append(summary);
+   }
+
+   if(!updates.length){
+    const empty=document.createElement('p');empty.className='ls26-update-group-empty';empty.textContent='No update items match the current filters for this version.';section.append(empty);
+   }else{
+    updates.forEach(note=>section.append(renderUpdateCard(note)));
+   }
+   list.append(section);
+  }
+ }
+
  async function load(reset=false){
-  if(loading)return;loading=true;$('appUpdateStatus').textContent='Loading…';$('appUpdateMore').disabled=true;
-  try{let q=collection().orderBy('createdAt','desc').limit(50);if(!reset&&cursor)q=q.startAfter(cursor);const snap=await q.get();if(reset)rows=[];rows.push(...snap.docs.map(d=>({...d.data(),id:d.id})));cursor=snap.docs.at(-1)||null;render();$('appUpdateMore').hidden=snap.size<50;$('appUpdateStatus').textContent='';}
-  catch(e){$('appUpdateStatus').textContent=errorText(e);}
-  finally{loading=false;$('appUpdateMore').disabled=false;}
+  if(loading)return;
+  loading=true;
+  if(manage){$('appUpdateStatus').textContent='Loading version history…';if($('appUpdateMore'))$('appUpdateMore').disabled=true;}
+  try{
+   const snap=await collection().orderBy('createdAt','desc').get();
+   rows=snap.docs.map(d=>({...d.data(),id:d.id}));
+   cursor=null;
+   render();
+   if(manage&&$('appUpdateMore'))$('appUpdateMore').hidden=true;
+   if(manage)$('appUpdateStatus').textContent='';
+  }catch(e){if(manage)$('appUpdateStatus').textContent=errorText(e);}
+  finally{loading=false;if(manage&&$('appUpdateMore'))$('appUpdateMore').disabled=false;}
+ }
+
+ let versionDialog=null;
+ function ensureVersionDialog(){
+  if(versionDialog)return versionDialog;
+  versionDialog=document.createElement('dialog');
+  versionDialog.id='ls26CreateVersionDialog';
+  versionDialog.className='ls26-dialog ls26-create-version-dialog';
+  versionDialog.setAttribute('aria-labelledby','ls26CreateVersionHeading');
+  versionDialog.innerHTML=`
+   <form id="ls26CreateVersionForm">
+    <h2 id="ls26CreateVersionHeading">Create LiveSuite Version</h2>
+    <p class="ls26-update-intro">Create a release, update the LiveSuite app version, and optionally assign all completed unversioned updates to it.</p>
+    <div class="ls26-update-form-grid">
+     <label>Release type
+      <select id="ls26ReleaseType"><option value="major">Major</option><option value="minor">Minor</option><option value="patch" selected>Patch</option></select>
+     </label>
+     <label>New version
+      <input id="ls26ReleaseVersion" required inputmode="decimal" placeholder="3.1.56">
+     </label>
+    </div>
+    <label>GitHub pull request <small>(recommended)</small>
+     <input id="ls26ReleasePr" type="url" inputmode="url" placeholder="https://github.com/.../pull/123">
+    </label>
+    <label>Release summary
+     <textarea id="ls26ReleaseSummary" rows="4" maxlength="5000" placeholder="Summary of this LiveSuite version"></textarea>
+    </label>
+    <label class="ls26-release-assign"><input id="ls26ReleaseAssign" type="checkbox" checked> Assign all completed updates that do not yet have a version to this release</label>
+    <p id="ls26ReleaseStatus" role="status"></p>
+    <div class="ls26-dialog-actions"><button class="primary" type="submit">Create Version</button><button id="ls26ReleaseCancel" type="button">Cancel</button></div>
+   </form>`;
+  document.body.append(versionDialog);
+  $('ls26ReleaseCancel').onclick=()=>versionDialog.close();
+  $('ls26ReleaseType').onchange=()=>{$('ls26ReleaseVersion').value=bumpVersion(currentVersion(),$('ls26ReleaseType').value);};
+  $('ls26CreateVersionForm').onsubmit=async event=>{
+   event.preventDefault();
+   const button=event.currentTarget.querySelector('[type=submit]');
+   const updateType=normaliseType($('ls26ReleaseType').value);
+   const version=normaliseVersion($('ls26ReleaseVersion').value);
+   const rawPr=String($('ls26ReleasePr').value||'').trim();
+   const pullRequestUrl=normalisePr(rawPr);
+   const summary=String($('ls26ReleaseSummary').value||'').trim();
+   const assign=$('ls26ReleaseAssign').checked;
+   if(!version){$('ls26ReleaseStatus').textContent='Use the LiveSuite version format 0.0.00, for example 3.1.56.';return;}
+   if(rawPr&&!pullRequestUrl){$('ls26ReleaseStatus').textContent='Enter a GitHub pull-request URL.';return;}
+   if(!window.LS26Settings?.save){$('ls26ReleaseStatus').textContent='App Settings has not loaded yet. Reload the page and try again.';return;}
+   const user=auth().currentUser;if(!user){$('ls26ReleaseStatus').textContent='Sign in to Admin first.';return;}
+
+   button.disabled=true;$('ls26ReleaseStatus').textContent='Creating version…';
+   try{
+    let assigned=0;
+    if(assign){
+     const completedSnap=await collection().where('completed','==',true).get();
+     const candidates=completedSnap.docs.filter(doc=>{
+      const data=doc.data()||{};
+      return data.kind!=='release'&&!normaliseVersion(data.version);
+     });
+     for(let offset=0;offset<candidates.length;offset+=400){
+      const batch=db().batch();
+      candidates.slice(offset,offset+400).forEach(doc=>{
+       const data=doc.data()||{};
+       const patch={version,updatedAt:stamp()};
+       if(!UPDATE_TYPES[String(data.updateType||'').toLowerCase()])patch.updateType=updateType;
+       if(pullRequestUrl&&!normalisePr(data.pullRequestUrl))patch.pullRequestUrl=pullRequestUrl;
+       batch.update(doc.ref,patch);
+      });
+      await batch.commit();
+     }
+     assigned=candidates.length;
+    }
+
+    await collection().add({
+     kind:'release',
+     text:summary||`LiveSuite v${version} release`,
+     updateType,
+     version,
+     pullRequestUrl,
+     completed:true,
+     page:location.pathname,
+     createdAt:stamp(),
+     updatedAt:stamp(),
+     createdBy:user.uid
+    });
+
+    await window.LS26Settings.save({appVersion:version});
+    versionDialog.close();
+    LS26.toast(`LiveSuite v${version} created · ${assigned} update${assigned===1?'':'s'} assigned.`);
+    await load(true);
+   }catch(error){
+    $('ls26ReleaseStatus').textContent=errorText(error);
+   }finally{button.disabled=false;}
+  };
+  return versionDialog;
+ }
+
+ function openCreateVersion(){
+  const dlg=ensureVersionDialog();
+  const type='patch';
+  $('ls26ReleaseType').value=type;
+  $('ls26ReleaseVersion').value=bumpVersion(currentVersion(),type);
+  $('ls26ReleasePr').value='';
+  $('ls26ReleaseSummary').value='';
+  $('ls26ReleaseAssign').checked=true;
+  $('ls26ReleaseStatus').textContent='';
+  if(!dlg.open)dlg.showModal();
  }
  window.LS26.openAppUpdates=open;
  if(manage){
