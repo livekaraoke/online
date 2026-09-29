@@ -1177,7 +1177,7 @@
             <label class="section-scroll-pause-control">
               <span class="section-scroll-pause-copy">
                 <strong>AUTO-SCROLL PAUSE</strong>
-                <small>Pause scrolling when this section becomes active.</small>
+                <small>Pause scrolling when this section becomes active. Value is in seconds.</small>
               </span>
               <span class="section-scroll-pause-value">
                 <input type="number" min="0" step="0.1" inputmode="decimal" data-section-pause-seconds="${index}" value="${Number(((s.pauseMs || 0) / 1000).toFixed(3))}" aria-label="Section auto-scroll pause in seconds">
