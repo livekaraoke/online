@@ -1302,7 +1302,7 @@
     if (expandedInsertIndex !== insertIndex) {
       wrap.innerHTML = `
         <button type="button" class="creator-inline-add-strip" data-expand-inline-insert="${insertIndex}" aria-label="Add a section here" title="Add a section here">
-          <span aria-hidden="true">＋</span>
+          <span class="creator-inline-plus" aria-hidden="true">+</span>
         </button>`;
       return wrap;
     }
@@ -2462,13 +2462,13 @@
   });
 
   function revealSection(index=sections.length-1){requestAnimationFrame(()=>{const card=document.querySelector(`.creator-section-card[data-index="${index}"]`);if(!card)return;const offset=document.getElementById('ls26StickyHeader')?.getBoundingClientRect().height||0;window.scrollTo({top:Math.max(0,card.getBoundingClientRect().top+window.scrollY-offset-12),behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});});}
-  $("addLyricsSectionBtn").onclick = () => { syncSectionsFromDOM(); sections.push(makeSection("lyrics")); markDirty(); render(); revealSection(); };
-  $("addTabSectionBtn").onclick = () => { syncSectionsFromDOM(); sections.push(makeSection("tab")); markDirty(); render(); revealSection(); };
-  $("addPerformanceNoteBtn").onclick = () => { syncSectionsFromDOM(); sections.push(makeSection("performanceNote")); markDirty(); render(); revealSection(); };
-  $("addHostNoteBtn").onclick = () => { syncSectionsFromDOM(); sections.push(makeSection("hostNote")); markDirty(); render(); revealSection(); };
-  $("addSeparatorBtn").onclick = () => { syncSectionsFromDOM(); sections.push(makeSection("separator")); markDirty(); render(); revealSection(); };
+  $("addLyricsSectionBtn").onclick = () => insertSectionAt(0, makeSection("lyrics"));
+  $("addTabSectionBtn").onclick = () => insertSectionAt(0, makeSection("tab"));
+  $("addPerformanceNoteBtn").onclick = () => insertSectionAt(0, makeSection("performanceNote"));
+  $("addHostNoteBtn").onclick = () => insertSectionAt(0, makeSection("hostNote"));
+  $("addSeparatorBtn").onclick = () => insertSectionAt(0, makeSection("separator"));
   $("openTemplatesBtn").onclick = () => {
-    pendingTemplateInsertIndex = null;
+    pendingTemplateInsertIndex = 0;
     $("templatesModal").classList.remove("hidden");
   };
   $("refreshSetlistsBtn").onclick = () => loadSetlistMembership(firebaseId);
