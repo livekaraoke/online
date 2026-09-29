@@ -2461,3 +2461,25 @@ body.host-lyric-view-page {
     grid-template-columns:1fr!important;
   }
 }
+
+
+/* 2026-09-29 performance-window release + end-session state */
+#performanceQuickInfo.past-karaoke-tools-window{
+  opacity:0!important;
+  visibility:hidden!important;
+  pointer-events:none!important;
+  transform:translateY(-6px)!important;
+  transition:opacity .16s ease,transform .16s ease,visibility .16s ease!important;
+}
+.host-end-completion-panel .host-end-action:disabled{
+  opacity:.28!important;
+  filter:grayscale(.72)!important;
+  cursor:not-allowed!important;
+  box-shadow:none!important;
+}
+.host-end-completion-panel #endStartBreakBtn.is-break-active{
+  border-color:#21d987!important;
+  background:rgba(10,85,55,.58)!important;
+  color:#7dffbc!important;
+  box-shadow:0 0 18px rgba(33,217,135,.12)!important;
+}
