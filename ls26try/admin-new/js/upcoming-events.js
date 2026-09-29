@@ -23,6 +23,38 @@
     "Other": "#a5adb3"
   };
 
+  const DISPLAY_COLOUR_DEFAULTS = [
+    ["Red", "displayColourRed", "#ff3131"],
+    ["Cyan", "displayColourCyan", "#00dfe8"],
+    ["Blue", "displayColourBlue", "#1828ff"],
+    ["Green", "displayColourGreen", "#42f35c"],
+    ["Magenta", "displayColourMagenta", "#f000dc"],
+    ["Yellow", "displayColourYellow", "#fff200"],
+    ["Black", "displayColourBlack", "#000000"],
+    ["White", "displayColourWhite", "#ffffff"],
+    ["Orange", "displayColourOrange", "#ff8a24"],
+    ["Gray", "displayColourGray", "#777777"],
+    ["Light Gray", "displayColourLightGray", "#d7d7d7"],
+    ["Bright Purple", "displayColourBrightPurple", "#c14cff"]
+  ];
+  let eventTypeColourTarget = null;
+
+  function displayColourPalette() {
+    const settings = window.LS26Settings?.get?.() || {};
+    return DISPLAY_COLOUR_DEFAULTS.map(([name,key,fallback]) => [
+      name,
+      /^#[0-9a-f]{6}$/i.test(String(settings[key] || "")) ? settings[key] : fallback
+    ]);
+  }
+
+  function renderEventTypeColourPalette() {
+    const root = $("eventTypeColourPalette");
+    if (!root) return;
+    root.innerHTML = displayColourPalette().map(([name,colour]) =>
+      `<button type="button" data-event-palette-colour="${escapeHTML(colour)}" title="${escapeHTML(name)}" aria-label="${escapeHTML(name)} ${escapeHTML(colour)}"><span style="background:${escapeHTML(colour)}"></span><small>${escapeHTML(name)}</small></button>`
+    ).join("");
+  }
+
   let typeOptions = [...DEFAULT_TYPE_OPTIONS];
   let typeColors = { ...DEFAULT_TYPE_COLORS };
   const STATUS_OPTIONS = ["Confirmed", "Tentative", "Cancelled"];
@@ -727,6 +759,8 @@
 
   function openEventTypesModal() {
     renderEventTypeManager();
+    renderEventTypeColourPalette();
+    eventTypeColourTarget = $("newEventTypeColorInput");
     $("eventTypesMessage").textContent = "";
     $("newEventTypeInput").value = "";
     $("eventTypesModal").classList.remove("hidden");
@@ -1165,7 +1199,25 @@
         el.addEventListener(el.tagName === "INPUT" ? "input" : "change", renderEvents);
       });
 
+    $("eventTypesModal")?.addEventListener("focusin", event => {
+      const input = event.target.closest('input[type="color"]');
+      if (input) eventTypeColourTarget = input;
+    });
+
     document.addEventListener("click", event => {
+      const paletteColour = event.target.closest("[data-event-palette-colour]");
+      if (paletteColour) {
+        const target = eventTypeColourTarget || $("newEventTypeColorInput");
+        if (target) {
+          target.value = paletteColour.dataset.eventPaletteColour || target.value;
+          target.dispatchEvent(new Event("change", { bubbles:true }));
+          const row = target.closest(".event-type-manager-row");
+          const swatch = row?.querySelector(".event-type-manager-swatch");
+          if (swatch) swatch.style.background = target.value;
+        }
+        return;
+      }
+
       const calendarDay = event.target.closest("[data-calendar-date]");
       if (calendarDay) {
         selectedCalendarDate = calendarDay.dataset.calendarDate || "";
@@ -1256,6 +1308,7 @@
 
   function init() {
     bindUI();
+    window.addEventListener("ls26:settings-applied", renderEventTypeColourPalette);
     if (!nextGigCountdownTimer) {
       nextGigCountdownTimer = setInterval(tickNextGigCountdown, 1000);
     }
