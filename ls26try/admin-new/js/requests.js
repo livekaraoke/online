@@ -97,6 +97,7 @@
         songTitle: req.songTitle || req.title || "",
         artist: req.songArtist || req.artist || "",
         singerName: req.singerName || req.name || "",
+        requesterNote: req.note || req.requesterNote || "",
         requestId: id,
         source: "request",
         status: "queued",
