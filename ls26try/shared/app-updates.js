@@ -328,6 +328,10 @@
    const assign=$('ls26ReleaseAssign').checked;
    const makeCurrent=$('ls26ReleaseMakeCurrent').checked;
    if(!version){$('ls26ReleaseStatus').textContent='Use the LiveSuite version format 0.0.00, for example 3.1.56.';return;}
+   if(rows.some(item=>item.kind==='release'&&normaliseVersion(item.version)===version)){
+    $('ls26ReleaseStatus').textContent='That LiveSuite version already exists in the version history.';
+    return;
+   }
    if(rawPr&&!pullRequestUrl){$('ls26ReleaseStatus').textContent='Enter a GitHub pull-request URL.';return;}
    if(!window.LS26Settings?.save){$('ls26ReleaseStatus').textContent='App Settings has not loaded yet. Reload the page and try again.';return;}
    const user=auth().currentUser;if(!user){$('ls26ReleaseStatus').textContent='Sign in to Admin first.';return;}
