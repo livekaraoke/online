@@ -12,7 +12,7 @@
   <link rel="stylesheet" href="css/admin-navigation.css?v=20260929-admin-polish">
   <link rel="stylesheet" href="../shared/theme.css?v=20260929-nav-fit">
   <link rel="stylesheet" href="../shared/performance.css?v=20260929-lyric-sizing">
-  <link rel="stylesheet" href="css/app-settings.css?v=20260929-savebar-up">
+  <link rel="stylesheet" href="css/app-settings.css?v=20260929-display-colours">
   <script src="../shared/data.js?v=20260910-stage4"></script>
 </head>
 <body class="admin-body enquiries-page">
@@ -30,6 +30,23 @@
       <div class="setting-row"><div class="setting-copy"><strong>Original BPM</strong></div><div class="setting-control"><input id="originalBpmColor" data-setting type="color"></div></div>
       <div class="setting-row"><div class="setting-copy"><strong>Key</strong></div><div class="setting-control"><input id="keyColor" data-setting type="color"></div></div>
       <div class="setting-row"><div class="setting-copy"><strong>Capo (1+)</strong></div><div class="setting-control"><input id="capoColor" data-setting type="color"></div></div>
+    </section>
+
+    <section class="settings-card display-colour-settings"><h2>Default Displayable Colours</h2><p>These palette colours are used in LyricsCreator text-colour selection and Event / Session colour selection.</p>
+      <div class="display-colour-grid">
+        <label><span>Red</span><input id="displayColourRed" data-setting type="color"></label>
+        <label><span>Cyan</span><input id="displayColourCyan" data-setting type="color"></label>
+        <label><span>Blue</span><input id="displayColourBlue" data-setting type="color"></label>
+        <label><span>Green</span><input id="displayColourGreen" data-setting type="color"></label>
+        <label><span>Magenta</span><input id="displayColourMagenta" data-setting type="color"></label>
+        <label><span>Yellow</span><input id="displayColourYellow" data-setting type="color"></label>
+        <label><span>Black</span><input id="displayColourBlack" data-setting type="color"></label>
+        <label><span>White</span><input id="displayColourWhite" data-setting type="color"></label>
+        <label><span>Orange</span><input id="displayColourOrange" data-setting type="color"></label>
+        <label><span>Gray</span><input id="displayColourGray" data-setting type="color"></label>
+        <label><span>Light Gray</span><input id="displayColourLightGray" data-setting type="color"></label>
+        <label><span>Bright Purple</span><input id="displayColourBrightPurple" data-setting type="color"></label>
+      </div>
     </section>
 
     <section class="settings-card"><h2>LyricView Controls</h2><p>Size the performance controls to suit the tablet and viewing distance.</p>
@@ -86,7 +103,7 @@
 <script src="js/sidebar.js?v=20260929-sidebar-accordion"></script>
 <script src="js/profile.js?v=20260929-members-visible"></script>
 <script src="js/auth.js?v=20260910-stage4"></script>
-<script data-ls26-settings="1" src="../shared/app-settings.js?v=20260929-pause-countdown-colour"></script>
+<script data-ls26-settings="1" src="../shared/app-settings.js?v=20260929-display-colours"></script>
 <script src="../shared/shell.js?v=20260929-pause-countdown-colour"></script>
-<script src="js/app-settings.js?v=20260929-pause-countdown-colour"></script>
+<script src="js/app-settings.js?v=20260929-display-colours"></script>
 </body></html>
