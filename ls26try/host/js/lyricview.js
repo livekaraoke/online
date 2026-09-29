@@ -1621,14 +1621,15 @@
 
   async function getNextRunOrderItem() {
     const { sessionId } = await getActiveSessionContext();
-    if (!sessionId) return null;
 
     const sharedRun=window.LK?.sessionTools?.getRunOrderSnapshot?.();
     const snap=sharedRun?null:await db.collection('karaokeControl').doc('runOrder').get();
     const data=sharedRun||(snap?.exists?snap.data():{});
+    const expectedSessionId=sessionId||"";
+    const runSessionId=String(data.sessionId||"");
 
     if (
-      data.sessionId !== sessionId ||
+      runSessionId !== expectedSessionId ||
       !Array.isArray(data.items) ||
       !data.items.length
     ) {
@@ -1696,6 +1697,15 @@
     return next;
   }
 
+  function prepNextIcon() {
+    return `
+      <span class="host-prep-next-icon" aria-hidden="true">
+        <svg viewBox="0 0 32 32" focusable="false">
+          <path d="M11.2 22.5h9.6M12.7 26h6.6M10.4 19.5c-2.1-1.7-3.4-4.2-3.4-7A9 9 0 0 1 25 12.5c0 2.8-1.3 5.3-3.4 7-1.2 1-1.9 2.1-2.1 3.2h-7c-.2-1.1-.9-2.2-2.1-3.2Z"></path>
+        </svg>
+      </span>`;
+  }
+
   function prepNextField(label, value) {
     const clean = String(value ?? "").trim() || "–";
     return `
@@ -1717,6 +1727,7 @@
     if (!next?.songId) {
       button.hidden = false;
       button.disabled = true;
+      if ($("endLoadNextSongBtn")) $("endLoadNextSongBtn").disabled = true;
       button.innerHTML = `
         <span class="host-next-song-play" aria-hidden="true">■</span>
         <span class="host-next-song-button-copy">
@@ -1729,7 +1740,7 @@
       card.classList.add("is-empty");
       card.innerHTML = `
         <div class="host-prep-next-head">
-          <span class="host-prep-next-icon" aria-hidden="true">◇</span>
+          ${prepNextIcon()}
           <span><strong>PREP NEXT SONG</strong><small>NO NEXT SONG QUEUED</small></span>
         </div>
       `;
@@ -1760,6 +1771,7 @@
 
     button.hidden = false;
     button.disabled = false;
+    if ($("endLoadNextSongBtn")) $("endLoadNextSongBtn").disabled = false;
     button.innerHTML = `
       <span class="host-next-song-play" aria-hidden="true">▶</span>
       <span class="host-next-song-button-copy">
@@ -1773,7 +1785,7 @@
     card.classList.remove("is-empty");
     card.innerHTML = `
       <div class="host-prep-next-head">
-        <span class="host-prep-next-icon" aria-hidden="true">◇</span>
+        ${prepNextIcon()}
         <span><strong>PREP NEXT SONG</strong><small>${esc(title)}${artist ? ` · ${esc(artist)}` : ""}</small></span>
       </div>
       <div class="host-prep-next-fields">
@@ -1789,13 +1801,6 @@
   async function goToNextRunOrderSong() {
     // PLAY NEXT finalizes a started song; previewing end cards never changes status.
     if(performanceRecordCreated)await finalizeCurrentSongPlayed();
-    const { sessionId } = await getActiveSessionContext();
-
-    if (!sessionId) {
-      await showModal("No Active Session", "Start a Performance Session first.");
-      return;
-    }
-
     const next = await getNextRunOrderItem();
 
     if (!next) {
@@ -1810,6 +1815,70 @@
     location.href = `lyricview.html?${params.toString()}`;
   }
 
+
+  function stayOnCurrentSong() {
+    showEndCompletionPanel(false);
+    autoScrollEndHandled=false;
+    const index=Math.max(0,Math.min(currentSectionIndex,sectionEls.length-1));
+    if(sectionEls[index])scrollToSection(index);
+    else $("endMarker")?.scrollIntoView({behavior:"smooth",block:"center"});
+  }
+
+  async function addCurrentSongToSetlist() {
+    if(!currentSongId)return;
+    let lists=[];
+    try{
+      const snap=await LS26Data.collection("lyricsSetlists");
+      lists=snap.docs.map(doc=>({id:doc.id,...(doc.data()||{})}))
+        .sort((a,b)=>String(a.name||"").localeCompare(String(b.name||""),undefined,{sensitivity:"base"}));
+    }catch(error){
+      window.LS26?.toast(error.message||"Could not load setlists.");
+      return;
+    }
+    if(!lists.length){
+      await showModal("No Setlists","Create a setlist first, then use Add to Setlist again.");
+      return;
+    }
+
+    const dialog=document.createElement("dialog");
+    dialog.className="ls26-dialog lyricview-setlist-dialog";
+    dialog.innerHTML=`
+      <h2>Add to Setlist</h2>
+      <p>Add <strong>${esc(currentSong?.title||"this song")}</strong> to:</p>
+      <div class="lyricview-setlist-picker">
+        ${lists.map(list=>{
+          const contains=Array.isArray(list.songIds)&&list.songIds.includes(currentSongId);
+          return `<button type="button" data-add-current-setlist="${esc(list.id)}" ${contains?"disabled":""}>
+            <span><strong>${esc(list.name||"Untitled Setlist")}</strong><small>${(list.songIds||[]).length} songs</small></span>
+            <span>${contains?"✓ Added":"＋ Add"}</span>
+          </button>`;
+        }).join("")}
+      </div>
+      <div class="ls26-dialog-actions"><button type="button" data-close-setlist>Close</button></div>
+    `;
+    document.body.append(dialog);
+    const close=()=>{try{dialog.close();}catch(_){}dialog.remove();};
+    dialog.querySelector("[data-close-setlist]").onclick=close;
+    dialog.addEventListener("cancel",event=>{event.preventDefault();close();});
+    dialog.addEventListener("click",async event=>{
+      const add=event.target.closest("[data-add-current-setlist]");
+      if(!add||add.disabled)return;
+      add.disabled=true;
+      try{
+        await db.collection("lyricsSetlists").doc(add.dataset.addCurrentSetlist).set({
+          songIds:firebase.firestore.FieldValue.arrayUnion(currentSongId),
+          updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+        },{merge:true});
+        LS26Data.invalidate("lyricsSetlists");
+        window.LS26?.toast("Song added to setlist");
+        close();
+      }catch(error){
+        add.disabled=false;
+        window.LS26?.toast(error.message||"Could not add song to setlist.");
+      }
+    });
+    dialog.showModal();
+  }
 
   function startAutoScroll() {
     const wasOff = !autoScrollOn;
@@ -1945,12 +2014,34 @@
       drawer.setAttribute("aria-hidden", "true");
       $("songInfoBtn").classList.remove("active");
     };
-    document.querySelectorAll(".host-nav-btn").forEach(button => {
+    const navButtons=[...document.querySelectorAll(".host-nav-btn")];
+    navButtons.forEach(button => {
       button.addEventListener("click", () => {
-        if (matchMedia("(prefers-reduced-motion: reduce)").matches || !button.animate) return;
-        button.getAnimations().forEach(animation => animation.cancel());
-        button.animate([{scale:"1.12", opacity:1}, {scale:"1", opacity:.72}], {
-          duration:650, easing:"ease-out"
+        const settings=window.LS26Settings?.get?.()||{};
+        const idle=Math.max(.1,Math.min(.9,Number(settings.lyricNavIdleOpacity??40)/100));
+        const active=Math.max(.2,Math.min(.95,Number(settings.lyricNavActiveOpacity??60)/100));
+        const peak=Math.max(.4,Math.min(1,Number(settings.lyricNavPressedOpacity??90)/100));
+        const duration=Math.max(500,Math.min(5000,Number(settings.lyricNavFeedbackDuration??1800)));
+
+        navButtons.forEach(nav=>nav.getAnimations?.().forEach(animation=>animation.cancel()));
+        if(matchMedia("(prefers-reduced-motion: reduce)").matches||!button.animate)return;
+
+        navButtons.forEach(nav=>{
+          const clicked=nav===button;
+          nav.animate(
+            clicked
+              ? [
+                  {opacity:peak,scale:"1.08",offset:0},
+                  {opacity:active,scale:"1.04",offset:.5},
+                  {opacity:idle,scale:"1",offset:1}
+                ]
+              : [
+                  {opacity:active,scale:"1",offset:0},
+                  {opacity:active,scale:"1",offset:.5},
+                  {opacity:idle,scale:"1",offset:1}
+                ],
+            {duration,easing:"ease-out"}
+          );
         });
       });
     });
@@ -1980,6 +2071,9 @@
     if ($("endNextRunOrderSongBtn")) {
       $("endNextRunOrderSongBtn").onclick = goToNextRunOrderSong;
     }
+    if ($("endLoadNextSongBtn")) $("endLoadNextSongBtn").onclick = goToNextRunOrderSong;
+    if ($("endStaySongBtn")) $("endStaySongBtn").onclick = stayOnCurrentSong;
+    if ($("endAddSetlistBtn")) $("endAddSetlistBtn").onclick = addCurrentSongToSetlist;
     $("sendToKaraokeBtn").onclick = sendToKaraoke;
     $("karaokeMenuBtn").onclick = () => $("karaokeMenu").classList.toggle("hidden");
     $("resetKaraokeBtn").onclick = resetKaraoke;
