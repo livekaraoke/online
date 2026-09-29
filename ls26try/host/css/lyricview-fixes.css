@@ -2004,3 +2004,210 @@ body.host-lyric-view-page {
   min-height:1.45em!important;
   color:#dcecf3!important;
 }
+
+
+/* =========================================================
+   END-OF-SONG COMPLETION WORKFLOW
+   [ END ] reaches the same activation line as lyric sections.
+   ========================================================= */
+.host-end-completion-panel{
+  box-sizing:border-box!important;
+  width:min(820px,calc(100% - 28px))!important;
+  margin:18px auto 112px!important;
+  padding:20px 18px 16px!important;
+  border:1px solid rgba(35,102,126,.78)!important;
+  border-radius:13px!important;
+  background:
+    radial-gradient(circle at 50% 0%,rgba(0,230,125,.08),transparent 240px),
+    linear-gradient(150deg,rgba(4,25,34,.98),rgba(2,15,22,.98))!important;
+  box-shadow:0 16px 42px rgba(0,0,0,.34),inset 0 0 0 1px rgba(0,202,250,.035)!important;
+  text-align:center!important;
+}
+.host-end-completion-panel[hidden]{display:none!important}
+.host-song-complete-icon{
+  display:grid!important;
+  place-items:center!important;
+  width:52px!important;
+  height:52px!important;
+  margin:0 auto 10px!important;
+  border:2px solid #20ef86!important;
+  border-radius:50%!important;
+  box-shadow:0 0 20px rgba(32,239,134,.24)!important;
+  color:#20ef86!important;
+  font-size:32px!important;
+  font-weight:1000!important;
+  line-height:1!important;
+}
+.host-end-completion-panel>h2{
+  margin:0!important;
+  color:#4bf1c0!important;
+  font-size:23px!important;
+  font-weight:1000!important;
+  letter-spacing:.13em!important;
+}
+.host-end-completion-panel>p{
+  margin:7px 0 16px!important;
+  color:#879fb0!important;
+  font-size:13px!important;
+  font-weight:750!important;
+}
+.host-end-completion-panel .host-end-next-wrap{
+  width:100%!important;
+  margin:0!important;
+  gap:10px!important;
+}
+.host-end-completion-panel .host-end-next-song-btn{
+  display:grid!important;
+  grid-template-columns:auto minmax(0,1fr) auto!important;
+  align-items:center!important;
+  gap:13px!important;
+  width:100%!important;
+  min-width:0!important;
+  min-height:76px!important;
+  padding:11px 16px!important;
+  border:2px solid #20ef86!important;
+  border-radius:16px!important;
+  background:linear-gradient(100deg,rgba(9,62,37,.92),rgba(4,34,27,.9))!important;
+  color:#56f395!important;
+  box-shadow:0 0 20px rgba(32,239,134,.17),inset 0 0 18px rgba(32,239,134,.05)!important;
+  text-align:left!important;
+  text-transform:none!important;
+  letter-spacing:0!important;
+}
+.host-end-completion-panel .host-end-next-song-btn:disabled{
+  border-color:#40535d!important;
+  background:#0a151b!important;
+  color:#84949b!important;
+  box-shadow:none!important;
+  cursor:default!important;
+}
+.host-next-song-play{
+  font-size:29px!important;
+  line-height:1!important;
+}
+.host-next-song-button-copy{
+  display:grid!important;
+  min-width:0!important;
+  gap:3px!important;
+}
+.host-next-song-button-copy strong{
+  overflow:hidden!important;
+  color:inherit!important;
+  font-size:18px!important;
+  font-weight:1000!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+}
+.host-next-song-button-copy small{
+  overflow:hidden!important;
+  color:#9cc5ad!important;
+  font-size:11px!important;
+  font-weight:750!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+}
+.host-end-next-song-btn:disabled .host-next-song-button-copy small{color:#718087!important}
+.host-next-song-arrow{
+  font-size:38px!important;
+  font-weight:500!important;
+  line-height:1!important;
+}
+
+/* Purple PREP NEXT SONG card. */
+.host-end-completion-panel .host-end-next-song-card{
+  width:100%!important;
+  padding:12px 14px!important;
+  border:1px solid #9d5bf0!important;
+  border-left:4px solid #ad62ff!important;
+  border-radius:9px!important;
+  background:linear-gradient(100deg,rgba(48,21,71,.9),rgba(25,18,43,.94))!important;
+  box-shadow:0 0 16px rgba(156,84,239,.11)!important;
+  color:#e7d9ff!important;
+  text-align:left!important;
+}
+.host-end-completion-panel .host-end-next-song-card.is-empty{
+  border-color:#665076!important;
+  border-left-color:#7c5d91!important;
+  opacity:.82!important;
+}
+.host-prep-next-head{
+  display:flex!important;
+  align-items:center!important;
+  gap:10px!important;
+}
+.host-prep-next-icon{
+  display:grid!important;
+  place-items:center!important;
+  width:34px!important;
+  height:34px!important;
+  flex:0 0 34px!important;
+  border:1px solid #b26cff!important;
+  border-radius:50%!important;
+  color:#c88fff!important;
+  font-size:18px!important;
+}
+.host-prep-next-head>span:last-child{
+  display:grid!important;
+  gap:2px!important;
+  min-width:0!important;
+}
+.host-prep-next-head strong{
+  color:#cb82ff!important;
+  font-size:12px!important;
+  font-weight:1000!important;
+  letter-spacing:.045em!important;
+}
+.host-prep-next-head small{
+  overflow:hidden!important;
+  color:#a797bb!important;
+  font-size:10px!important;
+  font-weight:750!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+}
+.host-prep-next-fields{
+  display:flex!important;
+  flex-wrap:wrap!important;
+  gap:6px 0!important;
+  margin-top:10px!important;
+}
+.host-prep-next-field{
+  display:inline-flex!important;
+  align-items:baseline!important;
+  gap:5px!important;
+  padding:0 9px!important;
+  border-left:1px solid rgba(183,124,245,.28)!important;
+}
+.host-prep-next-field:first-child{padding-left:0!important;border-left:0!important}
+.host-prep-next-field small{
+  color:#9d8daf!important;
+  font-size:8px!important;
+  font-weight:950!important;
+}
+.host-prep-next-field strong{
+  color:#eadfff!important;
+  font-size:11px!important;
+  font-weight:950!important;
+}
+.host-end-completion-panel .host-end-session-actions{
+  width:100%!important;
+  margin-top:2px!important;
+}
+
+@media(max-width:700px){
+  .host-end-completion-panel{
+    width:calc(100% - 18px)!important;
+    padding:17px 12px 13px!important;
+  }
+  .host-end-completion-panel .host-end-next-song-btn{
+    min-height:70px!important;
+    padding:9px 12px!important;
+  }
+  .host-next-song-button-copy strong{font-size:16px!important}
+  .host-prep-next-field{
+    width:33.333%!important;
+    box-sizing:border-box!important;
+    padding:3px 7px!important;
+  }
+  .host-prep-next-field:nth-child(4){border-left:0!important}
+}
