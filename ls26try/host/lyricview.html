@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="../admin-new/css/top-statusbar.css?v=20260910-stage4">
   <link rel="stylesheet" href="../admin-new/css/top-statusbar-session-tools.css?v=20260910-stage4">
   <!-- Lyric View-only overrides MUST load last -->
-  <link rel="stylesheet" href="css/lyricview-fixes.css?v=20260929-countdown-transition">
+  <link rel="stylesheet" href="css/lyricview-fixes.css?v=20260929-current-section-pause">
 <link rel="stylesheet" href="../shared/theme.css?v=20260929-nav-fit"><link rel="stylesheet" href="../shared/performance.css?v=20260929-edit-green-final"><script src="../shared/data.js?v=20260910-stage4"></script><link rel="stylesheet" href="../shared/section-layout.css?v=20260925-match-section-green"></head>
 <body class="host-lyric-view-page">
   <!-- Song title/actions; navigation and session move into shared sticky header -->
@@ -28,7 +28,7 @@
         <div><small>Capo</small><strong id="quickCapo">–</strong></div>
       </div>
       <div class="host-song-actions">
-        <button id="quickEditSongBtn" class="host-top-btn" type="button">✎ EDIT</button>
+        <button id="quickEditSongBtn" class="host-top-btn edit-song-action" type="button" style="background:rgba(0,190,96,.30)!important;border-color:rgba(47,231,137,.72)!important;color:#c8ffdf!important;box-shadow:inset 0 0 0 1px rgba(78,255,159,.10),0 0 12px rgba(0,190,96,.08)!important;">✎ EDIT</button>
         <button id="songInfoBtn" class="host-top-btn" type="button"><svg class="host-top-action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10M14 4v6M8 14v6"/></svg><span>TOOLS</span></button>
         <button id="songActionsBtn" class="host-top-btn host-song-actions-toggle" type="button" aria-label="Song actions" aria-expanded="false">▼</button>
         <div id="songActionsMenu" class="host-song-actions-menu hidden">
@@ -288,7 +288,7 @@
   <script data-ls26-settings="1" src="../shared/app-settings.js?v=20260929-pause-countdown-colour"></script>
   <script src="../shared/metronome-engine.js?v=20260925-tools"></script>
   <script src="../shared/lyricview-metronome.js?v=20260925-circle-colour"></script>
-  <script src="js/lyricview.js?v=20260929-countdown-transition"></script>
+  <script src="js/lyricview.js?v=20260929-current-section-pause"></script>
   <script src="../admin-new/js/top-statusbar.js?v=20260925-artist-names" data-include="../admin-new/includes/top-statusbar.html?v=20260910-stage4"></script>
   <script src="../admin-new/js/top-statusbar-session-tools.js?v=20260929-pre-session-runorder"></script>
   <script>
