@@ -11,30 +11,117 @@
  let dialog,editing=null,rows=[],loading=false,cursor=null;
  const manage=!!$('appUpdateRows');
  function close(){LS26Dialogs.fadeClose(dialog);}
+ const UPDATE_TYPES=Object.freeze({
+  major:{label:'Major',rank:0},
+  minor:{label:'Minor',rank:1},
+  patch:{label:'Patch',rank:2}
+ });
+ const VERSION_RE=/^\d+\.\d+\.\d{2}$/;
+ const normaliseType=value=>UPDATE_TYPES[String(value||'').toLowerCase()]?String(value).toLowerCase():'patch';
+ const normaliseVersion=value=>{const clean=String(value||'').trim();return VERSION_RE.test(clean)?clean:'';};
+ const normalisePr=value=>{
+  const clean=String(value||'').trim();
+  if(!clean)return '';
+  try{
+   const url=new URL(clean);
+   return /(^|\.)github\.com$/i.test(url.hostname)&&/\/pull\/\d+(?:\/|$)/.test(url.pathname)?url.href:'';
+  }catch(_){return '';}
+ };
+ const typeLabel=value=>UPDATE_TYPES[normaliseType(value)].label;
+ const typeRank=value=>UPDATE_TYPES[normaliseType(value)].rank;
+ const dateMs=value=>value?.toMillis?.()||value?.toDate?.()?.getTime?.()||Date.parse(value||0)||0;
+ const versionParts=value=>String(value||'').split('.').map(part=>Number(part)||0);
+ const compareVersion=(a,b)=>{
+  const av=versionParts(a),bv=versionParts(b);
+  for(let i=0;i<3;i++){if(av[i]!==bv[i])return av[i]-bv[i];}
+  return 0;
+ };
+ const currentVersion=()=>{
+  const settings=window.LS26Settings?.get?.();
+  const fromSettings=normaliseVersion(settings?.appVersion);
+  if(fromSettings)return fromSettings;
+  const versions=rows.map(item=>normaliseVersion(item.version)).filter(Boolean).sort(compareVersion);
+  return versions.at(-1)||'3.1.55';
+ };
+ const bumpVersion=(base,type)=>{
+  const [major=0,minor=0,patch=0]=versionParts(normaliseVersion(base)||'3.1.55');
+  if(type==='major')return `${major+1}.0.00`;
+  if(type==='minor')return `${major}.${minor+1}.00`;
+  return `${major}.${minor}.${String(patch+1).padStart(2,'0')}`;
+ };
+
  function open(note=null){
   editing=note;
   if(!dialog){
-   dialog=document.createElement('dialog');dialog.id='ls26UpdatesDialog';dialog.className='ls26-dialog ls26-capture-dialog';dialog.setAttribute('aria-labelledby','ls26UpdatesHeading');
-   dialog.innerHTML='<form id="ls26UpdateForm"><h2 id="ls26UpdatesHeading">App Updates</h2><p class="ls26-update-intro">Capture an idea or something to fix in LiveSuite.</p><textarea id="ls26UpdateText" aria-label="Your note" required maxlength="5000" rows="4" placeholder="What would you like to improve?"></textarea><p id="ls26UpdateSaveStatus" role="status"></p><button class="ls26-save-note" type="submit">Save note</button></form>';
+   dialog=document.createElement('dialog');
+   dialog.id='ls26UpdatesDialog';
+   dialog.className='ls26-dialog ls26-capture-dialog ls26-update-editor-dialog';
+   dialog.setAttribute('aria-labelledby','ls26UpdatesHeading');
+   dialog.innerHTML=`
+    <form id="ls26UpdateForm">
+      <h2 id="ls26UpdatesHeading">App Updates</h2>
+      <p class="ls26-update-intro">Capture a LiveSuite change, fix or improvement.</p>
+      <div class="ls26-update-form-grid">
+        <label>Update type
+          <select id="ls26UpdateType">
+            <option value="major">Major</option>
+            <option value="minor">Minor</option>
+            <option value="patch" selected>Patch</option>
+          </select>
+        </label>
+        <label>LiveSuite version <small>(optional until released)</small>
+          <input id="ls26UpdateVersion" inputmode="decimal" placeholder="e.g. 3.1.56">
+        </label>
+      </div>
+      <label>GitHub pull request <small>(optional)</small>
+        <input id="ls26UpdatePr" type="url" inputmode="url" placeholder="https://github.com/.../pull/123">
+      </label>
+      <label>Update details
+        <textarea id="ls26UpdateText" aria-label="Update details" required maxlength="5000" rows="5" placeholder="What changed in LiveSuite?"></textarea>
+      </label>
+      <p id="ls26UpdateSaveStatus" role="status"></p>
+      <button class="ls26-save-note" type="submit">Save update</button>
+    </form>`;
    document.body.append(dialog);
-   $('ls26UpdateText').oninput=()=>{$('ls26UpdateText').setCustomValidity('');if(!editing)try{localStorage.setItem(key(),$('ls26UpdateText').value);}catch(_){}};
+   $('ls26UpdateText').oninput=()=>{
+    $('ls26UpdateText').setCustomValidity('');
+    if(!editing)try{localStorage.setItem(key(),$('ls26UpdateText').value);}catch(_){}
+   };
    $('ls26UpdateForm').onsubmit=async e=>{
-    e.preventDefault();const field=$('ls26UpdateText'),text=field.value.trim(),button=e.currentTarget.querySelector('[type=submit]');if(!text){field.setCustomValidity('Enter a note.');field.reportValidity();return;}
+    e.preventDefault();
+    const field=$('ls26UpdateText');
+    const text=field.value.trim();
+    const button=e.currentTarget.querySelector('[type=submit]');
+    const updateType=normaliseType($('ls26UpdateType').value);
+    const rawVersion=String($('ls26UpdateVersion').value||'').trim();
+    const version=normaliseVersion(rawVersion);
+    const rawPr=String($('ls26UpdatePr').value||'').trim();
+    const pullRequestUrl=normalisePr(rawPr);
+    if(!text){field.setCustomValidity('Enter an update.');field.reportValidity();return;}
+    if(rawVersion&&!version){$('ls26UpdateSaveStatus').textContent='Use a version such as 3.1.56.';return;}
+    if(rawPr&&!pullRequestUrl){$('ls26UpdateSaveStatus').textContent='Enter a GitHub pull-request URL, for example https://github.com/owner/repo/pull/123.';return;}
     button.disabled=true;field.disabled=true;dialog.querySelector('.ls26-modal-x')?.setAttribute('disabled','');$('ls26UpdateSaveStatus').textContent='Saving…';
     try{
      const user=auth().currentUser;if(!user)throw Error('Sign in to Admin first, then try again.');
-     if(editing)await collection().doc(editing.id).update({text,updatedAt:stamp()});
-     else await collection().add({text,page:location.pathname,completed:false,createdAt:stamp(),createdBy:user.uid});
+     const data={text,updateType,version,pullRequestUrl,updatedAt:stamp()};
+     if(editing)await collection().doc(editing.id).update(data);
+     else await collection().add({...data,kind:'update',page:location.pathname,completed:false,createdAt:stamp(),createdBy:user.uid});
      if(!editing)try{localStorage.removeItem(key());}catch(_){}
-     field.value='';close();LS26.toast('Note saved successfully.');if(manage)load(true);
-    }catch(err){$('ls26UpdateSaveStatus').textContent=errorText(err)+' Your note has been kept; please retry.';}
+     field.value='';close();LS26.toast('App update saved.');if(manage)load(true);
+    }catch(err){$('ls26UpdateSaveStatus').textContent=errorText(err)+' Your update has been kept; please retry.';}
     finally{button.disabled=false;field.disabled=false;dialog.querySelector('.ls26-modal-x')?.removeAttribute('disabled');}
    };
    dialog.addEventListener('cancel',e=>{if($('ls26UpdateForm').querySelector('[type=submit]').disabled)e.preventDefault();});
   }
-  $('ls26UpdatesHeading').textContent=note?'Edit app update':'App Updates';$('ls26UpdateSaveStatus').textContent='';
+  $('ls26UpdatesHeading').textContent=note?'Edit app update':'Add App Update';
+  $('ls26UpdateSaveStatus').textContent='';
   let draft='';try{draft=localStorage.getItem(key())||'';}catch(_){}
-  $('ls26UpdateText').value=note?.text||draft;if(!dialog.open)dialog.showModal();$('ls26UpdateText').focus();
+  $('ls26UpdateText').value=note?.text||draft;
+  $('ls26UpdateType').value=normaliseType(note?.updateType);
+  $('ls26UpdateVersion').value=normaliseVersion(note?.version);
+  $('ls26UpdatePr').value=normalisePr(note?.pullRequestUrl);
+  if(!dialog.open)dialog.showModal();
+  $('ls26UpdateText').focus();
  }
  function render(){
   const list=$('appUpdateRows'),filter=$('appUpdateFilter').value;list.replaceChildren();
