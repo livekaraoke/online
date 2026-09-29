@@ -1049,12 +1049,14 @@ html.ls26-reduce-glow .performance-quick-info{box-shadow:none!important;filter:n
 .host-lyric-view-page .host-lyrics-content .host-section[data-focus-state="past"]{
   transition:opacity 180ms linear;
 }
-.host-lyric-view-page .host-lyrics-content .host-section[data-focus-state="next"]{
+.host-lyric-view-page .host-lyrics-content .host-section[data-focus-state="next"],
+.host-lyric-view-page .host-lyrics-content .host-section[data-focus-state="leaving"]{
   transition:none;
   will-change:opacity;
 }
 .host-lyric-view-page .host-lyrics-content .host-section[data-focus-state="active"],
-.host-lyric-view-page .host-lyrics-content .host-section[data-focus-state="future"]{
+.host-lyric-view-page .host-lyrics-content .host-section[data-focus-state="future"],
+.host-lyric-view-page .host-lyrics-content .host-section[data-focus-state="normal"]{
   transition:none;
 }
 @media(prefers-reduced-motion:reduce){

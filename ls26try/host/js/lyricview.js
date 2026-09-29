@@ -832,14 +832,39 @@
     const settings=window.LS26Settings?.get?.()||{};
     const past=Math.max(0,Math.min(1,Number(settings.lyricPastSectionOpacity??50)/100));
     const upcoming=Math.max(0,Math.min(1,Number(settings.lyricUpcomingSectionOpacity??50)/100));
-    const fadeDistance=Math.max(0,Math.min(800,Number(settings.lyricUpcomingFadeDistance??180)));
-    return {past,upcoming,fadeDistance};
+    const upcomingFadeDistance=Math.max(0,Math.min(800,Number(settings.lyricUpcomingFadeDistance??180)));
+    const previousFadeDistance=Math.max(0,Math.min(800,Number(settings.lyricPreviousFadeDistance??180)));
+    const duringPlayback=settings.lyricSectionFocusDuringPlayback!==false;
+    const whenStopped=settings.lyricSectionFocusWhenStopped===true;
+    return {past,upcoming,upcomingFadeDistance,previousFadeDistance,duringPlayback,whenStopped};
+  }
+
+  function sectionFadeProgress(distance,leadDistance) {
+    if(leadDistance<=0)return distance<=0?1:0;
+    return Math.max(0,Math.min(1,1-(distance/leadDistance)));
   }
 
   function updateSectionFocusOpacity(anchor=performanceActivationAnchor()) {
     if(!sectionEls.length)return;
-    const {past,upcoming,fadeDistance}=sectionFocusSettings();
+    const {
+      past,upcoming,upcomingFadeDistance,previousFadeDistance,
+      duringPlayback,whenStopped
+    }=sectionFocusSettings();
+    const focusEnabled=autoScrollOn?duringPlayback:whenStopped;
+
+    if(!focusEnabled){
+      sectionEls.forEach(el=>{
+        el.dataset.focusState="normal";
+        el.style.opacity="1";
+      });
+      return;
+    }
+
     const nextIndex=currentSectionIndex+1;
+    const nextEl=sectionEls[nextIndex]||null;
+    const nextDistance=nextEl?nextEl.getBoundingClientRect().top-anchor:Infinity;
+    const upcomingProgress=nextEl?sectionFadeProgress(nextDistance,upcomingFadeDistance):0;
+    const previousProgress=nextEl?sectionFadeProgress(nextDistance,previousFadeDistance):0;
 
     sectionEls.forEach((el,index)=>{
       let opacity=1;
@@ -848,16 +873,15 @@
       if(index<currentSectionIndex){
         opacity=past;
         state="past";
-      }else if(index>currentSectionIndex){
+      }else if(index===currentSectionIndex){
+        opacity=nextEl?1-((1-past)*previousProgress):1;
+        state=previousProgress>0?"leaving":"active";
+      }else{
         opacity=upcoming;
         state=index===nextIndex?"next":"future";
 
         if(index===nextIndex){
-          const distance=el.getBoundingClientRect().top-anchor;
-          const progress=fadeDistance<=0
-            ? (distance<=0?1:0)
-            : Math.max(0,Math.min(1,1-(distance/fadeDistance)));
-          opacity=upcoming+((1-upcoming)*progress);
+          opacity=upcoming+((1-upcoming)*upcomingProgress);
         }
       }
 
@@ -972,6 +996,9 @@
 
   window.addEventListener("resize", () => {
     requestAnimationFrame(() => centerActiveProgressSection(false));
+  });
+  window.addEventListener("ls26:settings-applied",()=>{
+    requestAnimationFrame(()=>updateSectionFocusOpacity(performanceActivationAnchor()));
   });
 
   function smoothRelativeScroll(direction) {
@@ -1971,6 +1998,7 @@
     $("autoScrollBtn").classList.toggle("active", autoScrollOn);
     $("autoScrollBtn").innerHTML = autoScrollOn ? '<svg class="ls26-play-icon" viewBox="0 0 32 32" aria-hidden="true"><path d="M7 4h6v24H7zM19 4h6v24h-6z"/></svg>' : '<svg class="ls26-play-icon" viewBox="0 0 32 32" aria-hidden="true"><path d="M7 3 29 16 7 29Z"/></svg>';
     $("autoScrollBtn").setAttribute('aria-label', autoScrollOn ? 'Pause auto-scroll (song stays playing)' : 'Start or resume auto-scroll');
+    requestAnimationFrame(()=>updateSectionFocusOpacity(performanceActivationAnchor()));
 
     if (wasOff && autoScrollOn) {
       autoScrollEndHandled = false;
@@ -2007,11 +2035,11 @@
             fractionalY -= wholePixels;
           }
 
-          // Primary finish trigger: [ END ] reaches the exact same activation
-          // line as lyric sections. Keep the physical bottom check as a safety
-          // fallback for malformed/legacy songs without a usable end marker.
+          // Primary finish trigger: use the dedicated lower completion line,
+          // matching updateSectionProgress. Keep the physical bottom check as
+          // a safety fallback for malformed/legacy songs.
           const endMarker=$("endMarker");
-          const endReached=endMarker && endMarker.getBoundingClientRect().top <= performanceActivationAnchor();
+          const endReached=endMarker && endMarker.getBoundingClientRect().top <= songCompletionActivationY(performanceActivationAnchor());
           const doc = document.documentElement;
           const atBottom =
             window.scrollY + window.innerHeight >=
