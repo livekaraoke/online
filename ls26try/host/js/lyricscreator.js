@@ -2432,7 +2432,7 @@
     if (template) {
       syncSectionsFromDOM();
       const item = TEMPLATES[Number(template.dataset.template)];
-      const requestedIndex = Number.isFinite(Number(pendingTemplateInsertIndex))
+      const requestedIndex = pendingTemplateInsertIndex !== null && Number.isFinite(Number(pendingTemplateInsertIndex))
         ? Math.max(0, Math.min(sections.length, Number(pendingTemplateInsertIndex)))
         : sections.length;
       sections.splice(requestedIndex, 0, makeSection(item.type, item));
