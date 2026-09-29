@@ -1215,15 +1215,15 @@
 
   function syncQuickToolsHeight() {
     const quick=$("performanceQuickInfo");
-    const height=quick&&!quick.hidden&&!quick.classList.contains("ls26-released")
+    const height=quick&&!quick.hidden
       ? Math.ceil(quick.getBoundingClientRect().height||0)
       : 0;
     document.documentElement?.style?.setProperty?.("--ls26-karaoke-tools-h",height+"px");
   }
 
-  function setQuickToolsReleased(released) {
+  function setQuickToolsReleased() {
     const quick=$("performanceQuickInfo");
-    quick?.classList.toggle("ls26-released",!!released);
+    quick?.classList.remove("ls26-released");
     syncQuickToolsHeight();
   }
 

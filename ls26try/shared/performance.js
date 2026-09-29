@@ -79,7 +79,14 @@
     window.addEventListener('ls26:tempo-changed',sync);
     window.addEventListener('ls26:song-started',()=>{if(!$('ls26InfoStartup').checked)$('closeSongInfoBtn').click();});
     let frame;
-    function sticky(){cancelAnimationFrame(frame);frame=requestAnimationFrame(()=>{const sections=window.LS26Performance?.sections()||[],quick=$('performanceQuickInfo');if(!quick||sections.length<2)return;const threshold=sections[1].getBoundingClientRect().top+scrollY-(header?.getBoundingClientRect().height||0)-24;quick.classList.toggle('ls26-released',scrollY>=threshold);});}
+    function sticky(){
+      cancelAnimationFrame(frame);
+      frame=requestAnimationFrame(()=>{
+        const quick=$('performanceQuickInfo');
+        if(!quick)return;
+        quick.classList.remove('ls26-released');
+      });
+    }
     window.addEventListener('scroll',sticky,{passive:true});
   }
   function adminHandoff(){
