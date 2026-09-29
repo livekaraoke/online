@@ -2208,8 +2208,6 @@
     const { sessionId } = await getActiveSessionContext();
     const expectedSessionId=String(sessionId||"");
 
-    // Prefer the already-live Run Order snapshot, but never trust a snapshot
-    // from another/no session. In that case read the authoritative document.
     let data=window.LK?.sessionTools?.getRunOrderSnapshot?.() || null;
     if (
       !data ||
@@ -2220,9 +2218,8 @@
       data=snap?.exists ? (snap.data()||{}) : {};
     }
 
-    const runSessionId=String(data.sessionId||"");
     if (
-      runSessionId !== expectedSessionId ||
+      String(data.sessionId||"") !== expectedSessionId ||
       !Array.isArray(data.items) ||
       !data.items.length
     ) {
@@ -2234,65 +2231,60 @@
       "deleted","deletedbyhost","declined"
     ]);
 
-    const items = data.items;
-    let currentIndex = -1;
-
-    if (requestId) {
-      currentIndex = items.findIndex(item => item.requestId === requestId);
-    }
-
-    if (currentIndex < 0) {
-      currentIndex = items.findIndex(item => item.songId === currentSongId);
-    }
-
-    if (currentIndex < 0 && currentSong) {
-      currentIndex = items.findIndex(item =>
-        sameSongByMetadata(item, currentSong)
-      );
-    }
-
-    const playable = item => {
+    const isCurrentSong = item => {
       if (!item) return false;
-      const hasSongIdentity=Boolean(
+
+      if (
+        currentSongId &&
+        item.songId &&
+        String(item.songId) === String(currentSongId)
+      ) {
+        return true;
+      }
+
+      if (currentSong && sameSongByMetadata(item,currentSong)) {
+        return true;
+      }
+
+      // A request ID can survive navigation/reloads, so never let it choose the
+      // "next" row by itself. Only treat it as current when the song identity
+      // also matches.
+      if (
+        requestId &&
+        item.requestId === requestId &&
+        currentSong &&
+        sameSongByMetadata(item,currentSong)
+      ) {
+        return true;
+      }
+
+      return false;
+    };
+
+    const isNextCandidate = item => {
+      if (!item) return false;
+      const status=String(item.status||"").toLowerCase();
+      if (terminal.has(status) || status === "playing") return false;
+      if (isCurrentSong(item)) return false;
+
+      return Boolean(
         item.songId ||
         String(item.songTitle||item.title||"").trim()
       );
-      return hasSongIdentity &&
-        !terminal.has(String(item.status||"").toLowerCase());
     };
 
-    let next = null;
-
-    // Normal queue behaviour: use the first playable item after the song that
-    // has just finished.
-    if (currentIndex >= 0) {
-      for (let i=currentIndex+1;i<items.length;i++) {
-        if (playable(items[i])) {
-          next=items[i];
-          break;
-        }
-      }
-    }
-
-    // A host can start a Library song that was not already in Run Order.
-    // ensureCurrentSongPlaying() records that song by appending a temporary
-    // "lyricview" row at the end. In that case the real queued songs are before
-    // the current row, so falling through to "nothing next" is wrong. Use the
-    // first remaining playable row, excluding the current song itself.
-    if (!next) {
-      next=items.find((item,index) =>
-        index !== currentIndex &&
-        playable(item)
-      ) || null;
-    }
-
+    // The Run Order array itself is authoritative for queue order. The next
+    // song is therefore the FIRST remaining queued/playable row, exactly as the
+    // host sees it in Run Order — never "the row after whichever request ID
+    // happened to match".
+    const next=data.items.find(isNextCandidate) || null;
     if (!next) return null;
 
     const resolved = await resolveRunOrderSongDocument(next);
 
     if (resolved?.id) {
       if (resolved.id !== next.songId) {
-        await repairSingleRunOrderItemSongId(next, resolved, data);
+        await repairSingleRunOrderItemSongId(next,resolved,data);
       }
 
       return {
@@ -2304,8 +2296,6 @@
       };
     }
 
-    // If the row still has a valid Firestore song ID, it can be loaded even
-    // when the optional preview metadata lookup failed.
     return next.songId ? next : null;
   }
 
