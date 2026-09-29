@@ -710,3 +710,211 @@ body .ls26-footer .ls26-footer-icon image{filter:none!important;box-shadow:none!
     max-width:51px!important;
   }
 }
+
+
+/* =========================================================
+   APP UPDATES VERSION HISTORY — 2026-09-30
+   ========================================================= */
+.app-update-header-actions{
+  display:flex!important;
+  align-items:center!important;
+  gap:8px!important;
+  flex-wrap:wrap!important;
+}
+.app-update-header-actions button{
+  min-height:42px!important;
+  padding:8px 13px!important;
+  border:1px solid var(--ls-border)!important;
+  border-radius:7px!important;
+  background:var(--ls-soft)!important;
+  color:var(--ls-text)!important;
+  font-weight:850!important;
+}
+.app-update-header-actions .primary{
+  border-color:var(--ls-accent)!important;
+  background:#07506b!important;
+  color:#fff!important;
+}
+.ls26-updates-toolbar label{
+  display:flex!important;
+  align-items:center!important;
+  gap:6px!important;
+  color:var(--ls-muted)!important;
+  font-size:12px!important;
+  font-weight:800!important;
+}
+.ls26-updates-toolbar select{
+  min-width:132px!important;
+  margin:0!important;
+}
+.ls26-update-version-group{
+  margin:16px 0 22px!important;
+  padding:0 12px 12px!important;
+  border:1px solid var(--ls-border)!important;
+  border-radius:11px!important;
+  background:rgba(4,20,29,.72)!important;
+}
+.ls26-update-version-group.is-unassigned{
+  border-style:dashed!important;
+}
+.ls26-update-version-head{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:12px!important;
+  margin:0 -12px 10px!important;
+  padding:12px 14px!important;
+  border-bottom:1px solid var(--ls-border)!important;
+  background:rgba(7,36,50,.9)!important;
+  border-radius:10px 10px 0 0!important;
+}
+.ls26-update-version-head h2{
+  margin:0!important;
+  color:#eaf8ff!important;
+  font-size:20px!important;
+}
+.ls26-update-release-meta,
+.ls26-update-badges,
+.ls26-update-meta-row,
+.ls26-update-actions{
+  display:flex!important;
+  align-items:center!important;
+  gap:7px!important;
+  flex-wrap:wrap!important;
+}
+.ls26-update-type,
+.ls26-update-version-badge,
+.ls26-update-status-badge{
+  display:inline-flex!important;
+  align-items:center!important;
+  min-height:24px!important;
+  padding:3px 8px!important;
+  border:1px solid var(--ls-border)!important;
+  border-radius:999px!important;
+  font-size:10px!important;
+  font-weight:950!important;
+  letter-spacing:.04em!important;
+  text-transform:uppercase!important;
+}
+.ls26-update-type.type-major{
+  border-color:#d25a6d!important;
+  background:#3a1019!important;
+  color:#ff8797!important;
+}
+.ls26-update-type.type-minor{
+  border-color:#b88c34!important;
+  background:#332609!important;
+  color:#ffd36c!important;
+}
+.ls26-update-type.type-patch{
+  border-color:#267ca0!important;
+  background:#082b3b!important;
+  color:#77dcff!important;
+}
+.ls26-update-version-badge{
+  border-color:#35687d!important;
+  background:#082431!important;
+  color:#a7d9eb!important;
+}
+.ls26-update-status-badge.completed{
+  border-color:#287c4c!important;
+  background:#092b1b!important;
+  color:#77efa8!important;
+}
+.ls26-update-status-badge.pending{
+  border-color:#735e2c!important;
+  background:#2c2309!important;
+  color:#f0d06b!important;
+}
+.ls26-update-card{
+  margin:10px 0!important;
+}
+.ls26-update-card>p{
+  margin:9px 0!important;
+}
+.ls26-update-meta-row{
+  justify-content:space-between!important;
+}
+.ls26-update-pr-link{
+  color:#65dcff!important;
+  font-size:11px!important;
+  font-weight:850!important;
+  text-decoration:none!important;
+}
+.ls26-update-pr-link:hover{
+  text-decoration:underline!important;
+}
+.ls26-update-actions{
+  margin-top:10px!important;
+}
+.ls26-release-summary{
+  margin:8px 4px 12px!important;
+  padding:10px 12px!important;
+  border-left:3px solid var(--ls-accent)!important;
+  background:#061a24!important;
+  color:#cfe6f1!important;
+  white-space:pre-wrap!important;
+}
+.ls26-update-release-meta small{
+  color:var(--ls-muted)!important;
+}
+.ls26-edit-release{
+  min-height:30px!important;
+  padding:4px 8px!important;
+  border:1px solid var(--ls-border)!important;
+  border-radius:6px!important;
+  background:var(--ls-soft)!important;
+  color:var(--ls-text)!important;
+}
+.ls26-update-form-grid{
+  display:grid!important;
+  grid-template-columns:1fr 1fr!important;
+  gap:10px!important;
+}
+.ls26-update-editor-dialog label,
+.ls26-create-version-dialog label{
+  display:grid!important;
+  gap:5px!important;
+  margin:9px 0!important;
+  color:#ddecf4!important;
+  font-size:12px!important;
+  font-weight:850!important;
+}
+.ls26-update-editor-dialog label small,
+.ls26-create-version-dialog label small{
+  color:var(--ls-muted)!important;
+  font-weight:600!important;
+}
+.ls26-update-editor-dialog input,
+.ls26-update-editor-dialog select,
+.ls26-create-version-dialog input,
+.ls26-create-version-dialog select,
+.ls26-create-version-dialog textarea{
+  box-sizing:border-box!important;
+  width:100%!important;
+  min-height:42px!important;
+  padding:8px 10px!important;
+  border:1px solid var(--ls-border)!important;
+  border-radius:7px!important;
+  background:var(--ls-bg)!important;
+  color:var(--ls-text)!important;
+}
+.ls26-release-assign{
+  grid-template-columns:auto 1fr!important;
+  align-items:center!important;
+}
+.ls26-release-assign input{
+  width:20px!important;
+  min-width:20px!important;
+  height:20px!important;
+}
+#ls26ReleaseStatus,
+#ls26UpdateSaveStatus{
+  min-height:18px!important;
+  color:#ffcb69!important;
+  font-size:11px!important;
+}
+@media(max-width:760px){
+  .ls26-update-form-grid{grid-template-columns:1fr!important}
+  .ls26-update-version-head{align-items:flex-start!important;flex-direction:column!important}
+}
