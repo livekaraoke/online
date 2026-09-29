@@ -3,9 +3,9 @@
   box-sizing:border-box!important;
   min-width:0!important;
   max-width:none!important;
-  width:calc(100% - 245px)!important;
-  margin-left:245px!important;
-  padding-bottom:34px!important;
+  width:calc(100% - var(--d26-side,245px))!important;
+  margin-left:var(--d26-side,245px)!important;
+  padding-bottom:112px!important;
 }
 .settings-main>*{
   min-width:0!important;
@@ -64,11 +64,11 @@
 }
 .setting-row{
   display:grid!important;
-  grid-template-columns:minmax(250px,1fr) minmax(220px,310px)!important;
-  gap:22px!important;
-  align-items:center!important;
+  grid-template-columns:1fr!important;
+  gap:10px!important;
+  align-items:start!important;
   min-height:74px!important;
-  padding:12px 18px!important;
+  padding:14px 18px!important;
   border-top:1px solid #123445!important;
 }
 .settings-card>p+.setting-row{border-top:0!important}
@@ -101,23 +101,24 @@
   min-width:0!important;
   display:flex!important;
   align-items:center!important;
-  justify-content:flex-end!important;
+  justify-content:flex-start!important;
   gap:10px!important;
+  width:100%!important;
 }
 .setting-control input[type="range"]{
   flex:1 1 auto!important;
   width:auto!important;
   min-width:150px!important;
-  max-width:245px!important;
+  max-width:520px!important;
   accent-color:#00cafa!important;
 }
 .setting-control output{
-  flex:0 0 55px!important;
-  min-width:55px!important;
+  flex:0 0 auto!important;
+  min-width:58px!important;
   color:#00cafa!important;
   font-size:14px!important;
   font-weight:900!important;
-  text-align:right!important;
+  text-align:left!important;
 }
 .setting-control input[type="color"]{
   width:70px!important;
@@ -146,17 +147,22 @@
   accent-color:#00cafa!important;
 }
 .settings-actions{
-  position:static!important;
+  position:fixed!important;
+  left:calc(var(--d26-side,245px) + 20px)!important;
+  right:20px!important;
+  bottom:max(10px,env(safe-area-inset-bottom))!important;
+  z-index:2300!important;
   display:flex!important;
   align-items:center!important;
   justify-content:flex-end!important;
   gap:10px!important;
-  margin-top:16px!important;
+  margin:0!important;
   padding:13px 14px!important;
-  border:1px solid #24556b!important;
+  border:1px solid #2a627a!important;
   border-radius:10px!important;
-  background:#041722!important;
-  backdrop-filter:none!important;
+  background:rgba(4,23,34,.96)!important;
+  box-shadow:0 -10px 34px rgba(0,0,0,.38)!important;
+  backdrop-filter:blur(8px)!important;
 }
 .settings-actions button{
   min-height:46px!important;
@@ -193,10 +199,7 @@
 
 @media(min-width:1380px){
   .settings-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
-  .setting-row{
-    grid-template-columns:minmax(180px,1fr) minmax(190px,250px)!important;
-    gap:14px!important;
-  }
+  .setting-row{grid-template-columns:1fr!important;gap:10px!important}
 }
 @media(max-width:699px){
   .settings-main{
@@ -217,4 +220,31 @@
   .setting-toggle{justify-content:flex-start!important}
   .settings-actions{flex-wrap:wrap!important}
   #settingsStatus{flex-basis:100%!important}
+}
+
+
+/* Controls now sit below the setting title/description instead of being
+   squeezed against the far right edge. */
+.setting-control select,
+.setting-control input[type="text"],
+.setting-control input[type="number"]{
+  min-height:42px!important;
+  max-width:520px!important;
+  border:1px solid #35667c!important;
+  border-radius:7px!important;
+  background:#071c27!important;
+  color:#eef8ff!important;
+  padding:8px 10px!important;
+  font-size:14px!important;
+}
+.setting-control select{min-width:240px!important}
+.setting-control input[type="text"]{width:min(100%,320px)!important}
+.setting-toggle{justify-content:flex-start!important}
+
+@media(max-width:760px){
+  .settings-actions{
+    left:10px!important;
+    right:10px!important;
+    bottom:max(8px,env(safe-area-inset-bottom))!important;
+  }
 }
