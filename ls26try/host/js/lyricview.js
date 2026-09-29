@@ -701,28 +701,25 @@
     return -1;
   }
 
-  function tuningReleaseAnchor() {
-    const header = document.getElementById("ls26StickyHeader");
-    const quick = document.getElementById("performanceQuickInfo");
-    return (header?.getBoundingClientRect().height || 0)
-      + (quick?.getBoundingClientRect().height || 0)
-      + sectionActivationOffset();
-  }
-
   function updateGuitarTuningStickyState() {
     const card = $("guitarTuningCard");
     if (!card || card.hidden) return;
     const firstSection = sectionEls[0] || null;
-    const released = !!firstSection && firstSection.getBoundingClientRect().top <= tuningReleaseAnchor();
-    card.classList.toggle("past-tuning-window", released);
+    if (!firstSection) {
+      card.classList.remove("past-tuning-window");
+      return;
+    }
+
+    // Release exactly when the first visible section reaches the fixed tuning
+    // card, rather than using the much lower lyric activation line.
+    const cardBottom = card.getBoundingClientRect().bottom;
+    const firstTop = firstSection.getBoundingClientRect().top;
+    card.classList.toggle("past-tuning-window", firstTop <= cardBottom + 3);
   }
 
   function guitarTuningStickyHeight() {
     const card = $("guitarTuningCard");
-    if (!card || card.hidden) return 0;
-    // Keep the section activation anchor stable at the release boundary. The
-    // card remains in document flow while visually hidden, so using its height
-    // here prevents the active section from bouncing between Verse 1/Verse 2.
+    if (!card || card.hidden || card.classList.contains("past-tuning-window")) return 0;
     return Math.ceil(card.getBoundingClientRect().height || 0) + 8;
   }
 
@@ -935,7 +932,7 @@
     }
 
     updateGuitarTuningStickyState();
-    setQuickToolsReleased(secondVisibleSectionIndex() >= 0 && currentSectionIndex >= secondVisibleSectionIndex());
+    updateQuickToolsStickyState();
     updateSpeed();
     renderSectionProgress();
     updateSectionVisibilityUi();
@@ -1248,6 +1245,22 @@
     syncQuickToolsHeight();
   }
 
+  function updateQuickToolsStickyState() {
+    const quick=$("performanceQuickInfo");
+    const secondIndex=secondVisibleSectionIndex();
+    const secondSection=secondIndex >= 0 ? sectionEls[secondIndex] : null;
+    if (!quick || !secondSection) {
+      setQuickToolsReleased(false);
+      return;
+    }
+
+    // The Live Karaoke tools stay until the second visible section physically
+    // reaches the sticky tools card.
+    const quickBottom=quick.getBoundingClientRect().bottom;
+    const secondTop=secondSection.getBoundingClientRect().top;
+    setQuickToolsReleased(secondTop <= quickBottom + 3);
+  }
+
   function beginCurrentSectionEndPause(index) {
     if(
       !autoScrollOn ||
@@ -1297,6 +1310,7 @@
     manualSectionUntil=Date.now()+650;
     currentSectionIndex = Math.max(0, Math.min(sectionEls.length - 1, index));
     updateGuitarTuningStickyState();
+    updateQuickToolsStickyState();
     updateSpeed();
 
     // Update/centre the guide immediately when Prev/Next or a guide item is used.
@@ -1344,6 +1358,7 @@
     const changed = bestIndex !== currentSectionIndex;
     currentSectionIndex = bestIndex;
     updateGuitarTuningStickyState();
+    updateQuickToolsStickyState();
 
     [...$("sectionProgress").children]
       .forEach(el => el.classList.toggle("active", Number(el.dataset.visibleIndex) === currentSectionIndex && !el.classList.contains("session-hidden")));
@@ -1359,7 +1374,7 @@
     // current section marker into view and keep it roughly centred.
     if (changed) {
       updateSpeed();
-      setQuickToolsReleased(secondVisibleSectionIndex() >= 0 && currentSectionIndex >= secondVisibleSectionIndex());
+      updateQuickToolsStickyState();
       centerActiveProgressSection(true);
     }
 
