@@ -2325,6 +2325,9 @@ body.host-lyric-view-page {
 .host-lyric-view-page .host-section{
   position:relative!important;
 }
+.host-lyric-view-page .host-section-body{
+  position:relative!important;
+}
 .host-lyric-view-page .section-pause-countdown{
   position:absolute!important;
   z-index:4!important;
@@ -2345,8 +2348,8 @@ body.host-lyric-view-page {
   user-select:none!important;
 }
 .host-lyric-view-page .section-pause-countdown[hidden],
-.host-lyric-view-page .host-section:not(.current-section)>.section-pause-countdown,
-.host-lyric-view-page .host-section.collapsed>.section-pause-countdown{
+.host-lyric-view-page .host-section:not(.current-section) .section-pause-countdown,
+.host-lyric-view-page .host-section.collapsed .section-pause-countdown{
   display:none!important;
 }
 @media(max-width:700px){
@@ -2354,4 +2357,13 @@ body.host-lyric-view-page {
     right:24px!important;
     top:50%!important;
   }
+}
+
+
+/* Countdown lives inside the lyric body so 50% means the vertical centre of
+   the actual section content, not halfway through header + body combined. */
+.host-lyric-view-page .host-section-body>.section-pause-countdown{
+  top:50%!important;
+  bottom:auto!important;
+  transform:translateY(-50%)!important;
 }
