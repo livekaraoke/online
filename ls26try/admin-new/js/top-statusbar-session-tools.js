@@ -984,6 +984,7 @@
       songTitle: request.songTitle || request.title || "",
       artist: request.artist || request.songArtist || "",
       singerName: request.singerName || request.name || "",
+      requesterNote: request.note || request.requesterNote || "",
       requestId: request.id,
       source: "request",
       status: "queued",

@@ -542,3 +542,45 @@ body .ls26-footer .ls26-footer-icon image{filter:none!important;box-shadow:none!
   }
   .ls26-nav-icon{font-size:17px!important}
 }
+
+
+/* =========================================================
+   LIVE SUITE LOGO CELL CENTRING — 2026-09-29
+   Remove the legacy auto-margin that visually enlarged only the right side
+   of the logo cell. The icon now sits in the geometric centre of its cell.
+   ========================================================= */
+.ls26-nav a.ls26-brand.ls26-brand-icon{
+  margin:0!important;
+  flex:0 0 98px!important;
+  width:98px!important;
+  min-width:98px!important;
+  max-width:98px!important;
+  padding:0!important;
+  display:grid!important;
+  place-items:center!important;
+}
+.ls26-nav a.ls26-brand.ls26-brand-icon svg{
+  width:78px!important;
+  height:78px!important;
+  max-width:82%!important;
+  max-height:100%!important;
+  margin:0 auto!important;
+}
+@media(max-width:1100px){
+  .ls26-nav a.ls26-brand.ls26-brand-icon{
+    flex-basis:90px!important;
+    width:90px!important;
+    min-width:90px!important;
+    max-width:90px!important;
+  }
+  .ls26-nav a.ls26-brand.ls26-brand-icon svg{width:72px!important;height:72px!important}
+}
+@media(max-width:800px){
+  .ls26-nav a.ls26-brand.ls26-brand-icon{
+    flex-basis:80px!important;
+    width:80px!important;
+    min-width:80px!important;
+    max-width:80px!important;
+  }
+  .ls26-nav a.ls26-brand.ls26-brand-icon svg{width:66px!important;height:66px!important}
+}

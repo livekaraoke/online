@@ -63,6 +63,14 @@
   };
   let capoDisplayShift = 0;
   let notesSaveTimer = null;
+  let requesterSaveTimer = null;
+  let requesterContext = {
+    sessionId:"",
+    requestId:"",
+    runOrderItemId:"",
+    name:"Host",
+    note:""
+  };
 
   const $ = id => document.getElementById(id);
   const esc = value => String(value ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
@@ -305,6 +313,206 @@
     // TIME is now a permanent reference card beside the YouTube/notes cards,
     // so keep this reference row available even when a song has no note/link.
     root.hidden=false;
+  }
+
+  function requesterLocalStorageKey() {
+    const projectId=firebase.app().options.projectId||"default";
+    const session=requesterContext.sessionId||"no-session";
+    return `ls26:requester-card:${projectId}:${session}:${currentSongId||songId||"song"}`;
+  }
+
+  function setRequesterCards(name,note,status="") {
+    const nameInput=$("performanceRequesterName");
+    const noteInput=$("performanceRequesterNote");
+    if(nameInput && document.activeElement!==nameInput) nameInput.value=String(name||"Host");
+    if(noteInput && document.activeElement!==noteInput) noteInput.value=String(note||"");
+    if($("performanceRequesterStatus")) $("performanceRequesterStatus").textContent=status;
+  }
+
+  async function loadRequesterCardsContext() {
+    const nameInput=$("performanceRequesterName");
+    const noteInput=$("performanceRequesterNote");
+    if(!nameInput||!noteInput)return;
+
+    requesterContext={
+      sessionId:"",
+      requestId:requestId||"",
+      runOrderItemId:"",
+      name:"Host",
+      note:""
+    };
+    setRequesterCards("Host","","");
+
+    try{
+      const {sessionId}=await getActiveSessionContext();
+      requesterContext.sessionId=sessionId||"";
+
+      let runData={};
+      let matched=null;
+      try{
+        const runSnap=await db.collection("karaokeControl").doc("runOrder").get();
+        runData=runSnap.exists?(runSnap.data()||{}):{};
+        const sameSession=!sessionId||!runData.sessionId||runData.sessionId===sessionId;
+        if(sameSession&&Array.isArray(runData.items)){
+          matched=await findCurrentRunOrderItem(runData.items);
+        }
+      }catch(error){
+        console.warn("Could not load requester Run Order context:",error);
+      }
+
+      const activeRequestId=requestId||matched?.requestId||"";
+      requesterContext.requestId=activeRequestId;
+      requesterContext.runOrderItemId=matched?.id||"";
+
+      let requestData={};
+      if(activeRequestId){
+        try{
+          const requestSnap=await db.collection("publicSongRequests").doc(activeRequestId).get();
+          if(requestSnap.exists)requestData=requestSnap.data()||{};
+        }catch(error){
+          console.warn("Could not load requester request document:",error);
+        }
+      }
+
+      let local={};
+      try{
+        local=JSON.parse(sessionStorage.getItem(requesterLocalStorageKey())||"{}")||{};
+      }catch(_){ local={}; }
+
+      const name=String(
+        requestData.singerName ||
+        requestData.name ||
+        requestData.requesterName ||
+        matched?.requesterName ||
+        matched?.singerName ||
+        local.name ||
+        "Host"
+      ).trim() || "Host";
+
+      const remoteNote=
+        requestData.note ??
+        requestData.requesterNote ??
+        matched?.requesterNote ??
+        matched?.note;
+
+      const note=String(
+        remoteNote !== undefined && remoteNote !== null
+          ? remoteNote
+          : (local.note||"")
+      );
+
+      requesterContext.name=name;
+      requesterContext.note=note;
+      setRequesterCards(name,note,"");
+    }catch(error){
+      console.warn("Could not initialise requester cards:",error);
+      setRequesterCards(
+        requesterContext.name||"Host",
+        requesterContext.note||"",
+        "Requester details could not be loaded."
+      );
+    }
+  }
+
+  async function saveRequesterCards() {
+    clearTimeout(requesterSaveTimer);
+    requesterSaveTimer=null;
+
+    const nameInput=$("performanceRequesterName");
+    const noteInput=$("performanceRequesterNote");
+    if(!nameInput||!noteInput)return;
+
+    const name=String(nameInput.value||"").trim()||"Host";
+    const note=String(noteInput.value||"").trim();
+    requesterContext.name=name;
+    requesterContext.note=note;
+
+    try{
+      sessionStorage.setItem(
+        requesterLocalStorageKey(),
+        JSON.stringify({name,note})
+      );
+    }catch(_){}
+
+    const status=$("performanceRequesterStatus");
+    if(status)status.textContent="Saving…";
+
+    try{
+      const updates=[];
+
+      if(requesterContext.requestId){
+        updates.push(
+          db.collection("publicSongRequests").doc(requesterContext.requestId).set({
+            singerName:name,
+            note,
+            updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+          },{merge:true})
+        );
+      }
+
+      const runRef=db.collection("karaokeControl").doc("runOrder");
+      try{
+        const runSnap=await runRef.get();
+        const runData=runSnap.exists?(runSnap.data()||{}):{};
+        const sameSession=
+          !requesterContext.sessionId ||
+          !runData.sessionId ||
+          runData.sessionId===requesterContext.sessionId;
+        const items=sameSession&&Array.isArray(runData.items)
+          ? runData.items.map(item=>({...item}))
+          : [];
+        let index=-1;
+
+        if(requesterContext.runOrderItemId){
+          index=items.findIndex(item=>item.id===requesterContext.runOrderItemId);
+        }
+        if(index<0&&requesterContext.requestId){
+          index=items.findIndex(item=>item.requestId===requesterContext.requestId);
+        }
+        if(index<0){
+          index=items.findIndex(item=>
+            item.songId===currentSongId ||
+            sameSongByMetadata(item,currentSong)
+          );
+        }
+
+        if(index>=0){
+          requesterContext.runOrderItemId=items[index].id||requesterContext.runOrderItemId;
+          items[index]={
+            ...items[index],
+            ...(requesterContext.requestId ? {singerName:name} : {requesterName:name}),
+            requesterNote:note
+          };
+          updates.push(
+            runRef.set({
+              items,
+              updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+            },{merge:true})
+          );
+        }
+      }catch(error){
+        console.warn("Could not save requester details to Run Order:",error);
+      }
+
+      if(updates.length)await Promise.all(updates);
+      if(status){
+        status.textContent="Saved";
+        setTimeout(()=>{
+          if(status.textContent==="Saved")status.textContent="";
+        },1100);
+      }
+    }catch(error){
+      console.error("Could not save requester details:",error);
+      if(status)status.textContent="Save failed";
+      window.LS26?.toast?.("Requester details could not be saved.");
+    }
+  }
+
+  function queueRequesterCardsSave() {
+    const status=$("performanceRequesterStatus");
+    if(status)status.textContent="Unsaved";
+    clearTimeout(requesterSaveTimer);
+    requesterSaveTimer=setTimeout(saveRequesterCards,800);
   }
 
   function openSongNoteModal() {
@@ -2277,6 +2485,15 @@
       menu.classList.toggle("hidden",!opening);
       $("songActionsBtn").setAttribute("aria-expanded",opening?"true":"false");
     };
+    const requesterNameInput=$("performanceRequesterName");
+    const requesterNoteInput=$("performanceRequesterNote");
+    [requesterNameInput,requesterNoteInput].filter(Boolean).forEach(input=>{
+      input.addEventListener("input",queueRequesterCardsSave);
+      input.addEventListener("blur",()=>{
+        if(requesterSaveTimer)void saveRequesterCards();
+      });
+    });
+
     $("songNoteActionBtn").onclick=openSongNoteModal;
     $("songNoteCancelBtn").onclick=closeSongNoteModal;
     $("songNoteSaveBtn").onclick=saveSongNoteFromPerformance;
@@ -2488,6 +2705,7 @@
       loadSongScrollSpeed(currentSong);
       setTopTitle(currentSong);
       setInfo(currentSong);
+      await loadRequesterCardsContext();
       renderGuitarTuning(currentSong);
       renderSections(currentSong);
       loadSlaveLyricsOptions();
