@@ -107,7 +107,7 @@
      if(editing)await collection().doc(editing.id).update(data);
      else await collection().add({...data,kind:'update',page:location.pathname,completed:false,createdAt:stamp(),createdBy:user.uid});
      if(!editing)try{localStorage.removeItem(key());}catch(_){}
-     field.value='';close();LS26.toast('App update saved.');if(manage)load(true);
+     field.value='';close();LS26.toast(`${typeLabel(updateType)} update saved: ${text.slice(0,90)}${text.length>90?'…':''}`);if(manage)load(true);
     }catch(err){$('ls26UpdateSaveStatus').textContent=errorText(err)+' Your update has been kept; please retry.';}
     finally{button.disabled=false;field.disabled=false;dialog.querySelector('.ls26-modal-x')?.removeAttribute('disabled');}
    };
@@ -303,6 +303,7 @@
   const assign=$('ls26ReleaseAssign')?.checked !== false;
   const candidates=assign ? releaseCandidates() : [];
 
+  if($('ls26CreateVersionHeading'))$('ls26CreateVersionHeading').textContent=`Create ${typeLabel(type)} Version`;
   summary.textContent=assign
    ? `${typeLabel(type)} v${version} · ${candidates.length} completed unversioned update${candidates.length===1?'':'s'} will be included`
    : `${typeLabel(type)} v${version} · no existing updates will be assigned`;
