@@ -828,6 +828,44 @@
       +sectionActivationOffset();
   }
 
+  function sectionFocusSettings() {
+    const settings=window.LS26Settings?.get?.()||{};
+    const past=Math.max(.1,Math.min(1,Number(settings.lyricPastSectionOpacity??50)/100));
+    const upcoming=Math.max(.1,Math.min(1,Number(settings.lyricUpcomingSectionOpacity??50)/100));
+    const fadeDistance=Math.max(0,Math.min(800,Number(settings.lyricUpcomingFadeDistance??180)));
+    return {past,upcoming,fadeDistance};
+  }
+
+  function updateSectionFocusOpacity(anchor=performanceActivationAnchor()) {
+    if(!sectionEls.length)return;
+    const {past,upcoming,fadeDistance}=sectionFocusSettings();
+    const nextIndex=currentSectionIndex+1;
+
+    sectionEls.forEach((el,index)=>{
+      let opacity=1;
+      let state="active";
+
+      if(index<currentSectionIndex){
+        opacity=past;
+        state="past";
+      }else if(index>currentSectionIndex){
+        opacity=upcoming;
+        state=index===nextIndex?"next":"future";
+
+        if(index===nextIndex){
+          const distance=el.getBoundingClientRect().top-anchor;
+          const progress=fadeDistance<=0
+            ? (distance<=0?1:0)
+            : Math.max(0,Math.min(1,1-(distance/fadeDistance)));
+          opacity=upcoming+((1-upcoming)*progress);
+        }
+      }
+
+      el.dataset.focusState=state;
+      el.style.opacity=String(Math.max(.1,Math.min(1,opacity)));
+    });
+  }
+
   function scrollToSection(index) {
     if (!sectionEls.length) return;
     cancelAnimationFrame(relativeScrollFrame);
@@ -850,13 +888,18 @@
     const header=document.getElementById('ls26StickyHeader');
     const offset=(header?.getBoundingClientRect().height||0)+(currentSectionIndex===0&&!quick?.classList.contains('ls26-released')?(quick?.getBoundingClientRect().height||0):0)+guitarTuningStickyHeight()+sectionActivationOffset();
     window.scrollTo({top:Math.max(0,sectionEls[currentSectionIndex].getBoundingClientRect().top+window.scrollY-offset),behavior:'instant'});
+    requestAnimationFrame(()=>updateSectionFocusOpacity(performanceActivationAnchor()));
     setTimeout(updateSectionProgress,700);
   }
 
   function updateSectionProgress() {
-    if (!sectionEls.length || Date.now()<manualSectionUntil) return;
+    if (!sectionEls.length) return;
 
     const anchor=performanceActivationAnchor();
+    if(Date.now()<manualSectionUntil){
+      updateSectionFocusOpacity(anchor);
+      return;
+    }
     let bestIndex = 0;
     sectionEls.forEach((el,i)=>{if(el.getBoundingClientRect().top<=anchor)bestIndex=i;});
 
@@ -872,6 +915,7 @@
     sectionEls.forEach((el, i) => {
       el.classList.toggle("current-section", i === currentSectionIndex);
     });
+    updateSectionFocusOpacity(anchor);
 
     // As the performer scrolls through the song, automatically bring the
     // current section marker into view and keep it roughly centred.
@@ -2021,7 +2065,7 @@
         const idle=Math.max(.1,Math.min(.9,Number(settings.lyricNavIdleOpacity??40)/100));
         const active=Math.max(.2,Math.min(.95,Number(settings.lyricNavActiveOpacity??60)/100));
         const peak=Math.max(.4,Math.min(1,Number(settings.lyricNavPressedOpacity??90)/100));
-        const duration=Math.max(500,Math.min(5000,Number(settings.lyricNavFeedbackDuration??1800)));
+        const duration=Math.max(500,Math.min(10000,Number(settings.lyricNavFeedbackDuration??1800)));
 
         navButtons.forEach(nav=>nav.getAnimations?.().forEach(animation=>animation.cancel()));
         if(matchMedia("(prefers-reduced-motion: reduce)").matches||!button.animate)return;
