@@ -464,7 +464,14 @@
 
   function stripLegacyMarkerFromHtml(value) {
     const original = String(value || "");
-    const cleaned = LS26SectionContent.cleanHtml(original);
+    const holder = document.createElement("div");
+    holder.innerHTML = original;
+
+    // Older creator builds could accidentally persist preview-only dash spans.
+    // Collapse them back to literal "-" characters before normalising/saving.
+    unwrapDashSpans(holder);
+
+    const cleaned = LS26SectionContent.cleanHtml(holder.innerHTML);
     if (cleaned !== original) legacyMarkerWasRemoved = true;
     return cleaned;
   }
@@ -959,9 +966,19 @@
 
   function unwrapDashSpans(root) {
     if (!root) return;
-    root.querySelectorAll("span.creator-dash-char").forEach(span => {
+    // These spans exist only to colour dashes in the live editor/viewer.
+    // They must never be persisted: a large guitar tab can contain tens of
+    // thousands of dashes, turning a small text section into megabytes of HTML.
+    root.querySelectorAll("span.creator-dash-char, span.section-dash-char").forEach(span => {
       span.replaceWith(document.createTextNode(span.textContent || "-"));
     });
+  }
+
+  function getCleanEditorHtmlForSave(editor) {
+    if (!editor) return "";
+    const clone = editor.cloneNode(true);
+    unwrapDashSpans(clone);
+    return clone.innerHTML;
   }
 
   function applyDashColourToEditor(editor, colour) {
@@ -1277,7 +1294,11 @@
       const i = Number(el.dataset.html);
       updateEmptyEditor(el);
       if (sections[i]) {
-        sections[i].html = el.classList.contains("is-empty") ? "" : el.innerHTML;
+        // Persist clean semantic HTML, not the thousands of temporary
+        // creator-dash-char spans used to colour "-" in the editor.
+        sections[i].html = el.classList.contains("is-empty")
+          ? ""
+          : getCleanEditorHtmlForSave(el);
         if (sections[i].type === "hostNote") {
           sections[i].text = el.classList.contains("is-empty")
             ? ""
@@ -1483,7 +1504,9 @@
     if (legacyMarkerWasRemoved) {
       try {
         await db.collection("lyrics").doc(firebaseId).set({
-          sections: sections.map(normalizeSection),
+          // JSON round-trip ensures the section array contains plain Firestore-
+      // serializable values only; no DOM/helper objects can leak into the write.
+      sections: sections.map(normalizeSection).map(section => JSON.parse(JSON.stringify(section))),
           updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         }, { merge:true });
         loadedSong.sections = JSON.parse(JSON.stringify(sections));
@@ -1556,6 +1579,19 @@
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     };
     if (!firebaseId) data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+
+    // Firestore documents are limited to 1 MiB. Check the serializable payload
+    // (timestamps replaced with null only for this estimate) before attempting
+    // the write so any genuinely oversized song gets a useful message.
+    const sizeProbe = { ...data, updatedAt: null };
+    if (Object.prototype.hasOwnProperty.call(sizeProbe, "createdAt")) sizeProbe.createdAt = null;
+    const estimatedBytes = new TextEncoder().encode(JSON.stringify(sizeProbe)).length;
+    if (estimatedBytes > 950 * 1024) {
+      await LS26Dialogs.alert(
+        `Could not save song: the cleaned song data is about ${Math.ceil(estimatedBytes / 1024)} KB, which is too close to Firestore's 1 MiB document limit.`
+      );
+      return;
+    }
 
     $("saveSongBtn").disabled = true;
     try {
