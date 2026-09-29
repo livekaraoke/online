@@ -1092,6 +1092,34 @@
       </div>`;
   }
 
+  function hostNoteToolbar(index, section) {
+    const style = section.style || defaultStyle(section.type);
+    return `
+      <div class="rich-toolbar advanced-rich-toolbar host-note-rich-toolbar">
+        <select class="toolbar-select" data-font="${index}" title="Font name">${renderFontOptions(style.fontFamily)}</select>
+        <div class="font-size-stepper" title="Section font size">
+          <button type="button" data-size-step="${index}" data-step="-1" title="Decrease font size by 1">▼</button>
+          <input class="toolbar-select size-select" data-size="${index}" type="number" min="6" max="120" step="1" list="fontSizePresets" value="${Number(style.fontSize) || 23}" aria-label="Font size">
+          <button type="button" data-size-step="${index}" data-step="1" title="Increase font size by 1">▲</button>
+        </div>
+        <button type="button" class="text-colour-control" data-colour="${index}" title="Apply a colour to the selected text" aria-label="Selected text colour">
+          <span class="text-colour-icon">T</span>
+          <span class="text-colour-swatch" style="background:${esc(style.color || "#ffffff")}"></span>
+        </button>
+        <button type="button" data-command="bold" title="Bold"><b>B</b></button>
+        <button type="button" data-command="italic" title="Italic"><i>I</i></button>
+        <button type="button" data-command="underline" title="Underline"><u>U</u></button>
+        <button type="button" data-command="insertUnorderedList" title="Bullet list">• LIST</button>
+        <button type="button" data-command="insertOrderedList" title="Numbered list">1. LIST</button>
+        <button type="button" data-text-case="upper" title="Uppercase selected text">AA</button>
+        <button type="button" data-text-case="lower" title="Lowercase selected text">aa</button>
+        <button type="button" data-text-case="sentence" title="Sentence case selected text">Aa</button>
+        <button type="button" data-wrap-brackets="${index}" title="Wrap selected text in square brackets">[ ]</button>
+        <button type="button" data-insert-link="${index}">＋ LINK</button>
+        <button type="button" class="toolbar-select-all" data-select-section="${index}" title="Select all text in this section">SELECT ALL</button>
+      </div>`;
+  }
+
   function render() {
     const root = $("sectionEditorList");
     root.innerHTML = "";
@@ -1114,7 +1142,8 @@
             </div>
           </div><hr>`;
       } else {
-        const isTextNote = s.type === "performanceNote" || s.type === "hostNote";
+        const isPerformanceNote = s.type === "performanceNote";
+        const isHostNote = s.type === "hostNote";
         card.innerHTML = `
           <div class="creator-section-head">
             <button class="editor-collapse-btn" type="button" data-editor-collapse="${index}" title="Collapse editor section">${s.editorCollapsed ? "▼" : "▲"}</button>
@@ -1149,10 +1178,12 @@
                 <input type="checkbox" data-host-note-card="${index}" ${s.displayAsCard ? "checked" : ""}>
                 <span><strong>Display as card</strong><small>Show this Host Note as a centred 80% width card in LyricView.</small></span>
               </label>` : ""}
-            ${isTextNote ? noteTextToolbar(index) : sectionToolbar(index, s)}
-            ${isTextNote
-              ? `<textarea class="${s.type === "hostNote" ? "host-note-editor" : "performance-note-editor"}" data-note="${index}" style="text-align:${esc(s.style?.textAlign || "left")}">${esc(s.text)}</textarea>`
-              : `<div class="creator-rich-editor ${s.type === "tab" ? "tab-editor" : ""}" data-html="${index}" data-placeholder="${s.type === "lyrics" ? "Enter lyrics and chords here..." : ""}" contenteditable="true" style="font-family:${esc(s.style.fontFamily)};font-size:${Number(s.style.fontSize) || 23}px;color:${esc(s.style.color)};text-align:${esc(s.style?.textAlign || "left")}">${s.html || ""}</div>`}
+            ${isHostNote ? hostNoteToolbar(index, s) : isPerformanceNote ? noteTextToolbar(index) : sectionToolbar(index, s)}
+            ${isHostNote
+              ? `<div class="creator-rich-editor host-note-rich-editor" data-html="${index}" data-placeholder="Enter host note..." contenteditable="true" style="font-family:${esc(s.style.fontFamily)};font-size:${Number(s.style.fontSize) || 23}px;color:${esc(s.style.color)};text-align:${esc(s.style?.textAlign || "left")}">${s.html || esc(s.text || "").replace(/\\r?\\n/g, "<br>")}</div>`
+              : isPerformanceNote
+                ? `<textarea class="performance-note-editor" data-note="${index}" style="text-align:${esc(s.style?.textAlign || "left")}">${esc(s.text)}</textarea>`
+                : `<div class="creator-rich-editor ${s.type === "tab" ? "tab-editor" : ""}" data-html="${index}" data-placeholder="${s.type === "lyrics" ? "Enter lyrics and chords here..." : ""}" contenteditable="true" style="font-family:${esc(s.style.fontFamily)};font-size:${Number(s.style.fontSize) || 23}px;color:${esc(s.style.color)};text-align:${esc(s.style?.textAlign || "left")}">${s.html || ""}</div>`}
           </div>`;
       }
       root.appendChild(card);
@@ -1226,7 +1257,14 @@
     document.querySelectorAll("[data-html]").forEach(el => {
       const i = Number(el.dataset.html);
       updateEmptyEditor(el);
-      if (sections[i]) sections[i].html = el.classList.contains("is-empty") ? "" : el.innerHTML;
+      if (sections[i]) {
+        sections[i].html = el.classList.contains("is-empty") ? "" : el.innerHTML;
+        if (sections[i].type === "hostNote") {
+          sections[i].text = el.classList.contains("is-empty")
+            ? ""
+            : String(el.innerText || el.textContent || "").replace(/\u00a0/g, " ");
+        }
+      }
     });
     document.querySelectorAll("[data-load-collapsed]").forEach(el => {
       const i = Number(el.dataset.loadCollapsed);
