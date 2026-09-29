@@ -2238,3 +2238,26 @@ body.host-lyric-view-page {
 @media(max-width:700px){
   .host-lyric-view-page .host-section.is-host-note.display-as-card{width:calc(100% - 20px)!important}
 }
+
+
+/* =========================================================
+   HOST NOTE VISIBILITY + TUNING STICKY FIX — 2026-09-29
+   ========================================================= */
+
+/* lyrics-suite.css historically hid host-note sections because they used to be
+   sidebar-only. Host Notes are now real LyricView sections, so override that
+   legacy rule. This also prevents display:none Host Notes from reporting a
+   zero-position rectangle and falsely advancing the active-section index,
+   which could release/hide the sticky tuning card before section 2. */
+.host-lyric-view-page .host-section.is-host-note{
+  display:block!important;
+}
+.host-lyric-view-page .host-section.is-host-note.session-visibility-hidden{
+  display:none!important;
+}
+
+/* Preserve rich Host Note formatting while still respecting the whole-section
+   alignment saved in LyricsCreator. */
+.host-lyric-view-page .host-section.is-host-note .host-section-body{
+  white-space:normal!important;
+}

@@ -1373,3 +1373,19 @@
   }
   .creator-page #creatorSectionNav.creator-section-navigator button{flex-basis:84px!important;min-height:48px!important}
 }
+
+
+/* =========================================================
+   HOST NOTE RICH EDITOR — 2026-09-29
+   ========================================================= */
+.creator-page .host-note-rich-toolbar{
+  margin-top:2px!important;
+}
+.creator-page .host-note-rich-editor{
+  min-height:118px!important;
+  white-space:pre-wrap!important;
+  overflow-wrap:anywhere!important;
+}
+.creator-page .host-note-rich-editor.is-empty::before{
+  color:#587482!important;
+}
