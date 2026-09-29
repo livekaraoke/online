@@ -592,7 +592,7 @@ body .ls26-footer .ls26-footer-icon image{filter:none!important;box-shadow:none!
    navigation tap targets without reintroducing horizontal scrolling.
    ========================================================= */
 .ls26-nav a.ls26-brand.ls26-brand-icon svg{
-  transform:translateX(8px)!important;
+  transform:translate(-10px,-6px)!important;
 }
 @media(min-width:801px) and (max-width:1100px){
   .ls26-nav a.ls26-brand.ls26-brand-icon{
