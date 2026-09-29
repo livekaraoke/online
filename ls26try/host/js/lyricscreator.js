@@ -817,7 +817,7 @@
 
   function clearBoldMarkup(root) {
     if (!root?.querySelectorAll) return;
-    root.querySelectorAll("b,strong,.ls26-heavy-bold").forEach(element => unwrapElement(element));
+    root.querySelectorAll("b,strong,.ls26-standard-bold,.ls26-heavy-bold,.ls26-normal-weight").forEach(element => unwrapElement(element));
     root.querySelectorAll("[style]").forEach(element => {
       if (element.style?.fontWeight) element.style.fontWeight = "";
     });
