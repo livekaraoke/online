@@ -1015,7 +1015,7 @@
   function setQuickToolsReleased(released) {
     const quick=$("performanceQuickInfo");
     quick?.classList.toggle("ls26-released",!!released);
-    requestAnimationFrame(syncQuickToolsHeight);
+    syncQuickToolsHeight();
   }
 
   function beginSectionAutoScrollPause(index,afterManualNavigation=false) {
