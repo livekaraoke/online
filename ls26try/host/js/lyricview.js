@@ -655,7 +655,11 @@
       if (sectionTypeClass(section) === "is-tab") {
         buildBeatGridTab(section, body);
       } else if (hostNote) {
-        body.textContent = section.text || section.html || "";
+        // New Host Notes may contain rich formatting from LyricsCreator.
+        // Existing plain-text notes remain fully compatible.
+        body.innerHTML = section.html
+          ? cleanSectionHtml(section.html)
+          : esc(section.text || "").replace(/\r?\n/g, "<br>");
       } else {
         body.innerHTML = cleanSectionHtml(section.html || section.text || "");
       }
