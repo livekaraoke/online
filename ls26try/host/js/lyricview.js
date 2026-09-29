@@ -39,7 +39,10 @@
   let scrollTimer = null;
   let autoScrollOn = false;
   let sectionPauseUntil = 0;
+  let sectionPauseStartsAt = 0;
   let lastSectionPauseIndex = -1;
+  let sectionPauseCountdownFrame = 0;
+  let quickToolsResizeObserver = null;
   let performanceRecordCreated = false;
   let performanceRecordPromise = null;
   let ensurePlayingPromise = null;
@@ -605,6 +608,7 @@
   }
 
   function renderSections(song) {
+    clearSectionPauseCountdown();
     const container = $("lyricsContent");
     container.innerHTML = "";
     sectionEls = [];
@@ -676,7 +680,12 @@
         requestAnimationFrame(updateSectionProgress);
       });
 
-      card.append(header, body);
+      const pauseCountdown = document.createElement("div");
+      pauseCountdown.className = "section-pause-countdown";
+      pauseCountdown.hidden = true;
+      pauseCountdown.setAttribute("aria-hidden", "true");
+
+      card.append(header, body, pauseCountdown);
       container.appendChild(card);
       sectionItems.push({ el:card, section, sourceIndex:index, restrictedByType });
     });
@@ -944,20 +953,89 @@
     return Number.isFinite(value)&&value>0?Math.round(value):0;
   }
 
+  function clearSectionPauseCountdown() {
+    if(sectionPauseCountdownFrame){
+      cancelAnimationFrame(sectionPauseCountdownFrame);
+      sectionPauseCountdownFrame=0;
+    }
+    sectionItems.forEach(item=>{
+      const output=item.el?.querySelector?.(".section-pause-countdown");
+      if(!output)return;
+      output.hidden=true;
+      output.textContent="";
+    });
+  }
+
+  function runSectionPauseCountdown(index) {
+    clearSectionPauseCountdown();
+    const card=sectionEls[index];
+    const output=card?.querySelector?.(".section-pause-countdown");
+    if(!card||!output||sectionPauseMsForIndex(index)<=0)return;
+
+    const tick=()=>{
+      if(!autoScrollOn||currentSectionIndex!==index||sectionPauseUntil<=0){
+        output.hidden=true;
+        output.textContent="";
+        sectionPauseCountdownFrame=0;
+        return;
+      }
+
+      const now=Date.now();
+      if(now<sectionPauseStartsAt){
+        output.hidden=true;
+        output.textContent="";
+        sectionPauseCountdownFrame=requestAnimationFrame(tick);
+        return;
+      }
+
+      const remaining=sectionPauseUntil-now;
+      if(remaining<=0){
+        output.hidden=true;
+        output.textContent="";
+        sectionPauseCountdownFrame=0;
+        return;
+      }
+
+      output.textContent=(remaining/1000).toFixed(1);
+      output.hidden=false;
+      sectionPauseCountdownFrame=requestAnimationFrame(tick);
+    };
+
+    tick();
+  }
+
+  function syncQuickToolsHeight() {
+    const quick=$("performanceQuickInfo");
+    const height=quick&&!quick.hidden&&!quick.classList.contains("ls26-released")
+      ? Math.ceil(quick.getBoundingClientRect().height||0)
+      : 0;
+    document.documentElement.style.setProperty("--ls26-karaoke-tools-h",height+"px");
+  }
+
+  function setQuickToolsReleased(released) {
+    const quick=$("performanceQuickInfo");
+    quick?.classList.toggle("ls26-released",!!released);
+    requestAnimationFrame(syncQuickToolsHeight);
+  }
+
   function beginSectionAutoScrollPause(index,afterManualNavigation=false) {
     if(!autoScrollOn||index<0||index>=sectionEls.length||index===lastSectionPauseIndex)return 0;
     lastSectionPauseIndex=index;
 
     const pauseMs=sectionPauseMsForIndex(index);
     if(pauseMs<=0){
+      sectionPauseStartsAt=0;
       sectionPauseUntil=0;
+      clearSectionPauseCountdown();
       return 0;
     }
 
     const base=afterManualNavigation
       ? Math.max(Date.now(),manualSectionUntil)
       : Date.now();
+    sectionPauseStartsAt=base;
     sectionPauseUntil=base+pauseMs;
+    runSectionPauseCountdown(index);
     return pauseMs;
   }
 
@@ -979,7 +1057,7 @@
     centerActiveProgressSection(true);
 
     const quick=document.getElementById('performanceQuickInfo');
-    quick?.classList.toggle('ls26-released',currentSectionIndex>0);
+    setQuickToolsReleased(currentSectionIndex>0);
     const header=document.getElementById('ls26StickyHeader');
     const offset=(header?.getBoundingClientRect().height||0)+(currentSectionIndex===0&&!quick?.classList.contains('ls26-released')?(quick?.getBoundingClientRect().height||0):0)+guitarTuningStickyHeight()+sectionActivationOffset();
     window.scrollTo({top:Math.max(0,sectionEls[currentSectionIndex].getBoundingClientRect().top+window.scrollY-offset),behavior:'instant'});
@@ -1002,6 +1080,7 @@
     const changed = bestIndex !== currentSectionIndex;
     currentSectionIndex = bestIndex;
     updateGuitarTuningStickyState();
+    setQuickToolsReleased(currentSectionIndex>0);
 
     [...$("sectionProgress").children]
       .forEach(el => el.classList.toggle("active", Number(el.dataset.visibleIndex) === currentSectionIndex && !el.classList.contains("session-hidden")));
@@ -1744,6 +1823,9 @@
     autoScrollEndHandled = true;
 
     autoScrollOn = false;
+    sectionPauseStartsAt = 0;
+    sectionPauseUntil = 0;
+    clearSectionPauseCountdown();
     window.dispatchEvent(new CustomEvent("ls26:scroll-state",{detail:{playing:false}}));
     window.dispatchEvent(new Event("ls26:song-finished"));
 
@@ -2105,7 +2187,9 @@
         cancelAnimationFrame(scrollTimer);
         scrollTimer = null;
       }
+      sectionPauseStartsAt = 0;
       sectionPauseUntil = 0;
+      clearSectionPauseCountdown();
 
       flushPerformanceTempo();
       // LS26: pausing affects scrolling only; current song remains playing.
@@ -2115,6 +2199,14 @@
 
   function bindUi() {
     if ($("exitBtn")) $("exitBtn").onclick = () => location.href = LS26.url("library.html");
+
+    const quickTools=$("performanceQuickInfo");
+    if(quickTools && window.ResizeObserver){
+      quickToolsResizeObserver?.disconnect?.();
+      quickToolsResizeObserver=new ResizeObserver(syncQuickToolsHeight);
+      quickToolsResizeObserver.observe(quickTools);
+    }
+    requestAnimationFrame(syncQuickToolsHeight);
     setupLinkedSongReturn();
     if ($("showAllSectionsBtn")) {
       $("showAllSectionsBtn").onclick = () => {
