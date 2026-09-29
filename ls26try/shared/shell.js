@@ -83,12 +83,13 @@
     if(!stack){stack=document.createElement('div');stack.id='ls26StickyHeader';document.body.prepend(stack);}
     stack.append(nav);const status=$('topStatusContainer');if(status)stack.append(status);
     new ResizeObserver(()=>document.documentElement.style.setProperty('--ls-header-h',stack.getBoundingClientRect().height+'px')).observe(stack);
-    const menu=document.createElement('div');menu.id='ls26HostMenu';menu.hidden=true;menu.innerHTML='<button id="ls26InboxOpen" type="button">▣ Inbox</button><button id="ls26UpdatesOpen" type="button">✎ App Updates</button><button id="ls26ReminderOpen" type="button">☑ Add Reminder</button>';document.body.append(menu);
+    const menu=document.createElement('div');menu.id='ls26HostMenu';menu.hidden=true;menu.innerHTML='<button id="ls26InboxOpen" type="button">▣ Inbox</button><button id="ls26UpdatesOpen" type="button">✎ App Updates</button><button id="ls26ReminderOpen" type="button">☑ Add Reminder</button><button id="ls26SettingsOpen" type="button">⚙ App Settings</button>';document.body.append(menu);
     function closeMenu(){menu.hidden=true;$('ls26More').setAttribute('aria-expanded','false');}
     $('ls26More').onclick=()=>{menu.hidden=!menu.hidden;$('ls26More').setAttribute('aria-expanded',String(!menu.hidden));const rect=nav.getBoundingClientRect();menu.style.top=(rect.bottom+4)+'px';if(!menu.hidden)menu.querySelector('button').focus();};
     $('ls26InboxOpen').onclick=()=>{closeMenu();openInbox();};
     $('ls26UpdatesOpen').onclick=()=>{closeMenu();window.LS26.openAppUpdates();};
     $('ls26ReminderOpen').onclick=()=>{closeMenu();window.LS26.openReminder();};
+    $('ls26SettingsOpen').onclick=()=>{closeMenu();location.href=url('admin-new/app-settings.html');};
     document.addEventListener('click',e=>{if(!menu.contains(e.target)&&!$('ls26More').contains(e.target))closeMenu();});
     document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!menu.hidden){closeMenu();$('ls26More').focus();}});
     window.addEventListener('resize',closeMenu);
