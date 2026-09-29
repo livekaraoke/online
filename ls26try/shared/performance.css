@@ -146,7 +146,7 @@ body.host-lyric-view-page{overflow:visible!important}
 .ls26-title-meta{display:grid;grid-template-columns:repeat(4,minmax(42px,auto));gap:10px;align-items:center;text-align:center}
 .ls26-title-meta>div{min-width:0}
 .ls26-title-meta small{display:block;font-size:10px!important;font-weight:600;color:var(--ls-muted);white-space:nowrap}
-.ls26-title-meta strong,.ls26-title-meta .bpm-number{display:block;font-size:21px!important;line-height:1.3!important;white-space:nowrap}
+.ls26-title-meta strong,.ls26-title-meta .bpm-number{display:block;font-size:var(--ls26-title-meta-value-size,21px)!important;line-height:1.3!important;white-space:nowrap}
 .ls26-title-meta .bpm-suffix{display:none!important}
 .host-lyric-view-page #ls26StickyHeader .ls26-actions button:first-child{border-color:var(--ls-border);color:var(--ls-text)}
 .library-page .ls26-footer .ls26-brand,.host-lyric-view-page .ls26-footer .ls26-brand{width:135px;height:45px}
@@ -1070,4 +1070,66 @@ html.ls26-reduce-glow .performance-quick-info{box-shadow:none!important;filter:n
 }
 .host-lyric-view-page .host-nav-pad{
   bottom:calc(var(--ls-drawer-bottom,150px) + 6px)!important;
+}
+
+
+/* =========================================================
+   LYRICVIEW HEADER SIZING + TOP ACTIONS — 2026-09-29
+   ========================================================= */
+
+/* Five-level section heading size. Size 3 maps to the former 19px / 44px
+   design. The coloured indicator keeps its saved per-section colour and only
+   changes thickness with the selected size. */
+.host-lyric-view-page .host-section-header,
+.host-lyric-view-page .host-section.is-host-note.display-as-card .host-section-header{
+  min-height:var(--ls26-section-header-height,44px)!important;
+  padding:var(--ls26-section-header-pad-y,7px) 12px!important;
+}
+.host-lyric-view-page .host-section-header>strong{
+  font-size:var(--ls26-section-header-font-size,19px)!important;
+}
+.host-lyric-view-page .host-section-header>.collapse-arrow{
+  font-size:var(--ls26-section-header-arrow-size,14px)!important;
+}
+.host-lyric-view-page .host-section-header>.collapse-hint{
+  font-size:var(--ls26-section-header-hint-size,9px)!important;
+}
+.host-lyric-view-page .host-section-header .section-colour-indicator{
+  height:var(--ls26-section-indicator-height,8px)!important;
+}
+
+/* EDIT gets a restrained green tint so it reads as a primary song-edit
+   action without competing with the transport controls. */
+.host-lyric-view-page #hostStickyStack #quickEditSongBtn{
+  border-color:rgba(67,224,132,.46)!important;
+  background:rgba(24,134,77,.22)!important;
+  color:#a8f5c8!important;
+}
+.host-lyric-view-page #hostStickyStack #quickEditSongBtn:hover{
+  border-color:rgba(78,238,151,.68)!important;
+  background:rgba(29,151,88,.30)!important;
+}
+
+/* INFO is now TOOLS. */
+.host-lyric-view-page #hostStickyStack #songInfoBtn{
+  border-color:rgba(72,183,226,.40)!important;
+  background:rgba(26,91,121,.18)!important;
+  color:#d8f3ff!important;
+}
+.host-lyric-view-page #hostStickyStack #songInfoBtn.active{
+  border-color:rgba(55,205,244,.76)!important;
+  background:rgba(14,106,139,.30)!important;
+  color:#effcff!important;
+  box-shadow:0 0 0 1px rgba(55,205,244,.12) inset!important;
+}
+.host-top-action-icon{
+  width:16px!important;
+  height:16px!important;
+  margin-right:6px!important;
+  fill:none!important;
+  stroke:currentColor!important;
+  stroke-width:1.9!important;
+  stroke-linecap:round!important;
+  stroke-linejoin:round!important;
+  flex:0 0 auto!important;
 }
