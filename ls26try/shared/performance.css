@@ -1047,10 +1047,9 @@ html.ls26-reduce-glow .performance-quick-info{box-shadow:none!important;filter:n
    The next section is scroll-linked with no transition lag so it is exactly
    100% at activation; the section that just became "past" fades down quickly. */
 .host-lyric-view-page .host-lyrics-content .host-section[data-focus-state="past"]{
-  transition:opacity 180ms linear;
+  transition:opacity var(--ls26-previous-section-fade-duration,900ms) linear;
 }
-.host-lyric-view-page .host-lyrics-content .host-section[data-focus-state="next"],
-.host-lyric-view-page .host-lyrics-content .host-section[data-focus-state="leaving"]{
+.host-lyric-view-page .host-lyrics-content .host-section[data-focus-state="next"]{
   transition:none;
   will-change:opacity;
 }

@@ -22,7 +22,7 @@
     lyricPastSectionOpacity: 50,
     lyricUpcomingSectionOpacity: 50,
     lyricUpcomingFadeDistance: 180,
-    lyricPreviousFadeDistance: 180,
+    lyricPreviousFadeDuration: 900,
     lyricSectionFocusDuringPlayback: true,
     lyricSectionFocusWhenStopped: false,
     lyricTextScale: 100,
@@ -76,7 +76,7 @@
       lyricPastSectionOpacity: clamp(raw.lyricPastSectionOpacity,0,100,DEFAULTS.lyricPastSectionOpacity),
       lyricUpcomingSectionOpacity: clamp(raw.lyricUpcomingSectionOpacity,0,100,DEFAULTS.lyricUpcomingSectionOpacity),
       lyricUpcomingFadeDistance: clamp(raw.lyricUpcomingFadeDistance,0,800,DEFAULTS.lyricUpcomingFadeDistance),
-      lyricPreviousFadeDistance: clamp(raw.lyricPreviousFadeDistance,0,800,DEFAULTS.lyricPreviousFadeDistance),
+      lyricPreviousFadeDuration: clamp(raw.lyricPreviousFadeDuration,0,5000,DEFAULTS.lyricPreviousFadeDuration),
       lyricSectionFocusDuringPlayback: raw.lyricSectionFocusDuringPlayback !== false,
       lyricSectionFocusWhenStopped: raw.lyricSectionFocusWhenStopped === true,
       lyricTextScale: clamp(raw.lyricTextScale,75,150,DEFAULTS.lyricTextScale),
@@ -125,6 +125,7 @@
     root.style.setProperty("--ls26-past-section-opacity",String(s.lyricPastSectionOpacity/100));
     root.style.setProperty("--ls26-upcoming-section-opacity",String(s.lyricUpcomingSectionOpacity/100));
     root.style.setProperty("--ls26-upcoming-fade-distance",s.lyricUpcomingFadeDistance+"px");
+    root.style.setProperty("--ls26-previous-section-fade-duration",s.lyricPreviousFadeDuration+"ms");
     root.style.setProperty("--ls26-lyric-text-scale",String(s.lyricTextScale/100));
     root.style.setProperty("--ls26-lyric-lead-in-height",s.lyricLeadInHeight+"px");
     root.style.setProperty("--ls26-section-activation-offset",s.lyricSectionActivationOffset+"px");

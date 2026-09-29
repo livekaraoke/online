@@ -833,10 +833,9 @@
     const past=Math.max(0,Math.min(1,Number(settings.lyricPastSectionOpacity??50)/100));
     const upcoming=Math.max(0,Math.min(1,Number(settings.lyricUpcomingSectionOpacity??50)/100));
     const upcomingFadeDistance=Math.max(0,Math.min(800,Number(settings.lyricUpcomingFadeDistance??180)));
-    const previousFadeDistance=Math.max(0,Math.min(800,Number(settings.lyricPreviousFadeDistance??180)));
     const duringPlayback=settings.lyricSectionFocusDuringPlayback!==false;
     const whenStopped=settings.lyricSectionFocusWhenStopped===true;
-    return {past,upcoming,upcomingFadeDistance,previousFadeDistance,duringPlayback,whenStopped};
+    return {past,upcoming,upcomingFadeDistance,duringPlayback,whenStopped};
   }
 
   function sectionFadeProgress(distance,leadDistance) {
@@ -847,7 +846,7 @@
   function updateSectionFocusOpacity(anchor=performanceActivationAnchor()) {
     if(!sectionEls.length)return;
     const {
-      past,upcoming,upcomingFadeDistance,previousFadeDistance,
+      past,upcoming,upcomingFadeDistance,
       duringPlayback,whenStopped
     }=sectionFocusSettings();
     const focusEnabled=autoScrollOn?duringPlayback:whenStopped;
@@ -864,7 +863,6 @@
     const nextEl=sectionEls[nextIndex]||null;
     const nextDistance=nextEl?nextEl.getBoundingClientRect().top-anchor:Infinity;
     const upcomingProgress=nextEl?sectionFadeProgress(nextDistance,upcomingFadeDistance):0;
-    const previousProgress=nextEl?sectionFadeProgress(nextDistance,previousFadeDistance):0;
 
     sectionEls.forEach((el,index)=>{
       let opacity=1;
@@ -874,8 +872,11 @@
         opacity=past;
         state="past";
       }else if(index===currentSectionIndex){
-        opacity=nextEl?1-((1-past)*previousProgress):1;
-        state=previousProgress>0?"leaving":"active";
+        // The active section remains fully visible until the following section
+        // actually becomes active. Only then does this section become "past"
+        // and CSS fades it down over the configured duration.
+        opacity=1;
+        state="active";
       }else{
         opacity=upcoming;
         state=index===nextIndex?"next":"future";
