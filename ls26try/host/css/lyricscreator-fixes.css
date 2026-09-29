@@ -1279,3 +1279,28 @@
   min-width:0!important;
   box-sizing:border-box!important;
 }
+
+
+/* =========================================================
+   LOOP + SONG DETAILS METADATA
+   ========================================================= */
+.creator-page #loopingInput{
+  min-height:48px!important;
+  padding:10px 12px!important;
+  border:1px solid #235064!important;
+  border-radius:6px!important;
+  background:#031722!important;
+  color:#f4fbff!important;
+  font-size:17px!important;
+  font-weight:800!important;
+}
+.creator-page .creator-song-details-field{
+  grid-column:1 / -1!important;
+  width:100%!important;
+  min-width:0!important;
+}
+.creator-page #songDetailsInput{
+  min-height:110px!important;
+  resize:vertical!important;
+  line-height:1.4!important;
+}
