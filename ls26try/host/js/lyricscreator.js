@@ -1177,11 +1177,11 @@
             <label class="section-scroll-pause-control">
               <span class="section-scroll-pause-copy">
                 <strong>AUTO-SCROLL PAUSE</strong>
-                <small>Pause scrolling when this section becomes active.</small>
+                <small>Pause scrolling when this section becomes active. Value is in seconds.</small>
               </span>
               <span class="section-scroll-pause-value">
-                <input type="number" min="0" step="100" inputmode="numeric" data-section-pause-ms="${index}" value="${s.pauseMs || 0}" aria-label="Section auto-scroll pause in milliseconds">
-                <em>ms</em>
+                <input type="number" min="0" step="0.1" inputmode="decimal" data-section-pause-seconds="${index}" value="${Number(((s.pauseMs || 0) / 1000).toFixed(3))}" aria-label="Section auto-scroll pause in seconds">
+                <em>s</em>
               </span>
             </label>
             ${s.type === "hostNote" ? `
@@ -1287,11 +1287,11 @@
       if (sections[i]?.type === "hostNote") sections[i].displayAsCard = el.checked;
     });
 
-    document.querySelectorAll("[data-section-pause-ms]").forEach(el => {
-      const i = Number(el.dataset.sectionPauseMs);
+    document.querySelectorAll("[data-section-pause-seconds]").forEach(el => {
+      const i = Number(el.dataset.sectionPauseSeconds);
       if (!sections[i]) return;
-      const value = Number(el.value);
-      sections[i].pauseMs = Number.isFinite(value) && value > 0 ? Math.round(value) : 0;
+      const seconds = Number(el.value);
+      sections[i].pauseMs = Number.isFinite(seconds) && seconds > 0 ? Math.round(seconds * 1000) : 0;
     });
 
     document.querySelectorAll("[data-visibility-strip]").forEach(strip => {
@@ -1739,7 +1739,7 @@
         const custom = document.querySelector(`[data-title-custom="${index}"]`);
         if (custom) custom.value = getSystemSectionTitleColour(event.target.value);
       }
-    } else if (event.target.matches("[data-note],[data-html],[data-load-collapsed],[data-visible-type],[data-host-note-card],[data-section-pause-ms]")) {
+    } else if (event.target.matches("[data-note],[data-html],[data-load-collapsed],[data-visible-type],[data-host-note-card],[data-section-pause-seconds]")) {
       syncSectionsFromDOM();
     }
 

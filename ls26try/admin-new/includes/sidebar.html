@@ -4,6 +4,9 @@
 .suite-nav-icon>svg{display:block;width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .suite-nav a,.suite-nav button{grid-template-columns:26px minmax(0,1fr) auto auto!important}
 #membersNavLink .suite-nav-label{overflow:visible!important;text-overflow:clip!important}
+.suite-nav .suite-logout-row{border-color:transparent!important;background:rgba(150,28,39,.22)!important;color:#ffc2c7!important;box-shadow:none!important;outline:none!important}
+.suite-nav .suite-logout-row .suite-nav-icon,.suite-nav .suite-logout-row .suite-nav-chevron{color:#ff8f98!important}
+.suite-nav .suite-logout-row:hover,.suite-nav .suite-logout-row:focus-visible{border-color:rgba(255,94,105,.44)!important;background:rgba(177,36,48,.32)!important;color:#fff!important}
 </style>
 <aside class="admin-sidebar suite-sidebar">
   <svg class="suite-icon-sprite" aria-hidden="true" width="0" height="0" style="position:absolute;overflow:hidden">
@@ -90,13 +93,13 @@
 
   <div class="suite-nav-section-title system-title">SYSTEM</div>
   <nav class="side-nav suite-nav">
-    <button id="membersNavLink" type="button" data-sidebar-admin-section="membersPanel" onclick="scrollToAdminSection('membersPanel')"><span class="suite-nav-icon"><svg aria-hidden="true"><use href="#lsi-users"></use></svg></span><span class="suite-nav-label">Members &amp; Users</span><span class="suite-nav-chevron">›</span></button>
+    <a id="membersNavLink" href="admin.html#membersPanel" data-sidebar-admin-section="membersPanel"><span class="suite-nav-icon"><svg aria-hidden="true"><use href="#lsi-users"></use></svg></span><span class="suite-nav-label">Members &amp; Users</span><span class="suite-nav-chevron">›</span></a>
     <a href="app-updates.html" data-sidebar-nav="app-updates"><span class="suite-nav-icon"><svg aria-hidden="true"><use href="#lsi-edit"></use></svg></span><span class="suite-nav-label">App Updates</span><span class="suite-nav-chevron">›</span></a>
     <a href="app-settings.html" data-sidebar-nav="app-settings"><span class="suite-nav-icon"><svg aria-hidden="true"><use href="#lsi-settings"></use></svg></span><span class="suite-nav-label">App Settings</span><span class="suite-nav-chevron">›</span></a>
     <a href="database-manager.html" data-sidebar-nav="database-manager"><span class="suite-nav-icon"><svg aria-hidden="true"><use href="#lsi-database"></use></svg></span><span class="suite-nav-label">Database Manager</span><span class="suite-nav-chevron">›</span></a>
-    <button type="button" data-sidebar-admin-section="consolePanel" onclick="scrollToAdminSection('consolePanel')"><span class="suite-nav-icon"><svg aria-hidden="true"><use href="#lsi-terminal"></use></svg></span><span class="suite-nav-label">Control Panel</span><span class="suite-nav-chevron">›</span></button>
+    <a href="admin.html#consolePanel" data-sidebar-admin-section="consolePanel"><span class="suite-nav-icon"><svg aria-hidden="true"><use href="#lsi-terminal"></use></svg></span><span class="suite-nav-label">Control Panel</span><span class="suite-nav-chevron">›</span></a>
     <a href="db-logs.html" data-sidebar-nav="db-logs"><span class="suite-nav-icon"><svg aria-hidden="true"><use href="#lsi-terminal"></use></svg></span><span class="suite-nav-label">DB Logs</span><span class="suite-nav-chevron">›</span></a>
-    <button type="button" onclick="adminLogout()"><span class="suite-nav-icon"><svg aria-hidden="true"><use href="#lsi-logout"></use></svg></span><span class="suite-nav-label">Log Out</span><span class="suite-nav-chevron">›</span></button>
+    <button type="button" class="suite-logout-row" onclick="adminLogout()"><span class="suite-nav-icon"><svg aria-hidden="true"><use href="#lsi-logout"></use></svg></span><span class="suite-nav-label">Log Out</span><span class="suite-nav-chevron">›</span></button>
   </nav>
 
   <div id="sidebarSongRequests" class="sidebar-request-list suite-hidden-request-list"></div>

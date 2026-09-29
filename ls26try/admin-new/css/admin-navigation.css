@@ -29,3 +29,24 @@ body.ls26-admin{--d26-side:210px}
 .ls26-admin .admin-main{margin-left:var(--d26-side);width:calc(100% - var(--d26-side));padding:20px}
 @media(max-width:760px){body.ls26-admin{--d26-side:0px}.ls26-admin #sidebarContainer{width:100%}.ls26-admin .admin-sidebar.suite-sidebar{position:relative!important;top:auto!important;bottom:auto!important;width:100%;height:auto!important;max-height:260px!important}.ls26-admin .suite-nav{display:grid;grid-template-columns:1fr 1fr}.ls26-admin .admin-main{margin-left:0;width:100%;padding:15px 10px}}
 body.ls26-admin{font-family:Arial,Helvetica,sans-serif;overflow-x:clip}
+
+
+/* System sidebar consistency */
+.ls26-admin .suite-nav>.suite-logout-row{
+  border-color:transparent!important;
+  background:rgba(150,28,39,.22)!important;
+  color:#ffc2c7!important;
+  box-shadow:none!important;
+  outline:none!important;
+}
+.ls26-admin .suite-nav>.suite-logout-row .suite-nav-icon,
+.ls26-admin .suite-nav>.suite-logout-row .suite-nav-chevron{
+  color:#ff8f98!important;
+}
+.ls26-admin .suite-nav>.suite-logout-row:hover,
+.ls26-admin .suite-nav>.suite-logout-row:focus-visible{
+  border-color:rgba(255,94,105,.44)!important;
+  background:rgba(177,36,48,.32)!important;
+  color:#fff!important;
+  transform:none!important;
+}

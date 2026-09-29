@@ -39,6 +39,18 @@
         link.href = new URL(href, sidebarAdminBase).href;
       });
 
+      // Dashboard-section links stay visible and consistent on every Admin
+      // page. On the dashboard they scroll smoothly; elsewhere their normal
+      // href routes back to the correct panel.
+      target.querySelectorAll("a[data-sidebar-admin-section]").forEach(link => {
+        link.addEventListener("click", event => {
+          const id = link.dataset.sidebarAdminSection;
+          if (!id || !document.getElementById(id)) return;
+          event.preventDefault();
+          scrollToAdminSection(id);
+        });
+      });
+
       highlightCurrentPage();
       window.dispatchEvent(new CustomEvent('ls26:sidebar-ready'));
       bindSidebarProfile();
@@ -146,7 +158,7 @@
       item.classList.remove("active");
     });
 
-    document.querySelectorAll(".suite-nav a").forEach(link => {
+    document.querySelectorAll(".suite-nav a:not([data-sidebar-admin-section])").forEach(link => {
       const href = (link.getAttribute("href") || "")
         .split("?")[0]
         .split("#")[0]
