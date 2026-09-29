@@ -172,3 +172,32 @@
 .suite-user-card .avatar img { display:none; width:100%; height:100%; object-fit:cover; }
 .suite-user-card .avatar span { display:grid; }
 /* Database Manager is now a normal structured nav row, so it inherits exactly the same font as every other link. */
+
+
+/* Shared structural support for the reorganized sidebar (also used by DB Logs). */
+.suite-brand-accordion{display:block}
+.suite-collapsible-heading{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  width:calc(100% - 16px);
+  min-height:26px;
+  margin:15px 8px 6px;
+  padding:0;
+  border:0;
+  background:transparent;
+  color:#8799ac;
+  font:inherit;
+  font-size:9px;
+  font-weight:950;
+  letter-spacing:.07em;
+  text-align:left;
+  text-transform:uppercase;
+  cursor:pointer;
+}
+.suite-collapsible-heading:hover,.suite-collapsible-heading:focus-visible{color:#fff}
+.suite-section-chevron{color:#7391a2;font-size:18px;line-height:1}
+.suite-collapsible-panel[hidden],.suite-subnav[hidden]{display:none!important}
+.suite-subnav{margin-left:18px;padding-left:8px;border-left:1px solid rgba(255,255,255,.12)}
+.suite-sidebar-divider{height:1px;margin:14px 4px 10px;background:rgba(255,255,255,.12)}
+.suite-logout-nav{margin-bottom:0}
