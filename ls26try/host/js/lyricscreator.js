@@ -2190,6 +2190,54 @@
   });
 
   document.addEventListener("click", async event => {
+    const expandInline = event.target.closest("[data-expand-inline-insert]");
+    if (expandInline) {
+      syncSectionsFromDOM();
+      expandedInsertIndex = Number(expandInline.dataset.expandInlineInsert);
+      render();
+      return;
+    }
+
+    const collapseInline = event.target.closest("[data-collapse-inline-insert]");
+    if (collapseInline) {
+      expandedInsertIndex = null;
+      render();
+      return;
+    }
+
+    const copyWholeSection = event.target.closest("[data-copy-section]");
+    if (copyWholeSection) {
+      syncSectionsFromDOM();
+      const index = Number(copyWholeSection.dataset.copySection);
+      if (!sections[index]) return;
+      copiedSection = cloneSection(sections[index]);
+      document.querySelectorAll("[data-inline-paste]").forEach(button => button.disabled = false);
+      window.LS26?.toast?.(`Copied section: ${sections[index].title || sections[index].type || "Section"}`);
+      return;
+    }
+
+    const pasteWholeSection = event.target.closest("[data-inline-paste]");
+    if (pasteWholeSection) {
+      if (!copiedSection) return;
+      insertSectionAt(Number(pasteWholeSection.dataset.inlinePaste), copiedSection);
+      return;
+    }
+
+    const inlineAdd = event.target.closest("[data-inline-add]");
+    if (inlineAdd) {
+      const type = inlineAdd.dataset.inlineAdd || "lyrics";
+      insertSectionAt(Number(inlineAdd.dataset.insertIndex), makeSection(type));
+      return;
+    }
+
+    const inlineTemplate = event.target.closest("[data-inline-template]");
+    if (inlineTemplate) {
+      syncSectionsFromDOM();
+      pendingTemplateInsertIndex = Number(inlineTemplate.dataset.inlineTemplate);
+      $("templatesModal").classList.remove("hidden");
+      return;
+    }
+
     const remove = event.target.closest("[data-remove]");
     if (remove) {
       const index = Number(remove.dataset.remove);
@@ -2296,7 +2344,7 @@
     const extraBold = event.target.closest("[data-extra-bold]");
     if (extraBold) {
       const editor = extraBold.closest(".creator-section-body")?.querySelector(".creator-rich-editor");
-      if (editor) applyHeavyBold(editor);
+      if (editor) toggleSelectedBold(editor, true);
       return;
     }
 
@@ -2317,8 +2365,12 @@
     const command = event.target.closest("[data-command]");
     if (command) {
       const editor = command.closest(".creator-section-body")?.querySelector(".creator-rich-editor");
-      captureSelection(editor);
-      applyCommand(command.dataset.command);
+      if (command.dataset.command === "bold") {
+        if (editor) toggleSelectedBold(editor, false);
+      } else {
+        captureSelection(editor);
+        applyCommand(command.dataset.command);
+      }
       return;
     }
 
