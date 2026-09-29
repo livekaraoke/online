@@ -391,6 +391,9 @@
       capo: $("capoInput")?.value || "",
       year: $("yearInput")?.value || "",
       timeSignature: $("timeSignatureInput")?.value || "",
+      loopSlot: $("loopSlotInput")?.value || "",
+      looping: $("loopingInput")?.value || "false",
+      songDetails: $("songDetailsInput")?.value || "",
       guitarTuning: getCurrentGuitarTuning(),
       youtubeLinks: getYoutubeLinks(),
       youtubeLinkLabels: getYoutubeLinkLabels(),
@@ -427,6 +430,9 @@
     if ($("capoInput")) $("capoInput").value = state.capo || "";
     if ($("yearInput")) $("yearInput").value = state.year || "";
     if ($("timeSignatureInput")) $("timeSignatureInput").value = state.timeSignature || "";
+    if ($("loopSlotInput")) $("loopSlotInput").value = state.loopSlot ?? "";
+    if ($("loopingInput")) $("loopingInput").value = String(state.looping ?? "false");
+    if ($("songDetailsInput")) $("songDetailsInput").value = state.songDetails || "";
     applyGuitarTuningState(state.guitarTuning || {name:"Standard Tuning",strings:["E","A","D","G","B","e"]});
     setYoutubeLinks(state.youtubeLinks || [state.youtube || ""], state.youtubeLinkLabels || []);
     if ($("hostNoteInput")) $("hostNoteInput").value = state.songNote || "";
@@ -1417,6 +1423,9 @@
     $("capoInput").value = loadedSong.capo || "";
     $("yearInput").value = loadedSong.year || "";
     $("timeSignatureInput").value = loadedSong.timeSignature || "4/4";
+    $("loopSlotInput").value = loadedSong.loopSlot ?? "";
+    $("loopingInput").value = String(loadedSong.looping === true || ["true","yes"].includes(String(loadedSong.looping).toLowerCase()));
+    $("songDetailsInput").value = loadedSong.songDetails || "";
     applyGuitarTuningState(loadedSong.guitarTuning || {
       name:"Standard Tuning",
       strings:["E","A","D","G","B","e"]
@@ -1452,6 +1461,9 @@
       capo: $("capoInput").value.trim(),
       year: $("yearInput").value,
       timeSignature: $("timeSignatureInput").value.trim() || "4/4",
+      loopSlot: $("loopSlotInput").value === "" ? null : Number($("loopSlotInput").value),
+      looping: $("loopingInput").value === "true",
+      songDetails: $("songDetailsInput").value.trim(),
       guitarTuning: getCurrentGuitarTuning(),
       youtubeLink: getYoutubeLinks()[0] || "",
       youtubeLinks: getYoutubeLinks(),
@@ -1700,6 +1712,11 @@
   });
 
   document.addEventListener("change", event => {
+    if (event.target.id === "loopingInput") {
+      markDirty();
+      return;
+    }
+
     const font = event.target.closest("[data-font]");
     if (font) {
       const index = Number(font.dataset.font);
