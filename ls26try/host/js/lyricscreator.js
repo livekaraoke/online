@@ -1279,6 +1279,55 @@
       </div>`;
   }
 
+  function cloneSection(value) {
+    return value ? JSON.parse(JSON.stringify(value)) : null;
+  }
+
+  function insertSectionAt(index, section) {
+    syncSectionsFromDOM();
+    const safeIndex = Math.max(0, Math.min(sections.length, Number(index)));
+    sections.splice(safeIndex, 0, normalizeSection(cloneSection(section)));
+    expandedInsertIndex = null;
+    markDirty();
+    render();
+    revealSection(safeIndex);
+    return safeIndex;
+  }
+
+  function inlineSectionInsertElement(insertIndex) {
+    const wrap = document.createElement("div");
+    wrap.className = "creator-inline-section-insert";
+    wrap.dataset.insertIndex = String(insertIndex);
+
+    if (expandedInsertIndex !== insertIndex) {
+      wrap.innerHTML = `
+        <button type="button" class="creator-inline-add-strip" data-expand-inline-insert="${insertIndex}" aria-label="Add a section here" title="Add a section here">
+          <span aria-hidden="true">＋</span>
+        </button>`;
+      return wrap;
+    }
+
+    wrap.classList.add("is-expanded");
+    wrap.innerHTML = `
+      <div class="creator-inline-add-card">
+        <div class="creator-inline-add-head">
+          <strong>ADD SECTION HERE</strong>
+          <div class="creator-inline-add-head-actions">
+            <button type="button" class="creator-inline-paste-btn" data-inline-paste="${insertIndex}" ${copiedSection ? "" : "disabled"} title="Paste copied section here" aria-label="Paste copied section here">▤</button>
+            <button type="button" class="creator-inline-cancel-btn" data-collapse-inline-insert="${insertIndex}" title="Cancel" aria-label="Collapse add-section controls">×</button>
+          </div>
+        </div>
+        <div class="creator-add-toolbar creator-inline-add-toolbar">
+          <button type="button" class="btn ghost" data-inline-add="lyrics" data-insert-index="${insertIndex}">＋ LYRICS / CHORDS</button>
+          <button type="button" class="btn ghost" data-inline-add="tab" data-insert-index="${insertIndex}">＋ TAB</button>
+          <button type="button" class="btn green" data-inline-add="performanceNote" data-insert-index="${insertIndex}">＋ PERFORMANCE NOTE</button>
+          <button type="button" class="btn teal" data-inline-add="hostNote" data-insert-index="${insertIndex}">＋ HOST NOTE</button>
+          <button type="button" class="btn ghost" data-inline-add="separator" data-insert-index="${insertIndex}">＋ SEPARATOR</button>
+          <button type="button" class="btn gold" data-inline-template="${insertIndex}">＋ SECTION TEMPLATE</button>
+        </div>
+      </div>`;
+    return wrap;
+  }
   function render() {
     const root = $("sectionEditorList");
     root.innerHTML = "";
@@ -1369,6 +1418,7 @@
           </div>`;
       }
       root.appendChild(card);
+      root.appendChild(inlineSectionInsertElement(index + 1));
     });
 
     renderSectionNavigator();
