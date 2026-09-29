@@ -2428,7 +2428,8 @@ body.host-lyric-view-page {
 .host-lyric-view-page .performance-requester-status:empty{display:none!important}
 
 #performanceQuickInfo.performance-quick-info{
-  position:relative!important;
+  position:sticky!important;
+  top:var(--ls-stack-h,var(--lv-stack-h))!important;
   z-index:1900!important;
   overflow:visible!important;
 }
