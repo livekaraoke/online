@@ -284,6 +284,55 @@
  }
 
  let versionDialog=null;
+
+ function releaseCandidates(){
+  return rows.filter(item =>
+   item.kind!=='release' &&
+   item.completed===true &&
+   !normaliseVersion(item.version)
+  );
+ }
+
+ function renderReleasePreview(){
+  const list=$('ls26ReleasePreviewList');
+  const summary=$('ls26ReleasePreviewSummary');
+  if(!list||!summary)return;
+
+  const type=normaliseType($('ls26ReleaseType')?.value);
+  const version=normaliseVersion($('ls26ReleaseVersion')?.value) || bumpVersion(currentVersion(),type);
+  const assign=$('ls26ReleaseAssign')?.checked !== false;
+  const candidates=assign ? releaseCandidates() : [];
+
+  summary.textContent=assign
+   ? `${typeLabel(type)} v${version} · ${candidates.length} completed unversioned update${candidates.length===1?'':'s'} will be included`
+   : `${typeLabel(type)} v${version} · no existing updates will be assigned`;
+
+  list.replaceChildren();
+  if(!assign){
+   const item=document.createElement('li');
+   item.textContent='No existing updates selected for this version.';
+   list.append(item);
+   return;
+  }
+  if(!candidates.length){
+   const item=document.createElement('li');
+   item.textContent='No completed unversioned updates are waiting to be released.';
+   list.append(item);
+   return;
+  }
+
+  candidates.forEach(update=>{
+   const item=document.createElement('li');
+   const badge=document.createElement('span');
+   badge.className='ls26-release-preview-type type-'+normaliseType(update.updateType);
+   badge.textContent=typeLabel(update.updateType);
+   const textNode=document.createElement('strong');
+   textNode.textContent=String(update.text||'Untitled update').trim();
+   item.append(badge,textNode);
+   list.append(item);
+  });
+ }
+
  function ensureVersionDialog(){
   if(versionDialog)return versionDialog;
   versionDialog=document.createElement('dialog');
@@ -309,13 +358,22 @@
      <textarea id="ls26ReleaseSummary" rows="4" maxlength="5000" placeholder="Summary of this LiveSuite version"></textarea>
     </label>
     <label class="ls26-release-assign"><input id="ls26ReleaseAssign" type="checkbox" checked> Assign all completed updates that do not yet have a version to this release</label>
+    <section class="ls26-release-preview" aria-live="polite">
+      <strong id="ls26ReleasePreviewSummary">Updates included</strong>
+      <ul id="ls26ReleasePreviewList"></ul>
+    </section>
     <label class="ls26-release-assign"><input id="ls26ReleaseMakeCurrent" type="checkbox" checked> Make this the current LiveSuite version shown in the app footer</label>
     <p id="ls26ReleaseStatus" role="status"></p>
     <div class="ls26-dialog-actions"><button class="primary" type="submit">Create Version</button><button id="ls26ReleaseCancel" type="button">Cancel</button></div>
    </form>`;
   document.body.append(versionDialog);
   $('ls26ReleaseCancel').onclick=()=>versionDialog.close();
-  $('ls26ReleaseType').onchange=()=>{$('ls26ReleaseVersion').value=bumpVersion(currentVersion(),$('ls26ReleaseType').value);};
+  $('ls26ReleaseType').onchange=()=>{
+   $('ls26ReleaseVersion').value=bumpVersion(currentVersion(),$('ls26ReleaseType').value);
+   renderReleasePreview();
+  };
+  $('ls26ReleaseVersion').oninput=renderReleasePreview;
+  $('ls26ReleaseAssign').onchange=renderReleasePreview;
   $('ls26CreateVersionForm').onsubmit=async event=>{
    event.preventDefault();
    const button=event.currentTarget.querySelector('[type=submit]');
@@ -338,6 +396,7 @@
    button.disabled=true;$('ls26ReleaseStatus').textContent='Creating version…';
    try{
     let assigned=0;
+    let assignedUpdates=[];
     if(assign){
      const completedSnap=await collection().where('completed','==',true).get();
      const candidates=completedSnap.docs.filter(doc=>{
@@ -356,6 +415,7 @@
       await batch.commit();
      }
      assigned=candidates.length;
+     assignedUpdates=candidates.map(doc=>String(doc.data()?.text||'').trim()).filter(Boolean);
     }
 
     await collection().add({
@@ -373,7 +433,10 @@
 
     if(makeCurrent)await window.LS26Settings.save({appVersion:version});
     versionDialog.close();
-    LS26.toast(`LiveSuite v${version} created · ${assigned} update${assigned===1?'':'s'} assigned.`);
+    const updateSummary=assignedUpdates.length
+      ? assignedUpdates.slice(0,3).join(' · ')+(assignedUpdates.length>3?` · +${assignedUpdates.length-3} more`:'')
+      : (summary || 'No existing updates assigned');
+    LS26.toast(`${typeLabel(updateType)} v${version} created · ${updateSummary}`);
     await load(true);
    }catch(error){
     $('ls26ReleaseStatus').textContent=errorText(error);
@@ -393,6 +456,7 @@
   $('ls26ReleaseAssign').checked=true;
   $('ls26ReleaseMakeCurrent').checked=true;
   $('ls26ReleaseStatus').textContent='';
+  renderReleasePreview();
   if(!dlg.open)dlg.showModal();
  }
  window.LS26.openAppUpdates=open;
