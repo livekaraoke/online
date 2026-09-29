@@ -1162,6 +1162,16 @@
     return Number.isFinite(value)&&value>0?Math.round(value):0;
   }
 
+  function sectionScrollSpeedForIndex(index) {
+    const el=sectionEls[index];
+    if(!el)return scrollSpeed;
+    const item=sectionItems.find(entry=>entry.el===el);
+    const value=Number(item?.section?.scrollSpeedOverride);
+    return Number.isFinite(value)&&value>0
+      ? Math.max(0.1,Math.min(10,value))
+      : scrollSpeed;
+  }
+
   function clearSectionPauseCountdown() {
     if(sectionPauseCountdownFrame){
       cancelAnimationFrame(sectionPauseCountdownFrame);
@@ -2393,7 +2403,7 @@
         last = now;
 
         if (!document.hidden && Date.now()>=manualSectionUntil && Date.now()>=sectionPauseUntil) {
-          fractionalY += dt * AUTO_SCROLL_BASE_PX_PER_MS * scrollSpeed;
+          fractionalY += dt * AUTO_SCROLL_BASE_PX_PER_MS * sectionScrollSpeedForIndex(currentSectionIndex);
 
           const wholePixels = Math.floor(fractionalY);
           if (wholePixels > 0) {
