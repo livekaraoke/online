@@ -1041,3 +1041,15 @@ html.ls26-reduce-glow .performance-quick-info{box-shadow:none!important;filter:n
 #songInfoDrawer .lv-metro-beat{position:absolute;right:14px;bottom:14px;width:26px;height:26px;display:grid;place-items:center;border:1px solid var(--ls-border);border-radius:50%;color:var(--ls-muted);font-size:12px}
 #songInfoDrawer .lv-metro-beat.active{color:var(--ls-bg);background:var(--ls-accent);border-color:var(--ls-accent)}
 #songInfoDrawer .ls26-info-startup{padding:12px;border:1px solid var(--ls-border);border-radius:8px;margin-top:16px;background:var(--ls-soft)}
+
+
+/* LyricView section focus hierarchy: JS supplies scroll-linked opacity. */
+.host-lyric-view-page .host-lyrics-content .host-section{
+  transition:opacity 120ms linear;
+}
+.host-lyric-view-page .host-lyrics-content .host-section[data-focus-state="next"]{
+  will-change:opacity;
+}
+@media(prefers-reduced-motion:reduce){
+  .host-lyric-view-page .host-lyrics-content .host-section{transition:none!important}
+}
