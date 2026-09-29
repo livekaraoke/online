@@ -675,14 +675,14 @@ html.ls26-reduce-glow .performance-quick-info{box-shadow:none!important;filter:n
 /* Compact action labels requested for the performance header. */
 .host-lyric-view-page #hostStickyStack #quickEditSongBtn{
   border-color:#20b96b!important;
-  background:rgba(0,232,138,.10)!important;
+  background:rgba(0,232,138,.18)!important;
   color:#68f0a5!important;
-  box-shadow:inset 0 0 0 1px rgba(0,232,138,.05)!important;
+  box-shadow:inset 0 0 0 1px rgba(0,232,138,.08)!important;
 }
 .host-lyric-view-page #hostStickyStack #quickEditSongBtn:hover,
 .host-lyric-view-page #hostStickyStack #quickEditSongBtn:focus-visible{
   border-color:#39dc86!important;
-  background:rgba(0,232,138,.16)!important;
+  background:rgba(0,232,138,.26)!important;
   color:#9dffc7!important;
 }
 .host-lyric-view-page #hostStickyStack #quickEditSongBtn,
