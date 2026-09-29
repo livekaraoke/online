@@ -81,7 +81,7 @@ body .ls26-footer .ls26-brand.ls26-footer-icon{width:38px;height:38px;background
 @media(max-width:1100px){.ls26-nav a.ls26-brand{width:230px;min-width:230px;height:68px}}
 @media(max-width:800px){.ls26-nav a.ls26-brand{width:190px;min-width:190px;height:62px}}
 /* Creator details and section controls follow the stage palette. */
-.creator-page .creator-meta-grid input,.creator-page .creator-meta-grid textarea{font-size:18px!important;min-height:48px;padding:12px!important;background:#031722!important;border-color:#235064!important}
+.creator-page .creator-meta-grid input,.creator-page .creator-meta-grid textarea{font-size:19px!important;min-height:48px;padding:12px!important;background:#031722!important;border-color:#235064!important}
 .creator-page #userBpmInput{color:var(--ls-success)!important;font-weight:700}
 .creator-page #originalBpmInput{color:var(--ls-accent)!important;font-weight:700}
 .creator-page #capoInput{color:#ffdb58!important;font-weight:700}
@@ -606,7 +606,7 @@ body .ls26-footer .ls26-footer-icon image{filter:none!important;box-shadow:none!
     min-width:132px!important;
     width:132px!important;
     padding-inline:15px!important;
-    font-size:20px!important;
+    font-size:23px!important;
   }
   .ls26-nav>a:nth-child(4),
   .ls26-nav>a:nth-child(5){
@@ -618,25 +618,60 @@ body .ls26-footer .ls26-footer-icon image{filter:none!important;box-shadow:none!
   }
   .ls26-nav a.ls26-admin-nav,
   .ls26-nav #ls26Fullscreen{
-    flex:0 0 57px!important;
-    width:57px!important;
-    min-width:57px!important;
-    max-width:57px!important;
+    flex:0 0 61px!important;
+    width:61px!important;
+    min-width:61px!important;
+    max-width:61px!important;
     padding:9px!important;
   }
   .ls26-nav .ls26-host{
-    flex:0 0 137px!important;
-    min-width:137px!important;
-    width:137px!important;
+    flex:0 0 131px!important;
+    min-width:131px!important;
+    width:131px!important;
     padding-inline:10px!important;
     font-size:15px!important;
   }
   .ls26-nav #ls26More{
-    flex:0 0 47px!important;
-    width:47px!important;
-    min-width:47px!important;
-    max-width:47px!important;
+    flex:0 0 51px!important;
+    width:51px!important;
+    min-width:51px!important;
+    max-width:51px!important;
     padding-inline:6px!important;
   }
   .ls26-nav-icon{font-size:21px!important}
+}
+
+
+/* =========================================================
+   FINAL TABLET TOPBAR SIZING — 2026-09-29
+   Explicit high-specificity overrides so these sizes cannot be masked by
+   earlier responsive rules.
+   ========================================================= */
+@media(min-width:801px) and (max-width:1100px){
+  html body .ls26-nav a.ls26-primary-nav{
+    font-size:23px!important;
+  }
+  html body .ls26-nav>a:nth-child(4),
+  html body .ls26-nav>a:nth-child(5){
+    font-size:19px!important;
+  }
+  html body .ls26-nav>a.ls26-admin-nav,
+  html body .ls26-nav>#ls26Fullscreen{
+    flex:0 0 61px!important;
+    width:61px!important;
+    min-width:61px!important;
+    max-width:61px!important;
+  }
+  html body .ls26-nav>a.ls26-host{
+    flex:0 0 131px!important;
+    width:131px!important;
+    min-width:131px!important;
+    max-width:131px!important;
+  }
+  html body .ls26-nav>#ls26More{
+    flex:0 0 51px!important;
+    width:51px!important;
+    min-width:51px!important;
+    max-width:51px!important;
+  }
 }
