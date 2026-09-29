@@ -66,6 +66,8 @@ __fixture.data['upcomingEvents/past']={name:'Old unclosed booking',date:'2020-01
  await page.evaluate(()=>scrollTo(0,document.body.scrollHeight));await page.waitForTimeout(100);await checkFooter();
  assert.equal((await page.locator('.ls26-admin-nav').innerText()).trim(),'⚙');
  assert.equal((await page.locator('#ls26Fullscreen').innerText()).trim(),'');
+ assert.equal(await page.locator('#ls26ExitFullscreenSession').count(),0);
+ assert.equal((await page.locator('#ls26VersionLabel').innerText()).trim(),'v3.1.48');
  await page.locator('#ls26Fullscreen').click();await page.waitForTimeout(100);await checkFooter();
  assert.equal(await page.locator('#ls26Fullscreen').getAttribute('aria-pressed'),'true');
  await page.locator('#ls26Fullscreen').click();await page.waitForTimeout(100);
