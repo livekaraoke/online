@@ -701,11 +701,19 @@
     return -1;
   }
 
+  function tuningReleaseAnchor() {
+    const header = document.getElementById("ls26StickyHeader");
+    const quick = document.getElementById("performanceQuickInfo");
+    return (header?.getBoundingClientRect().height || 0)
+      + (quick?.getBoundingClientRect().height || 0)
+      + sectionActivationOffset();
+  }
+
   function updateGuitarTuningStickyState() {
     const card = $("guitarTuningCard");
     if (!card || card.hidden) return;
-    const secondSection = secondVisibleSectionIndex();
-    const released = secondSection >= 0 && currentSectionIndex >= secondSection;
+    const firstSection = sectionEls[0] || null;
+    const released = !!firstSection && firstSection.getBoundingClientRect().top <= tuningReleaseAnchor();
     card.classList.toggle("past-tuning-window", released);
   }
 
@@ -927,6 +935,7 @@
     }
 
     updateGuitarTuningStickyState();
+    setQuickToolsReleased(secondVisibleSectionIndex() >= 0 && currentSectionIndex >= secondVisibleSectionIndex());
     updateSpeed();
     renderSectionProgress();
     updateSectionVisibilityUi();
@@ -1232,9 +1241,10 @@
     document.documentElement?.style?.setProperty?.("--ls26-karaoke-tools-h",height+"px");
   }
 
-  function setQuickToolsReleased() {
+  function setQuickToolsReleased(released = false) {
     const quick=$("performanceQuickInfo");
-    quick?.classList.remove("ls26-released");
+    if (!quick) return;
+    quick.classList.toggle("past-karaoke-tools-window", Boolean(released));
     syncQuickToolsHeight();
   }
 
@@ -1300,7 +1310,7 @@
     centerActiveProgressSection(true);
 
     const quick=document.getElementById('performanceQuickInfo');
-    setQuickToolsReleased(currentSectionIndex>0);
+    setQuickToolsReleased(secondVisibleSectionIndex() >= 0 && currentSectionIndex >= secondVisibleSectionIndex());
     const header=document.getElementById('ls26StickyHeader');
     const offset=(header?.getBoundingClientRect().height||0)+(currentSectionIndex===0&&!quick?.classList.contains('ls26-released')?(quick?.getBoundingClientRect().height||0):0)+guitarTuningStickyHeight()+sectionActivationOffset();
     sectionPauseStartsAt=0;
@@ -1349,7 +1359,7 @@
     // current section marker into view and keep it roughly centred.
     if (changed) {
       updateSpeed();
-      setQuickToolsReleased(currentSectionIndex>0);
+      setQuickToolsReleased(secondVisibleSectionIndex() >= 0 && currentSectionIndex >= secondVisibleSectionIndex());
       centerActiveProgressSection(true);
     }
 
