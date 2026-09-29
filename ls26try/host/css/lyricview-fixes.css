@@ -2329,10 +2329,10 @@ body.host-lyric-view-page {
   position:absolute!important;
   z-index:4!important;
   right:clamp(28px,7vw,96px)!important;
-  top:55%!important;
+  top:50%!important;
   transform:translateY(-50%)!important;
   min-width:3.2ch!important;
-  color:#78e7ff!important;
+  color:var(--ls26-pause-countdown-color,#78e7ff)!important;
   font-size:var(--ls26-pause-countdown-font-size,56px)!important;
   font-weight:1000!important;
   font-variant-numeric:tabular-nums!important;
@@ -2352,6 +2352,6 @@ body.host-lyric-view-page {
 @media(max-width:700px){
   .host-lyric-view-page .section-pause-countdown{
     right:24px!important;
-    top:58%!important;
+    top:50%!important;
   }
 }

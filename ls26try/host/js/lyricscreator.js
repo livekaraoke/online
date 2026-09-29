@@ -1180,7 +1180,7 @@
                 <small>Pause scrolling when this section becomes active. Value is in seconds.</small>
               </span>
               <span class="section-scroll-pause-value">
-                <input type="number" min="0" step="0.1" inputmode="decimal" data-section-pause-seconds="${index}" value="${Number(((s.pauseMs || 0) / 1000).toFixed(3))}" aria-label="Section auto-scroll pause in seconds">
+                <input type="text" inputmode="decimal" pattern="[0-9]*[.]?[0-9]*" data-section-pause-seconds="${index}" value="${Number(((s.pauseMs || 0) / 1000).toFixed(3))}" aria-label="Section auto-scroll pause in seconds">
                 <em>s</em>
               </span>
             </label>
@@ -1242,10 +1242,15 @@
     if (navigatorFrame) return;
     navigatorFrame = requestAnimationFrame(() => { navigatorFrame = 0; updateNavigatorPosition(); });
   }, {passive:true});
-  document.addEventListener("click", event => {
+  document.addEventListener("focusin", event => {
     const pauseInput = event.target.closest?.("[data-section-pause-seconds]");
-    if (pauseInput) pauseInput.select();
+    if (!pauseInput) return;
+    requestAnimationFrame(() => {
+      try { pauseInput.select(); } catch (_) {}
+    });
+  });
 
+  document.addEventListener("click", event => {
     const button = event.target.closest?.("[data-jump-section]");
     if (button) revealSection(Number(button.dataset.jumpSection));
   });

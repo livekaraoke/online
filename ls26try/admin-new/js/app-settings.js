@@ -4,7 +4,7 @@
   const fields=[
     "showTopStatusWhenInactive","statusValueFontSize","statusLabelFontSize",
     "userBpmColor","originalBpmColor","keyColor","capoColor",
-    "lyricSongValueFontSize","lyricSectionHeaderSize","lyricPauseCountdownFontSize",
+    "lyricSongValueFontSize","lyricSectionHeaderSize","lyricPauseCountdownFontSize","lyricPauseCountdownColor",
     "lyricNavVerticalSize","lyricNavHorizontalSize","lyricTextScale",
     "lyricNavHorizontalGap","lyricNavVerticalGap",
     "lyricNavIdleOpacity","lyricNavActiveOpacity","lyricNavPressedOpacity","lyricNavFeedbackDuration",
