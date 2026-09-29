@@ -2367,3 +2367,96 @@ body.host-lyric-view-page {
   bottom:auto!important;
   transform:translateY(-50%)!important;
 }
+
+
+/* =========================================================
+   REQUESTER CARDS + KARAOKE RESET MENU LAYERING — 2026-09-29
+   ========================================================= */
+.host-lyric-view-page .performance-requester-row{
+  grid-column:1 / -1!important;
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+  gap:12px!important;
+  min-width:0!important;
+}
+.host-lyric-view-page .performance-requester-card{
+  display:grid!important;
+  gap:7px!important;
+  min-width:0!important;
+  padding:12px 14px!important;
+}
+.host-lyric-view-page .performance-requester-card>small{
+  color:#43d7f6!important;
+  font-size:9px!important;
+  font-weight:950!important;
+  letter-spacing:.09em!important;
+}
+.host-lyric-view-page .performance-requester-card input,
+.host-lyric-view-page .performance-requester-card textarea{
+  box-sizing:border-box!important;
+  width:100%!important;
+  min-width:0!important;
+  margin:0!important;
+  padding:8px 9px!important;
+  border:1px solid rgba(72,139,166,.42)!important;
+  border-radius:7px!important;
+  outline:none!important;
+  background:rgba(1,15,22,.72)!important;
+  color:#eef9ff!important;
+  font:inherit!important;
+  font-size:14px!important;
+  font-weight:800!important;
+}
+.host-lyric-view-page .performance-requester-card textarea{
+  min-height:44px!important;
+  resize:vertical!important;
+  line-height:1.35!important;
+}
+.host-lyric-view-page .performance-requester-card input:focus,
+.host-lyric-view-page .performance-requester-card textarea:focus{
+  border-color:rgba(0,202,250,.76)!important;
+  box-shadow:0 0 0 2px rgba(0,202,250,.10)!important;
+}
+.host-lyric-view-page .performance-requester-status{
+  grid-column:1 / -1!important;
+  min-height:0!important;
+  margin-top:-6px!important;
+  color:#7295a6!important;
+  font-size:9px!important;
+  text-align:right!important;
+}
+.host-lyric-view-page .performance-requester-status:empty{display:none!important}
+
+#performanceQuickInfo.performance-quick-info{
+  position:relative!important;
+  z-index:1900!important;
+  overflow:visible!important;
+}
+.host-lyric-view-page .performance-quick-karaoke,
+.host-lyric-view-page .performance-quick-primary,
+.host-lyric-view-page .quick-split-action{
+  overflow:visible!important;
+}
+.host-lyric-view-page .performance-quick-primary .quick-split-action{
+  position:relative!important;
+  z-index:1910!important;
+}
+.host-lyric-view-page #quickKaraokeMenu.mini-menu{
+  position:absolute!important;
+  top:calc(100% + 6px)!important;
+  left:0!important;
+  right:auto!important;
+  z-index:6200!important;
+  min-width:100%!important;
+  width:max-content!important;
+  max-width:min(360px,90vw)!important;
+  margin:0!important;
+  box-shadow:0 12px 32px rgba(0,0,0,.58),0 0 0 1px rgba(36,185,75,.12)!important;
+}
+.host-lyric-view-page #quickKaraokeMenu.mini-menu.hidden{display:none!important}
+
+@media(max-width:700px){
+  .host-lyric-view-page .performance-requester-row{
+    grid-template-columns:1fr!important;
+  }
+}
