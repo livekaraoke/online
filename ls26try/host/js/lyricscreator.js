@@ -1423,19 +1423,41 @@
 
     renderSectionNavigator();
     updateCapoColour();
+    applySongValueColours();
     root.querySelectorAll("[data-placeholder]").forEach(updateEmptyEditor);
     updateOneShotGreenButtons();
     // Preview each section's dash colour immediately in the creator.
     requestAnimationFrame(refreshAllDashColours);
   }
 
+  function applySongValueColours() {
+    const settings=window.LS26Settings?.get?.() || {};
+    const values=[
+      ["userBpmInput",settings.userBpmColor || "#00e88a"],
+      ["originalBpmInput",settings.originalBpmColor || "#00cafa"],
+      ["keyInput",settings.keyColor || "#00cafa"],
+      ["capoInput",settings.capoColor || "#ffdb58"]
+    ];
+
+    values.forEach(([id,colour]) => {
+      const input=$(id);
+      if (!input) return;
+      input.style.setProperty("color",String(colour),"important");
+      input.style.setProperty("font-weight","900","important");
+    });
+  }
+
   function updateCapoColour() {
     const input = $("capoInput");
     if (input) input.dataset.zero = String(!Number(input.value));
+    applySongValueColours();
   }
 
   $("capoInput")?.addEventListener("input", updateCapoColour);
-  window.addEventListener("ls26:settings-applied", updateCapoColour);
+  window.addEventListener("ls26:settings-applied", () => {
+    updateCapoColour();
+    applySongValueColours();
+  });
 
   function renderSectionNavigator() {
     const nav = $("creatorSectionNav");
