@@ -130,3 +130,17 @@
   font-synthesis:weight!important;
   text-shadow:.22px 0 0 currentColor,-.22px 0 0 currentColor!important;
 }
+
+
+/* LyricsCreator explicit bold states. */
+.creator-page .creator-rich-editor .ls26-standard-bold,
+.host-lyric-view-page .host-section-body .ls26-standard-bold{
+  font-weight:700!important;
+  font-synthesis:weight!important;
+}
+.creator-page .creator-rich-editor .ls26-normal-weight,
+.host-lyric-view-page .host-section-body .ls26-normal-weight{
+  font-weight:400!important;
+  font-synthesis:weight!important;
+  text-shadow:none!important;
+}
