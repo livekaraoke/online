@@ -56,7 +56,7 @@
     metronomeNumberOpacity: 42,
     metronomeNumberVerticalPosition: 31,
     libraryRowHeight: 62,
-    appVersion: "3.1.48",
+    appVersion: "3.1.55",
     reduceGlow: false
   });
 
