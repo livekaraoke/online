@@ -1424,7 +1424,7 @@
     $("yearInput").value = loadedSong.year || "";
     $("timeSignatureInput").value = loadedSong.timeSignature || "4/4";
     $("loopSlotInput").value = loadedSong.loopSlot ?? "";
-    $("loopingInput").value = String(loadedSong.looping === true || String(loadedSong.looping).toLowerCase() === "yes");
+    $("loopingInput").value = String(loadedSong.looping === true || ["true","yes"].includes(String(loadedSong.looping).toLowerCase()));
     $("songDetailsInput").value = loadedSong.songDetails || "";
     applyGuitarTuningState(loadedSong.guitarTuning || {
       name:"Standard Tuning",
