@@ -927,6 +927,7 @@
     }
 
     updateGuitarTuningStickyState();
+    updateSpeed();
     renderSectionProgress();
     updateSectionVisibilityUi();
   }
@@ -1286,6 +1287,7 @@
     manualSectionUntil=Date.now()+650;
     currentSectionIndex = Math.max(0, Math.min(sectionEls.length - 1, index));
     updateGuitarTuningStickyState();
+    updateSpeed();
 
     // Update/centre the guide immediately when Prev/Next or a guide item is used.
     [...$("sectionProgress").children]
@@ -1346,6 +1348,7 @@
     // As the performer scrolls through the song, automatically bring the
     // current section marker into view and keep it roughly centred.
     if (changed) {
+      updateSpeed();
       setQuickToolsReleased(currentSectionIndex>0);
       centerActiveProgressSection(true);
     }
@@ -1764,6 +1767,7 @@
         hostScrollSpeed: scrollSpeed,
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       }, { merge: true });
+      if (currentSong) currentSong.hostScrollSpeed = scrollSpeed;
     } catch (error) {
       console.error("Could not save this song's autoscroll speed:", error);
     }
@@ -2583,7 +2587,11 @@
     $("sendToKaraokeBtn").onclick = sendToKaraoke;
     $("karaokeMenuBtn").onclick = () => $("karaokeMenu").classList.toggle("hidden");
     $("resetKaraokeBtn").onclick = resetKaraoke;
-    $("editSongBtn").onclick = () => location.href = `lyricscreator.html?firebaseId=${encodeURIComponent(currentSongId)}`;
+    $("editSongBtn").onclick = async () => {
+      clearTimeout(window.__ls26SpeedSave);
+      await saveSongScrollSpeed();
+      location.href = `lyricscreator.html?firebaseId=${encodeURIComponent(currentSongId)}`;
+    };
     $("sendSlaveLyricsBtn").onclick = () => sendSlaveLyrics("slaveLyricsSelect");
 
     // Duplicate performance tools above the first lyric section.
@@ -2598,8 +2606,11 @@
       };
     }
     if ($("quickEditSongBtn")) {
-      $("quickEditSongBtn").onclick = () =>
+      $("quickEditSongBtn").onclick = async () => {
+        clearTimeout(window.__ls26SpeedSave);
+        await saveSongScrollSpeed();
         location.href = `lyricscreator.html?firebaseId=${encodeURIComponent(currentSongId)}`;
+      };
     }
     if ($("quickSendSlaveLyricsBtn")) {
       $("quickSendSlaveLyricsBtn").onclick = () => sendSlaveLyrics("quickSlaveLyricsSelect");
@@ -2648,7 +2659,12 @@
     });
     updateSpeed();
   }
-  function updateSpeed(){ $("scrollSpeedLabel").textContent = `${scrollSpeed.toFixed(1)}×`; }
+  function updateSpeed(){
+    const label = $("scrollSpeedLabel");
+    if (!label) return;
+    const effective = sectionScrollSpeedForIndex(currentSectionIndex);
+    label.textContent = `${effective.toFixed(1)}×`;
+  }
 
   async function init() {
     await Promise.all([loadSectionTitleDefaultsForView(), loadActiveSessionType()]);
