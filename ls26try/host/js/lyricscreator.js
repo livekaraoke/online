@@ -1666,6 +1666,15 @@
       timeSignature: $("timeSignatureInput").value.trim() || "4/4",
       loopSlot: $("loopSlotInput").value === "" ? null : Number($("loopSlotInput").value),
       looping: $("loopingInput").value === "true",
+
+      // Preserve LyricView's saved song-level autoscroll speed when editing.
+      // LyricsCreator replaces the whole song document on save, so this field
+      // must be explicitly carried forward or it would reset to 1.0×.
+      hostScrollSpeed:
+        firebaseId && Number.isFinite(Number(loadedSong?.hostScrollSpeed))
+          ? Math.max(0.1, Math.min(10, Number(loadedSong.hostScrollSpeed)))
+          : 1,
+
       songDetails: $("songDetailsInput").value.trim(),
       guitarTuning: getCurrentGuitarTuning(),
       youtubeLink: getYoutubeLinks()[0] || "",
