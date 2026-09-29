@@ -119,3 +119,14 @@
 .host-lyric-view-page .host-section-body u {
   text-decoration-thickness: from-font;
 }
+
+
+/* Extra-bold semantic span saved by LyricsCreator.
+   Font synthesis + a very small same-colour edge ensures the effect remains
+   visibly heavier even for tab/monospace fonts without a native 900 face. */
+.creator-page .creator-rich-editor .ls26-heavy-bold,
+.host-lyric-view-page .host-section-body .ls26-heavy-bold{
+  font-weight:900!important;
+  font-synthesis:weight!important;
+  text-shadow:.22px 0 0 currentColor,-.22px 0 0 currentColor!important;
+}
