@@ -83,7 +83,7 @@
     // Force the requested topbar sizing at runtime so older responsive CSS
     // or cached stylesheet rules cannot override these exact dimensions.
     if(window.innerWidth>=700){
-      nav.querySelectorAll('.ls26-primary-nav').forEach(el=>el.style.setProperty('font-size','19px','important'));
+      nav.querySelectorAll('.ls26-primary-nav').forEach(el=>el.style.setProperty('font-size','18px','important'));
       [nav.children[3],nav.children[4]].forEach(el=>el&&el.style.setProperty('font-size','15px','important'));
 
       const admin=nav.querySelector('.ls26-admin-nav');
@@ -110,7 +110,7 @@
         host.style.setProperty('max-width','111px','important');
       }
       const logoSvg=nav.querySelector('.ls26-brand-icon svg');
-      if(logoSvg)logoSvg.style.setProperty('transform','translate(-4px,-2px)','important');
+      if(logoSvg)logoSvg.style.setProperty('transform','translate(-4px,-5px)','important');
     }
     let stack=$('ls26StickyHeader');
     if(!stack){stack=document.createElement('div');stack.id='ls26StickyHeader';document.body.prepend(stack);}
