@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../shared/artist-names.js?v=20260925-artist-names"></script>
+  <link rel="stylesheet" href="../shared/dialogs.css?v=20260924-followup">
+  <script src="../shared/dialogs.js?v=20260924-followup"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Notes · LiveSuite</title>
+  <link rel="stylesheet" href="css/admin.css?v=20260910-stage4">
+  <link rel="stylesheet" href="css/sidebar.css?v=20260910-stage4">
+  <link rel="stylesheet" href="css/sidebar-suite.css?v=20260929-planner-tools">
+  <link rel="stylesheet" href="../shared/tools.css?v=20260925-tools">
+  <link rel="stylesheet" href="../shared/theme.css?v=20260929-nav-tools">
+  <link rel="stylesheet" href="../shared/performance.css?v=20260929-lyric-sizing">
+  <link rel="stylesheet" href="css/admin-navigation.css?v=20260929-admin-polish">
+  <link rel="stylesheet" href="css/planner-tools.css?v=20260929-planner-tools">
+  <script src="../shared/data.js?v=20260910-stage4"></script>
+</head>
+<body class="admin-body tool-page planner-page">
+  <div class="admin-shell">
+    <div id="sidebarContainer"></div>
+    <main class="admin-main tool-main notes-main">
+      <header class="tool-heading">
+        <div><h1>Notes</h1><p>Rich notes with optional calendar date and time.</p></div>
+        <div class="tool-actions">
+          <button id="notesOpenCalendar" type="button">Calendar</button>
+          <button id="notesNew" type="button">＋ New note</button>
+        </div>
+      </header>
+
+      <div class="notes-workspace">
+        <aside class="notes-list-panel">
+          <div class="notes-list-tools">
+            <strong>Notebook</strong>
+            <input id="notesSearch" type="search" placeholder="Search notes…">
+            <select id="notesCategoryFilter"><option value="">All categories</option></select>
+          </div>
+          <div id="notesList" class="notes-list" aria-live="polite"></div>
+        </aside>
+
+        <section class="note-editor-panel">
+          <div class="note-editor-head">
+            <input id="noteTitle" type="text" maxlength="180" placeholder="Note title">
+            <div class="note-editor-actions">
+              <button id="noteDelete" class="danger" type="button" disabled>Delete</button>
+              <button id="noteSave" class="primary" type="button">Save note</button>
+            </div>
+          </div>
+
+          <div class="note-meta-grid">
+            <label>Date · optional<input id="noteDate" type="date"></label>
+            <label>Time · optional<input id="noteTime" type="time"></label>
+            <label>Categories<input id="noteCategories" type="text" maxlength="300" placeholder="Roxanna, ideas, setlist…"></label>
+            <label class="note-favourite"><input id="noteFavourite" type="checkbox"> Favourite</label>
+          </div>
+
+          <div class="note-toolbar" role="toolbar" aria-label="Note formatting">
+            <button type="button" data-command="bold" title="Bold"><b>B</b></button>
+            <button type="button" data-command="italic" title="Italic"><i>I</i></button>
+            <button type="button" data-command="underline" title="Underline"><u>U</u></button>
+            <button type="button" data-command="strikeThrough" title="Strike through">S̶</button>
+            <button type="button" data-command="insertUnorderedList" title="Bullet list">• List</button>
+            <button type="button" data-command="insertOrderedList" title="Numbered list">1. List</button>
+            <button type="button" data-command="justifyLeft" title="Align left">L</button>
+            <button type="button" data-command="justifyCenter" title="Align centre">C</button>
+            <button type="button" data-command="justifyRight" title="Align right">R</button>
+            <select id="noteBlockFormat" aria-label="Text style"><option value="div">Normal</option><option value="h2">Heading</option><option value="h3">Subheading</option><option value="blockquote">Quote</option></select>
+            <input id="noteTextColor" type="color" value="#ffffff" aria-label="Text colour">
+            <button type="button" data-command="removeFormat" title="Clear formatting">Clear</button>
+          </div>
+
+          <div id="noteEditor" class="note-editor" contenteditable="true" data-placeholder="Write your note here…" spellcheck="true"></div>
+          <div class="note-editor-status"><span id="noteStatus">Choose a note or start a new one.</span><span id="noteUpdated"></span></div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script src="../firebase-projects.js?v=20260910-stage4"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="js/firebase.js?v=20260910-stage4"></script>
+  <script src="js/sidebar.js?v=20260929-planner-tools"></script>
+  <script src="js/profile.js?v=20260929-members-align"></script>
+  <script src="js/auth.js?v=20260910-stage4"></script>
+  <script src="../shared/shell.js?v=20260929-planner-tools"></script>
+  <script src="../shared/inbox.js?v=20260925-artist-names"></script>
+  <script src="../shared/session-ui.js?v=20260925-live-click"></script>
+  <script src="../shared/performance.js?v=20260925-live-click"></script>
+  <script src="js/notes.js?v=20260929-planner-tools"></script>
+</body>
+</html>

@@ -1,0 +1,89 @@
+/* LiveSuite Calendar + Notes — tablet-first planning tools */
+.planner-page .tool-main{max-width:none}
+.planner-card{border:1px solid #285668;background:#031c29;border-radius:12px;padding:18px;margin-bottom:16px}
+.planner-subtle{color:#8faabd}
+.planner-status{min-height:20px;margin:10px 0;color:#8faabd;font-size:13px}
+.planner-status.error{color:#ff7888}
+
+.calendar-controls{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.calendar-month-nav{display:flex;align-items:center;gap:10px}
+.calendar-month-nav strong{min-width:180px;text-align:center;color:#eef8ff;font-size:20px}
+.calendar-filter-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.calendar-filter{display:inline-flex!important;flex-direction:row!important;align-items:center!important;gap:7px!important;min-height:40px;padding:7px 10px;border:1px solid #214c60;border-radius:999px;background:#062330;color:#cfe4ef;font-size:12px!important;font-weight:750!important}
+.calendar-filter input{width:17px!important;height:17px!important;min-height:17px!important;padding:0!important;accent-color:#00cafa}
+.calendar-legend-dot{width:9px;height:9px;border-radius:50%;display:inline-block}
+.calendar-legend-dot.event{background:#00cafa}.calendar-legend-dot.reminder{background:#ffc857}.calendar-legend-dot.note{background:#b882ff}
+
+.calendar-weekdays,.calendar-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.calendar-weekdays{margin-top:16px;color:#7899aa;font-size:10px;font-weight:900;letter-spacing:.07em;text-align:center}
+.calendar-weekdays span{padding:6px 2px}
+.calendar-grid{margin-top:3px}
+.calendar-day{position:relative;min-height:112px;padding:8px!important;text-align:left!important;align-content:start;border:1px solid #1d4354!important;border-radius:9px!important;background:#02151f!important;color:#dff3fc!important;overflow:hidden}
+.calendar-day.outside{opacity:.38}
+.calendar-day.today{border-color:#00cafa!important;box-shadow:inset 0 0 0 1px rgba(0,202,250,.18)}
+.calendar-day.selected{border-color:#5ee7ff!important;background:#073247!important;box-shadow:0 0 0 1px rgba(94,231,255,.18)}
+.calendar-day-number{display:flex;align-items:center;justify-content:space-between;gap:6px;font-weight:900;font-size:13px}
+.calendar-day-count{min-width:20px;height:20px;display:grid;place-items:center;border-radius:999px;background:#0b4053;color:#8eeaff;font-size:9px}
+.calendar-day-items{display:grid;gap:4px;margin-top:7px}
+.calendar-mini-item{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;border-radius:5px;padding:4px 5px;font-size:9px;font-weight:800}
+.calendar-mini-item.event{background:rgba(0,202,250,.13);color:#80e8ff}
+.calendar-mini-item.reminder{background:rgba(255,200,87,.13);color:#ffe1a1}
+.calendar-mini-item.note{background:rgba(184,130,255,.14);color:#dabaff}
+.calendar-more{color:#7899aa;font-size:9px;padding-left:3px}
+
+.calendar-agenda-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px}
+.calendar-agenda-head h2{margin:0;color:#00cafa;font-size:21px}.calendar-agenda-head p{margin:4px 0 0;color:#8faabd}
+.calendar-agenda{display:grid;gap:9px}
+.calendar-agenda-item{display:grid;grid-template-columns:78px minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px;border:1px solid #1e485b;border-radius:9px;background:#041b27;color:#eaf7fd;text-decoration:none}
+.calendar-agenda-item:hover{border-color:#00cafa;background:#06283a}
+.calendar-agenda-time{color:#a6c0ce;font-size:12px;font-variant-numeric:tabular-nums}
+.calendar-agenda-copy{min-width:0}.calendar-agenda-copy strong{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.calendar-agenda-copy small{display:block;margin-top:4px;color:#8faabd}
+.calendar-kind{padding:4px 8px;border-radius:999px;font-size:9px;font-weight:900;text-transform:uppercase}
+.calendar-kind.event{background:rgba(0,202,250,.14);color:#77e7ff}.calendar-kind.reminder{background:rgba(255,200,87,.14);color:#ffe19b}.calendar-kind.note{background:rgba(184,130,255,.15);color:#d8b7ff}
+.calendar-empty{padding:18px;color:#829eae;text-align:center;border:1px dashed #244b5e;border-radius:9px}
+
+.notes-workspace{display:grid;grid-template-columns:minmax(260px,330px) minmax(0,1fr);gap:16px;align-items:start}
+.notes-list-panel,.note-editor-panel{border:1px solid #285668;background:#031c29;border-radius:12px}
+.notes-list-panel{position:sticky;top:calc(var(--ls-header-h,68px) + 12px);max-height:calc(100dvh - var(--ls-header-h,68px) - 30px);overflow:auto}
+.notes-list-tools{position:sticky;top:0;z-index:2;padding:14px;background:#031c29;border-bottom:1px solid #21485a}
+.notes-list-tools input,.notes-list-tools select{width:100%;margin-top:8px}
+.notes-list{display:grid}
+.note-list-row{display:grid;gap:5px;width:100%;min-height:84px;padding:12px 14px!important;border:0!important;border-bottom:1px solid #173b4b!important;border-radius:0!important;background:transparent!important;text-align:left!important}
+.note-list-row:hover,.note-list-row.active{background:#073044!important}
+.note-list-row.active{box-shadow:inset 3px 0 #00cafa}
+.note-list-row strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#eef8ff}
+.note-list-row span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;color:#8faabd;font-size:12px;line-height:1.35}
+.note-list-meta{display:flex;gap:6px;flex-wrap:wrap;color:#86a4b5!important;font-size:10px!important}
+.note-list-meta em{font-style:normal;padding:2px 5px;border-radius:4px;background:#0b3445;color:#aad8ea}
+
+.note-editor-panel{min-width:0;overflow:hidden}
+.note-editor-head{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;padding:14px 16px;border-bottom:1px solid #21485a}
+.note-editor-head input[type="text"]{width:100%;min-height:48px;font-size:21px;font-weight:850;background:#02151f}
+.note-editor-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.note-editor-actions .primary{border-color:#00dc88!important;background:#063a2c!important;color:#6dffc2!important}
+.note-editor-actions .danger{border-color:#87424d!important;background:#34151b!important;color:#ff9eab!important}
+.note-meta-grid{display:grid;grid-template-columns:1fr 1fr minmax(180px,1.2fr);gap:12px;padding:14px 16px;border-bottom:1px solid #21485a}
+.note-meta-grid label{display:grid;gap:6px;color:#98b2c1;font-size:12px;font-weight:750}
+.note-meta-grid input{width:100%}
+.note-favourite{display:flex!important;grid-column:1/-1;flex-direction:row!important;align-items:center!important;gap:8px!important}
+.note-favourite input{width:18px!important;height:18px!important;min-height:18px!important;padding:0!important;accent-color:#ffc857}
+.note-toolbar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:10px 12px;border-bottom:1px solid #21485a;background:#04202d}
+.note-toolbar button,.note-toolbar select,.note-toolbar input[type="color"]{min-height:38px!important;height:38px;padding:6px 10px!important}
+.note-toolbar button{min-width:38px!important}
+.note-toolbar input[type="color"]{width:46px!important;padding:3px!important}
+.note-editor{min-height:420px;padding:20px;background:#010f18;color:#f5f8fb;font-size:17px;line-height:1.55;outline:0;overflow-wrap:anywhere}
+.note-editor:empty::before{content:attr(data-placeholder);color:#587789;pointer-events:none}
+.note-editor-status{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:46px;padding:10px 16px;border-top:1px solid #21485a;color:#7ea0b1;font-size:12px}
+.note-editor-status .unsaved{color:#ff6578;font-weight:850}.note-editor-status .saved{color:#65e6a7;font-weight:850}
+.note-empty-editor{padding:40px 20px;text-align:center;color:#7897a8}
+
+@media(max-width:900px){
+  .calendar-day{min-height:94px;padding:6px!important}.calendar-mini-item{font-size:8px}
+  .notes-workspace{grid-template-columns:1fr}.notes-list-panel{position:relative;top:auto;max-height:310px}
+}
+@media(max-width:700px){
+  .calendar-weekdays,.calendar-grid{gap:3px}.calendar-day{min-height:76px}.calendar-day-items{display:none}.calendar-day-count{font-size:8px}
+  .calendar-agenda-item{grid-template-columns:60px minmax(0,1fr)}.calendar-kind{grid-column:2}
+  .note-editor-head{grid-template-columns:1fr}.note-editor-actions{justify-content:flex-start}.note-meta-grid{grid-template-columns:1fr}
+  .note-favourite{grid-column:auto}.note-editor{min-height:330px;padding:15px}
+}

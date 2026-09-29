@@ -3,7 +3,7 @@
 .suite-icon-sprite{position:absolute!important;width:0!important;height:0!important;overflow:hidden!important}
 .suite-nav-icon>svg{display:block;width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .suite-nav a,.suite-nav button{grid-template-columns:26px minmax(0,1fr) auto auto!important}
-#membersNavLink .suite-nav-label{overflow:visible!important;text-overflow:clip!important}
+#membersNavLink .suite-nav-label{overflow:visible!important;text-overflow:clip!important;white-space:nowrap!important;align-self:center!important}
 .suite-nav .suite-logout-row{border-color:transparent!important;background:rgba(150,28,39,.22)!important;color:#ffc2c7!important;box-shadow:none!important;outline:none!important}
 .suite-nav .suite-logout-row .suite-nav-icon,.suite-nav .suite-logout-row .suite-nav-chevron{color:#ff8f98!important}
 .suite-nav .suite-logout-row:hover,.suite-nav .suite-logout-row:focus-visible{border-color:rgba(255,94,105,.44)!important;background:rgba(177,36,48,.32)!important;color:#fff!important}
@@ -85,8 +85,9 @@
 
   <div class="suite-nav-section-title tools-title">TOOLS</div>
   <nav class="side-nav suite-nav">
+    <a href="calendar.html" data-sidebar-nav="calendar"><span class="suite-nav-icon"><svg aria-hidden="true"><use href="#lsi-calendar"></use></svg></span><span class="suite-nav-label">Calendar</span><span class="suite-nav-chevron">›</span></a>
     <a href="reminders.html" data-sidebar-nav="reminders"><span class="suite-nav-icon"><svg aria-hidden="true"><use href="#lsi-note"></use></svg></span><span class="suite-nav-label">Reminders</span><span id="sidebarReminderBadge" class="suite-nav-count request-count hidden" aria-label="Pending reminders">0</span><span class="suite-nav-chevron">›</span></a>
-    <a href="../notekeeper/notekeeper.html"><span class="suite-nav-icon"><svg aria-hidden="true"><use href="#lsi-note"></use></svg></span><span class="suite-nav-label">Notes</span><span class="suite-nav-chevron">›</span></a>
+    <a href="notes.html" data-sidebar-nav="notes"><span class="suite-nav-icon"><svg aria-hidden="true"><use href="#lsi-note"></use></svg></span><span class="suite-nav-label">Notes</span><span class="suite-nav-chevron">›</span></a>
     <a href="../songMeta/index.html"><span class="suite-nav-icon"><svg aria-hidden="true"><use href="#lsi-tag"></use></svg></span><span class="suite-nav-label">Song Meta Search</span><span class="suite-nav-chevron">›</span></a>
     <a href="metronome.html" data-sidebar-nav="metronome"><span class="suite-nav-icon"><svg aria-hidden="true"><use href="#lsi-metronome"></use></svg></span><span class="suite-nav-label">Metronome / Click</span><span class="suite-nav-chevron">›</span></a>
   </nav>
