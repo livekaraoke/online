@@ -266,7 +266,10 @@
     const root=$("performanceSongReference");
     if(!root)return;
     const note=String(song?.note||song?.songNote||"").trim();
+    const details=String(song?.songDetails||"").trim();
     const links=songYoutubeLinks(song);
+    const loopSlot = song?.loopSlot === null || song?.loopSlot === undefined || song?.loopSlot === "" ? "–" : String(song.loopSlot);
+    const looping = song?.looping === true || String(song?.looping||"").toLowerCase() === "yes";
     const hostNotes=(song?.sections||[]).filter(section=>{
       const isHost=`${section?.type||""} ${section?.title||""}`.toLowerCase().includes("host note");
       return isHost&&(showAllSectionsOverride||sectionVisibleForActiveType(section));
@@ -282,6 +285,11 @@
       const label=link.label||`YouTube${links.length>1?` ${index+1}`:""}`;
       return `<a href="${esc(link.url)}" target="_blank" rel="noopener noreferrer">▶ ${esc(label)}</a>`;
     }).join("");
+
+    $("quickLoopSlot").textContent = loopSlot;
+    $("quickLooping").textContent = looping ? "YES" : "NO";
+    $("performanceLoopingCard").dataset.looping = looping ? "yes" : "no";
+    $("performanceSongDetails").textContent = details || "—";
 
     const hostCard=$("performanceHostNotesCard");
     hostCard.hidden=!hostNotes.length;
