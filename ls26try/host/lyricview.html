@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="../admin-new/css/top-statusbar.css?v=20260910-stage4">
   <link rel="stylesheet" href="../admin-new/css/top-statusbar-session-tools.css?v=20260910-stage4">
   <!-- Lyric View-only overrides MUST load last -->
-  <link rel="stylesheet" href="css/lyricview-fixes.css?v=20260929-centered-values-host-notes">
+  <link rel="stylesheet" href="css/lyricview-fixes.css?v=20260929-end-completion">
 <link rel="stylesheet" href="../shared/theme.css?v=20260924-layout-refinements"><link rel="stylesheet" href="../shared/performance.css?v=20260925-live-click"><script src="../shared/data.js?v=20260910-stage4"></script><link rel="stylesheet" href="../shared/section-layout.css?v=20260925-match-section-green"></head>
 <body class="host-lyric-view-page">
   <!-- Song title/actions; navigation and session move into shared sticky header -->
@@ -118,23 +118,29 @@
     <div class="host-song-lead-in-spacer" aria-hidden="true"></div>
     <div id="lyricsContent" class="host-lyrics-content"></div>
     <div id="endMarker" class="host-end-marker">[ END ]</div>
-    <div class="host-end-next-wrap">
-      <button id="endNextRunOrderSongBtn" class="host-end-next-song-btn" type="button" hidden>
-        NEXT SONG
-      </button>
-      <div id="endNextSongDetailsCard" class="host-end-next-song-card" hidden></div>
-      <div id="endSessionActions" class="host-end-session-actions" hidden>
-        <button id="endGoLibraryBtn" class="host-end-action" type="button" aria-label="Open Library">
-          <span class="host-end-action-icon" aria-hidden="true">♫</span><span>LIBRARY</span>
+    <section id="endCompletionPanel" class="host-end-completion-panel" hidden aria-live="polite">
+      <div class="host-song-complete-icon" aria-hidden="true">✓</div>
+      <h2>[ SONG COMPLETE ]</h2>
+      <p>Great run. Keep it going.</p>
+
+      <div class="host-end-next-wrap">
+        <button id="endNextRunOrderSongBtn" class="host-end-next-song-btn" type="button" hidden>
+          NEXT SONG
         </button>
-        <button id="endStartBreakBtn" class="host-end-action break" type="button" aria-label="Start break">
-          <span class="host-end-action-icon" aria-hidden="true">☕</span><span>BREAK</span>
-        </button>
-        <button id="endSessionBtn" class="host-end-action end" type="button" aria-label="End session">
-          <span class="host-end-action-icon" aria-hidden="true">■</span><span>END SESSION</span>
-        </button>
+        <div id="endNextSongDetailsCard" class="host-end-next-song-card" hidden></div>
+        <div id="endSessionActions" class="host-end-session-actions" hidden>
+          <button id="endGoLibraryBtn" class="host-end-action" type="button" aria-label="Open Library">
+            <span class="host-end-action-icon" aria-hidden="true">♫</span><span>LIBRARY</span>
+          </button>
+          <button id="endStartBreakBtn" class="host-end-action break" type="button" aria-label="Start break">
+            <span class="host-end-action-icon" aria-hidden="true">☕</span><span>BREAK</span>
+          </button>
+          <button id="endSessionBtn" class="host-end-action end" type="button" aria-label="End session">
+            <span class="host-end-action-icon" aria-hidden="true">■</span><span>END SESSION</span>
+          </button>
+        </div>
       </div>
-    </div>
+    </section>
   </main>
 
   <div class="host-nav-pad" aria-label="Lyric navigation">
@@ -275,7 +281,7 @@
   <script data-ls26-settings="1" src="../shared/app-settings.js?v=20260925-metro-visuals"></script>
   <script src="../shared/metronome-engine.js?v=20260925-tools"></script>
   <script src="../shared/lyricview-metronome.js?v=20260925-circle-colour"></script>
-  <script src="js/lyricview.js?v=20260929-centered-values-host-notes"></script>
+  <script src="js/lyricview.js?v=20260929-end-completion"></script>
   <script src="../admin-new/js/top-statusbar.js?v=20260925-artist-names" data-include="../admin-new/includes/top-statusbar.html?v=20260910-stage4"></script>
   <script src="../admin-new/js/top-statusbar-session-tools.js?v=20260925-artist-names"></script>
   <script>
