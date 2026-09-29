@@ -1954,10 +1954,12 @@ body.host-lyric-view-page {
 }
 .host-lyric-view-page .performance-mini-card>strong{
   display:block!important;
+  width:100%!important;
   font-size:25px!important;
   line-height:1!important;
   font-weight:950!important;
   color:#f4fbff!important;
+  text-align:center!important;
 }
 .host-lyric-view-page #performanceLoopingCard[data-looping="yes"]>strong{
   color:#62e78d!important;
@@ -1994,4 +1996,11 @@ body.host-lyric-view-page {
   .host-lyric-view-page .performance-song-details-card{
     min-height:140px!important;
   }
+}
+
+
+/* Song-level Host Notes stays visible even when empty. */
+.host-lyric-view-page .performance-host-notes-card>div{
+  min-height:1.45em!important;
+  color:#dcecf3!important;
 }
