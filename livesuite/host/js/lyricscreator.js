@@ -257,6 +257,11 @@
   function stripLegacyMarkerFromHtml(value) {
     const holder = document.createElement("div");
     holder.innerHTML = String(value || "");
+
+    // Clean up dash-colour helper spans that may have been stored by older
+    // Lyrics Creator versions. LyricView reapplies dash colour at render time.
+    unwrapDashSpans(holder);
+
     let removed = false;
 
     function trimLeadingWhitespace(container) {
@@ -477,9 +482,20 @@
 
   function unwrapDashSpans(root) {
     if (!root) return;
-    root.querySelectorAll("span.creator-dash-char").forEach(span => {
+    // Dash-colour spans are render-only helpers. Never persist them in the
+    // song document: large guitar tabs can contain tens of thousands of "-"
+    // characters, and saving one span per dash can exceed Firestore's 1 MiB
+    // document limit.
+    root.querySelectorAll("span.creator-dash-char, span.section-dash-char").forEach(span => {
       span.replaceWith(document.createTextNode(span.textContent || "-"));
     });
+  }
+
+  function getCleanEditorHtml(editor) {
+    if (!editor) return "";
+    const clone = editor.cloneNode(true);
+    unwrapDashSpans(clone);
+    return clone.innerHTML;
   }
 
   function applyDashColourToEditor(editor, colour) {
@@ -668,7 +684,12 @@
     });
     document.querySelectorAll("[data-html]").forEach(el => {
       const i = Number(el.dataset.html);
-      if (sections[i]) sections[i].html = el.innerHTML;
+      if (sections[i]) {
+        // Save semantic editor HTML only. The live grey-dash preview spans are
+        // deliberately excluded so a normal-sized tab does not balloon into
+        // a multi-megabyte Firestore document.
+        sections[i].html = getCleanEditorHtml(el);
+      }
     });
     document.querySelectorAll("[data-load-collapsed]").forEach(el => {
       const i = Number(el.dataset.loadCollapsed);
@@ -913,6 +934,20 @@
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     };
     if (!firebaseId) data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+
+    // Firestore has a 1 MiB document limit. Keep a safety margin so the user
+    // gets a useful message instead of a cryptic Firebase write failure.
+    const sizeCheckData = { ...data, updatedAt: null };
+    if (Object.prototype.hasOwnProperty.call(sizeCheckData, "createdAt")) {
+      sizeCheckData.createdAt = null;
+    }
+    const estimatedBytes = new TextEncoder().encode(JSON.stringify(sizeCheckData)).length;
+    if (estimatedBytes > 950 * 1024) {
+      alert(
+        `Could not save song: the song data is about ${Math.ceil(estimatedBytes / 1024)} KB, which is too close to Firestore's 1 MiB document limit. Split unusually large content into smaller sections before saving.`
+      );
+      return;
+    }
 
     $("saveSongBtn").disabled = true;
     try {
