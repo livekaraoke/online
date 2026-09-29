@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="../admin-new/css/top-statusbar.css?v=20260910-stage4">
   <link rel="stylesheet" href="../admin-new/css/top-statusbar-session-tools.css?v=20260910-stage4">
   <!-- Lyric View-only overrides MUST load last -->
-  <link rel="stylesheet" href="css/lyricview-fixes.css?v=20260928-second-section-bpm-center">
+  <link rel="stylesheet" href="css/lyricview-fixes.css?v=20260929-loop-details">
 <link rel="stylesheet" href="../shared/theme.css?v=20260924-layout-refinements"><link rel="stylesheet" href="../shared/performance.css?v=20260925-live-click"><script src="../shared/data.js?v=20260910-stage4"></script><link rel="stylesheet" href="../shared/section-layout.css?v=20260925-match-section-green"></head>
 <body class="host-lyric-view-page">
   <!-- Song title/actions; navigation and session move into shared sticky header -->
@@ -87,16 +87,30 @@
     <!-- END PERFORMANCE QUICK INFO -->
 
     <section id="performanceSongReference" class="performance-song-reference" hidden aria-label="Song notes and links">
-      <div id="performanceSongNoteCard" class="performance-reference-card" hidden>
-        <small>SONG NOTE</small><div id="performanceSongNote"></div>
-      </div>
-      <div id="performanceYoutubeCard" class="performance-reference-card" hidden>
+      <div id="performanceYoutubeCard" class="performance-reference-card performance-youtube-card" hidden>
         <small>YOUTUBE LINKS</small><div id="performanceYoutubeLinks" class="performance-youtube-links"></div>
       </div>
-      <div id="performanceTimeCard" class="performance-reference-card performance-time-card">
-        <small>TIME</small><strong id="quickTime" class="performance-time-value">–</strong>
+
+      <div class="performance-loop-stack" aria-label="Time and loop settings">
+        <div id="performanceTimeCard" class="performance-reference-card performance-mini-card performance-time-card">
+          <small>TIME</small><strong id="quickTime" class="performance-time-value">–</strong>
+        </div>
+        <div id="performanceLoopSlotCard" class="performance-reference-card performance-mini-card">
+          <small>LOOP SLOT</small><strong id="quickLoopSlot">–</strong>
+        </div>
+        <div id="performanceLoopingCard" class="performance-reference-card performance-mini-card">
+          <small>LOOPING</small><strong id="quickLooping">NO</strong>
+        </div>
       </div>
-      <div id="performanceHostNotesCard" class="performance-reference-card" hidden>
+
+      <div id="performanceSongDetailsCard" class="performance-reference-card performance-song-details-card">
+        <small>SONG DETAILS</small><div id="performanceSongDetails">—</div>
+      </div>
+
+      <div id="performanceSongNoteCard" class="performance-reference-card performance-reference-wide" hidden>
+        <small>SONG NOTE</small><div id="performanceSongNote"></div>
+      </div>
+      <div id="performanceHostNotesCard" class="performance-reference-card performance-reference-wide" hidden>
         <small>HOST NOTES</small><div id="performanceHostNotes"></div>
       </div>
     </section>
@@ -261,7 +275,7 @@
   <script data-ls26-settings="1" src="../shared/app-settings.js?v=20260925-metro-visuals"></script>
   <script src="../shared/metronome-engine.js?v=20260925-tools"></script>
   <script src="../shared/lyricview-metronome.js?v=20260925-circle-colour"></script>
-  <script src="js/lyricview.js?v=20260928-second-section-bpm-center"></script>
+  <script src="js/lyricview.js?v=20260929-loop-details"></script>
   <script src="../admin-new/js/top-statusbar.js?v=20260925-artist-names" data-include="../admin-new/includes/top-statusbar.html?v=20260910-stage4"></script>
   <script src="../admin-new/js/top-statusbar-session-tools.js?v=20260925-artist-names"></script>
   <script>
