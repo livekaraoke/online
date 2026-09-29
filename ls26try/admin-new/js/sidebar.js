@@ -88,6 +88,13 @@
     if (year) year.textContent = String(new Date().getFullYear());
   }
 
+  function updateSidebarAppVersion(root = document) {
+    const label = root.querySelector?.("[data-sidebar-app-version]");
+    if (!label) return;
+    const value = String(window.LS26Settings?.get?.().appVersion || "3.1.55").trim();
+    label.textContent = "v" + (/^\d\.\d\.\d{2}$/.test(value) ? value : "3.1.55");
+  }
+
   async function loadSidebar() {
     const target = $("sidebarContainer");
     if (!target) return;
@@ -101,6 +108,7 @@
       target.innerHTML = await response.text();
       bindSidebarDisclosureControls(target);
       updateSidebarCopyrightYear(target);
+      updateSidebarAppVersion(target);
 
       target.querySelectorAll("a[href]").forEach(link => {
         const href = link.getAttribute("href") || "";
@@ -494,6 +502,11 @@
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;");
   }
+
+  window.addEventListener("ls26:settings-applied", () => {
+    const target = $("sidebarContainer");
+    if (target) updateSidebarAppVersion(target);
+  });
 
   window.LK = window.LK || {};
 
