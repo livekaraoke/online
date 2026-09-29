@@ -1554,3 +1554,54 @@
     width:18%!important;
   }
 }
+
+
+/* 2026-09-30 LyricsCreator section control alignment fixes */
+.creator-page .section-visibility-strip{
+  flex-direction:row!important;
+  align-items:center!important;
+  flex-wrap:nowrap!important;
+}
+.creator-page .section-visibility-strip .section-visibility-label{
+  flex:0 0 auto!important;
+}
+.creator-page .section-visibility-strip .section-visibility-types{
+  flex:1 1 auto!important;
+  min-width:0!important;
+}
+.creator-page .section-visibility-strip .section-copy-btn{
+  margin-left:auto!important;
+  align-self:center!important;
+  flex:0 0 42px!important;
+}
+.creator-page .creator-inline-add-strip{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  line-height:1!important;
+}
+.creator-page .creator-inline-add-strip .creator-inline-plus{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  width:100%!important;
+  height:100%!important;
+  margin:0!important;
+  padding:0!important;
+  line-height:1!important;
+  font-family:Arial,sans-serif!important;
+  font-size:24px!important;
+  font-weight:700!important;
+  transform:none!important;
+}
+@media(max-width:820px){
+  .creator-page .section-visibility-strip{
+    flex-direction:row!important;
+    align-items:center!important;
+    flex-wrap:nowrap!important;
+  }
+  .creator-page .section-visibility-strip .section-copy-btn{
+    margin-left:auto!important;
+    align-self:center!important;
+  }
+}
