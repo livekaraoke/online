@@ -1829,6 +1829,10 @@
     $("templateGrid").innerHTML = TEMPLATES.map((template, index) => `<button type="button" data-template="${index}"><strong>${esc(template.label)}</strong><span>${esc(template.type)}</span></button>`).join("");
   }
 
+  window.addEventListener("ls26:settings-applied", () => {
+    if ($("colourPalette")) renderModals();
+  });
+
   document.addEventListener("focusin", event => {
     if (!event.target.matches?.("[data-title]")) return;
     // Section-title editing is intentionally replacement-friendly.
@@ -2177,7 +2181,7 @@
     const extraBold = event.target.closest("[data-extra-bold]");
     if (extraBold) {
       const editor = extraBold.closest(".creator-section-body")?.querySelector(".creator-rich-editor");
-      if (editor) toggleHeavyBold(editor);
+      if (editor) applyHeavyBold(editor);
       return;
     }
 
