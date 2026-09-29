@@ -103,18 +103,13 @@
 
 
     if(location.pathname.includes('/admin-new/'))document.body.classList.add('ls26-admin');
-    const foot=document.createElement('footer');foot.className='ls26-footer';foot.innerHTML=`<div class="ls26-brand ls26-footer-brand" role="img" aria-label="LiveSuite"><img src="${url('assets/livesuite-logo-clean.png')}" alt="" width="2048" height="683"></div><button id="ls26ExitFullscreenSession" class="ls26-exit-fullscreen-session" type="button">EXIT FULLSCREEN</button>`;document.body.append(foot);
-    $('ls26ExitFullscreenSession').onclick=async()=>{
-      try{
-        const topWindow=window.top||window;
-        const topDocument=topWindow.document;
-        if(topDocument.fullscreenElement&&topDocument.exitFullscreen)await topDocument.exitFullscreen();
-        else if(topDocument.webkitFullscreenElement&&topDocument.webkitExitFullscreen)topDocument.webkitExitFullscreen();
-        topWindow.location.href=url('admin-new/admin.html');
-      }catch(_){
-        location.href=url('admin-new/admin.html');
-      }
+    const footerVersion=()=>{
+      const value=String(window.LS26Settings?.get?.().appVersion||"3.1.48").trim();
+      return /^\d\.\d\.\d{2}$/.test(value)?value:"3.1.48";
     };
+    const foot=document.createElement('footer');foot.className='ls26-footer';foot.innerHTML=`<div class="ls26-brand ls26-footer-brand" role="img" aria-label="LiveSuite"><img src="${url('assets/livesuite-logo-clean.png')}" alt="" width="2048" height="683"></div><span id="ls26VersionLabel" class="ls26-version-label" aria-label="LiveSuite version">v${footerVersion()}</span>`;document.body.append(foot);
+    const syncFooterVersion=()=>{const label=$('ls26VersionLabel');if(label)label.textContent='v'+footerVersion();};
+    window.addEventListener('ls26:settings-applied',syncFooterVersion);
     if(location.pathname.endsWith('/lyricscreator.html')){LS26Data.invalidate('lyrics');const title=params.get('inboxTitle'),artist=params.get('inboxArtist');if(title&&!params.get('firebaseId')){$('songTitleInput').value=title;$('artistInput').value=ArtistNames.display(artist);}}
     if(location.pathname.endsWith('/setlist-editor.html'))LS26Data.invalidate('lyricsSetlists');
   }

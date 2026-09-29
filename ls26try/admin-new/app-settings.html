@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="css/sidebar-suite.css?v=20260924-performance-tools">
   <link rel="stylesheet" href="css/enquiries.css?v=20260910-stage4">
   <link rel="stylesheet" href="css/admin-navigation.css?v=20260922-batch">
-  <link rel="stylesheet" href="../shared/theme.css?v=20260924-layout-refinements">
+  <link rel="stylesheet" href="../shared/theme.css?v=20260929-version-footer">
   <link rel="stylesheet" href="../shared/performance.css?v=20260929-nav-feedback">
   <link rel="stylesheet" href="css/app-settings.css?v=20260925-fit-viewport">
   <script src="../shared/data.js?v=20260910-stage4"></script>
@@ -65,6 +65,7 @@
 
     <section class="settings-card"><h2>Library &amp; Effects</h2><p>Useful density and visibility preferences.</p>
       <div class="setting-row"><div class="setting-copy"><strong>Library row height</strong><small>Smaller rows show more songs; larger rows are easier to tap.</small></div><div class="setting-control"><input id="libraryRowHeight" data-setting type="range" min="48" max="92" step="2"><output data-output="libraryRowHeight"></output></div></div>
+      <div class="setting-row"><div class="setting-copy"><strong>App version</strong><small>Footer version label. Required format: 0.0.00, for example 3.1.48.</small></div><div class="setting-control"><input id="appVersion" data-setting type="text" inputmode="numeric" maxlength="6" pattern="[0-9]\.[0-9]\.[0-9]{2}" placeholder="3.1.48" aria-label="LiveSuite app version"></div></div>
       <div class="setting-row"><div class="setting-copy"><strong>Reduce interface glow</strong><small>Turns down neon shadows while keeping LiveSuite colours.</small></div><div class="setting-control"><label class="setting-toggle"><input id="reduceGlow" data-setting type="checkbox"> Reduce glow</label></div></div>
     </section>
   </div>
@@ -78,7 +79,7 @@
 <script src="js/sidebar.js?v=20260925-artist-names"></script>
 <script src="js/profile.js?v=20260910-stage4"></script>
 <script src="js/auth.js?v=20260910-stage4"></script>
-<script data-ls26-settings="1" src="../shared/app-settings.js?v=20260929-section-focus"></script>
-<script src="../shared/shell.js?v=20260925-artist-names"></script>
-<script src="js/app-settings.js?v=20260929-section-focus"></script>
+<script data-ls26-settings="1" src="../shared/app-settings.js?v=20260929-version-footer"></script>
+<script src="../shared/shell.js?v=20260929-version-footer"></script>
+<script src="js/app-settings.js?v=20260929-version-footer"></script>
 </body></html>

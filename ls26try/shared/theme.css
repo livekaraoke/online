@@ -330,3 +330,21 @@ body .ls26-footer .ls26-footer-icon image{filter:none!important;box-shadow:none!
 #liveCircleBtn:disabled{
   cursor:default!important;
 }
+
+
+/* LiveSuite footer version replaces the duplicate Exit Fullscreen action. */
+.ls26-footer .ls26-version-label{
+  position:absolute!important;
+  right:max(14px,env(safe-area-inset-right))!important;
+  top:50%!important;
+  transform:translateY(-50%)!important;
+  color:var(--ls-muted,#a5bad0)!important;
+  font-size:12px!important;
+  font-weight:800!important;
+  letter-spacing:.055em!important;
+  white-space:nowrap!important;
+  user-select:none!important;
+}
+@media(max-width:800px){
+  .ls26-footer .ls26-version-label{right:max(10px,env(safe-area-inset-right))!important;font-size:11px!important}
+}

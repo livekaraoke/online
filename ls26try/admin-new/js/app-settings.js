@@ -12,7 +12,7 @@
     "metronomeBeat1Color","metronomeBeat2Color","metronomeBeat3Color","metronomeBeat4Color",
     "metronomeFlashBrightness","metronomeEdgeThickness","metronomeFlashDuration",
     "metronomeShowBeatNumber","metronomeNumberSize","metronomeNumberOpacity","metronomeNumberVerticalPosition",
-    "libraryRowHeight","reduceGlow"
+    "libraryRowHeight","appVersion","reduceGlow"
   ];
   function put(settings){
     fields.forEach(id=>{
@@ -39,14 +39,32 @@
     });
     return out;
   }
+  const VERSION_RE=/^\d\.\d\.\d{2}$/;
+  function validVersion(report=false){
+    const el=$("appVersion");
+    if(!el)return true;
+    const ok=VERSION_RE.test(String(el.value||"").trim());
+    el.setCustomValidity(ok?"":"Use version format 0.0.00, for example 3.1.48.");
+    if(report&&!ok)el.reportValidity();
+    return ok;
+  }
   function preview(){const s=LS26Settings.apply(collect());put(s);$("settingsStatus").textContent="Previewing changes";}
 
   document.addEventListener("DOMContentLoaded",async()=>{
     window.LK?.sidebar?.loadSidebar?.();
     put(LS26Settings.get());
     try{put(await LS26Settings.syncRemoteOncePerSession(true));}catch(_){}
-    document.querySelectorAll("[data-setting]").forEach(el=>el.addEventListener("input",preview));
+    document.querySelectorAll("[data-setting]").forEach(el=>el.addEventListener("input",()=>{
+      if(el.id==="appVersion"){
+        if(!validVersion(false)){
+          $("settingsStatus").textContent="App version must use 0.0.00 format";
+          return;
+        }
+      }
+      preview();
+    }));
     $("saveSettingsBtn").onclick=async()=>{
+      if(!validVersion(true)){$("settingsStatus").textContent="App version must use 0.0.00 format";return;}
       const b=$("saveSettingsBtn");b.disabled=true;$("settingsStatus").textContent="Saving…";
       try{put(await LS26Settings.save(collect()));$("settingsStatus").textContent="Settings saved";}
       catch(error){$("settingsStatus").textContent=error.message||"Could not save settings";}

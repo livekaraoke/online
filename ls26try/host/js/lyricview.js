@@ -866,6 +866,39 @@
     });
   }
 
+  function songCompletionActivationY(anchor=performanceActivationAnchor()) {
+    const dock=document.querySelector(".host-bottom-dock");
+    const dockTop=dock?.getBoundingClientRect().top||window.innerHeight;
+    const desired=Math.max(anchor+70,window.innerHeight*.47);
+    const capped=Math.min(dockTop-120,desired);
+    return Math.max(anchor+30,capped);
+  }
+
+  function slowScrollCompletionIntoView() {
+    const panel=$("endCompletionPanel");
+    if(!panel||panel.hidden)return;
+    cancelAnimationFrame(relativeScrollFrame);
+
+    const sticky=document.getElementById("ls26StickyHeader");
+    const targetViewportTop=(sticky?.getBoundingClientRect().height||0)+22;
+    const start=window.scrollY;
+    const panelDocumentTop=panel.getBoundingClientRect().top+start;
+    const maxScroll=Math.max(0,document.documentElement.scrollHeight-window.innerHeight);
+    const target=Math.max(0,Math.min(maxScroll,panelDocumentTop-targetViewportTop));
+    const distance=target-start;
+    if(Math.abs(distance)<3)return;
+
+    const started=performance.now();
+    const duration=1500;
+    const step=now=>{
+      const t=Math.min(1,(now-started)/duration);
+      const eased=t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
+      window.scrollTo(0,start+(distance*eased));
+      if(t<1)relativeScrollFrame=requestAnimationFrame(step);
+    };
+    relativeScrollFrame=requestAnimationFrame(step);
+  }
+
   function scrollToSection(index) {
     if (!sectionEls.length) return;
     cancelAnimationFrame(relativeScrollFrame);
@@ -923,15 +956,15 @@
       centerActiveProgressSection(true);
     }
 
-    // [ END ] behaves like another performance activation marker. When the
-    // marker reaches the same reading line used for lyric sections, stop
-    // auto-scroll and reveal the end-of-song workflow immediately.
+    // [ END ] completes lower in the viewport than ordinary section changes.
+    // This gives the performer a final visual beat before the completion card.
     const endMarker=$("endMarker");
+    const completionY=songCompletionActivationY(anchor);
     if (
       autoScrollOn &&
       !autoScrollEndHandled &&
       endMarker &&
-      endMarker.getBoundingClientRect().top <= anchor
+      endMarker.getBoundingClientRect().top <= completionY
     ) {
       void stopAutoScrollAtEnd();
     }
@@ -1655,11 +1688,16 @@
     $("autoScrollBtn")?.classList.remove("active");
     if ($("autoScrollBtn")) $("autoScrollBtn").innerHTML = '<svg class="ls26-play-icon" viewBox="0 0 32 32" aria-hidden="true"><path d="M7 3 29 16 7 29Z"/></svg>';
 
-    await finalizeCurrentSongPlayed();
+    // Start persistence immediately, but do not hold the UI at [ END ] while
+    // waiting for Firestore/network work.
+    const finalizePromise=finalizeCurrentSongPlayed();
     showEndCompletionPanel(true);
     showEndNextSongButton(true);
     if ($("endSessionActions")) $("endSessionActions").hidden = false;
-    await renderEndNextSongDetails();
+    const detailsPromise=renderEndNextSongDetails();
+
+    requestAnimationFrame(()=>setTimeout(slowScrollCompletionIntoView,80));
+    await Promise.allSettled([finalizePromise,detailsPromise]);
   }
 
 

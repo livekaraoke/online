@@ -37,6 +37,7 @@
     metronomeNumberOpacity: 42,
     metronomeNumberVerticalPosition: 31,
     libraryRowHeight: 62,
+    appVersion: "3.1.48",
     reduceGlow: false
   });
 
@@ -47,6 +48,10 @@
   function colour(value,fallback){
     const s=String(value||"").trim();
     return /^#[0-9a-f]{6}$/i.test(s)?s:fallback;
+  }
+  function version(value,fallback){
+    const s=String(value||"").trim();
+    return /^\d\.\d\.\d{2}$/.test(s)?s:fallback;
   }
   function normalise(raw={}){
     return {
@@ -83,6 +88,7 @@
       metronomeNumberOpacity: clamp(raw.metronomeNumberOpacity,10,100,DEFAULTS.metronomeNumberOpacity),
       metronomeNumberVerticalPosition: clamp(raw.metronomeNumberVerticalPosition,18,72,DEFAULTS.metronomeNumberVerticalPosition),
       libraryRowHeight: clamp(raw.libraryRowHeight,48,92,DEFAULTS.libraryRowHeight),
+      appVersion: version(raw.appVersion,DEFAULTS.appVersion),
       reduceGlow: raw.reduceGlow === true
     };
   }
