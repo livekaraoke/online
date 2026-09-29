@@ -8,7 +8,7 @@
     "lyricNavHorizontalGap","lyricNavVerticalGap",
     "lyricNavIdleOpacity","lyricNavActiveOpacity","lyricNavPressedOpacity","lyricNavFeedbackDuration",
     "lyricLeadInHeight","lyricSectionActivationOffset",
-    "lyricPastSectionOpacity","lyricUpcomingSectionOpacity","lyricUpcomingFadeDistance","lyricPreviousFadeDuration",
+    "lyricPastSectionOpacity","lyricUpcomingSectionOpacity","lyricUpcomingFadeDistance","lyricPreviousFadeDistance",
     "lyricSectionFocusDuringPlayback","lyricSectionFocusWhenStopped",
     "metronomeBeat1Color","metronomeBeat2Color","metronomeBeat3Color","metronomeBeat4Color",
     "metronomeFlashBrightness","metronomeEdgeThickness","metronomeFlashDuration",
@@ -25,7 +25,7 @@
         const units={
           lyricTextScale:"%",lyricNavIdleOpacity:"%",lyricNavActiveOpacity:"%",lyricNavPressedOpacity:"%",
           lyricPastSectionOpacity:"%",lyricUpcomingSectionOpacity:"%",lyricNavFeedbackDuration:"ms",
-          lyricPreviousFadeDuration:"ms",metronomeFlashBrightness:"%",metronomeNumberOpacity:"%",
+          metronomeFlashBrightness:"%",metronomeNumberOpacity:"%",
           metronomeNumberVerticalPosition:"%",metronomeFlashDuration:"ms"
         };
         out.value=el.value+(id.includes("Color")?"":units[id]||"px");
