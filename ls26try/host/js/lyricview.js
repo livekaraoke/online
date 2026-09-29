@@ -276,8 +276,8 @@
     });
 
     const noteCard=$("performanceSongNoteCard");
-    noteCard.hidden=!note;
-    $("performanceSongNote").textContent=note;
+    noteCard.hidden=false;
+    $("performanceSongNote").textContent=note || "–";
 
     const youtubeCard=$("performanceYoutubeCard");
     youtubeCard.hidden=!links.length;
