@@ -932,3 +932,54 @@ body .ls26-footer .ls26-footer-icon image{filter:none!important;box-shadow:none!
   .ls26-update-form-grid{grid-template-columns:1fr!important}
   .ls26-update-version-head{align-items:flex-start!important;flex-direction:column!important}
 }
+
+
+/* App Updates: show exactly what a new version will contain. */
+.ls26-release-preview{
+  margin:10px 0 12px!important;
+  padding:10px 12px!important;
+  border:1px solid var(--ls-border)!important;
+  border-radius:8px!important;
+  background:#041722!important;
+}
+.ls26-release-preview>strong{
+  display:block!important;
+  margin-bottom:8px!important;
+  color:#dff7ff!important;
+  font-size:13px!important;
+}
+.ls26-release-preview ul{
+  max-height:190px!important;
+  margin:0!important;
+  padding:0!important;
+  overflow:auto!important;
+  list-style:none!important;
+}
+.ls26-release-preview li{
+  display:flex!important;
+  align-items:flex-start!important;
+  gap:8px!important;
+  padding:7px 0!important;
+  border-bottom:1px solid rgba(255,255,255,.07)!important;
+}
+.ls26-release-preview li:last-child{border-bottom:0!important}
+.ls26-release-preview li strong{
+  color:#cfe1e9!important;
+  font-size:12px!important;
+  line-height:1.35!important;
+  font-weight:700!important;
+}
+.ls26-release-preview-type{
+  flex:0 0 auto!important;
+  min-width:48px!important;
+  padding:2px 6px!important;
+  border-radius:999px!important;
+  border:1px solid var(--ls-border)!important;
+  font-size:8px!important;
+  font-weight:950!important;
+  text-align:center!important;
+  text-transform:uppercase!important;
+}
+.ls26-release-preview-type.type-major{color:#ff8797!important;border-color:#d25a6d!important}
+.ls26-release-preview-type.type-minor{color:#ffd36c!important;border-color:#b88c34!important}
+.ls26-release-preview-type.type-patch{color:#77dcff!important;border-color:#267ca0!important}
