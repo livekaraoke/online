@@ -1802,6 +1802,79 @@
     }
   }
 
+  function lyricViewSessionState() {
+    const tools=window.LK?.sessionTools;
+    const control=tools?.getControl?.() || null;
+    const session=tools?.getSession?.() || null;
+    const sessionId=String(
+      tools?.getSessionId?.() ||
+      control?.sessionId ||
+      control?.activeSessionId ||
+      session?.id ||
+      ""
+    );
+
+    const status=String(session?.status || control?.status || "").toLowerCase();
+    const active=Boolean(sessionId) && (
+      control?.active === true ||
+      session?.isActive === true ||
+      status === "active"
+    );
+
+    const breaks=Array.isArray(session?.breaks)
+      ? session.breaks
+      : (Array.isArray(control?.breaks) ? control.breaks : []);
+
+    const openBreak=breaks.some(item =>
+      (item?.start || item?.startedAt) &&
+      !(item?.end || item?.endedAt)
+    );
+
+    const breakOpen=active && (
+      session?.breakOpen === true ||
+      control?.breakOpen === true ||
+      openBreak
+    );
+
+    return {active,breakOpen,sessionId,session,control};
+  }
+
+  function syncEndSessionActions() {
+    const state=lyricViewSessionState();
+    const breakButton=$("endStartBreakBtn");
+    const endButton=$("endSessionBtn");
+
+    if (breakButton) {
+      breakButton.disabled=!state.active;
+      breakButton.classList.toggle("is-break-active",state.breakOpen);
+      breakButton.setAttribute(
+        "aria-label",
+        state.breakOpen ? "End break and resume session" : "Start break"
+      );
+      breakButton.title=state.active
+        ? (state.breakOpen ? "End break and resume session" : "Start break")
+        : "No active Performance Session";
+
+      const icon=breakButton.querySelector(".host-end-action-icon");
+      const label=breakButton.querySelector(".host-end-action-icon + span");
+      if(icon)icon.textContent=state.breakOpen ? "▶" : "☕";
+      if(label)label.textContent=state.breakOpen ? "END BREAK" : "BREAK";
+    }
+
+    if (endButton) {
+      endButton.disabled=!state.active;
+      endButton.setAttribute(
+        "aria-label",
+        state.active ? "End session" : "No active session"
+      );
+      endButton.title=state.active
+        ? "End Performance Session"
+        : "No active Performance Session";
+    }
+
+    return state;
+  }
+
   async function findCurrentRunOrderItem(items) {
     if (!Array.isArray(items)) return null;
 
@@ -2108,6 +2181,7 @@
     showEndCompletionPanel(true);
     showEndNextSongButton(true);
     if ($("endSessionActions")) $("endSessionActions").hidden = false;
+    syncEndSessionActions();
     const detailsPromise=renderEndNextSongDetails();
 
     requestAnimationFrame(()=>setTimeout(slowScrollCompletionIntoView,80));
@@ -2630,37 +2704,49 @@
     }
     if ($("endStartBreakBtn")) {
       $("endStartBreakBtn").onclick = async () => {
-        const sessionId = window.LK?.sessionTools?.getSessionId?.() || "";
-        if (!sessionId) {
+        const state=syncEndSessionActions();
+        if (!state.active) {
           await showModal("No Active Session", "There is no active Performance Session to put on break.");
           return;
         }
-        const breakButton = $("tsBreakActionBtn");
-        if (!breakButton || breakButton.disabled) {
+
+        performanceTempo?.flush();
+        if (!state.breakOpen) {
+          window.dispatchEvent(new Event("ls26:song-finished"));
+        }
+
+        if (typeof window.LK?.topStatus?.toggleBreak === "function") {
+          await window.LK.topStatus.toggleBreak();
+          setTimeout(syncEndSessionActions,0);
+          return;
+        }
+
+        const topBreakButton=$("tsBreakActionBtn");
+        if (!topBreakButton || topBreakButton.disabled) {
           await showModal("Break Unavailable", "The break control is not available right now.");
           return;
         }
-        performanceTempo?.flush();
-        window.dispatchEvent(new Event("ls26:song-finished"));
-        breakButton.click();
+        topBreakButton.click();
       };
     }
     if ($("endSessionBtn")) {
       $("endSessionBtn").onclick = async () => {
-        const sessionId = window.LK?.sessionTools?.getSessionId?.() || "";
-        if (!sessionId) {
+        const state=syncEndSessionActions();
+        if (!state.active || !state.sessionId) {
           await showModal("No Active Session", "There is no active Performance Session to end.");
           return;
         }
         await flushPerformanceTempo();
         // Admin owns the single end-session confirmation and the full archive lifecycle.
-        location.href = `../admin-new/admin.html?endSession=${encodeURIComponent(sessionId)}`;
+        location.href = `../admin-new/admin.html?endSession=${encodeURIComponent(state.sessionId)}`;
       };
     }
     $("myNotesInput").addEventListener("input",() => { clearTimeout(notesSaveTimer); notesSaveTimer=setTimeout(saveMyNotes,5000); });
     window.addEventListener("scroll",updateSectionProgress,{passive:true});
     window.addEventListener("resize",updateSectionProgress);
     window.addEventListener("ls26:settings-applied",() => requestAnimationFrame(updateSectionProgress));
+    window.addEventListener("lk:session-updated",syncEndSessionActions);
+    syncEndSessionActions();
     document.addEventListener("keydown", e => {
       if (e.key === "ArrowDown" && e.altKey) smoothRelativeScroll(1);
       if (e.key === "ArrowUp" && e.altKey) smoothRelativeScroll(-1);
