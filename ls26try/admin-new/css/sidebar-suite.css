@@ -300,3 +300,44 @@
 .suite-nav a,.suite-nav button{grid-template-columns:26px minmax(0,1fr) auto auto!important;column-gap:8px!important}
 .suite-nav-label{line-height:1.2!important}
 #membersNavLink .suite-nav-label{overflow:visible!important;text-overflow:clip!important}
+
+
+/* 2026-09-29 sidebar organization: brand accordions, Advanced group, logout divider */
+.suite-brand-accordion{display:block}
+.suite-collapsible-heading{
+  width:calc(100% - 16px);
+  border:0;
+  background:transparent;
+  font:inherit;
+  text-align:left;
+  cursor:pointer;
+}
+.suite-collapsible-heading:hover,
+.suite-collapsible-heading:focus-visible{
+  color:#fff;
+}
+.suite-section-chevron{
+  color:#7391a2;
+  font-size:18px;
+  line-height:1;
+}
+.suite-collapsible-panel[hidden],
+.suite-subnav[hidden]{
+  display:none!important;
+}
+.suite-subnav{
+  margin-left:18px;
+  padding-left:8px;
+  border-left:1px solid var(--suite-line);
+}
+.suite-subnav .suite-nav-label{
+  font-size:10.5px;
+}
+.suite-sidebar-divider{
+  height:1px;
+  margin:14px 4px 10px;
+  background:var(--suite-line);
+}
+.suite-logout-nav{
+  margin-bottom:0;
+}
