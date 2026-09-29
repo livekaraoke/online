@@ -830,8 +830,8 @@
 
   function sectionFocusSettings() {
     const settings=window.LS26Settings?.get?.()||{};
-    const past=Math.max(.1,Math.min(1,Number(settings.lyricPastSectionOpacity??50)/100));
-    const upcoming=Math.max(.1,Math.min(1,Number(settings.lyricUpcomingSectionOpacity??50)/100));
+    const past=Math.max(0,Math.min(1,Number(settings.lyricPastSectionOpacity??50)/100));
+    const upcoming=Math.max(0,Math.min(1,Number(settings.lyricUpcomingSectionOpacity??50)/100));
     const fadeDistance=Math.max(0,Math.min(800,Number(settings.lyricUpcomingFadeDistance??180)));
     return {past,upcoming,fadeDistance};
   }
@@ -862,7 +862,7 @@
       }
 
       el.dataset.focusState=state;
-      el.style.opacity=String(Math.max(.1,Math.min(1,opacity)));
+      el.style.opacity=String(Math.max(0,Math.min(1,opacity)));
     });
   }
 
