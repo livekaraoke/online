@@ -1178,6 +1178,7 @@
               <span>${esc(type)}</span>
             </label>`).join("")}
         </div>
+        <button type="button" class="section-copy-btn" data-copy-section="${index}" title="Copy this whole section" aria-label="Copy this whole section">⧉</button>
       </div>`;
   }
 
@@ -1296,6 +1297,7 @@
             <div class="creator-section-actions">
               <button type="button" data-up="${index}">↑</button>
               <button type="button" data-down="${index}">↓</button>
+              <button type="button" data-copy-section="${index}" title="Copy this separator" aria-label="Copy this separator">⧉</button>
               <button type="button" data-remove="${index}">×</button>
             </div>
           </div><hr>`;
