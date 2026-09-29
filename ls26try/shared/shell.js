@@ -83,7 +83,7 @@
     // Force the requested topbar sizing at runtime so older responsive CSS
     // or cached stylesheet rules cannot override these exact dimensions.
     if(window.innerWidth>=700){
-      nav.querySelectorAll('.ls26-primary-nav').forEach(el=>el.style.setProperty('font-size','23px','important'));
+      nav.querySelectorAll('.ls26-primary-nav').forEach(el=>el.style.setProperty('font-size','15px','important'));
       [nav.children[3],nav.children[4]].forEach(el=>el&&el.style.setProperty('font-size','19px','important'));
 
       const admin=nav.querySelector('.ls26-admin-nav');
@@ -104,13 +104,13 @@
         more.style.setProperty('max-width','51px','important');
       }
       if(host){
-        host.style.setProperty('flex','0 0 131px','important');
-        host.style.setProperty('width','131px','important');
-        host.style.setProperty('min-width','131px','important');
-        host.style.setProperty('max-width','131px','important');
+        host.style.setProperty('flex','0 0 111px','important');
+        host.style.setProperty('width','111px','important');
+        host.style.setProperty('min-width','111px','important');
+        host.style.setProperty('max-width','111px','important');
       }
       const logoSvg=nav.querySelector('.ls26-brand-icon svg');
-      if(logoSvg)logoSvg.style.setProperty('transform','translate(-10px,-8px)','important');
+      if(logoSvg)logoSvg.style.setProperty('transform','translate(-4px,-2px)','important');
     }
     let stack=$('ls26StickyHeader');
     if(!stack){stack=document.createElement('div');stack.id='ls26StickyHeader';document.body.prepend(stack);}
