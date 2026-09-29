@@ -573,35 +573,40 @@
     if(!requestId||!trackedRequestIds().includes(requestId))return;
     if(!confirm("Cancel this song request?"))return;
 
-    const requestRef=db.collection("publicSongRequests").doc(requestId);
-    await requestRef.set({
-      status:"cancelled",
-      reason:"Cancelled by requester",
-      cancelledAt:firebase.firestore.FieldValue.serverTimestamp(),
-      updatedAt:firebase.firestore.FieldValue.serverTimestamp()
-    },{merge:true});
-
-    // If public rules allow it, update the Run Order immediately. Host pages
-    // also reconcile cancelled request records, so cancellation remains safe
-    // when direct queue writes are intentionally blocked.
     try{
-      const runRef=db.collection("karaokeControl").doc("runOrder");
-      await db.runTransaction(async tx=>{
-        const snap=await tx.get(runRef);
-        if(!snap.exists)return;
-        const data=snap.data()||{};
-        if(String(data.sessionId||"")!==String(activeSessionId||""))return;
-        const items=Array.isArray(data.items)?data.items:[];
-        if(!items.some(item=>item.requestId===requestId))return;
-        tx.set(runRef,{
-          items:items.map(item=>item.requestId===requestId
-            ? {...item,status:"cancelled",reason:"Cancelled by requester"}
-            : item),
-          updatedAt:firebase.firestore.FieldValue.serverTimestamp()
-        },{merge:true});
-      });
+      const requestRef=db.collection("publicSongRequests").doc(requestId);
+      await requestRef.set({
+        status:"cancelled",
+        reason:"Cancelled by requester",
+        cancelledAt:firebase.firestore.FieldValue.serverTimestamp(),
+        updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+      },{merge:true});
+
+      // If public rules allow it, update the Run Order immediately. Host pages
+      // also reconcile cancelled request records, so cancellation remains safe
+      // when direct queue writes are intentionally blocked.
+      try{
+        const runRef=db.collection("karaokeControl").doc("runOrder");
+        await db.runTransaction(async tx=>{
+          const snap=await tx.get(runRef);
+          if(!snap.exists)return;
+          const data=snap.data()||{};
+          if(String(data.sessionId||"")!==String(activeSessionId||""))return;
+          const items=Array.isArray(data.items)?data.items:[];
+          if(!items.some(item=>item.requestId===requestId))return;
+          tx.set(runRef,{
+            items:items.map(item=>item.requestId===requestId
+              ? {...item,status:"cancelled",reason:"Cancelled by requester"}
+              : item),
+            updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+          },{merge:true});
+        });
+      }catch(error){
+        console.info("Run Order cancellation will be reconciled by the host.",error?.code||error);
+      }
     }catch(error){
-      console.info("Run Order cancellation will be reconciled by the host.",error?.code||error);
+      console.error("Could not cancel request:",error);
+      alert("Could not cancel this request. Please try again.");
     }
   }
 
