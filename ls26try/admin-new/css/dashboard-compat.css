@@ -1704,3 +1704,54 @@
     border-top:1px solid #1d4050;
   }
 }
+
+
+/* Live Session due-time countdown inside the selected/upcoming event card. */
+.session-due-status{
+  display:grid;
+  grid-template-columns:auto 1fr auto;
+  align-items:center;
+  gap:8px;
+  margin-top:7px;
+  padding:7px 8px;
+  border:1px solid #28556b;
+  border-radius:6px;
+  background:#071c27;
+}
+.session-due-status>span{
+  margin:0!important;
+  color:#65dff6!important;
+  font-size:8px!important;
+  font-weight:950!important;
+  letter-spacing:.08em!important;
+}
+.session-due-status>strong{
+  display:block!important;
+  color:#eefaff!important;
+  font-size:10px!important;
+  white-space:nowrap;
+}
+.session-due-status>em{
+  color:#7cf0a1;
+  font-size:10px;
+  font-style:normal;
+  font-weight:950;
+  text-align:right;
+  white-space:nowrap;
+}
+.session-due-status.is-late{
+  border-color:#a95c2d;
+  background:#2a1609;
+}
+.session-due-status.is-late>span,
+.session-due-status.is-late>em{
+  color:#ffb45c!important;
+}
+@media(max-width:760px){
+  .session-due-status{
+    grid-template-columns:1fr auto;
+  }
+  .session-due-status>span{
+    grid-column:1 / -1;
+  }
+}
