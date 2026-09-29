@@ -14,6 +14,9 @@
   let activeEditor = null;
   let savedRange = null;
   let internalClipboard = null;
+  let copiedSection = null;
+  let expandedInsertIndex = null;
+  let pendingTemplateInsertIndex = null;
   let confirmResolver = null;
 
   // Setlist membership for the song currently being edited.
@@ -852,6 +855,65 @@
     return true;
   }
 
+  function selectionIsBold(editor = activeEditor) {
+    if (!editor || !restoreSelection()) return false;
+    const selection = window.getSelection();
+    if (!selection || !selection.rangeCount || selection.isCollapsed) return false;
+    const range = selection.getRangeAt(0);
+    if (!editor.contains(range.commonAncestorContainer)) return false;
+
+    const walker = document.createTreeWalker(editor, NodeFilter.SHOW_TEXT);
+    let foundText = false;
+    let allBold = true;
+    while (walker.nextNode()) {
+      const node = walker.currentNode;
+      if (!node.nodeValue || !node.nodeValue.trim()) continue;
+      try { if (!range.intersectsNode(node)) continue; } catch (_) { continue; }
+      foundText = true;
+      const element = node.parentElement;
+      const weight = element ? String(getComputedStyle(element).fontWeight || "") : "";
+      const numeric = Number(weight);
+      const markupBold = !!element?.closest?.("b,strong,.ls26-standard-bold,.ls26-heavy-bold");
+      if (!(markupBold || weight === "bold" || (Number.isFinite(numeric) && numeric >= 600))) {
+        allBold = false;
+        break;
+      }
+    }
+    return foundText && allBold;
+  }
+
+  function toggleSelectedBold(editor = activeEditor, extra = false) {
+    if (!editor) return false;
+    captureSelection(editor);
+    if (!restoreSelection()) return false;
+    const selection = window.getSelection();
+    if (!selection || !selection.rangeCount || selection.isCollapsed) return false;
+    const range = selection.getRangeAt(0);
+    if (!editor.contains(range.commonAncestorContainer)) return false;
+
+    const turningOff = selectionIsBold(editor);
+    if (!restoreSelection()) return false;
+    const activeSelection = window.getSelection();
+    const activeRange = activeSelection.getRangeAt(0);
+    const fragment = activeRange.extractContents();
+    if (turningOff) clearBoldMarkup(fragment);
+
+    const span = document.createElement("span");
+    span.className = turningOff ? "ls26-normal-weight" : (extra ? "ls26-heavy-bold" : "ls26-standard-bold");
+    span.style.fontWeight = turningOff ? "400" : (extra ? "900" : "700");
+    if (turningOff) span.style.textShadow = "none";
+    span.appendChild(fragment);
+    activeRange.insertNode(span);
+
+    const selectedRange = document.createRange();
+    selectedRange.selectNodeContents(span);
+    activeSelection.removeAllRanges();
+    activeSelection.addRange(selectedRange);
+    captureSelection(editor);
+    syncSectionsFromDOM();
+    markDirty();
+    return true;
+  }
   async function copyEditorSelection(editor = activeEditor) {
     if (!editor) return false;
     captureSelection(editor);
