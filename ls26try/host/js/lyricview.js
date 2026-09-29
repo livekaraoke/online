@@ -2206,13 +2206,21 @@
 
   async function getNextRunOrderItem() {
     const { sessionId } = await getActiveSessionContext();
+    const expectedSessionId=String(sessionId||"");
 
-    const sharedRun=window.LK?.sessionTools?.getRunOrderSnapshot?.();
-    const snap=sharedRun?null:await db.collection('karaokeControl').doc('runOrder').get();
-    const data=sharedRun||(snap?.exists?snap.data():{});
-    const expectedSessionId=sessionId||"";
+    // Prefer the already-live Run Order snapshot, but never trust a snapshot
+    // from another/no session. In that case read the authoritative document.
+    let data=window.LK?.sessionTools?.getRunOrderSnapshot?.() || null;
+    if (
+      !data ||
+      String(data.sessionId||"") !== expectedSessionId ||
+      !Array.isArray(data.items)
+    ) {
+      const snap=await db.collection("karaokeControl").doc("runOrder").get();
+      data=snap?.exists ? (snap.data()||{}) : {};
+    }
+
     const runSessionId=String(data.sessionId||"");
-
     if (
       runSessionId !== expectedSessionId ||
       !Array.isArray(data.items) ||
@@ -2222,7 +2230,8 @@
     }
 
     const terminal = new Set([
-      "played","abandoned","left","deleted","deletedbyhost","declined"
+      "played","completed","finished","abandoned","left",
+      "deleted","deletedbyhost","declined"
     ]);
 
     const items = data.items;
@@ -2242,22 +2251,38 @@
       );
     }
 
+    const playable = item => {
+      if (!item) return false;
+      const hasSongIdentity=Boolean(
+        item.songId ||
+        String(item.songTitle||item.title||"").trim()
+      );
+      return hasSongIdentity &&
+        !terminal.has(String(item.status||"").toLowerCase());
+    };
+
     let next = null;
 
-    for (let i = Math.max(0, currentIndex + 1); i < items.length; i++) {
-      if (
-        items[i].songId &&
-        !terminal.has(String(items[i].status || "").toLowerCase())
-      ) {
-        next = items[i];
-        break;
+    // Normal queue behaviour: use the first playable item after the song that
+    // has just finished.
+    if (currentIndex >= 0) {
+      for (let i=currentIndex+1;i<items.length;i++) {
+        if (playable(items[i])) {
+          next=items[i];
+          break;
+        }
       }
     }
 
-    if (!next && currentIndex < 0) {
-      next = items.find(item =>
-        item.songId &&
-        !terminal.has(String(item.status || "").toLowerCase())
+    // A host can start a Library song that was not already in Run Order.
+    // ensureCurrentSongPlaying() records that song by appending a temporary
+    // "lyricview" row at the end. In that case the real queued songs are before
+    // the current row, so falling through to "nothing next" is wrong. Use the
+    // first remaining playable row, excluding the current song itself.
+    if (!next) {
+      next=items.find((item,index) =>
+        index !== currentIndex &&
+        playable(item)
       ) || null;
     }
 
@@ -2273,13 +2298,15 @@
       return {
         ...next,
         songId:resolved.id,
-        songTitle:next.songTitle || resolved.title || "",
-        artist:next.artist || resolved.artist || "",
+        songTitle:next.songTitle || next.title || resolved.title || "",
+        artist:next.artist || next.songArtist || resolved.artist || "",
         _resolvedSong:resolved
       };
     }
 
-    return next;
+    // If the row still has a valid Firestore song ID, it can be loaded even
+    // when the optional preview metadata lookup failed.
+    return next.songId ? next : null;
   }
 
   function prepNextIcon() {
@@ -2761,6 +2788,9 @@
     window.addEventListener("resize",updateSectionProgress);
     window.addEventListener("ls26:settings-applied",() => requestAnimationFrame(updateSectionProgress));
     window.addEventListener("lk:session-updated",syncEndSessionActions);
+    window.addEventListener("lk:runorder-updated",() => {
+      if (!$("endCompletionPanel")?.hidden) void renderEndNextSongDetails();
+    });
     syncEndSessionActions();
     document.addEventListener("keydown", e => {
       if (e.key === "ArrowDown" && e.altKey) smoothRelativeScroll(1);
