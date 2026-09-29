@@ -79,6 +79,39 @@
     const tab=location.pathname.endsWith('/setlist-editor.html')?'Setlists':isLibrary?'Library':isLyric?'LyricView':location.pathname.endsWith('/requests.html')?'Requests':'';
     const nav=document.createElement('nav');nav.className='ls26-nav';nav.setAttribute('aria-label','LiveSuite navigation');
     nav.innerHTML=`<a class="ls26-brand ls26-brand-icon" href="${url('library.html')}" aria-label="LiveSuite Library"><svg viewBox="0 20 480 600" preserveAspectRatio="xMidYMid meet" aria-hidden="true"><defs><clipPath id="ls26HeaderIconClip"><rect x="0" y="20" width="480" height="600"/></clipPath></defs><image clip-path="url(#ls26HeaderIconClip)" href="${url('assets/livesuite-logo-transparent.png')}" width="2048" height="683"/></svg></a>${[['Library','library.html','♫'],['LyricView','host/lyricview.html','▣'],['Setlists','host/setlist-editor.html','☷'],['Requests','requests.html','♟']].map(([label,path,icon])=>`<a ${label==='LyricView'?'id="ls26LyricLink"':''} class="${label===tab?'active':''} ${['Library','LyricView'].includes(label)?'ls26-primary-nav':''}" href="${url(path)}"><span class="ls26-nav-icon" aria-hidden="true">${icon}</span>${label}</a>`).join('')}<a class="ls26-admin-nav" href="${url('admin-new/admin.html')}" aria-label="Admin dashboard"><span class="ls26-nav-icon" aria-hidden="true">⚙</span></a><button id="ls26Fullscreen" type="button" aria-label="Enter fullscreen" aria-pressed="false" title="Enter fullscreen"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M8 3H3v5M16 3h5v5M21 16v5h-5M8 21H3v-5"/></svg></button><a class="ls26-host" href="${url('admin-new/admin.html')}"><span class="ls26-user-icon" aria-hidden="true"><svg viewBox="0 0 32 32"><circle cx="16" cy="10" r="6"/><path d="M5 29v-4a11 11 0 0 1 22 0v4Z"/></svg></span><span>Host Mode<small>Sing. Play. Repeat.</small></span></a><button id="ls26More" type="button" aria-label="Host menu" aria-expanded="false" aria-controls="ls26HostMenu">▼</button>`;
+
+    // Force the requested topbar sizing at runtime so older responsive CSS
+    // or cached stylesheet rules cannot override these exact dimensions.
+    if(window.innerWidth>=700){
+      nav.querySelectorAll('.ls26-primary-nav').forEach(el=>el.style.setProperty('font-size','23px','important'));
+      [nav.children[3],nav.children[4]].forEach(el=>el&&el.style.setProperty('font-size','19px','important'));
+
+      const admin=nav.querySelector('.ls26-admin-nav');
+      const fullscreen=nav.querySelector('#ls26Fullscreen');
+      const more=nav.querySelector('#ls26More');
+      const host=nav.querySelector('.ls26-host');
+      [admin,fullscreen].forEach(el=>{
+        if(!el)return;
+        el.style.setProperty('flex','0 0 61px','important');
+        el.style.setProperty('width','61px','important');
+        el.style.setProperty('min-width','61px','important');
+        el.style.setProperty('max-width','61px','important');
+      });
+      if(more){
+        more.style.setProperty('flex','0 0 51px','important');
+        more.style.setProperty('width','51px','important');
+        more.style.setProperty('min-width','51px','important');
+        more.style.setProperty('max-width','51px','important');
+      }
+      if(host){
+        host.style.setProperty('flex','0 0 131px','important');
+        host.style.setProperty('width','131px','important');
+        host.style.setProperty('min-width','131px','important');
+        host.style.setProperty('max-width','131px','important');
+      }
+      const logoSvg=nav.querySelector('.ls26-brand-icon svg');
+      if(logoSvg)logoSvg.style.setProperty('transform','translate(-10px,-8px)','important');
+    }
     let stack=$('ls26StickyHeader');
     if(!stack){stack=document.createElement('div');stack.id='ls26StickyHeader';document.body.prepend(stack);}
     stack.append(nav);const status=$('topStatusContainer');if(status)stack.append(status);
