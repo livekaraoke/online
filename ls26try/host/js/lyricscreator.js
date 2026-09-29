@@ -1434,6 +1434,9 @@
     if (input) input.dataset.zero = String(!Number(input.value));
   }
 
+  $("capoInput")?.addEventListener("input", updateCapoColour);
+  window.addEventListener("ls26:settings-applied", updateCapoColour);
+
   function renderSectionNavigator() {
     const nav = $("creatorSectionNav");
     if (!nav) return;
