@@ -50,7 +50,14 @@
     if(report&&!ok)el.reportValidity();
     return ok;
   }
-  function preview(){const s=LS26Settings.apply(collect());put(s);$("settingsStatus").textContent="Previewing changes";}
+  function setStatus(text,state=""){
+    const el=$("settingsStatus");
+    if(!el)return;
+    el.textContent=text;
+    el.classList.toggle("is-unsaved",state==="unsaved");
+    el.classList.toggle("is-error",state==="error");
+  }
+  function preview(){const s=LS26Settings.apply(collect());put(s);setStatus("Unsaved changes","unsaved");}
 
   document.addEventListener("DOMContentLoaded",async()=>{
     window.LK?.sidebar?.loadSidebar?.();
@@ -59,24 +66,24 @@
     document.querySelectorAll("[data-setting]").forEach(el=>el.addEventListener("input",()=>{
       if(el.id==="appVersion"){
         if(!validVersion(false)){
-          $("settingsStatus").textContent="App version must use 0.0.00 format";
+          setStatus("App version must use 0.0.00 format","error");
           return;
         }
       }
       preview();
     }));
     $("saveSettingsBtn").onclick=async()=>{
-      if(!validVersion(true)){$("settingsStatus").textContent="App version must use 0.0.00 format";return;}
-      const b=$("saveSettingsBtn");b.disabled=true;$("settingsStatus").textContent="Saving…";
-      try{put(await LS26Settings.save(collect()));$("settingsStatus").textContent="Settings saved";}
-      catch(error){$("settingsStatus").textContent=error.message||"Could not save settings";}
+      if(!validVersion(true)){setStatus("App version must use 0.0.00 format","error");return;}
+      const b=$("saveSettingsBtn");b.disabled=true;setStatus("Saving…");
+      try{put(await LS26Settings.save(collect()));setStatus("Settings saved");}
+      catch(error){setStatus(error.message||"Could not save settings","error");}
       finally{b.disabled=false;}
     };
     $("resetSettingsBtn").onclick=async()=>{
       if(!await LS26Dialogs.confirm("Reset LiveSuite App Settings to their defaults?"))return;
       put(LS26Settings.reset());
       await LS26Settings.save(LS26Settings.DEFAULTS);
-      $("settingsStatus").textContent="Defaults restored";
+      setStatus("Defaults restored");
     };
   });
 })();
