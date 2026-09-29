@@ -1804,7 +1804,7 @@ body.host-lyric-view-page {
    ========================================================= */
 .host-guitar-tuning-card{
   position:fixed!important;
-  top:calc(var(--ls-stack-h,var(--lv-stack-h)) + 7px)!important;
+  top:calc(var(--ls-stack-h,var(--lv-stack-h)) + var(--ls26-karaoke-tools-h,0px) + 14px)!important;
   left:50%!important;
   z-index:1750!important;
   display:grid!important;
@@ -2317,3 +2317,41 @@ body.host-lyric-view-page {
 .lyricview-setlist-picker small{color:#7895a3}
 .lyricview-setlist-picker>button>span:last-child{color:#54ee9a;font-weight:900}
 @media(max-width:700px){.host-end-choice-actions{grid-template-columns:1fr!important}}
+
+
+/* =========================================================
+   ACTIVE SECTION AUTO-SCROLL PAUSE COUNTDOWN — 2026-09-29
+   ========================================================= */
+.host-lyric-view-page .host-section{
+  position:relative!important;
+}
+.host-lyric-view-page .section-pause-countdown{
+  position:absolute!important;
+  z-index:4!important;
+  right:clamp(28px,7vw,96px)!important;
+  top:55%!important;
+  transform:translateY(-50%)!important;
+  min-width:3.2ch!important;
+  color:#78e7ff!important;
+  font-size:var(--ls26-pause-countdown-font-size,56px)!important;
+  font-weight:1000!important;
+  font-variant-numeric:tabular-nums!important;
+  line-height:1!important;
+  text-align:center!important;
+  letter-spacing:-.035em!important;
+  opacity:.84!important;
+  text-shadow:0 0 16px rgba(0,202,250,.28)!important;
+  pointer-events:none!important;
+  user-select:none!important;
+}
+.host-lyric-view-page .section-pause-countdown[hidden],
+.host-lyric-view-page .host-section:not(.current-section)>.section-pause-countdown,
+.host-lyric-view-page .host-section.collapsed>.section-pause-countdown{
+  display:none!important;
+}
+@media(max-width:700px){
+  .host-lyric-view-page .section-pause-countdown{
+    right:24px!important;
+    top:58%!important;
+  }
+}
