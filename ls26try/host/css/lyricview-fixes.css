@@ -1924,3 +1924,74 @@ body.host-lyric-view-page {
   margin:0!important;
   accent-color:#00cafa!important;
 }
+
+
+/* =========================================================
+   THREE-COLUMN SONG REFERENCE: YOUTUBE / LOOP / DETAILS
+   ========================================================= */
+.host-lyric-view-page .performance-song-reference{
+  grid-template-columns:minmax(210px,1.05fr) minmax(145px,.68fr) minmax(210px,1.05fr)!important;
+  align-items:start!important;
+  gap:12px!important;
+}
+.host-lyric-view-page .performance-youtube-card{
+  grid-column:1!important;
+  align-self:start!important;
+}
+.host-lyric-view-page .performance-loop-stack{
+  grid-column:2!important;
+  display:grid!important;
+  gap:8px!important;
+  min-width:0!important;
+}
+.host-lyric-view-page .performance-mini-card{
+  min-height:68px!important;
+  padding:9px 12px!important;
+}
+.host-lyric-view-page .performance-mini-card>small{
+  margin-bottom:3px!important;
+  font-size:9px!important;
+}
+.host-lyric-view-page .performance-mini-card>strong{
+  display:block!important;
+  font-size:25px!important;
+  line-height:1!important;
+  font-weight:950!important;
+  color:#f4fbff!important;
+}
+.host-lyric-view-page #performanceLoopingCard[data-looping="yes"]>strong{
+  color:#62e78d!important;
+}
+.host-lyric-view-page #performanceLoopingCard[data-looping="no"]>strong{
+  color:#91a9b4!important;
+}
+.host-lyric-view-page .performance-song-details-card{
+  grid-column:3!important;
+  min-height:220px!important;
+  padding:13px 15px!important;
+}
+.host-lyric-view-page .performance-song-details-card>div{
+  font-size:14px!important;
+  line-height:1.5!important;
+  color:#dcecf3!important;
+}
+.host-lyric-view-page .performance-reference-wide{
+  grid-column:1 / -1!important;
+}
+@media(max-width:760px){
+  .host-lyric-view-page .performance-song-reference{
+    grid-template-columns:1fr!important;
+  }
+  .host-lyric-view-page .performance-youtube-card,
+  .host-lyric-view-page .performance-loop-stack,
+  .host-lyric-view-page .performance-song-details-card,
+  .host-lyric-view-page .performance-reference-wide{
+    grid-column:1!important;
+  }
+  .host-lyric-view-page .performance-loop-stack{
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  }
+  .host-lyric-view-page .performance-song-details-card{
+    min-height:140px!important;
+  }
+}
