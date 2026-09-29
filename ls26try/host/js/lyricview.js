@@ -1095,6 +1095,12 @@
     if (!sectionEls.length) return;
 
     const anchor=performanceActivationAnchor();
+
+    // While the current section's programmed end-pause is running, freeze
+    // section activation/fading as well as scrolling. The next section must
+    // not begin fading until the countdown has finished.
+    if(autoScrollOn&&sectionPauseUntil>Date.now())return;
+
     if(Date.now()<manualSectionUntil){
       updateSectionFocusOpacity(anchor);
       return;
