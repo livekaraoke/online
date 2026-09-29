@@ -119,7 +119,7 @@
   color:#00cafa!important;
   font-size:14px!important;
   font-weight:900!important;
-  text-align:left!important;
+  text-align:center!important;
 }
 .setting-control input[type="color"]{
   width:70px!important;
@@ -206,7 +206,7 @@
   .settings-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
   .setting-row{grid-template-columns:1fr!important;gap:10px!important}
 }
-@media(max-width:699px){
+@media(max-width:760px){
   .settings-main{
     --settings-sidebar-gap:0px;
     width:100%!important;
