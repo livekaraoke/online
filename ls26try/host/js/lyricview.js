@@ -685,7 +685,8 @@
       pauseCountdown.hidden = true;
       pauseCountdown.setAttribute("aria-hidden", "true");
 
-      card.append(header, body, pauseCountdown);
+      body.appendChild(pauseCountdown);
+      card.append(header, body);
       container.appendChild(card);
       sectionItems.push({ el:card, section, sourceIndex:index, restrictedByType });
     });
@@ -996,7 +997,7 @@
         return;
       }
 
-      output.textContent=String(Math.max(1,Math.round(remaining/1000)));
+      output.textContent=String(Math.max(1,Math.ceil(remaining/1000)));
       output.hidden=false;
       sectionPauseCountdownFrame=requestAnimationFrame(tick);
     };
@@ -1018,85 +1019,47 @@
     syncQuickToolsHeight();
   }
 
-  function beginSectionAutoScrollPause(index,afterManualNavigation=false) {
-    if(!autoScrollOn||index<0||index>=sectionEls.length||index===lastSectionPauseIndex)return 0;
-    lastSectionPauseIndex=index;
+  function beginCurrentSectionEndPause(index) {
+    if(
+      !autoScrollOn ||
+      index<0 ||
+      index>=sectionEls.length ||
+      index===lastSectionPauseIndex
+    )return 0;
 
     const pauseMs=sectionPauseMsForIndex(index);
-    if(pauseMs<=0){
-      sectionPauseStartsAt=0;
-      sectionPauseUntil=0;
-      clearSectionPauseCountdown();
-      return 0;
-    }
+    if(pauseMs<=0)return 0;
 
-    const base=afterManualNavigation
-      ? Math.max(Date.now(),manualSectionUntil)
-      : Date.now();
-    sectionPauseStartsAt=base;
-    sectionPauseUntil=base+pauseMs;
+    lastSectionPauseIndex=index;
+    sectionPauseStartsAt=Date.now();
+    sectionPauseUntil=sectionPauseStartsAt+pauseMs;
     runSectionPauseCountdown(index);
     return pauseMs;
   }
 
-  function activateUpcomingPausedSection(anchor) {
+  function maybeBeginCurrentSectionEndPause(anchor) {
     if(!autoScrollOn||!sectionEls.length)return false;
 
-    const nextIndex=currentSectionIndex+1;
+    const activeIndex=currentSectionIndex;
+    const nextIndex=activeIndex+1;
     if(
+      activeIndex<0 ||
       nextIndex>=sectionEls.length ||
-      nextIndex===lastSectionPauseIndex ||
-      sectionPauseMsForIndex(nextIndex)<=0
+      activeIndex===lastSectionPauseIndex ||
+      sectionPauseMsForIndex(activeIndex)<=0
     )return false;
 
     const nextEl=sectionEls[nextIndex];
-    const triggerDistance=sectionFocusSettings().upcomingFadeDistance;
-    if(nextEl.getBoundingClientRect().top>anchor+triggerDistance)return false;
+    const nextDistance=nextEl.getBoundingClientRect().top-anchor;
+    const fadeDistance=sectionFocusSettings().upcomingFadeDistance;
 
-    // A programmed pause takes ownership of the transition just before the
-    // upcoming-section fade would begin. Make that section current, align it
-    // to the reading position, then hold scrolling for its saved pause.
-    cancelAnimationFrame(relativeScrollFrame);
-    currentSectionIndex=nextIndex;
-    updateGuitarTuningStickyState();
+    // Trigger a few pixels BEFORE the next section enters its fade-in zone.
+    // The current section remains current and fully visible while its pause
+    // counts down; only after the pause ends can the next section start fading.
+    const preFadeBuffer=8;
+    if(nextDistance<=0 || nextDistance>fadeDistance+preFadeBuffer)return false;
 
-    [...$("sectionProgress").children]
-      .forEach(el=>el.classList.toggle(
-        "active",
-        Number(el.dataset.visibleIndex)===currentSectionIndex &&
-        !el.classList.contains("session-hidden")
-      ));
-
-    sectionEls.forEach((el,index)=>{
-      el.classList.toggle("current-section",index===currentSectionIndex);
-    });
-
-    setQuickToolsReleased(currentSectionIndex>0);
-    centerActiveProgressSection(true);
-
-    const quick=document.getElementById("performanceQuickInfo");
-    const header=document.getElementById("ls26StickyHeader");
-    const offset=
-      (header?.getBoundingClientRect().height||0) +
-      (currentSectionIndex===0&&!quick?.classList.contains("ls26-released")
-        ? (quick?.getBoundingClientRect().height||0)
-        : 0) +
-      guitarTuningStickyHeight() +
-      sectionActivationOffset();
-
-    window.scrollTo({
-      top:Math.max(
-        0,
-        sectionEls[currentSectionIndex].getBoundingClientRect().top +
-        window.scrollY -
-        offset
-      ),
-      behavior:"instant"
-    });
-
-    beginSectionAutoScrollPause(currentSectionIndex,false);
-    updateSectionFocusOpacity(performanceActivationAnchor());
-    return true;
+    return beginCurrentSectionEndPause(activeIndex)>0;
   }
 
   function scrollToSection(index) {
@@ -1120,8 +1083,10 @@
     setQuickToolsReleased(currentSectionIndex>0);
     const header=document.getElementById('ls26StickyHeader');
     const offset=(header?.getBoundingClientRect().height||0)+(currentSectionIndex===0&&!quick?.classList.contains('ls26-released')?(quick?.getBoundingClientRect().height||0):0)+guitarTuningStickyHeight()+sectionActivationOffset();
+    sectionPauseStartsAt=0;
+    sectionPauseUntil=0;
+    clearSectionPauseCountdown();
     window.scrollTo({top:Math.max(0,sectionEls[currentSectionIndex].getBoundingClientRect().top+window.scrollY-offset),behavior:'instant'});
-    beginSectionAutoScrollPause(currentSectionIndex,true);
     requestAnimationFrame(()=>updateSectionFocusOpacity(performanceActivationAnchor()));
     setTimeout(updateSectionProgress,700);
   }
@@ -1135,7 +1100,7 @@
       return;
     }
 
-    if(activateUpcomingPausedSection(anchor))return;
+    if(maybeBeginCurrentSectionEndPause(anchor))return;
 
     let bestIndex = 0;
     sectionEls.forEach((el,i)=>{if(el.getBoundingClientRect().top<=anchor)bestIndex=i;});
@@ -1159,7 +1124,6 @@
     if (changed) {
       setQuickToolsReleased(currentSectionIndex>0);
       centerActiveProgressSection(true);
-      beginSectionAutoScrollPause(currentSectionIndex,false);
     }
 
     // [ END ] completes lower in the viewport than ordinary section changes.
@@ -2200,10 +2164,8 @@
       recordCurrentSongPlayed();
       window.dispatchEvent(new Event("ls26:song-started"));
 
-      // The first/current section is already active before the first scroll
-      // event, so apply its programmed pause on initial Play. Resuming in the
-      // same section does not restart a pause that already fired.
-      beginSectionAutoScrollPause(currentSectionIndex,false);
+      // Per-section pauses are end-of-section holds. They begin only just
+      // before the following section would start fading in.
     }
 
     if (autoScrollOn) {
