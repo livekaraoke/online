@@ -1801,17 +1801,9 @@
   function openColourModal(editor) {
     captureSelection(editor);
 
-    // "Green" means: match the green already used by the normal, non-underlined
-    // lyric text in this section. This avoids hard-coding a shade that differs
-    // from older songs with their own saved lyric green.
-    const sectionGreen = resolveSectionLyricGreen(editor);
-    const greenButton = $("colourPalette")?.querySelector('[data-palette-name="Green"]');
-    if (greenButton) {
-      greenButton.dataset.paletteColour = sectionGreen;
-      const swatch = greenButton.querySelector("span");
-      if (swatch) swatch.style.background = sectionGreen;
-      greenButton.title = "Green · match this section (" + sectionGreen + ")";
-    }
+    // Re-render on open so the palette always reflects the current
+    // Default Displayable Colours from App Settings.
+    renderModals();
 
     // Keep the selected range internally, but dismiss Android/Chrome's native
     // selection toolbar and handles so they do not overlap the LiveSuite modal.
