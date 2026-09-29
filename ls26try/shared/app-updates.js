@@ -190,12 +190,11 @@
  function render(){
   if(!manage)return;
   const list=$('appUpdateRows');
+  refreshVersionFilter();
   const statusFilter=$('appUpdateFilter')?.value||'all';
   const typeFilter=$('appUpdateTypeFilter')?.value||'all';
   const versionFilter=$('appUpdateVersionFilter')?.value||'all';
   const sort=$('appUpdateSort')?.value||'newest';
-
-  refreshVersionFilter();
 
   const visible=rows.filter(note=>{
    if(statusFilter!=='all'&&Boolean(note.completed)!==(statusFilter==='completed'))return false;
