@@ -13,6 +13,7 @@
   let dirty = false;
   let activeEditor = null;
   let savedRange = null;
+  let internalClipboard = null;
   let confirmResolver = null;
 
   // Setlist membership for the song currently being edited.
@@ -65,11 +66,27 @@
   const LYRIC_HIGHLIGHT_GREEN = "#42f35c";
   let oneShotGreenArmed = false;
   let oneShotGreenTimer = 0;
-  const COLOURS = [
-    ["Red", "#ff3131"], ["Cyan", "#00dfe8"], ["Blue", "#1828ff"], ["Green", "#42f35c"],
-    ["Magenta", "#f000dc"], ["Yellow", "#fff200"], ["Black", "#000000"], ["White", "#ffffff"],
-    ["Orange", "#ff8a24"], ["Gray", "#777777"], ["Light Gray", "#d7d7d7"], ["Bright Purple", "#c14cff"]
+  const DISPLAY_COLOUR_DEFAULTS = [
+    ["Red", "displayColourRed", "#ff3131"],
+    ["Cyan", "displayColourCyan", "#00dfe8"],
+    ["Blue", "displayColourBlue", "#1828ff"],
+    ["Green", "displayColourGreen", "#42f35c"],
+    ["Magenta", "displayColourMagenta", "#f000dc"],
+    ["Yellow", "displayColourYellow", "#fff200"],
+    ["Black", "displayColourBlack", "#000000"],
+    ["White", "displayColourWhite", "#ffffff"],
+    ["Orange", "displayColourOrange", "#ff8a24"],
+    ["Gray", "displayColourGray", "#777777"],
+    ["Light Gray", "displayColourLightGray", "#d7d7d7"],
+    ["Bright Purple", "displayColourBrightPurple", "#c14cff"]
   ];
+  function displayColours() {
+    const settings = window.LS26Settings?.get?.() || {};
+    return DISPLAY_COLOUR_DEFAULTS.map(([name, key, fallback]) => [
+      name,
+      /^#[0-9a-f]{6}$/i.test(String(settings[key] || "")) ? settings[key] : fallback
+    ]);
+  }
 
   const TEMPLATES = [
     { label: "Verse", type: "lyrics", title: "VERSE", html: "Enter verse lyrics here..." },
@@ -514,6 +531,10 @@
       visibleForTypes: normaliseVisibleForTypes(section),
       displayAsCard: type === "hostNote" && section.displayAsCard === true,
       pauseMs: Math.max(0, Math.round(Number(section.pauseMs) || 0)),
+      scrollSpeedOverride:
+        Number.isFinite(Number(section.scrollSpeedOverride)) && Number(section.scrollSpeedOverride) > 0
+          ? Math.max(0.1, Math.min(10, Number(section.scrollSpeedOverride)))
+          : 0,
       collapsed: section.collapsed === true,
       editorCollapsed: section.editorCollapsed === true,
       style: {
@@ -831,6 +852,57 @@
     return true;
   }
 
+  async function copyEditorSelection(editor = activeEditor) {
+    if (!editor) return false;
+    captureSelection(editor);
+    if (!restoreSelection()) return false;
+
+    const selection = window.getSelection();
+    if (!selection || !selection.rangeCount || selection.isCollapsed) return false;
+    const range = selection.getRangeAt(0);
+    if (!editor.contains(range.commonAncestorContainer)) return false;
+
+    const fragment = range.cloneContents();
+    const holder = document.createElement("div");
+    holder.appendChild(fragment);
+    unwrapDashSpans(holder);
+
+    internalClipboard = {
+      html: holder.innerHTML,
+      text: selection.toString()
+    };
+
+    try {
+      await navigator.clipboard?.writeText?.(internalClipboard.text);
+    } catch (_) {}
+
+    window.LS26?.toast?.("Copied");
+    return true;
+  }
+
+  async function pasteEditorSelection(editor = activeEditor) {
+    if (!editor) return false;
+    captureSelection(editor);
+
+    let html = internalClipboard?.html || "";
+    if (!html) {
+      let text = "";
+      try {
+        text = await navigator.clipboard?.readText?.() || "";
+      } catch (_) {}
+      if (!text) return false;
+      html = esc(text.replace(/\r\n?/g, "\n")).replace(/\n/g, "<br>");
+    }
+
+    insertHTMLAtSelection(html);
+    const index = Number(editor.dataset.html);
+    requestAnimationFrame(() =>
+      applyDashColourToEditor(editor, sections[index]?.style?.dashColor || "#777777")
+    );
+    window.LS26?.toast?.("Pasted");
+    return true;
+  }
+
   function applyQuickColour(colour) {
     if (!applyTextColour(colour)) return;
     applyHeavyBold(activeEditor);
@@ -1095,6 +1167,9 @@
           <input type="color" data-dash-custom="${index}" value="${esc(style.dashColor || "#777777")}" title="Custom dash colour">
         </label>
         <button type="button" class="one-shot-green ${oneShotGreenArmed ? "is-armed" : ""}" data-one-shot-green="${index}" aria-pressed="${String(oneShotGreenArmed)}" title="Turn on, then select the next text or spaces to apply lyric green + bold once">${oneShotGreenArmed ? "HIGHLIGHT ON" : "HIGHLIGHT"}</button>
+        <button type="button" class="extra-bold-btn" data-extra-bold="${index}" title="Extra bold selected text"><b>XB</b></button>
+        <button type="button" class="editor-clipboard-btn" data-copy-selection="${index}" title="Copy selected text" aria-label="Copy selected text"><span aria-hidden="true">⧉</span></button>
+        <button type="button" class="editor-clipboard-btn" data-paste-selection="${index}" title="Paste" aria-label="Paste"><span aria-hidden="true">▤</span></button>
         <button type="button" class="toolbar-select-all" data-select-section="${index}" title="Select all text in this section">SELECT ALL</button>
       </div>`;
   }
@@ -1134,6 +1209,9 @@
         <button type="button" data-text-case="sentence" title="Sentence case selected text">Aa</button>
         <button type="button" data-wrap-brackets="${index}" title="Wrap selected text in square brackets">[ ]</button>
         <button type="button" data-insert-link="${index}">＋ LINK</button>
+        <button type="button" class="extra-bold-btn" data-extra-bold="${index}" title="Extra bold selected text"><b>XB</b></button>
+        <button type="button" class="editor-clipboard-btn" data-copy-selection="${index}" title="Copy selected text" aria-label="Copy selected text"><span aria-hidden="true">⧉</span></button>
+        <button type="button" class="editor-clipboard-btn" data-paste-selection="${index}" title="Paste" aria-label="Paste"><span aria-hidden="true">▤</span></button>
         <button type="button" class="toolbar-select-all" data-select-section="${index}" title="Select all text in this section">SELECT ALL</button>
       </div>`;
   }
@@ -1191,16 +1269,28 @@
           </div>
           <div class="creator-section-body ${s.editorCollapsed ? "hidden" : ""}">
             ${renderSectionVisibility(index, s)}
-            <label class="section-scroll-pause-control">
-              <span class="section-scroll-pause-copy">
-                <strong>AUTO-SCROLL PAUSE</strong>
-                <small>Pause at the end of this section, just before the next section starts fading in. Value is in seconds.</small>
-              </span>
-              <span class="section-scroll-pause-value">
-                <input type="text" inputmode="decimal" pattern="[0-9]*[.]?[0-9]*" data-section-pause-seconds="${index}" value="${Number(((s.pauseMs || 0) / 1000).toFixed(3))}" aria-label="Section auto-scroll pause in seconds">
-                <em>s</em>
-              </span>
-            </label>
+            <div class="section-scroll-controls">
+              <label class="section-scroll-control section-scroll-pause-control">
+                <span class="section-scroll-control-copy">
+                  <strong>AUTO-SCROLL PAUSE</strong>
+                  <small>Hold at section end before the next section fades in.</small>
+                </span>
+                <span class="section-scroll-control-value">
+                  <input type="text" inputmode="decimal" pattern="[0-9]*[.]?[0-9]*" data-section-pause-seconds="${index}" value="${Number(((s.pauseMs || 0) / 1000).toFixed(3))}" aria-label="Section auto-scroll pause in seconds">
+                  <em>s</em>
+                </span>
+              </label>
+              <label class="section-scroll-control section-scroll-speed-control">
+                <span class="section-scroll-control-copy">
+                  <strong>AUTO-SCROLL SPEED</strong>
+                  <small>Override speed for this section. Blank or 0 uses the song speed.</small>
+                </span>
+                <span class="section-scroll-control-value">
+                  <input type="text" inputmode="decimal" pattern="[0-9]*[.]?[0-9]*" data-section-scroll-speed="${index}" value="${s.scrollSpeedOverride ? Number(s.scrollSpeedOverride).toFixed(1) : ""}" aria-label="Section auto-scroll speed override">
+                  <em>×</em>
+                </span>
+              </label>
+            </div>
             ${s.type === "hostNote" ? `
               <label class="host-note-display-card-toggle">
                 <input type="checkbox" data-host-note-card="${index}" ${s.displayAsCard ? "checked" : ""}>
@@ -1260,10 +1350,10 @@
     navigatorFrame = requestAnimationFrame(() => { navigatorFrame = 0; updateNavigatorPosition(); });
   }, {passive:true});
   document.addEventListener("focusin", event => {
-    const pauseInput = event.target.closest?.("[data-section-pause-seconds]");
-    if (!pauseInput) return;
+    const scrollInput = event.target.closest?.("[data-section-pause-seconds],[data-section-scroll-speed]");
+    if (!scrollInput) return;
     requestAnimationFrame(() => {
-      try { pauseInput.select(); } catch (_) {}
+      try { scrollInput.select(); } catch (_) {}
     });
   });
 
@@ -1321,6 +1411,16 @@
       if (!sections[i]) return;
       const seconds = Number(el.value);
       sections[i].pauseMs = Number.isFinite(seconds) && seconds > 0 ? Math.round(seconds * 1000) : 0;
+    });
+
+    document.querySelectorAll("[data-section-scroll-speed]").forEach(el => {
+      const i = Number(el.dataset.sectionScrollSpeed);
+      if (!sections[i]) return;
+      const speed = Number(el.value);
+      sections[i].scrollSpeedOverride =
+        Number.isFinite(speed) && speed > 0
+          ? Math.max(0.1, Math.min(10, Number(speed.toFixed(2))))
+          : 0;
     });
 
     document.querySelectorAll("[data-visibility-strip]").forEach(strip => {
@@ -1725,7 +1825,7 @@
   function renderModals() {
     if ($("fontSizePresets")) $("fontSizePresets").innerHTML = renderSizeOptions();
     $("chordQuickGrid").innerHTML = ["C", "D", "E", "F", "G", "A", "B", "Am", "Em", "Dm", "G7", "Cmaj7", "F#m", "Bb"].map(chord => `<button type="button" data-chord-quick="${esc(chord)}">${esc(chord)}</button>`).join("");
-    $("colourPalette").innerHTML = COLOURS.map(([name, colour]) => `<button type="button" data-palette-name="${esc(name)}" data-palette-colour="${colour}" title="${esc(name)}"><span style="background:${colour}"></span>${esc(name)}</button>`).join("");
+    $("colourPalette").innerHTML = displayColours().map(([name, colour]) => `<button type="button" data-palette-name="${esc(name)}" data-palette-colour="${colour}" title="${esc(name)}"><span style="background:${colour}"></span>${esc(name)}</button>`).join("");
     $("templateGrid").innerHTML = TEMPLATES.map((template, index) => `<button type="button" data-template="${index}"><strong>${esc(template.label)}</strong><span>${esc(template.type)}</span></button>`).join("");
   }
 
@@ -1783,7 +1883,7 @@
         const custom = document.querySelector(`[data-title-custom="${index}"]`);
         if (custom) custom.value = getSystemSectionTitleColour(event.target.value);
       }
-    } else if (event.target.matches("[data-note],[data-html],[data-load-collapsed],[data-visible-type],[data-host-note-card],[data-section-pause-seconds]")) {
+    } else if (event.target.matches("[data-note],[data-html],[data-load-collapsed],[data-visible-type],[data-host-note-card],[data-section-pause-seconds],[data-section-scroll-speed]")) {
       syncSectionsFromDOM();
     }
 
@@ -2074,12 +2174,32 @@
       return;
     }
 
+    const extraBold = event.target.closest("[data-extra-bold]");
+    if (extraBold) {
+      const editor = extraBold.closest(".creator-section-body")?.querySelector(".creator-rich-editor");
+      if (editor) toggleHeavyBold(editor);
+      return;
+    }
+
+    const copySelection = event.target.closest("[data-copy-selection]");
+    if (copySelection) {
+      const editor = copySelection.closest(".creator-section-body")?.querySelector(".creator-rich-editor");
+      if (editor) await copyEditorSelection(editor);
+      return;
+    }
+
+    const pasteSelection = event.target.closest("[data-paste-selection]");
+    if (pasteSelection) {
+      const editor = pasteSelection.closest(".creator-section-body")?.querySelector(".creator-rich-editor");
+      if (editor) await pasteEditorSelection(editor);
+      return;
+    }
+
     const command = event.target.closest("[data-command]");
     if (command) {
       const editor = command.closest(".creator-section-body")?.querySelector(".creator-rich-editor");
       captureSelection(editor);
-      if (command.dataset.command === "bold") toggleHeavyBold(editor);
-      else applyCommand(command.dataset.command);
+      applyCommand(command.dataset.command);
       return;
     }
 
