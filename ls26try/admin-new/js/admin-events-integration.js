@@ -757,6 +757,9 @@
 
     statusCountdownTimer = setInterval(() => {
       renderVenueContextStatus();
+      if (!activeSessionControl?.active) {
+        renderSessionSuggestion(selectedSessionEvent());
+      }
     }, 1000);
   }
 
@@ -913,6 +916,23 @@
     }
   }
 
+  function sessionDueMarkup(event) {
+    if (!event) return "";
+    const start = eventStartDate(event);
+    const scheduled = event.startTime || (start ? start.toLocaleTimeString(undefined,{hour:"2-digit",minute:"2-digit",hour12:false}) : "Time TBC");
+
+    if (!start) {
+      return `<div class="session-due-status"><span>UPCOMING SESSION</span><strong>Scheduled ${esc(scheduled)}</strong><em>Countdown unavailable</em></div>`;
+    }
+
+    const diff = start.getTime() - Date.now();
+    const countdown = countdownText(start);
+    if (diff <= 0) {
+      return `<div class="session-due-status is-late"><span>SESSION DUE</span><strong>Scheduled ${esc(scheduled)}</strong><em>${esc(lateDurationText(diff))}</em></div>`;
+    }
+
+    return `<div class="session-due-status"><span>UPCOMING SESSION</span><strong>Scheduled ${esc(scheduled)}</strong><em>Starts in ${esc(countdown.text)}</em></div>`;
+  }
   function renderSessionSuggestion(event = null) {
     const panel = $("sessionEventSuggestion");
     const body = $("sessionEventSuggestionBody");
@@ -937,6 +957,7 @@
             ${next.venue ? ` • ${esc(next.venue)}` : ""}
             ${next.type ? ` • ${esc(next.type)}` : ""}
           </span>
+          ${sessionDueMarkup(next)}
         </button>
       `;
       return;
@@ -952,6 +973,7 @@
           ${event.venue ? ` • ${esc(event.venue)}` : ""}
           ${event.type ? ` • ${esc(event.type)}` : ""}
         </span>
+        ${sessionDueMarkup(event)}
       </button>
     `;
   }
