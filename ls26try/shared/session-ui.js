@@ -109,10 +109,32 @@
   function mirror(){
     const end=$('endMarker');if(!end||!tools())return;
     for(const [kind,title,source] of [['run','RUN ORDER','tsRunOrderList'],['requests','PENDING REQUESTS','tsPendingRequestsList']]){
-      let card=$('ls26End'+kind);if(!card){card=document.createElement('section');card.id='ls26End'+kind;card.className='ls26-mirror '+kind;card.innerHTML=`<h3>${title}</h3><div class="ls26-mirror-list"></div>`;if(kind==='run')end.after(card);else $('ls26Endrun').after(card);}
-      const list=card.querySelector('.ls26-mirror-list'),original=$(source);if(!original)continue;const content=original.innerHTML;if(list.innerHTML!==content)list.innerHTML=content;
+      let card=$('ls26End'+kind);
+      if(!card){
+        card=document.createElement('section');
+        card.id='ls26End'+kind;
+        card.className='ls26-mirror '+kind;
+        card.innerHTML=`<h3>${title}</h3><div class="ls26-mirror-list"></div>`;
+      }
+
+      // Keep these workflow mirrors beneath Library / Break / End Session.
+      if(kind==='run'){
+        const actions=$('endSessionActions');
+        if(actions?.parentNode)actions.insertAdjacentElement('afterend',card);
+        else $('endCompletionPanel')?.append(card) || end.after(card);
+      }else{
+        const run=$('ls26Endrun');
+        if(run?.parentNode)run.insertAdjacentElement('afterend',card);
+        else $('endCompletionPanel')?.append(card) || end.after(card);
+      }
+
+      const list=card.querySelector('.ls26-mirror-list'),original=$(source);
+      if(!original)continue;
+      const content=original.innerHTML;
+      if(list.innerHTML!==content)list.innerHTML=content;
     }
   }
+
   async function openSongPicker(){
     const d=dialog('Add a song',`<p class="ls26-muted" id="ls26PickerListName">Loading session song list…</p><input class="ls26-picker-search" placeholder="Search songs or artists" aria-label="Search session songs"><div class="ls26-picker-list">Loading…</div><a class="ls26-button" href="${LS26.url('library.html')}">Open full Library</a>`);
     try{
