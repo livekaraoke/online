@@ -2432,8 +2432,13 @@
     if (template) {
       syncSectionsFromDOM();
       const item = TEMPLATES[Number(template.dataset.template)];
-      sections.push(makeSection(item.type, item));
-      const newIndex = sections.length - 1;
+      const requestedIndex = Number.isFinite(Number(pendingTemplateInsertIndex))
+        ? Math.max(0, Math.min(sections.length, Number(pendingTemplateInsertIndex)))
+        : sections.length;
+      sections.splice(requestedIndex, 0, makeSection(item.type, item));
+      const newIndex = requestedIndex;
+      pendingTemplateInsertIndex = null;
+      expandedInsertIndex = null;
       $("templatesModal").classList.add("hidden");
       markDirty();
       render();
@@ -2462,7 +2467,10 @@
   $("addPerformanceNoteBtn").onclick = () => { syncSectionsFromDOM(); sections.push(makeSection("performanceNote")); markDirty(); render(); revealSection(); };
   $("addHostNoteBtn").onclick = () => { syncSectionsFromDOM(); sections.push(makeSection("hostNote")); markDirty(); render(); revealSection(); };
   $("addSeparatorBtn").onclick = () => { syncSectionsFromDOM(); sections.push(makeSection("separator")); markDirty(); render(); revealSection(); };
-  $("openTemplatesBtn").onclick = () => $("templatesModal").classList.remove("hidden");
+  $("openTemplatesBtn").onclick = () => {
+    pendingTemplateInsertIndex = null;
+    $("templatesModal").classList.remove("hidden");
+  };
   $("refreshSetlistsBtn").onclick = () => loadSetlistMembership(firebaseId);
   $("addYoutubeLinkBtn").onclick = () => addYoutubeLink();
   $("guitarTuningSelect").addEventListener("change", () => {
@@ -2533,7 +2541,10 @@
     insertHTMLAtSelection(`<strong class="inserted-chord">${esc(chord)}</strong>`);
   };
   $("colourCancelBtn").onclick = () => $("colourModal").classList.add("hidden");
-  $("templatesCancelBtn").onclick = () => $("templatesModal").classList.add("hidden");
+  $("templatesCancelBtn").onclick = () => {
+    pendingTemplateInsertIndex = null;
+    $("templatesModal").classList.add("hidden");
+  };
 
   document.addEventListener("click", event => {
     const removeYoutube = event.target.closest?.("[data-remove-youtube]");
