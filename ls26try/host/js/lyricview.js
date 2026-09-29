@@ -454,7 +454,13 @@
       try{
         const runSnap=await runRef.get();
         const runData=runSnap.exists?(runSnap.data()||{}):{};
-        const items=Array.isArray(runData.items)?runData.items.map(item=>({...item})):[];
+        const sameSession=
+          !requesterContext.sessionId ||
+          !runData.sessionId ||
+          runData.sessionId===requesterContext.sessionId;
+        const items=sameSession&&Array.isArray(runData.items)
+          ? runData.items.map(item=>({...item}))
+          : [];
         let index=-1;
 
         if(requesterContext.runOrderItemId){
