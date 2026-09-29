@@ -803,6 +803,15 @@
     return Number.isFinite(cssValue) ? cssValue : 320;
   }
 
+  function performanceActivationAnchor() {
+    const header=document.getElementById("ls26StickyHeader");
+    const quick=document.getElementById("performanceQuickInfo");
+    return (header?.getBoundingClientRect().height||0)
+      +(quick&&!quick.classList.contains("ls26-released")?quick.getBoundingClientRect().height:0)
+      +guitarTuningStickyHeight()
+      +sectionActivationOffset();
+  }
+
   function scrollToSection(index) {
     if (!sectionEls.length) return;
     cancelAnimationFrame(relativeScrollFrame);
@@ -831,8 +840,7 @@
   function updateSectionProgress() {
     if (!sectionEls.length || Date.now()<manualSectionUntil) return;
 
-    const header=document.getElementById("ls26StickyHeader"),quick=document.getElementById("performanceQuickInfo");
-    const anchor=(header?.getBoundingClientRect().height||0)+(quick&&!quick.classList.contains("ls26-released")?quick.getBoundingClientRect().height:0)+guitarTuningStickyHeight()+sectionActivationOffset();
+    const anchor=performanceActivationAnchor();
     let bestIndex = 0;
     sectionEls.forEach((el,i)=>{if(el.getBoundingClientRect().top<=anchor)bestIndex=i;});
 
@@ -853,6 +861,19 @@
     // current section marker into view and keep it roughly centred.
     if (changed) {
       centerActiveProgressSection(true);
+    }
+
+    // [ END ] behaves like another performance activation marker. When the
+    // marker reaches the same reading line used for lyric sections, stop
+    // auto-scroll and reveal the end-of-song workflow immediately.
+    const endMarker=$("endMarker");
+    if (
+      autoScrollOn &&
+      !autoScrollEndHandled &&
+      endMarker &&
+      endMarker.getBoundingClientRect().top <= anchor
+    ) {
+      void stopAutoScrollAtEnd();
     }
   }
 
@@ -1547,6 +1568,11 @@
     }
   }
 
+  function showEndCompletionPanel(show) {
+    const panel=$("endCompletionPanel");
+    if (panel) panel.hidden=!show;
+  }
+
   function showEndNextSongButton(show) {
     const button = $("endNextRunOrderSongBtn");
     if (!button) return;
@@ -1570,6 +1596,7 @@
     if ($("autoScrollBtn")) $("autoScrollBtn").innerHTML = '<svg class="ls26-play-icon" viewBox="0 0 32 32" aria-hidden="true"><path d="M7 3 29 16 7 29Z"/></svg>';
 
     await finalizeCurrentSongPlayed();
+    showEndCompletionPanel(true);
     showEndNextSongButton(true);
     if ($("endSessionActions")) $("endSessionActions").hidden = false;
     await renderEndNextSongDetails();
@@ -1653,87 +1680,92 @@
     return next;
   }
 
-  function nextDetailField(label, value) {
-    const clean = String(value ?? "").trim();
-    if (!clean) return "";
-
+  function prepNextField(label, value) {
+    const clean = String(value ?? "").trim() || "–";
     return `
-      <div class="host-next-detail-row">
-        <span>${esc(label)}</span>
+      <span class="host-prep-next-field">
+        <small>${esc(label)}</small>
         <strong>${esc(clean)}</strong>
-      </div>
+      </span>
     `;
   }
 
   async function renderEndNextSongDetails() {
     const card = $("endNextSongDetailsCard");
-    if (!card) return;
+    const button = $("endNextRunOrderSongBtn");
+    if (!card || !button) return;
 
+    showEndCompletionPanel(true);
     const next = await getNextRunOrderItem();
 
     if (!next?.songId) {
+      button.hidden = false;
+      button.disabled = true;
+      button.innerHTML = `
+        <span class="host-next-song-play" aria-hidden="true">■</span>
+        <span class="host-next-song-button-copy">
+          <strong>No next song in Run Order</strong>
+          <small>Add or queue a song before continuing.</small>
+        </span>
+      `;
+
       card.hidden = false;
+      card.classList.add("is-empty");
       card.innerHTML = `
-        <div class="host-next-song-card-title">NEXT IN RUN ORDER</div>
-        <div class="host-next-song-empty">No next song in the Run Order.</div>
+        <div class="host-prep-next-head">
+          <span class="host-prep-next-icon" aria-hidden="true">◇</span>
+          <span><strong>PREP NEXT SONG</strong><small>NO NEXT SONG QUEUED</small></span>
+        </div>
       `;
       return;
     }
 
-    let song = {};
-    let request = {};
-
+    let song = next._resolvedSong || {};
     try {
-      const cached=window.LK?.sessionTools?.getSongs?.().find(s=>s.id===next.songId);
-      if(cached)song=cached;
-      else {const songSnap=await db.collection('lyrics').doc(next.songId).get();if(songSnap.exists)song=songSnap.data()||{};}
+      if (!song?.id) {
+        const cached=window.LK?.sessionTools?.getSongs?.().find(s=>s.id===next.songId);
+        if(cached) song=cached;
+        else {
+          const songSnap=await db.collection("lyrics").doc(next.songId).get();
+          if(songSnap.exists) song={id:songSnap.id,...(songSnap.data()||{})};
+        }
+      }
     } catch (error) {
       console.warn("Could not load next song details:", error);
     }
 
-    if (next.requestId) {
-      try {
-        const cached=window.LK?.sessionTools?.getRequests?.().find(r=>r.id===next.requestId);
-        if(cached)request=cached;
-        else {const requestSnap=await db.collection('publicSongRequests').doc(next.requestId).get();if(requestSnap.exists)request=requestSnap.data()||{};}
-      } catch (error) {
-        console.warn("Could not load next request details:", error);
-      }
-    }
+    const title=song.title || next.songTitle || next.title || "Untitled Song";
+    const artist=ArtistNames.display(song.artist || next.artist || "");
+    const userBpm=song.userBpm ?? next.userBpm ?? next.bpm ?? "–";
+    const capo=song.capo === "" || song.capo == null ? "0" : song.capo;
+    const tuning=normaliseGuitarTuning(song).name;
+    const key=song.key || "–";
+    const time=song.timeSignature || song.time || "4/4";
 
-    const bpm =
-      song.userBpm ??
-      song.bpm ??
-      next.bpm ??
-      "";
-
-    const requester =
-      request.singerName ||
-      request.name ||
-      next.singerName ||
-      "";
+    button.hidden = false;
+    button.disabled = false;
+    button.innerHTML = `
+      <span class="host-next-song-play" aria-hidden="true">▶</span>
+      <span class="host-next-song-button-copy">
+        <strong>Next Song: ${esc(title)}</strong>
+        <small>${esc(artist || "Artist not set")}</small>
+      </span>
+      <span class="host-next-song-arrow" aria-hidden="true">›</span>
+    `;
 
     card.hidden = false;
-    showEndNextSongButton(true);
-    if($('endNextRunOrderSongBtn'))$('endNextRunOrderSongBtn').textContent='▶ PLAY NEXT SONG';
+    card.classList.remove("is-empty");
     card.innerHTML = `
-      <div class="host-next-song-card-title">UP NEXT</div>
-
-      <div class="host-next-song-hero">
-        <strong>${esc(song.title || next.songTitle || next.title || "Untitled Song")}</strong>
-        <span>${esc(ArtistNames.display(song.artist || next.artist || ""))}</span>
+      <div class="host-prep-next-head">
+        <span class="host-prep-next-icon" aria-hidden="true">◇</span>
+        <span><strong>PREP NEXT SONG</strong><small>${esc(title)}${artist ? ` · ${esc(artist)}` : ""}</small></span>
       </div>
-
-      <div class="host-next-song-detail-grid">
-        ${nextDetailField("BPM", bpm)}
-        ${nextDetailField("Key", song.key)}
-        ${nextDetailField("Capo", song.capo)}
-        ${nextDetailField("Song Year", song.year)}
-        ${nextDetailField("Requested By", requester)}
-        ${nextDetailField("Country / From", request.location)}
-        ${nextDetailField("Age Range", request.ageRange)}
-        ${nextDetailField("Rating", request.rating ? `${request.rating}/5` : "")}
-        ${nextDetailField("Request Note", request.note)}
+      <div class="host-prep-next-fields">
+        ${prepNextField("USER BPM", userBpm)}
+        ${prepNextField("CAPO", capo)}
+        ${prepNextField("TUNING", tuning)}
+        ${prepNextField("KEY", key)}
+        ${prepNextField("TIME", time)}
       </div>
     `;
   }
@@ -1775,6 +1807,7 @@
 
     if (wasOff && autoScrollOn) {
       autoScrollEndHandled = false;
+      showEndCompletionPanel(false);
       showEndNextSongButton(false);
       if ($("endSessionActions")) $("endSessionActions").hidden = true;
       if ($("endNextSongDetailsCard")) {
@@ -1807,13 +1840,18 @@
             fractionalY -= wholePixels;
           }
 
+          // Primary finish trigger: [ END ] reaches the exact same activation
+          // line as lyric sections. Keep the physical bottom check as a safety
+          // fallback for malformed/legacy songs without a usable end marker.
+          const endMarker=$("endMarker");
+          const endReached=endMarker && endMarker.getBoundingClientRect().top <= performanceActivationAnchor();
           const doc = document.documentElement;
           const atBottom =
             window.scrollY + window.innerHeight >=
             Math.max(doc.scrollHeight, document.body.scrollHeight) - 3;
 
-          if (atBottom) {
-            stopAutoScrollAtEnd();
+          if (endReached || atBottom) {
+            void stopAutoScrollAtEnd();
             return;
           }
         }
