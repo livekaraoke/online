@@ -605,11 +605,29 @@
     return !status || ["active","pending","waiting"].includes(status);
   }
 
+  function pendingRequestTime(request) {
+    const raw = request?.createdAt || request?.requestedAt || request?.created || null;
+    if (raw?.toMillis) return raw.toMillis();
+    const date = toDate(raw);
+    return date?.getTime?.() || 0;
+  }
+
+  function sortPendingRequestsOldestFirst(a,b) {
+    const diff = pendingRequestTime(a) - pendingRequestTime(b);
+    if (diff) return diff;
+    return String(a?.id || "").localeCompare(String(b?.id || ""));
+  }
+
   function renderPending() {
     const list = $("tsPendingRequestsList");
     const countEl = $("tsPendingCount");
     const tabCount = $("tsPendingTabCount");
-    const pending = state.requests.filter(isPendingRequest);
+    // Oldest request stays at the top; every newer request is appended below it.
+    // This makes the host accept requests in the order they were submitted.
+    const pending = state.requests
+      .filter(isPendingRequest)
+      .slice()
+      .sort(sortPendingRequestsOldestFirst);
 
     if (countEl) countEl.textContent = `(${pending.length})`;
 
