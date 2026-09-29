@@ -208,50 +208,160 @@
 
   <dialog id="requestDialog" class="modal request-modal">
     <div class="request-modal-top">
-      <div class="request-header"><span class="eyebrow">LIVE REQUESTS</span><h2>REQUEST A SONG</h2></div>
+      <div class="request-header">
+        <span class="eyebrow">LIVE REQUESTS</span>
+        <div class="request-title-line">
+          <h2>REQUEST A SONG</h2>
+          <button id="editRequesterNameBtn" class="requesting-as-inline" type="button" title="Open profile" aria-label="Open profile">
+            <span>REQUESTING AS</span>
+            <strong id="requesterNameLabel">Guest</strong>
+            <i aria-hidden="true">✎</i>
+          </button>
+        </div>
+      </div>
       <button class="modal-close request-modal-close" data-close="requestDialog" aria-label="Close">×</button>
     </div>
 
-    <section id="requestNameStep" class="request-name-step">
-      <label for="singerName">YOUR NAME</label>
-      <input id="singerName" type="text" maxlength="60" placeholder="Enter your name" autocomplete="name">
-      <button id="continueRequestBtn" class="primary-btn" type="button">CONTINUE →</button>
-    </section>
+    <section id="requestSongStep" class="request-song-step">
+      <div class="request-tab-stage">
+        <section id="requestProfilePanel" class="request-tab-panel request-profile-panel" data-request-panel="profile" hidden>
+          <div class="request-panel-heading">
+            <span class="eyebrow">YOUR DETAILS</span>
+            <h3>PROFILE</h3>
+            <p>Save your details on this device so requests are quicker during the gig.</p>
+          </div>
+          <div class="request-profile-grid">
+            <label class="request-field request-field-wide">NAME
+              <input id="singerName" type="text" maxlength="60" placeholder="Your name" autocomplete="name">
+            </label>
+            <label class="request-field">COUNTRY <small>OPTIONAL</small>
+              <input id="requestProfileCountry" type="text" maxlength="80" placeholder="e.g. Malta" autocomplete="country-name">
+            </label>
+            <label class="request-field">AGE RANGE <small>OPTIONAL</small>
+              <select id="requestProfileAge">
+                <option value="">Prefer not to say</option>
+                <option>Under 18</option>
+                <option>18–24</option>
+                <option>25–34</option>
+                <option>35–44</option>
+                <option>45–54</option>
+                <option>55–64</option>
+                <option>65+</option>
+              </select>
+            </label>
+            <label class="request-field">GENDER <small>OPTIONAL</small>
+              <select id="requestProfileGender">
+                <option value="">Prefer not to say</option>
+                <option>Female</option>
+                <option>Male</option>
+                <option>Non-binary</option>
+                <option>Other</option>
+              </select>
+            </label>
+          </div>
 
-    <section id="requestSongStep" class="request-song-step" hidden>
-      <div class="requester-block">
-        <div class="requester-name-line">
-          <span class="requester-caption">REQUESTING AS</span>
-          <strong id="requesterNameLabel"></strong>
-          <button id="editRequesterNameBtn" class="icon-btn" type="button" aria-label="Edit name" title="Edit name">✎</button>
-        </div>
-        <div id="requesterNameEdit" class="requester-name-edit" hidden>
-          <input id="editSingerName" type="text" maxlength="60" autocomplete="name">
-          <button id="saveRequesterNameBtn" class="small-btn" type="button">SAVE</button>
-          <button id="cancelRequesterNameBtn" class="small-btn ghost" type="button">CANCEL</button>
-        </div>
-        <label class="request-note-label" for="requestNote">OPTIONAL NOTE / COMMENT</label>
-        <textarea id="requestNote" rows="2" maxlength="240" placeholder="Anything you'd like the host to know?"></textarea>
+          <div class="request-review-card">
+            <div class="request-panel-heading compact">
+              <span class="eyebrow">YOUR EXPERIENCE</span>
+              <h3>RATE / REVIEW</h3>
+            </div>
+            <label class="request-field">RATING <small>OPTIONAL</small>
+              <select id="requestReviewRating">
+                <option value="">No rating</option>
+                <option value="5">★★★★★ · 5</option>
+                <option value="4">★★★★☆ · 4</option>
+                <option value="3">★★★☆☆ · 3</option>
+                <option value="2">★★☆☆☆ · 2</option>
+                <option value="1">★☆☆☆☆ · 1</option>
+              </select>
+            </label>
+            <label class="request-field request-field-wide">REVIEW <small>OPTIONAL</small>
+              <textarea id="requestReviewText" maxlength="1000" rows="4" placeholder="How was your experience?"></textarea>
+            </label>
+            <label class="request-review-private">
+              <input id="requestReviewPrivate" type="checkbox">
+              <span>Keep my review private — do not select it for display on the website.</span>
+            </label>
+          </div>
+          <div class="request-profile-actions">
+            <button id="continueRequestBtn" class="primary-btn" type="button">SAVE PROFILE</button>
+            <span id="requestProfileStatus" class="request-profile-status" role="status"></span>
+          </div>
+        </section>
+
+        <section id="requestBrowser" class="request-tab-panel request-browser" data-request-panel="songs">
+          <div class="request-panel-heading">
+            <span class="eyebrow">SONG LIST</span>
+            <h3>CHOOSE A SONG</h3>
+          </div>
+          <div class="request-category-grid" aria-label="Song categories">
+            <button type="button" data-song-category="80s"><strong>80s</strong><span>1980–1989</span></button>
+            <button type="button" data-song-category="90s"><strong>90s</strong><span>1990–1999</span></button>
+            <button type="button" data-song-category="rock"><strong>ROCK</strong><span>Rock songs</span></button>
+            <button type="button" data-song-category="pop"><strong>POP</strong><span>Pop songs</span></button>
+          </div>
+          <div class="request-controls">
+            <input id="songSearch" type="search" placeholder="Search song or artist…" autocomplete="off" inputmode="search">
+            <button id="clearSongCategoryBtn" class="request-filter-clear" type="button" hidden>SHOW ALL</button>
+          </div>
+          <div id="requestNotice" class="request-notice">Choose a song. Tap + to continue.</div>
+          <div id="songResults" class="song-results"></div>
+        </section>
+
+        <section id="requestConfirmPanel" class="request-tab-panel request-confirm-panel" hidden>
+          <button id="backToSongListBtn" class="request-back-btn" type="button">← SONG LIST</button>
+          <div class="request-confirm-card">
+            <span class="eyebrow">YOUR REQUEST</span>
+            <h3 id="requestConfirmSongTitle">Song</h3>
+            <p id="requestConfirmSongArtist"></p>
+            <dl>
+              <div><dt>REQUESTING AS</dt><dd id="requestConfirmName"></dd></div>
+            </dl>
+            <label class="request-note-label" for="requestNote">OPTIONAL NOTE / COMMENT</label>
+            <textarea id="requestNote" rows="4" maxlength="240" placeholder="Anything you'd like the host to know?"></textarea>
+            <button id="sendRequestBtn" class="primary-btn request-send-btn" type="button">SEND REQUEST</button>
+          </div>
+        </section>
+
+        <section id="requestMyRequestsPanel" class="request-tab-panel request-my-panel" data-request-panel="requests" hidden>
+          <div class="request-panel-heading">
+            <span class="eyebrow">LIVE STATUS</span>
+            <h3>MY REQUESTS</h3>
+            <p>Accepted requests follow the current LiveSuite Run Order.</p>
+          </div>
+          <div id="myRequests" class="my-requests-scroll"></div>
+        </section>
+
+        <section id="requestInfoPanel" class="request-tab-panel request-info-panel" data-request-panel="info" hidden>
+          <div class="request-panel-heading">
+            <span class="eyebrow">HELP</span>
+            <h3>HOW REQUESTS WORK</h3>
+          </div>
+          <div class="request-info-list">
+            <details open><summary>How do I request a song?</summary><p>Open SONG LIST, search or browse a category, tap + on a song, add an optional note, then press SEND REQUEST.</p></details>
+            <details><summary>What happens after I send it?</summary><p>Your request starts as pending. When accepted it appears in LiveSuite Run Order and MY REQUESTS shows your live queue position.</p></details>
+            <details><summary>Can I change my request?</summary><p>You can edit your note while the request is still waiting or queued. You can also cancel your own request before it starts playing.</p></details>
+            <details><summary>Why was my request rejected?</summary><p>If the host rejects or removes a request, MY REQUESTS shows REJECTED together with the reason supplied by the host.</p></details>
+            <details><summary>Queue position</summary><p>Queue positions follow LiveSuite Run Order and may change when the host reorders the performance.</p></details>
+            <details><summary>Tips</summary><p>Add a note if you need a different key, want to sing with someone, or want the host to know something before your turn.</p></details>
+          </div>
+        </section>
+
+        <section id="requestSuccess" class="request-success" hidden>
+          <div class="success-mark">✓</div>
+          <h3>REQUEST SENT</h3>
+          <p id="requestSuccessText">Your request has been sent and is awaiting approval.</p>
+          <button id="requestAnotherBtn" class="primary-btn" type="button">REQUEST ANOTHER SONG →</button>
+          <button id="viewMyRequestsBtn" class="small-btn ghost" type="button">VIEW MY REQUESTS</button>
+        </section>
       </div>
 
-      <div class="my-requests">
-        <h3>MY REQUESTS</h3>
-        <div id="myRequests" class="my-requests-scroll"></div>
-      </div>
-
-      <div id="requestBrowser" class="request-browser">
-        <h3 class="full-song-list-title">FULL SONG REQUEST LIST</h3>
-        <div class="request-controls"><input id="songSearch" type="search" placeholder="Search song or artist…" autocomplete="off" inputmode="search"></div>
-        <div id="requestNotice" class="request-notice"></div>
-        <div id="songResults" class="song-results"></div>
-      </div>
-
-      <div id="requestSuccess" class="request-success" hidden>
-        <div class="success-mark">✓</div>
-        <h3>REQUEST SENT</h3>
-        <p id="requestSuccessText">Your request has been sent and is awaiting approval.</p>
-        <button id="requestAnotherBtn" class="primary-btn" type="button">REQUEST ANOTHER SONG →</button>
-      </div>
+      <nav class="request-bottom-tabs" aria-label="Live request sections">
+        <button type="button" data-request-tab="profile" aria-label="Profile" title="Profile"><span aria-hidden="true">👤</span><small>PROFILE</small></button>
+        <button type="button" data-request-tab="songs" class="active"><span aria-hidden="true">♫</span><small>SONG LIST</small></button>
+        <button type="button" data-request-tab="requests"><span aria-hidden="true">☷</span><small>MY REQUESTS</small></button>
+        <button type="button" data-request-tab="info" aria-label="Information" title="Information"><span aria-hidden="true">ⓘ</span><small>INFO</small></button>
+      </nav>
     </section>
   </dialog>
 
@@ -260,6 +370,6 @@
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
   <script src="js/firebase-config.js"></script>
   <script src="js/youtube-videos.js"></script>
-  <script src="js/app.js?v=20260925-artist-names"></script>
+  <script src="js/app.js?v=20260930-request-tabs-v1"></script>
 </body>
 </html>
