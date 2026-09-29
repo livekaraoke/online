@@ -1605,3 +1605,25 @@
     align-self:center!important;
   }
 }
+
+
+/* 2026-09-30 song-value colours from Admin > App Settings. */
+.creator-page #userBpmInput{
+  color:var(--ls26-user-bpm-color,#00e88a)!important;
+  font-weight:900!important;
+}
+.creator-page #originalBpmInput{
+  color:var(--ls26-original-bpm-color,#00cafa)!important;
+  font-weight:900!important;
+}
+.creator-page #keyInput{
+  color:var(--ls26-key-color,#00cafa)!important;
+  font-weight:900!important;
+}
+.creator-page #capoInput:not([data-zero="true"]){
+  color:var(--ls26-capo-color,#ffdb58)!important;
+  font-weight:900!important;
+}
+.creator-page #capoInput[data-zero="true"]{
+  color:inherit!important;
+}
