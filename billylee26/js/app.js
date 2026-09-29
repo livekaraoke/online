@@ -213,43 +213,208 @@
     return item?String(item.status||"").toLowerCase():"";
   }
 
+  const REQUEST_PROFILE_KEY="billylee26.requestProfile.v1";
+  const REQUEST_REVIEW_ID_KEY="billylee26.reviewId";
+  let requestCategory="all";
+
+  function requestProfile(){
+    let stored={};
+    try{stored=JSON.parse(localStorage.getItem(REQUEST_PROFILE_KEY)||"{}")||{};}catch(_){}
+    const legacyName=String(localStorage.getItem("billylee26.requestName")||"").trim();
+    return {
+      name:String(stored.name||legacyName||"").trim(),
+      country:String(stored.country||"").trim(),
+      ageRange:String(stored.ageRange||""),
+      gender:String(stored.gender||""),
+      rating:String(stored.rating||""),
+      review:String(stored.review||""),
+      reviewPrivate:stored.reviewPrivate===true
+    };
+  }
+
+  function syncRequesterUi(){
+    const profile=requestProfile();
+    if($("requesterNameLabel"))$("requesterNameLabel").textContent=profile.name||"Set profile";
+    if($("requestConfirmName"))$("requestConfirmName").textContent=profile.name||"Guest";
+  }
+
+  function populateProfileForm(){
+    const profile=requestProfile();
+    if($("singerName"))$("singerName").value=profile.name;
+    if($("requestProfileCountry"))$("requestProfileCountry").value=profile.country;
+    if($("requestProfileAge"))$("requestProfileAge").value=profile.ageRange;
+    if($("requestProfileGender"))$("requestProfileGender").value=profile.gender;
+    if($("requestReviewRating"))$("requestReviewRating").value=profile.rating;
+    if($("requestReviewText"))$("requestReviewText").value=profile.review;
+    if($("requestReviewPrivate"))$("requestReviewPrivate").checked=profile.reviewPrivate;
+    syncRequesterUi();
+  }
+
+  async function saveRequestProfile({goToSongs=true}={}){
+    const name=String($("singerName")?.value||"").trim();
+    if(!name){
+      $("requestProfileStatus").textContent="Enter your name first.";
+      $("singerName")?.focus();
+      return false;
+    }
+
+    const profile={
+      name,
+      country:String($("requestProfileCountry")?.value||"").trim(),
+      ageRange:String($("requestProfileAge")?.value||""),
+      gender:String($("requestProfileGender")?.value||""),
+      rating:String($("requestReviewRating")?.value||""),
+      review:String($("requestReviewText")?.value||"").trim(),
+      reviewPrivate:$("requestReviewPrivate")?.checked===true
+    };
+
+    localStorage.setItem(REQUEST_PROFILE_KEY,JSON.stringify(profile));
+    localStorage.setItem("billylee26.requestName",name);
+    syncRequesterUi();
+
+    const status=$("requestProfileStatus");
+    if(status)status.textContent="Profile saved on this device.";
+
+    if(profile.rating || profile.review){
+      try{
+        const data={
+          source:"billylee26",
+          name:profile.name,
+          country:profile.country,
+          ageRange:profile.ageRange,
+          gender:profile.gender,
+          rating:profile.rating?Number(profile.rating):null,
+          review:profile.review,
+          displayOptIn:!profile.reviewPrivate,
+          sessionId:activeSessionId||"",
+          updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+        };
+        const existingId=localStorage.getItem(REQUEST_REVIEW_ID_KEY)||"";
+        if(existingId){
+          await db.collection("websiteReviews").doc(existingId).set(data,{merge:true});
+        }else{
+          const ref=await db.collection("websiteReviews").add({
+            ...data,
+            createdAt:firebase.firestore.FieldValue.serverTimestamp()
+          });
+          localStorage.setItem(REQUEST_REVIEW_ID_KEY,ref.id);
+        }
+        if(status)status.textContent=profile.reviewPrivate
+          ?"Profile and private review saved."
+          :"Profile and review saved.";
+      }catch(error){
+        console.warn("Could not save website review:",error);
+        if(status)status.textContent="Profile saved. Review could not be submitted right now.";
+      }
+    }
+
+    if(goToSongs) switchRequestTab("songs");
+    return true;
+  }
+
+  function switchRequestTab(tab){
+    const valid=new Set(["profile","songs","requests","info"]);
+    const target=valid.has(tab)?tab:"songs";
+
+    document.querySelectorAll("[data-request-panel]").forEach(panel=>{
+      panel.hidden=panel.dataset.requestPanel!==target;
+    });
+    if($("requestConfirmPanel"))$("requestConfirmPanel").hidden=true;
+    if($("requestSuccess"))$("requestSuccess").hidden=true;
+
+    document.querySelectorAll("[data-request-tab]").forEach(button=>{
+      const active=button.dataset.requestTab===target;
+      button.classList.toggle("active",active);
+      button.setAttribute("aria-selected",String(active));
+    });
+
+    if(target==="profile")populateProfileForm();
+    if(target==="songs"){
+      if($("requestNotice"))$("requestNotice").textContent=requestCategory==="all"
+        ?"Choose a song. Tap + to continue."
+        :`${requestCategory.toUpperCase()} songs · tap + to continue.`;
+      renderSongResults();
+    }
+    if(target==="requests")void renderMyRequests();
+  }
+
+  function songGenres(song){
+    const values=[];
+    if(song?.genre)values.push(song.genre);
+    if(Array.isArray(song?.genres))values.push(...song.genres);
+    if(Array.isArray(song?.tags))values.push(...song.tags);
+    return values.map(value=>String(value||"").toLowerCase());
+  }
+
+  function songMatchesCategory(song,category){
+    if(category==="all")return true;
+    const year=Number(song?.year);
+    if(category==="80s")return Number.isFinite(year)&&year>=1980&&year<=1989;
+    if(category==="90s")return Number.isFinite(year)&&year>=1990&&year<=1999;
+    const genres=songGenres(song).join(" ");
+    if(category==="rock")return /rock|grunge|metal|alternative/.test(genres);
+    if(category==="pop")return /pop/.test(genres);
+    return true;
+  }
+
+  function setSongCategory(category){
+    requestCategory=String(category||"all").toLowerCase();
+    document.querySelectorAll("[data-song-category]").forEach(button=>{
+      button.classList.toggle("active",button.dataset.songCategory===requestCategory);
+    });
+    if($("clearSongCategoryBtn"))$("clearSongCategoryBtn").hidden=requestCategory==="all";
+    renderSongResults();
+  }
+
   function renderSongResults(){
-    const q=$("songSearch").value.trim().toLowerCase();
-    const list=q?songs.filter(song=>ArtistNames.matchesSong(song,q)):songs;
+    const q=String($("songSearch")?.value||"").trim().toLowerCase();
+    const list=songs.filter(song=>
+      songMatchesCategory(song,requestCategory) &&
+      (!q || ArtistNames.matchesSong(song,q))
+    );
+
     $("songResults").innerHTML=list.map(song=>{
       const state=songSessionState(song);
-      const selected=selectedRequestSongId===song.id;
-      let action="＋", disabled="", stateClass="";
+      let action="＋",disabled="",stateClass="";
       if(state==="playing"){action="NOW PLAYING";disabled=" disabled";stateClass=" is-playing";}
       else if(state==="played"){action="ALREADY PLAYED";disabled=" disabled";stateClass=" is-played";}
-      else if(selected){action="SEND REQUEST";stateClass=" selected";}
-      return `<div class="song-row${stateClass}" data-song-row-id="${escapeHTML(song.id)}"><span><strong>${escapeHTML(song.title||"Untitled")}</strong><small>${escapeHTML(ArtistNames.display(song.artist||""))}</small></span><button class="song-action" type="button" data-song-id="${escapeHTML(song.id)}"${disabled}>${escapeHTML(action)}</button></div>`;
-    }).join("") || `<div class="empty-box">No songs found.</div>`;
+      return `<div class="song-row${stateClass}" data-song-row-id="${escapeHTML(song.id)}"><span><strong>${escapeHTML(song.title||"Untitled")}</strong><small>${escapeHTML(ArtistNames.display(song.artist||""))}</small></span><button class="song-action" type="button" data-song-id="${escapeHTML(song.id)}"${disabled} aria-label="Choose ${escapeHTML(song.title||"song")}">${escapeHTML(action)}</button></div>`;
+    }).join("") || `<div class="empty-box">No songs found in this category.</div>`;
   }
 
   function showRequestBrowser(){
     selectedRequestSongId="";
+    requestCategory="all";
+    if($("songSearch"))$("songSearch").value="";
+    document.querySelectorAll("[data-song-category]").forEach(button=>button.classList.remove("active"));
+    if($("clearSongCategoryBtn"))$("clearSongCategoryBtn").hidden=true;
+    switchRequestTab("songs");
+  }
+
+  function showRequestConfirmation(song){
+    if(!song)return;
+    syncRequesterUi();
+    document.querySelectorAll("[data-request-panel]").forEach(panel=>panel.hidden=true);
+    document.querySelectorAll("[data-request-tab]").forEach(button=>button.classList.remove("active"));
+    $("requestConfirmPanel").hidden=false;
     $("requestSuccess").hidden=true;
-    $("requestBrowser").hidden=false;
+    $("requestConfirmSongTitle").textContent=song.title||"Song";
+    $("requestConfirmSongArtist").textContent=ArtistNames.display(song.artist||"");
+    $("requestConfirmName").textContent=requestProfile().name||"Guest";
     $("requestNote").value="";
-    $("songSearch").value="";
-    $("requestNotice").textContent="Choose a song. Tap +, then tap SEND REQUEST on that song.";
-    renderSongResults();
+    setTimeout(()=>$("requestNote")?.focus(),30);
   }
 
   async function enterSongRequestStep(name){
-    localStorage.setItem("billylee26.requestName",name);
-    $("requesterNameLabel").textContent=name;
-    $("editSingerName").value=name;
-    $("requestNameStep").hidden=true;
-    $("requestSongStep").hidden=false;
-    $("requestSuccess").hidden=true;
-    $("requestBrowser").hidden=false;
-    $("requestNotice").textContent="Loading songs…";
+    const profile=requestProfile();
+    profile.name=String(name||profile.name||"").trim();
+    localStorage.setItem(REQUEST_PROFILE_KEY,JSON.stringify(profile));
+    localStorage.setItem("billylee26.requestName",profile.name);
+    syncRequesterUi();
     try{
-      await loadPublicSongs();
+      if(!songs.length)await loadPublicSongs();
       await renderMyRequests();
-      showRequestBrowser();
+      switchRequestTab("songs");
     }catch(error){
       console.error(error);
       $("requestNotice").textContent="Could not load the public song list.";
@@ -257,91 +422,241 @@
   }
 
   async function openRequestDialog(){
-    if(!(controlData.active===true && activeSessionId)){alert("Song requests are only available during an active session.");return;}
-    selectedRequestSongId="";
-    const storedName=(localStorage.getItem("billylee26.requestName")||"").trim();
-    $("requestSuccess").hidden=true;
-    $("requestBrowser").hidden=false;
-    $("requestDialog").showModal();
-    if(storedName){
-      $("singerName").value=storedName;
-      await enterSongRequestStep(storedName);
-    }else{
-      $("requestNameStep").hidden=false;
-      $("requestSongStep").hidden=true;
-      $("singerName").value="";
-      setTimeout(()=>$("singerName").focus(),50);
+    if(!(controlData.active===true && activeSessionId)){
+      alert("Song requests are only available during an active session.");
+      return;
     }
+
+    selectedRequestSongId="";
+    requestCategory="all";
+    $("requestDialog").showModal();
+    populateProfileForm();
+
+    try{
+      if(!songs.length)await loadPublicSongs();
+      await renderMyRequests();
+    }catch(error){
+      console.error(error);
+    }
+
+    const profile=requestProfile();
+    switchRequestTab(profile.name?"songs":"profile");
   }
 
   async function continueToSongs(){
-    const name=$("singerName").value.trim();
-    if(!name){$("singerName").focus();return;}
-    await enterSongRequestStep(name);
+    await saveRequestProfile({goToSongs:true});
   }
 
-  function trackedRequestIds(){try{return JSON.parse(localStorage.getItem("billylee26.requestIds")||"[]");}catch{return[];}}
-  function saveTrackedRequestIds(ids){localStorage.setItem("billylee26.requestIds",JSON.stringify([...new Set(ids)].slice(-40)));}
-  function clearRequestListeners(){requestListeners.forEach(fn=>{try{fn();}catch{}});requestListeners=[];}
+  function trackedRequestIds(){
+    try{return JSON.parse(localStorage.getItem("billylee26.requestIds")||"[]");}
+    catch{return[];}
+  }
+  function saveTrackedRequestIds(ids){
+    localStorage.setItem("billylee26.requestIds",JSON.stringify([...new Set(ids)].slice(-40)));
+  }
+  function clearRequestListeners(){
+    requestListeners.forEach(fn=>{try{fn();}catch{}});
+    requestListeners=[];
+  }
+
   function statusLabel(status){
     const s=String(status||"active").toLowerCase();
     if(s==="queued")return "ACCEPTED";
     if(s==="playing")return "NOW PLAYING";
-    if(["completed","played"].includes(s))return "PLAYED";
-    if(["declined","deleted","deletedbyhost"].includes(s))return "DECLINED";
-    if(s==="abandoned"||s==="left")return "REMOVED";
+    if(["completed","played","finished"].includes(s))return "PLAYED";
+    if(["declined","deleted","deletedbyhost","abandoned","left"].includes(s))return "REJECTED";
+    if(s==="cancelled")return "CANCELLED";
     return "PENDING";
   }
+
+  function runOrderItemForRequest(requestId){
+    return runOrder.find(row=>String(row?.requestId||"")===String(requestId||""))||null;
+  }
+
+  function queuePositionForRequest(requestId){
+    const item=runOrderItemForRequest(requestId);
+    if(!item)return 0;
+    const status=String(item.status||"").toLowerCase();
+    if(status==="playing")return -1;
+    const active=runOrder.filter(row=>{
+      const s=String(row?.status||"").toLowerCase();
+      return !terminalStatuses.has(s)&&s!=="playing";
+    });
+    const index=active.findIndex(row=>String(row?.requestId||"")===String(requestId||""));
+    return index>=0?index+1:0;
+  }
+
+  function requestReason(record,runItem){
+    return String(
+      record?.reason ||
+      runItem?.reason ||
+      runItem?.abandonReason ||
+      ""
+    ).trim();
+  }
+
+  function requestCanCancel(status){
+    return ["active","pending","queued"].includes(String(status||"").toLowerCase());
+  }
+
   async function renderMyRequests(){
     clearRequestListeners();
     const ids=trackedRequestIds();
     const box=$("myRequests");
-    if(!activeSessionId){box.innerHTML=`<p class="muted">Requests from previous sessions are hidden.</p>`;return;}
-    if(!ids.length){box.innerHTML=`<p class="muted">Requests you make in this session will appear here.</p>`;return;}
+    if(!box)return;
+    if(!activeSessionId){
+      box.innerHTML=`<p class="muted">Requests from previous sessions are hidden.</p>`;
+      return;
+    }
+    if(!ids.length){
+      box.innerHTML=`<p class="muted">Requests you make in this session will appear here.</p>`;
+      return;
+    }
+
     const records=new Map();
     const paint=()=>{
-      const current=ids.slice().reverse().map(id=>records.get(id)).filter(r=>r && String(r.sessionId||"")===String(activeSessionId));
-      if(!current.length){box.innerHTML=`<p class="muted">Requests you make in this session will appear here.</p>`;return;}
-      box.innerHTML=current.map(r=>{
-        const id=r.id;
-        const runStatus=runOrderStatusForRequest(id);
-        const effectiveStatus=runStatus||String(r.status||"active").toLowerCase();
+      const current=ids.slice().reverse()
+        .map(id=>records.get(id))
+        .filter(record=>record&&String(record.sessionId||"")===String(activeSessionId));
+
+      if(!current.length){
+        box.innerHTML=`<p class="muted">Requests you make in this session will appear here.</p>`;
+        return;
+      }
+
+      box.innerHTML=current.map(record=>{
+        const id=record.id;
+        const runItem=runOrderItemForRequest(id);
+        const runStatus=runItem?String(runItem.status||"").toLowerCase():"";
+        const effectiveStatus=runStatus||String(record.status||"active").toLowerCase();
         const playing=effectiveStatus==="playing";
-        return `<div class="my-request${playing?" is-playing":""}"><span><strong>${escapeHTML(r.songTitle||"Song")}</strong><small>${escapeHTML(ArtistNames.display(r.songArtist||r.artist||""))}</small></span><em class="request-status status-${escapeHTML(effectiveStatus)}">${statusLabel(effectiveStatus)}</em></div>`;
+        const position=queuePositionForRequest(id);
+        const reason=requestReason(record,runItem);
+        const note=String(record.note||record.comment||"").trim();
+        const queueText=position===-1
+          ?"NOW PLAYING"
+          :(position>0?`QUEUE #${position}`:(effectiveStatus==="active"?"AWAITING APPROVAL":""));
+        const canCancel=requestCanCancel(effectiveStatus);
+
+        return `<article class="my-request${playing?" is-playing":""}" data-my-request-id="${escapeHTML(id)}">
+          <div class="my-request-song">
+            <strong>${escapeHTML(record.songTitle||"Song")}</strong>
+            <small>${escapeHTML(ArtistNames.display(record.songArtist||record.artist||""))}</small>
+          </div>
+          <div class="my-request-detail">
+            ${queueText?`<b>${escapeHTML(queueText)}</b>`:""}
+            ${reason?`<span class="request-reason">${escapeHTML(reason)}</span>`:""}
+            ${note?`<span class="request-user-note">Note: ${escapeHTML(note)}</span>`:""}
+          </div>
+          <div class="my-request-state">
+            <em class="request-status status-${escapeHTML(effectiveStatus)}">${statusLabel(effectiveStatus)}</em>
+            <div class="my-request-actions">
+              <button type="button" data-edit-request-note="${escapeHTML(id)}">NOTE</button>
+              ${canCancel?`<button type="button" class="cancel-request" data-cancel-request="${escapeHTML(id)}">CANCEL</button>`:""}
+            </div>
+          </div>
+        </article>`;
       }).join("");
     };
+
     paint();
-    ids.forEach(id=>requestListeners.push(db.collection("publicSongRequests").doc(id).onSnapshot(doc=>{if(doc.exists)records.set(id,{id,...doc.data()});paint();})));
+    ids.forEach(id=>{
+      const unsub=db.collection("publicSongRequests").doc(id).onSnapshot(doc=>{
+        if(doc.exists)records.set(id,{id,...doc.data()});
+        paint();
+      },error=>console.warn("Could not watch request",id,error));
+      requestListeners.push(unsub);
+    });
+  }
+
+  async function cancelMyRequest(requestId){
+    if(!requestId||!trackedRequestIds().includes(requestId))return;
+    if(!confirm("Cancel this song request?"))return;
+
+    const requestRef=db.collection("publicSongRequests").doc(requestId);
+    await requestRef.set({
+      status:"cancelled",
+      reason:"Cancelled by requester",
+      cancelledAt:firebase.firestore.FieldValue.serverTimestamp(),
+      updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+    },{merge:true});
+
+    // If public rules allow it, update the Run Order immediately. Host pages
+    // also reconcile cancelled request records, so cancellation remains safe
+    // when direct queue writes are intentionally blocked.
+    try{
+      const runRef=db.collection("karaokeControl").doc("runOrder");
+      await db.runTransaction(async tx=>{
+        const snap=await tx.get(runRef);
+        if(!snap.exists)return;
+        const data=snap.data()||{};
+        if(String(data.sessionId||"")!==String(activeSessionId||""))return;
+        const items=Array.isArray(data.items)?data.items:[];
+        if(!items.some(item=>item.requestId===requestId))return;
+        tx.set(runRef,{
+          items:items.map(item=>item.requestId===requestId
+            ? {...item,status:"cancelled",reason:"Cancelled by requester"}
+            : item),
+          updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+        },{merge:true});
+      });
+    }catch(error){
+      console.info("Run Order cancellation will be reconciled by the host.",error?.code||error);
+    }
+  }
+
+  async function editMyRequestNote(requestId){
+    if(!requestId||!trackedRequestIds().includes(requestId))return;
+    try{
+      const snap=await db.collection("publicSongRequests").doc(requestId).get();
+      if(!snap.exists)return;
+      const current=snap.data()||{};
+      const next=prompt("Note for the host:",String(current.note||current.comment||""));
+      if(next===null)return;
+      const note=String(next).trim().slice(0,240);
+      await snap.ref.set({
+        note,
+        comment:note,
+        updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+      },{merge:true});
+    }catch(error){
+      console.error(error);
+      alert("Could not update the note. Please try again.");
+    }
   }
 
   function selectRequestSong(songId){
     const song=songs.find(item=>item.id===songId);
     if(!song)return;
-    const state=songSessionState(song);
-    if(state!=="available")return;
-    if(selectedRequestSongId===songId){
-      sendSelectedRequest();
+    if(songSessionState(song)!=="available")return;
+    if(!requestProfile().name){
+      switchRequestTab("profile");
+      $("requestProfileStatus").textContent="Save your name before sending a request.";
       return;
     }
     selectedRequestSongId=songId;
-    $("requestNotice").textContent=`${song.title||"Song"} selected. Tap SEND REQUEST on that song to confirm.`;
-    renderSongResults();
+    showRequestConfirmation(song);
   }
 
   async function sendSelectedRequest(){
-    const name=(localStorage.getItem("billylee26.requestName")||"").trim();
+    const profile=requestProfile();
+    const name=profile.name;
     const song=songs.find(item=>item.id===selectedRequestSongId);
     if(!name||!song||!activeSessionId)return;
+
     if(songSessionState(song)!=="available"){
+      switchRequestTab("songs");
       $("requestNotice").textContent="That song is already playing or has already been played in this session.";
       selectedRequestSongId="";
       renderSongResults();
       return;
     }
-    const rowButton=document.querySelector(`.song-action[data-song-id="${CSS.escape(song.id)}"]`);
-    if(rowButton)rowButton.disabled=true;
+
+    const button=$("sendRequestBtn");
+    if(button)button.disabled=true;
+
     try{
-      const note=$("requestNote").value.trim();
+      const note=String($("requestNote")?.value||"").trim();
       const ref=await db.collection("publicSongRequests").add({
         listId:publicSetlist?.id||"venue-main-public-song-list",
         publicSetlistId:publicSetlist?.id||"",
@@ -351,6 +666,9 @@
         status:"active",
         singerName:name,
         name,
+        requesterCountry:profile.country,
+        requesterAgeRange:profile.ageRange,
+        requesterGender:profile.gender,
         note,
         comment:note,
         source:"billylee26",
@@ -361,32 +679,31 @@
         year:song.year||"",
         createdAt:firebase.firestore.FieldValue.serverTimestamp()
       });
-      const ids=trackedRequestIds();ids.push(ref.id);saveTrackedRequestIds(ids);
+
+      const ids=trackedRequestIds();
+      ids.push(ref.id);
+      saveTrackedRequestIds(ids);
       selectedRequestSongId="";
-      $("requestNote").value="";
-      $("requestBrowser").hidden=true;
+      $("requestConfirmPanel").hidden=true;
+      document.querySelectorAll("[data-request-panel]").forEach(panel=>panel.hidden=true);
       $("requestSuccess").hidden=false;
       $("requestSuccessText").textContent=`Thank you ${name}! ${song.title||"Your song"} has been sent and is awaiting approval.`;
       await renderMyRequests();
     }catch(error){
       console.error(error);
-      $("requestNotice").textContent="Could not send request. Please try again.";
-      if(rowButton)rowButton.disabled=false;
+      alert("Could not send request. Please try again.");
+    }finally{
+      if(button)button.disabled=false;
     }
   }
 
   function beginEditRequesterName(){
-    $("editSingerName").value=localStorage.getItem("billylee26.requestName")||$("requesterNameLabel").textContent||"";
-    $("requesterNameEdit").hidden=false;
-    setTimeout(()=>$("editSingerName").focus(),20);
+    switchRequestTab("profile");
+    $("singerName")?.focus();
   }
-  function saveRequesterName(){
-    const name=$("editSingerName").value.trim();
-    if(!name){$("editSingerName").focus();return;}
-    localStorage.setItem("billylee26.requestName",name);
-    $("singerName").value=name;
-    $("requesterNameLabel").textContent=name;
-    $("requesterNameEdit").hidden=true;
+
+  async function saveRequesterName(){
+    await saveRequestProfile({goToSongs:true});
   }
 
   async function showEventDetails(eventData, options={}){
