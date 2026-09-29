@@ -126,7 +126,7 @@
     document.addEventListener('click',e=>{if(!menu.contains(e.target)&&!$('ls26More').contains(e.target))closeMenu();});
     document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!menu.hidden){closeMenu();$('ls26More').focus();}});
     window.addEventListener('resize',closeMenu);
-    const notesScript=document.createElement('script');notesScript.src=url('shared/app-updates.js?v=20260930-version-history-v2');document.head.append(notesScript);
+    const notesScript=document.createElement('script');notesScript.src=url('shared/app-updates.js?v=20260930-release-preview');document.head.append(notesScript);
     window.LS26.openAppUpdates=()=>toast('App Updates is loading. Please try again.');
     window.LS26.openReminder=()=>toast('Reminders is loading. Please try again.');
     const reminderStyle=document.createElement('link');reminderStyle.rel='stylesheet';reminderStyle.href=url('shared/tools.css?v=20260925-tools');document.head.append(reminderStyle);
