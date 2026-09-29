@@ -1060,3 +1060,14 @@ html.ls26-reduce-glow .performance-quick-info{box-shadow:none!important;filter:n
 @media(prefers-reduced-motion:reduce){
   .host-lyric-view-page .host-lyrics-content .host-section{transition:none!important}
 }
+
+
+/* =========================================================
+   LOWER PERFORMANCE CONTROLS — 2026-09-29
+   ========================================================= */
+.host-lyric-view-page .host-bottom-dock{
+  bottom:calc(var(--ls26-footer-height) + 2px)!important;
+}
+.host-lyric-view-page .host-nav-pad{
+  bottom:calc(var(--ls-drawer-bottom,150px) + 6px)!important;
+}
