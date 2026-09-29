@@ -291,11 +291,11 @@
     $("performanceLoopingCard").dataset.looping = looping ? "yes" : "no";
     $("performanceSongDetails").textContent = details || "—";
 
+    // Host Note sections now render in their actual song position with the
+    // normal LyricView sections. Do not duplicate them in the top reference row.
     const hostCard=$("performanceHostNotesCard");
-    hostCard.hidden=!hostNotes.length;
-    $("performanceHostNotes").innerHTML=hostNotes.map(section=>
-      `<article><strong>${esc(section.title||"HOST NOTE")}</strong><div>${cleanSectionHtml(section.html||section.text||"")}</div></article>`
-    ).join("");
+    if (hostCard) hostCard.hidden=true;
+    if ($("performanceHostNotes")) $("performanceHostNotes").innerHTML="";
 
     // TIME is now a permanent reference card beside the YouTube/notes cards,
     // so keep this reference row available even when a song has no note/link.
@@ -400,6 +400,13 @@
     next.searchParams.set("returnTo", currentRelative);
     if (currentSong?.title) next.searchParams.set("fromTitle", currentSong.title);
     return `${next.pathname.split("/").pop()}?${next.searchParams.toString()}${next.hash}`;
+  }
+
+  function isHostNoteSection(section) {
+    const key = `${section?.type || ""} ${section?.title || ""}`
+      .toLowerCase()
+      .replace(/[-_]+/g," ");
+    return /host\s*note/.test(key) || String(section?.type || "").toLowerCase() === "hostnote";
   }
 
   function sectionTypeClass(section) {
@@ -608,11 +615,11 @@
         container.appendChild(sep);
         return;
       }
-      if ((section.type || "").toLowerCase() === "host-note") return;
-
+      const hostNote = isHostNoteSection(section);
       const restrictedByType = !sectionVisibleForActiveType(section);
       const card = document.createElement("section");
       card.className = `host-section ${sectionTypeClass(section)}`;
+      if (hostNote && section.displayAsCard === true) card.classList.add("display-as-card");
       card.dataset.sectionIndex = String(index);
       card.dataset.sectionTitle = section.title || section.type || `Section ${index + 1}`;
       card.dataset.typeRestricted = restrictedByType ? "true" : "false";
@@ -645,8 +652,13 @@
       if (section.style?.color) body.style.color = section.style.color;
       body.style.textAlign = ["left","center","right"].includes(section.style?.textAlign) ? section.style.textAlign : "left";
 
-      if (sectionTypeClass(section) === "is-tab") buildBeatGridTab(section, body);
-      else body.innerHTML = cleanSectionHtml(section.html || section.text || "");
+      if (sectionTypeClass(section) === "is-tab") {
+        buildBeatGridTab(section, body);
+      } else if (hostNote) {
+        body.textContent = section.text || section.html || "";
+      } else {
+        body.innerHTML = cleanSectionHtml(section.html || section.text || "");
+      }
 
       applySectionDashColour(body, section.style?.dashColor || "#777777");
 

@@ -2211,3 +2211,30 @@ body.host-lyric-view-page {
   }
   .host-prep-next-field:nth-child(4){border-left:0!important}
 }
+
+
+/* =========================================================
+   INLINE HOST NOTE SECTIONS
+   ========================================================= */
+.host-lyric-view-page .host-section.is-host-note.display-as-card{
+  width:80%!important;
+  max-width:none!important;
+  margin-left:auto!important;
+  margin-right:auto!important;
+  border:1px solid #28566b!important;
+  border-radius:11px!important;
+  background:linear-gradient(145deg,#061c28,#04131c)!important;
+  box-shadow:0 8px 25px rgba(0,0,0,.24),0 0 15px rgba(0,202,250,.055)!important;
+  overflow:hidden!important;
+}
+.host-lyric-view-page .host-section.is-host-note.display-as-card .host-section-header{
+  border-bottom:1px solid #214b5d!important;
+  background:#071f2c!important;
+}
+.host-lyric-view-page .host-section.is-host-note.display-as-card .host-section-body{
+  padding:18px 20px 20px!important;
+  background:transparent!important;
+}
+@media(max-width:700px){
+  .host-lyric-view-page .host-section.is-host-note.display-as-card{width:calc(100% - 20px)!important}
+}

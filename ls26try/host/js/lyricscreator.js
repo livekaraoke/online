@@ -505,6 +505,7 @@
       html: stripLegacyMarkerFromHtml(section.html || ""),
       text: stripLegacyMarkerFromText(section.text || ""),
       visibleForTypes: normaliseVisibleForTypes(section),
+      displayAsCard: type === "hostNote" && section.displayAsCard === true,
       collapsed: section.collapsed === true,
       editorCollapsed: section.editorCollapsed === true,
       style: {
@@ -520,7 +521,12 @@
       return normalizeSection({ type, title: template?.title || "PERFORMANCE NOTE", text: template?.text || "Short instrumental (wait for signal)" });
     }
     if (type === "hostNote") {
-      return normalizeSection({ type, title: template?.title || "HOST NOTE", text: template?.text || "Private reminder for the host..." });
+      return normalizeSection({
+        type,
+        title: template?.title || "HOST NOTE",
+        text: template?.text || "Private reminder for the host...",
+        displayAsCard: template?.displayAsCard === true
+      });
     }
     if (type === "tab") {
       return normalizeSection({ type, title: template?.title || "GUITAR TAB", html: blankTabHTML() });
@@ -1138,6 +1144,11 @@
           </div>
           <div class="creator-section-body ${s.editorCollapsed ? "hidden" : ""}">
             ${renderSectionVisibility(index, s)}
+            ${s.type === "hostNote" ? `
+              <label class="host-note-display-card-toggle">
+                <input type="checkbox" data-host-note-card="${index}" ${s.displayAsCard ? "checked" : ""}>
+                <span><strong>Display as card</strong><small>Show this Host Note as a centred 80% width card in LyricView.</small></span>
+              </label>` : ""}
             ${isTextNote ? noteTextToolbar(index) : sectionToolbar(index, s)}
             ${isTextNote
               ? `<textarea class="${s.type === "hostNote" ? "host-note-editor" : "performance-note-editor"}" data-note="${index}" style="text-align:${esc(s.style?.textAlign || "left")}">${esc(s.text)}</textarea>`
@@ -1220,6 +1231,11 @@
     document.querySelectorAll("[data-load-collapsed]").forEach(el => {
       const i = Number(el.dataset.loadCollapsed);
       if (sections[i]) sections[i].collapsed = el.checked;
+    });
+
+    document.querySelectorAll("[data-host-note-card]").forEach(el => {
+      const i = Number(el.dataset.hostNoteCard);
+      if (sections[i]?.type === "hostNote") sections[i].displayAsCard = el.checked;
     });
 
     document.querySelectorAll("[data-visibility-strip]").forEach(strip => {
@@ -1667,7 +1683,7 @@
         const custom = document.querySelector(`[data-title-custom="${index}"]`);
         if (custom) custom.value = getSystemSectionTitleColour(event.target.value);
       }
-    } else if (event.target.matches("[data-note],[data-html],[data-load-collapsed],[data-visible-type]")) {
+    } else if (event.target.matches("[data-note],[data-html],[data-load-collapsed],[data-visible-type],[data-host-note-card]")) {
       syncSectionsFromDOM();
     }
 
