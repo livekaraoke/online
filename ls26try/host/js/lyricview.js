@@ -269,7 +269,7 @@
     const details=String(song?.songDetails||"").trim();
     const links=songYoutubeLinks(song);
     const loopSlot = song?.loopSlot === null || song?.loopSlot === undefined || song?.loopSlot === "" ? "–" : String(song.loopSlot);
-    const looping = song?.looping === true || String(song?.looping||"").toLowerCase() === "yes";
+    const looping = song?.looping === true || ["true","yes"].includes(String(song?.looping||"").toLowerCase());
     const hostNotes=(song?.sections||[]).filter(section=>{
       const isHost=`${section?.type||""} ${section?.title||""}`.toLowerCase().includes("host note");
       return isHost&&(showAllSectionsOverride||sectionVisibleForActiveType(section));
