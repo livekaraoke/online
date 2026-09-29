@@ -384,3 +384,44 @@ body .ls26-footer .ls26-footer-icon image{filter:none!important;box-shadow:none!
   }
   .ls26-nav a.ls26-primary-nav{min-width:124px!important;padding-inline:15px!important}
 }
+
+
+/* =========================================================
+   HEADER LOGO CENTRING — 2026-09-29
+   Slightly larger LiveSuite icon, centred within its navigation cell.
+   ========================================================= */
+.ls26-nav a.ls26-brand.ls26-brand-icon{
+  display:grid!important;
+  place-items:center!important;
+  flex-basis:90px!important;
+  width:90px!important;
+  min-width:90px!important;
+  max-width:90px!important;
+  height:66px!important;
+  padding:0!important;
+}
+.ls26-nav a.ls26-brand.ls26-brand-icon svg{
+  display:block!important;
+  width:94%!important;
+  height:94%!important;
+  margin:auto!important;
+  transform:none!important;
+}
+@media(max-width:1100px){
+  .ls26-nav a.ls26-brand.ls26-brand-icon{
+    flex-basis:84px!important;
+    width:84px!important;
+    min-width:84px!important;
+    max-width:84px!important;
+    height:64px!important;
+  }
+}
+@media(max-width:800px){
+  .ls26-nav a.ls26-brand.ls26-brand-icon{
+    flex-basis:78px!important;
+    width:78px!important;
+    min-width:78px!important;
+    max-width:78px!important;
+    height:60px!important;
+  }
+}

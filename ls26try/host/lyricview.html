@@ -10,8 +10,8 @@
   <link rel="stylesheet" href="../admin-new/css/top-statusbar.css?v=20260910-stage4">
   <link rel="stylesheet" href="../admin-new/css/top-statusbar-session-tools.css?v=20260910-stage4">
   <!-- Lyric View-only overrides MUST load last -->
-  <link rel="stylesheet" href="css/lyricview-fixes.css?v=20260929-completion-trigger">
-<link rel="stylesheet" href="../shared/theme.css?v=20260929-nav-tools"><link rel="stylesheet" href="../shared/performance.css?v=20260929-lyric-sizing"><script src="../shared/data.js?v=20260910-stage4"></script><link rel="stylesheet" href="../shared/section-layout.css?v=20260925-match-section-green"></head>
+  <link rel="stylesheet" href="css/lyricview-fixes.css?v=20260929-pause-countdown">
+<link rel="stylesheet" href="../shared/theme.css?v=20260929-logo-centred"><link rel="stylesheet" href="../shared/performance.css?v=20260929-edit-green"><script src="../shared/data.js?v=20260910-stage4"></script><link rel="stylesheet" href="../shared/section-layout.css?v=20260925-match-section-green"></head>
 <body class="host-lyric-view-page">
   <!-- Song title/actions; navigation and session move into shared sticky header -->
   <div id="hostStickyStack" class="host-sticky-stack">
@@ -49,13 +49,6 @@
       </button>
     </div>
 
-    <section id="guitarTuningCard" class="host-guitar-tuning-card" aria-label="Guitar tuning">
-      <small>GUITAR TUNING</small>
-      <strong id="guitarTuningName">Standard Tuning</strong>
-      <span id="guitarTuningStrings">E - A - D - G - B - e</span>
-    </section>
-    <div class="host-guitar-tuning-spacer" aria-hidden="true"></div>
-
     <!-- PERFORMANCE QUICK INFO
          Copy of the most useful SONG INFO details/tools.
          The original SONG INFO sidebar remains unchanged. -->
@@ -85,6 +78,15 @@
       </div>
     </section>
     <!-- END PERFORMANCE QUICK INFO -->
+
+    <section id="guitarTuningCard" class="host-guitar-tuning-card" aria-label="Guitar tuning">
+      <small>GUITAR TUNING</small>
+      <strong id="guitarTuningName">Standard Tuning</strong>
+      <span id="guitarTuningStrings">E - A - D - G - B - e</span>
+    </section>
+    <div class="host-guitar-tuning-spacer" aria-hidden="true"></div>
+
+
 
     <section id="performanceSongReference" class="performance-song-reference" hidden aria-label="Song notes and links">
       <div id="performanceYoutubeCard" class="performance-reference-card performance-youtube-card" hidden>
@@ -283,10 +285,10 @@
   <script src="../oldadmin/files/song-data-kl.js?v=20260910-stage4"></script>
   <script src="../shared/section-content.js?v=20260922-clean-sections"></script>
   <script src="../shared/performance-tempo.js?v=20260925-live-click"></script>
-  <script data-ls26-settings="1" src="../shared/app-settings.js?v=20260929-previous-fade-distance"></script>
+  <script data-ls26-settings="1" src="../shared/app-settings.js?v=20260929-pause-countdown"></script>
   <script src="../shared/metronome-engine.js?v=20260925-tools"></script>
   <script src="../shared/lyricview-metronome.js?v=20260925-circle-colour"></script>
-  <script src="js/lyricview.js?v=20260929-section-scroll-pause"></script>
+  <script src="js/lyricview.js?v=20260929-pause-countdown"></script>
   <script src="../admin-new/js/top-statusbar.js?v=20260925-artist-names" data-include="../admin-new/includes/top-statusbar.html?v=20260910-stage4"></script>
   <script src="../admin-new/js/top-statusbar-session-tools.js?v=20260929-pre-session-runorder"></script>
   <script>
@@ -296,5 +298,5 @@
       }
     });
   </script>
-<script src="../shared/shell.js?v=20260929-planner-tools"></script><script src="../shared/inbox.js?v=20260925-artist-names"></script><script src="../shared/session-ui.js?v=20260929-endflow"></script><script src="../shared/performance.js?v=20260928-nav-bpm-toggle"></script></body>
+<script src="../shared/shell.js?v=20260929-pause-countdown"></script><script src="../shared/inbox.js?v=20260925-artist-names"></script><script src="../shared/session-ui.js?v=20260929-endflow"></script><script src="../shared/performance.js?v=20260928-nav-bpm-toggle"></script></body>
 </html>

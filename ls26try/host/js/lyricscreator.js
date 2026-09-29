@@ -1243,6 +1243,9 @@
     navigatorFrame = requestAnimationFrame(() => { navigatorFrame = 0; updateNavigatorPosition(); });
   }, {passive:true});
   document.addEventListener("click", event => {
+    const pauseInput = event.target.closest?.("[data-section-pause-seconds]");
+    if (pauseInput) pauseInput.select();
+
     const button = event.target.closest?.("[data-jump-section]");
     if (button) revealSection(Number(button.dataset.jumpSection));
   });

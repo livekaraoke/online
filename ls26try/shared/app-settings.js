@@ -21,6 +21,7 @@
     lyricNavFeedbackDuration: 1800,
     lyricSongValueFontSize: 21,
     lyricSectionHeaderSize: 3,
+    lyricPauseCountdownFontSize: 56,
     lyricPastSectionOpacity: 50,
     lyricUpcomingSectionOpacity: 50,
     lyricUpcomingFadeDistance: 180,
@@ -77,6 +78,7 @@
       lyricNavFeedbackDuration: clamp(raw.lyricNavFeedbackDuration,500,10000,DEFAULTS.lyricNavFeedbackDuration),
       lyricSongValueFontSize: clamp(raw.lyricSongValueFontSize,16,32,DEFAULTS.lyricSongValueFontSize),
       lyricSectionHeaderSize: clamp(raw.lyricSectionHeaderSize,1,5,DEFAULTS.lyricSectionHeaderSize),
+      lyricPauseCountdownFontSize: clamp(raw.lyricPauseCountdownFontSize,24,96,DEFAULTS.lyricPauseCountdownFontSize),
       lyricPastSectionOpacity: clamp(raw.lyricPastSectionOpacity,0,100,DEFAULTS.lyricPastSectionOpacity),
       lyricUpcomingSectionOpacity: clamp(raw.lyricUpcomingSectionOpacity,0,100,DEFAULTS.lyricUpcomingSectionOpacity),
       lyricUpcomingFadeDistance: clamp(raw.lyricUpcomingFadeDistance,0,800,DEFAULTS.lyricUpcomingFadeDistance),
@@ -127,6 +129,7 @@
     root.style.setProperty("--ls26-nav-pressed-opacity",String(s.lyricNavPressedOpacity/100));
     root.style.setProperty("--ls26-nav-feedback-duration",s.lyricNavFeedbackDuration+"ms");
     root.style.setProperty("--ls26-title-meta-value-size",s.lyricSongValueFontSize+"px");
+    root.style.setProperty("--ls26-pause-countdown-font-size",s.lyricPauseCountdownFontSize+"px");
 
     const sectionHeaderSizes={
       1:{font:15,height:34,padY:4,indicator:4,arrow:11,hint:7},

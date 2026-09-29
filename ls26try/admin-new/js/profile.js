@@ -58,7 +58,11 @@
     const membersNav = $("membersNavLink");
     const showMembers = isOwner();
     if (membersPanel) membersPanel.style.display = showMembers ? "block" : "none";
-    if (membersNav) membersNav.style.display = showMembers ? "grid" : "none";
+
+    // Keep the Members & Users navigation entry visible on every Admin page.
+    // The dashboard panel itself remains owner-gated above; hiding the shared
+    // sidebar link caused it to disappear while profile state was still loading.
+    if (membersNav) membersNav.style.display = "grid";
   }
 
   function openProfileModal() {

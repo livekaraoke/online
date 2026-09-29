@@ -151,7 +151,7 @@
   position:fixed!important;
   left:calc(var(--d26-side,210px) + var(--settings-sidebar-gap,18px) + 20px)!important;
   right:20px!important;
-  bottom:max(10px,env(safe-area-inset-bottom))!important;
+  bottom:max(25px,calc(env(safe-area-inset-bottom,0px) + 15px))!important;
   z-index:2300!important;
   display:flex!important;
   align-items:center!important;
@@ -252,6 +252,6 @@
   .settings-actions{
     left:10px!important;
     right:10px!important;
-    bottom:max(8px,env(safe-area-inset-bottom))!important;
+    bottom:max(23px,calc(env(safe-area-inset-bottom,0px) + 15px))!important;
   }
 }
