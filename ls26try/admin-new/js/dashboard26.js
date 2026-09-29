@@ -23,7 +23,7 @@
       if (!profile || !heading || !badge) return false;
       profile.append(badge); // Move, never clone: the original live listener retains its node.
       const label = heading.querySelector('span');
-      if (label) label.textContent = 'OVERVIEW';
+      if (label) label.textContent = 'LIVE OVERVIEW';
       return true;
     }
     if (!decorate()) {
