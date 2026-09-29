@@ -6,6 +6,7 @@
     "userBpmColor","originalBpmColor","keyColor","capoColor",
     "lyricNavVerticalSize","lyricNavHorizontalSize","lyricTextScale",
     "lyricNavHorizontalGap","lyricNavVerticalGap",
+    "lyricNavIdleOpacity","lyricNavActiveOpacity","lyricNavPressedOpacity","lyricNavFeedbackDuration",
     "lyricLeadInHeight","lyricSectionActivationOffset",
     "metronomeBeat1Color","metronomeBeat2Color","metronomeBeat3Color","metronomeBeat4Color",
     "metronomeFlashBrightness","metronomeEdgeThickness","metronomeFlashDuration",
@@ -20,7 +21,8 @@
       const out=document.querySelector(`[data-output="${id}"]`);
       if(out){
         const units={
-          lyricTextScale:"%",metronomeFlashBrightness:"%",metronomeNumberOpacity:"%",
+          lyricTextScale:"%",lyricNavIdleOpacity:"%",lyricNavActiveOpacity:"%",lyricNavPressedOpacity:"%",
+          lyricNavFeedbackDuration:"ms",metronomeFlashBrightness:"%",metronomeNumberOpacity:"%",
           metronomeNumberVerticalPosition:"%",metronomeFlashDuration:"ms"
         };
         out.value=el.value+(id.includes("Color")?"":units[id]||"px");
