@@ -18,6 +18,8 @@
   let scrollThumbDragging = false;
   let scrollThumbStartY = 0;
   let scrollStartY = 0;
+  let hostSingerSync = null;
+  let hostSyncFrame = null;
 
   /* ======================================================================
    * LIVE TV STATIC CANVAS — TEMPORAL NOISE ENGINE
@@ -259,6 +261,158 @@
     }, 1000);
   }
 
+  function singerSyncSections() {
+    return [...document.querySelectorAll("#singerLyrics [data-source-index]")]
+      .sort((a,b) => Number(a.dataset.sourceIndex) - Number(b.dataset.sourceIndex));
+  }
+
+  function singerSyncAnchorY() {
+    const topbar = document.querySelector(".singer-topbar");
+    return (topbar?.getBoundingClientRect().bottom || 0) + 26;
+  }
+
+  function setSingerManualControlsEnabled(enabled) {
+    ["singerPlayBtn","singerSpeedDown","singerSpeedUp","singerMinusBtn","singerPlusBtn"]
+      .forEach(id => {
+        const el = $(id);
+        if (el) el.disabled = !enabled;
+      });
+    if ($("singerAutoScroll")) $("singerAutoScroll").disabled = !enabled;
+  }
+
+  function stopHostSyncFollower(clearFocus = true) {
+    if (hostSyncFrame) {
+      cancelAnimationFrame(hostSyncFrame);
+      hostSyncFrame = null;
+    }
+    document.body.classList.remove("host-singer-sync-active");
+    setSingerManualControlsEnabled(true);
+
+    if (clearFocus) {
+      singerSyncSections().forEach(el => {
+        el.style.opacity = "";
+        el.classList.remove("current-section");
+      });
+    }
+  }
+
+  function resolveSingerSyncSection(sync, sections) {
+    if (!sections.length) return null;
+    const wanted = Number(sync?.activeSourceIndex);
+    const exact = sections.find(el => Number(el.dataset.sourceIndex) === wanted);
+    if (exact) return exact;
+
+    // Host-only/tab sections may not exist on the singer screen. In that case
+    // keep the nearest lyric section at or before the host's active section.
+    return [...sections]
+      .reverse()
+      .find(el => Number(el.dataset.sourceIndex) <= wanted) || sections[0];
+  }
+
+  function applySingerSyncFocus(sync, sections, active) {
+    if (!active) return;
+    const activeSource = Number(active.dataset.sourceIndex);
+    const previousSource = Number(sync?.previousSourceIndex);
+    const nextSource = Number(sync?.nextSourceIndex);
+    const past = Math.max(0, Math.min(1, Number(sync?.pastOpacity ?? .5)));
+    const upcoming = Math.max(0, Math.min(1, Number(sync?.upcomingOpacity ?? .5)));
+    const previousOpacity = Math.max(0, Math.min(1, Number(sync?.previousOpacity ?? past)));
+    const activeOpacity = Math.max(0, Math.min(1, Number(sync?.activeOpacity ?? 1)));
+    const nextOpacity = Math.max(0, Math.min(1, Number(sync?.nextOpacity ?? upcoming)));
+
+    sections.forEach(el => {
+      const source = Number(el.dataset.sourceIndex);
+      let opacity = 1;
+
+      if (source < activeSource) {
+        opacity = source === previousSource ? previousOpacity : past;
+      } else if (source === activeSource) {
+        opacity = activeOpacity;
+      } else {
+        opacity = source === nextSource ? nextOpacity : upcoming;
+      }
+
+      el.style.opacity = String(opacity);
+      el.classList.toggle("current-section", source === activeSource);
+    });
+  }
+
+  function projectedSingerSyncProgress(sync) {
+    const base = Math.max(0, Math.min(1, Number(sync?.sectionProgress) || 0));
+    const rate = Math.max(0, Number(sync?.progressRatePerMs) || 0);
+    const elapsed = Math.max(0, Math.min(3500, Date.now() - Number(sync?._receivedAt || Date.now())));
+    return Math.max(0, Math.min(1, base + (rate * elapsed)));
+  }
+
+  function runHostSyncFollower() {
+    if (hostSyncFrame) cancelAnimationFrame(hostSyncFrame);
+
+    const tick = () => {
+      const sync = hostSingerSync;
+      if (!sync?.enabled || !song || (sync.songId && sync.songId !== song.firebaseId)) {
+        hostSyncFrame = null;
+        return;
+      }
+
+      const sections = singerSyncSections();
+      const active = resolveSingerSyncSection(sync, sections);
+      if (active) {
+        const activeSource = Number(active.dataset.sourceIndex);
+        const requestedNext = Number(sync.nextSourceIndex);
+        const next =
+          sections.find(el => Number(el.dataset.sourceIndex) === requestedNext) ||
+          sections.find(el => Number(el.dataset.sourceIndex) > activeSource) ||
+          null;
+
+        const progress = projectedSingerSyncProgress(sync);
+        const activeTop = active.getBoundingClientRect().top + window.scrollY;
+        const nextTop = next
+          ? next.getBoundingClientRect().top + window.scrollY
+          : activeTop;
+        const semanticTop = activeTop + ((nextTop - activeTop) * progress);
+        const maxScroll = Math.max(
+          0,
+          Math.max(document.documentElement.scrollHeight, document.body.scrollHeight) - window.innerHeight
+        );
+        const targetY = Math.max(0, Math.min(maxScroll, semanticTop - singerSyncAnchorY()));
+        const delta = targetY - window.scrollY;
+
+        if (Math.abs(delta) > .25) window.scrollBy(0, delta * .12);
+        applySingerSyncFocus(sync, sections, active);
+      }
+
+      if ($("singerAutoScroll")) $("singerAutoScroll").checked = Boolean(sync.playing);
+      requestAnimationFrame(updateCustomScrollbar);
+      hostSyncFrame = requestAnimationFrame(tick);
+    };
+
+    hostSyncFrame = requestAnimationFrame(tick);
+  }
+
+  function applyHostSingerSync(raw) {
+    const sync = raw && typeof raw === "object" ? { ...raw, _receivedAt:Date.now() } : null;
+    hostSingerSync = sync;
+
+    if (!sync?.enabled) {
+      stopHostSyncFollower(true);
+      return;
+    }
+
+    // Host sync owns movement while enabled; the singer's local auto-scroll
+    // controls are disabled so two scroll engines can never fight each other.
+    stopAutoScroll();
+    document.body.classList.add("host-singer-sync-active");
+    setSingerManualControlsEnabled(false);
+    if ($("singerAutoScroll")) $("singerAutoScroll").checked = Boolean(sync.playing);
+
+    if (song) {
+      const sections = singerSyncSections();
+      const active = resolveSingerSyncSection(sync, sections);
+      applySingerSyncFocus(sync, sections, active);
+      runHostSyncFollower();
+    }
+  }
+
   function listenForHost() {
     db.collection("karaokeControl").doc("liveLyrics").onSnapshot(doc => {
       const data = doc.exists ? doc.data() : {};
@@ -271,9 +425,15 @@
 
       const reloadToken = String(data.forceReloadToken || "").trim();
 
+      // Scroll/focus sync shares the existing liveLyrics realtime listener, so
+      // enabling it does not add another Firestore subscription.
+      applyHostSingerSync(data.singerSync);
+
       if (!id || data.displayState === "idle" || data.reset === true) {
         currentControlSongId = "";
         currentControlReloadToken = "";
+        hostSingerSync = null;
+        stopHostSyncFollower(true);
 
         if (unsubscribeSong) {
           unsubscribeSong();
@@ -379,7 +539,7 @@
     const content = $("singerLyrics");
     content.innerHTML = "";
 
-    (song.sections || []).forEach(section => {
+    (song.sections || []).forEach((section, sourceIndex) => {
       if (
         section.type === "separator" ||
         section.type === "tab" ||
@@ -392,16 +552,18 @@
 
       if (section.type === "performanceNote" || section.type === "performance-note") {
         const cue = document.createElement("div");
-        cue.className = "singer-performance-cue";
+        cue.className = "singer-performance-cue singer-sync-section";
+        cue.dataset.sourceIndex = String(sourceIndex);
         cue.innerHTML = html;
         content.appendChild(cue);
         return;
       }
 
       const block = document.createElement("section");
-      block.className = `singer-section ${sectionGuidanceClass(section)} type-${String(section.title || section.type || "lyrics")
+      block.className = `singer-section singer-sync-section ${sectionGuidanceClass(section)} type-${String(section.title || section.type || "lyrics")
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, "-")}`;
+      block.dataset.sourceIndex = String(sourceIndex);
 
       block.innerHTML = `
         ${section.title ? `<h2>${LyricsCommon.escapeHTML(section.title)}</h2>` : ""}
@@ -417,6 +579,13 @@
 
     applyGuidanceMode(guidanceMode);
     if (resetPosition) window.scrollTo({ top: 0, behavior: "instant" });
+
+    if (hostSingerSync?.enabled) {
+      applyHostSingerSync(hostSingerSync);
+    } else {
+      stopHostSyncFollower(true);
+    }
+
     requestAnimationFrame(updateCustomScrollbar);
   }
 
@@ -434,7 +603,7 @@
   }
 
   function toggleScroll() {
-    if (!song) return;
+    if (!song || hostSingerSync?.enabled) return;
 
     scrolling = !scrolling;
     $("singerPlayBtn").textContent = scrolling ? "Ⅱ" : "▶";
