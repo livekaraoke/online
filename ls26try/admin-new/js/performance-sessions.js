@@ -462,7 +462,7 @@
 
     if (["completed","played"].includes(value)) return "Played";
     if (["abandoned","singerleft","singer_left"].includes(value)) return "Singer Left";
-    if (["deletedbyhost","deleted","declined"].includes(value)) return "Deleted / Declined";
+    if (["deletedbyhost","deleted","declined"].includes(value)) return "Rejected";
     if (["queued","accepted"].includes(value)) return "Queued";
     return "Left / Not Played";
   }
@@ -476,24 +476,69 @@
     const duration = durationValues(session);
 
     const requestRows = detail.requests.length
-      ? detail.requests.map(req => `
-          <div class="detail-row">
-            <strong>${esc(req.songTitle || req.title || "Untitled Song")} — ${esc(ArtistNames.display(req.artist || req.songArtist || ""))}</strong>
-            <span>${esc(req.singerName || req.name || "Singer")} · ${formatTime(tsDate(req.requestedAt || req.createdAt || req.submittedAt || req.timestamp))}</span>
-            <span class="status-chip ${esc(requestStatusBucket(req.status))}">${esc(requestStatusLabel(req.status))}</span>
-          </div>
-        `).join("")
+      ? detail.requests.map(req => {
+          const country=String(req.requesterCountry || req.country || req.location || "").trim();
+          const requesterNote=String(req.note || req.comment || "").trim();
+          const hostNote=String(req.reason || req.hostComment || req.adminComment || req.responseNote || "").trim();
+          const requester=String(req.singerName || req.name || "Singer").trim();
+          const requestedAt=formatTime(tsDate(req.requestedAt || req.createdAt || req.submittedAt || req.timestamp));
+          return `
+            <div class="detail-row detail-request-row">
+              <strong>${esc(req.songTitle || req.title || "Untitled Song")} — ${esc(ArtistNames.display(req.artist || req.songArtist || ""))}</strong>
+              <div class="request-history-meta">
+                <span><b>Requester</b> ${esc(requester)} · ${requestedAt}</span>
+                ${country?`<span><b>Country</b> ${esc(country)}</span>`:""}
+                ${requesterNote?`<span class="request-history-note"><b>Request note</b> ${esc(requesterNote)}</span>`:""}
+                ${hostNote?`<span class="request-history-host-note"><b>Host note</b> ${esc(hostNote)}</span>`:""}
+              </div>
+              <span class="status-chip ${esc(requestStatusBucket(req.status))}">${esc(requestStatusLabel(req.status))}</span>
+            </div>
+          `;
+        }).join("")
       : `<div class="detail-row"><span>No song requests recorded.</span></div>`;
 
-    const playedRows = detail.played.length
-      ? detail.played.map(item => `
-          <div class="detail-row">
-            <strong>${esc(item.songTitle || item.title || item.songId || "Untitled Song")} — ${esc(ArtistNames.display(item.songArtist || item.artist || ""))}</strong>
-            <span>${formatTime(tsDate(item.playedAt || item.createdAt))}${Number(item.performanceBpm || item.userBpm)>0 ? ` · ${esc(item.performanceBpm || item.userBpm)} BPM used` : ""}</span>
-            <span class="status-chip played">Played</span>
-          </div>
-        `).join("")
-      : `<div class="detail-row"><span>No played songs recorded.</span></div>`;
+    const timelineEvents = [];
+    detail.played.forEach((item,index)=>{
+      timelineEvents.push({
+        kind:"song",
+        time:playedOrderMs(item),
+        index,
+        item
+      });
+    });
+    (session.breaks || []).forEach((br,index)=>{
+      const start=tsDate(br.startedAt || br.start);
+      const end=tsDate(br.endedAt || br.end);
+      if(start)timelineEvents.push({kind:"break-start",time:start.getTime(),index,date:start});
+      if(end)timelineEvents.push({kind:"break-end",time:end.getTime(),index,date:end});
+    });
+    timelineEvents.sort((a,b)=>(a.time||Number.MAX_SAFE_INTEGER)-(b.time||Number.MAX_SAFE_INTEGER)||a.index-b.index);
+
+    const breakEventCount=timelineEvents.filter(event=>event.kind!=="song").length;
+    const playedRows = timelineEvents.length
+      ? timelineEvents.map(event => {
+          if(event.kind==="song"){
+            const item=event.item;
+            return `
+              <div class="detail-row detail-timeline-row">
+                <strong>${esc(item.songTitle || item.title || item.songId || "Untitled Song")} — ${esc(ArtistNames.display(item.songArtist || item.artist || ""))}</strong>
+                <span>${formatTime(tsDate(item.playedAt || item.startedAt || item.playingAt || item.createdAt))}${Number(item.performanceBpm || item.userBpm)>0 ? ` · ${esc(item.performanceBpm || item.userBpm)} BPM used` : ""}</span>
+                <span class="status-chip played">Played</span>
+              </div>
+            `;
+          }
+
+          const number=event.index+1;
+          const isStart=event.kind==="break-start";
+          return `
+            <div class="detail-row detail-break-row ${isStart?"break-start":"break-end"}">
+              <strong>☕ BREAK ${number} · ${isStart?"START":"END"}</strong>
+              <span>${formatTime(event.date)} · ${isStart?"Performance paused":"Performance resumed"}</span>
+              <span class="status-chip ${isStart?"break-start":"break-end"}">${isStart?"Break Start":"Break End"}</span>
+            </div>
+          `;
+        }).join("")
+      : `<div class="detail-row"><span>No played songs or breaks recorded.</span></div>`;
 
     const runOrderSection = detail.runOrder.length
       ? `
@@ -546,7 +591,7 @@
       </div>
 
       <div class="detail-section">
-        <h3>PLAYED SONGS (${detail.played.length})</h3>
+        <h3>PLAYED SONGS &amp; BREAKS (${detail.played.length} songs · ${breakEventCount} break events)</h3>
         <div class="detail-list">${playedRows}</div>
       </div>
 
