@@ -189,6 +189,20 @@
     controls.classList.toggle("hidden", !visible);
   }
 
+  function setSingerBackground(value, persist = true) {
+    singerBackground = normaliseSingerColour(value);
+    document.documentElement.style.setProperty("--singer-custom-background", singerBackground);
+
+    const colourInput = $("singerBackgroundColor");
+    const colourValue = $("singerBackgroundColorValue");
+    if (colourInput) colourInput.value = singerBackground;
+    if (colourValue) colourValue.textContent = singerBackground.toUpperCase();
+
+    if (persist) {
+      try { localStorage.setItem(SINGER_BACKGROUND_KEY, singerBackground); } catch (_) {}
+    }
+  }
+
   function applySingerPersonalisation() {
     try {
       singerBackground = normaliseSingerColour(
@@ -200,13 +214,9 @@
       showBottomBar = true;
     }
 
-    document.documentElement.style.setProperty("--singer-custom-background", singerBackground);
+    setSingerBackground(singerBackground, false);
 
-    const colourInput = $("singerBackgroundColor");
-    const colourValue = $("singerBackgroundColorValue");
     const bottomToggle = $("singerShowBottomBar");
-    if (colourInput) colourInput.value = singerBackground;
-    if (colourValue) colourValue.textContent = singerBackground.toUpperCase();
     if (bottomToggle) bottomToggle.checked = showBottomBar;
 
     updateBottomBarVisibility();
@@ -859,12 +869,7 @@
     : requestSingerFullscreen();
 
   $("singerBackgroundColor").oninput = event => {
-    singerBackground = normaliseSingerColour(event.target.value);
-    document.documentElement.style.setProperty("--singer-custom-background", singerBackground);
-    if ($("singerBackgroundColorValue")) {
-      $("singerBackgroundColorValue").textContent = singerBackground.toUpperCase();
-    }
-    try { localStorage.setItem(SINGER_BACKGROUND_KEY, singerBackground); } catch (_) {}
+    setSingerBackground(event.target.value, true);
   };
 
   $("singerShowBottomBar").onchange = event => {
@@ -893,6 +898,12 @@
       document.body.dataset.theme = theme;
       event.target.parentElement.querySelectorAll("button")
         .forEach(button => button.classList.toggle("active", button === event.target));
+
+      // Keep the original theme buttons meaningful now that Singer View also
+      // has a custom background-colour control.
+      if (theme === "warm") setSingerBackground("#160d07", true);
+      else if (theme === "contrast") setSingerBackground("#000000", true);
+      else if (theme === "default") setSingerBackground(DEFAULT_SINGER_BACKGROUND, true);
     }
 
     const font = event.target.dataset.font;
