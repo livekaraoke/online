@@ -14,6 +14,13 @@
   let latestEvents = [];
   let selectedRequestSongId = "";
   let elapsedTimer = null;
+  const DEFAULT_REQUEST_CATEGORIES = [
+    {id:"80s",label:"80s",subtitle:"1980–1989",enabled:true,mode:"rule",rule:"80s",songIds:[]},
+    {id:"90s",label:"90s",subtitle:"1990–1999",enabled:true,mode:"rule",rule:"90s",songIds:[]},
+    {id:"rock",label:"ROCK",subtitle:"Rock songs",enabled:true,mode:"rule",rule:"rock",songIds:[]},
+    {id:"pop",label:"POP",subtitle:"Pop songs",enabled:true,mode:"rule",rule:"pop",songIds:[]}
+  ];
+  let websiteRequestSettings = {showCategoryCards:true,categories:DEFAULT_REQUEST_CATEGORIES.map(item=>({...item}))};
   const DEFAULT_TYPE_COLORS = {"Live Karaoke":"#36a9e1","Roxanna":"#d96ce0","Solo":"#53c985","Texanna":"#f08a45","Other":"#a5adb3"};
   let eventTypeColors = {...DEFAULT_TYPE_COLORS};
 
@@ -109,6 +116,44 @@
       eventTypeColors={...DEFAULT_TYPE_COLORS,...colors};
       renderEvents();
     },err=>console.warn("Event type colours listener failed",err));
+  }
+
+  function normaliseRequestCategories(raw){
+    if(!Array.isArray(raw)||!raw.length)return DEFAULT_REQUEST_CATEGORIES.map(item=>({...item}));
+    return raw.slice(0,8).map((item,index)=>{
+      const fallback=DEFAULT_REQUEST_CATEGORIES[index]||{};
+      return {
+        id:String(item?.id||fallback.id||`category-${index+1}`).replace(/[^a-z0-9_-]+/gi,"-").toLowerCase(),
+        label:String(item?.label||fallback.label||`CATEGORY ${index+1}`).trim().slice(0,24),
+        subtitle:String(item?.subtitle||fallback.subtitle||"").trim().slice(0,40),
+        enabled:item?.enabled!==false,
+        mode:String(item?.mode||fallback.mode||"custom"),
+        rule:String(item?.rule||fallback.rule||""),
+        songIds:Array.isArray(item?.songIds)?[...new Set(item.songIds.map(String).filter(Boolean))]:[]
+      };
+    });
+  }
+
+  function applyWebsiteRequestSettings(data={}){
+    websiteRequestSettings={
+      showCategoryCards:data.showCategoryCards!==false,
+      categories:normaliseRequestCategories(data.categories)
+    };
+    renderRequestCategoryCards();
+    if(requestCategory!=="all"&&!websiteRequestSettings.categories.some(category=>category.id===requestCategory&&category.enabled)){
+      requestCategory="all";
+      if($("clearSongCategoryBtn"))$("clearSongCategoryBtn").hidden=true;
+    }
+    if($("requestDialog")?.open&&$("requestBrowser")&&!$("requestBrowser").hidden)renderSongResults();
+  }
+
+  function listenWebsiteRequestSettings(){
+    db.collection("karaokeControl").doc("billyLeeWebsiteSettings").onSnapshot(doc=>{
+      applyWebsiteRequestSettings(doc.exists?(doc.data()||{}):{});
+    },error=>{
+      console.warn("Billy Lee website settings unavailable; using defaults.",error);
+      applyWebsiteRequestSettings({});
+    });
   }
 
   function queuedRequestCount(){
@@ -238,6 +283,20 @@
     if($("requestConfirmName"))$("requestConfirmName").textContent=profile.name||"Guest";
   }
 
+  function paintReviewStars(){
+    const rating=Number($("requestReviewRating")?.value||0);
+    document.querySelectorAll("[data-review-rating]").forEach(button=>{
+      const value=Number(button.dataset.reviewRating||0);
+      button.classList.toggle("active",value>0&&value<=rating);
+      button.setAttribute("aria-pressed",String(value===rating));
+    });
+  }
+
+  function setReviewRating(value){
+    if($("requestReviewRating"))$("requestReviewRating").value=value?String(value):"";
+    paintReviewStars();
+  }
+
   function populateProfileForm(){
     const profile=requestProfile();
     if($("singerName"))$("singerName").value=profile.name;
@@ -247,7 +306,24 @@
     if($("requestReviewRating"))$("requestReviewRating").value=profile.rating;
     if($("requestReviewText"))$("requestReviewText").value=profile.review;
     if($("requestReviewPrivate"))$("requestReviewPrivate").checked=profile.reviewPrivate;
+    if($("requestProfileStatus"))$("requestProfileStatus").textContent="";
+    paintReviewStars();
     syncRequesterUi();
+  }
+
+  function forgetRequestProfile(){
+    const name=requestProfile().name||"this user";
+    if(!confirm(`Forget ${name} on this device? This clears the saved profile and this device's My Requests history.`))return;
+    clearRequestListeners();
+    localStorage.removeItem(REQUEST_PROFILE_KEY);
+    localStorage.removeItem("billylee26.requestName");
+    localStorage.removeItem("billylee26.requestIds");
+    localStorage.removeItem(REQUEST_REVIEW_ID_KEY);
+    selectedRequestSongId="";
+    populateProfileForm();
+    if($("myRequests"))$("myRequests").innerHTML='<p class="muted">Requests you make in this session will appear here.</p>';
+    if($("requestProfileStatus"))$("requestProfileStatus").textContent="Saved user forgotten on this device.";
+    $("singerName")?.focus();
   }
 
   async function saveRequestProfile({goToSongs=true}={}){
@@ -330,9 +406,11 @@
 
     if(target==="profile")populateProfileForm();
     if(target==="songs"){
+      renderRequestCategoryCards();
+      const selected=requestCategoryById(requestCategory);
       if($("requestNotice"))$("requestNotice").textContent=requestCategory==="all"
         ?"Choose a song. Tap + to continue."
-        :`${requestCategory.toUpperCase()} songs · tap + to continue.`;
+        :`${selected?.label||"Category"} · tap + to continue.`;
       renderSongResults();
     }
     if(target==="requests")void renderMyRequests();
@@ -346,15 +424,41 @@
     return values.map(value=>String(value||"").toLowerCase());
   }
 
-  function songMatchesCategory(song,category){
-    if(category==="all")return true;
+  function requestCategoryById(id){
+    return websiteRequestSettings.categories.find(category=>category.id===id)||null;
+  }
+
+  function songMatchesCategory(song,categoryId){
+    if(categoryId==="all")return true;
+    const category=requestCategoryById(categoryId);
+    if(!category||category.enabled===false)return false;
+
+    // Explicit Admin assignments always win.
+    if(Array.isArray(category.songIds)&&category.songIds.length){
+      return category.songIds.includes(String(song.id));
+    }
+
+    const rule=String(category.rule||category.id||"").toLowerCase();
     const year=Number(song?.year);
-    if(category==="80s")return Number.isFinite(year)&&year>=1980&&year<=1989;
-    if(category==="90s")return Number.isFinite(year)&&year>=1990&&year<=1999;
+    if(rule==="80s")return Number.isFinite(year)&&year>=1980&&year<=1989;
+    if(rule==="90s")return Number.isFinite(year)&&year>=1990&&year<=1999;
     const genres=songGenres(song).join(" ");
-    if(category==="rock")return /rock|grunge|metal|alternative/.test(genres);
-    if(category==="pop")return /pop/.test(genres);
-    return true;
+    if(rule==="rock")return /rock|grunge|metal|alternative/.test(genres);
+    if(rule==="pop")return /pop/.test(genres);
+    return false;
+  }
+
+  function renderRequestCategoryCards(){
+    const grid=$("requestCategoryGrid");
+    if(!grid)return;
+    const categories=websiteRequestSettings.categories.filter(category=>category.enabled!==false);
+    grid.hidden=websiteRequestSettings.showCategoryCards===false||!categories.length;
+    grid.innerHTML=grid.hidden?"":categories.map(category=>`
+      <button type="button" data-song-category="${escapeHTML(category.id)}" class="${requestCategory===category.id?"active":""}">
+        <strong>${escapeHTML(category.label)}</strong>
+        ${category.subtitle?`<span>${escapeHTML(category.subtitle)}</span>`:""}
+      </button>
+    `).join("");
   }
 
   function setSongCategory(category){
@@ -363,6 +467,10 @@
       button.classList.toggle("active",button.dataset.songCategory===requestCategory);
     });
     if($("clearSongCategoryBtn"))$("clearSongCategoryBtn").hidden=requestCategory==="all";
+    const selected=requestCategoryById(requestCategory);
+    if($("requestNotice"))$("requestNotice").textContent=requestCategory==="all"
+      ?"Choose a song. Tap + to continue."
+      :`${selected?.label||"Category"} · tap + to continue.`;
     renderSongResults();
   }
 
@@ -378,7 +486,10 @@
       let action="＋",disabled="",stateClass="";
       if(state==="playing"){action="NOW PLAYING";disabled=" disabled";stateClass=" is-playing";}
       else if(state==="played"){action="ALREADY PLAYED";disabled=" disabled";stateClass=" is-played";}
-      return `<div class="song-row${stateClass}" data-song-row-id="${escapeHTML(song.id)}"><span><strong>${escapeHTML(song.title||"Untitled")}</strong><small>${escapeHTML(ArtistNames.display(song.artist||""))}</small></span><button class="song-action" type="button" data-song-id="${escapeHTML(song.id)}"${disabled} aria-label="Choose ${escapeHTML(song.title||"song")}">${escapeHTML(action)}</button></div>`;
+      const artist=ArtistNames.display(song.artist||"");
+      const year=String(song.year||"").trim();
+      const meta=[artist,year].filter(Boolean).join(" • ");
+      return `<div class="song-row${stateClass}" data-song-row-id="${escapeHTML(song.id)}"><span><strong>${escapeHTML(song.title||"Untitled")}</strong><small>${escapeHTML(meta)}</small></span><button class="song-action" type="button" data-song-id="${escapeHTML(song.id)}"${disabled} aria-label="Choose ${escapeHTML(song.title||"song")}">${escapeHTML(action)}</button></div>`;
     }).join("") || `<div class="empty-box">No songs found in this category.</div>`;
   }
 
@@ -955,6 +1066,7 @@
     const song=e.target.closest("[data-song-id]"); if(song)selectRequestSong(song.dataset.songId);
     const tab=e.target.closest("[data-request-tab]"); if(tab)switchRequestTab(tab.dataset.requestTab);
     const category=e.target.closest("[data-song-category]"); if(category)setSongCategory(category.dataset.songCategory);
+    const rating=e.target.closest("[data-review-rating]"); if(rating)setReviewRating(Number(rating.dataset.reviewRating||0));
     const cancelRequest=e.target.closest("[data-cancel-request]"); if(cancelRequest)void cancelMyRequest(cancelRequest.dataset.cancelRequest);
     const editRequestNote=e.target.closest("[data-edit-request-note]"); if(editRequestNote)void editMyRequestNote(editRequestNote.dataset.editRequestNote);
     const close=e.target.closest("[data-close]");
@@ -968,6 +1080,8 @@
   $("continueRequestBtn").addEventListener("click",continueToSongs);
   $("singerName").addEventListener("keydown",e=>{if(e.key==="Enter")continueToSongs();});
   $("editRequesterNameBtn").addEventListener("click",beginEditRequesterName);
+  $("forgetRequestProfileBtn").addEventListener("click",forgetRequestProfile);
+  $("clearReviewRatingBtn").addEventListener("click",()=>setReviewRating(""));
   $("clearSongCategoryBtn").addEventListener("click",()=>setSongCategory("all"));
   $("backToSongListBtn").addEventListener("click",()=>switchRequestTab("songs"));
   $("sendRequestBtn").addEventListener("click",sendSelectedRequest);
@@ -1002,5 +1116,5 @@
   syncRequesterUi();
   $("shareBtn").addEventListener("click",async()=>{try{if(navigator.share)await navigator.share({title:document.title,url:location.href});else{await navigator.clipboard.writeText(location.href);alert("Link copied.");}}catch{}});
 
-  listenEventTypes(); listenEvents(); listenLiveState(); renderLive();
+  listenEventTypes(); listenEvents(); listenLiveState(); listenWebsiteRequestSettings(); renderRequestCategoryCards(); renderLive();
 })();
