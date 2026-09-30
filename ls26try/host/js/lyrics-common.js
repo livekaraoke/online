@@ -116,44 +116,19 @@ window.LyricsCommon = (() => {
     return tokens.every(token => /^([A-G](?:#|b)?(?:maj|min|m|sus|dim|aug|add)?\d*(?:\/[A-G](?:#|b)?)?|[|:()x0-9.-]+)$/.test(token));
   }
 
-  function stripChordOnlyBreakLines(block) {
-    if (!block || block.querySelector("div,p,pre,li")) return;
+  function isSingerPerformanceCueLine(text) {
+    const line = String(text || "").trim().replace(/\s+/g, " ");
+    if (!line) return false;
 
-    if (block.tagName === "PRE") {
-      const kept = String(block.textContent || "")
-        .split(/\r?\n/)
-        .filter(line => !isChordOnlyLine(line) && !isSingerTabNotationLine(line));
-      block.textContent = kept.join("\n");
-      if (!block.textContent.trim()) block.remove();
-      return;
-    }
+    // Standalone bracket cues belong in a Performance Note section instead.
+    if (/^\[[^\]\n]{1,100}\]$/.test(line)) return true;
 
-    const groups = [[]];
-    [...block.childNodes].forEach(node => {
-      if (node.nodeType === Node.ELEMENT_NODE && node.tagName === "BR") {
-        groups.push([]);
-      } else {
-        groups[groups.length - 1].push(node);
-      }
-    });
+    // Common instrumental/performance cue shapes such as:
+    // "Guitar Riff x8", "Bass Solo", "Instrumental x4", "Drum Break".
+    if (/^(?:(?:guitar|bass|drums?|piano|keys?|keyboard|organ|sax(?:ophone)?|vocal)\s+)?(?:solo|riff|instrumental|interlude|break)(?:\s+(?:x|×)?\d+)?(?:\s+bars?)?$/i.test(line)) return true;
+    if (/^(?:intro|outro)(?:\s+(?:riff|instrumental|solo))?(?:\s+(?:x|×)?\d+)?$/i.test(line)) return true;
 
-    if (groups.length <= 1) {
-      if (isChordOnlyLine(block.textContent) || isSingerTabNotationLine(block.textContent)) block.remove();
-      return;
-    }
-
-    const keptGroups = groups.filter(nodes => {
-      const text = nodes.map(node => node.textContent || "").join("").trim();
-      return text && !isChordOnlyLine(text) && !isSingerTabNotationLine(text);
-    });
-
-    block.replaceChildren();
-    keptGroups.forEach((nodes, index) => {
-      nodes.forEach(node => block.appendChild(node));
-      if (index < keptGroups.length - 1) block.appendChild(document.createElement("br"));
-    });
-
-    if (!block.textContent.trim() && !block.querySelector(".performance-cue")) block.remove();
+    return false;
   }
 
   function isSingerTabNotationLine(text) {
@@ -169,30 +144,102 @@ window.LyricsCommon = (() => {
     return false;
   }
 
+  function singerLineShouldBeRemoved(text) {
+    return isChordOnlyLine(text) ||
+      isSingerTabNotationLine(text) ||
+      isSingerPerformanceCueLine(text);
+  }
+
+  function stripSingerNonLyricBreakLines(block) {
+    if (!block || block.querySelector("div,p,pre,li")) return;
+
+    if (block.tagName === "PRE") {
+      const kept = String(block.textContent || "")
+        .split(/\r?\n/)
+        .filter(line => !singerLineShouldBeRemoved(line));
+      block.textContent = kept.join("\n");
+      if (!block.textContent.trim()) block.remove();
+      return;
+    }
+
+    const groups = [[]];
+    [...block.childNodes].forEach(node => {
+      if (node.nodeType === Node.ELEMENT_NODE && node.tagName === "BR") {
+        groups.push([]);
+      } else {
+        groups[groups.length - 1].push(node);
+      }
+    });
+
+    if (groups.length <= 1) {
+      if (singerLineShouldBeRemoved(block.textContent)) block.remove();
+      return;
+    }
+
+    const keptGroups = groups.filter(nodes => {
+      const text = nodes.map(node => node.textContent || "").join("").trim();
+      return text && !singerLineShouldBeRemoved(text);
+    });
+
+    block.replaceChildren();
+    keptGroups.forEach((nodes, index) => {
+      nodes.forEach(node => block.appendChild(node));
+      if (index < keptGroups.length - 1) block.appendChild(document.createElement("br"));
+    });
+
+    if (!block.textContent.trim()) block.remove();
+  }
+
+  function defaultSingerScreenVisibility(section) {
+    const type = String(section?.type || "lyrics").toLowerCase();
+    return !["separator","tab","hostnote","host-note"].includes(type);
+  }
+
+  function sectionVisibleOnSingerScreen(section) {
+    if (
+      section &&
+      Object.prototype.hasOwnProperty.call(section, "visibleOnSingerScreen")
+    ) {
+      return section.visibleOnSingerScreen === true;
+    }
+    return defaultSingerScreenVisibility(section);
+  }
+
   function singerHTMLFromSection(section) {
-    if (!section || section.type === "separator" || section.type === "tab") return "";
+    if (!section || section.type === "separator") return "";
+
     if (section.type === "performanceNote" || section.type === "performance-note") {
       return `<div class="performance-cue">${escapeHTML(section.text || section.title || section.html || "")}</div>`;
     }
+
+    // Host Notes and Guitar Tabs are OFF on Singer Screen by default, but if
+    // the host explicitly enables SINGER SCREEN for that section, render it.
+    if (section.type === "hostNote" || section.type === "host-note") {
+      return `<div class="performance-cue">${escapeHTML(section.text || section.title || "")}</div>`;
+    }
+
+    if (section.type === "tab") {
+      const tabRoot = document.createElement("div");
+      tabRoot.innerHTML = stripEditorControls(section.html || "");
+      tabRoot.querySelectorAll(".host-only,.host-note,.my-note").forEach(el => el.remove());
+      return tabRoot.innerHTML.trim();
+    }
+
     const root = document.createElement("div");
     root.innerHTML = stripEditorControls(section.html || "");
 
-    // Singer View is lyrics-only. Remove tabs/host-only material and every
-    // explicit chord token created by LyricsCreator before doing the fallback
-    // plain-text chord-line detection.
-    root.querySelectorAll(".tab-block,.viewer-tab,.tab-line,.tab-dashes,.tab-note,.tab-cell,.note-cell,.host-only,.host-note,.my-note,.chord-diagram,.chords-legend,.inserted-chord,[data-original-chord],[data-chord]").forEach(el => el.remove());
-    root.querySelectorAll(".performance-note-line").forEach(el => el.classList.add("performance-cue"));
+    // Ordinary singer lyric sections are lyrics-only. Chords, embedded tabs,
+    // host notes and legacy inline performance cues are removed; performance
+    // cues should be authored as dedicated Performance Note sections.
+    root.querySelectorAll(".tab-block,.viewer-tab,.tab-line,.tab-dashes,.tab-note,.tab-cell,.note-cell,.host-only,.host-note,.my-note,.chord-diagram,.chords-legend,.inserted-chord,[data-original-chord],[data-chord],.performance-note-line,.performance-cue").forEach(el => el.remove());
 
     const blocks = [...root.querySelectorAll("div,p,pre,li")];
-    blocks.forEach(block => {
-      if (block.querySelector(".performance-cue")) return;
-      stripChordOnlyBreakLines(block);
-    });
+    blocks.forEach(stripSingerNonLyricBreakLines);
 
     // Handle legacy sections whose content is directly in the section root.
     if (
       !root.querySelector("div,p,pre,li") &&
-      (isChordOnlyLine(root.textContent) || isSingerTabNotationLine(root.textContent))
+      singerLineShouldBeRemoved(root.textContent)
     ) {
       root.innerHTML = "";
     }
@@ -225,5 +272,5 @@ window.LyricsCommon = (() => {
     return (song.sections || []).some(section => section.type !== "tab" && section.type !== "separator" && String(section.html || section.text || "").trim());
   }
 
-  return { escapeHTML, toDate, normalizeSong, transposeRoot, transposeChordText, transposeChordHTML, transposeTabHTML, stripEditorControls, singerHTMLFromSection, getPerformanceNotes, hasTabs, hasLyrics };
+  return { escapeHTML, toDate, normalizeSong, transposeRoot, transposeChordText, transposeChordHTML, transposeTabHTML, stripEditorControls, singerHTMLFromSection, sectionVisibleOnSingerScreen, getPerformanceNotes, hasTabs, hasLyrics };
 })();
