@@ -807,7 +807,7 @@
   }
 
   function switchRequestTab(tab){
-    const valid=new Set(["profile","songs","requests","info"]);
+    const valid=new Set(["profile","songs","requests","data","info"]);
     const target=valid.has(tab)?tab:"songs";
 
     if($("requestNameGate"))$("requestNameGate").hidden=true;
@@ -837,6 +837,7 @@
       renderSongResults();
     }
     if(target==="requests")void renderMyRequests();
+    if(target==="data")void openRequestHistory();
   }
 
   function songGenres(song){
@@ -909,7 +910,7 @@
     return match?match[0].toUpperCase():"#";
   }
 
-  function renderAlphabetJump(containerId,list,{artistMode=false,attribute="data-alpha"}={}){
+  function renderAlphabetJump(containerId,list,{artistMode=false,attribute="data-alpha",scrollTargetId="songResults"}={}){
     const row=$(containerId);
     if(!row)return;
     const present=new Set();
@@ -919,7 +920,7 @@
     });
     const letters=["#","A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"];
     row.innerHTML=letters.map(letter=>`
-      <button type="button" data-alpha-jump="${letter}" data-alpha-target="${containerId}" data-alpha-attribute="${attribute}" ${present.has(letter)?"":"disabled"}>${letter}</button>
+      <button type="button" data-alpha-jump="${letter}" data-alpha-target="${scrollTargetId}" data-alpha-attribute="${attribute}" ${present.has(letter)?"":"disabled"}>${letter}</button>
     `).join("");
   }
 
@@ -928,8 +929,10 @@
     if(!container)return;
     const target=[...container.querySelectorAll("["+attribute+"]")].find(node=>node.getAttribute(attribute)===letter);
     if(!target)return;
-    const top=target.offsetTop-container.offsetTop;
-    container.scrollTo({top:Math.max(0,top-4),behavior:"smooth"});
+    const containerRect=container.getBoundingClientRect();
+    const targetRect=target.getBoundingClientRect();
+    const top=container.scrollTop+(targetRect.top-containerRect.top);
+    container.scrollTo({top:Math.max(0,top-3),behavior:"smooth"});
   }
 
   function setSongCategory(category){
@@ -961,7 +964,14 @@
     const year=String(song.year||"").trim();
     const meta=artistGrouped?[year].filter(Boolean).join(" • "):[artist,year].filter(Boolean).join(" • ");
     const alpha=alphabetKey(song.title||"");
-    return `<div class="song-row${stateClass}" data-song-row-id="${escapeHTML(song.id)}" data-alpha="${alpha}"><span><strong>${escapeHTML(song.title||"Untitled")}</strong>${meta?`<small>${escapeHTML(meta)}</small>`:""}</span><button class="song-action" type="button" data-song-id="${escapeHTML(song.id)}"${disabled} aria-label="Choose ${escapeHTML(song.title||"song")}">${escapeHTML(action)}</button></div>`;
+    const favourite=isFavouriteSong(song.id);
+    return `<div class="song-row${stateClass}" data-song-row-id="${escapeHTML(song.id)}" data-alpha="${alpha}">
+      <span><strong>${escapeHTML(song.title||"Untitled")}</strong>${meta?`<small>${escapeHTML(meta)}</small>`:""}</span>
+      <div class="song-row-actions">
+        <button type="button" class="request-favourite-btn ${favourite?"is-favourite":""}" data-toggle-favourite="${escapeHTML(song.id)}" aria-label="${favourite?"Remove from":"Add to"} favourites">${favourite?"♥":"♡"}</button>
+        <button class="song-action" type="button" data-song-id="${escapeHTML(song.id)}"${disabled} aria-label="Choose ${escapeHTML(song.title||"song")}">${escapeHTML(action)}</button>
+      </div>
+    </div>`;
   }
 
   function artistBrowseDisplayName(value){
@@ -1003,7 +1013,7 @@
       songMatchesCategory(song,requestCategory)&&(!q||ArtistNames.matchesSong(song,q))
     );
     const artistMode=requestCategory===ARTIST_BROWSE_CATEGORY;
-    renderAlphabetJump("requestAlphabetRow",list,{artistMode,attribute:"data-alpha"});
+    renderAlphabetJump("requestAlphabetRow",list,{artistMode,attribute:"data-alpha",scrollTargetId:"songResults"});
 
     if(artistMode){
       $("songResults").classList.add("artist-browse-results");
@@ -1474,7 +1484,7 @@
     const ids=new Set(favouriteSongIds());
     if(ids.has(id))ids.delete(id);else ids.add(id);
     saveFavouriteSongIds([...ids]);
-    renderHistorySongList();
+    renderSongResults();
     renderRequestHistoryAnalytics(currentHistoryRecords,currentHistorySessions);
     const profile=requestProfile();
     if(profile.email){
@@ -1605,7 +1615,7 @@
   }
 
   function switchRequestHistoryTab(tab){
-    const target=["overview","history","songlist","favourites","sessions"].includes(tab)?tab:"overview";
+    const target=["overview","history","favourites","sessions"].includes(tab)?tab:"overview";
     document.querySelectorAll("[data-request-history-tab]").forEach(button=>{
       const active=button.dataset.requestHistoryTab===target;
       button.classList.toggle("active",active);
@@ -1614,25 +1624,20 @@
     document.querySelectorAll("[data-request-history-panel]").forEach(panel=>{
       panel.hidden=panel.dataset.requestHistoryPanel!==target;
     });
-    if(target==="songlist"){
-      renderHistorySongCategoryCards();
-      renderHistorySongList();
-    }
     if(target==="favourites"){
       renderRequestHistoryAnalytics(currentHistoryRecords,currentHistorySessions);
     }
   }
 
   async function openRequestHistory(){
-    const dialog=$("requestHistoryDialog");
-    if(!dialog)return;
-    $("requestHistoryLoading").hidden=false;
-    $("requestHistoryLoading").textContent="Loading your request history…";
+    const loading=$("requestHistoryLoading");
+    if(!loading)return;
+    loading.hidden=false;
+    loading.textContent="Loading your request history…";
     document.querySelectorAll("[data-request-history-panel]").forEach(panel=>{
       panel.hidden=true;
-      if(panel.dataset.requestHistoryPanel!=="songlist")panel.innerHTML="";
+      panel.innerHTML="";
     });
-    if(!dialog.open)dialog.showModal();
 
     try{
       if(!songs.length)await loadPublicSongs();
@@ -1640,17 +1645,13 @@
       const sessions=await loadRequestHistorySessions(records);
       currentHistoryRecords=records;
       currentHistorySessions=sessions;
-      historySongCategory="all";
-      historyFavouritesOnly=false;
-      if($("historySongSearch"))$("historySongSearch").value="";
       renderRequestHistoryAnalytics(records,sessions);
-      renderHistorySongCategoryCards();
-      renderHistorySongList();
-      $("requestHistoryLoading").hidden=true;
+      loading.hidden=true;
       switchRequestHistoryTab("overview");
     }catch(error){
       console.error("Could not load request history:",error);
-      $("requestHistoryLoading").textContent="Could not load your request history right now.";
+      loading.hidden=false;
+      loading.textContent="Could not load your request history right now.";
     }
   }
 
@@ -2086,10 +2087,8 @@
     const tab=e.target.closest("[data-request-tab]"); if(tab)switchRequestTab(tab.dataset.requestTab);
     const historyTab=e.target.closest("[data-request-history-tab]"); if(historyTab)switchRequestHistoryTab(historyTab.dataset.requestHistoryTab);
     const category=e.target.closest("[data-song-category]"); if(category)setSongCategory(category.dataset.songCategory);
-    const historyCategory=e.target.closest("[data-history-song-category]"); if(historyCategory)setHistorySongCategory(historyCategory.dataset.historySongCategory);
     const alphaJump=e.target.closest("[data-alpha-jump]"); if(alphaJump)jumpToAlphabet(alphaJump.dataset.alphaTarget,alphaJump.dataset.alphaAttribute||"data-alpha",alphaJump.dataset.alphaJump);
     const favourite=e.target.closest("[data-toggle-favourite]"); if(favourite)void toggleFavouriteSong(favourite.dataset.toggleFavourite);
-    const historyRequest=e.target.closest("[data-history-request-song]"); if(historyRequest)requestFromHistorySongList(historyRequest.dataset.historyRequestSong);
     const rating=e.target.closest("[data-review-rating]"); if(rating)setReviewRating(Number(rating.dataset.reviewRating||0));
     const cancelRequest=e.target.closest("[data-cancel-request]"); if(cancelRequest)void cancelMyRequest(cancelRequest.dataset.cancelRequest);
     const editRequestNote=e.target.closest("[data-edit-request-note]"); if(editRequestNote)void editMyRequestNote(editRequestNote.dataset.editRequestNote);
@@ -2102,11 +2101,6 @@
     }
   });
   $("songSearch").addEventListener("input",renderSongResults);
-  $("historySongSearch").addEventListener("input",renderHistorySongList);
-  $("historyMyFavouritesCard").addEventListener("click",()=>{
-    historyFavouritesOnly=!historyFavouritesOnly;
-    renderHistorySongList();
-  });
   $("requestStartContinueBtn").addEventListener("click",continueFromRequestName);
   $("requestStartName").addEventListener("keydown",e=>{if(e.key==="Enter")continueFromRequestName();});
   $("requestNoteDialogSaveBtn").addEventListener("click",saveMyRequestNote);
@@ -2117,9 +2111,6 @@
   $("requestActionConfirmDialog").addEventListener("close",()=>{if(requestActionConfirmResolve)finishRequestActionConfirm(false);});
   $("requestNoteDialogInput").addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&e.key==="Enter")saveMyRequestNote();});
   $("continueRequestBtn").addEventListener("click",continueToSongs);
-  $("openRequestHistoryBtn").addEventListener("click",()=>void openRequestHistory());
-  $("recoverRequestProfileBtn").addEventListener("click",()=>void recoverRequestProfile());
-  $("requestProfileEmail").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();void recoverRequestProfile();}});
   $("singerName").addEventListener("keydown",e=>{if(e.key==="Enter")continueToSongs();});
   $("editRequesterNameBtn").addEventListener("click",beginEditRequesterName);
   $("forgetRequestProfileBtn").addEventListener("click",forgetRequestProfile);
