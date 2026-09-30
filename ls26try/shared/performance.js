@@ -37,15 +37,18 @@
     const autoSendButton=$('ls26AutoSendKaraoke');
     const autoSendState=$('ls26AutoSendKaraokeState');
     const autoSendKey='ls26:autoSendToKaraoke';
-    function setAutoSend(enabled){
+    function setAutoSend(enabled, notify=false){
       const on=enabled!==false;
       autoSendButton?.setAttribute('aria-pressed',String(on));
       autoSendButton?.classList.toggle('active',on);
       if(autoSendState)autoSendState.textContent=on?'ON':'OFF';
       try{localStorage.setItem(autoSendKey,String(on));}catch(_){}
+      if(notify){
+        window.dispatchEvent(new CustomEvent('ls26:auto-send-karaoke-changed',{detail:{enabled:on}}));
+      }
     }
     let autoSend=true;try{autoSend=localStorage.getItem(autoSendKey)!=='false';}catch(_){}setAutoSend(autoSend);
-    if(autoSendButton)autoSendButton.onclick=()=>setAutoSend(autoSendButton.getAttribute('aria-pressed')!=='true');
+    if(autoSendButton)autoSendButton.onclick=()=>setAutoSend(autoSendButton.getAttribute('aria-pressed')!=='true',true);
 
     const singerSyncToggle=$('ls26SyncSingerScroll');
     const singerSyncKey='ls26:syncSingerScroll';
