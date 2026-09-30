@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#02080d">
   <title>Billy Lee — Live Music</title>
   <meta name="description" content="Billy Lee — live music, gigs, requests and live performance in Malta.">
-  <link rel="stylesheet" href="css/style.css?v=20260930-request-polish-v3">
+  <link rel="stylesheet" href="css/style.css?v=20260930-request-name-info-v1">
 </head>
 <body>
   <header class="hero" id="top">
@@ -224,6 +224,17 @@
 
     <section id="requestSongStep" class="request-song-step">
       <div class="request-tab-stage">
+        <section id="requestNameGate" class="request-name-gate">
+          <div class="request-name-gate-card">
+            <span class="eyebrow">LIVE REQUESTS</span>
+            <h3>WHAT'S YOUR NAME?</h3>
+            <p>Enter your name to request a song.</p>
+            <label for="requestStartName">YOUR NAME</label>
+            <input id="requestStartName" type="text" maxlength="60" placeholder="Your name" autocomplete="name">
+            <button id="requestStartContinueBtn" class="primary-btn" type="button">CONTINUE TO SONG LIST →</button>
+          </div>
+        </section>
+
         <section id="requestProfilePanel" class="request-tab-panel request-profile-panel" data-request-panel="profile" hidden>
           <div class="request-panel-heading request-profile-heading">
             <div>
@@ -349,14 +360,7 @@
             <span class="eyebrow">HELP</span>
             <h3>HOW REQUESTS WORK</h3>
           </div>
-          <div class="request-info-list">
-            <details open><summary>How do I request a song?</summary><p>Open SONG LIST, search or browse a category, tap + on a song, add an optional note, then press SEND REQUEST.</p></details>
-            <details><summary>What happens after I send it?</summary><p>Your request starts as pending. When accepted it appears in LiveSuite Run Order and MY REQUESTS shows your live queue position.</p></details>
-            <details><summary>Can I change my request?</summary><p>You can edit your note while the request is still waiting or queued. You can also cancel your own request before it starts playing.</p></details>
-            <details><summary>Why was my request rejected?</summary><p>If the host rejects or removes a request, MY REQUESTS shows REJECTED together with the reason supplied by the host.</p></details>
-            <details><summary>Queue position</summary><p>Queue positions follow LiveSuite Run Order and may change when the host reorders the performance.</p></details>
-            <details><summary>Tips</summary><p>Add a note if you need a different key, want to sing with someone, or want the host to know something before your turn.</p></details>
-          </div>
+          <div id="requestInfoList" class="request-info-list"></div>
         </section>
 
         <section id="requestSuccess" class="request-success" hidden>
@@ -382,6 +386,6 @@
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
   <script src="js/firebase-config.js"></script>
   <script src="js/youtube-videos.js"></script>
-  <script src="js/app.js?v=20260930-request-polish-v2"></script>
+  <script src="js/app.js?v=20260930-request-name-info-v1"></script>
 </body>
 </html>
