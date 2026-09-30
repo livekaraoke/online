@@ -490,7 +490,12 @@
   const REQUEST_PROFILE_KEY="billylee26.requestProfile.v1";
   const REQUEST_REVIEW_ID_KEY="billylee26.reviewId";
   const REQUEST_DEVICE_ID_KEY="billylee26.requestDeviceId.v1";
+  const REQUEST_FAVOURITES_KEY="billylee26.favouriteSongIds.v1";
   let requestCategory="all";
+  let historySongCategory="all";
+  let historyFavouritesOnly=false;
+  let currentHistoryRecords=[];
+  let currentHistorySessions=new Map();
 
   function requestDeviceId(){
     let id=String(localStorage.getItem(REQUEST_DEVICE_ID_KEY)||"").trim();
@@ -506,6 +511,7 @@
     const legacyName=String(localStorage.getItem("billylee26.requestName")||"").trim();
     return {
       name:String(stored.name||legacyName||"").trim(),
+      email:String(stored.email||"").trim(),
       country:String(stored.country||"").trim(),
       ageRange:String(stored.ageRange||""),
       gender:String(stored.gender||""),
@@ -538,6 +544,7 @@
   function populateProfileForm(){
     const profile=requestProfile();
     if($("singerName"))$("singerName").value=profile.name;
+    if($("requestProfileEmail"))$("requestProfileEmail").value=profile.email;
     if($("requestProfileCountry"))$("requestProfileCountry").value=profile.country;
     if($("requestProfileAge"))$("requestProfileAge").value=profile.ageRange;
     if($("requestProfileGender"))$("requestProfileGender").value=profile.gender;
@@ -590,6 +597,7 @@
     localStorage.removeItem("billylee26.requestIds");
     localStorage.removeItem(REQUEST_REVIEW_ID_KEY);
     localStorage.removeItem(REQUEST_DEVICE_ID_KEY);
+    localStorage.removeItem(REQUEST_FAVOURITES_KEY);
     selectedRequestSongId="";
     populateProfileForm();
     if($("myRequests"))$("myRequests").innerHTML='<p class="muted">Requests you make in this session will appear here.</p>';
@@ -605,8 +613,16 @@
       return false;
     }
 
+    const email=String($("requestProfileEmail")?.value||"").trim();
+    if(email&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+      $("requestProfileStatus").textContent="Enter a valid email address or leave it blank.";
+      $("requestProfileEmail")?.focus();
+      return false;
+    }
+
     const profile={
       name,
+      email,
       country:String($("requestProfileCountry")?.value||"").trim(),
       ageRange:String($("requestProfileAge")?.value||""),
       gender:String($("requestProfileGender")?.value||""),
@@ -627,6 +643,7 @@
         const data={
           source:"billylee26",
           name:profile.name,
+          requesterEmailHash:profile.email?await requestEmailHash(profile.email):"",
           country:profile.country,
           ageRange:profile.ageRange,
           gender:profile.gender,
@@ -653,6 +670,10 @@
         console.warn("Could not save website review:",error);
         if(status)status.textContent="Profile saved. Review could not be submitted right now.";
       }
+    }
+
+    if(profile.email){
+      try{await syncRecoveryProfile(profile);}catch(error){console.info("Recovery profile sync unavailable:",error?.code||error);}
     }
 
     if(goToSongs) switchRequestTab("songs");
