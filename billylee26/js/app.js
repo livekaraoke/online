@@ -505,6 +505,129 @@
     return id;
   }
 
+
+  async function requestEmailHash(email){
+    const normalized=String(email||"").trim().toLowerCase();
+    if(!normalized)return "";
+    if(globalThis.crypto?.subtle&&globalThis.TextEncoder){
+      const bytes=new TextEncoder().encode(normalized);
+      const digest=await crypto.subtle.digest("SHA-256",bytes);
+      return [...new Uint8Array(digest)].map(byte=>byte.toString(16).padStart(2,"0")).join("");
+    }
+    let hash=2166136261;
+    for(let i=0;i<normalized.length;i++){
+      hash^=normalized.charCodeAt(i);
+      hash=Math.imul(hash,16777619);
+    }
+    return "legacy-"+(hash>>>0).toString(16);
+  }
+
+  function favouriteSongIds(){
+    try{
+      const ids=JSON.parse(localStorage.getItem(REQUEST_FAVOURITES_KEY)||"[]");
+      return Array.isArray(ids)?[...new Set(ids.map(String))]:[];
+    }catch{return[];}
+  }
+
+  function saveFavouriteSongIds(ids){
+    localStorage.setItem(REQUEST_FAVOURITES_KEY,JSON.stringify([...new Set((ids||[]).map(String))].slice(0,500)));
+  }
+
+  function isFavouriteSong(songId){
+    return favouriteSongIds().includes(String(songId||""));
+  }
+
+  async function syncRecoveryProfile(profile=requestProfile()){
+    if(!profile.email)return false;
+    const emailHash=await requestEmailHash(profile.email);
+    if(!emailHash)return false;
+    const data={
+      source:"billylee26",
+      name:profile.name||"",
+      country:profile.country||"",
+      ageRange:profile.ageRange||"",
+      gender:profile.gender||"",
+      rating:profile.rating?Number(profile.rating):null,
+      review:profile.review||"",
+      reviewPrivate:profile.reviewPrivate===true,
+      favouriteSongIds:favouriteSongIds(),
+      requesterDeviceId:requestDeviceId(),
+      updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+    };
+    await db.collection("websiteRequesterProfiles").doc(emailHash).set(data,{merge:true});
+    return true;
+  }
+
+  async function recoverRequestProfile(){
+    const status=$("requestProfileStatus");
+    const email=String($("requestProfileEmail")?.value||"").trim();
+    if(!email||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+      if(status)status.textContent="Enter the email address used with your profile.";
+      $("requestProfileEmail")?.focus();
+      return;
+    }
+
+    const button=$("recoverRequestProfileBtn");
+    if(button)button.disabled=true;
+    if(status)status.textContent="Looking for your saved profile…";
+
+    try{
+      const emailHash=await requestEmailHash(email);
+      let cloudProfile=null;
+      try{
+        const profileSnap=await db.collection("websiteRequesterProfiles").doc(emailHash).get();
+        if(profileSnap.exists)cloudProfile=profileSnap.data()||{};
+      }catch(error){
+        console.info("Recovery profile document unavailable:",error?.code||error);
+      }
+
+      let requestDocs=[];
+      try{
+        const requestSnap=await db.collection("publicSongRequests")
+          .where("requesterEmailHash","==",emailHash)
+          .limit(250)
+          .get();
+        requestDocs=requestSnap.docs.map(doc=>({id:doc.id,...(doc.data()||{})}));
+      }catch(error){
+        console.info("Email-linked request lookup unavailable:",error?.code||error);
+      }
+
+      if(!cloudProfile&&!requestDocs.length){
+        if(status)status.textContent="No saved profile or request history was found for that email yet.";
+        return;
+      }
+
+      const latest=requestDocs.slice().sort((a,b)=>
+        requestTimestampMs(b.createdAt||b.requestedAt)-requestTimestampMs(a.createdAt||a.requestedAt)
+      )[0]||{};
+
+      const recovered={
+        name:String(cloudProfile?.name||latest.singerName||latest.name||"").trim(),
+        email,
+        country:String(cloudProfile?.country||latest.requesterCountry||"").trim(),
+        ageRange:String(cloudProfile?.ageRange||latest.requesterAgeRange||""),
+        gender:String(cloudProfile?.gender||latest.requesterGender||""),
+        rating:cloudProfile?.rating!=null?String(cloudProfile.rating):"",
+        review:String(cloudProfile?.review||""),
+        reviewPrivate:cloudProfile?.reviewPrivate===true
+      };
+
+      localStorage.setItem(REQUEST_PROFILE_KEY,JSON.stringify(recovered));
+      if(recovered.name)localStorage.setItem("billylee26.requestName",recovered.name);
+      if(requestDocs.length)saveTrackedRequestIds([...trackedRequestIds(),...requestDocs.map(record=>record.id)]);
+      if(Array.isArray(cloudProfile?.favouriteSongIds))saveFavouriteSongIds(cloudProfile.favouriteSongIds);
+      populateProfileForm();
+      if(status){
+        status.textContent="Recovered "+requestDocs.length+" request"+(requestDocs.length===1?"":"s")+(recovered.name?" for "+recovered.name:"")+".";
+      }
+    }catch(error){
+      console.error("Could not recover request profile:",error);
+      if(status)status.textContent="Could not recover the profile right now. Please try again.";
+    }finally{
+      if(button)button.disabled=false;
+    }
+  }
+
   function requestProfile(){
     let stored={};
     try{stored=JSON.parse(localStorage.getItem(REQUEST_PROFILE_KEY)||"{}")||{};}catch(_){}
@@ -1464,6 +1587,7 @@
 
     try{
       const note=String($("requestNote")?.value||"").trim();
+      const requesterEmailHash=profile.email?await requestEmailHash(profile.email):"";
       const ref=await db.collection("publicSongRequests").add({
         listId:publicSetlist?.id||"venue-main-public-song-list",
         publicSetlistId:publicSetlist?.id||"",
@@ -1478,6 +1602,7 @@
         requesterAgeRange:profile.ageRange,
         requesterGender:profile.gender,
         requesterDeviceId:requestDeviceId(),
+        requesterEmailHash,
         note,
         comment:note,
         source:"billylee26",
