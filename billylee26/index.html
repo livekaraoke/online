@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#02080d">
   <title>Billy Lee — Live Music</title>
   <meta name="description" content="Billy Lee — live music, gigs, requests and live performance in Malta.">
-  <link rel="stylesheet" href="css/style.css?v=20260930-request-test-mode-v1">
+  <link rel="stylesheet" href="css/style.css?v=20260930-request-history-v1">
 </head>
 <body>
   <header class="hero" id="top">
@@ -240,6 +240,32 @@
     </div>
   </dialog>
 
+  <dialog id="requestHistoryDialog" class="modal request-history-dialog">
+    <div class="request-history-shell">
+      <div class="request-history-top">
+        <div>
+          <span class="eyebrow">YOUR LIVE REQUESTS</span>
+          <h2>REQUEST HISTORY &amp; STATS</h2>
+          <p>History linked to requests saved on this device.</p>
+        </div>
+        <button class="modal-close" data-close="requestHistoryDialog" aria-label="Close request history">×</button>
+      </div>
+      <div class="request-history-tabs" role="tablist" aria-label="Request history sections">
+        <button type="button" class="active" data-request-history-tab="overview" role="tab">OVERVIEW</button>
+        <button type="button" data-request-history-tab="history" role="tab">HISTORY</button>
+        <button type="button" data-request-history-tab="favourites" role="tab">FAVOURITES</button>
+        <button type="button" data-request-history-tab="sessions" role="tab">SESSIONS</button>
+      </div>
+      <div class="request-history-body">
+        <div id="requestHistoryLoading" class="request-history-loading">Loading your request history…</div>
+        <section id="requestHistoryOverview" class="request-history-panel" data-request-history-panel="overview"></section>
+        <section id="requestHistoryHistory" class="request-history-panel" data-request-history-panel="history" hidden></section>
+        <section id="requestHistoryFavourites" class="request-history-panel" data-request-history-panel="favourites" hidden></section>
+        <section id="requestHistorySessions" class="request-history-panel" data-request-history-panel="sessions" hidden></section>
+      </div>
+    </div>
+  </dialog>
+
   <dialog id="requestDialog" class="modal request-modal">
     <div class="request-modal-top">
       <div class="request-header">
@@ -347,6 +373,7 @@
 
           <div class="request-profile-actions">
             <button id="continueRequestBtn" class="primary-btn" type="button">SAVE PROFILE</button>
+            <button id="openRequestHistoryBtn" class="request-history-open-btn" type="button">MY REQUEST HISTORY &amp; STATS →</button>
             <span id="requestProfileStatus" class="request-profile-status" role="status"></span>
           </div>
         </section>
@@ -422,6 +449,6 @@
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
   <script src="js/firebase-config.js"></script>
   <script src="js/youtube-videos.js"></script>
-  <script src="js/app.js?v=20260930-request-test-mode-v1"></script>
+  <script src="js/app.js?v=20260930-request-history-v1"></script>
 </body>
 </html>
