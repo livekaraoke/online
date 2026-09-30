@@ -637,3 +637,112 @@ body.sessions-body {
   white-space:pre-wrap;
   line-height:1.4;
 }
+
+
+/* 2026-09-30 session-history detail readability */
+.session-modal .detail-row{
+  min-height:46px!important;
+  align-items:center!important;
+  padding:9px 10px!important;
+  font-size:11px!important;
+}
+.session-modal .detail-row strong{
+  font-size:11.5px!important;
+  line-height:1.35!important;
+}
+.session-modal .status-chip{
+  min-height:26px!important;
+  padding:4px 9px!important;
+  justify-content:center!important;
+  border-width:1px!important;
+  border-radius:999px!important;
+  font-size:9px!important;
+  letter-spacing:.04em!important;
+  text-transform:uppercase!important;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.025)!important;
+}
+.session-modal .status-chip.completed,
+.session-modal .status-chip.played{
+  border-color:#2fbf69!important;
+  background:rgba(32,130,73,.19)!important;
+  color:#7cf0a9!important;
+}
+.session-modal .status-chip.abandoned{
+  border-color:#d4a43a!important;
+  background:rgba(153,108,16,.18)!important;
+  color:#ffd56e!important;
+}
+.session-modal .status-chip.deleted,
+.session-modal .status-chip.declined{
+  border-color:#e35b6b!important;
+  background:rgba(143,35,49,.2)!important;
+  color:#ff9aa7!important;
+}
+.session-modal .status-chip.left{
+  border-color:#d2b34d!important;
+  background:rgba(126,101,25,.17)!important;
+  color:#ffe17a!important;
+}
+.session-modal .status-chip.break-start{
+  border-color:#eea83d!important;
+  background:rgba(156,95,14,.18)!important;
+  color:#ffd17a!important;
+}
+.session-modal .status-chip.break-end{
+  border-color:#35c989!important;
+  background:rgba(29,130,89,.18)!important;
+  color:#82efbc!important;
+}
+.session-modal .detail-break-row{
+  border-color:#6f5420!important;
+  background:linear-gradient(90deg,rgba(89,61,9,.22),#031722 36%)!important;
+}
+.session-modal .detail-break-row.break-end{
+  border-color:#255d49!important;
+  background:linear-gradient(90deg,rgba(25,91,65,.2),#031722 36%)!important;
+}
+.session-modal .detail-break-row strong{
+  color:#ffd676!important;
+}
+.session-modal .detail-break-row.break-end strong{
+  color:#85e7b7!important;
+}
+.request-history-meta{
+  display:grid!important;
+  gap:3px!important;
+  min-width:0!important;
+}
+.request-history-meta>span{
+  display:block!important;
+  color:#9bb2c0!important;
+  font-size:10px!important;
+  line-height:1.35!important;
+}
+.request-history-meta b{
+  margin-right:4px!important;
+  color:#d7e8ef!important;
+  font-size:9px!important;
+  letter-spacing:.03em!important;
+}
+.request-history-note,
+.request-history-host-note{
+  padding:5px 7px!important;
+  border-radius:5px!important;
+}
+.request-history-note{
+  border-left:2px solid #2bbfd0!important;
+  background:rgba(29,115,129,.09)!important;
+}
+.request-history-host-note{
+  border-left:2px solid #ef7b89!important;
+  background:rgba(132,33,47,.1)!important;
+  color:#ffb3bc!important;
+}
+@media(max-width:700px){
+  .session-modal .detail-row{
+    grid-template-columns:1fr!important;
+  }
+  .session-modal .status-chip{
+    margin-top:3px!important;
+  }
+}
