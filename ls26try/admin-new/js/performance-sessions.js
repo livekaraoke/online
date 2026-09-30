@@ -172,7 +172,11 @@
       deleted:0
     };
 
-    requests.forEach(req => counts[requestStatusBucket(req.status)]++);
+    requests.forEach(req => {
+      const bucket=requestStatusBucket(req.status);
+      if(bucket==="cancelled")counts.left++;
+      else counts[bucket]++;
+    });
     return counts;
   }
 
