@@ -2080,6 +2080,10 @@
     const tab=e.target.closest("[data-request-tab]"); if(tab)switchRequestTab(tab.dataset.requestTab);
     const historyTab=e.target.closest("[data-request-history-tab]"); if(historyTab)switchRequestHistoryTab(historyTab.dataset.requestHistoryTab);
     const category=e.target.closest("[data-song-category]"); if(category)setSongCategory(category.dataset.songCategory);
+    const historyCategory=e.target.closest("[data-history-song-category]"); if(historyCategory)setHistorySongCategory(historyCategory.dataset.historySongCategory);
+    const alphaJump=e.target.closest("[data-alpha-jump]"); if(alphaJump)jumpToAlphabet(alphaJump.dataset.alphaTarget,alphaJump.dataset.alphaAttribute||"data-alpha",alphaJump.dataset.alphaJump);
+    const favourite=e.target.closest("[data-toggle-favourite]"); if(favourite)void toggleFavouriteSong(favourite.dataset.toggleFavourite);
+    const historyRequest=e.target.closest("[data-history-request-song]"); if(historyRequest)requestFromHistorySongList(historyRequest.dataset.historyRequestSong);
     const rating=e.target.closest("[data-review-rating]"); if(rating)setReviewRating(Number(rating.dataset.reviewRating||0));
     const cancelRequest=e.target.closest("[data-cancel-request]"); if(cancelRequest)void cancelMyRequest(cancelRequest.dataset.cancelRequest);
     const editRequestNote=e.target.closest("[data-edit-request-note]"); if(editRequestNote)void editMyRequestNote(editRequestNote.dataset.editRequestNote);
@@ -2092,6 +2096,11 @@
     }
   });
   $("songSearch").addEventListener("input",renderSongResults);
+  $("historySongSearch").addEventListener("input",renderHistorySongList);
+  $("historyMyFavouritesCard").addEventListener("click",()=>{
+    historyFavouritesOnly=!historyFavouritesOnly;
+    renderHistorySongList();
+  });
   $("requestStartContinueBtn").addEventListener("click",continueFromRequestName);
   $("requestStartName").addEventListener("keydown",e=>{if(e.key==="Enter")continueFromRequestName();});
   $("requestNoteDialogSaveBtn").addEventListener("click",saveMyRequestNote);
@@ -2103,11 +2112,14 @@
   $("requestNoteDialogInput").addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&e.key==="Enter")saveMyRequestNote();});
   $("continueRequestBtn").addEventListener("click",continueToSongs);
   $("openRequestHistoryBtn").addEventListener("click",()=>void openRequestHistory());
+  $("recoverRequestProfileBtn").addEventListener("click",()=>void recoverRequestProfile());
+  $("requestProfileEmail").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();void recoverRequestProfile();}});
   $("singerName").addEventListener("keydown",e=>{if(e.key==="Enter")continueToSongs();});
   $("editRequesterNameBtn").addEventListener("click",beginEditRequesterName);
   $("forgetRequestProfileBtn").addEventListener("click",forgetRequestProfile);
   $("clearReviewRatingBtn").addEventListener("click",()=>setReviewRating(""));
   $("clearSongCategoryBtn").addEventListener("click",()=>setSongCategory("all"));
+  $("historyClearSongCategoryBtn").addEventListener("click",()=>setHistorySongCategory("all"));
   $("backToSongListBtn").addEventListener("click",()=>switchRequestTab("songs"));
   $("sendRequestBtn").addEventListener("click",sendSelectedRequest);
   $("requestAnotherBtn").addEventListener("click",showRequestBrowser);
