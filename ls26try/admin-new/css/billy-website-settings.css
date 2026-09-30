@@ -83,3 +83,180 @@
   .billy-site-savebar{left:12px;right:12px;bottom:76px;flex-wrap:wrap}
   .billy-site-savebar>span{width:100%}
 }
+
+
+/* 2026-09-30 density/readability pass */
+.billy-site-topbar{
+  margin-bottom:14px!important;
+}
+.billy-site-topbar .enquiries-eyebrow{
+  margin-bottom:3px!important;
+  font-size:9px!important;
+}
+.billy-site-topbar h1{
+  font-size:23px!important;
+  line-height:1.08!important;
+}
+.billy-site-topbar .enquiries-subtitle{
+  margin-top:5px!important;
+  font-size:13px!important;
+  line-height:1.4!important;
+}
+.billy-site-open{
+  min-height:40px!important;
+  padding:0 14px!important;
+  font-size:12px!important;
+}
+.billy-site-status{
+  font-size:13px!important;
+}
+.billy-site-card{
+  padding:17px!important;
+}
+.billy-site-card h2{
+  font-size:20px!important;
+}
+.billy-site-card p{
+  font-size:13px!important;
+}
+.billy-site-switch{
+  font-size:14px!important;
+}
+.billy-site-switch input{
+  width:21px!important;
+  height:21px!important;
+}
+.billy-site-btn{
+  min-height:41px!important;
+  padding:0 14px!important;
+  font-size:12px!important;
+}
+.website-category-editor>summary{
+  min-height:66px!important;
+  padding:11px 14px!important;
+}
+.website-category-preview strong{
+  font-size:17px!important;
+}
+.website-category-preview small{
+  font-size:12px!important;
+}
+.website-category-count{
+  font-size:12px!important;
+}
+.website-category-fields label,
+.website-category-toolbar label{
+  font-size:10px!important;
+}
+.website-category-fields input[type=text],
+.website-category-toolbar input{
+  min-height:42px!important;
+  font-size:14px!important;
+}
+.website-category-enabled{
+  font-size:13px!important;
+}
+.website-category-actions button{
+  min-height:38px!important;
+  padding:0 11px!important;
+  font-size:10px!important;
+}
+.website-song-option{
+  min-height:54px!important;
+}
+.website-song-option strong{
+  font-size:14px!important;
+}
+.website-song-option small{
+  font-size:11px!important;
+}
+
+/* Editable INFO / FAQ rows */
+.website-faq-editors{
+  display:grid;
+  gap:10px;
+}
+.website-faq-editor{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:12px;
+  align-items:end;
+  padding:13px;
+  border:1px solid #263b45;
+  border-radius:9px;
+  background:#061118;
+}
+.website-faq-fields{
+  display:grid;
+  grid-template-columns:minmax(220px,.72fr) minmax(300px,1.28fr);
+  gap:10px;
+}
+.website-faq-fields label{
+  display:grid;
+  gap:5px;
+  color:#82969e;
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:.08em;
+}
+.website-faq-fields input,
+.website-faq-fields textarea{
+  width:100%;
+  min-height:43px;
+  padding:9px 10px;
+  border:1px solid #2d4652;
+  border-radius:7px;
+  background:#030b10;
+  color:#eef8fb;
+  font:inherit;
+  font-size:14px;
+}
+.website-faq-fields textarea{
+  min-height:76px;
+  resize:vertical;
+  line-height:1.4;
+}
+.website-faq-actions{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+.website-faq-actions button{
+  min-height:34px;
+  padding:0 9px;
+  border:1px solid #2c4856;
+  border-radius:6px;
+  background:#081822;
+  color:#9bdce5;
+  font-size:10px;
+  font-weight:850;
+  cursor:pointer;
+}
+.website-faq-actions button.danger{
+  border-color:#67313a;
+  color:#ff8e9b;
+}
+.website-faq-actions button:disabled{
+  opacity:.3;
+  cursor:not-allowed;
+}
+.billy-site-savebar .billy-site-btn{
+  min-height:44px!important;
+  font-size:13px!important;
+}
+.billy-site-savebar>span{
+  font-size:12px!important;
+}
+
+@media(max-width:900px){
+  .website-faq-editor{
+    grid-template-columns:1fr;
+  }
+  .website-faq-fields{
+    grid-template-columns:1fr;
+  }
+  .website-faq-actions{
+    flex-direction:row;
+    flex-wrap:wrap;
+  }
+}
