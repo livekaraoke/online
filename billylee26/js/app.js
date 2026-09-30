@@ -934,6 +934,31 @@
     container.scrollTo({top:Math.max(0,top-3),behavior:"smooth"});
   }
 
+  function jumpToArtistAlphabet(letter){
+    const container=$("songResults");
+    if(!container)return;
+    const target=[...container.querySelectorAll(".artist-song-group[data-artist-alpha]")]
+      .find(group=>group.dataset.artistAlpha===letter);
+    if(!target)return;
+
+    let top=0;
+    let node=target;
+    let reachedContainer=false;
+    while(node&&node!==container){
+      top+=Number(node.offsetTop)||0;
+      node=node.offsetParent;
+    }
+    reachedContainer=node===container;
+
+    if(!reachedContainer){
+      const containerRect=container.getBoundingClientRect();
+      const targetRect=target.getBoundingClientRect();
+      top=container.scrollTop+(targetRect.top-containerRect.top);
+    }
+
+    container.scrollTo({top:Math.max(0,top-2),behavior:"smooth"});
+  }
+
   function setSongCategory(category){
     let next=String(category||"all").toLowerCase();
     if(next===ARTIST_BROWSE_CATEGORY&&requestCategory===ARTIST_BROWSE_CATEGORY)next="all";
@@ -1978,7 +2003,15 @@
     const tab=e.target.closest("[data-request-tab]"); if(tab)switchRequestTab(tab.dataset.requestTab);
     const historyTab=e.target.closest("[data-request-history-tab]"); if(historyTab)switchRequestHistoryTab(historyTab.dataset.requestHistoryTab);
     const category=e.target.closest("[data-song-category]"); if(category)setSongCategory(category.dataset.songCategory);
-    const alphaJump=e.target.closest("[data-alpha-jump]"); if(alphaJump)jumpToAlphabet(alphaJump.dataset.alphaTarget,alphaJump.dataset.alphaAttribute||"data-alpha",alphaJump.dataset.alphaJump);
+    const alphaJump=e.target.closest("[data-alpha-jump]");
+    if(alphaJump){
+      const letter=alphaJump.dataset.alphaJump;
+      if(requestCategory===ARTIST_BROWSE_CATEGORY && alphaJump.dataset.alphaTarget==="songResults"){
+        jumpToArtistAlphabet(letter);
+      }else{
+        jumpToAlphabet(alphaJump.dataset.alphaTarget,alphaJump.dataset.alphaAttribute||"data-alpha",letter);
+      }
+    }
     const favourite=e.target.closest("[data-toggle-favourite]"); if(favourite)void toggleFavouriteSong(favourite.dataset.toggleFavourite);
     const rating=e.target.closest("[data-review-rating]"); if(rating)setReviewRating(Number(rating.dataset.reviewRating||0));
     const cancelRequest=e.target.closest("[data-cancel-request]"); if(cancelRequest)void cancelMyRequest(cancelRequest.dataset.cancelRequest);
