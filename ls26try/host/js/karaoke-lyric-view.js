@@ -371,14 +371,19 @@
         : Date.now();
     const remaining = Math.max(0, 5000 - Math.max(0, Date.now() - finishedAtMs));
 
+    const returnToIdle = () => {
+      if (data.autoSendEnabled === false) setAutoSendIdle();
+      else setStandby();
+    };
+
     if (remaining <= 0) {
-      setStandby();
+      returnToIdle();
       return;
     }
 
     finishedTimer = setTimeout(() => {
       finishedTimer = null;
-      setStandby();
+      returnToIdle();
     }, remaining);
 
     requestAnimationFrame(updateCustomScrollbar);
