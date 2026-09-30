@@ -2562,3 +2562,35 @@ p,
     padding-left:13px!important;
   }
 }
+
+
+/* LIVE REQUEST PLAYER test mode */
+.live-panel.is-test-mode{
+  border-color:rgba(240,177,64,.48)!important;
+  box-shadow:0 0 0 1px rgba(240,177,64,.08),0 18px 55px rgba(0,0,0,.24)!important;
+}
+.live-panel.is-test-mode .player-main{
+  background:
+    linear-gradient(100deg,rgba(124,76,7,.12),transparent 45%),
+    transparent!important;
+}
+.live-panel.is-test-mode #liveStateLabel,
+#liveStateLabel.is-test-mode{
+  color:#ffd36d!important;
+}
+.live-panel.is-test-mode .state-icon{
+  border-color:rgba(240,177,64,.6)!important;
+  color:#ffd36d!important;
+  box-shadow:0 0 20px rgba(240,177,64,.12)!important;
+}
+.live-panel.is-test-mode .request-strip{
+  border-top-color:rgba(240,177,64,.24)!important;
+}
+.live-panel.is-test-mode .queue-summary b{
+  color:#ffd36d!important;
+}
+#watchLiveBtn.is-test-mode{
+  border-color:#d7a339!important;
+  color:#ffe092!important;
+  background:rgba(85,55,8,.3)!important;
+}
