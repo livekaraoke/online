@@ -28,6 +28,8 @@
 
   let songs = [];
   let state = {
+    enableLiveRequestTestMode:false,
+    requestTestSessionId:"",
     showCategoryCards:true,
     showArtistSearchCard:true,
     categoryCardSize:DEFAULT_CONTENT.categoryCardSize,
@@ -97,6 +99,8 @@
     const source=Array.isArray(data.categories)&&data.categories.length?data.categories:DEFAULTS;
     const faqSource=Array.isArray(data.faqs)&&data.faqs.length?data.faqs:DEFAULT_FAQS;
     return {
+      enableLiveRequestTestMode:data.enableLiveRequestTestMode===true,
+      requestTestSessionId:String(data.requestTestSessionId||""),
       showCategoryCards:data.showCategoryCards!==false,
       showArtistSearchCard:data.showArtistSearchCard!==false,
       categoryCardSize:Math.max(60,Math.min(120,Number(data.categoryCardSize)||DEFAULT_CONTENT.categoryCardSize)),
@@ -137,6 +141,7 @@
   }
 
   function render(){
+    if($("enableLiveRequestTestMode"))$("enableLiveRequestTestMode").checked=state.enableLiveRequestTestMode===true;
     $("showCategoryCards").checked=state.showCategoryCards!==false;
     if($("showArtistSearchCard"))$("showArtistSearchCard").checked=state.showArtistSearchCard!==false;
     if($("categoryCardSize")){
@@ -236,6 +241,11 @@
     button.disabled=true;
     setStatus("Saving…");
     try{
+      const testModeEnabled=$("enableLiveRequestTestMode")?.checked===true;
+      state.enableLiveRequestTestMode=testModeEnabled;
+      state.requestTestSessionId=testModeEnabled
+        ? (state.requestTestSessionId||`billylee-test-${Date.now()}`)
+        : "";
       state.showCategoryCards=$("showCategoryCards").checked;
       state.showArtistSearchCard=$("showArtistSearchCard")?.checked!==false;
       state.categoryCardSize=Math.max(60,Math.min(120,Number($("categoryCardSize")?.value)||DEFAULT_CONTENT.categoryCardSize));
@@ -244,6 +254,8 @@
       state.aboutShort=String($("websiteAboutShort")?.value||"").trim();
       state.aboutDetailed=String($("websiteAboutDetailed")?.value||"").trim();
       await SETTINGS_DOC().set({
+        enableLiveRequestTestMode:state.enableLiveRequestTestMode,
+        requestTestSessionId:state.requestTestSessionId,
         showCategoryCards:state.showCategoryCards,
         showArtistSearchCard:state.showArtistSearchCard,
         categoryCardSize:state.categoryCardSize,
@@ -294,6 +306,8 @@
   function resetDefaults(){
     if(!confirm("Reset all Billy Lee website settings on this page to their defaults?"))return;
     state={
+      enableLiveRequestTestMode:false,
+      requestTestSessionId:"",
       showCategoryCards:true,
       showArtistSearchCard:true,
       categoryCardSize:DEFAULT_CONTENT.categoryCardSize,
@@ -429,6 +443,13 @@
     }
   });
 
+  $("enableLiveRequestTestMode")?.addEventListener("change",()=>{
+    state.enableLiveRequestTestMode=$("enableLiveRequestTestMode").checked===true;
+    if(!state.enableLiveRequestTestMode)state.requestTestSessionId="";
+    setStatus(state.enableLiveRequestTestMode
+      ?"Test mode will be enabled when you save."
+      :"Test mode will be disabled when you save.");
+  });
   $("showCategoryCards").addEventListener("change",()=>{state.showCategoryCards=$("showCategoryCards").checked;});
   $("showArtistSearchCard")?.addEventListener("change",()=>{state.showArtistSearchCard=$("showArtistSearchCard").checked;});
   $("categoryCardSize").addEventListener("input",()=>{
