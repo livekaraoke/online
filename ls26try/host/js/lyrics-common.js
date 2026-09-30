@@ -116,6 +116,46 @@ window.LyricsCommon = (() => {
     return tokens.every(token => /^([A-G](?:#|b)?(?:maj|min|m|sus|dim|aug|add)?\d*(?:\/[A-G](?:#|b)?)?|[|:()x0-9.-]+)$/.test(token));
   }
 
+  function stripChordOnlyBreakLines(block) {
+    if (!block || block.querySelector("div,p,pre,li")) return;
+
+    if (block.tagName === "PRE") {
+      const kept = String(block.textContent || "")
+        .split(/\r?\n/)
+        .filter(line => !isChordOnlyLine(line));
+      block.textContent = kept.join("\n");
+      if (!block.textContent.trim()) block.remove();
+      return;
+    }
+
+    const groups = [[]];
+    [...block.childNodes].forEach(node => {
+      if (node.nodeType === Node.ELEMENT_NODE && node.tagName === "BR") {
+        groups.push([]);
+      } else {
+        groups[groups.length - 1].push(node);
+      }
+    });
+
+    if (groups.length <= 1) {
+      if (isChordOnlyLine(block.textContent)) block.remove();
+      return;
+    }
+
+    const keptGroups = groups.filter(nodes => {
+      const text = nodes.map(node => node.textContent || "").join("").trim();
+      return text && !isChordOnlyLine(text);
+    });
+
+    block.replaceChildren();
+    keptGroups.forEach((nodes, index) => {
+      nodes.forEach(node => block.appendChild(node));
+      if (index < keptGroups.length - 1) block.appendChild(document.createElement("br"));
+    });
+
+    if (!block.textContent.trim() && !block.querySelector(".performance-cue")) block.remove();
+  }
+
   function singerHTMLFromSection(section) {
     if (!section || section.type === "separator" || section.type === "tab") return "";
     if (section.type === "performanceNote" || section.type === "performance-note") {
@@ -123,15 +163,23 @@ window.LyricsCommon = (() => {
     }
     const root = document.createElement("div");
     root.innerHTML = stripEditorControls(section.html || "");
-    root.querySelectorAll(".tab-block,.viewer-tab,.tab-line,.tab-dashes,.tab-note,.tab-cell,.note-cell,.host-only,.host-note,.my-note,.chord-diagram,.chords-legend").forEach(el => el.remove());
+
+    // Singer View is lyrics-only. Remove tabs/host-only material and every
+    // explicit chord token created by LyricsCreator before doing the fallback
+    // plain-text chord-line detection.
+    root.querySelectorAll(".tab-block,.viewer-tab,.tab-line,.tab-dashes,.tab-note,.tab-cell,.note-cell,.host-only,.host-note,.my-note,.chord-diagram,.chords-legend,.inserted-chord,[data-original-chord],[data-chord]").forEach(el => el.remove());
     root.querySelectorAll(".performance-note-line").forEach(el => el.classList.add("performance-cue"));
 
-    const blocks = [...root.querySelectorAll("div,p,pre")];
+    const blocks = [...root.querySelectorAll("div,p,pre,li")];
     blocks.forEach(block => {
       if (block.querySelector(".performance-cue")) return;
-      const lines = block.innerText.split(/\n/);
-      if (lines.length && lines.every(isChordOnlyLine)) block.remove();
+      stripChordOnlyBreakLines(block);
     });
+
+    // Handle legacy sections whose content is directly in the section root.
+    if (!root.querySelector("div,p,pre,li") && isChordOnlyLine(root.textContent)) {
+      root.innerHTML = "";
+    }
 
     const html = root.innerHTML.trim();
     return html ? html : "";
