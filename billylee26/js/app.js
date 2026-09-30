@@ -869,6 +869,7 @@
     return false;
   }
 
+
   function renderRequestCategoryCards(){
     const grid=$("requestCategoryGrid");
     if(!grid)return;
@@ -888,26 +889,56 @@
         ${category.subtitle?`<span>${escapeHTML(category.subtitle)}</span>`:""}
       </button>
     `).join("");
+    const artistLabel=requestCategory===ARTIST_BROWSE_CATEGORY?"SEARCH BY SONG":"SEARCH BY ARTIST";
     const artistCard=showArtistCard?`
       <button type="button" data-song-category="${ARTIST_BROWSE_CATEGORY}" class="artist-search-card ${requestCategory===ARTIST_BROWSE_CATEGORY?"active":""}">
-        <strong>SEARCH BY ARTIST</strong>
+        <strong>${artistLabel}</strong>
       </button>
     `:"";
     grid.innerHTML=categoryCards+artistCard;
   }
 
-  function setSongCategory(category){
-    requestCategory=String(category||"all").toLowerCase();
-    document.querySelectorAll("[data-song-category]").forEach(button=>{
-      button.classList.toggle("active",button.dataset.songCategory===requestCategory);
+  function alphabetKey(value){
+    const text=String(value||"").trim();
+    const match=text.match(/[A-Za-z]/);
+    return match?match[0].toUpperCase():"#";
+  }
+
+  function renderAlphabetJump(containerId,list,{artistMode=false,attribute="data-alpha"}={}){
+    const row=$(containerId);
+    if(!row)return;
+    const present=new Set();
+    list.forEach(song=>{
+      const value=artistMode?artistBrowseDisplayName(ArtistNames.display(song.artist||"")):(song.title||"");
+      present.add(alphabetKey(value));
     });
+    const letters=["#","A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"];
+    row.innerHTML=letters.map(letter=>`
+      <button type="button" data-alpha-jump="${letter}" data-alpha-target="${containerId}" data-alpha-attribute="${attribute}" ${present.has(letter)?"":"disabled"}>${letter}</button>
+    `).join("");
+  }
+
+  function jumpToAlphabet(containerId,attribute,letter){
+    const container=$(containerId);
+    if(!container)return;
+    const target=[...container.querySelectorAll("["+attribute+"]")].find(node=>node.getAttribute(attribute)===letter);
+    if(!target)return;
+    const top=target.offsetTop-container.offsetTop;
+    container.scrollTo({top:Math.max(0,top-4),behavior:"smooth"});
+  }
+
+  function setSongCategory(category){
+    let next=String(category||"all").toLowerCase();
+    if(next===ARTIST_BROWSE_CATEGORY&&requestCategory===ARTIST_BROWSE_CATEGORY)next="all";
+    requestCategory=next;
+    renderRequestCategoryCards();
     if($("clearSongCategoryBtn"))$("clearSongCategoryBtn").hidden=requestCategory==="all";
     const selected=requestCategoryById(requestCategory);
     if($("requestNotice")){
       if(requestCategory==="all"){
         $("requestNotice").textContent="Choose a song. Tap + to continue.";
       }else if(requestCategory===ARTIST_BROWSE_CATEGORY){
-        $("requestNotice").textContent="Browse by artist. Use the search bar to find an artist or song.";
+        $("requestNotice").textContent="Browse by artist. Use the letters or search bar to jump through the list.";
       }else{
         $("requestNotice").textContent=`${selected?.label||"Category"} · tap + to continue.`;
       }
@@ -923,10 +954,9 @@
     else if(state==="requested"){action="ALREADY REQUESTED";disabled=" disabled";stateClass=" is-requested";}
     const artist=ArtistNames.display(song.artist||"");
     const year=String(song.year||"").trim();
-    const meta=artistGrouped
-      ? [year].filter(Boolean).join(" • ")
-      : [artist,year].filter(Boolean).join(" • ");
-    return `<div class="song-row${stateClass}" data-song-row-id="${escapeHTML(song.id)}"><span><strong>${escapeHTML(song.title||"Untitled")}</strong>${meta?`<small>${escapeHTML(meta)}</small>`:""}</span><button class="song-action" type="button" data-song-id="${escapeHTML(song.id)}"${disabled} aria-label="Choose ${escapeHTML(song.title||"song")}">${escapeHTML(action)}</button></div>`;
+    const meta=artistGrouped?[year].filter(Boolean).join(" • "):[artist,year].filter(Boolean).join(" • ");
+    const alpha=alphabetKey(song.title||"");
+    return `<div class="song-row${stateClass}" data-song-row-id="${escapeHTML(song.id)}" data-alpha="${alpha}"><span><strong>${escapeHTML(song.title||"Untitled")}</strong>${meta?`<small>${escapeHTML(meta)}</small>`:""}</span><button class="song-action" type="button" data-song-id="${escapeHTML(song.id)}"${disabled} aria-label="Choose ${escapeHTML(song.title||"song")}">${escapeHTML(action)}</button></div>`;
   }
 
   function artistBrowseDisplayName(value){
@@ -946,11 +976,12 @@
       artistBrowseDisplayName(a).localeCompare(artistBrowseDisplayName(b),undefined,{sensitivity:"base"})
     );
     return artists.map(artist=>{
+      const displayArtist=artistBrowseDisplayName(artist);
       const artistSongs=groups.get(artist).slice().sort((a,b)=>String(a.title||"").localeCompare(String(b.title||""),undefined,{sensitivity:"base"}));
       return `
-        <section class="artist-song-group">
+        <section class="artist-song-group" data-alpha="${alphabetKey(displayArtist)}">
           <div class="artist-song-group-heading">
-            <strong>${escapeHTML(artistBrowseDisplayName(artist))}</strong>
+            <strong>${escapeHTML(displayArtist)}</strong>
             <span>${artistSongs.length} song${artistSongs.length===1?"":"s"}</span>
           </div>
           <div class="artist-song-group-list">
@@ -964,18 +995,20 @@
   function renderSongResults(){
     const q=String($("songSearch")?.value||"").trim().toLowerCase();
     const list=songs.filter(song=>
-      songMatchesCategory(song,requestCategory) &&
-      (!q || ArtistNames.matchesSong(song,q))
+      songMatchesCategory(song,requestCategory)&&(!q||ArtistNames.matchesSong(song,q))
     );
+    const artistMode=requestCategory===ARTIST_BROWSE_CATEGORY;
+    renderAlphabetJump("requestAlphabetRow",list,{artistMode,attribute:"data-alpha"});
 
-    if(requestCategory===ARTIST_BROWSE_CATEGORY){
+    if(artistMode){
       $("songResults").classList.add("artist-browse-results");
-      $("songResults").innerHTML=renderArtistGroupedResults(list) || `<div class="empty-box">No matching artists or songs.</div>`;
+      $("songResults").innerHTML=renderArtistGroupedResults(list)||`<div class="empty-box">No matching artists or songs.</div>`;
       return;
     }
 
     $("songResults").classList.remove("artist-browse-results");
-    $("songResults").innerHTML=list.map(song=>renderSongResultRow(song)).join("") || `<div class="empty-box">No songs found in this category.</div>`;
+    const sorted=list.slice().sort((a,b)=>String(a.title||"").localeCompare(String(b.title||""),undefined,{sensitivity:"base"}));
+    $("songResults").innerHTML=sorted.map(song=>renderSongResultRow(song)).join("")||`<div class="empty-box">No songs found in this category.</div>`;
   }
 
   function showRequestBrowser(){
