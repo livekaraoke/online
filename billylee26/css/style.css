@@ -3820,3 +3820,148 @@ p,
 .request-category-grid button span{
   margin-top:0!important;
 }
+
+
+/* LIVE REQUESTS v13 — artist alphabet + profile alignment/readability */
+.request-category-grid button{
+  gap:5px!important;
+}
+.request-category-grid button span{
+  margin-top:1px!important;
+}
+
+/* Keep Name and Email text boxes aligned; recovery action now sits with Save. */
+.request-email-control{
+  grid-template-columns:minmax(0,1fr) 104px!important;
+}
+.request-email-control input{
+  grid-column:1!important;
+}
+.request-profile-grid{
+  row-gap:10px!important;
+}
+.request-field{
+  font-size:10px!important;
+}
+.request-field>small,
+.request-field small{
+  font-size:8px!important;
+}
+.request-field input,
+.request-field select{
+  font-size:14px!important;
+}
+.forget-profile-btn,
+.recover-profile-btn{
+  font-size:9px!important;
+}
+.request-email-help{
+  font-size:8px!important;
+}
+
+/* Slightly stronger separation before the review block. */
+.request-review-card{
+  margin-top:11px!important;
+  padding:9px 11px!important;
+}
+.request-review-heading{
+  margin-bottom:7px!important;
+}
+.request-review-heading h3{
+  font-size:17px!important;
+}
+.request-review-optional{
+  font-size:9px!important;
+}
+.request-review-rating{
+  grid-template-columns:62px minmax(0,1fr)!important;
+  gap:8px!important;
+  margin-bottom:8px!important;
+}
+.request-review-label{
+  font-size:10px!important;
+}
+.request-review-text{
+  gap:5px!important;
+}
+.request-review-text>span{
+  font-size:10px!important;
+}
+.request-review-text textarea{
+  min-height:58px!important;
+  max-height:72px!important;
+  padding:8px 10px!important;
+  font-size:14px!important;
+  line-height:1.35!important;
+}
+.request-review-private{
+  margin-top:8px!important;
+  padding:7px 9px!important;
+  gap:8px!important;
+}
+.request-review-private strong{
+  font-size:12px!important;
+}
+.request-review-private small{
+  font-size:10px!important;
+  line-height:1.2!important;
+}
+.request-profile-actions{
+  gap:9px!important;
+  margin-top:9px!important;
+  flex-wrap:nowrap!important;
+}
+.request-profile-actions .recover-profile-btn{
+  min-width:138px!important;
+  height:38px!important;
+  min-height:38px!important;
+  flex:0 0 auto!important;
+}
+.request-profile-actions .request-profile-status{
+  min-width:0!important;
+  flex:1 1 auto!important;
+}
+
+@media(max-width:760px){
+  .request-profile-grid{
+    row-gap:10px!important;
+  }
+  .request-email-control{
+    grid-template-columns:minmax(0,1fr) 104px!important;
+  }
+}
+
+@media(max-width:520px){
+  .request-email-control{
+    grid-template-columns:minmax(0,1fr) 96px!important;
+  }
+  .request-review-heading h3{
+    font-size:16px!important;
+  }
+  .request-review-label,
+  .request-review-text>span{
+    font-size:9px!important;
+  }
+  .request-review-text textarea{
+    font-size:13px!important;
+  }
+  .request-review-private strong{
+    font-size:11px!important;
+  }
+  .request-review-private small{
+    font-size:9px!important;
+  }
+  .request-profile-actions{
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) minmax(118px,.72fr)!important;
+    gap:7px!important;
+  }
+  .request-profile-actions .primary-btn,
+  .request-profile-actions .recover-profile-btn{
+    width:100%!important;
+    min-width:0!important;
+  }
+  .request-profile-actions .request-profile-status{
+    grid-column:1/-1!important;
+  }
+}
