@@ -2478,3 +2478,87 @@ p,
     margin-top:9px!important;
   }
 }
+
+
+/* LIVE REQUESTS v9 — Search by Artist */
+.request-category-grid .artist-search-card{
+  border-color:rgba(120,226,235,.48)!important;
+  background:linear-gradient(160deg,#0a303b,#05141b)!important;
+}
+.request-category-grid .artist-search-card strong{
+  max-width:100%!important;
+  font-size:13px!important;
+  line-height:1.15!important;
+  text-align:center!important;
+  letter-spacing:.045em!important;
+  overflow-wrap:anywhere!important;
+}
+.request-category-grid .artist-search-card span{
+  font-size:9px!important;
+  text-align:center!important;
+}
+.request-category-grid .artist-search-card.active{
+  border-color:#51e8f2!important;
+  background:linear-gradient(160deg,#0d4b59,#08212c)!important;
+  box-shadow:0 0 20px rgba(36,215,230,.16)!important;
+}
+
+.artist-browse-results{
+  background:#031018!important;
+}
+.artist-song-group{
+  border-bottom:1px solid rgba(36,215,230,.18)!important;
+}
+.artist-song-group:last-child{
+  border-bottom:0!important;
+}
+.artist-song-group-heading{
+  position:sticky!important;
+  top:0!important;
+  z-index:2!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:12px!important;
+  min-height:38px!important;
+  padding:8px 13px!important;
+  border-bottom:1px solid rgba(36,215,230,.28)!important;
+  background:linear-gradient(90deg,#082632,#061821)!important;
+  box-shadow:0 5px 12px rgba(0,0,0,.22)!important;
+}
+.artist-song-group-heading strong{
+  color:#64e8f1!important;
+  font-size:14px!important;
+  font-weight:950!important;
+  letter-spacing:.04em!important;
+}
+.artist-song-group-heading span{
+  color:#81969d!important;
+  font-size:9px!important;
+  font-weight:850!important;
+  white-space:nowrap!important;
+}
+.artist-song-group-list .song-row{
+  padding-left:18px!important;
+}
+.artist-song-group-list .song-row>span>strong{
+  font-size:18px!important;
+}
+.artist-song-group-list .song-row>span>small{
+  font-size:14px!important;
+}
+@media(max-width:620px){
+  .request-category-grid .artist-search-card strong{
+    font-size:12px!important;
+  }
+  .artist-song-group-heading{
+    min-height:36px!important;
+    padding:7px 10px!important;
+  }
+  .artist-song-group-heading strong{
+    font-size:13px!important;
+  }
+  .artist-song-group-list .song-row{
+    padding-left:13px!important;
+  }
+}
