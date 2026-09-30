@@ -2003,7 +2003,6 @@
   $("forgetRequestProfileBtn").addEventListener("click",forgetRequestProfile);
   $("clearReviewRatingBtn").addEventListener("click",()=>setReviewRating(""));
   $("clearSongCategoryBtn").addEventListener("click",()=>setSongCategory("all"));
-  $("historyClearSongCategoryBtn").addEventListener("click",()=>setHistorySongCategory("all"));
   $("backToSongListBtn").addEventListener("click",()=>switchRequestTab("songs"));
   $("sendRequestBtn").addEventListener("click",sendSelectedRequest);
   $("requestAnotherBtn").addEventListener("click",showRequestBrowser);
