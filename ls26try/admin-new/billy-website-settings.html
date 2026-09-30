@@ -13,7 +13,7 @@
   <link rel="stylesheet" href="css/admin-navigation.css?v=20260929-admin-polish">
   <link rel="stylesheet" href="../shared/theme.css?v=20260930-release-preview-v2">
   <link rel="stylesheet" href="../shared/performance.css?v=20260929-lyric-sizing">
-  <link rel="stylesheet" href="css/billy-website-settings.css?v=20260930-v6">
+  <link rel="stylesheet" href="css/billy-website-settings.css?v=20260930-request-test-mode-v1">
   <script src="../shared/data.js?v=20260910-stage4"></script>
 </head>
 <body class="admin-body enquiries-page">
@@ -30,6 +30,21 @@
       </header>
 
       <p id="billyWebsiteSettingsStatus" class="billy-site-status" role="status">Loading website settings…</p>
+
+      <section class="billy-site-card billy-site-test-mode">
+        <div class="billy-site-test-mode-copy">
+          <span class="billy-site-test-badge">TESTING</span>
+          <div>
+            <h2>Live Request Player test mode</h2>
+            <p>Temporarily show the Billy Lee website as request-enabled even when there is no active LiveSuite session. Real live sessions always take priority.</p>
+          </div>
+        </div>
+        <label class="billy-site-switch billy-site-test-switch">
+          <input id="enableLiveRequestTestMode" type="checkbox">
+          <span>Enable LIVE REQUEST PLAYER test mode</span>
+        </label>
+        <p class="billy-site-test-note">Test requests are stored separately and marked as test requests. Disable this again when testing is finished.</p>
+      </section>
 
       <section class="billy-site-card">
         <div class="billy-site-section-head">
@@ -118,6 +133,6 @@
   <script src="js/auth.js?v=20260910-stage4"></script>
   <script data-ls26-settings="1" src="../shared/app-settings.js?v=20260930-app-version"></script>
   <script src="../shared/shell.js?v=20260930-release-preview-v3"></script>
-  <script src="js/billy-website-settings.js?v=20260930-artist-card-v1"></script>
+  <script src="js/billy-website-settings.js?v=20260930-request-test-mode-v1"></script>
 </body>
 </html>
