@@ -20,7 +20,19 @@
     {id:"rock",label:"ROCK",subtitle:"Rock songs",enabled:true,mode:"rule",rule:"rock",songIds:[]},
     {id:"pop",label:"POP",subtitle:"Pop songs",enabled:true,mode:"rule",rule:"pop",songIds:[]}
   ];
-  let websiteRequestSettings = {showCategoryCards:true,categories:DEFAULT_REQUEST_CATEGORIES.map(item=>({...item}))};
+  const DEFAULT_REQUEST_FAQS = [
+    {id:"how-request",question:"How do I request a song?",answer:"Open SONG LIST, search or browse a category, tap + on a song, add an optional note, then press SEND REQUEST."},
+    {id:"after-send",question:"What happens after I send it?",answer:"Your request starts as pending. When accepted it appears in LiveSuite Run Order and MY REQUESTS shows your live queue position."},
+    {id:"change-request",question:"Can I change my request?",answer:"You can edit your note while the request is still waiting or queued. You can also cancel your own request before it starts playing."},
+    {id:"rejected",question:"Why was my request rejected?",answer:"If the host rejects or removes a request, MY REQUESTS shows REJECTED together with the reason supplied by the host."},
+    {id:"queue",question:"Queue position",answer:"Queue positions follow LiveSuite Run Order and may change when the host reorders the performance."},
+    {id:"tips",question:"Tips",answer:"Add a note if you need a different key, want to sing with someone, or want the host to know something before your turn."}
+  ];
+  let websiteRequestSettings = {
+    showCategoryCards:true,
+    categories:DEFAULT_REQUEST_CATEGORIES.map(item=>({...item})),
+    faqs:DEFAULT_REQUEST_FAQS.map(item=>({...item}))
+  };
   const DEFAULT_TYPE_COLORS = {"Live Karaoke":"#36a9e1","Roxanna":"#d96ce0","Solo":"#53c985","Texanna":"#f08a45","Other":"#a5adb3"};
   let eventTypeColors = {...DEFAULT_TYPE_COLORS};
 
@@ -134,12 +146,34 @@
     });
   }
 
+  function normaliseRequestFaqs(raw){
+    if(!Array.isArray(raw)||!raw.length)return DEFAULT_REQUEST_FAQS.map(item=>({...item}));
+    return raw.slice(0,20).map((item,index)=>({
+      id:String(item?.id||`faq-${index+1}`),
+      question:String(item?.question||"Question").trim().slice(0,120),
+      answer:String(item?.answer||"").trim().slice(0,800)
+    })).filter(item=>item.question&&item.answer);
+  }
+
+  function renderRequestInfo(){
+    const list=$("requestInfoList");
+    if(!list)return;
+    list.innerHTML=websiteRequestSettings.faqs.map((item,index)=>`
+      <details ${index===0?"open":""}>
+        <summary>${escapeHTML(item.question)}</summary>
+        <p>${escapeHTML(item.answer)}</p>
+      </details>
+    `).join("") || '<p class="muted">No information has been added yet.</p>';
+  }
+
   function applyWebsiteRequestSettings(data={}){
     websiteRequestSettings={
       showCategoryCards:data.showCategoryCards!==false,
-      categories:normaliseRequestCategories(data.categories)
+      categories:normaliseRequestCategories(data.categories),
+      faqs:normaliseRequestFaqs(data.faqs)
     };
     renderRequestCategoryCards();
+    renderRequestInfo();
     if(requestCategory!=="all"&&!websiteRequestSettings.categories.some(category=>category.id===requestCategory&&category.enabled)){
       requestCategory="all";
       if($("clearSongCategoryBtn"))$("clearSongCategoryBtn").hidden=true;
@@ -392,6 +426,7 @@
     const valid=new Set(["profile","songs","requests","info"]);
     const target=valid.has(tab)?tab:"songs";
 
+    if($("requestNameGate"))$("requestNameGate").hidden=true;
     document.querySelectorAll("[data-request-panel]").forEach(panel=>{
       panel.hidden=panel.dataset.requestPanel!==target;
     });
@@ -535,6 +570,32 @@
     }
   }
 
+  function showRequestNameGate(){
+    document.querySelectorAll("[data-request-panel]").forEach(panel=>panel.hidden=true);
+    if($("requestConfirmPanel"))$("requestConfirmPanel").hidden=true;
+    if($("requestSuccess"))$("requestSuccess").hidden=true;
+    document.querySelectorAll("[data-request-tab]").forEach(button=>button.classList.remove("active"));
+    const gate=$("requestNameGate");
+    if(gate)gate.hidden=false;
+    const name=requestProfile().name||"";
+    if($("requestStartName"))$("requestStartName").value=name;
+    setTimeout(()=>$("requestStartName")?.focus(),30);
+  }
+
+  function continueFromRequestName(){
+    const name=String($("requestStartName")?.value||"").trim();
+    if(!name){
+      $("requestStartName")?.focus();
+      return;
+    }
+    const profile=requestProfile();
+    profile.name=name;
+    localStorage.setItem(REQUEST_PROFILE_KEY,JSON.stringify(profile));
+    localStorage.setItem("billylee26.requestName",name);
+    syncRequesterUi();
+    switchRequestTab("songs");
+  }
+
   async function openRequestDialog(){
     if(!(controlData.active===true && activeSessionId)){
       alert("Song requests are only available during an active session.");
@@ -553,8 +614,9 @@
       console.error(error);
     }
 
-    const profile=requestProfile();
-    switchRequestTab(profile.name?"songs":"profile");
+    renderRequestCategoryCards();
+    renderRequestInfo();
+    showRequestNameGate();
   }
 
   async function continueToSongs(){
@@ -1080,6 +1142,8 @@
     }
   });
   $("songSearch").addEventListener("input",renderSongResults);
+  $("requestStartContinueBtn").addEventListener("click",continueFromRequestName);
+  $("requestStartName").addEventListener("keydown",e=>{if(e.key==="Enter")continueFromRequestName();});
   $("continueRequestBtn").addEventListener("click",continueToSongs);
   $("singerName").addEventListener("keydown",e=>{if(e.key==="Enter")continueToSongs();});
   $("editRequesterNameBtn").addEventListener("click",beginEditRequesterName);
@@ -1119,5 +1183,5 @@
   syncRequesterUi();
   $("shareBtn").addEventListener("click",async()=>{try{if(navigator.share)await navigator.share({title:document.title,url:location.href});else{await navigator.clipboard.writeText(location.href);alert("Link copied.");}}catch{}});
 
-  listenEventTypes(); listenEvents(); listenLiveState(); listenWebsiteRequestSettings(); renderRequestCategoryCards(); renderLive();
+  listenEventTypes(); listenEvents(); listenLiveState(); listenWebsiteRequestSettings(); renderRequestCategoryCards(); renderRequestInfo(); renderLive();
 })();
