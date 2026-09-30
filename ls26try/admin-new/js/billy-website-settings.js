@@ -10,9 +10,21 @@
     {id:"rock",label:"ROCK",subtitle:"Rock songs",enabled:true,mode:"rule",rule:"rock",songIds:[]},
     {id:"pop",label:"POP",subtitle:"Pop songs",enabled:true,mode:"rule",rule:"pop",songIds:[]}
   ];
+  const DEFAULT_FAQS = [
+    {id:"how-request",question:"How do I request a song?",answer:"Open SONG LIST, search or browse a category, tap + on a song, add an optional note, then press SEND REQUEST."},
+    {id:"after-send",question:"What happens after I send it?",answer:"Your request starts as pending. When accepted it appears in LiveSuite Run Order and MY REQUESTS shows your live queue position."},
+    {id:"change-request",question:"Can I change my request?",answer:"You can edit your note while the request is still waiting or queued. You can also cancel your own request before it starts playing."},
+    {id:"rejected",question:"Why was my request rejected?",answer:"If the host rejects or removes a request, MY REQUESTS shows REJECTED together with the reason supplied by the host."},
+    {id:"queue",question:"Queue position",answer:"Queue positions follow LiveSuite Run Order and may change when the host reorders the performance."},
+    {id:"tips",question:"Tips",answer:"Add a note if you need a different key, want to sing with someone, or want the host to know something before your turn."}
+  ];
 
   let songs = [];
-  let state = {showCategoryCards:true,categories:DEFAULTS.map(item=>({...item}))};
+  let state = {
+    showCategoryCards:true,
+    categories:DEFAULTS.map(item=>({...item})),
+    faqs:DEFAULT_FAQS.map(item=>({...item}))
+  };
   let loaded = false;
 
   function esc(value){
@@ -60,11 +72,21 @@
     };
   }
 
+  function normaliseFaq(item,index){
+    return {
+      id:slug(item?.id||`faq-${index+1}`,`faq-${index+1}`),
+      question:String(item?.question||"Question").trim().slice(0,120),
+      answer:String(item?.answer||"").trim().slice(0,800)
+    };
+  }
+
   function normaliseSettings(data={}){
     const source=Array.isArray(data.categories)&&data.categories.length?data.categories:DEFAULTS;
+    const faqSource=Array.isArray(data.faqs)&&data.faqs.length?data.faqs:DEFAULT_FAQS;
     return {
       showCategoryCards:data.showCategoryCards!==false,
-      categories:source.slice(0,8).map(normaliseCategory)
+      categories:source.slice(0,8).map(normaliseCategory),
+      faqs:faqSource.slice(0,20).map(normaliseFaq)
     };
   }
 
@@ -126,6 +148,21 @@
         </div>
       </details>
     `).join("") || '<p class="website-song-empty">No category cards. Add one to begin.</p>';
+
+    const faqContainer=$("websiteFaqEditors");
+    faqContainer.innerHTML=state.faqs.map((faq,index)=>`
+      <article class="website-faq-editor" data-faq-editor="${esc(faq.id)}">
+        <div class="website-faq-fields">
+          <label>Question<input type="text" maxlength="120" data-faq-field="question" data-faq-id="${esc(faq.id)}" value="${esc(faq.question)}"></label>
+          <label>Answer<textarea maxlength="800" rows="3" data-faq-field="answer" data-faq-id="${esc(faq.id)}">${esc(faq.answer)}</textarea></label>
+        </div>
+        <div class="website-faq-actions">
+          <button type="button" data-faq-up="${esc(faq.id)}" ${index===0?"disabled":""}>↑ Move up</button>
+          <button type="button" data-faq-down="${esc(faq.id)}" ${index===state.faqs.length-1?"disabled":""}>↓ Move down</button>
+          <button type="button" class="danger" data-faq-delete="${esc(faq.id)}">Delete</button>
+        </div>
+      </article>
+    `).join("") || '<p class="website-song-empty">No FAQ items. Add a question to begin.</p>';
   }
 
   function updateSummary(category){
@@ -183,6 +220,11 @@
           rule:category.rule||"",
           songIds:Array.from(new Set(category.songIds||[]))
         })),
+        faqs:state.faqs.map(faq=>({
+          id:faq.id,
+          question:String(faq.question||"").trim(),
+          answer:String(faq.answer||"").trim()
+        })).filter(faq=>faq.question&&faq.answer),
         updatedAt:firebase.firestore.FieldValue.serverTimestamp(),
         updatedBy:LK.auth.currentUser.uid
       },{merge:true});
@@ -211,9 +253,38 @@
 
   function resetDefaults(){
     if(!confirm("Reset the Billy Lee request category cards to the four defaults?"))return;
-    state={showCategoryCards:true,categories:DEFAULTS.map((item,index)=>normaliseCategory(item,index))};
+    state={
+      showCategoryCards:true,
+      categories:DEFAULTS.map((item,index)=>normaliseCategory(item,index)),
+      faqs:DEFAULT_FAQS.map((item,index)=>normaliseFaq(item,index))
+    };
     render();
     setStatus("Defaults loaded. Press Save Website Settings to publish them.");
+  }
+
+  function faqById(id){
+    return state.faqs.find(faq=>faq.id===id)||null;
+  }
+
+  function addFaq(){
+    if(state.faqs.length>=20){
+      setStatus("A maximum of 20 FAQ items is supported.",true);
+      return;
+    }
+    let n=state.faqs.length+1;
+    let id=`faq-${n}`;
+    while(faqById(id)){n++;id=`faq-${n}`;}
+    state.faqs.push({id,question:"New question",answer:"Answer goes here."});
+    render();
+    document.querySelector(`[data-faq-editor="${CSS.escape(id)}"] input`)?.focus();
+  }
+
+  function moveFaq(id,direction){
+    const index=state.faqs.findIndex(faq=>faq.id===id);
+    const target=index+direction;
+    if(index<0||target<0||target>=state.faqs.length)return;
+    [state.faqs[index],state.faqs[target]]=[state.faqs[target],state.faqs[index]];
+    render();
   }
 
   function moveCategory(id,direction){
@@ -232,6 +303,15 @@
       if(field.dataset.categoryField==="label")category.label=field.value.slice(0,24);
       if(field.dataset.categoryField==="subtitle")category.subtitle=field.value.slice(0,40);
       updateSummary(category);
+      return;
+    }
+
+    const faqField=event.target.closest("[data-faq-field]");
+    if(faqField){
+      const faq=faqById(faqField.dataset.faqId);
+      if(!faq)return;
+      if(faqField.dataset.faqField==="question")faq.question=faqField.value.slice(0,120);
+      if(faqField.dataset.faqField==="answer")faq.answer=faqField.value.slice(0,800);
       return;
     }
 
@@ -262,6 +342,18 @@
   });
 
   document.addEventListener("click",event=>{
+    const faqUp=event.target.closest("[data-faq-up]");if(faqUp){moveFaq(faqUp.dataset.faqUp,-1);return;}
+    const faqDown=event.target.closest("[data-faq-down]");if(faqDown){moveFaq(faqDown.dataset.faqDown,1);return;}
+    const faqDelete=event.target.closest("[data-faq-delete]");
+    if(faqDelete){
+      const faq=faqById(faqDelete.dataset.faqDelete);
+      if(faq&&confirm(`Delete the FAQ question "${faq.question}"?`)){
+        state.faqs=state.faqs.filter(item=>item.id!==faq.id);
+        render();
+      }
+      return;
+    }
+
     const selectAll=event.target.closest("[data-category-select-all]");
     if(selectAll){
       const id=selectAll.dataset.categorySelectAll;
@@ -293,11 +385,13 @@
 
   $("showCategoryCards").addEventListener("change",()=>{state.showCategoryCards=$("showCategoryCards").checked;});
   $("addWebsiteCategoryBtn").addEventListener("click",addCategory);
+  $("addWebsiteFaqBtn").addEventListener("click",addFaq);
   $("resetWebsiteCategoriesBtn").addEventListener("click",resetDefaults);
   $("saveBillyWebsiteSettingsBtn").addEventListener("click",save);
 
   LK.auth.onAuthStateChanged(user=>{
     if(user){
+      window.LK?.sidebar?.loadSidebar?.().catch?.(error=>console.warn("Could not load sidebar:",error));
       load().catch(error=>{
         console.error(error);
         $("billyWebsiteSettingsStatus").textContent=error.message||"Could not load website settings.";
