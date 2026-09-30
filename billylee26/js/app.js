@@ -28,11 +28,24 @@
     {id:"queue",question:"Queue position",answer:"Queue positions follow LiveSuite Run Order and may change when the host reorders the performance."},
     {id:"tips",question:"Tips",answer:"Add a note if you need a different key, want to sing with someone, or want the host to know something before your turn."}
   ];
+  const DEFAULT_WEBSITE_CONTENT = {
+    categoryCardSize:82,
+    instagramUrl:"https://www.instagram.com/billylee.mt",
+    facebookUrl:"https://www.facebook.com/billylee.mt",
+    aboutShort:"Billy Lee is a Malta-based singer, guitarist and live performer with over 20 years of experience on stage. His solo performances combine guitar, vocals and live looping to build arrangements in real time, ranging from stripped-back acoustic songs to a fuller, layered sound.\n\nHaving performed at venues, concerts and festivals in Malta and the UK, Billy brings a broad repertoire and an adaptable approach to every show. Alongside his solo work, he is the frontman and guitarist of hard rock band Roxanna and also provides Live Karaoke, an interactive live music experience built around audience song requests and live performance.",
+    aboutDetailed:"Billy Lee is a singer, guitarist and live performer based in Malta, with more than two decades of experience performing at venues, concerts, festivals and private events in Malta and the UK.\n\nHis solo setup is centred around guitar, vocals and live looping. Using a loop station, parts are recorded and layered live — rhythm guitar, lead parts, percussion and vocal harmonies can all be built into an arrangement in real time. This allows a solo performance to develop naturally from a simple acoustic foundation into a much fuller sound, without relying on a fixed backing arrangement.\n\nThe repertoire covers a wide range of material, with a strong foundation in rock alongside acoustic and contemporary favourites. Rather than reproducing every song in exactly the same way, arrangements can be adapted to the setting, the audience and the pace of the night. Requests and spontaneous changes are part of that approach, keeping the performance flexible and genuinely live.\n\nBilly is also behind Live Karaoke, an interactive live music experience that puts the audience at the centre of the performance. Guests choose and request songs to sing live, backed by Billy on guitar and vocals. It combines the accessibility of karaoke with the spontaneity and interaction of a live musician, allowing each performance to adapt to the singer and the room.\n\nBilly has also worked extensively in band settings. He currently fronts Roxanna, a Malta-based hard rock band formed in 2023, performing as lead vocalist and guitarist alongside Billy B on bass and backing vocals and Salvo on drums. The band draws from classic and modern hard rock, with elements of grunge and alternative rock, and also performs acoustic material in more intimate settings.\n\nWhether performing solo, hosting Live Karaoke or playing with Roxanna, the focus remains on musicianship, strong arrangements and audience connection - adapting each show to the setting and the people in the room."
+  };
   let websiteRequestSettings = {
     showCategoryCards:true,
+    categoryCardSize:DEFAULT_WEBSITE_CONTENT.categoryCardSize,
     categories:DEFAULT_REQUEST_CATEGORIES.map(item=>({...item})),
-    faqs:DEFAULT_REQUEST_FAQS.map(item=>({...item}))
+    faqs:DEFAULT_REQUEST_FAQS.map(item=>({...item})),
+    instagramUrl:DEFAULT_WEBSITE_CONTENT.instagramUrl,
+    facebookUrl:DEFAULT_WEBSITE_CONTENT.facebookUrl,
+    aboutShort:DEFAULT_WEBSITE_CONTENT.aboutShort,
+    aboutDetailed:DEFAULT_WEBSITE_CONTENT.aboutDetailed
   };
+  let editingRequestNoteId = "";
   const DEFAULT_TYPE_COLORS = {"Live Karaoke":"#36a9e1","Roxanna":"#d96ce0","Solo":"#53c985","Texanna":"#f08a45","Other":"#a5adb3"};
   let eventTypeColors = {...DEFAULT_TYPE_COLORS};
 
@@ -166,13 +179,43 @@
     `).join("") || '<p class="muted">No information has been added yet.</p>';
   }
 
+  function renderPlainParagraphs(target,text){
+    if(!target)return;
+    const parts=String(text||"").split(/\n\s*\n/).map(part=>part.trim()).filter(Boolean);
+    target.innerHTML=parts.map(part=>`<p>${escapeHTML(part).replace(/\n/g,"<br>")}</p>`).join("");
+  }
+
+  function safeWebsiteUrl(value,fallback){
+    const raw=String(value||"").trim();
+    if(!raw)return fallback;
+    try{
+      const url=new URL(/^https?:\/\//i.test(raw)?raw:`https://${raw}`);
+      return /^https?:$/.test(url.protocol)?url.href:fallback;
+    }catch{return fallback;}
+  }
+
+  function applyWebsiteContent(){
+    const instagram=safeWebsiteUrl(websiteRequestSettings.instagramUrl,DEFAULT_WEBSITE_CONTENT.instagramUrl);
+    const facebook=safeWebsiteUrl(websiteRequestSettings.facebookUrl,DEFAULT_WEBSITE_CONTENT.facebookUrl);
+    if($("footerInstagramLink"))$("footerInstagramLink").href=instagram;
+    if($("footerFacebookLink"))$("footerFacebookLink").href=facebook;
+    renderPlainParagraphs($("aboutShortText"),websiteRequestSettings.aboutShort||DEFAULT_WEBSITE_CONTENT.aboutShort);
+    renderPlainParagraphs($("aboutDetailedText"),websiteRequestSettings.aboutDetailed||DEFAULT_WEBSITE_CONTENT.aboutDetailed);
+  }
+
   function applyWebsiteRequestSettings(data={}){
     websiteRequestSettings={
       showCategoryCards:data.showCategoryCards!==false,
+      categoryCardSize:Math.max(60,Math.min(120,Number(data.categoryCardSize)||DEFAULT_WEBSITE_CONTENT.categoryCardSize)),
       categories:normaliseRequestCategories(data.categories),
-      faqs:normaliseRequestFaqs(data.faqs)
+      faqs:normaliseRequestFaqs(data.faqs),
+      instagramUrl:String(data.instagramUrl||DEFAULT_WEBSITE_CONTENT.instagramUrl),
+      facebookUrl:String(data.facebookUrl||DEFAULT_WEBSITE_CONTENT.facebookUrl),
+      aboutShort:String(data.aboutShort||DEFAULT_WEBSITE_CONTENT.aboutShort),
+      aboutDetailed:String(data.aboutDetailed||DEFAULT_WEBSITE_CONTENT.aboutDetailed)
     };
     renderRequestCategoryCards();
+    applyWebsiteContent();
     renderRequestInfo();
     if(requestCategory!=="all"&&!websiteRequestSettings.categories.some(category=>category.id===requestCategory&&category.enabled)){
       requestCategory="all";
@@ -492,6 +535,8 @@
     const grid=$("requestCategoryGrid");
     if(!grid)return;
     const categories=websiteRequestSettings.categories.filter(category=>category.enabled!==false);
+    const size=Math.max(60,Math.min(120,Number(websiteRequestSettings.categoryCardSize)||82));
+    grid.style.setProperty("--request-category-size",size+"px");
     grid.hidden=websiteRequestSettings.showCategoryCards===false||!categories.length;
     grid.innerHTML=grid.hidden?"":categories.map(category=>`
       <button type="button" data-song-category="${escapeHTML(category.id)}" class="${requestCategory===category.id?"active":""}">
@@ -620,7 +665,11 @@
 
     renderRequestCategoryCards();
     renderRequestInfo();
-    showRequestNameGate();
+    if(requestProfile().name){
+      switchRequestTab("songs");
+    }else{
+      showRequestNameGate();
+    }
   }
 
   async function continueToSongs(){
@@ -792,22 +841,54 @@
 
   async function editMyRequestNote(requestId){
     if(!requestId||!trackedRequestIds().includes(requestId))return;
+    const dialog=$("requestNoteDialog");
+    const input=$("requestNoteDialogInput");
+    const status=$("requestNoteDialogStatus");
     try{
       const snap=await db.collection("publicSongRequests").doc(requestId).get();
       if(!snap.exists)return;
       const current=snap.data()||{};
-      const next=prompt("Note for the host:",String(current.note||current.comment||""));
-      if(next===null)return;
-      const note=String(next).trim().slice(0,240);
-      await snap.ref.set({
+      editingRequestNoteId=requestId;
+      if(input)input.value=String(current.note||current.comment||"");
+      if(status)status.textContent="";
+      if($("requestNoteDialogSong"))$("requestNoteDialogSong").textContent=`${current.songTitle||"Song"}${current.songArtist||current.artist?` · ${ArtistNames.display(current.songArtist||current.artist||"")}`:""}`;
+      if(dialog&&!dialog.open)dialog.showModal();
+      setTimeout(()=>input?.focus(),25);
+    }catch(error){
+      console.error(error);
+      alert("Could not open the note editor. Please try again.");
+    }
+  }
+
+  async function saveMyRequestNote(){
+    if(!editingRequestNoteId||!trackedRequestIds().includes(editingRequestNoteId))return;
+    const button=$("requestNoteDialogSaveBtn");
+    const status=$("requestNoteDialogStatus");
+    const note=String($("requestNoteDialogInput")?.value||"").trim().slice(0,240);
+    if(button)button.disabled=true;
+    if(status)status.textContent="Saving…";
+    try{
+      await db.collection("publicSongRequests").doc(editingRequestNoteId).set({
         note,
         comment:note,
         updatedAt:firebase.firestore.FieldValue.serverTimestamp()
       },{merge:true});
+      if(status)status.textContent="Note saved.";
+      setTimeout(()=>{
+        if($("requestNoteDialog")?.open)$("requestNoteDialog").close();
+        editingRequestNoteId="";
+      },220);
     }catch(error){
       console.error(error);
-      alert("Could not update the note. Please try again.");
+      if(status)status.textContent="Could not save the note. Please try again.";
+    }finally{
+      if(button)button.disabled=false;
     }
+  }
+
+  function closeMyRequestNoteEditor(){
+    editingRequestNoteId="";
+    if($("requestNoteDialog")?.open)$("requestNoteDialog").close();
   }
 
   function selectRequestSong(songId){
@@ -1143,11 +1224,15 @@
       const dialogId=close.dataset.close;
       $(dialogId)?.close();
       if(dialogId==="videoPlayerDialog") closeVideoPlayer();
+      if(dialogId==="requestNoteDialog") editingRequestNoteId="";
     }
   });
   $("songSearch").addEventListener("input",renderSongResults);
   $("requestStartContinueBtn").addEventListener("click",continueFromRequestName);
   $("requestStartName").addEventListener("keydown",e=>{if(e.key==="Enter")continueFromRequestName();});
+  $("requestNoteDialogSaveBtn").addEventListener("click",saveMyRequestNote);
+  $("requestNoteDialogCancelBtn").addEventListener("click",closeMyRequestNoteEditor);
+  $("requestNoteDialogInput").addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&e.key==="Enter")saveMyRequestNote();});
   $("continueRequestBtn").addEventListener("click",continueToSongs);
   $("singerName").addEventListener("keydown",e=>{if(e.key==="Enter")continueToSongs();});
   $("editRequesterNameBtn").addEventListener("click",beginEditRequesterName);
