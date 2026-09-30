@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#02080d">
   <title>Billy Lee — Live Music</title>
   <meta name="description" content="Billy Lee — live music, gigs, requests and live performance in Malta.">
-  <link rel="stylesheet" href="css/style.css?v=20260930-request-tabs-v3">
+  <link rel="stylesheet" href="css/style.css?v=20260930-request-polish-v1">
 </head>
 <body>
   <header class="hero" id="top">
@@ -225,15 +225,22 @@
     <section id="requestSongStep" class="request-song-step">
       <div class="request-tab-stage">
         <section id="requestProfilePanel" class="request-tab-panel request-profile-panel" data-request-panel="profile" hidden>
-          <div class="request-panel-heading">
-            <span class="eyebrow">YOUR DETAILS</span>
-            <h3>PROFILE</h3>
-            <p>Save your details on this device so requests are quicker during the gig.</p>
+          <div class="request-panel-heading request-profile-heading">
+            <div>
+              <span class="eyebrow">YOUR DETAILS</span>
+              <h3>PROFILE</h3>
+            </div>
+            <p>Saved on this device for faster requests.</p>
           </div>
+
           <div class="request-profile-grid">
-            <label class="request-field request-field-wide">NAME
-              <input id="singerName" type="text" maxlength="60" placeholder="Your name" autocomplete="name">
-            </label>
+            <div class="request-field request-field-wide request-name-field">
+              <label for="singerName">NAME</label>
+              <div class="request-name-control">
+                <input id="singerName" type="text" maxlength="60" placeholder="Your name" autocomplete="name">
+                <button id="forgetRequestProfileBtn" class="forget-profile-btn" type="button">FORGET USER</button>
+              </div>
+            </div>
             <label class="request-field">COUNTRY <small>OPTIONAL</small>
               <input id="requestProfileCountry" type="text" maxlength="80" placeholder="e.g. Malta" autocomplete="country-name">
             </label>
@@ -261,28 +268,38 @@
           </div>
 
           <div class="request-review-card">
-            <div class="request-panel-heading compact">
-              <span class="eyebrow">YOUR EXPERIENCE</span>
-              <h3>RATE / REVIEW</h3>
+            <div class="request-review-heading">
+              <div>
+                <span class="eyebrow">YOUR EXPERIENCE</span>
+                <h3>RATE / REVIEW</h3>
+              </div>
+              <span class="request-review-optional">OPTIONAL</span>
             </div>
-            <label class="request-field">RATING <small>OPTIONAL</small>
-              <select id="requestReviewRating">
-                <option value="">No rating</option>
-                <option value="5">★★★★★ · 5</option>
-                <option value="4">★★★★☆ · 4</option>
-                <option value="3">★★★☆☆ · 3</option>
-                <option value="2">★★☆☆☆ · 2</option>
-                <option value="1">★☆☆☆☆ · 1</option>
-              </select>
+
+            <div class="request-review-rating">
+              <span class="request-review-label">RATING</span>
+              <input id="requestReviewRating" type="hidden" value="">
+              <div class="request-star-row" role="group" aria-label="Rating out of five">
+                <button type="button" data-review-rating="1" aria-label="1 star">★</button>
+                <button type="button" data-review-rating="2" aria-label="2 stars">★</button>
+                <button type="button" data-review-rating="3" aria-label="3 stars">★</button>
+                <button type="button" data-review-rating="4" aria-label="4 stars">★</button>
+                <button type="button" data-review-rating="5" aria-label="5 stars">★</button>
+                <button id="clearReviewRatingBtn" class="clear-rating-btn" type="button">CLEAR</button>
+              </div>
+            </div>
+
+            <label class="request-review-text" for="requestReviewText">
+              <span>REVIEW</span>
+              <textarea id="requestReviewText" maxlength="1000" rows="3" placeholder="How was your experience?"></textarea>
             </label>
-            <label class="request-field request-field-wide">REVIEW <small>OPTIONAL</small>
-              <textarea id="requestReviewText" maxlength="1000" rows="4" placeholder="How was your experience?"></textarea>
-            </label>
+
             <label class="request-review-private">
               <input id="requestReviewPrivate" type="checkbox">
-              <span>Keep my review private — do not select it for display on the website.</span>
+              <span><strong>Keep this review private</strong><small>It will be saved but will not be eligible to appear on the website.</small></span>
             </label>
           </div>
+
           <div class="request-profile-actions">
             <button id="continueRequestBtn" class="primary-btn" type="button">SAVE PROFILE</button>
             <span id="requestProfileStatus" class="request-profile-status" role="status"></span>
@@ -294,12 +311,7 @@
             <span class="eyebrow">SONG LIST</span>
             <h3>CHOOSE A SONG</h3>
           </div>
-          <div class="request-category-grid" aria-label="Song categories">
-            <button type="button" data-song-category="80s"><strong>80s</strong><span>1980–1989</span></button>
-            <button type="button" data-song-category="90s"><strong>90s</strong><span>1990–1999</span></button>
-            <button type="button" data-song-category="rock"><strong>ROCK</strong><span>Rock songs</span></button>
-            <button type="button" data-song-category="pop"><strong>POP</strong><span>Pop songs</span></button>
-          </div>
+          <div id="requestCategoryGrid" class="request-category-grid" aria-label="Song categories"></div>
           <div class="request-controls">
             <input id="songSearch" type="search" placeholder="Search song or artist…" autocomplete="off" inputmode="search">
             <button id="clearSongCategoryBtn" class="request-filter-clear" type="button" hidden>SHOW ALL</button>
@@ -370,6 +382,6 @@
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
   <script src="js/firebase-config.js"></script>
   <script src="js/youtube-videos.js"></script>
-  <script src="js/app.js?v=20260930-request-tabs-v3"></script>
+  <script src="js/app.js?v=20260930-request-polish-v1"></script>
 </body>
 </html>
