@@ -427,6 +427,8 @@
     const target=valid.has(tab)?tab:"songs";
 
     if($("requestNameGate"))$("requestNameGate").hidden=true;
+    const bottomTabs=document.querySelector(".request-bottom-tabs");
+    if(bottomTabs)bottomTabs.hidden=false;
     document.querySelectorAll("[data-request-panel]").forEach(panel=>{
       panel.hidden=panel.dataset.requestPanel!==target;
     });
@@ -577,6 +579,8 @@
     document.querySelectorAll("[data-request-tab]").forEach(button=>button.classList.remove("active"));
     const gate=$("requestNameGate");
     if(gate)gate.hidden=false;
+    const bottomTabs=document.querySelector(".request-bottom-tabs");
+    if(bottomTabs)bottomTabs.hidden=true;
     const name=requestProfile().name||"";
     if($("requestStartName"))$("requestStartName").value=name;
     setTimeout(()=>$("requestStartName")?.focus(),30);
