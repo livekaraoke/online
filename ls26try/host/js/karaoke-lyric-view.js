@@ -20,6 +20,7 @@
   let scrollStartY = 0;
   let hostSingerSync = null;
   let hostSyncFrame = null;
+  let lastHostSyncActiveSource = null;
   let finishedTimer = null;
 
   const SINGER_BACKGROUND_KEY = "ls26:karaokeSingerBackground";
@@ -479,6 +480,7 @@
       hostSyncFrame = null;
     }
     document.body.classList.remove("host-singer-sync-active");
+    lastHostSyncActiveSource = null;
     setSingerManualControlsEnabled(true);
 
     if (clearFocus) {
@@ -581,7 +583,15 @@
         const targetY = Math.max(0, Math.min(maxScroll, semanticTop - singerSyncAnchorY()));
         const delta = targetY - window.scrollY;
 
-        if (Math.abs(delta) > .25) window.scrollBy(0, delta * .12);
+        // At the exact moment a new host section becomes active, place its
+        // singer copy directly on the configured reading line. Between section
+        // changes, retain smooth interpolation so the screen never jitters.
+        if (lastHostSyncActiveSource !== activeSource) {
+          window.scrollTo(0, targetY);
+          lastHostSyncActiveSource = activeSource;
+        } else if (Math.abs(delta) > .25) {
+          window.scrollBy(0, delta * .12);
+        }
         applySingerSyncFocus(sync, sections, active);
       }
 
