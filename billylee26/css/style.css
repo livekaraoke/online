@@ -3448,3 +3448,366 @@ p,
     grid-template-columns:1fr!important;
   }
 }
+
+
+/* LIVE REQUESTS v12 — single song list, visible alphabet, MY DATA, compact profile */
+.request-browser .request-category-grid{
+  flex:0 0 auto!important;
+  margin-bottom:4px!important;
+}
+.request-browser .request-alphabet-row{
+  position:relative!important;
+  z-index:5!important;
+  flex:0 0 34px!important;
+  min-height:34px!important;
+  max-height:34px!important;
+  align-items:center!important;
+  margin:3px 0 6px!important;
+  padding:2px 1px!important;
+  background:#04131b!important;
+}
+.request-browser .request-alphabet-row button{
+  flex:0 0 28px!important;
+  width:28px!important;
+  height:28px!important;
+}
+.request-browser .request-controls{
+  position:relative!important;
+  z-index:3!important;
+  flex:0 0 auto!important;
+}
+.request-browser .request-notice{
+  flex:0 0 auto!important;
+}
+.request-browser .song-results{
+  flex:1 1 auto!important;
+  min-height:0!important;
+}
+
+/* One canonical song list: request + favourite controls live together. */
+.song-row-actions{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:flex-end!important;
+  gap:7px!important;
+  flex:0 0 auto!important;
+}
+.request-favourite-btn{
+  width:40px!important;
+  min-width:40px!important;
+  height:40px!important;
+  padding:0!important;
+  display:grid!important;
+  place-items:center!important;
+  border:1px solid rgba(177,99,225,.34)!important;
+  border-radius:8px!important;
+  background:rgba(70,38,94,.08)!important;
+  color:#9670aa!important;
+  font-size:21px!important;
+  line-height:1!important;
+  cursor:pointer!important;
+}
+.request-favourite-btn:hover{
+  border-color:#d186f5!important;
+  color:#dda3fa!important;
+}
+.request-favourite-btn.is-favourite{
+  border-color:#d186f5!important;
+  background:rgba(136,54,177,.2)!important;
+  color:#e1a3ff!important;
+  text-shadow:0 0 10px rgba(209,134,245,.28)!important;
+}
+
+/* Five equal primary tabs with MY DATA next to MY REQUESTS. */
+.request-bottom-tabs{
+  grid-template-columns:repeat(5,minmax(0,1fr))!important;
+}
+.request-bottom-tabs button{
+  min-width:0!important;
+  padding-left:4px!important;
+  padding-right:4px!important;
+}
+.request-bottom-tabs button small{
+  white-space:nowrap!important;
+}
+
+/* MY DATA now lives inside the main request popup. */
+.request-my-data-panel{
+  display:flex!important;
+  flex-direction:column!important;
+  min-height:0!important;
+  overflow:hidden!important;
+  padding:14px 18px!important;
+}
+.request-my-data-panel[hidden]{
+  display:none!important;
+}
+.request-data-heading{
+  flex:0 0 auto!important;
+  margin-bottom:8px!important;
+}
+.request-data-heading h3{
+  margin:2px 0 2px!important;
+}
+.request-data-heading p{
+  margin:0!important;
+}
+.request-data-tabs{
+  flex:0 0 auto!important;
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  border:1px solid rgba(36,215,230,.18)!important;
+  border-radius:8px 8px 0 0!important;
+  overflow:hidden!important;
+}
+.request-data-tabs button{
+  min-height:40px!important;
+  padding:4px 5px!important;
+  font-size:9px!important;
+}
+.request-data-body{
+  flex:1 1 auto!important;
+  min-height:0!important;
+  overflow-y:auto!important;
+  padding:11px!important;
+  border:1px solid rgba(36,215,230,.18)!important;
+  border-top:0!important;
+  border-radius:0 0 8px 8px!important;
+  background:#031018!important;
+}
+
+/* Compact profile so the full form remains usable above the bottom tabs. */
+.request-profile-panel{
+  padding:12px 18px 10px!important;
+}
+.request-profile-heading{
+  align-items:center!important;
+  margin:0 0 7px!important;
+  padding-bottom:5px!important;
+}
+.request-profile-heading h3{
+  margin:0!important;
+  font-size:18px!important;
+  line-height:1!important;
+  letter-spacing:.03em!important;
+}
+.request-profile-heading p{
+  margin:0!important;
+  font-size:10px!important;
+  line-height:1.2!important;
+}
+.request-profile-grid{
+  display:grid!important;
+  grid-template-columns:repeat(6,minmax(0,1fr))!important;
+  gap:6px 8px!important;
+}
+.request-profile-grid .request-name-field{
+  grid-column:span 3!important;
+}
+.request-profile-grid .request-email-field{
+  grid-column:span 3!important;
+}
+.request-profile-grid .request-country-field,
+.request-profile-grid .request-age-field,
+.request-profile-grid .request-gender-field{
+  grid-column:span 2!important;
+}
+.request-field{
+  gap:3px!important;
+  font-size:9px!important;
+}
+.request-field>small,
+.request-field small{
+  font-size:7px!important;
+}
+.request-field input,
+.request-field select{
+  min-height:36px!important;
+  height:36px!important;
+  padding:7px 9px!important;
+  font-size:13px!important;
+}
+.request-name-control,
+.request-email-control{
+  gap:6px!important;
+}
+.forget-profile-btn,
+.recover-profile-btn{
+  min-height:36px!important;
+  height:36px!important;
+  min-width:104px!important;
+  padding:0 9px!important;
+  font-size:8px!important;
+}
+.recover-profile-btn:disabled{
+  opacity:.28!important;
+  cursor:not-allowed!important;
+  filter:saturate(.45)!important;
+}
+.request-email-help{
+  margin-top:0!important;
+  font-size:7px!important;
+  line-height:1.15!important;
+}
+
+.request-review-card{
+  margin-top:7px!important;
+  padding:8px 10px!important;
+}
+.request-review-heading{
+  align-items:center!important;
+  margin-bottom:5px!important;
+}
+.request-review-heading h3{
+  margin:0!important;
+  font-size:15px!important;
+  line-height:1!important;
+  letter-spacing:.025em!important;
+}
+.request-review-optional{
+  font-size:7px!important;
+}
+.request-review-rating{
+  grid-template-columns:58px minmax(0,1fr)!important;
+  gap:7px!important;
+  margin-bottom:6px!important;
+}
+.request-review-label{
+  font-size:8px!important;
+}
+.request-star-row{
+  gap:4px!important;
+}
+.request-star-row [data-review-rating]{
+  width:30px!important;
+  height:28px!important;
+  font-size:18px!important;
+}
+.clear-rating-btn{
+  min-height:27px!important;
+  height:27px!important;
+  margin-left:2px!important;
+  font-size:7px!important;
+}
+.request-review-text{
+  gap:3px!important;
+}
+.request-review-text>span{
+  font-size:8px!important;
+}
+.request-review-text textarea{
+  min-height:52px!important;
+  max-height:64px!important;
+  padding:7px 9px!important;
+  font-size:12px!important;
+  line-height:1.3!important;
+}
+.request-review-private{
+  margin-top:6px!important;
+  padding:6px 8px!important;
+  gap:7px!important;
+}
+.request-review-private input{
+  width:16px!important;
+  height:16px!important;
+}
+.request-review-private strong{
+  font-size:10px!important;
+}
+.request-review-private small{
+  font-size:8px!important;
+  line-height:1.15!important;
+}
+.request-profile-actions{
+  display:flex!important;
+  align-items:center!important;
+  gap:9px!important;
+  margin-top:7px!important;
+}
+.request-profile-actions .primary-btn{
+  min-width:160px!important;
+  min-height:38px!important;
+  height:38px!important;
+  padding:0 16px!important;
+}
+.request-profile-status{
+  font-size:9px!important;
+}
+
+/* Remove legacy standalone-history / duplicate-song-list surfaces from layout. */
+.request-history-dialog,
+.request-history-songlist,
+.history-song-category-grid,
+.history-song-controls,
+.history-song-results,
+.history-my-favourites-card{
+  /* kept harmless if an old cached DOM exists */
+}
+
+/* Keep SEARCH BY ARTIST / SEARCH BY SONG comfortably wide. */
+.request-category-grid .artist-search-card{
+  grid-column:span 2!important;
+  min-width:calc((var(--request-category-size,82px) * 2) + 10px)!important;
+  width:calc((var(--request-category-size,82px) * 2) + 10px)!important;
+}
+.request-category-grid .artist-search-card strong{
+  white-space:normal!important;
+  text-wrap:balance!important;
+  max-width:96%!important;
+}
+
+@media(max-width:760px){
+  .request-profile-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+  .request-profile-grid .request-name-field,
+  .request-profile-grid .request-email-field{
+    grid-column:span 2!important;
+  }
+  .request-profile-grid .request-country-field,
+  .request-profile-grid .request-age-field,
+  .request-profile-grid .request-gender-field{
+    grid-column:span 1!important;
+  }
+  .request-profile-grid .request-gender-field{
+    max-width:100%!important;
+  }
+  .request-data-tabs button{
+    font-size:8px!important;
+    letter-spacing:.035em!important;
+  }
+}
+
+@media(max-width:520px){
+  .request-profile-panel{
+    padding:10px 10px 8px!important;
+  }
+  .request-profile-heading p{
+    display:none!important;
+  }
+  .request-name-control,
+  .request-email-control{
+    grid-template-columns:minmax(0,1fr) 96px!important;
+  }
+  .forget-profile-btn,
+  .recover-profile-btn{
+    min-width:96px!important;
+  }
+  .request-review-card{
+    padding:7px 8px!important;
+  }
+  .request-review-heading h3{
+    font-size:14px!important;
+  }
+  .request-review-rating{
+    grid-template-columns:48px minmax(0,1fr)!important;
+  }
+  .request-star-row [data-review-rating]{
+    width:27px!important;
+    height:26px!important;
+    font-size:16px!important;
+  }
+  .request-bottom-tabs button small{
+    font-size:7px!important;
+    letter-spacing:.035em!important;
+  }
+}
