@@ -455,6 +455,15 @@
     return Math.max(minimum, window.innerHeight * (percent / 100));
   }
 
+  function updateSingerSyncRunway() {
+    const anchor = singerSyncAnchorY();
+    const topbarHeight = document.querySelector(".singer-topbar")?.getBoundingClientRect().height || 0;
+    const topRunway = Math.max(28, anchor - topbarHeight);
+    const bottomRunway = Math.max(120, window.innerHeight - anchor + 120);
+    document.documentElement.style.setProperty("--singer-sync-top-runway", `${Math.round(topRunway)}px`);
+    document.documentElement.style.setProperty("--singer-sync-bottom-runway", `${Math.round(bottomRunway)}px`);
+  }
+
   function setSingerManualControlsEnabled(enabled) {
     ["singerPlayBtn","singerSpeedDown","singerSpeedUp","singerMinusBtn","singerPlusBtn"]
       .forEach(id => {
@@ -548,6 +557,7 @@
         return;
       }
 
+      updateSingerSyncRunway();
       const sections = singerSyncSections();
       const active = resolveSingerSyncSection(sync, sections);
       if (active) {
@@ -595,6 +605,7 @@
     // Host sync owns movement while enabled; the singer's local auto-scroll
     // controls are disabled so two scroll engines can never fight each other.
     stopAutoScroll();
+    updateSingerSyncRunway();
     document.body.classList.add("host-singer-sync-active");
     setSingerManualControlsEnabled(false);
     if ($("singerAutoScroll")) $("singerAutoScroll").checked = Boolean(sync.playing);
