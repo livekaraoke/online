@@ -122,7 +122,7 @@ window.LyricsCommon = (() => {
     if (block.tagName === "PRE") {
       const kept = String(block.textContent || "")
         .split(/\r?\n/)
-        .filter(line => !isChordOnlyLine(line));
+        .filter(line => !isChordOnlyLine(line) && !isSingerTabNotationLine(line));
       block.textContent = kept.join("\n");
       if (!block.textContent.trim()) block.remove();
       return;
@@ -138,13 +138,13 @@ window.LyricsCommon = (() => {
     });
 
     if (groups.length <= 1) {
-      if (isChordOnlyLine(block.textContent)) block.remove();
+      if (isChordOnlyLine(block.textContent) || isSingerTabNotationLine(block.textContent)) block.remove();
       return;
     }
 
     const keptGroups = groups.filter(nodes => {
       const text = nodes.map(node => node.textContent || "").join("").trim();
-      return text && !isChordOnlyLine(text);
+      return text && !isChordOnlyLine(text) && !isSingerTabNotationLine(text);
     });
 
     block.replaceChildren();
@@ -154,6 +154,19 @@ window.LyricsCommon = (() => {
     });
 
     if (!block.textContent.trim() && !block.querySelector(".performance-cue")) block.remove();
+  }
+
+  function isSingerTabNotationLine(text) {
+    const line = String(text || "").trim();
+    if (!line || line.length < 4) return false;
+
+    // Standard six-string tab rows such as "e|-----4---|" or "G|--3h5--|".
+    if (/^[eEbBgGdDaA]\|[0-9xXhHpPbBrR\/\\~^().*+|:\-\s]+$/.test(line)) return true;
+
+    // Continuation rows sometimes omit the string name and start at the bar.
+    if (/^\|[0-9xXhHpPbBrR\/\\~^().*+|:\-\s]{5,}$/.test(line)) return true;
+
+    return false;
   }
 
   function singerHTMLFromSection(section) {
@@ -177,7 +190,10 @@ window.LyricsCommon = (() => {
     });
 
     // Handle legacy sections whose content is directly in the section root.
-    if (!root.querySelector("div,p,pre,li") && isChordOnlyLine(root.textContent)) {
+    if (
+      !root.querySelector("div,p,pre,li") &&
+      (isChordOnlyLine(root.textContent) || isSingerTabNotationLine(root.textContent))
+    ) {
       root.innerHTML = "";
     }
 
