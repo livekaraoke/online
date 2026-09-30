@@ -2103,12 +2103,14 @@ p,
     gap:5px!important;
   }
   .request-category-grid{
-    grid-template-columns:repeat(4,76px)!important;
+    grid-template-columns:repeat(4,minmax(0,1fr))!important;
+    width:100%!important;
     gap:7px!important;
   }
   .request-category-grid button{
-    width:76px!important;
-    height:76px!important;
+    width:100%!important;
+    height:auto!important;
+    aspect-ratio:1/1!important;
   }
   .request-category-grid button strong{
     font-size:14px!important;
