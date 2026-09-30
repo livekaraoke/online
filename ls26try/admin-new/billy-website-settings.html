@@ -1,0 +1,76 @@
+<!-- Copyright © 2026 LiveSuite. All rights reserved. -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../shared/artist-names.js?v=20260925-artist-names"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Billy Lee Website Settings · LiveSuite</title>
+  <link rel="stylesheet" href="css/admin.css?v=20260910-stage4">
+  <link rel="stylesheet" href="css/sidebar.css?v=20260910-stage4">
+  <link rel="stylesheet" href="css/sidebar-suite.css?v=20260929-admin-polish">
+  <link rel="stylesheet" href="css/enquiries.css?v=20260910-stage4">
+  <link rel="stylesheet" href="css/admin-navigation.css?v=20260929-admin-polish">
+  <link rel="stylesheet" href="../shared/theme.css?v=20260930-release-preview-v2">
+  <link rel="stylesheet" href="../shared/performance.css?v=20260929-lyric-sizing">
+  <link rel="stylesheet" href="css/billy-website-settings.css?v=20260930-v1">
+  <script src="../shared/data.js?v=20260910-stage4"></script>
+</head>
+<body class="admin-body enquiries-page">
+  <div class="admin-shell">
+    <div id="sidebarContainer"></div>
+    <main class="admin-main enquiries-main billy-site-main">
+      <header class="enquiries-topbar billy-site-topbar">
+        <div>
+          <p class="enquiries-eyebrow">BILLY LEE</p>
+          <h1>Website Settings</h1>
+          <p class="enquiries-subtitle">Configure the public Live Requests experience on the Billy Lee website.</p>
+        </div>
+        <a class="billy-site-open" href="https://livekaraoke.github.io/online/billylee26/" target="_blank" rel="noopener">Open website ↗</a>
+      </header>
+
+      <p id="billyWebsiteSettingsStatus" class="billy-site-status" role="status">Loading website settings…</p>
+
+      <section class="billy-site-card billy-site-master">
+        <div>
+          <h2>Song category cards</h2>
+          <p>Control the small category shortcuts shown above the song search inside Request a Song.</p>
+        </div>
+        <label class="billy-site-switch">
+          <input id="showCategoryCards" type="checkbox" checked>
+          <span>Show category cards</span>
+        </label>
+      </section>
+
+      <section class="billy-site-card">
+        <div class="billy-site-section-head">
+          <div>
+            <h2>Categories</h2>
+            <p>Rename cards, hide individual cards, reorder them and choose exactly which songs each card contains.</p>
+          </div>
+          <button id="addWebsiteCategoryBtn" class="billy-site-btn" type="button">＋ Add category</button>
+        </div>
+        <div id="websiteCategoryEditors" class="website-category-editors"></div>
+      </section>
+
+      <div class="billy-site-savebar">
+        <span id="billyWebsiteSaveStatus"></span>
+        <button id="resetWebsiteCategoriesBtn" class="billy-site-btn muted" type="button">Reset defaults</button>
+        <button id="saveBillyWebsiteSettingsBtn" class="billy-site-btn primary" type="button">Save Website Settings</button>
+      </div>
+    </main>
+  </div>
+
+  <script src="../firebase-projects.js?v=20260910-stage4"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="js/firebase.js?v=20260910-stage4"></script>
+  <script src="js/sidebar.js?v=20260930-dynamic-version"></script>
+  <script src="js/profile.js?v=20260929-members-align"></script>
+  <script src="js/auth.js?v=20260910-stage4"></script>
+  <script data-ls26-settings="1" src="../shared/app-settings.js?v=20260930-app-version"></script>
+  <script src="../shared/shell.js?v=20260930-release-preview-v3"></script>
+  <script src="js/billy-website-settings.js?v=20260930-v1"></script>
+</body>
+</html>
