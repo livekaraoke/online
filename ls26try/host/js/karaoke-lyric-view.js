@@ -312,8 +312,18 @@
   function applySingerSyncFocus(sync, sections, active) {
     if (!active) return;
     const activeSource = Number(active.dataset.sourceIndex);
-    const previousSource = Number(sync?.previousSourceIndex);
-    const nextSource = Number(sync?.nextSourceIndex);
+    const requestedPrevious = Number(sync?.previousSourceIndex);
+    const requestedNext = Number(sync?.nextSourceIndex);
+    const previousVisible = [...sections]
+      .reverse()
+      .find(el => Number(el.dataset.sourceIndex) < activeSource);
+    const nextVisible = sections.find(el => Number(el.dataset.sourceIndex) > activeSource);
+    const previousSource = sections.some(el => Number(el.dataset.sourceIndex) === requestedPrevious)
+      ? requestedPrevious
+      : Number(previousVisible?.dataset?.sourceIndex);
+    const nextSource = sections.some(el => Number(el.dataset.sourceIndex) === requestedNext)
+      ? requestedNext
+      : Number(nextVisible?.dataset?.sourceIndex);
     const past = Math.max(0, Math.min(1, Number(sync?.pastOpacity ?? .5)));
     const upcoming = Math.max(0, Math.min(1, Number(sync?.upcomingOpacity ?? .5)));
     const previousOpacity = Math.max(0, Math.min(1, Number(sync?.previousOpacity ?? past)));
