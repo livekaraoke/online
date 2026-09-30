@@ -1642,6 +1642,7 @@
         finishedSongId: currentSongId || "",
         finishedSongTitle: currentSong?.title || "",
         finishedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        autoSendEnabled: autoSendToKaraokeEnabled(),
         singerSync: {
           enabled: false,
           playing: false,
@@ -1770,7 +1771,7 @@
         artist: "",
         chordTranspose: 0,
         transpose: 0,
-        displayState: "idle",
+        displayState: autoSendToKaraokeEnabled() ? "idle" : "auto-send-off",
         autoSendEnabled: autoSendToKaraokeEnabled(),
         reset: true,
         resetAt: firebase.firestore.FieldValue.serverTimestamp(),
