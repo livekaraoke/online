@@ -12,6 +12,7 @@
     "lyricNavHorizontalGap","lyricNavVerticalGap",
     "lyricNavIdleOpacity","lyricNavActiveOpacity","lyricNavPressedOpacity","lyricNavFeedbackDuration",
     "lyricLeadInHeight","lyricSectionActivationOffset",
+    "karaokeSingerActivePosition",
     "lyricPastSectionOpacity","lyricUpcomingSectionOpacity","lyricUpcomingFadeDistance","lyricPreviousFadeDistance",
     "lyricSectionFocusDuringPlayback","lyricSectionFocusWhenStopped",
     "metronomeBeat1Color","metronomeBeat2Color","metronomeBeat3Color","metronomeBeat4Color",
@@ -29,6 +30,7 @@
         const units={
           lyricTextScale:"%",lyricNavIdleOpacity:"%",lyricNavActiveOpacity:"%",lyricNavPressedOpacity:"%",
           lyricPastSectionOpacity:"%",lyricUpcomingSectionOpacity:"%",lyricNavFeedbackDuration:"ms",
+          karaokeSingerActivePosition:"%",
           metronomeFlashBrightness:"%",metronomeNumberOpacity:"%",
           metronomeNumberVerticalPosition:"%",metronomeFlashDuration:"ms"
         };
