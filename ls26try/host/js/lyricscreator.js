@@ -522,6 +522,21 @@
     return allowed.some(value => value.toLowerCase() === String(type || "").trim().toLowerCase());
   }
 
+  function defaultSingerScreenVisibility(section) {
+    const type = String(section?.type || "lyrics").toLowerCase();
+    return !["separator","tab","hostnote","host-note"].includes(type);
+  }
+
+  function sectionVisibleOnSingerScreen(section) {
+    if (
+      section &&
+      Object.prototype.hasOwnProperty.call(section, "visibleOnSingerScreen")
+    ) {
+      return section.visibleOnSingerScreen === true;
+    }
+    return defaultSingerScreenVisibility(section);
+  }
+
   function normalizeSection(section) {
     const type = section?.type || "lyrics";
     if (type === "separator") return { type: "separator" };
@@ -532,6 +547,7 @@
       html: stripLegacyMarkerFromHtml(section.html || ""),
       text: stripLegacyMarkerFromText(section.text || ""),
       visibleForTypes: normaliseVisibleForTypes(section),
+      visibleOnSingerScreen: sectionVisibleOnSingerScreen(section),
       displayAsCard: type === "hostNote" && section.displayAsCard === true,
       pauseMs: Math.max(0, Math.round(Number(section.pauseMs) || 0)),
       scrollSpeedOverride:
@@ -1177,6 +1193,10 @@
               <input type="checkbox" data-visible-type="${index}" data-session-type="${esc(type)}" ${allowed === null || sectionVisibleForType(section, type) ? "checked" : ""}>
               <span>${esc(type)}</span>
             </label>`).join("")}
+          <label class="section-visibility-singer" title="Show this section on the karaoke singer screen">
+            <input type="checkbox" data-visible-singer="${index}" ${sectionVisibleOnSingerScreen(section) ? "checked" : ""}>
+            <span>SINGER SCREEN</span>
+          </label>
         </div>
         <button type="button" class="section-copy-btn" data-copy-section="${index}" title="Copy this whole section" aria-label="Copy this whole section">⧉</button>
       </div>`;
@@ -1568,6 +1588,9 @@
       const boxes = [...strip.querySelectorAll(`[data-visible-type="${i}"]`)];
       const selected = boxes.filter(box => box.checked).map(box => box.dataset.sessionType).filter(Boolean);
       sections[i].visibleForTypes = selected.length === eventTypes.length ? null : selected;
+
+      const singerBox = strip.querySelector(`[data-visible-singer="${i}"]`);
+      if (singerBox) sections[i].visibleOnSingerScreen = singerBox.checked;
     });
 
     document.querySelectorAll("[data-dash-colour]").forEach(el => {
@@ -2027,7 +2050,7 @@
         const custom = document.querySelector(`[data-title-custom="${index}"]`);
         if (custom) custom.value = getSystemSectionTitleColour(event.target.value);
       }
-    } else if (event.target.matches("[data-note],[data-html],[data-load-collapsed],[data-visible-type],[data-host-note-card],[data-section-pause-seconds],[data-section-scroll-speed]")) {
+    } else if (event.target.matches("[data-note],[data-html],[data-load-collapsed],[data-visible-type],[data-visible-singer],[data-host-note-card],[data-section-pause-seconds],[data-section-scroll-speed]")) {
       syncSectionsFromDOM();
     }
 
@@ -2202,7 +2225,7 @@
       return;
     }
 
-    if (event.target.matches("[data-visible-type]")) {
+    if (event.target.matches("[data-visible-type],[data-visible-singer]")) {
       syncSectionsFromDOM();
       markDirty();
       return;
