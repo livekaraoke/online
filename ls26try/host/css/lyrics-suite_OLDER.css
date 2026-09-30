@@ -3715,3 +3715,150 @@ body.host-view-page {
     min-width: 100%;
   }
 }
+
+
+/* ==========================================================================
+   2026-09-30 SINGER VIEW — readability, personalised background and states
+   ========================================================================== */
+
+body.singer-page.singer-song-mode {
+  background: var(--singer-custom-background, #00131a) !important;
+}
+
+body.singer-page .singer-section-body {
+  font-size: 34px;
+  line-height: 1.42;
+  font-weight: 900;
+}
+
+body.singer-page[data-size="small"] .singer-section-body {
+  font-size: 28px;
+}
+
+body.singer-page[data-size="large"] .singer-section-body {
+  font-size: 40px;
+}
+
+body.singer-page[data-size="xlarge"] .singer-section-body {
+  font-size: 48px;
+}
+
+.singer-colour-setting {
+  display: grid;
+  grid-template-columns: 58px 1fr;
+  align-items: center;
+  gap: 12px;
+  margin-top: 9px;
+}
+
+.singer-colour-setting input[type="color"] {
+  width: 58px;
+  height: 42px;
+  padding: 3px;
+  border: 1px solid #444;
+  border-radius: 7px;
+  background: #090909;
+}
+
+.singer-colour-setting span {
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  padding: 0 11px;
+  border: 1px solid #333;
+  border-radius: 7px;
+  background: #0c0c0c;
+  color: #fff;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px;
+}
+
+.karaoke-simple-state {
+  position: fixed;
+  z-index: 25;
+  inset: 70px 0 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  padding: 28px;
+  text-align: center;
+  background: #000;
+}
+
+.auto-send-idle-view img {
+  display: block;
+  width: min(760px, 76vw);
+  max-height: 66vh;
+  object-fit: contain;
+  margin: auto;
+}
+
+.song-finished-view {
+  background:
+    radial-gradient(circle at center, rgba(40, 205, 95, .12), transparent 42%),
+    #000;
+}
+
+.song-finished-card {
+  display: grid;
+  place-items: center;
+  gap: 14px;
+}
+
+.song-finished-card > span {
+  display: grid;
+  place-items: center;
+  width: clamp(82px, 11vw, 140px);
+  aspect-ratio: 1;
+  border: 3px solid #45e46c;
+  border-radius: 50%;
+  color: #64ef84;
+  font-size: clamp(48px, 7vw, 88px);
+  font-weight: 950;
+  box-shadow: 0 0 38px rgba(69, 228, 108, .22);
+}
+
+.song-finished-card h1 {
+  margin: 0;
+  color: #fff;
+  font-size: clamp(38px, 7vw, 92px);
+  font-weight: 950;
+  letter-spacing: .08em;
+  text-shadow: 0 0 24px rgba(255,255,255,.08);
+}
+
+.singer-auto-send-off-mode,
+.singer-finished-mode {
+  overflow: hidden;
+  background: #000 !important;
+}
+
+@media (max-width: 720px) {
+  body.singer-page .singer-section-body {
+    font-size: 30px;
+    line-height: 1.45;
+    font-weight: 900;
+  }
+
+  body.singer-page[data-size="small"] .singer-section-body {
+    font-size: 26px;
+  }
+
+  body.singer-page[data-size="large"] .singer-section-body {
+    font-size: 35px;
+  }
+
+  body.singer-page[data-size="xlarge"] .singer-section-body {
+    font-size: 41px;
+  }
+
+  .karaoke-simple-state {
+    inset: 62px 0 0;
+    padding: 20px;
+  }
+
+  .auto-send-idle-view img {
+    width: min(86vw, 700px);
+    max-height: 70vh;
+  }
+}
