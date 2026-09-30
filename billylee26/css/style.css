@@ -4217,3 +4217,175 @@ p,
     grid-column:1/-1!important;
   }
 }
+
+
+/* LIVE REQUESTS v15 — profile breathing room + MY DATA readability */
+.request-profile-heading{
+  margin-bottom:14px!important;
+  padding-bottom:10px!important;
+}
+.request-profile-grid{
+  column-gap:14px!important;
+  row-gap:17px!important;
+}
+.request-field{
+  gap:6px!important;
+}
+.request-email-help{
+  margin-top:3px!important;
+}
+.request-review-card{
+  margin-top:19px!important;
+  padding:13px 15px 14px!important;
+}
+.request-review-heading{
+  margin-bottom:12px!important;
+}
+.request-review-rating{
+  margin-bottom:13px!important;
+}
+.request-review-text{
+  gap:7px!important;
+}
+.request-review-text textarea{
+  min-height:82px!important;
+  max-height:108px!important;
+  padding:10px 12px!important;
+}
+.request-review-private{
+  margin-top:13px!important;
+  padding:10px 12px!important;
+}
+.request-profile-actions{
+  margin-top:15px!important;
+}
+
+/* Make the played state easier to read beside the favourite button. */
+.request-browser .song-row.is-played .song-action{
+  min-width:104px!important;
+  font-size:11px!important;
+  letter-spacing:.015em!important;
+}
+
+/* MY DATA — slightly larger labels, values and inner tabs throughout. */
+.request-data-tabs button{
+  min-height:44px!important;
+  font-size:11px!important;
+  letter-spacing:.045em!important;
+}
+.request-data-heading h3{
+  font-size:20px!important;
+}
+.request-data-heading p{
+  font-size:12px!important;
+}
+.request-history-stat-grid span{
+  font-size:10px!important;
+}
+.request-history-stat-grid strong{
+  font-size:30px!important;
+}
+.request-history-highlight-grid article>span{
+  font-size:10px!important;
+}
+.request-history-highlight-grid strong{
+  font-size:18px!important;
+}
+.request-history-highlight-grid small{
+  font-size:12px!important;
+}
+.request-history-summary span{
+  font-size:11px!important;
+}
+.request-history-summary strong{
+  font-size:13px!important;
+}
+.request-history-row-main>strong{
+  font-size:16px!important;
+}
+.request-history-row-main>span{
+  font-size:13px!important;
+}
+.request-history-row-main>small{
+  font-size:11px!important;
+}
+.request-history-row-main>em{
+  font-size:11px!important;
+  line-height:1.4!important;
+}
+.request-history-status{
+  min-height:29px!important;
+  padding:5px 10px!important;
+  font-size:10px!important;
+}
+.personal-favourites-card .request-history-section-title strong,
+.request-history-section-title strong{
+  font-size:12px!important;
+}
+.personal-favourites-empty{
+  font-size:12px!important;
+}
+.personal-favourite-list strong{
+  font-size:13px!important;
+}
+.personal-favourite-list small{
+  font-size:10px!important;
+}
+.request-ranking-list b{
+  font-size:11px!important;
+}
+.request-ranking-list span{
+  font-size:13px!important;
+}
+.request-ranking-list strong{
+  font-size:12px!important;
+}
+.request-history-fun-stat>span{
+  font-size:10px!important;
+}
+.request-history-fun-stat>small{
+  font-size:11px!important;
+}
+.request-session-history article>div:first-child strong{
+  font-size:15px!important;
+}
+.request-session-history article>div:first-child span{
+  font-size:11px!important;
+}
+.request-session-numbers{
+  font-size:11px!important;
+}
+.request-session-history article>small{
+  font-size:11px!important;
+}
+
+@media(max-width:760px){
+  .request-profile-heading{
+    margin-bottom:12px!important;
+  }
+  .request-profile-grid{
+    row-gap:15px!important;
+  }
+  .request-review-card{
+    margin-top:16px!important;
+  }
+  .request-data-tabs button{
+    font-size:10px!important;
+  }
+}
+
+@media(max-width:520px){
+  .request-profile-grid{
+    row-gap:13px!important;
+  }
+  .request-review-card{
+    margin-top:14px!important;
+  }
+  .request-review-text textarea{
+    min-height:76px!important;
+    max-height:98px!important;
+  }
+  .request-data-tabs button{
+    font-size:9px!important;
+  }
+}
