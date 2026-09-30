@@ -337,8 +337,10 @@
       .onSnapshot(snapshot => {
         if (generation !== sidebarRequestsGeneration) return;
         const pending = snapshot.docs.filter(doc => {
-          const status = String(doc.data().status || "").toLowerCase();
-          return !status || ["pending", "waiting", "active"].includes(status);
+          const data=doc.data()||{};
+          const status = String(data.status || "").toLowerCase();
+          if(!status || ["pending", "waiting", "active"].includes(status))return true;
+          return status==="cancelled" && data.cancelledDismissedByHost!==true;
         });
         const count = pending.length;
 
