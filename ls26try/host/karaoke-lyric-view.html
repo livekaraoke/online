@@ -33,6 +33,17 @@
     </div>
   </div>
 
+  <div id="autoSendIdleView" class="karaoke-simple-state auto-send-idle-view hidden" aria-live="polite">
+    <img src="img/karaokelyricdisplay_idle.png" alt="Live Karaoke">
+  </div>
+
+  <div id="songFinishedView" class="karaoke-simple-state song-finished-view hidden" aria-live="assertive">
+    <div class="song-finished-card">
+      <span>✓</span>
+      <h1>SONG FINISHED</h1>
+    </div>
+  </div>
+
   <div id="songLoadingView" class="song-loading-view hidden" aria-live="assertive">
     <div class="loading-pulse-ring"></div>
     <p>CURRENTLY LOADING SONG…</p>
@@ -56,6 +67,10 @@
     <label>FONT<div class="settings-options"><button data-font="default" class="active">Default</button><button data-font="arial">Arial</button><button data-font="dyslexic">OpenDyslexic</button></div></label>
     <label>TEXT SIZE<div class="settings-options"><button data-size="small">A−</button><button data-size="normal" class="active">A</button><button data-size="large">A＋</button><button data-size="xlarge">A＋＋</button></div></label>
     <label>LINE SPACING<div class="settings-options"><button data-spacing="normal" class="active">Default</button><button data-spacing="loose">Loose</button><button data-spacing="looser">Looser</button></div></label>
+    <label>BACKGROUND COLOUR
+      <div class="singer-colour-setting"><input id="singerBackgroundColor" type="color" value="#00131a" aria-label="Singer screen background colour"><span id="singerBackgroundColorValue">#00131A</span></div>
+    </label>
+    <label class="inline-setting">SHOW BOTTOM PLAY / SPEED BAR <input id="singerShowBottomBar" type="checkbox" checked></label>
     <label class="inline-setting">AUTO-SCROLL <input id="singerAutoScroll" type="checkbox"></label>
     <label>SCROLL SPEED<div class="stepper"><button id="singerSpeedDown">−</button><strong id="singerSpeedLabel">1.00×</strong><button id="singerSpeedUp">＋</button></div></label>
     <div class="tip-box"><h3>SINGING TIPS</h3><p>🎤 Sing out and have fun.</p><p>👥 Watch the host for cues.</p><p>★ You are doing great.</p></div>
@@ -72,6 +87,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
   <script src="js/firebase-config.js?v=20260910-stage4"></script>
+  <script data-ls26-settings="1" src="../shared/app-settings.js?v=20260930-karaoke-tools"></script>
   <script src="js/lyrics-common.js?v=20260930-singer-visibility-v3"></script>
   <script src="js/karaoke-lyric-view.js?v=20260930-singer-visibility-v3"></script>
 </body>
