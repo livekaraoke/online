@@ -596,13 +596,19 @@
     compactText('tsCompactType',schedule.start&&schedule.end?formatClock(schedule.start)+' – '+formatClock(schedule.end):'Time not set');
     compactText('tsCompactStarted',actual?formatClock(actual):'--:--');
     compactText('tsCompactElapsed',actual?shortDuration(Math.max(0,Date.now()-actual.getTime())):'0m');
-    compactText('tsCompactRequests',state.requests.filter(isPendingRequest).length);
-    compactText('tsCompactAlerts',Math.max(state.requests.filter(isPendingRequest).length,state.notifications.length));
+    compactText('tsCompactRequests',state.requests.filter(isPendingDisplayRequest).length);
+    compactText('tsCompactAlerts',Math.max(state.requests.filter(isPendingDisplayRequest).length,state.notifications.length));
   }
 
   function isPendingRequest(request) {
     const status = String(request?.status || "").toLowerCase();
     return !status || ["active","pending","waiting"].includes(status);
+  }
+
+  function isPendingDisplayRequest(request) {
+    const status=String(request?.status||"").toLowerCase();
+    if(isPendingRequest(request))return true;
+    return status==="cancelled" && request?.cancelledDismissedByHost!==true;
   }
 
   function pendingRequestTime(request) {
@@ -625,7 +631,7 @@
     // Oldest request stays at the top; every newer request is appended below it.
     // This makes the host accept requests in the order they were submitted.
     const pending = state.requests
-      .filter(isPendingRequest)
+      .filter(isPendingDisplayRequest)
       .slice()
       .sort(sortPendingRequestsOldestFirst);
 
@@ -649,35 +655,30 @@
       return;
     }
 
-    list.innerHTML = pending.map(request => `
-      <div class="ts-pending-request-row" data-ls-request="${esc(request.id)}">
-        <div class="ts-pending-main">
-          <strong>${esc(request.songTitle || request.title || "Untitled Song")}</strong>
-          <small>${esc(ArtistNames.display(request.artist || request.songArtist || ""))} · ${esc(request.singerName || request.name || "Singer")} · ${esc(request.location || "")}</small>
+    list.innerHTML = pending.map(request => {
+      const status=String(request.status||"").toLowerCase();
+      const cancelled=status==="cancelled";
+      return `
+        <div class="ts-pending-request-row${cancelled?" is-cancelled":""}" data-ls-request="${esc(request.id)}">
+          <div class="ts-pending-main">
+            <strong>${esc(request.songTitle || request.title || "Untitled Song")}</strong>
+            <small>${esc(ArtistNames.display(request.artist || request.songArtist || ""))} · ${esc(request.singerName || request.name || "Singer")} · ${esc(request.requesterCountry || request.location || "")}</small>
+            ${cancelled?`<em class="ts-request-cancelled-label">CANCELLED BY REQUESTER</em>`:""}
+          </div>
+          ${request.note?`<div class="ls26-request-note">${esc(request.note)}</div>`:''}
+          <div class="ts-pending-actions">
+            ${cancelled
+              ? `<button type="button" class="dismiss-cancelled" data-ts-dismiss-cancelled="${esc(request.id)}" title="Remove cancelled request from this list" aria-label="Remove cancelled request">✕</button>`
+              : `
+                <button type="button" class="accept" data-ts-accept="${esc(request.id)}" title="Accept into Run Order">✓</button>
+                <button type="button" class="abandon" data-ts-abandon-request="${esc(request.id)}" title="Singer left / abandoned">⊘</button>
+                <button type="button" class="decline" data-ts-decline="${esc(request.id)}" title="Decline request">✕</button>
+              `
+            }
+          </div>
         </div>
-        ${request.note?`<div class="ls26-request-note">${esc(request.note)}</div>`:''}
-        <div class="ts-pending-actions">
-          <button
-            type="button"
-            class="accept"
-            data-ts-accept="${esc(request.id)}"
-            title="Accept into Run Order"
-          >✓</button>
-          <button
-            type="button"
-            class="abandon"
-            data-ts-abandon-request="${esc(request.id)}"
-            title="Singer left / abandoned"
-          >⊘</button>
-          <button
-            type="button"
-            class="decline"
-            data-ts-decline="${esc(request.id)}"
-            title="Decline request"
-          >✕</button>
-        </div>
-      </div>
-    `).join("");
+      `;
+    }).join("");
   }
 
 
@@ -1077,6 +1078,15 @@
       deletedByHostAt: firebase.firestore.FieldValue.serverTimestamp(),
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     }, { merge:true });
+  }
+
+  async function dismissCancelledRequest(requestId){
+    if(!requestId||!state.db)return;
+    await state.db.collection("publicSongRequests").doc(requestId).set({
+      cancelledDismissedByHost:true,
+      cancelledDismissedAt:firebase.firestore.FieldValue.serverTimestamp(),
+      updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+    },{merge:true});
   }
 
   async function moveRunOrder(itemId,direction) {
@@ -1540,6 +1550,13 @@
         return;
       }
 
+      const dismissCancelled=event.target.closest("[data-ts-dismiss-cancelled]");
+      if(dismissCancelled){
+        event.preventDefault();
+        event.stopPropagation();
+        return dismissCancelledRequest(dismissCancelled.dataset.tsDismissCancelled);
+      }
+
       const accept = event.target.closest("[data-ts-accept]");
       if (accept) return acceptRequest(accept.dataset.tsAccept);
 
@@ -1657,7 +1674,7 @@
   LK.sessionTools.getPublicList = () => state.publicList||{};
   LK.sessionTools.getSongs = () => state.songs;
   LK.sessionTools.ensureSongs = ensureSongs;
-  LK.sessionTools.actions = {acceptRequest,abandonRequest,deleteRequest,moveRunOrder,abandonRunOrder,removeRunOrder,openRunOrderSong,openRunOrderDetails};
+  LK.sessionTools.actions = {acceptRequest,abandonRequest,deleteRequest,dismissCancelledRequest,moveRunOrder,abandonRunOrder,removeRunOrder,openRunOrderSong,openRunOrderDetails};
   window.addEventListener('pagehide',()=>{state.globalUnsubs.forEach(fn=>fn());state.sessionUnsubs.forEach(fn=>fn());state.linkedEventUnsub?.();});
   LK.sessionTools.getRunOrder = () => queueItems().map(item => ({...item}));
   LK.sessionTools.getSessionId = () => state.sessionId;
