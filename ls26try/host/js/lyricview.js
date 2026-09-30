@@ -1584,6 +1584,78 @@
     }
   }
 
+  async function publishAutoSendDisplayState(enabled) {
+    const on = enabled !== false;
+
+    try {
+      if (!on) {
+        await db.collection("karaokeControl").doc("liveLyrics").set({
+          currentLyricsSongId: "",
+          currentSongId: "",
+          songId: "",
+          song: null,
+          songTitle: "",
+          songArtist: "",
+          title: "",
+          artist: "",
+          displayState: "auto-send-off",
+          autoSendEnabled: false,
+          reset: false,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge:true });
+        autoKaraokeSentSongId = "";
+        return;
+      }
+
+      // Turning Auto Send back on leaves the singer on the ordinary
+      // waiting-for-next-singer screen until Play (or manual Send) occurs.
+      await db.collection("karaokeControl").doc("liveLyrics").set({
+        currentLyricsSongId: "",
+        currentSongId: "",
+        songId: "",
+        song: null,
+        songTitle: "",
+        songArtist: "",
+        title: "",
+        artist: "",
+        displayState: "idle",
+        autoSendEnabled: true,
+        reset: true,
+        resetAt: firebase.firestore.FieldValue.serverTimestamp(),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge:true });
+      autoKaraokeSentSongId = "";
+    } catch (error) {
+      console.warn("Could not update singer Auto Send display state:", error);
+    }
+  }
+
+  async function publishSingerSongFinished() {
+    // If Auto Send is off and this song was never manually sent, preserve the
+    // black Auto-Send-Off idle screen instead of flashing a completion state.
+    if (!autoSendToKaraokeEnabled() && autoKaraokeSentSongId !== currentSongId) return;
+
+    try {
+      await db.collection("karaokeControl").doc("liveLyrics").set({
+        displayState: "finished",
+        reset: false,
+        finishedSongId: currentSongId || "",
+        finishedSongTitle: currentSong?.title || "",
+        finishedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        singerSync: {
+          enabled: false,
+          playing: false,
+          songId: currentSongId || "",
+          updatedAtMs: Date.now()
+        },
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge:true });
+      autoKaraokeSentSongId = "";
+    } catch (error) {
+      console.warn("Could not show Song Finished on singer screen:", error);
+    }
+  }
+
   function autoSendCurrentSongToKaraoke() {
     if (!autoSendToKaraokeEnabled()) return;
     if (!currentSong || !currentSongId) return;
@@ -1635,6 +1707,7 @@
 
         song: currentSong,
         displayState: "song",
+        autoSendEnabled: autoSendToKaraokeEnabled(),
         reset: false,
         forceReloadToken: reloadToken,
         sentAt: firebase.firestore.FieldValue.serverTimestamp(),
@@ -1698,6 +1771,7 @@
         chordTranspose: 0,
         transpose: 0,
         displayState: "idle",
+        autoSendEnabled: autoSendToKaraokeEnabled(),
         reset: true,
         resetAt: firebase.firestore.FieldValue.serverTimestamp(),
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -2348,6 +2422,7 @@
     // Start persistence immediately, but do not hold the UI at [ END ] while
     // waiting for Firestore/network work.
     const finalizePromise=finalizeCurrentSongPlayed();
+    const singerFinishedPromise=publishSingerSongFinished();
     showEndCompletionPanel(true);
     showEndNextSongButton(true);
     if ($("endSessionActions")) $("endSessionActions").hidden = false;
@@ -2355,7 +2430,7 @@
     const detailsPromise=renderEndNextSongDetails();
 
     requestAnimationFrame(()=>setTimeout(slowScrollCompletionIntoView,80));
-    await Promise.allSettled([finalizePromise,detailsPromise]);
+    await Promise.allSettled([finalizePromise,detailsPromise,singerFinishedPromise]);
   }
 
 
@@ -2943,6 +3018,9 @@
     window.addEventListener("resize",updateSectionProgress);
     window.addEventListener("ls26:settings-applied",() => requestAnimationFrame(updateSectionProgress));
     window.addEventListener("ls26:singer-scroll-sync-changed", () => queueSingerSync(true));
+    window.addEventListener("ls26:auto-send-karaoke-changed", event => {
+      void publishAutoSendDisplayState(event.detail?.enabled !== false);
+    });
     window.addEventListener("lk:session-updated",syncEndSessionActions);
     window.addEventListener("lk:runorder-updated",() => {
       if (!$("endCompletionPanel")?.hidden) void renderEndNextSongDetails();
@@ -2966,6 +3044,13 @@
   async function init() {
     await Promise.all([loadSectionTitleDefaultsForView(), loadActiveSessionType()]);
     bindUi();
+
+    // Auto Send is a host-device preference. When it is already OFF on entry,
+    // make sure the singer display reflects that state even before Play.
+    if (!autoSendToKaraokeEnabled()) {
+      void publishAutoSendDisplayState(false);
+    }
+
     if (!songId) {
       $("lyricsContent").innerHTML = `<div class="host-load-error">No song selected.</div>`;
       return;
