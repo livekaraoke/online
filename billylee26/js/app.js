@@ -615,7 +615,10 @@
       localStorage.setItem(REQUEST_PROFILE_KEY,JSON.stringify(recovered));
       if(recovered.name)localStorage.setItem("billylee26.requestName",recovered.name);
       if(requestDocs.length)saveTrackedRequestIds([...trackedRequestIds(),...requestDocs.map(record=>record.id)]);
-      if(Array.isArray(cloudProfile?.favouriteSongIds))saveFavouriteSongIds(cloudProfile.favouriteSongIds);
+      const recoveredFavourites=Array.isArray(cloudProfile?.favouriteSongIds)
+        ? cloudProfile.favouriteSongIds
+        : (Array.isArray(latest.requesterFavouriteSongIds)?latest.requesterFavouriteSongIds:[]);
+      if(recoveredFavourites.length)saveFavouriteSongIds(recoveredFavourites);
       populateProfileForm();
       if(status){
         status.textContent="Recovered "+requestDocs.length+" request"+(requestDocs.length===1?"":"s")+(recovered.name?" for "+recovered.name:"")+".";
@@ -826,9 +829,11 @@
     if(target==="songs"){
       renderRequestCategoryCards();
       const selected=requestCategoryById(requestCategory);
-      if($("requestNotice"))$("requestNotice").textContent=requestCategory==="all"
-        ?"Choose a song. Tap + to continue."
-        :`${selected?.label||"Category"} · tap + to continue.`;
+      if($("requestNotice")){
+        if(requestCategory==="all")$("requestNotice").textContent="Choose a song. Tap + to continue.";
+        else if(requestCategory===ARTIST_BROWSE_CATEGORY)$("requestNotice").textContent="Browse by artist. Use the letters or search bar to jump through the list.";
+        else $("requestNotice").textContent=`${selected?.label||"Category"} · tap + to continue.`;
+      }
       renderSongResults();
     }
     if(target==="requests")void renderMyRequests();
@@ -1798,6 +1803,7 @@
         requesterGender:profile.gender,
         requesterDeviceId:requestDeviceId(),
         requesterEmailHash,
+        requesterFavouriteSongIds:favouriteSongIds(),
         note,
         comment:note,
         source:"billylee26",
