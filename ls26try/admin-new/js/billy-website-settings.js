@@ -47,15 +47,16 @@
   function normaliseCategory(item,index){
     const fallback=DEFAULTS[index]||{};
     const rule=String(item?.rule||fallback.rule||"");
+    const mode=String(item?.mode||fallback.mode||"custom");
     const rawSongIds=Array.isArray(item?.songIds)?item.songIds.map(String).filter(Boolean):[];
     return {
       id:slug(item?.id||fallback.id||`category-${index+1}`,`category-${index+1}`),
       label:String(item?.label||fallback.label||`CATEGORY ${index+1}`).trim().slice(0,24),
       subtitle:String(item?.subtitle||fallback.subtitle||"").trim().slice(0,40),
       enabled:item?.enabled!==false,
-      mode:String(item?.mode||fallback.mode||"custom"),
+      mode,
       rule,
-      songIds:rawSongIds.length?Array.from(new Set(rawSongIds)):(rule?defaultSongIds(rule):[])
+      songIds:mode==="custom"?Array.from(new Set(rawSongIds)):(rawSongIds.length?Array.from(new Set(rawSongIds)):(rule?defaultSongIds(rule):[]))
     };
   }
 
