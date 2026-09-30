@@ -11,6 +11,8 @@
   let songs = [];
   let publicSetlist = null;
   let requestListeners = [];
+  let sessionRequests = [];
+  let sessionRequestsUnsub = null;
   let latestEvents = [];
   let selectedRequestSongId = "";
   let elapsedTimer = null;
@@ -275,10 +277,35 @@
     if(!id){renderLive();return;}
     sessionUnsub=db.collection("performanceSessions").doc(id).onSnapshot(doc=>{activeSession=doc.exists?(doc.data()||{}):null;renderLive();},err=>console.error("Session listener failed",err));
   }
+
+  function attachSessionRequests(id){
+    if(sessionRequestsUnsub){try{sessionRequestsUnsub();}catch{} sessionRequestsUnsub=null;}
+    sessionRequests=[];
+    if(!id){
+      if($("requestDialog")?.open && !$("requestBrowser")?.hidden)renderSongResults();
+      return;
+    }
+    sessionRequestsUnsub=db.collection("publicSongRequests")
+      .where("sessionId","==",id)
+      .onSnapshot(snapshot=>{
+        sessionRequests=snapshot.docs.map(doc=>({id:doc.id,...(doc.data()||{})}));
+        if($("requestDialog")?.open && !$("requestBrowser")?.hidden)renderSongResults();
+      },error=>{
+        console.warn("Could not watch session request availability:",error);
+        sessionRequests=[];
+      });
+  }
+
   function listenLiveState(){
     db.collection("karaokeControl").doc("currentSession").onSnapshot(doc=>{
       const d=doc.exists?(doc.data()||{}):{}; controlData=d; const next=d.active===true?String(d.sessionId||d.activeSessionId||""):"";
-      if(next!==activeSessionId){activeSessionId=next;attachSessionDoc(next);if($("requestDialog")?.open) renderMyRequests();} renderLive();
+      if(next!==activeSessionId){
+        activeSessionId=next;
+        attachSessionDoc(next);
+        attachSessionRequests(next);
+        if($("requestDialog")?.open) renderMyRequests();
+      }
+      renderLive();
     },err=>console.error("Current session listener failed",err));
     db.collection("karaokeControl").doc("runOrder").onSnapshot(doc=>{
       const d=doc.exists?(doc.data()||{}):{};
@@ -325,10 +352,35 @@
     return !ia||!sa||ia===sa;
   }
   function songSessionState(song){
-    const matches=runOrder.filter(item=>sameSong(item,song));
-    if(matches.some(item=>String(item.status||"").toLowerCase()==="playing")) return "playing";
-    if(matches.some(item=>["played","completed"].includes(String(item.status||"").toLowerCase()))) return "played";
-    return "available";
+    const releasedStatuses=new Set(["cancelled","declined","deleted","deletedbyhost","abandoned","left","rejected"]);
+    const playedStatuses=new Set(["played","completed","finished"]);
+    const activeRequestStatuses=new Set(["active","pending","waiting","queued","accepted","playing","requested"]);
+
+    const requestMatches=sessionRequests.filter(request=>sameSong(request,song));
+    if(requestMatches.some(request=>playedStatuses.has(String(request.status||"").toLowerCase())))return "played";
+
+    const runMatches=runOrder.filter(item=>sameSong(item,song));
+    if(runMatches.some(item=>playedStatuses.has(String(item.status||"").toLowerCase())))return "played";
+    if(runMatches.some(item=>String(item.status||"").toLowerCase()==="playing"))return "playing";
+
+    if(requestMatches.some(request=>{
+      const status=String(request.status||"active").toLowerCase();
+      return activeRequestStatuses.has(status)&&!releasedStatuses.has(status);
+    }))return "requested";
+
+    const requestById=new Map(sessionRequests.map(request=>[String(request.id||""),request]));
+    const activeRunMatch=runMatches.some(item=>{
+      const status=String(item.status||"queued").toLowerCase();
+      if(playedStatuses.has(status)||status==="playing")return false;
+      if(["cancelled","declined","deleted","deletedbyhost","abandoned","left"].includes(status))return false;
+      if(item.requestId){
+        const request=requestById.get(String(item.requestId));
+        const requestStatus=String(request?.status||"").toLowerCase();
+        if(request&&releasedStatuses.has(requestStatus))return false;
+      }
+      return true;
+    });
+    return activeRunMatch?"requested":"available";
   }
   function runOrderStatusForRequest(requestId){
     const item=runOrder.find(row=>row?.requestId===requestId);
@@ -388,9 +440,41 @@
     syncRequesterUi();
   }
 
-  function forgetRequestProfile(){
+  let requestActionConfirmResolve=null;
+
+  function showRequestActionConfirm({title="CONFIRM",message="",confirmLabel="CONFIRM",cancelLabel="KEEP",danger=true}={}){
+    const dialog=$("requestActionConfirmDialog");
+    if(!dialog)return Promise.resolve(false);
+    if(requestActionConfirmResolve){
+      requestActionConfirmResolve(false);
+      requestActionConfirmResolve=null;
+    }
+    $("requestActionConfirmTitle").textContent=title;
+    $("requestActionConfirmMessage").textContent=message;
+    $("requestActionConfirmOkBtn").textContent=confirmLabel;
+    $("requestActionConfirmCancelBtn").textContent=cancelLabel;
+    $("requestActionConfirmOkBtn").classList.toggle("danger",danger);
+    if(!dialog.open)dialog.showModal();
+    return new Promise(resolve=>{requestActionConfirmResolve=resolve;});
+  }
+
+  function finishRequestActionConfirm(result){
+    if($("requestActionConfirmDialog")?.open)$("requestActionConfirmDialog").close();
+    const resolve=requestActionConfirmResolve;
+    requestActionConfirmResolve=null;
+    if(resolve)resolve(!!result);
+  }
+
+  async function forgetRequestProfile(){
     const name=requestProfile().name||"this user";
-    if(!confirm(`Forget ${name} on this device? This clears the saved profile and this device's My Requests history.`))return;
+    const confirmed=await showRequestActionConfirm({
+      title:"FORGET USER?",
+      message:`Forget ${name} on this device? This clears the saved profile and this device's My Requests history.`,
+      confirmLabel:"FORGET USER",
+      cancelLabel:"KEEP USER",
+      danger:true
+    });
+    if(!confirmed)return;
     clearRequestListeners();
     localStorage.removeItem(REQUEST_PROFILE_KEY);
     localStorage.removeItem("billylee26.requestName");
@@ -571,6 +655,7 @@
       let action="＋",disabled="",stateClass="";
       if(state==="playing"){action="NOW PLAYING";disabled=" disabled";stateClass=" is-playing";}
       else if(state==="played"){action="ALREADY PLAYED";disabled=" disabled";stateClass=" is-played";}
+      else if(state==="requested"){action="ALREADY REQUESTED";disabled=" disabled";stateClass=" is-requested";}
       const artist=ArtistNames.display(song.artist||"");
       const year=String(song.year||"").trim();
       const meta=[artist,year].filter(Boolean).join(" • ");
@@ -800,7 +885,14 @@
 
   async function cancelMyRequest(requestId){
     if(!requestId||!trackedRequestIds().includes(requestId))return;
-    if(!confirm("Cancel this song request?"))return;
+    const confirmed=await showRequestActionConfirm({
+      title:"CANCEL REQUEST?",
+      message:"Cancel this song request? The host will see that you cancelled it.",
+      confirmLabel:"CANCEL REQUEST",
+      cancelLabel:"KEEP REQUEST",
+      danger:true
+    });
+    if(!confirmed)return;
 
     try{
       const requestRef=db.collection("publicSongRequests").doc(requestId);
@@ -1232,6 +1324,10 @@
   $("requestStartName").addEventListener("keydown",e=>{if(e.key==="Enter")continueFromRequestName();});
   $("requestNoteDialogSaveBtn").addEventListener("click",saveMyRequestNote);
   $("requestNoteDialogCancelBtn").addEventListener("click",closeMyRequestNoteEditor);
+  $("requestActionConfirmOkBtn").addEventListener("click",()=>finishRequestActionConfirm(true));
+  $("requestActionConfirmCancelBtn").addEventListener("click",()=>finishRequestActionConfirm(false));
+  $("requestActionConfirmDialog").addEventListener("cancel",event=>{event.preventDefault();finishRequestActionConfirm(false);});
+  $("requestActionConfirmDialog").addEventListener("close",()=>{if(requestActionConfirmResolve)finishRequestActionConfirm(false);});
   $("requestNoteDialogInput").addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&e.key==="Enter")saveMyRequestNote();});
   $("continueRequestBtn").addEventListener("click",continueToSongs);
   $("singerName").addEventListener("keydown",e=>{if(e.key==="Enter")continueToSongs();});
@@ -1272,5 +1368,6 @@
   syncRequesterUi();
   $("shareBtn").addEventListener("click",async()=>{try{if(navigator.share)await navigator.share({title:document.title,url:location.href});else{await navigator.clipboard.writeText(location.href);alert("Link copied.");}}catch{}});
 
+  window.addEventListener("pagehide",()=>{try{sessionRequestsUnsub?.();}catch{}});
   listenEventTypes(); listenEvents(); listenLiveState(); listenWebsiteRequestSettings(); renderRequestCategoryCards(); renderRequestInfo(); renderLive();
 })();
