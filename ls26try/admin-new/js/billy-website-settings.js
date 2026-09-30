@@ -29,6 +29,7 @@
   let songs = [];
   let state = {
     showCategoryCards:true,
+    showArtistSearchCard:true,
     categoryCardSize:DEFAULT_CONTENT.categoryCardSize,
     categories:DEFAULTS.map(item=>({...item})),
     faqs:DEFAULT_FAQS.map(item=>({...item})),
@@ -97,6 +98,7 @@
     const faqSource=Array.isArray(data.faqs)&&data.faqs.length?data.faqs:DEFAULT_FAQS;
     return {
       showCategoryCards:data.showCategoryCards!==false,
+      showArtistSearchCard:data.showArtistSearchCard!==false,
       categoryCardSize:Math.max(60,Math.min(120,Number(data.categoryCardSize)||DEFAULT_CONTENT.categoryCardSize)),
       categories:source.slice(0,8).map(normaliseCategory),
       faqs:faqSource.slice(0,20).map(normaliseFaq),
@@ -136,6 +138,7 @@
 
   function render(){
     $("showCategoryCards").checked=state.showCategoryCards!==false;
+    if($("showArtistSearchCard"))$("showArtistSearchCard").checked=state.showArtistSearchCard!==false;
     if($("categoryCardSize")){
       $("categoryCardSize").value=String(state.categoryCardSize||DEFAULT_CONTENT.categoryCardSize);
       $("categoryCardSizeValue").textContent=`${$("categoryCardSize").value} px`;
@@ -234,6 +237,7 @@
     setStatus("Saving…");
     try{
       state.showCategoryCards=$("showCategoryCards").checked;
+      state.showArtistSearchCard=$("showArtistSearchCard")?.checked!==false;
       state.categoryCardSize=Math.max(60,Math.min(120,Number($("categoryCardSize")?.value)||DEFAULT_CONTENT.categoryCardSize));
       state.instagramUrl=String($("websiteInstagramUrl")?.value||"").trim();
       state.facebookUrl=String($("websiteFacebookUrl")?.value||"").trim();
@@ -241,6 +245,7 @@
       state.aboutDetailed=String($("websiteAboutDetailed")?.value||"").trim();
       await SETTINGS_DOC().set({
         showCategoryCards:state.showCategoryCards,
+        showArtistSearchCard:state.showArtistSearchCard,
         categoryCardSize:state.categoryCardSize,
         instagramUrl:state.instagramUrl,
         facebookUrl:state.facebookUrl,
@@ -290,6 +295,7 @@
     if(!confirm("Reset all Billy Lee website settings on this page to their defaults?"))return;
     state={
       showCategoryCards:true,
+      showArtistSearchCard:true,
       categoryCardSize:DEFAULT_CONTENT.categoryCardSize,
       categories:DEFAULTS.map((item,index)=>normaliseCategory(item,index)),
       faqs:DEFAULT_FAQS.map((item,index)=>normaliseFaq(item,index)),
@@ -424,6 +430,7 @@
   });
 
   $("showCategoryCards").addEventListener("change",()=>{state.showCategoryCards=$("showCategoryCards").checked;});
+  $("showArtistSearchCard")?.addEventListener("change",()=>{state.showArtistSearchCard=$("showArtistSearchCard").checked;});
   $("categoryCardSize").addEventListener("input",()=>{
     const value=Math.max(60,Math.min(120,Number($("categoryCardSize").value)||DEFAULT_CONTENT.categoryCardSize));
     state.categoryCardSize=value;
