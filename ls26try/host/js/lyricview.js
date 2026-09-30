@@ -49,6 +49,9 @@
   let ensurePlayingDone = false;
   let ensurePlayingRetryAfter = 0;
   let autoScrollEndHandled = false;
+  let karaokeSendInFlightSongId = "";
+  let autoKaraokeSentSongId = "";
+  const AUTO_SEND_KARAOKE_KEY = "ls26:autoSendToKaraoke";
 
   // AUTOSCROLL:
   // 1.00× is now physically one-third of the old 1.00× pace.
@@ -1466,13 +1469,38 @@
     if ($("tabTransposeValue")) $("tabTransposeValue").textContent = String(tabShift);
   }
 
-  async function sendToKaraoke() {
+  function autoSendToKaraokeEnabled() {
+    try {
+      return localStorage.getItem(AUTO_SEND_KARAOKE_KEY) !== "false";
+    } catch (_) {
+      return true;
+    }
+  }
+
+  function autoSendCurrentSongToKaraoke() {
+    if (!autoSendToKaraokeEnabled()) return;
+    if (!currentSong || !currentSongId) return;
+    if (autoKaraokeSentSongId === currentSongId) return;
+    if (karaokeSendInFlightSongId === currentSongId) return;
+    void sendToKaraoke({ silent:true });
+  }
+
+  async function sendToKaraoke(options = {}) {
+    const silent = options?.silent === true;
+
     if (!currentSong || !currentSongId) {
-      return showModal(
+      if (silent) return false;
+      await showModal(
         "No Song Loaded",
         "Open a song before sending it to the karaoke display."
       );
+      return false;
     }
+
+    if (karaokeSendInFlightSongId === currentSongId) return false;
+
+    const songIdBeingSent = currentSongId;
+    karaokeSendInFlightSongId = songIdBeingSent;
 
     const button = $("sendToKaraokeBtn");
     const quickButton = $("quickSendToKaraokeBtn");
@@ -1506,18 +1534,35 @@
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       }, { merge:true });
 
-      await showModal(
-        "Sent to Karaoke",
-        `${currentSong.title || "The song"} is being sent to the karaoke display.`
-      );
+      autoKaraokeSentSongId = songIdBeingSent;
+
+      if (!silent) {
+        await showModal(
+          "Sent to Karaoke",
+          `${currentSong.title || "The song"} is being sent to the karaoke display.`
+        );
+      }
+      return true;
     } catch (error) {
       console.error("Could not send song to karaoke display:", error);
 
-      await showModal(
-        "Send Failed",
-        error?.message || "Could not update the karaoke display."
-      );
+      if (silent) {
+        window.LS26?.toast?.(
+          error?.message
+            ? `Auto-send to karaoke failed: ${error.message}`
+            : "Auto-send to karaoke failed."
+        );
+      } else {
+        await showModal(
+          "Send Failed",
+          error?.message || "Could not update the karaoke display."
+        );
+      }
+      return false;
     } finally {
+      if (karaokeSendInFlightSongId === songIdBeingSent) {
+        karaokeSendInFlightSongId = "";
+      }
       if (button) button.disabled = false;
       if (quickButton) quickButton.disabled = false;
     }
@@ -1551,6 +1596,8 @@
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       }, { merge:true });
 
+      // A deliberate reset means the next Play may auto-send this song again.
+      autoKaraokeSentSongId = "";
       $("karaokeMenu")?.classList.add("hidden");
     } catch (error) {
       console.error("Could not reset karaoke display:", error);
@@ -2502,6 +2549,12 @@
         $("endNextSongDetailsCard").hidden = true;
         $("endNextSongDetailsCard").innerHTML = "";
       }
+
+      // When enabled, the first Play for this loaded song performs the same
+      // karaokeControl/liveLyrics write as SEND TO KARAOKE. It is intentionally
+      // silent and only runs once per song so pause/resume never resets the
+      // singer display back to the start.
+      autoSendCurrentSongToKaraoke();
 
       // PLAY marks the matching Run Order item as "playing", keeping it
       // visible and highlighted in the Top Status Bar.
