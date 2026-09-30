@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#02080d">
   <title>Billy Lee — Live Music</title>
   <meta name="description" content="Billy Lee — live music, gigs, requests and live performance in Malta.">
-  <link rel="stylesheet" href="css/style.css?v=20260930-profile-favourites-v2">
+  <link rel="stylesheet" href="css/style.css?v=20260930-my-data-v1">
 </head>
 <body>
   <header class="hero" id="top">
@@ -240,48 +240,6 @@
     </div>
   </dialog>
 
-  <dialog id="requestHistoryDialog" class="modal request-history-dialog">
-    <div class="request-history-shell">
-      <div class="request-history-top">
-        <div>
-          <span class="eyebrow">YOUR LIVE REQUESTS</span>
-          <h2>REQUEST HISTORY &amp; STATS</h2>
-          <p>History linked to this profile and device, with email recovery when available.</p>
-        </div>
-        <button class="modal-close" data-close="requestHistoryDialog" aria-label="Close request history">×</button>
-      </div>
-      <div class="request-history-tabs" role="tablist" aria-label="Request history sections">
-        <button type="button" class="active" data-request-history-tab="overview" role="tab">OVERVIEW</button>
-        <button type="button" data-request-history-tab="history" role="tab">HISTORY</button>
-        <button type="button" data-request-history-tab="songlist" role="tab">SONG LIST</button>
-        <button type="button" data-request-history-tab="favourites" role="tab">FAVOURITES</button>
-        <button type="button" data-request-history-tab="sessions" role="tab">SESSIONS</button>
-      </div>
-      <div class="request-history-body">
-        <div id="requestHistoryLoading" class="request-history-loading">Loading your request history…</div>
-        <section id="requestHistoryOverview" class="request-history-panel" data-request-history-panel="overview"></section>
-        <section id="requestHistoryHistory" class="request-history-panel" data-request-history-panel="history" hidden></section>
-        <section id="requestHistorySongList" class="request-history-panel request-history-songlist" data-request-history-panel="songlist" hidden>
-          <div id="historySongCategoryGrid" class="request-category-grid history-song-category-grid" aria-label="Song categories"></div>
-          <div id="historySongAlphabetRow" class="request-alphabet-row" aria-label="Jump by first letter"></div>
-          <button id="historyMyFavouritesCard" class="history-my-favourites-card" type="button" aria-pressed="false">
-            <span aria-hidden="true">♥</span>
-            <strong>MY FAVOURITES</strong>
-            <small id="historyFavouriteCount">0 songs</small>
-          </button>
-          <div class="history-song-controls">
-            <input id="historySongSearch" type="search" placeholder="Search song or artist…" autocomplete="off" inputmode="search">
-            <button id="historyClearSongCategoryBtn" class="request-filter-clear" type="button" hidden>SHOW ALL</button>
-          </div>
-          <div id="historySongNotice" class="request-notice">Browse, request, or favourite songs.</div>
-          <div id="historySongResults" class="history-song-results"></div>
-        </section>
-        <section id="requestHistoryFavourites" class="request-history-panel" data-request-history-panel="favourites" hidden></section>
-        <section id="requestHistorySessions" class="request-history-panel" data-request-history-panel="sessions" hidden></section>
-      </div>
-    </div>
-  </dialog>
-
   <dialog id="requestDialog" class="modal request-modal">
     <div class="request-modal-top">
       <div class="request-header">
@@ -313,28 +271,25 @@
 
         <section id="requestProfilePanel" class="request-tab-panel request-profile-panel" data-request-panel="profile" hidden>
           <div class="request-panel-heading request-profile-heading">
-            <div>
-              <span class="eyebrow">YOUR DETAILS</span>
-              <h3>PROFILE</h3>
-            </div>
+            <h3>YOUR PROFILE</h3>
             <p>Saved on this device for faster requests.</p>
           </div>
 
           <div class="request-profile-grid">
-            <div class="request-field request-field-wide request-name-field">
+            <div class="request-field request-name-field">
               <label for="singerName">NAME</label>
               <div class="request-name-control">
                 <input id="singerName" type="text" maxlength="60" placeholder="Your name" autocomplete="name">
                 <button id="forgetRequestProfileBtn" class="forget-profile-btn" type="button">FORGET USER</button>
               </div>
             </div>
-            <div class="request-field request-field-wide request-email-field">
+            <div class="request-field request-email-field">
               <label for="requestProfileEmail">EMAIL ADDRESS <small>OPTIONAL · PROFILE RECOVERY</small></label>
               <div class="request-email-control">
                 <input id="requestProfileEmail" type="email" maxlength="160" placeholder="you@example.com" autocomplete="email">
-                <button id="recoverRequestProfileBtn" class="recover-profile-btn" type="button">RECOVER PROFILE</button>
+                <button id="recoverRequestProfileBtn" class="recover-profile-btn" type="button" disabled aria-disabled="true" title="Profile recovery is coming soon">RECOVER PROFILE</button>
               </div>
-              <small class="request-email-help">Used only to recover your saved request history/profile on another device.</small>
+              <small class="request-email-help">Saved for future profile recovery.</small>
             </div>
             <label class="request-field">COUNTRY <small>OPTIONAL</small>
               <input id="requestProfileCountry" type="text" maxlength="80" placeholder="e.g. Malta" autocomplete="country-name">
@@ -364,10 +319,7 @@
 
           <div class="request-review-card">
             <div class="request-review-heading">
-              <div>
-                <span class="eyebrow">YOUR EXPERIENCE</span>
-                <h3>RATE / REVIEW</h3>
-              </div>
+              <h3>RATE / REVIEW YOUR EXPERIENCE</h3>
               <span class="request-review-optional">OPTIONAL</span>
             </div>
 
@@ -397,7 +349,6 @@
 
           <div class="request-profile-actions">
             <button id="continueRequestBtn" class="primary-btn" type="button">SAVE PROFILE</button>
-            <button id="openRequestHistoryBtn" class="request-history-open-btn" type="button">MY REQUEST HISTORY &amp; STATS →</button>
             <span id="requestProfileStatus" class="request-profile-status" role="status"></span>
           </div>
         </section>
@@ -441,6 +392,27 @@
           <div id="myRequests" class="my-requests-scroll"></div>
         </section>
 
+        <section id="requestMyDataPanel" class="request-tab-panel request-my-data-panel" data-request-panel="data" hidden>
+          <div class="request-panel-heading request-data-heading">
+            <span class="eyebrow">YOUR LIVE REQUESTS</span>
+            <h3>MY DATA</h3>
+            <p>Your request history, favourites and stats saved for this profile/device.</p>
+          </div>
+          <div class="request-history-tabs request-data-tabs" role="tablist" aria-label="My data sections">
+            <button type="button" class="active" data-request-history-tab="overview" role="tab">OVERVIEW</button>
+            <button type="button" data-request-history-tab="history" role="tab">HISTORY</button>
+            <button type="button" data-request-history-tab="favourites" role="tab">FAVOURITES</button>
+            <button type="button" data-request-history-tab="sessions" role="tab">SESSIONS</button>
+          </div>
+          <div class="request-history-body request-data-body">
+            <div id="requestHistoryLoading" class="request-history-loading">Loading your request history…</div>
+            <section id="requestHistoryOverview" class="request-history-panel" data-request-history-panel="overview"></section>
+            <section id="requestHistoryHistory" class="request-history-panel" data-request-history-panel="history" hidden></section>
+            <section id="requestHistoryFavourites" class="request-history-panel" data-request-history-panel="favourites" hidden></section>
+            <section id="requestHistorySessions" class="request-history-panel" data-request-history-panel="sessions" hidden></section>
+          </div>
+        </section>
+
         <section id="requestInfoPanel" class="request-tab-panel request-info-panel" data-request-panel="info" hidden>
           <div class="request-panel-heading">
             <span class="eyebrow">HELP</span>
@@ -464,6 +436,7 @@
         <button type="button" data-request-tab="profile" aria-label="Profile" title="Profile"><span aria-hidden="true">👤</span><small>PROFILE</small></button>
         <button type="button" data-request-tab="songs" class="active"><span aria-hidden="true">♫</span><small>SONG LIST</small></button>
         <button type="button" data-request-tab="requests"><span aria-hidden="true">☷</span><small>MY REQUESTS</small></button>
+        <button type="button" data-request-tab="data"><span aria-hidden="true">▦</span><small>MY DATA</small></button>
         <button type="button" data-request-tab="info" aria-label="Information" title="Information"><span aria-hidden="true">ⓘ</span><small>INFO</small></button>
       </nav>
     </section>
@@ -474,6 +447,6 @@
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
   <script src="js/firebase-config.js"></script>
   <script src="js/youtube-videos.js"></script>
-  <script src="js/app.js?v=20260930-profile-favourites-v2"></script>
+  <script src="js/app.js?v=20260930-my-data-v1"></script>
 </body>
 </html>
