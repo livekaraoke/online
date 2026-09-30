@@ -47,3 +47,32 @@
     height: 32px;
   }
 }
+
+
+/* requester-cancelled requests stay visible until host dismisses them */
+.active-request-row.request-cancelled-by-requester{
+  border-color:rgba(145,108,216,.38);
+  background:linear-gradient(90deg,rgba(75,49,132,.13),transparent 55%);
+}
+.request-cancelled-label{
+  display:inline-flex;
+  align-items:center;
+  min-height:24px;
+  padding:3px 7px;
+  border:1px solid #8769cd;
+  border-radius:999px;
+  background:rgba(86,57,150,.18);
+  color:#cbb7ff;
+  font-size:9px;
+  font-weight:900;
+  letter-spacing:.04em;
+  white-space:nowrap;
+}
+.request-actions:has(.request-cancelled-label){
+  align-items:center;
+  justify-content:flex-end;
+  gap:7px;
+}
+.request-dismiss-cancelled{
+  flex:0 0 34px;
+}
