@@ -236,12 +236,11 @@ window.LyricsCommon = (() => {
     const blocks = [...root.querySelectorAll("div,p,pre,li")];
     blocks.forEach(stripSingerNonLyricBreakLines);
 
-    // Handle legacy sections whose content is directly in the section root.
-    if (
-      !root.querySelector("div,p,pre,li") &&
-      singerLineShouldBeRemoved(root.textContent)
-    ) {
-      root.innerHTML = "";
+    // LyricsCreator commonly stores direct text + <br> nodes with no wrapper.
+    // Run the same per-line filter on the section root in that case so a cue
+    // line can be removed without deleting the lyrics that follow it.
+    if (!root.querySelector("div,p,pre,li")) {
+      stripSingerNonLyricBreakLines(root);
     }
 
     const html = root.innerHTML.trim();
