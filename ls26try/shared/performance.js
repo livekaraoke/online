@@ -23,6 +23,7 @@
         <span>AUTO SEND TO KARAOKE ON PLAY</span>
         <strong id="ls26AutoSendKaraokeState">ON</strong>
       </button>
+      <label class="ls26-karaoke-toggle"><input type="checkbox" id="ls26SyncSingerScroll"> Sync singer auto-scroll with LyricView</label>
       <label class="ls26-karaoke-toggle"><input type="checkbox" id="ls26ShowKaraoke"> Show karaoke tools</label>`;
     const karaokeHeading=karaokeCard?.querySelector('h3');
     if(karaokeHeading)karaokeHeading.insertAdjacentElement('afterend',karaokePreferences);
@@ -45,6 +46,19 @@
     }
     let autoSend=true;try{autoSend=localStorage.getItem(autoSendKey)!=='false';}catch(_){}setAutoSend(autoSend);
     if(autoSendButton)autoSendButton.onclick=()=>setAutoSend(autoSendButton.getAttribute('aria-pressed')!=='true');
+
+    const singerSyncToggle=$('ls26SyncSingerScroll');
+    const singerSyncKey='ls26:syncSingerScroll';
+    function setSingerSync(enabled, notify=false){
+      const on=enabled===true;
+      if(singerSyncToggle)singerSyncToggle.checked=on;
+      try{localStorage.setItem(singerSyncKey,String(on));}catch(_){}
+      if(notify){
+        window.dispatchEvent(new CustomEvent('ls26:singer-scroll-sync-changed',{detail:{enabled:on}}));
+      }
+    }
+    let singerSync=false;try{singerSync=localStorage.getItem(singerSyncKey)==='true';}catch(_){}setSingerSync(singerSync);
+    if(singerSyncToggle)singerSyncToggle.onchange=e=>setSingerSync(e.target.checked,true);
 
     const panel=document.createElement('section');panel.className='song-info-card ls26-bpm-panel';panel.innerHTML=`
       <div class="ls26-bpm-panel-head">
