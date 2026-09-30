@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#02080d">
   <title>Billy Lee — Live Music</title>
   <meta name="description" content="Billy Lee — live music, gigs, requests and live performance in Malta.">
-  <link rel="stylesheet" href="css/style.css?v=20260930-artist-alpha-v1">
+  <link rel="stylesheet" href="css/style.css?v=20260930-artist-alpha-profile-v2">
 </head>
 <body>
   <header class="hero" id="top">
@@ -287,7 +287,6 @@
               <label for="requestProfileEmail">EMAIL ADDRESS <small>OPTIONAL · PROFILE RECOVERY</small></label>
               <div class="request-email-control">
                 <input id="requestProfileEmail" type="email" maxlength="160" placeholder="you@example.com" autocomplete="email">
-                <button id="recoverRequestProfileBtn" class="recover-profile-btn" type="button" disabled aria-disabled="true" title="Profile recovery is coming soon">RECOVER PROFILE</button>
               </div>
               <small class="request-email-help">Saved for future profile recovery.</small>
             </div>
@@ -349,6 +348,7 @@
 
           <div class="request-profile-actions">
             <button id="continueRequestBtn" class="primary-btn" type="button">SAVE PROFILE</button>
+            <button id="recoverRequestProfileBtn" class="recover-profile-btn" type="button" disabled aria-disabled="true" title="Profile recovery is coming soon">RECOVER PROFILE</button>
             <span id="requestProfileStatus" class="request-profile-status" role="status"></span>
           </div>
         </section>
@@ -447,6 +447,6 @@
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
   <script src="js/firebase-config.js"></script>
   <script src="js/youtube-videos.js"></script>
-  <script src="js/app.js?v=20260930-artist-alpha-v1"></script>
+  <script src="js/app.js?v=20260930-artist-alpha-profile-v2"></script>
 </body>
 </html>
