@@ -172,7 +172,10 @@ window.LyricsCommon = (() => {
     });
 
     if (groups.length <= 1) {
-      if (singerLineShouldBeRemoved(block.textContent)) block.remove();
+      if (singerLineShouldBeRemoved(block.textContent)) {
+        if (block.parentNode) block.remove();
+        else block.replaceChildren();
+      }
       return;
     }
 
