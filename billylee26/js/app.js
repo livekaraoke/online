@@ -1493,7 +1493,7 @@
       const empty='<div class="request-history-empty"><strong>No saved request history yet.</strong><span>Requests made from this device will build your stats here.</span></div>';
       overview.innerHTML=empty;
       history.innerHTML=empty;
-      favourites.innerHTML=empty;
+      favourites.innerHTML=personalFavouritesAnalyticsCard()+empty;
       sessionsPanel.innerHTML=empty;
       return;
     }
@@ -1548,6 +1548,7 @@
       '</div>';
 
     favourites.innerHTML=
+      personalFavouritesAnalyticsCard()+
       '<div class="request-history-favourites-grid">'+
         '<section>'+
           '<div class="request-history-section-title"><span>♫</span><strong>TOP SONGS</strong></div>'+
@@ -1599,7 +1600,7 @@
   }
 
   function switchRequestHistoryTab(tab){
-    const target=["overview","history","favourites","sessions"].includes(tab)?tab:"overview";
+    const target=["overview","history","songlist","favourites","sessions"].includes(tab)?tab:"overview";
     document.querySelectorAll("[data-request-history-tab]").forEach(button=>{
       const active=button.dataset.requestHistoryTab===target;
       button.classList.toggle("active",active);
@@ -1608,6 +1609,13 @@
     document.querySelectorAll("[data-request-history-panel]").forEach(panel=>{
       panel.hidden=panel.dataset.requestHistoryPanel!==target;
     });
+    if(target==="songlist"){
+      renderHistorySongCategoryCards();
+      renderHistorySongList();
+    }
+    if(target==="favourites"){
+      renderRequestHistoryAnalytics(currentHistoryRecords,currentHistorySessions);
+    }
   }
 
   async function openRequestHistory(){
@@ -1617,14 +1625,22 @@
     $("requestHistoryLoading").textContent="Loading your request history…";
     document.querySelectorAll("[data-request-history-panel]").forEach(panel=>{
       panel.hidden=true;
-      panel.innerHTML="";
+      if(panel.dataset.requestHistoryPanel!=="songlist")panel.innerHTML="";
     });
     if(!dialog.open)dialog.showModal();
 
     try{
+      if(!songs.length)await loadPublicSongs();
       const records=await loadRequestHistoryRecords();
       const sessions=await loadRequestHistorySessions(records);
+      currentHistoryRecords=records;
+      currentHistorySessions=sessions;
+      historySongCategory="all";
+      historyFavouritesOnly=false;
+      if($("historySongSearch"))$("historySongSearch").value="";
       renderRequestHistoryAnalytics(records,sessions);
+      renderHistorySongCategoryCards();
+      renderHistorySongList();
       $("requestHistoryLoading").hidden=true;
       switchRequestHistoryTab("overview");
     }catch(error){
