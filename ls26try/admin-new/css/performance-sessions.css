@@ -746,3 +746,42 @@ body.sessions-body {
     margin-top:3px!important;
   }
 }
+
+
+/* 2026-09-30 session popup value sizing */
+.session-modal .detail-card span{
+  font-size:9.5px!important;
+}
+.session-modal .detail-card strong{
+  font-size:15px!important;
+  line-height:1.35!important;
+}
+.session-modal .detail-row{
+  font-size:12.5px!important;
+}
+.session-modal .detail-row strong{
+  font-size:13.5px!important;
+  line-height:1.35!important;
+}
+.session-modal .detail-row>span{
+  font-size:12px!important;
+  line-height:1.4!important;
+}
+.session-modal .status-chip{
+  min-height:28px!important;
+  padding:5px 10px!important;
+  font-size:10.5px!important;
+}
+.session-modal .request-history-meta>span{
+  font-size:12px!important;
+  line-height:1.45!important;
+}
+.session-modal .request-history-meta b{
+  font-size:10.5px!important;
+}
+.session-modal .session-detail-header p{
+  font-size:12.5px!important;
+}
+.session-modal .detail-section h3{
+  font-size:13px!important;
+}
