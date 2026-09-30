@@ -3965,3 +3965,255 @@ p,
     grid-column:1/-1!important;
   }
 }
+
+
+/* LIVE REQUESTS v14 — Profile spacing, alignment and readability */
+.request-profile-panel{
+  padding:13px 22px 12px!important;
+}
+.request-profile-heading{
+  margin-bottom:10px!important;
+  padding-bottom:8px!important;
+}
+.request-profile-heading h3{
+  font-size:20px!important;
+}
+.request-profile-heading p{
+  font-size:11px!important;
+}
+
+.request-profile-grid{
+  grid-template-columns:repeat(6,minmax(0,1fr))!important;
+  column-gap:12px!important;
+  row-gap:13px!important;
+  align-items:start!important;
+}
+.request-profile-grid .request-name-field,
+.request-profile-grid .request-email-field{
+  grid-column:span 3!important;
+}
+.request-profile-grid .request-country-field,
+.request-profile-grid .request-age-field,
+.request-profile-grid .request-gender-field{
+  grid-column:span 2!important;
+}
+
+/* Name and email rows use matching suffix space, keeping the text boxes aligned. */
+.request-name-control,
+.request-email-control{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) 132px!important;
+  gap:8px!important;
+  align-items:center!important;
+}
+.request-email-control input{
+  grid-column:1!important;
+}
+.request-name-control input,
+.request-email-control input{
+  width:100%!important;
+}
+
+.request-field{
+  gap:5px!important;
+  font-size:11px!important;
+  line-height:1.15!important;
+}
+.request-field>label,
+.request-field:not(.request-name-field):not(.request-email-field){
+  line-height:1.15!important;
+}
+.request-field>small,
+.request-field small{
+  font-size:9px!important;
+  line-height:1.2!important;
+}
+.request-field input,
+.request-field select{
+  min-height:39px!important;
+  height:39px!important;
+  padding:8px 10px!important;
+  font-size:15px!important;
+}
+.forget-profile-btn{
+  min-width:132px!important;
+  min-height:39px!important;
+  height:39px!important;
+  padding:0 10px!important;
+  font-size:10px!important;
+}
+.request-email-help{
+  margin-top:1px!important;
+  font-size:9px!important;
+}
+
+/* Give the review block more breathing room and make the entered text easier to read. */
+.request-review-card{
+  margin-top:14px!important;
+  padding:11px 13px 12px!important;
+}
+.request-review-heading{
+  margin-bottom:9px!important;
+}
+.request-review-heading h3{
+  font-size:18px!important;
+  line-height:1.1!important;
+}
+.request-review-optional{
+  font-size:10px!important;
+}
+.request-review-rating{
+  grid-template-columns:68px minmax(0,1fr)!important;
+  gap:9px!important;
+  margin-bottom:10px!important;
+}
+.request-review-label,
+.request-review-text>span{
+  font-size:11px!important;
+}
+.request-star-row{
+  gap:5px!important;
+}
+.request-star-row [data-review-rating]{
+  width:33px!important;
+  height:31px!important;
+  font-size:20px!important;
+}
+.clear-rating-btn{
+  min-height:31px!important;
+  height:31px!important;
+  padding:0 9px!important;
+  font-size:9px!important;
+}
+.request-review-text{
+  gap:5px!important;
+}
+.request-review-text textarea{
+  min-height:68px!important;
+  max-height:90px!important;
+  padding:9px 11px!important;
+  font-size:16px!important;
+  line-height:1.38!important;
+}
+.request-review-private{
+  margin-top:10px!important;
+  padding:9px 11px!important;
+  gap:10px!important;
+  align-items:center!important;
+}
+.request-review-private input{
+  width:20px!important;
+  height:20px!important;
+}
+.request-review-private strong{
+  font-size:14px!important;
+  line-height:1.2!important;
+}
+.request-review-private small{
+  margin-top:2px!important;
+  font-size:12px!important;
+  line-height:1.25!important;
+}
+
+/* Save and disabled recovery controls are deliberately identical in typography. */
+.request-profile-actions{
+  display:flex!important;
+  align-items:center!important;
+  gap:10px!important;
+  margin-top:12px!important;
+  flex-wrap:nowrap!important;
+}
+.request-profile-actions .primary-btn,
+.request-profile-actions .recover-profile-btn{
+  width:auto!important;
+  min-width:170px!important;
+  min-height:42px!important;
+  height:42px!important;
+  padding:0 17px!important;
+  font-size:13px!important;
+  font-weight:900!important;
+  letter-spacing:.035em!important;
+  line-height:1!important;
+}
+.request-profile-actions .recover-profile-btn{
+  flex:0 0 auto!important;
+}
+.request-profile-status{
+  min-width:0!important;
+  flex:1 1 auto!important;
+  font-size:10px!important;
+}
+
+@media(max-width:760px){
+  .request-profile-panel{
+    padding:11px 13px 10px!important;
+  }
+  .request-profile-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    column-gap:10px!important;
+    row-gap:12px!important;
+  }
+  .request-profile-grid .request-name-field,
+  .request-profile-grid .request-email-field{
+    grid-column:span 2!important;
+  }
+  .request-profile-grid .request-country-field,
+  .request-profile-grid .request-age-field{
+    grid-column:span 1!important;
+  }
+  .request-profile-grid .request-gender-field{
+    grid-column:span 1!important;
+  }
+  .request-name-control,
+  .request-email-control{
+    grid-template-columns:minmax(0,1fr) 124px!important;
+  }
+  .forget-profile-btn{
+    min-width:124px!important;
+  }
+  .request-review-card{
+    margin-top:12px!important;
+  }
+}
+
+@media(max-width:520px){
+  .request-profile-grid{
+    row-gap:10px!important;
+  }
+  .request-name-control,
+  .request-email-control{
+    grid-template-columns:minmax(0,1fr) 108px!important;
+  }
+  .forget-profile-btn{
+    min-width:108px!important;
+    font-size:9px!important;
+  }
+  .request-review-heading h3{
+    font-size:17px!important;
+  }
+  .request-review-text textarea{
+    min-height:64px!important;
+    max-height:82px!important;
+    font-size:15px!important;
+  }
+  .request-review-private strong{
+    font-size:13px!important;
+  }
+  .request-review-private small{
+    font-size:11px!important;
+  }
+  .request-profile-actions{
+    display:grid!important;
+    grid-template-columns:1fr 1fr!important;
+    gap:8px!important;
+  }
+  .request-profile-actions .primary-btn,
+  .request-profile-actions .recover-profile-btn{
+    width:100%!important;
+    min-width:0!important;
+    font-size:12px!important;
+  }
+  .request-profile-actions .request-profile-status{
+    grid-column:1/-1!important;
+  }
+}
