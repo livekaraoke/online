@@ -14,11 +14,37 @@
     if(infoAction)infoAction.hidden=false;
     header.append(title);
     const drawer=$('songInfoDrawer');
-    const karaoke=$('performanceQuickInfo'),toggle=document.createElement('label');toggle.className='ls26-karaoke-toggle';toggle.innerHTML='<input type="checkbox" id="ls26ShowKaraoke"> Show karaoke tools';drawer.querySelector('.song-info-scroll').prepend(toggle);
+    const karaoke=$('performanceQuickInfo');
+    const karaokeCard=$('sendToKaraokeBtn')?.closest('.song-info-card');
+    const karaokePreferences=document.createElement('div');
+    karaokePreferences.className='ls26-karaoke-preferences';
+    karaokePreferences.innerHTML=`
+      <button id="ls26AutoSendKaraoke" class="ls26-auto-send-karaoke" type="button" aria-pressed="true">
+        <span>AUTO SEND TO KARAOKE ON PLAY</span>
+        <strong id="ls26AutoSendKaraokeState">ON</strong>
+      </button>
+      <label class="ls26-karaoke-toggle"><input type="checkbox" id="ls26ShowKaraoke"> Show karaoke tools</label>`;
+    const karaokeHeading=karaokeCard?.querySelector('h3');
+    if(karaokeHeading)karaokeHeading.insertAdjacentElement('afterend',karaokePreferences);
+    else drawer.querySelector('.song-info-scroll').prepend(karaokePreferences);
+
     const hide=document.createElement('button');hide.type='button';hide.className='ls26-hide-karaoke';hide.textContent='×';hide.setAttribute('aria-label','Hide karaoke tools');karaoke.querySelector('.performance-quick-karaoke').append(hide);
     function showKaraoke(show){karaoke.hidden=!show;$('ls26ShowKaraoke').checked=show;try{localStorage.setItem('ls26:showKaraokeTools',String(show));}catch(_){}}
     let show=true;try{show=localStorage.getItem('ls26:showKaraokeTools')!=='false';}catch(_){}showKaraoke(show);
     hide.onclick=()=>showKaraoke(false);$('ls26ShowKaraoke').onchange=e=>showKaraoke(e.target.checked);
+
+    const autoSendButton=$('ls26AutoSendKaraoke');
+    const autoSendState=$('ls26AutoSendKaraokeState');
+    const autoSendKey='ls26:autoSendToKaraoke';
+    function setAutoSend(enabled){
+      const on=enabled!==false;
+      autoSendButton?.setAttribute('aria-pressed',String(on));
+      autoSendButton?.classList.toggle('active',on);
+      if(autoSendState)autoSendState.textContent=on?'ON':'OFF';
+      try{localStorage.setItem(autoSendKey,String(on));}catch(_){}
+    }
+    let autoSend=true;try{autoSend=localStorage.getItem(autoSendKey)!=='false';}catch(_){}setAutoSend(autoSend);
+    if(autoSendButton)autoSendButton.onclick=()=>setAutoSend(autoSendButton.getAttribute('aria-pressed')!=='true');
 
     const panel=document.createElement('section');panel.className='song-info-card ls26-bpm-panel';panel.innerHTML=`
       <div class="ls26-bpm-panel-head">
@@ -61,7 +87,7 @@
     try{$('ls26InfoStartup').checked=localStorage.getItem(preferenceKey)==='true';}catch(_){}
     $('ls26InfoStartup').onchange=e=>{try{localStorage.setItem(preferenceKey,String(e.target.checked));}catch(_){}};
     function applyStartup(){const open=$('ls26InfoStartup').checked;drawer.classList.toggle('open',open);drawer.setAttribute('aria-hidden',String(!open));infoAction?.setAttribute('aria-expanded',String(open));infoAction?.classList.toggle('active',open);sync();}
-    const metro=document.createElement('section');metro.className='song-info-card lv-metronome';toggle.before(metro);window.LS26LyricMetronome?.mount(metro);
+    const metro=document.createElement('section');metro.className='song-info-card lv-metronome';panel.after(metro);window.LS26LyricMetronome?.mount(metro);
     applyStartup();
     if(infoAction){
       infoAction.setAttribute('aria-controls','songInfoDrawer');
