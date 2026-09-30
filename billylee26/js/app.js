@@ -433,7 +433,10 @@
     const category=requestCategoryById(categoryId);
     if(!category||category.enabled===false)return false;
 
-    // Explicit Admin assignments always win.
+    // Admin-managed categories are explicit, including intentionally empty ones.
+    if(String(category.mode||"").toLowerCase()==="custom"){
+      return Array.isArray(category.songIds)&&category.songIds.includes(String(song.id));
+    }
     if(Array.isArray(category.songIds)&&category.songIds.length){
       return category.songIds.includes(String(song.id));
     }
