@@ -44,6 +44,7 @@
     lyricTextScale: 100,
     lyricLeadInHeight: 192,
     lyricSectionActivationOffset: 320,
+    karaokeSingerActivePosition: 42,
     metronomeBeat1Color: "#ffd05a",
     metronomeBeat2Color: "#00cafa",
     metronomeBeat3Color: "#00cafa",
@@ -114,6 +115,7 @@
       lyricTextScale: clamp(raw.lyricTextScale,75,150,DEFAULTS.lyricTextScale),
       lyricLeadInHeight: clamp(raw.lyricLeadInHeight,80,360,DEFAULTS.lyricLeadInHeight),
       lyricSectionActivationOffset: clamp(raw.lyricSectionActivationOffset,0,520,DEFAULTS.lyricSectionActivationOffset),
+      karaokeSingerActivePosition: clamp(raw.karaokeSingerActivePosition,25,60,DEFAULTS.karaokeSingerActivePosition),
       metronomeBeat1Color: colour(raw.metronomeBeat1Color,DEFAULTS.metronomeBeat1Color),
       metronomeBeat2Color: colour(raw.metronomeBeat2Color,DEFAULTS.metronomeBeat2Color),
       metronomeBeat3Color: colour(raw.metronomeBeat3Color,DEFAULTS.metronomeBeat3Color),
@@ -180,6 +182,7 @@
     root.style.setProperty("--ls26-lyric-text-scale",String(s.lyricTextScale/100));
     root.style.setProperty("--ls26-lyric-lead-in-height",s.lyricLeadInHeight+"px");
     root.style.setProperty("--ls26-section-activation-offset",s.lyricSectionActivationOffset+"px");
+    root.style.setProperty("--ls26-karaoke-singer-active-position",s.karaokeSingerActivePosition+"%");
     root.style.setProperty("--ls26-metro-beat-1-color",s.metronomeBeat1Color);
     root.style.setProperty("--ls26-metro-beat-2-color",s.metronomeBeat2Color);
     root.style.setProperty("--ls26-metro-beat-3-color",s.metronomeBeat3Color);
