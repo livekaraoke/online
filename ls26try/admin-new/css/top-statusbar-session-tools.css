@@ -3261,3 +3261,29 @@
   font-size:9px !important;
   text-align:center !important;
 }
+
+
+/* requester-cancelled rows remain visible until the host dismisses them */
+#topStatusBar .ts-pending-request-row.is-cancelled{
+  border-left:3px solid #8769cd!important;
+  background:linear-gradient(90deg,rgba(84,55,146,.18),rgba(3,18,27,.96) 48%)!important;
+}
+#topStatusBar .ts-request-cancelled-label{
+  display:inline-flex!important;
+  width:max-content!important;
+  margin-top:4px!important;
+  padding:3px 7px!important;
+  border:1px solid #8769cd!important;
+  border-radius:999px!important;
+  background:rgba(86,57,150,.2)!important;
+  color:#cfbcff!important;
+  font-size:8px!important;
+  font-style:normal!important;
+  font-weight:950!important;
+  letter-spacing:.05em!important;
+}
+#topStatusBar .ts-pending-actions .dismiss-cancelled{
+  border-color:#8769cd!important;
+  color:#cfbcff!important;
+  background:rgba(86,57,150,.15)!important;
+}
