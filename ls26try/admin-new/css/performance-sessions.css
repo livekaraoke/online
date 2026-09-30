@@ -785,3 +785,10 @@ body.sessions-body {
 .session-modal .detail-section h3{
   font-size:13px!important;
 }
+
+
+.session-modal .status-chip.cancelled{
+  border-color:#8d6bd8!important;
+  background:rgba(87,57,155,.2)!important;
+  color:#cbb6ff!important;
+}
