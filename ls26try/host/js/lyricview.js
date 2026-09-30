@@ -52,6 +52,11 @@
   let karaokeSendInFlightSongId = "";
   let autoKaraokeSentSongId = "";
   const AUTO_SEND_KARAOKE_KEY = "ls26:autoSendToKaraoke";
+  const SINGER_SCROLL_SYNC_KEY = "ls26:syncSingerScroll";
+  const SINGER_SYNC_INTERVAL_MS = 2000;
+  let singerSyncLastWriteAt = 0;
+  let singerSyncTimer = null;
+  let singerSyncWriteChain = Promise.resolve();
 
   // AUTOSCROLL:
   // 1.00× is now physically one-third of the old 1.00× pace.
@@ -1074,6 +1079,99 @@
     return Math.max(0,Math.min(1,1-(distance/leadDistance)));
   }
 
+  function singerScrollSyncEnabled() {
+    try {
+      return localStorage.getItem(SINGER_SCROLL_SYNC_KEY) === "true";
+    } catch (_) {
+      return false;
+    }
+  }
+
+  function singerSyncOpacity(el, fallback = 1) {
+    const value = Number.parseFloat(el?.style?.opacity || "");
+    return Number.isFinite(value) ? Math.max(0, Math.min(1, value)) : fallback;
+  }
+
+  function buildSingerSyncState() {
+    const enabled = singerScrollSyncEnabled();
+    const active = sectionEls[currentSectionIndex] || null;
+    const previous = sectionEls[currentSectionIndex - 1] || null;
+    const next = sectionEls[currentSectionIndex + 1] || null;
+    const focus = sectionFocusSettings();
+    const anchorY = performanceActivationAnchor();
+
+    const sourceIndex = Number(active?.dataset?.sectionIndex);
+    const previousSourceIndex = Number(previous?.dataset?.sectionIndex);
+    const nextSourceIndex = Number(next?.dataset?.sectionIndex);
+
+    const activeTop = active?.getBoundingClientRect?.().top ?? anchorY;
+    const nextTop = next?.getBoundingClientRect?.().top ?? activeTop;
+    const sectionSpan = Math.max(1, nextTop - activeTop);
+    const progress = next
+      ? Math.max(0, Math.min(1, (anchorY - activeTop) / sectionSpan))
+      : 0;
+
+    const moving =
+      enabled &&
+      autoScrollOn &&
+      Date.now() >= manualSectionUntil &&
+      Date.now() >= sectionPauseUntil &&
+      Boolean(next);
+
+    const progressRatePerMs = moving
+      ? (AUTO_SCROLL_BASE_PX_PER_MS * sectionScrollSpeedForIndex(currentSectionIndex)) / sectionSpan
+      : 0;
+
+    return {
+      enabled,
+      playing: autoScrollOn,
+      songId: currentSongId || "",
+      activeSourceIndex: Number.isFinite(sourceIndex) ? sourceIndex : currentSectionIndex,
+      previousSourceIndex: Number.isFinite(previousSourceIndex) ? previousSourceIndex : -1,
+      nextSourceIndex: Number.isFinite(nextSourceIndex) ? nextSourceIndex : -1,
+      sectionProgress: Number(progress.toFixed(4)),
+      progressRatePerMs: Number(progressRatePerMs.toFixed(8)),
+      pastOpacity: Number(focus.past.toFixed(3)),
+      upcomingOpacity: Number(focus.upcoming.toFixed(3)),
+      previousOpacity: Number(singerSyncOpacity(previous, focus.past).toFixed(3)),
+      activeOpacity: Number(singerSyncOpacity(active, 1).toFixed(3)),
+      nextOpacity: Number(singerSyncOpacity(next, focus.upcoming).toFixed(3)),
+      updatedAtMs: Date.now()
+    };
+  }
+
+  function writeSingerSyncState() {
+    if (!currentSongId) return;
+    const state = buildSingerSyncState();
+    singerSyncLastWriteAt = Date.now();
+
+    singerSyncWriteChain = singerSyncWriteChain
+      .catch(() => {})
+      .then(() => db.collection("karaokeControl").doc("liveLyrics").set({
+        singerSync: state
+      }, { merge:true }))
+      .catch(error => console.warn("Could not sync singer scroll state:", error));
+  }
+
+  function queueSingerSync(force = false) {
+    clearTimeout(singerSyncTimer);
+    singerSyncTimer = null;
+
+    if (!currentSongId) return;
+    if (!singerScrollSyncEnabled() && !force) return;
+
+    const elapsed = Date.now() - singerSyncLastWriteAt;
+    if (force || elapsed >= SINGER_SYNC_INTERVAL_MS) {
+      writeSingerSyncState();
+      return;
+    }
+
+    singerSyncTimer = setTimeout(
+      writeSingerSyncState,
+      Math.max(0, SINGER_SYNC_INTERVAL_MS - elapsed)
+    );
+  }
+
   function updateSectionFocusOpacity(anchor=performanceActivationAnchor()) {
     if(!sectionEls.length)return;
     const {
@@ -1279,6 +1377,7 @@
     sectionPauseStartsAt=Date.now();
     sectionPauseUntil=sectionPauseStartsAt+pauseMs;
     runSectionPauseCountdown(index);
+    queueSingerSync(true);
     return pauseMs;
   }
 
@@ -1334,7 +1433,10 @@
     sectionPauseUntil=0;
     clearSectionPauseCountdown();
     window.scrollTo({top:Math.max(0,sectionEls[currentSectionIndex].getBoundingClientRect().top+window.scrollY-offset),behavior:'instant'});
-    requestAnimationFrame(()=>updateSectionFocusOpacity(performanceActivationAnchor()));
+    requestAnimationFrame(()=>{
+      updateSectionFocusOpacity(performanceActivationAnchor());
+      queueSingerSync(true);
+    });
     setTimeout(updateSectionProgress,700);
   }
 
@@ -1346,10 +1448,14 @@
     // While the current section's programmed end-pause is running, freeze
     // section activation/fading as well as scrolling. The next section must
     // not begin fading until the countdown has finished.
-    if(autoScrollOn&&sectionPauseUntil>Date.now())return;
+    if(autoScrollOn&&sectionPauseUntil>Date.now()){
+      queueSingerSync(false);
+      return;
+    }
 
     if(Date.now()<manualSectionUntil){
       updateSectionFocusOpacity(anchor);
+      queueSingerSync(false);
       return;
     }
 
@@ -1372,6 +1478,7 @@
       el.classList.toggle("current-section", i === currentSectionIndex);
     });
     updateSectionFocusOpacity(anchor);
+    queueSingerSync(changed);
 
     // As the performer scrolls through the song, automatically bring the
     // current section marker into view and keep it roughly centred.
@@ -2228,6 +2335,7 @@
     clearSectionPauseCountdown();
     window.dispatchEvent(new CustomEvent("ls26:scroll-state",{detail:{playing:false}}));
     window.dispatchEvent(new Event("ls26:song-finished"));
+    queueSingerSync(true);
 
     if (scrollTimer) {
       cancelAnimationFrame(scrollTimer);
@@ -2616,6 +2724,8 @@
       flushPerformanceTempo();
       // LS26: pausing affects scrolling only; current song remains playing.
     }
+
+    queueSingerSync(true);
   }
 
 
@@ -2732,12 +2842,14 @@
     $("scrollSpeedDown").onclick = async () => {
       scrollSpeed = Math.max(0.1, +(scrollSpeed - 0.1).toFixed(1));
       updateSpeed();
+      queueSingerSync(true);
       clearTimeout(window.__ls26SpeedSave); window.__ls26SpeedSave=setTimeout(saveSongScrollSpeed,1200);
     };
 
     $("scrollSpeedUp").onclick = async () => {
       scrollSpeed = Math.min(10, +(scrollSpeed + 0.1).toFixed(1));
       updateSpeed();
+      queueSingerSync(true);
       clearTimeout(window.__ls26SpeedSave); window.__ls26SpeedSave=setTimeout(saveSongScrollSpeed,1200);
     };
     if ($("nextRunOrderSongBtn")) {
@@ -2830,6 +2942,7 @@
     window.addEventListener("scroll",updateSectionProgress,{passive:true});
     window.addEventListener("resize",updateSectionProgress);
     window.addEventListener("ls26:settings-applied",() => requestAnimationFrame(updateSectionProgress));
+    window.addEventListener("ls26:singer-scroll-sync-changed", () => queueSingerSync(true));
     window.addEventListener("lk:session-updated",syncEndSessionActions);
     window.addEventListener("lk:runorder-updated",() => {
       if (!$("endCompletionPanel")?.hidden) void renderEndNextSongDetails();
