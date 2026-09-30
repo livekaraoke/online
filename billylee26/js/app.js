@@ -489,7 +489,16 @@
 
   const REQUEST_PROFILE_KEY="billylee26.requestProfile.v1";
   const REQUEST_REVIEW_ID_KEY="billylee26.reviewId";
+  const REQUEST_DEVICE_ID_KEY="billylee26.requestDeviceId.v1";
   let requestCategory="all";
+
+  function requestDeviceId(){
+    let id=String(localStorage.getItem(REQUEST_DEVICE_ID_KEY)||"").trim();
+    if(id)return id;
+    id=globalThis.crypto?.randomUUID?.()||("dev-"+Date.now()+"-"+Math.random().toString(36).slice(2,12));
+    localStorage.setItem(REQUEST_DEVICE_ID_KEY,id);
+    return id;
+  }
 
   function requestProfile(){
     let stored={};
@@ -580,6 +589,7 @@
     localStorage.removeItem("billylee26.requestName");
     localStorage.removeItem("billylee26.requestIds");
     localStorage.removeItem(REQUEST_REVIEW_ID_KEY);
+    localStorage.removeItem(REQUEST_DEVICE_ID_KEY);
     selectedRequestSongId="";
     populateProfileForm();
     if($("myRequests"))$("myRequests").innerHTML='<p class="muted">Requests you make in this session will appear here.</p>';
@@ -737,7 +747,6 @@
     const artistCard=showArtistCard?`
       <button type="button" data-song-category="${ARTIST_BROWSE_CATEGORY}" class="artist-search-card ${requestCategory===ARTIST_BROWSE_CATEGORY?"active":""}">
         <strong>SEARCH BY ARTIST</strong>
-        <span>Browse artists</span>
       </button>
     `:"";
     grid.innerHTML=categoryCards+artistCard;
@@ -776,6 +785,12 @@
     return `<div class="song-row${stateClass}" data-song-row-id="${escapeHTML(song.id)}"><span><strong>${escapeHTML(song.title||"Untitled")}</strong>${meta?`<small>${escapeHTML(meta)}</small>`:""}</span><button class="song-action" type="button" data-song-id="${escapeHTML(song.id)}"${disabled} aria-label="Choose ${escapeHTML(song.title||"song")}">${escapeHTML(action)}</button></div>`;
   }
 
+  function artistBrowseDisplayName(value){
+    const name=String(value||"").trim()||"Unknown Artist";
+    const match=name.match(/^the\s+(.+)$/i);
+    return match?`${match[1]}, The`:name;
+  }
+
   function renderArtistGroupedResults(list){
     const groups=new Map();
     list.forEach(song=>{
@@ -783,13 +798,15 @@
       if(!groups.has(artist))groups.set(artist,[]);
       groups.get(artist).push(song);
     });
-    const artists=[...groups.keys()].sort((a,b)=>a.localeCompare(b,undefined,{sensitivity:"base"}));
+    const artists=[...groups.keys()].sort((a,b)=>
+      artistBrowseDisplayName(a).localeCompare(artistBrowseDisplayName(b),undefined,{sensitivity:"base"})
+    );
     return artists.map(artist=>{
       const artistSongs=groups.get(artist).slice().sort((a,b)=>String(a.title||"").localeCompare(String(b.title||""),undefined,{sensitivity:"base"}));
       return `
         <section class="artist-song-group">
           <div class="artist-song-group-heading">
-            <strong>${escapeHTML(artist)}</strong>
+            <strong>${escapeHTML(artistBrowseDisplayName(artist))}</strong>
             <span>${artistSongs.length} song${artistSongs.length===1?"":"s"}</span>
           </div>
           <div class="artist-song-group-list">
@@ -920,7 +937,7 @@
     catch{return[];}
   }
   function saveTrackedRequestIds(ids){
-    localStorage.setItem("billylee26.requestIds",JSON.stringify([...new Set(ids)].slice(-40)));
+    localStorage.setItem("billylee26.requestIds",JSON.stringify([...new Set(ids)].slice(-250)));
   }
   function clearRequestListeners(){
     requestListeners.forEach(fn=>{try{fn();}catch{}});
@@ -1184,6 +1201,7 @@
         requesterCountry:profile.country,
         requesterAgeRange:profile.ageRange,
         requesterGender:profile.gender,
+        requesterDeviceId:requestDeviceId(),
         note,
         comment:note,
         source:"billylee26",
