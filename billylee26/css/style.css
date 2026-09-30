@@ -3077,3 +3077,374 @@ p,
     grid-template-columns:1fr!important;
   }
 }
+
+
+/* LIVE REQUESTS v11 — alphabet jump, wider artist toggle, email recovery, favourites */
+.request-category-grid button{
+  gap:0!important;
+}
+.request-category-grid button strong{
+  font-size:18px!important;
+  line-height:1!important;
+}
+.request-category-grid button span{
+  margin-top:0!important;
+  font-size:11px!important;
+  line-height:1!important;
+}
+.request-category-grid .artist-search-card{
+  grid-column:span 2!important;
+  width:calc((var(--request-category-size,82px) * 2) + 7px)!important;
+  min-width:calc((var(--request-category-size,82px) * 2) + 7px)!important;
+}
+.request-category-grid .artist-search-card strong{
+  max-width:95%!important;
+  font-size:16px!important;
+  line-height:1.02!important;
+  white-space:normal!important;
+  overflow-wrap:normal!important;
+  word-break:normal!important;
+}
+
+.request-alphabet-row{
+  display:flex!important;
+  flex-wrap:nowrap!important;
+  gap:5px!important;
+  width:100%!important;
+  margin:8px 0 8px!important;
+  padding:1px 0 3px!important;
+  overflow-x:auto!important;
+  overflow-y:hidden!important;
+  scrollbar-width:none!important;
+  -webkit-overflow-scrolling:touch!important;
+}
+.request-alphabet-row::-webkit-scrollbar{
+  display:none!important;
+}
+.request-alphabet-row button{
+  flex:0 0 30px!important;
+  width:30px!important;
+  height:30px!important;
+  padding:0!important;
+  border:1px solid rgba(36,215,230,.28)!important;
+  border-radius:6px!important;
+  background:#061923!important;
+  color:#b7e5eb!important;
+  font-size:10px!important;
+  font-weight:950!important;
+  line-height:1!important;
+  cursor:pointer!important;
+}
+.request-alphabet-row button:hover:not(:disabled){
+  border-color:#4ee4ef!important;
+  color:#fff!important;
+  background:#0a2b36!important;
+}
+.request-alphabet-row button:disabled{
+  opacity:.24!important;
+  cursor:default!important;
+}
+
+.request-email-field>label{
+  color:var(--cyan)!important;
+  font-size:10px!important;
+  font-weight:900!important;
+  letter-spacing:.09em!important;
+}
+.request-email-field>label small{
+  color:#718991!important;
+  font-size:8px!important;
+  letter-spacing:.05em!important;
+}
+.request-email-control{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) auto!important;
+  gap:9px!important;
+}
+.request-email-control input{
+  min-width:0!important;
+}
+.recover-profile-btn{
+  min-width:142px!important;
+  min-height:42px!important;
+  padding:0 13px!important;
+  border:1px solid rgba(91,214,229,.46)!important;
+  border-radius:8px!important;
+  background:linear-gradient(180deg,rgba(13,75,91,.42),rgba(5,33,43,.62))!important;
+  color:#8beaf2!important;
+  font-size:9px!important;
+  font-weight:950!important;
+  letter-spacing:.06em!important;
+  cursor:pointer!important;
+}
+.recover-profile-btn:disabled{
+  opacity:.45!important;
+  cursor:wait!important;
+}
+.request-email-help{
+  color:#71858d!important;
+  font-size:9px!important;
+  line-height:1.35!important;
+}
+
+/* Five equal tabs in Request History & Stats. */
+.request-history-tabs{
+  grid-template-columns:repeat(5,minmax(0,1fr))!important;
+}
+.request-history-tabs button{
+  padding:5px 7px!important;
+}
+
+/* SONG LIST inside Request History & Stats. */
+.request-history-songlist{
+  display:flex!important;
+  flex-direction:column!important;
+  min-height:0!important;
+}
+.request-history-songlist[hidden]{
+  display:none!important;
+}
+.history-song-category-grid{
+  margin-bottom:0!important;
+}
+.history-my-favourites-card{
+  width:100%!important;
+  min-height:48px!important;
+  display:grid!important;
+  grid-template-columns:auto 1fr auto!important;
+  gap:9px!important;
+  align-items:center!important;
+  margin:0 0 9px!important;
+  padding:8px 12px!important;
+  border:1px solid rgba(176,91,225,.34)!important;
+  border-radius:9px!important;
+  background:
+    radial-gradient(circle at 0 50%,rgba(176,91,225,.12),transparent 42%),
+    #06151f!important;
+  color:#d9c1ef!important;
+  text-align:left!important;
+  cursor:pointer!important;
+}
+.history-my-favourites-card>span{
+  color:#d587ff!important;
+  font-size:21px!important;
+  line-height:1!important;
+}
+.history-my-favourites-card strong{
+  font-size:12px!important;
+  letter-spacing:.05em!important;
+}
+.history-my-favourites-card small{
+  color:#8fa3aa!important;
+  font-size:10px!important;
+}
+.history-my-favourites-card.active{
+  border-color:#d587ff!important;
+  background:linear-gradient(90deg,rgba(119,48,158,.25),rgba(6,21,31,.98))!important;
+  box-shadow:0 0 18px rgba(174,88,225,.1)!important;
+}
+.history-song-controls{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) auto!important;
+  gap:8px!important;
+  margin-bottom:7px!important;
+}
+.history-song-controls input{
+  width:100%!important;
+  min-height:43px!important;
+  padding:9px 12px!important;
+  border:1px solid rgba(36,215,230,.28)!important;
+  border-radius:8px!important;
+  background:#020c12!important;
+  color:#eef8fb!important;
+  font-size:14px!important;
+}
+.history-song-results{
+  position:relative!important;
+  min-height:220px!important;
+  max-height:50vh!important;
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+  border:1px solid rgba(36,215,230,.18)!important;
+  border-radius:9px!important;
+  background:#031018!important;
+  scrollbar-width:thin!important;
+  scrollbar-color:#32d8e7 #071820!important;
+}
+.history-song-results::-webkit-scrollbar{width:10px!important}
+.history-song-results::-webkit-scrollbar-track{background:#071820!important}
+.history-song-results::-webkit-scrollbar-thumb{
+  border:2px solid #071820!important;
+  border-radius:999px!important;
+  background:linear-gradient(180deg,#4ae8f2,#178da5)!important;
+}
+.history-song-row{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) auto!important;
+  gap:12px!important;
+  align-items:center!important;
+  min-height:62px!important;
+  padding:9px 11px!important;
+  border-bottom:1px solid rgba(36,215,230,.12)!important;
+}
+.history-song-row:last-child{
+  border-bottom:0!important;
+}
+.history-song-row.is-played,
+.history-song-row.is-requested,
+.history-song-row.is-playing{
+  background:rgba(255,255,255,.015)!important;
+}
+.history-song-copy{
+  min-width:0!important;
+  display:grid!important;
+  gap:3px!important;
+}
+.history-song-copy strong{
+  color:#f2f9fb!important;
+  font-size:16px!important;
+  line-height:1.15!important;
+}
+.history-song-copy small{
+  color:#8fa5ad!important;
+  font-size:12px!important;
+}
+.history-song-actions{
+  display:flex!important;
+  align-items:center!important;
+  gap:7px!important;
+}
+.history-favourite-btn{
+  flex:0 0 37px!important;
+  width:37px!important;
+  height:37px!important;
+  display:grid!important;
+  place-items:center!important;
+  padding:0!important;
+  border:1px solid rgba(186,103,229,.36)!important;
+  border-radius:8px!important;
+  background:#081721!important;
+  color:#9d7eaf!important;
+  font-size:18px!important;
+  cursor:pointer!important;
+}
+.history-favourite-btn.is-favourite{
+  border-color:#d381ff!important;
+  background:rgba(116,49,150,.2)!important;
+  color:#e5a7ff!important;
+}
+.history-request-btn{
+  min-width:46px!important;
+  min-height:37px!important;
+  padding:0 10px!important;
+  border:1px solid rgba(36,215,230,.4)!important;
+  border-radius:8px!important;
+  background:#061923!important;
+  color:#4be5ef!important;
+  font-size:10px!important;
+  font-weight:950!important;
+  cursor:pointer!important;
+}
+.history-request-btn:disabled{
+  min-width:118px!important;
+  color:#8d9ca1!important;
+  border-color:#3d5058!important;
+  cursor:not-allowed!important;
+}
+.history-song-results .artist-song-group-heading{
+  top:0!important;
+}
+
+/* Personal favourites card in the FAVOURITES analytics tab. */
+.personal-favourites-card{
+  margin-bottom:10px!important;
+  padding:12px!important;
+  border:1px solid rgba(176,91,225,.3)!important;
+  border-radius:10px!important;
+  background:
+    radial-gradient(circle at 100% 0,rgba(157,72,203,.12),transparent 42%),
+    #06151f!important;
+}
+.personal-favourite-list{
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:6px!important;
+}
+.personal-favourite-list>div{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) auto!important;
+  gap:8px!important;
+  align-items:center!important;
+  min-height:46px!important;
+  padding:7px 9px!important;
+  border:1px solid rgba(176,91,225,.16)!important;
+  border-radius:7px!important;
+  background:rgba(255,255,255,.015)!important;
+}
+.personal-favourite-list>div>span{
+  min-width:0!important;
+  display:grid!important;
+  gap:1px!important;
+}
+.personal-favourite-list strong{
+  color:#f1e9f7!important;
+  font-size:12px!important;
+}
+.personal-favourite-list small{
+  color:#8f9da3!important;
+  font-size:9px!important;
+}
+.personal-favourite-list button{
+  width:34px!important;
+  height:34px!important;
+  display:grid!important;
+  place-items:center!important;
+  padding:0!important;
+  border:1px solid #c574ec!important;
+  border-radius:7px!important;
+  background:rgba(111,45,143,.18)!important;
+  color:#e2a0ff!important;
+  font-size:17px!important;
+  cursor:pointer!important;
+}
+.personal-favourites-empty{
+  margin:4px 0 0!important;
+  color:#879aa1!important;
+  font-size:11px!important;
+  line-height:1.4!important;
+}
+
+@media(max-width:620px){
+  .request-category-grid .artist-search-card{
+    grid-column:span 2!important;
+    width:100%!important;
+    min-width:0!important;
+  }
+  .request-category-grid button strong{
+    font-size:17px!important;
+  }
+  .request-category-grid button span{
+    font-size:10px!important;
+  }
+  .request-category-grid .artist-search-card strong{
+    font-size:15px!important;
+  }
+  .request-email-control{
+    grid-template-columns:1fr!important;
+  }
+  .recover-profile-btn{
+    width:100%!important;
+  }
+  .request-history-tabs button{
+    min-height:46px!important;
+    padding:4px 2px!important;
+    font-size:7px!important;
+    letter-spacing:.035em!important;
+  }
+  .history-song-results{
+    max-height:53vh!important;
+  }
+  .personal-favourite-list{
+    grid-template-columns:1fr!important;
+  }
+}
