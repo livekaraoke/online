@@ -18,12 +18,24 @@
     {id:"queue",question:"Queue position",answer:"Queue positions follow LiveSuite Run Order and may change when the host reorders the performance."},
     {id:"tips",question:"Tips",answer:"Add a note if you need a different key, want to sing with someone, or want the host to know something before your turn."}
   ];
+  const DEFAULT_CONTENT = {
+    categoryCardSize:82,
+    instagramUrl:"https://www.instagram.com/billylee.mt",
+    facebookUrl:"https://www.facebook.com/billylee.mt",
+    aboutShort:"Billy Lee is a Malta-based singer, guitarist and live performer with over 20 years of experience on stage. His solo performances combine guitar, vocals and live looping to build arrangements in real time, ranging from stripped-back acoustic songs to a fuller, layered sound.\n\nHaving performed at venues, concerts and festivals in Malta and the UK, Billy brings a broad repertoire and an adaptable approach to every show. Alongside his solo work, he is the frontman and guitarist of hard rock band Roxanna and also provides Live Karaoke, an interactive live music experience built around audience song requests and live performance.",
+    aboutDetailed:"Billy Lee is a singer, guitarist and live performer based in Malta, with more than two decades of experience performing at venues, concerts, festivals and private events in Malta and the UK.\n\nHis solo setup is centred around guitar, vocals and live looping. Using a loop station, parts are recorded and layered live — rhythm guitar, lead parts, percussion and vocal harmonies can all be built into an arrangement in real time. This allows a solo performance to develop naturally from a simple acoustic foundation into a much fuller sound, without relying on a fixed backing arrangement.\n\nThe repertoire covers a wide range of material, with a strong foundation in rock alongside acoustic and contemporary favourites. Rather than reproducing every song in exactly the same way, arrangements can be adapted to the setting, the audience and the pace of the night. Requests and spontaneous changes are part of that approach, keeping the performance flexible and genuinely live.\n\nBilly is also behind Live Karaoke, an interactive live music experience that puts the audience at the centre of the performance. Guests choose and request songs to sing live, backed by Billy on guitar and vocals. It combines the accessibility of karaoke with the spontaneity and interaction of a live musician, allowing each performance to adapt to the singer and the room.\n\nBilly has also worked extensively in band settings. He currently fronts Roxanna, a Malta-based hard rock band formed in 2023, performing as lead vocalist and guitarist alongside Billy B on bass and backing vocals and Salvo on drums. The band draws from classic and modern hard rock, with elements of grunge and alternative rock, and also performs acoustic material in more intimate settings.\n\nWhether performing solo, hosting Live Karaoke or playing with Roxanna, the focus remains on musicianship, strong arrangements and audience connection - adapting each show to the setting and the people in the room."
+  };
 
   let songs = [];
   let state = {
     showCategoryCards:true,
+    categoryCardSize:DEFAULT_CONTENT.categoryCardSize,
     categories:DEFAULTS.map(item=>({...item})),
-    faqs:DEFAULT_FAQS.map(item=>({...item}))
+    faqs:DEFAULT_FAQS.map(item=>({...item})),
+    instagramUrl:DEFAULT_CONTENT.instagramUrl,
+    facebookUrl:DEFAULT_CONTENT.facebookUrl,
+    aboutShort:DEFAULT_CONTENT.aboutShort,
+    aboutDetailed:DEFAULT_CONTENT.aboutDetailed
   };
   let loaded = false;
 
@@ -85,8 +97,13 @@
     const faqSource=Array.isArray(data.faqs)&&data.faqs.length?data.faqs:DEFAULT_FAQS;
     return {
       showCategoryCards:data.showCategoryCards!==false,
+      categoryCardSize:Math.max(60,Math.min(120,Number(data.categoryCardSize)||DEFAULT_CONTENT.categoryCardSize)),
       categories:source.slice(0,8).map(normaliseCategory),
-      faqs:faqSource.slice(0,20).map(normaliseFaq)
+      faqs:faqSource.slice(0,20).map(normaliseFaq),
+      instagramUrl:String(data.instagramUrl||DEFAULT_CONTENT.instagramUrl),
+      facebookUrl:String(data.facebookUrl||DEFAULT_CONTENT.facebookUrl),
+      aboutShort:String(data.aboutShort||DEFAULT_CONTENT.aboutShort),
+      aboutDetailed:String(data.aboutDetailed||DEFAULT_CONTENT.aboutDetailed)
     };
   }
 
@@ -119,6 +136,14 @@
 
   function render(){
     $("showCategoryCards").checked=state.showCategoryCards!==false;
+    if($("categoryCardSize")){
+      $("categoryCardSize").value=String(state.categoryCardSize||DEFAULT_CONTENT.categoryCardSize);
+      $("categoryCardSizeValue").textContent=`${$("categoryCardSize").value} px`;
+    }
+    if($("websiteInstagramUrl"))$("websiteInstagramUrl").value=state.instagramUrl||"";
+    if($("websiteFacebookUrl"))$("websiteFacebookUrl").value=state.facebookUrl||"";
+    if($("websiteAboutShort"))$("websiteAboutShort").value=state.aboutShort||"";
+    if($("websiteAboutDetailed"))$("websiteAboutDetailed").value=state.aboutDetailed||"";
     const container=$("websiteCategoryEditors");
     container.innerHTML=state.categories.map((category,index)=>`
       <details class="website-category-editor" data-category-editor="${esc(category.id)}" ${index===0?"open":""}>
@@ -209,8 +234,18 @@
     setStatus("Saving…");
     try{
       state.showCategoryCards=$("showCategoryCards").checked;
+      state.categoryCardSize=Math.max(60,Math.min(120,Number($("categoryCardSize")?.value)||DEFAULT_CONTENT.categoryCardSize));
+      state.instagramUrl=String($("websiteInstagramUrl")?.value||"").trim();
+      state.facebookUrl=String($("websiteFacebookUrl")?.value||"").trim();
+      state.aboutShort=String($("websiteAboutShort")?.value||"").trim();
+      state.aboutDetailed=String($("websiteAboutDetailed")?.value||"").trim();
       await SETTINGS_DOC().set({
         showCategoryCards:state.showCategoryCards,
+        categoryCardSize:state.categoryCardSize,
+        instagramUrl:state.instagramUrl,
+        facebookUrl:state.facebookUrl,
+        aboutShort:state.aboutShort,
+        aboutDetailed:state.aboutDetailed,
         categories:state.categories.map(category=>({
           id:category.id,
           label:category.label,
@@ -252,11 +287,16 @@
   }
 
   function resetDefaults(){
-    if(!confirm("Reset the Billy Lee request category cards to the four defaults?"))return;
+    if(!confirm("Reset all Billy Lee website settings on this page to their defaults?"))return;
     state={
       showCategoryCards:true,
+      categoryCardSize:DEFAULT_CONTENT.categoryCardSize,
       categories:DEFAULTS.map((item,index)=>normaliseCategory(item,index)),
-      faqs:DEFAULT_FAQS.map((item,index)=>normaliseFaq(item,index))
+      faqs:DEFAULT_FAQS.map((item,index)=>normaliseFaq(item,index)),
+      instagramUrl:DEFAULT_CONTENT.instagramUrl,
+      facebookUrl:DEFAULT_CONTENT.facebookUrl,
+      aboutShort:DEFAULT_CONTENT.aboutShort,
+      aboutDetailed:DEFAULT_CONTENT.aboutDetailed
     };
     render();
     setStatus("Defaults loaded. Press Save Website Settings to publish them.");
@@ -384,6 +424,11 @@
   });
 
   $("showCategoryCards").addEventListener("change",()=>{state.showCategoryCards=$("showCategoryCards").checked;});
+  $("categoryCardSize").addEventListener("input",()=>{
+    const value=Math.max(60,Math.min(120,Number($("categoryCardSize").value)||DEFAULT_CONTENT.categoryCardSize));
+    state.categoryCardSize=value;
+    $("categoryCardSizeValue").textContent=`${value} px`;
+  });
   $("addWebsiteCategoryBtn").addEventListener("click",addCategory);
   $("addWebsiteFaqBtn").addEventListener("click",addFaq);
   $("resetWebsiteCategoriesBtn").addEventListener("click",resetDefaults);
