@@ -550,12 +550,8 @@
     content.innerHTML = "";
 
     (song.sections || []).forEach((section, sourceIndex) => {
-      if (
-        section.type === "separator" ||
-        section.type === "tab" ||
-        section.type === "hostNote" ||
-        section.type === "host-note"
-      ) return;
+      if (!LyricsCommon.sectionVisibleOnSingerScreen(section)) return;
+      if (section.type === "separator") return;
 
       const html = LyricsCommon.singerHTMLFromSection(section);
       if (!html) return;
