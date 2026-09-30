@@ -27,7 +27,11 @@
     const box = $("activeRequestsList");
     if (!box) return;
 
-    const active = LK.state.currentRequests.filter(r => !r.status || r.status === "active" || r.status === "pending" || r.status === "waiting");
+    const active = LK.state.currentRequests.filter(r => {
+      const status=String(r.status||"").toLowerCase();
+      if(!status||["active","pending","waiting"].includes(status))return true;
+      return status==="cancelled"&&r.cancelledDismissedByHost!==true;
+    });
     const sort = $("requestSortSelect")?.value || "oldest";
 
     active.sort((a, b) => {
@@ -48,11 +52,12 @@
 
     active.forEach((req, i) => {
       const row = document.createElement("div");
-      row.className = "active-request-row";
+      const cancelled=String(req.status||"").toLowerCase()==="cancelled";
+      row.className = `active-request-row${cancelled?" request-cancelled-by-requester":""}`;
       const title = req.songTitle || req.title || "Untitled";
       const artist = req.songArtist || req.artist || "";
       const name = req.singerName || req.name || "Unknown";
-      const locationAge = [req.location, req.ageRange].filter(Boolean).join(" · ");
+      const locationAge = [req.requesterCountry || req.location, req.requesterAgeRange || req.ageRange].filter(Boolean).join(" · ");
       const bpm = req.userBpm || req.songUserBpm || req.bpm || "-";
 
       row.innerHTML = `
@@ -62,9 +67,12 @@
         <div>${LK.dashboard.escapeHTML(bpm)}</div>
         <div>${LK.dashboard.minutesAgo(req.createdAt)} mins ago</div>
         <div class="request-actions">
-          <button class="request-done" onclick="acceptRequestToRunOrder('${req.id}')" title="Accept and add to Run Order">✓</button>
-          <button class="request-abandoned" onclick="openReasonModal('${req.id}', 'abandoned')">🚶</button>
-          <button class="request-delete" onclick="openReasonModal('${req.id}', 'deleted')">×</button>
+          ${cancelled
+            ? `<span class="request-cancelled-label">CANCELLED BY REQUESTER</span><button class="request-delete request-dismiss-cancelled" onclick="dismissCancelledRequestFromPending('${req.id}')" title="Remove from pending list">×</button>`
+            : `<button class="request-done" onclick="acceptRequestToRunOrder('${req.id}')" title="Accept and add to Run Order">✓</button>
+               <button class="request-abandoned" onclick="openReasonModal('${req.id}', 'abandoned')">🚶</button>
+               <button class="request-delete" onclick="openReasonModal('${req.id}', 'deleted')">×</button>`
+          }
         </div>`;
       box.appendChild(row);
     });
@@ -150,6 +158,15 @@
     LK.sessions.setSessionStatus(LK.state.reasonMode === "abandoned" ? "Request abandoned." : "Request deleted.");
   }
 
+  async function dismissCancelledRequestFromPending(id){
+    if(!id)return;
+    await LK.db.collection("publicSongRequests").doc(id).set({
+      cancelledDismissedByHost:true,
+      cancelledDismissedAt:serverNow(),
+      updatedAt:serverNow()
+    },{merge:true});
+  }
+
   function initRequests() {
     renderActiveRequests();
   }
@@ -161,4 +178,5 @@
   window.openReasonModal = openReasonModal;
   window.closeReasonModal = closeReasonModal;
   window.confirmRequestReason = confirmRequestReason;
+  window.dismissCancelledRequestFromPending = dismissCancelledRequestFromPending;
 })();
