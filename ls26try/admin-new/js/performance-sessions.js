@@ -142,6 +142,7 @@
     const value = String(status || "").toLowerCase();
 
     if (["completed","played"].includes(value)) return "completed";
+    if (value==="cancelled") return "cancelled";
     if (["abandoned","singerleft","singer_left"].includes(value)) return "abandoned";
     if (["deletedbyhost","deleted","declined"].includes(value)) return "deleted";
     return "left";
@@ -461,6 +462,7 @@
     const value = String(status || "").toLowerCase();
 
     if (["completed","played"].includes(value)) return "Played";
+    if (value==="cancelled") return "Cancelled by Requester";
     if (["abandoned","singerleft","singer_left"].includes(value)) return "Singer Left";
     if (["deletedbyhost","deleted","declined"].includes(value)) return "Rejected";
     if (["queued","accepted"].includes(value)) return "Queued";
