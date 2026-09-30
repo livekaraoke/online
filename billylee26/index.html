@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#02080d">
   <title>Billy Lee — Live Music</title>
   <meta name="description" content="Billy Lee — live music, gigs, requests and live performance in Malta.">
-  <link rel="stylesheet" href="css/style.css?v=20260930-request-settings-v2">
+  <link rel="stylesheet" href="css/style.css?v=20260930-request-guard-v1">
 </head>
 <body>
   <header class="hero" id="top">
@@ -228,6 +228,18 @@
     </div>
   </dialog>
 
+  <dialog id="requestActionConfirmDialog" class="modal request-action-confirm-dialog">
+    <div class="request-action-confirm-card">
+      <div class="request-action-confirm-icon" aria-hidden="true">!</div>
+      <h2 id="requestActionConfirmTitle">CONFIRM</h2>
+      <p id="requestActionConfirmMessage"></p>
+      <div class="request-action-confirm-actions">
+        <button id="requestActionConfirmCancelBtn" type="button" class="small-btn ghost">KEEP</button>
+        <button id="requestActionConfirmOkBtn" type="button" class="request-action-confirm-ok">CONFIRM</button>
+      </div>
+    </div>
+  </dialog>
+
   <dialog id="requestDialog" class="modal request-modal">
     <div class="request-modal-top">
       <div class="request-header">
@@ -389,8 +401,10 @@
           <div class="success-mark">✓</div>
           <h3>REQUEST SENT</h3>
           <p id="requestSuccessText">Your request has been sent and is awaiting approval.</p>
-          <button id="requestAnotherBtn" class="primary-btn" type="button">REQUEST ANOTHER SONG →</button>
-          <button id="viewMyRequestsBtn" class="small-btn ghost" type="button">VIEW MY REQUESTS</button>
+          <div class="request-success-actions">
+            <button id="requestAnotherBtn" class="primary-btn" type="button">REQUEST ANOTHER SONG →</button>
+            <button id="viewMyRequestsBtn" class="primary-btn" type="button">VIEW MY REQUESTS →</button>
+          </div>
         </section>
       </div>
 
@@ -408,6 +422,6 @@
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
   <script src="js/firebase-config.js"></script>
   <script src="js/youtube-videos.js"></script>
-  <script src="js/app.js?v=20260930-request-settings-v2"></script>
+  <script src="js/app.js?v=20260930-request-guard-v1"></script>
 </body>
 </html>
