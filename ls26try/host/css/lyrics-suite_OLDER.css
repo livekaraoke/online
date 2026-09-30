@@ -736,6 +736,20 @@ button,input,select {
   border-bottom: 1px solid #303030;
 }
 
+body.host-singer-sync-active .singer-sync-section {
+  transition: opacity .18s linear;
+}
+
+body.host-singer-sync-active .singer-sync-section.current-section {
+  opacity: 1;
+}
+
+body.host-singer-sync-active .singer-controls button:disabled,
+body.host-singer-sync-active .singer-controls input:disabled {
+  opacity: .38;
+  cursor: not-allowed;
+}
+
 .singer-section h2 {
   display: inline-block;
   margin: 0 0 10px;
