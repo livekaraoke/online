@@ -13,6 +13,7 @@
   let requestListeners = [];
   let sessionRequests = [];
   let sessionRequestsUnsub = null;
+  let watchedRequestSessionId = "";
   let latestEvents = [];
   let selectedRequestSongId = "";
   let elapsedTimer = null;
@@ -39,6 +40,8 @@
     aboutDetailed:"Billy Lee is a singer, guitarist and live performer based in Malta, with more than two decades of experience performing at venues, concerts, festivals and private events in Malta and the UK.\n\nHis solo setup is centred around guitar, vocals and live looping. Using a loop station, parts are recorded and layered live — rhythm guitar, lead parts, percussion and vocal harmonies can all be built into an arrangement in real time. This allows a solo performance to develop naturally from a simple acoustic foundation into a much fuller sound, without relying on a fixed backing arrangement.\n\nThe repertoire covers a wide range of material, with a strong foundation in rock alongside acoustic and contemporary favourites. Rather than reproducing every song in exactly the same way, arrangements can be adapted to the setting, the audience and the pace of the night. Requests and spontaneous changes are part of that approach, keeping the performance flexible and genuinely live.\n\nBilly is also behind Live Karaoke, an interactive live music experience that puts the audience at the centre of the performance. Guests choose and request songs to sing live, backed by Billy on guitar and vocals. It combines the accessibility of karaoke with the spontaneity and interaction of a live musician, allowing each performance to adapt to the singer and the room.\n\nBilly has also worked extensively in band settings. He currently fronts Roxanna, a Malta-based hard rock band formed in 2023, performing as lead vocalist and guitarist alongside Billy B on bass and backing vocals and Salvo on drums. The band draws from classic and modern hard rock, with elements of grunge and alternative rock, and also performs acoustic material in more intimate settings.\n\nWhether performing solo, hosting Live Karaoke or playing with Roxanna, the focus remains on musicianship, strong arrangements and audience connection - adapting each show to the setting and the people in the room."
   };
   let websiteRequestSettings = {
+    enableLiveRequestTestMode:false,
+    requestTestSessionId:"",
     showCategoryCards:true,
     showArtistSearchCard:true,
     categoryCardSize:DEFAULT_WEBSITE_CONTENT.categoryCardSize,
@@ -109,6 +112,15 @@
     const active=controlData.active===true && !!activeSessionId;
     const hero=$('heroGigs');
     const watch=$('watchLiveBtn');
+    if(!active&&liveRequestTestMode()){
+      const upcoming=latestEvents.filter(eventIsUpcoming).sort(eventSort);
+      hero.innerHTML = upcoming.length ? eventCard(upcoming[0],true) : `<div class="empty-inline">No upcoming gig published.</div>`;
+      watch.innerHTML='<span class="button-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 18V5l10-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="16" cy="16" r="3"/></svg></span><span>TEST REQUESTS →</span>';
+      watch.classList.add('is-live','is-test-mode');
+      watch.setAttribute('href','#requestSongSection');
+      return;
+    }
+    watch.classList.remove('is-test-mode');
     if(active){
       const venue=controlData.venue || activeSession?.venue || controlData.eventSnapshot?.venue || 'Live Performance';
       const locality=controlData.venueLocality || controlData.locality || activeSession?.venueLocality || activeSession?.locality || controlData.eventSnapshot?.venueLocality || controlData.eventSnapshot?.locality || '';
@@ -209,6 +221,8 @@
 
   function applyWebsiteRequestSettings(data={}){
     websiteRequestSettings={
+      enableLiveRequestTestMode:data.enableLiveRequestTestMode===true,
+      requestTestSessionId:String(data.requestTestSessionId||""),
       showCategoryCards:data.showCategoryCards!==false,
       showArtistSearchCard:data.showArtistSearchCard!==false,
       categoryCardSize:Math.max(60,Math.min(120,Number(data.categoryCardSize)||DEFAULT_WEBSITE_CONTENT.categoryCardSize)),
@@ -233,6 +247,8 @@
         if($("clearSongCategoryBtn"))$("clearSongCategoryBtn").hidden=true;
       }
     }
+    syncSessionRequestsWatcher();
+    renderLive();
     if($("requestDialog")?.open&&$("requestBrowser")&&!$("requestBrowser").hidden)renderSongResults();
   }
 
@@ -243,6 +259,33 @@
       console.warn("Billy Lee website settings unavailable; using defaults.",error);
       applyWebsiteRequestSettings({});
     });
+  }
+
+  function hasRealLiveSession(){
+    return controlData.active===true && !!activeSessionId;
+  }
+
+  function liveRequestTestMode(){
+    return websiteRequestSettings.enableLiveRequestTestMode===true && !hasRealLiveSession();
+  }
+
+  function requestSessionId(){
+    if(hasRealLiveSession())return activeSessionId;
+    if(!liveRequestTestMode())return "";
+    return String(websiteRequestSettings.requestTestSessionId||"billylee-test-preview");
+  }
+
+  function syncSessionRequestsWatcher(){
+    const next=requestSessionId();
+    if(next===watchedRequestSessionId)return;
+    watchedRequestSessionId=next;
+    attachSessionRequests(next);
+    if($("requestDialog")?.open)void renderMyRequests();
+  }
+
+  function testRequestQueueCount(){
+    const activeStatuses=new Set(["active","pending","waiting","queued","accepted","requested"]);
+    return sessionRequests.filter(request=>activeStatuses.has(String(request.status||"active").toLowerCase())).length;
   }
 
   function queuedRequestCount(){
@@ -266,20 +309,64 @@
   }
 
   function renderLive(){
-    const active=controlData.active===true && !!activeSessionId;
+    const active=hasRealLiveSession();
+    const testMode=liveRequestTestMode();
     renderHeroGig();
-    const playing=playingItem(); const breakOpen=activeSession?.breakOpen===true;
-    $("queueCount").textContent=String(active ? queuedRequestCount() : 0);
-    $("requestSongBtn").disabled=!active;
-    $("sessionVenue").textContent=active ? (controlData.venue || activeSession?.venue || controlData.eventSnapshot?.venue || "Live") : "—";
-    $("sessionType").textContent=active ? (controlData.sessionType || controlData.type || activeSession?.sessionType || activeSession?.type || "Performance") : "—";
-    $("progressBar").style.width="0%"; startElapsed(playing);
-    const label=$("liveStateLabel"); const title=$("currentSongTitle");
-    label.classList.remove("is-playing"); title.classList.remove("between-songs-title");
-    if(!active){label.textContent="NOT LIVE";title.textContent="No active session";$("currentSongArtist").textContent="Check the upcoming gigs below.";$("stateIcon").textContent="♪";return;}
-    if(breakOpen){label.textContent="ON BREAK";title.textContent="- WE\'LL BE BACK SHORTLY -";title.classList.add("between-songs-title");$("currentSongArtist").textContent="Requests remain open during the break.";$("stateIcon").textContent="☕";return;}
-    if(playing){label.textContent="NOW PLAYING";label.classList.add("is-playing");title.textContent=playing.songTitle||playing.title||"Current song";$("currentSongArtist").textContent=ArtistNames.display(playing.artist||playing.songArtist||"");$("stateIcon").innerHTML='<span class="pause-bars"><i></i><i></i></span>';return;}
-    label.textContent="LIVE NOW";title.textContent="- BETWEEN SONGS -";title.classList.add("between-songs-title");$("currentSongArtist").textContent="The next song will start shortly.";$("stateIcon").textContent="♪";
+    const playing=active?playingItem():null;
+    const breakOpen=active&&activeSession?.breakOpen===true;
+    const livePanel=$("livePanel");
+    livePanel?.classList.toggle("is-test-mode",testMode);
+    $("queueCount").textContent=String(active?queuedRequestCount():(testMode?testRequestQueueCount():0));
+    $("requestSongBtn").disabled=!(active||testMode);
+    $("sessionVenue").textContent=active
+      ? (controlData.venue || activeSession?.venue || controlData.eventSnapshot?.venue || "Live")
+      : (testMode?"Billy Lee Website":"—");
+    $("sessionType").textContent=active
+      ? (controlData.sessionType || controlData.type || activeSession?.sessionType || activeSession?.type || "Performance")
+      : (testMode?"TEST MODE":"—");
+    $("progressBar").style.width="0%";
+    startElapsed(playing);
+    const label=$("liveStateLabel");
+    const title=$("currentSongTitle");
+    label.classList.remove("is-playing","is-test-mode");
+    title.classList.remove("between-songs-title");
+    if(testMode){
+      label.textContent="TEST MODE";
+      label.classList.add("is-test-mode");
+      title.textContent="- LIVE REQUEST PLAYER TEST -";
+      title.classList.add("between-songs-title");
+      $("currentSongArtist").textContent="Request A Song is enabled for website testing.";
+      $("stateIcon").textContent="⚙";
+      return;
+    }
+    if(!active){
+      label.textContent="NOT LIVE";
+      title.textContent="No active session";
+      $("currentSongArtist").textContent="Check the upcoming gigs below.";
+      $("stateIcon").textContent="♪";
+      return;
+    }
+    if(breakOpen){
+      label.textContent="ON BREAK";
+      title.textContent="- WE'LL BE BACK SHORTLY -";
+      title.classList.add("between-songs-title");
+      $("currentSongArtist").textContent="Requests remain open during the break.";
+      $("stateIcon").textContent="☕";
+      return;
+    }
+    if(playing){
+      label.textContent="NOW PLAYING";
+      label.classList.add("is-playing");
+      title.textContent=playing.songTitle||playing.title||"Current song";
+      $("currentSongArtist").textContent=ArtistNames.display(playing.artist||playing.songArtist||"");
+      $("stateIcon").innerHTML='<span class="pause-bars"><i></i><i></i></span>';
+      return;
+    }
+    label.textContent="LIVE NOW";
+    title.textContent="- BETWEEN SONGS -";
+    title.classList.add("between-songs-title");
+    $("currentSongArtist").textContent="The next song will start shortly.";
+    $("stateIcon").textContent="♪";
   }
 
   function attachSessionDoc(id){
@@ -290,6 +377,7 @@
 
   function attachSessionRequests(id){
     if(sessionRequestsUnsub){try{sessionRequestsUnsub();}catch{} sessionRequestsUnsub=null;}
+    watchedRequestSessionId=String(id||"");
     sessionRequests=[];
     if(!id){
       if($("requestDialog")?.open && !$("requestBrowser")?.hidden)renderSongResults();
@@ -299,6 +387,7 @@
       .where("sessionId","==",id)
       .onSnapshot(snapshot=>{
         sessionRequests=snapshot.docs.map(doc=>({id:doc.id,...(doc.data()||{})}));
+        renderLive();
         if($("requestDialog")?.open && !$("requestBrowser")?.hidden)renderSongResults();
       },error=>{
         console.warn("Could not watch session request availability:",error);
@@ -312,9 +401,10 @@
       if(next!==activeSessionId){
         activeSessionId=next;
         attachSessionDoc(next);
-        attachSessionRequests(next);
+        syncSessionRequestsWatcher();
         if($("requestDialog")?.open) renderMyRequests();
       }
+      syncSessionRequestsWatcher();
       renderLive();
     },err=>console.error("Current session listener failed",err));
     db.collection("karaokeControl").doc("runOrder").onSnapshot(doc=>{
@@ -533,7 +623,7 @@
           rating:profile.rating?Number(profile.rating):null,
           review:profile.review,
           displayOptIn:!profile.reviewPrivate,
-          sessionId:activeSessionId||"",
+          sessionId:requestSessionId()||"",
           updatedAt:firebase.firestore.FieldValue.serverTimestamp()
         };
         const existingId=localStorage.getItem(REQUEST_REVIEW_ID_KEY)||"";
@@ -795,7 +885,7 @@
   }
 
   async function openRequestDialog(){
-    if(!(controlData.active===true && activeSessionId)){
+    if(!requestSessionId()){
       alert("Song requests are only available during an active session.");
       return;
     }
@@ -882,7 +972,8 @@
     const ids=trackedRequestIds();
     const box=$("myRequests");
     if(!box)return;
-    if(!activeSessionId){
+    const currentRequestSessionId=requestSessionId();
+    if(!currentRequestSessionId){
       box.innerHTML=`<p class="muted">Requests from previous sessions are hidden.</p>`;
       return;
     }
@@ -895,7 +986,7 @@
     const paint=()=>{
       const current=ids.slice().reverse()
         .map(id=>records.get(id))
-        .filter(record=>record&&String(record.sessionId||"")===String(activeSessionId));
+        .filter(record=>record&&String(record.sessionId||"")===String(currentRequestSessionId));
 
       if(!current.length){
         box.innerHTML=`<p class="muted">Requests you make in this session will appear here.</p>`;
@@ -1064,11 +1155,12 @@
     const profile=requestProfile();
     const name=profile.name;
     const song=songs.find(item=>item.id===selectedRequestSongId);
-    if(!name||!song||!activeSessionId)return;
+    const currentRequestSessionId=requestSessionId();
+    if(!name||!song||!currentRequestSessionId)return;
 
     if(songSessionState(song)!=="available"){
       switchRequestTab("songs");
-      $("requestNotice").textContent="That song is already playing or has already been played in this session.";
+      $("requestNotice").textContent="That song is already requested, playing, or has already been played in this session.";
       selectedRequestSongId="";
       renderSongResults();
       return;
@@ -1083,8 +1175,9 @@
         listId:publicSetlist?.id||"venue-main-public-song-list",
         publicSetlistId:publicSetlist?.id||"",
         publicSetlistName:publicSetlist?.name||"",
-        sessionId:activeSessionId,
-        isTestSession:false,
+        sessionId:currentRequestSessionId,
+        isTestSession:liveRequestTestMode(),
+        requestTestMode:liveRequestTestMode(),
         status:"active",
         singerName:name,
         name,
