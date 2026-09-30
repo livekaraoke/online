@@ -1055,6 +1055,261 @@
     });
   }
 
+
+  function requestTimestampMs(value){
+    if(value?.toMillis)return value.toMillis();
+    if(value?.toDate)return value.toDate().getTime();
+    const n=Number(value);
+    if(Number.isFinite(n)&&n>0)return n;
+    const parsed=Date.parse(String(value||""));
+    return Number.isFinite(parsed)?parsed:0;
+  }
+
+  function requestDateLabel(record,withTime=true){
+    const ms=requestTimestampMs(record?.createdAt)||requestTimestampMs(record?.requestedAt)||requestTimestampMs(record?.updatedAt);
+    if(!ms)return "Date unavailable";
+    const options=withTime
+      ? {day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"}
+      : {day:"2-digit",month:"short",year:"numeric"};
+    return new Date(ms).toLocaleString("en-GB",options);
+  }
+
+  function analyticsStatusClass(status){
+    const value=String(status||"active").toLowerCase();
+    if(["played","completed","finished"].includes(value))return "played";
+    if(["declined","deleted","deletedbyhost","abandoned","left","rejected"].includes(value))return "rejected";
+    if(value==="cancelled")return "cancelled";
+    if(["queued","accepted"].includes(value))return "accepted";
+    if(value==="playing")return "playing";
+    return "pending";
+  }
+
+  function countBy(records,keyFn){
+    const counts=new Map();
+    records.forEach(record=>{
+      const key=String(keyFn(record)||"").trim();
+      if(!key)return;
+      counts.set(key,(counts.get(key)||0)+1);
+    });
+    return [...counts.entries()].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0],undefined,{sensitivity:"base"}));
+  }
+
+  async function loadRequestHistoryRecords(){
+    const ids=trackedRequestIds().slice(-250);
+    const records=new Map();
+    const chunks=[];
+    for(let i=0;i<ids.length;i+=10)chunks.push(ids.slice(i,i+10));
+
+    await Promise.all(chunks.map(async chunk=>{
+      if(!chunk.length)return;
+      try{
+        const snap=await db.collection("publicSongRequests")
+          .where(firebase.firestore.FieldPath.documentId(),"in",chunk)
+          .get();
+        snap.docs.forEach(doc=>records.set(doc.id,{id:doc.id,...(doc.data()||{})}));
+      }catch(error){
+        console.warn("Could not load a request-history batch:",error);
+        await Promise.all(chunk.map(async id=>{
+          try{
+            const doc=await db.collection("publicSongRequests").doc(id).get();
+            if(doc.exists)records.set(id,{id,...(doc.data()||{})});
+          }catch(_){}
+        }));
+      }
+    }));
+
+    const deviceId=String(localStorage.getItem(REQUEST_DEVICE_ID_KEY)||"").trim();
+    if(deviceId){
+      try{
+        const snap=await db.collection("publicSongRequests")
+          .where("requesterDeviceId","==",deviceId)
+          .limit(250)
+          .get();
+        snap.docs.forEach(doc=>records.set(doc.id,{id:doc.id,...(doc.data()||{})}));
+      }catch(error){
+        console.info("Device-linked history query unavailable; using locally tracked requests.",error?.code||error);
+      }
+    }
+
+    return [...records.values()].sort((a,b)=>
+      requestTimestampMs(b.createdAt||b.requestedAt)-requestTimestampMs(a.createdAt||a.requestedAt)
+    );
+  }
+
+  async function loadRequestHistorySessions(records){
+    const ids=[...new Set(records.map(record=>String(record.sessionId||"").trim()).filter(Boolean))]
+      .filter(id=>!id.startsWith("billylee-test-"))
+      .slice(0,60);
+    const sessions=new Map();
+    await Promise.all(ids.map(async id=>{
+      try{
+        const snap=await db.collection("performanceSessions").doc(id).get();
+        if(snap.exists)sessions.set(id,{id,...(snap.data()||{})});
+      }catch(_){}
+    }));
+    return sessions;
+  }
+
+  function sessionAnalyticsLabel(id,records,sessions){
+    const session=sessions.get(id)||{};
+    const name=String(session.name||session.sessionName||session.eventName||session.venue||"").trim();
+    if(name)return name;
+    if(String(id).startsWith("billylee-test-"))return "Website Test Session";
+    const first=records.slice().sort((a,b)=>requestTimestampMs(a.createdAt)-requestTimestampMs(b.createdAt))[0];
+    return first?"Session · "+requestDateLabel(first,false):"Session";
+  }
+
+  function renderRequestHistoryAnalytics(records,sessions){
+    const overview=$("requestHistoryOverview");
+    const history=$("requestHistoryHistory");
+    const favourites=$("requestHistoryFavourites");
+    const sessionsPanel=$("requestHistorySessions");
+    if(!overview||!history||!favourites||!sessionsPanel)return;
+
+    if(!records.length){
+      const empty='<div class="request-history-empty"><strong>No saved request history yet.</strong><span>Requests made from this device will build your stats here.</span></div>';
+      overview.innerHTML=empty;
+      history.innerHTML=empty;
+      favourites.innerHTML=empty;
+      sessionsPanel.innerHTML=empty;
+      return;
+    }
+
+    const played=records.filter(record=>analyticsStatusClass(record.status)==="played").length;
+    const cancelled=records.filter(record=>analyticsStatusClass(record.status)==="cancelled").length;
+    const rejected=records.filter(record=>analyticsStatusClass(record.status)==="rejected").length;
+    const uniqueSongs=new Set(records.map(record=>normaliseSongIdentity(record.songTitle||record.title)).filter(Boolean)).size;
+    const uniqueSessions=new Set(records.map(record=>String(record.sessionId||"")).filter(Boolean)).size;
+    const songCounts=countBy(records,record=>record.songTitle||record.title||"Untitled");
+    const artistCounts=countBy(records,record=>ArtistNames.display(record.songArtist||record.artist||""));
+    const latest=records[0];
+    const earliest=records[records.length-1];
+
+    overview.innerHTML=
+      '<div class="request-history-stat-grid">'+
+        '<article><span>TOTAL REQUESTS</span><strong>'+records.length+'</strong></article>'+
+        '<article><span>PLAYED</span><strong>'+played+'</strong></article>'+
+        '<article><span>UNIQUE SONGS</span><strong>'+uniqueSongs+'</strong></article>'+
+        '<article><span>SESSIONS</span><strong>'+uniqueSessions+'</strong></article>'+
+      '</div>'+
+      '<div class="request-history-highlight-grid">'+
+        '<article><span>MOST REQUESTED SONG</span><strong>'+escapeHTML(songCounts[0]?.[0]||"—")+'</strong><small>'+
+          (songCounts[0]?(songCounts[0][1]+' request'+(songCounts[0][1]===1?'':'s')):'No requests yet')+
+        '</small></article>'+
+        '<article><span>MOST REQUESTED ARTIST</span><strong>'+escapeHTML(artistCounts[0]?.[0]||"—")+'</strong><small>'+
+          (artistCounts[0]?(artistCounts[0][1]+' request'+(artistCounts[0][1]===1?'':'s')):'No requests yet')+
+        '</small></article>'+
+      '</div>'+
+      '<div class="request-history-summary">'+
+        '<div><span>First request</span><strong>'+escapeHTML(requestDateLabel(earliest))+'</strong></div>'+
+        '<div><span>Latest request</span><strong>'+escapeHTML(requestDateLabel(latest))+'</strong></div>'+
+        '<div><span>Cancelled</span><strong>'+cancelled+'</strong></div>'+
+        '<div><span>Rejected / left</span><strong>'+rejected+'</strong></div>'+
+      '</div>';
+
+    history.innerHTML=
+      '<div class="request-history-list">'+
+      records.map(record=>{
+        const statusClass=analyticsStatusClass(record.status);
+        const note=String(record.note||record.comment||"").trim();
+        return '<article class="request-history-row">'+
+          '<div class="request-history-row-main">'+
+            '<strong>'+escapeHTML(record.songTitle||record.title||"Untitled")+'</strong>'+
+            '<span>'+escapeHTML(ArtistNames.display(record.songArtist||record.artist||""))+'</span>'+
+            '<small>'+escapeHTML(requestDateLabel(record))+'</small>'+
+            (note?'<em>“'+escapeHTML(note)+'”</em>':'')+
+          '</div>'+
+          '<span class="request-history-status status-'+statusClass+'">'+escapeHTML(statusLabel(record.status))+'</span>'+
+        '</article>';
+      }).join("")+
+      '</div>';
+
+    favourites.innerHTML=
+      '<div class="request-history-favourites-grid">'+
+        '<section>'+
+          '<div class="request-history-section-title"><span>♫</span><strong>TOP SONGS</strong></div>'+
+          '<div class="request-ranking-list">'+
+            songCounts.slice(0,12).map(([name,count],index)=>
+              '<div><b>'+(index+1)+'</b><span>'+escapeHTML(name)+'</span><strong>'+count+'×</strong></div>'
+            ).join("")+
+          '</div>'+
+        '</section>'+
+        '<section>'+
+          '<div class="request-history-section-title"><span>♬</span><strong>TOP ARTISTS</strong></div>'+
+          '<div class="request-ranking-list">'+
+            artistCounts.slice(0,10).map(([name,count],index)=>
+              '<div><b>'+(index+1)+'</b><span>'+escapeHTML(name)+'</span><strong>'+count+'×</strong></div>'
+            ).join("")+
+          '</div>'+
+        '</section>'+
+      '</div>'+
+      '<div class="request-history-fun-stat"><span>REPEAT FAVOURITES</span><strong>'+
+        songCounts.filter(([,count])=>count>1).length+
+      '</strong><small>songs you have requested more than once</small></div>';
+
+    const bySession=new Map();
+    records.forEach(record=>{
+      const id=String(record.sessionId||"unknown");
+      if(!bySession.has(id))bySession.set(id,[]);
+      bySession.get(id).push(record);
+    });
+
+    const sessionRows=[...bySession.entries()].sort((a,b)=>{
+      const aMs=Math.max(...a[1].map(record=>requestTimestampMs(record.createdAt)||0));
+      const bMs=Math.max(...b[1].map(record=>requestTimestampMs(record.createdAt)||0));
+      return bMs-aMs;
+    });
+
+    sessionsPanel.innerHTML=
+      '<div class="request-session-history">'+
+      sessionRows.map(([id,list])=>{
+        const playedCount=list.filter(record=>analyticsStatusClass(record.status)==="played").length;
+        const top=countBy(list,record=>record.songTitle||record.title||"")[0];
+        const newest=list.slice().sort((a,b)=>requestTimestampMs(b.createdAt)-requestTimestampMs(a.createdAt))[0];
+        return '<article>'+
+          '<div><strong>'+escapeHTML(sessionAnalyticsLabel(id,list,sessions))+'</strong><span>'+escapeHTML(requestDateLabel(newest,false))+'</span></div>'+
+          '<div class="request-session-numbers"><span><b>'+list.length+'</b> requests</span><span><b>'+playedCount+'</b> played</span></div>'+
+          (top?'<small>Most requested here: '+escapeHTML(top[0])+(top[1]>1?' · '+top[1]+'×':'')+'</small>':'')+
+        '</article>';
+      }).join("")+
+      '</div>';
+  }
+
+  function switchRequestHistoryTab(tab){
+    const target=["overview","history","favourites","sessions"].includes(tab)?tab:"overview";
+    document.querySelectorAll("[data-request-history-tab]").forEach(button=>{
+      const active=button.dataset.requestHistoryTab===target;
+      button.classList.toggle("active",active);
+      button.setAttribute("aria-selected",String(active));
+    });
+    document.querySelectorAll("[data-request-history-panel]").forEach(panel=>{
+      panel.hidden=panel.dataset.requestHistoryPanel!==target;
+    });
+  }
+
+  async function openRequestHistory(){
+    const dialog=$("requestHistoryDialog");
+    if(!dialog)return;
+    $("requestHistoryLoading").hidden=false;
+    $("requestHistoryLoading").textContent="Loading your request history…";
+    document.querySelectorAll("[data-request-history-panel]").forEach(panel=>{
+      panel.hidden=true;
+      panel.innerHTML="";
+    });
+    if(!dialog.open)dialog.showModal();
+
+    try{
+      const records=await loadRequestHistoryRecords();
+      const sessions=await loadRequestHistorySessions(records);
+      renderRequestHistoryAnalytics(records,sessions);
+      $("requestHistoryLoading").hidden=true;
+      switchRequestHistoryTab("overview");
+    }catch(error){
+      console.error("Could not load request history:",error);
+      $("requestHistoryLoading").textContent="Could not load your request history right now.";
+    }
+  }
+
   async function cancelMyRequest(requestId){
     if(!requestId||!trackedRequestIds().includes(requestId))return;
     const confirmed=await showRequestActionConfirm({
@@ -1482,6 +1737,7 @@
     const photo=e.target.closest("[data-photo-index]"); if(photo)openPhoto(Number(photo.dataset.photoIndex));
     const song=e.target.closest("[data-song-id]"); if(song)selectRequestSong(song.dataset.songId);
     const tab=e.target.closest("[data-request-tab]"); if(tab)switchRequestTab(tab.dataset.requestTab);
+    const historyTab=e.target.closest("[data-request-history-tab]"); if(historyTab)switchRequestHistoryTab(historyTab.dataset.requestHistoryTab);
     const category=e.target.closest("[data-song-category]"); if(category)setSongCategory(category.dataset.songCategory);
     const rating=e.target.closest("[data-review-rating]"); if(rating)setReviewRating(Number(rating.dataset.reviewRating||0));
     const cancelRequest=e.target.closest("[data-cancel-request]"); if(cancelRequest)void cancelMyRequest(cancelRequest.dataset.cancelRequest);
@@ -1505,6 +1761,7 @@
   $("requestActionConfirmDialog").addEventListener("close",()=>{if(requestActionConfirmResolve)finishRequestActionConfirm(false);});
   $("requestNoteDialogInput").addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&e.key==="Enter")saveMyRequestNote();});
   $("continueRequestBtn").addEventListener("click",continueToSongs);
+  $("openRequestHistoryBtn").addEventListener("click",()=>void openRequestHistory());
   $("singerName").addEventListener("keydown",e=>{if(e.key==="Enter")continueToSongs();});
   $("editRequesterNameBtn").addEventListener("click",beginEditRequesterName);
   $("forgetRequestProfileBtn").addEventListener("click",forgetRequestProfile);
