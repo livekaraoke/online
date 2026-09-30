@@ -22,7 +22,7 @@
   let hostSyncFrame = null;
   let finishedTimer = null;
 
-  const SINGER_BACKGROUND_KEY = "ls26:karoakeSingerBackground";
+  const SINGER_BACKGROUND_KEY = "ls26:karaokeSingerBackground";
   const SINGER_BOTTOM_BAR_KEY = "ls26:karaokeSingerBottomBar";
   const DEFAULT_SINGER_BACKGROUND = "#00131a";
   let singerBackground = DEFAULT_SINGER_BACKGROUND;
