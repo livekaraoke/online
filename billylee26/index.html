@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#02080d">
   <title>Billy Lee — Live Music</title>
   <meta name="description" content="Billy Lee — live music, gigs, requests and live performance in Malta.">
-  <link rel="stylesheet" href="css/style.css?v=20260930-request-history-v2">
+  <link rel="stylesheet" href="css/style.css?v=20260930-profile-favourites-v1">
 </head>
 <body>
   <header class="hero" id="top">
@@ -253,6 +253,7 @@
       <div class="request-history-tabs" role="tablist" aria-label="Request history sections">
         <button type="button" class="active" data-request-history-tab="overview" role="tab">OVERVIEW</button>
         <button type="button" data-request-history-tab="history" role="tab">HISTORY</button>
+        <button type="button" data-request-history-tab="songlist" role="tab">SONG LIST</button>
         <button type="button" data-request-history-tab="favourites" role="tab">FAVOURITES</button>
         <button type="button" data-request-history-tab="sessions" role="tab">SESSIONS</button>
       </div>
@@ -260,6 +261,21 @@
         <div id="requestHistoryLoading" class="request-history-loading">Loading your request history…</div>
         <section id="requestHistoryOverview" class="request-history-panel" data-request-history-panel="overview"></section>
         <section id="requestHistoryHistory" class="request-history-panel" data-request-history-panel="history" hidden></section>
+        <section id="requestHistorySongList" class="request-history-panel request-history-songlist" data-request-history-panel="songlist" hidden>
+          <div id="historySongCategoryGrid" class="request-category-grid history-song-category-grid" aria-label="Song categories"></div>
+          <div id="historySongAlphabetRow" class="request-alphabet-row" aria-label="Jump by first letter"></div>
+          <button id="historyMyFavouritesCard" class="history-my-favourites-card" type="button" aria-pressed="false">
+            <span aria-hidden="true">♥</span>
+            <strong>MY FAVOURITES</strong>
+            <small id="historyFavouriteCount">0 songs</small>
+          </button>
+          <div class="history-song-controls">
+            <input id="historySongSearch" type="search" placeholder="Search song or artist…" autocomplete="off" inputmode="search">
+            <button id="historyClearSongCategoryBtn" class="request-filter-clear" type="button" hidden>SHOW ALL</button>
+          </div>
+          <div id="historySongNotice" class="request-notice">Browse, request, or favourite songs.</div>
+          <div id="historySongResults" class="history-song-results"></div>
+        </section>
         <section id="requestHistoryFavourites" class="request-history-panel" data-request-history-panel="favourites" hidden></section>
         <section id="requestHistorySessions" class="request-history-panel" data-request-history-panel="sessions" hidden></section>
       </div>
@@ -311,6 +327,14 @@
                 <input id="singerName" type="text" maxlength="60" placeholder="Your name" autocomplete="name">
                 <button id="forgetRequestProfileBtn" class="forget-profile-btn" type="button">FORGET USER</button>
               </div>
+            </div>
+            <div class="request-field request-field-wide request-email-field">
+              <label for="requestProfileEmail">EMAIL ADDRESS <small>OPTIONAL · PROFILE RECOVERY</small></label>
+              <div class="request-email-control">
+                <input id="requestProfileEmail" type="email" maxlength="160" placeholder="you@example.com" autocomplete="email">
+                <button id="recoverRequestProfileBtn" class="recover-profile-btn" type="button">RECOVER PROFILE</button>
+              </div>
+              <small class="request-email-help">Used only to recover your saved request history/profile on another device.</small>
             </div>
             <label class="request-field">COUNTRY <small>OPTIONAL</small>
               <input id="requestProfileCountry" type="text" maxlength="80" placeholder="e.g. Malta" autocomplete="country-name">
@@ -384,6 +408,7 @@
             <h3>CHOOSE A SONG</h3>
           </div>
           <div id="requestCategoryGrid" class="request-category-grid" aria-label="Song categories"></div>
+          <div id="requestAlphabetRow" class="request-alphabet-row" aria-label="Jump by first letter"></div>
           <div class="request-controls">
             <input id="songSearch" type="search" placeholder="Search song or artist…" autocomplete="off" inputmode="search">
             <button id="clearSongCategoryBtn" class="request-filter-clear" type="button" hidden>SHOW ALL</button>
@@ -449,6 +474,6 @@
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
   <script src="js/firebase-config.js"></script>
   <script src="js/youtube-videos.js"></script>
-  <script src="js/app.js?v=20260930-request-history-v2"></script>
+  <script src="js/app.js?v=20260930-profile-favourites-v1"></script>
 </body>
 </html>
