@@ -2199,3 +2199,5 @@ p,
   .request-name-gate-card{padding:18px!important}
   .request-name-gate-card h3{font-size:22px!important}
 }
+
+.request-bottom-tabs[hidden]{display:none!important}
