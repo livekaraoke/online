@@ -16,6 +16,7 @@
   let latestEvents = [];
   let selectedRequestSongId = "";
   let elapsedTimer = null;
+  const ARTIST_BROWSE_CATEGORY = "__artist__";
   const DEFAULT_REQUEST_CATEGORIES = [
     {id:"80s",label:"80s",subtitle:"1980–1989",enabled:true,mode:"rule",rule:"80s",songIds:[]},
     {id:"90s",label:"90s",subtitle:"1990–1999",enabled:true,mode:"rule",rule:"90s",songIds:[]},
@@ -39,6 +40,7 @@
   };
   let websiteRequestSettings = {
     showCategoryCards:true,
+    showArtistSearchCard:true,
     categoryCardSize:DEFAULT_WEBSITE_CONTENT.categoryCardSize,
     categories:DEFAULT_REQUEST_CATEGORIES.map(item=>({...item})),
     faqs:DEFAULT_REQUEST_FAQS.map(item=>({...item})),
@@ -208,6 +210,7 @@
   function applyWebsiteRequestSettings(data={}){
     websiteRequestSettings={
       showCategoryCards:data.showCategoryCards!==false,
+      showArtistSearchCard:data.showArtistSearchCard!==false,
       categoryCardSize:Math.max(60,Math.min(120,Number(data.categoryCardSize)||DEFAULT_WEBSITE_CONTENT.categoryCardSize)),
       categories:normaliseRequestCategories(data.categories),
       faqs:normaliseRequestFaqs(data.faqs),
@@ -219,9 +222,16 @@
     renderRequestCategoryCards();
     applyWebsiteContent();
     renderRequestInfo();
-    if(requestCategory!=="all"&&!websiteRequestSettings.categories.some(category=>category.id===requestCategory&&category.enabled)){
-      requestCategory="all";
-      if($("clearSongCategoryBtn"))$("clearSongCategoryBtn").hidden=true;
+    if(requestCategory!=="all"){
+      const artistModeValid=
+        requestCategory===ARTIST_BROWSE_CATEGORY &&
+        websiteRequestSettings.showCategoryCards!==false &&
+        websiteRequestSettings.showArtistSearchCard!==false;
+      const categoryValid=websiteRequestSettings.categories.some(category=>category.id===requestCategory&&category.enabled);
+      if(!artistModeValid&&!categoryValid){
+        requestCategory="all";
+        if($("clearSongCategoryBtn"))$("clearSongCategoryBtn").hidden=true;
+      }
     }
     if($("requestDialog")?.open&&$("requestBrowser")&&!$("requestBrowser").hidden)renderSongResults();
   }
@@ -593,7 +603,7 @@
   }
 
   function songMatchesCategory(song,categoryId){
-    if(categoryId==="all")return true;
+    if(categoryId==="all"||categoryId===ARTIST_BROWSE_CATEGORY)return true;
     const category=requestCategoryById(categoryId);
     if(!category||category.enabled===false)return false;
 
@@ -619,15 +629,28 @@
     const grid=$("requestCategoryGrid");
     if(!grid)return;
     const categories=websiteRequestSettings.categories.filter(category=>category.enabled!==false);
+    const showArtistCard=websiteRequestSettings.showArtistSearchCard!==false;
     const size=Math.max(60,Math.min(120,Number(websiteRequestSettings.categoryCardSize)||82));
     grid.style.setProperty("--request-category-size",size+"px");
-    grid.hidden=websiteRequestSettings.showCategoryCards===false||!categories.length;
-    grid.innerHTML=grid.hidden?"":categories.map(category=>`
+    const hasCards=categories.length>0||showArtistCard;
+    grid.hidden=websiteRequestSettings.showCategoryCards===false||!hasCards;
+    if(grid.hidden){
+      grid.innerHTML="";
+      return;
+    }
+    const categoryCards=categories.map(category=>`
       <button type="button" data-song-category="${escapeHTML(category.id)}" class="${requestCategory===category.id?"active":""}">
         <strong>${escapeHTML(category.label)}</strong>
         ${category.subtitle?`<span>${escapeHTML(category.subtitle)}</span>`:""}
       </button>
     `).join("");
+    const artistCard=showArtistCard?`
+      <button type="button" data-song-category="${ARTIST_BROWSE_CATEGORY}" class="artist-search-card ${requestCategory===ARTIST_BROWSE_CATEGORY?"active":""}">
+        <strong>SEARCH BY ARTIST</strong>
+        <span>Browse artists</span>
+      </button>
+    `:"";
+    grid.innerHTML=categoryCards+artistCard;
   }
 
   function setSongCategory(category){
@@ -637,10 +660,54 @@
     });
     if($("clearSongCategoryBtn"))$("clearSongCategoryBtn").hidden=requestCategory==="all";
     const selected=requestCategoryById(requestCategory);
-    if($("requestNotice"))$("requestNotice").textContent=requestCategory==="all"
-      ?"Choose a song. Tap + to continue."
-      :`${selected?.label||"Category"} · tap + to continue.`;
+    if($("requestNotice")){
+      if(requestCategory==="all"){
+        $("requestNotice").textContent="Choose a song. Tap + to continue.";
+      }else if(requestCategory===ARTIST_BROWSE_CATEGORY){
+        $("requestNotice").textContent="Browse by artist. Use the search bar to find an artist or song.";
+      }else{
+        $("requestNotice").textContent=`${selected?.label||"Category"} · tap + to continue.`;
+      }
+    }
     renderSongResults();
+  }
+
+  function renderSongResultRow(song,{artistGrouped=false}={}){
+    const state=songSessionState(song);
+    let action="＋",disabled="",stateClass="";
+    if(state==="playing"){action="NOW PLAYING";disabled=" disabled";stateClass=" is-playing";}
+    else if(state==="played"){action="ALREADY PLAYED";disabled=" disabled";stateClass=" is-played";}
+    else if(state==="requested"){action="ALREADY REQUESTED";disabled=" disabled";stateClass=" is-requested";}
+    const artist=ArtistNames.display(song.artist||"");
+    const year=String(song.year||"").trim();
+    const meta=artistGrouped
+      ? [year].filter(Boolean).join(" • ")
+      : [artist,year].filter(Boolean).join(" • ");
+    return `<div class="song-row${stateClass}" data-song-row-id="${escapeHTML(song.id)}"><span><strong>${escapeHTML(song.title||"Untitled")}</strong>${meta?`<small>${escapeHTML(meta)}</small>`:""}</span><button class="song-action" type="button" data-song-id="${escapeHTML(song.id)}"${disabled} aria-label="Choose ${escapeHTML(song.title||"song")}">${escapeHTML(action)}</button></div>`;
+  }
+
+  function renderArtistGroupedResults(list){
+    const groups=new Map();
+    list.forEach(song=>{
+      const artist=ArtistNames.display(song.artist||"").trim()||"Unknown Artist";
+      if(!groups.has(artist))groups.set(artist,[]);
+      groups.get(artist).push(song);
+    });
+    const artists=[...groups.keys()].sort((a,b)=>a.localeCompare(b,undefined,{sensitivity:"base"}));
+    return artists.map(artist=>{
+      const artistSongs=groups.get(artist).slice().sort((a,b)=>String(a.title||"").localeCompare(String(b.title||""),undefined,{sensitivity:"base"}));
+      return `
+        <section class="artist-song-group">
+          <div class="artist-song-group-heading">
+            <strong>${escapeHTML(artist)}</strong>
+            <span>${artistSongs.length} song${artistSongs.length===1?"":"s"}</span>
+          </div>
+          <div class="artist-song-group-list">
+            ${artistSongs.map(song=>renderSongResultRow(song,{artistGrouped:true})).join("")}
+          </div>
+        </section>
+      `;
+    }).join("");
   }
 
   function renderSongResults(){
@@ -650,17 +717,14 @@
       (!q || ArtistNames.matchesSong(song,q))
     );
 
-    $("songResults").innerHTML=list.map(song=>{
-      const state=songSessionState(song);
-      let action="＋",disabled="",stateClass="";
-      if(state==="playing"){action="NOW PLAYING";disabled=" disabled";stateClass=" is-playing";}
-      else if(state==="played"){action="ALREADY PLAYED";disabled=" disabled";stateClass=" is-played";}
-      else if(state==="requested"){action="ALREADY REQUESTED";disabled=" disabled";stateClass=" is-requested";}
-      const artist=ArtistNames.display(song.artist||"");
-      const year=String(song.year||"").trim();
-      const meta=[artist,year].filter(Boolean).join(" • ");
-      return `<div class="song-row${stateClass}" data-song-row-id="${escapeHTML(song.id)}"><span><strong>${escapeHTML(song.title||"Untitled")}</strong><small>${escapeHTML(meta)}</small></span><button class="song-action" type="button" data-song-id="${escapeHTML(song.id)}"${disabled} aria-label="Choose ${escapeHTML(song.title||"song")}">${escapeHTML(action)}</button></div>`;
-    }).join("") || `<div class="empty-box">No songs found in this category.</div>`;
+    if(requestCategory===ARTIST_BROWSE_CATEGORY){
+      $("songResults").classList.add("artist-browse-results");
+      $("songResults").innerHTML=renderArtistGroupedResults(list) || `<div class="empty-box">No matching artists or songs.</div>`;
+      return;
+    }
+
+    $("songResults").classList.remove("artist-browse-results");
+    $("songResults").innerHTML=list.map(song=>renderSongResultRow(song)).join("") || `<div class="empty-box">No songs found in this category.</div>`;
   }
 
   function showRequestBrowser(){
