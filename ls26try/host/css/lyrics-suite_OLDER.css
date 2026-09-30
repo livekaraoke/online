@@ -3862,3 +3862,9 @@ body.singer-page[data-size="xlarge"] .singer-section-body {
     max-height: 70vh;
   }
 }
+
+
+body.host-singer-sync-active .singer-lyrics {
+  padding-top: var(--singer-sync-top-runway, 28px);
+  padding-bottom: var(--singer-sync-bottom-runway, 100px);
+}
