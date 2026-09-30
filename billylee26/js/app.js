@@ -993,7 +993,7 @@
       const displayArtist=artistBrowseDisplayName(artist);
       const artistSongs=groups.get(artist).slice().sort((a,b)=>String(a.title||"").localeCompare(String(b.title||""),undefined,{sensitivity:"base"}));
       return `
-        <section class="artist-song-group" data-alpha="${alphabetKey(displayArtist)}">
+        <section class="artist-song-group" data-artist-alpha="${alphabetKey(displayArtist)}">
           <div class="artist-song-group-heading">
             <strong>${escapeHTML(displayArtist)}</strong>
             <span>${artistSongs.length} song${artistSongs.length===1?"":"s"}</span>
@@ -1012,7 +1012,11 @@
       songMatchesCategory(song,requestCategory)&&(!q||ArtistNames.matchesSong(song,q))
     );
     const artistMode=requestCategory===ARTIST_BROWSE_CATEGORY;
-    renderAlphabetJump("requestAlphabetRow",list,{artistMode,attribute:"data-alpha",scrollTargetId:"songResults"});
+    renderAlphabetJump("requestAlphabetRow",list,{
+      artistMode,
+      attribute:artistMode?"data-artist-alpha":"data-alpha",
+      scrollTargetId:"songResults"
+    });
 
     if(artistMode){
       $("songResults").classList.add("artist-browse-results");
