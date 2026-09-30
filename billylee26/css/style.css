@@ -3811,3 +3811,12 @@ p,
     letter-spacing:.035em!important;
   }
 }
+
+
+/* LIVE REQUESTS v11 — category label spacing */
+.request-category-grid button{
+  gap:3px!important;
+}
+.request-category-grid button span{
+  margin-top:0!important;
+}
