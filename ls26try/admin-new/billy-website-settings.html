@@ -13,7 +13,7 @@
   <link rel="stylesheet" href="css/admin-navigation.css?v=20260929-admin-polish">
   <link rel="stylesheet" href="../shared/theme.css?v=20260930-release-preview-v2">
   <link rel="stylesheet" href="../shared/performance.css?v=20260929-lyric-sizing">
-  <link rel="stylesheet" href="css/billy-website-settings.css?v=20260930-v4">
+  <link rel="stylesheet" href="css/billy-website-settings.css?v=20260930-v5">
   <script src="../shared/data.js?v=20260910-stage4"></script>
 </head>
 <body class="admin-body enquiries-page">
@@ -31,15 +31,47 @@
 
       <p id="billyWebsiteSettingsStatus" class="billy-site-status" role="status">Loading website settings…</p>
 
+      <section class="billy-site-card">
+        <div class="billy-site-section-head">
+          <div>
+            <h2>Website content</h2>
+            <p>Update the social links and About text shown on the public Billy Lee website.</p>
+          </div>
+        </div>
+        <div class="billy-site-content-grid">
+          <label>Instagram link
+            <input id="websiteInstagramUrl" type="url" inputmode="url" placeholder="https://www.instagram.com/...">
+          </label>
+          <label>Facebook link
+            <input id="websiteFacebookUrl" type="url" inputmode="url" placeholder="https://www.facebook.com/...">
+          </label>
+          <label class="wide">Short ABOUT text
+            <textarea id="websiteAboutShort" rows="5" maxlength="2400" placeholder="Text shown directly in the ABOUT section."></textarea>
+            <small>Blank lines create separate paragraphs.</small>
+          </label>
+          <label class="wide">Detailed ABOUT text
+            <textarea id="websiteAboutDetailed" rows="10" maxlength="7000" placeholder="Long text shown after clicking READ MORE."></textarea>
+            <small>Blank lines create separate paragraphs in the About popup.</small>
+          </label>
+        </div>
+      </section>
+
       <section class="billy-site-card billy-site-master">
         <div>
           <h2>Song category cards</h2>
           <p>Control the small category shortcuts shown above the song search inside Request a Song.</p>
         </div>
-        <label class="billy-site-switch">
-          <input id="showCategoryCards" type="checkbox" checked>
-          <span>Show category cards</span>
-        </label>
+        <div class="billy-site-category-master-controls">
+          <label class="billy-site-card-size">
+            <span>Card size</span>
+            <input id="categoryCardSize" type="range" min="60" max="120" step="2" value="82">
+            <output id="categoryCardSizeValue" for="categoryCardSize">82 px</output>
+          </label>
+          <label class="billy-site-switch">
+            <input id="showCategoryCards" type="checkbox" checked>
+            <span>Show category cards</span>
+          </label>
+        </div>
       </section>
 
       <section class="billy-site-card">
@@ -82,6 +114,6 @@
   <script src="js/auth.js?v=20260910-stage4"></script>
   <script data-ls26-settings="1" src="../shared/app-settings.js?v=20260930-app-version"></script>
   <script src="../shared/shell.js?v=20260930-release-preview-v3"></script>
-  <script src="js/billy-website-settings.js?v=20260930-v4"></script>
+  <script src="js/billy-website-settings.js?v=20260930-v5"></script>
 </body>
 </html>
