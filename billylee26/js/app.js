@@ -492,8 +492,6 @@
   const REQUEST_DEVICE_ID_KEY="billylee26.requestDeviceId.v1";
   const REQUEST_FAVOURITES_KEY="billylee26.favouriteSongIds.v1";
   let requestCategory="all";
-  let historySongCategory="all";
-  let historyFavouritesOnly=false;
   let currentHistoryRecords=[];
   let currentHistorySessions=new Map();
 
@@ -906,8 +904,9 @@
 
   function alphabetKey(value){
     const text=String(value||"").trim();
-    const match=text.match(/[A-Za-z]/);
-    return match?match[0].toUpperCase():"#";
+    if(!text)return "#";
+    const first=text.charAt(0).toUpperCase();
+    return /^[A-Z]$/.test(first)?first:"#";
   }
 
   function renderAlphabetJump(containerId,list,{artistMode=false,attribute="data-alpha",scrollTargetId="songResults"}={}){
@@ -1371,113 +1370,6 @@
     '</section>';
   }
 
-  function renderHistorySongCategoryCards(){
-    const grid=$("historySongCategoryGrid");
-    if(!grid)return;
-    const categories=websiteRequestSettings.categories.filter(category=>category.enabled!==false);
-    const showArtistCard=websiteRequestSettings.showArtistSearchCard!==false;
-    const size=Math.max(60,Math.min(120,Number(websiteRequestSettings.categoryCardSize)||82));
-    grid.style.setProperty("--request-category-size",size+"px");
-    grid.hidden=websiteRequestSettings.showCategoryCards===false||(!categories.length&&!showArtistCard);
-    if(grid.hidden){grid.innerHTML="";return;}
-    const categoryCards=categories.map(category=>
-      '<button type="button" data-history-song-category="'+escapeHTML(category.id)+'" class="'+(historySongCategory===category.id?"active":"")+'">'+
-        '<strong>'+escapeHTML(category.label)+'</strong>'+
-        (category.subtitle?'<span>'+escapeHTML(category.subtitle)+'</span>':'')+
-      '</button>'
-    ).join("");
-    const artistLabel=historySongCategory===ARTIST_BROWSE_CATEGORY?"SEARCH BY SONG":"SEARCH BY ARTIST";
-    const artistCard=showArtistCard
-      ? '<button type="button" data-history-song-category="'+ARTIST_BROWSE_CATEGORY+'" class="artist-search-card '+(historySongCategory===ARTIST_BROWSE_CATEGORY?"active":"")+'"><strong>'+artistLabel+'</strong></button>'
-      : "";
-    grid.innerHTML=categoryCards+artistCard;
-  }
-
-  function setHistorySongCategory(category){
-    let next=String(category||"all").toLowerCase();
-    if(next===ARTIST_BROWSE_CATEGORY&&historySongCategory===ARTIST_BROWSE_CATEGORY)next="all";
-    historySongCategory=next;
-    historyFavouritesOnly=false;
-    renderHistorySongCategoryCards();
-    if($("historyClearSongCategoryBtn"))$("historyClearSongCategoryBtn").hidden=historySongCategory==="all";
-    if($("historyMyFavouritesCard")){
-      $("historyMyFavouritesCard").classList.remove("active");
-      $("historyMyFavouritesCard").setAttribute("aria-pressed","false");
-    }
-    renderHistorySongList();
-  }
-
-  function historySongRow(song,{artistGrouped=false}={}){
-    const state=songSessionState(song);
-    let action="＋",disabled="",stateClass="";
-    if(state==="playing"){action="NOW PLAYING";disabled=" disabled";stateClass=" is-playing";}
-    else if(state==="played"){action="ALREADY PLAYED";disabled=" disabled";stateClass=" is-played";}
-    else if(state==="requested"){action="ALREADY REQUESTED";disabled=" disabled";stateClass=" is-requested";}
-    const artist=ArtistNames.display(song.artist||"");
-    const year=String(song.year||"").trim();
-    const meta=artistGrouped?[year].filter(Boolean).join(" • "):[artist,year].filter(Boolean).join(" • ");
-    const favourite=isFavouriteSong(song.id);
-    return '<div class="history-song-row'+stateClass+'" data-alpha="'+alphabetKey(song.title||"")+'">'+
-      '<span class="history-song-copy"><strong>'+escapeHTML(song.title||"Untitled")+'</strong>'+(meta?'<small>'+escapeHTML(meta)+'</small>':'')+'</span>'+
-      '<div class="history-song-actions">'+
-        '<button type="button" class="history-favourite-btn '+(favourite?"is-favourite":"")+'" data-toggle-favourite="'+escapeHTML(song.id)+'" aria-label="'+(favourite?"Remove from":"Add to")+' favourites">'+(favourite?"♥":"♡")+'</button>'+
-        '<button type="button" class="history-request-btn" data-history-request-song="'+escapeHTML(song.id)+'" '+disabled+'>'+escapeHTML(action)+'</button>'+
-      '</div>'+
-    '</div>';
-  }
-
-  function renderHistoryArtistGroups(list){
-    const groups=new Map();
-    list.forEach(song=>{
-      const artist=ArtistNames.display(song.artist||"").trim()||"Unknown Artist";
-      if(!groups.has(artist))groups.set(artist,[]);
-      groups.get(artist).push(song);
-    });
-    return [...groups.keys()]
-      .sort((a,b)=>artistBrowseDisplayName(a).localeCompare(artistBrowseDisplayName(b),undefined,{sensitivity:"base"}))
-      .map(artist=>{
-        const display=artistBrowseDisplayName(artist);
-        const artistSongs=groups.get(artist).slice().sort((a,b)=>String(a.title||"").localeCompare(String(b.title||""),undefined,{sensitivity:"base"}));
-        return '<section class="artist-song-group" data-alpha="'+alphabetKey(display)+'">'+
-          '<div class="artist-song-group-heading"><strong>'+escapeHTML(display)+'</strong><span>'+artistSongs.length+' song'+(artistSongs.length===1?"":"s")+'</span></div>'+
-          '<div class="artist-song-group-list">'+artistSongs.map(song=>historySongRow(song,{artistGrouped:true})).join("")+'</div>'+
-        '</section>';
-      }).join("");
-  }
-
-  function renderHistorySongList(){
-    const results=$("historySongResults");
-    if(!results)return;
-    const q=String($("historySongSearch")?.value||"").trim().toLowerCase();
-    const favouriteSet=new Set(favouriteSongIds());
-    let list=songs.filter(song=>
-      songMatchesCategory(song,historySongCategory)&&
-      (!historyFavouritesOnly||favouriteSet.has(String(song.id)))&&
-      (!q||ArtistNames.matchesSong(song,q))
-    );
-    const artistMode=historySongCategory===ARTIST_BROWSE_CATEGORY;
-    renderAlphabetJump("historySongAlphabetRow",list,{artistMode,attribute:"data-alpha"});
-    if($("historyFavouriteCount"))$("historyFavouriteCount").textContent=favouriteSet.size+" song"+(favouriteSet.size===1?"":"s");
-    if($("historyMyFavouritesCard")){
-      $("historyMyFavouritesCard").classList.toggle("active",historyFavouritesOnly);
-      $("historyMyFavouritesCard").setAttribute("aria-pressed",String(historyFavouritesOnly));
-    }
-    if($("historySongNotice")){
-      $("historySongNotice").textContent=historyFavouritesOnly
-        ?"Showing your personal favourites."
-        :(artistMode?"Browse by artist, request a song, or mark favourites.":"Browse, request, or mark songs as favourites.");
-    }
-
-    if(artistMode){
-      results.classList.add("artist-browse-results");
-      results.innerHTML=renderHistoryArtistGroups(list)||'<div class="empty-box">No matching artists or songs.</div>';
-      return;
-    }
-    results.classList.remove("artist-browse-results");
-    list=list.slice().sort((a,b)=>String(a.title||"").localeCompare(String(b.title||""),undefined,{sensitivity:"base"}));
-    results.innerHTML=list.map(song=>historySongRow(song)).join("")||'<div class="empty-box">No songs found.</div>';
-  }
-
   async function toggleFavouriteSong(songId){
     const id=String(songId||"");
     if(!id)return;
@@ -1490,11 +1382,6 @@
     if(profile.email){
       try{await syncRecoveryProfile(profile);}catch(error){console.info("Favourite sync unavailable:",error?.code||error);}
     }
-  }
-
-  function requestFromHistorySongList(songId){
-    if($("requestHistoryDialog")?.open)$("requestHistoryDialog").close();
-    selectRequestSong(songId);
   }
 
   function renderRequestHistoryAnalytics(records,sessions){
