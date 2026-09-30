@@ -20,6 +20,13 @@
   let scrollStartY = 0;
   let hostSingerSync = null;
   let hostSyncFrame = null;
+  let finishedTimer = null;
+
+  const SINGER_BACKGROUND_KEY = "ls26:karoakeSingerBackground";
+  const SINGER_BOTTOM_BAR_KEY = "ls26:karaokeSingerBottomBar";
+  const DEFAULT_SINGER_BACKGROUND = "#00131a";
+  let singerBackground = DEFAULT_SINGER_BACKGROUND;
+  let showBottomBar = true;
 
   /* ======================================================================
    * LIVE TV STATIC CANVAS — TEMPORAL NOISE ENGINE
@@ -159,6 +166,98 @@
     });
   }
 
+  function clearFinishedTimer() {
+    if (finishedTimer) {
+      clearTimeout(finishedTimer);
+      finishedTimer = null;
+    }
+  }
+
+  function normaliseSingerColour(value) {
+    const clean = String(value || "").trim();
+    return /^#[0-9a-f]{6}$/i.test(clean) ? clean.toLowerCase() : DEFAULT_SINGER_BACKGROUND;
+  }
+
+  function updateBottomBarVisibility() {
+    const controls = $("singerControls");
+    if (!controls) return;
+    const visible =
+      showBottomBar &&
+      Boolean(song) &&
+      document.body.classList.contains("singer-song-mode");
+    controls.classList.toggle("hidden", !visible);
+  }
+
+  function applySingerPersonalisation() {
+    try {
+      singerBackground = normaliseSingerColour(
+        localStorage.getItem(SINGER_BACKGROUND_KEY) || DEFAULT_SINGER_BACKGROUND
+      );
+      showBottomBar = localStorage.getItem(SINGER_BOTTOM_BAR_KEY) !== "false";
+    } catch (_) {
+      singerBackground = DEFAULT_SINGER_BACKGROUND;
+      showBottomBar = true;
+    }
+
+    document.documentElement.style.setProperty("--singer-custom-background", singerBackground);
+
+    const colourInput = $("singerBackgroundColor");
+    const colourValue = $("singerBackgroundColorValue");
+    const bottomToggle = $("singerShowBottomBar");
+    if (colourInput) colourInput.value = singerBackground;
+    if (colourValue) colourValue.textContent = singerBackground.toUpperCase();
+    if (bottomToggle) bottomToggle.checked = showBottomBar;
+
+    updateBottomBarVisibility();
+  }
+
+  async function requestSingerFullscreen() {
+    if (document.fullscreenElement || !document.documentElement.requestFullscreen) return true;
+    try {
+      await document.documentElement.requestFullscreen({ navigationUI:"hide" });
+      return true;
+    } catch (_) {
+      try {
+        await document.documentElement.requestFullscreen();
+        return true;
+      } catch (_) {
+        return false;
+      }
+    }
+  }
+
+  function initialiseFullscreenRequest() {
+    // Browsers normally reject a fullscreen request without a user gesture,
+    // but attempt it immediately for environments that permit it.
+    void requestSingerFullscreen();
+
+    const firstGesture = event => {
+      if (event.target?.closest?.("#fullscreenSingerBtn")) return;
+      if (!document.fullscreenElement) void requestSingerFullscreen();
+      document.removeEventListener("pointerdown", firstGesture, true);
+      document.removeEventListener("keydown", firstGesture, true);
+    };
+
+    document.addEventListener("pointerdown", firstGesture, true);
+    document.addEventListener("keydown", firstGesture, true);
+  }
+
+  function hideSingerPrimaryViews() {
+    $("standbyView")?.classList.add("hidden");
+    $("autoSendIdleView")?.classList.add("hidden");
+    $("songFinishedView")?.classList.add("hidden");
+    $("songLoadingView")?.classList.add("hidden");
+    $("singerLyrics")?.classList.add("hidden");
+    $("singerControls")?.classList.add("hidden");
+  }
+
+  function clearSongSubscription() {
+    if (unsubscribeSong) {
+      unsubscribeSong();
+      unsubscribeSong = null;
+    }
+  }
+
   function stopAutoScroll() {
     scrolling = false;
     cancelAnimationFrame(frame);
@@ -190,16 +289,20 @@
   function setStandby(message = "The lyrics will appear automatically when the host sends a song.") {
     loadingSequence += 1;
     clearLoadingTimer();
+    clearFinishedTimer();
     stopAutoScroll();
     song = null;
 
     document.body.classList.add("singer-standby-mode");
-    document.body.classList.remove("singer-loading-mode", "singer-song-mode");
+    document.body.classList.remove(
+      "singer-loading-mode",
+      "singer-song-mode",
+      "singer-auto-send-off-mode",
+      "singer-finished-mode"
+    );
 
-    $("standbyView").classList.remove("hidden");
-    $("songLoadingView").classList.add("hidden");
-    $("singerLyrics").classList.add("hidden");
-    $("singerControls").classList.add("hidden");
+    hideSingerPrimaryViews();
+    $("standbyView")?.classList.remove("hidden");
 
     $("singerTitle").textContent = "KARAOKE LYRIC VIEW";
     $("singerArtist").textContent = "Ready for the next singer";
@@ -212,15 +315,88 @@
     requestAnimationFrame(updateCustomScrollbar);
   }
 
-  function setLoadingState(nextSong) {
+  function setAutoSendIdle() {
+    loadingSequence += 1;
+    clearLoadingTimer();
+    clearFinishedTimer();
     stopAutoScroll();
-    document.body.classList.remove("singer-standby-mode", "singer-song-mode");
+    song = null;
+    hostSingerSync = null;
+    stopHostSyncFollower(true);
+
+    document.body.classList.add("singer-auto-send-off-mode");
+    document.body.classList.remove(
+      "singer-standby-mode",
+      "singer-loading-mode",
+      "singer-song-mode",
+      "singer-finished-mode"
+    );
+
+    hideSingerPrimaryViews();
+    $("autoSendIdleView")?.classList.remove("hidden");
+    $("singerTitle").textContent = "LIVE KARAOKE";
+    $("singerArtist").textContent = "Waiting";
+    setSettingsEnabled(false);
+    window.scrollTo(0, 0);
+    requestAnimationFrame(updateCustomScrollbar);
+  }
+
+  function setSongFinished(data = {}) {
+    loadingSequence += 1;
+    clearLoadingTimer();
+    clearFinishedTimer();
+    stopAutoScroll();
+    song = null;
+    hostSingerSync = null;
+    stopHostSyncFollower(true);
+
+    document.body.classList.add("singer-finished-mode");
+    document.body.classList.remove(
+      "singer-standby-mode",
+      "singer-loading-mode",
+      "singer-song-mode",
+      "singer-auto-send-off-mode"
+    );
+
+    hideSingerPrimaryViews();
+    $("songFinishedView")?.classList.remove("hidden");
+    $("singerTitle").textContent = "SONG FINISHED";
+    $("singerArtist").textContent = "";
+    setSettingsEnabled(false);
+    window.scrollTo(0, 0);
+
+    const finishedAtMs =
+      typeof data.finishedAt?.toMillis === "function"
+        ? data.finishedAt.toMillis()
+        : Date.now();
+    const remaining = Math.max(0, 5000 - Math.max(0, Date.now() - finishedAtMs));
+
+    if (remaining <= 0) {
+      setStandby();
+      return;
+    }
+
+    finishedTimer = setTimeout(() => {
+      finishedTimer = null;
+      setStandby();
+    }, remaining);
+
+    requestAnimationFrame(updateCustomScrollbar);
+  }
+
+  function setLoadingState(nextSong) {
+    clearFinishedTimer();
+    stopAutoScroll();
+    document.body.classList.remove(
+      "singer-standby-mode",
+      "singer-song-mode",
+      "singer-auto-send-off-mode",
+      "singer-finished-mode"
+    );
     document.body.classList.add("singer-loading-mode");
 
-    $("standbyView").classList.add("hidden");
-    $("singerLyrics").classList.add("hidden");
-    $("singerControls").classList.add("hidden");
-    $("songLoadingView").classList.remove("hidden");
+    hideSingerPrimaryViews();
+    $("songLoadingView")?.classList.remove("hidden");
 
     $("loadingSongTitle").textContent = nextSong.title || "Untitled Song";
     $("loadingSongArtist").textContent = ArtistNames.display(nextSong.artist) || "Unknown Artist";
@@ -267,8 +443,11 @@
   }
 
   function singerSyncAnchorY() {
+    const settings = window.LS26Settings?.get?.() || {};
+    const percent = Math.max(25, Math.min(60, Number(settings.karaokeSingerActivePosition ?? 42)));
     const topbar = document.querySelector(".singer-topbar");
-    return (topbar?.getBoundingClientRect().bottom || 0) + 26;
+    const minimum = (topbar?.getBoundingClientRect().bottom || 0) + 24;
+    return Math.max(minimum, window.innerHeight * (percent / 100));
   }
 
   function setSingerManualControlsEnabled(enabled) {
@@ -434,21 +613,34 @@
       ).trim();
 
       const reloadToken = String(data.forceReloadToken || "").trim();
+      const displayState = String(data.displayState || "").trim().toLowerCase();
+
+      if (displayState === "auto-send-off") {
+        currentControlSongId = "";
+        currentControlReloadToken = "";
+        clearSongSubscription();
+        setAutoSendIdle();
+        return;
+      }
+
+      if (displayState === "finished") {
+        currentControlSongId = "";
+        currentControlReloadToken = "";
+        clearSongSubscription();
+        setSongFinished(data);
+        return;
+      }
 
       // Scroll/focus sync shares the existing liveLyrics realtime listener, so
       // enabling it does not add another Firestore subscription.
       applyHostSingerSync(data.singerSync);
 
-      if (!id || data.displayState === "idle" || data.reset === true) {
+      if (!id || displayState === "idle" || data.reset === true) {
         currentControlSongId = "";
         currentControlReloadToken = "";
         hostSingerSync = null;
         stopHostSyncFollower(true);
-
-        if (unsubscribeSong) {
-          unsubscribeSong();
-          unsubscribeSong = null;
-        }
+        clearSongSubscription();
 
         setStandby();
         return;
@@ -534,13 +726,18 @@
   }
 
   function renderSingerSong(resetPosition = true) {
-    document.body.classList.remove("singer-standby-mode", "singer-loading-mode");
+    clearFinishedTimer();
+    document.body.classList.remove(
+      "singer-standby-mode",
+      "singer-loading-mode",
+      "singer-auto-send-off-mode",
+      "singer-finished-mode"
+    );
     document.body.classList.add("singer-song-mode");
 
-    $("standbyView").classList.add("hidden");
-    $("songLoadingView").classList.add("hidden");
-    $("singerLyrics").classList.remove("hidden");
-    $("singerControls").classList.remove("hidden");
+    hideSingerPrimaryViews();
+    $("singerLyrics")?.classList.remove("hidden");
+    updateBottomBarVisibility();
 
     $("singerTitle").textContent = song.title;
     $("singerArtist").textContent = ArtistNames.display(song.artist);
@@ -633,7 +830,23 @@
   $("closeSingerSettings").onclick = () => $("singerSettings").classList.add("hidden");
   $("fullscreenSingerBtn").onclick = () => document.fullscreenElement
     ? document.exitFullscreen()
-    : document.documentElement.requestFullscreen();
+    : requestSingerFullscreen();
+
+  $("singerBackgroundColor").oninput = event => {
+    singerBackground = normaliseSingerColour(event.target.value);
+    document.documentElement.style.setProperty("--singer-custom-background", singerBackground);
+    if ($("singerBackgroundColorValue")) {
+      $("singerBackgroundColorValue").textContent = singerBackground.toUpperCase();
+    }
+    try { localStorage.setItem(SINGER_BACKGROUND_KEY, singerBackground); } catch (_) {}
+  };
+
+  $("singerShowBottomBar").onchange = event => {
+    showBottomBar = event.target.checked;
+    try { localStorage.setItem(SINGER_BOTTOM_BAR_KEY, String(showBottomBar)); } catch (_) {}
+    updateBottomBarVisibility();
+  };
+
   $("singerPlayBtn").onclick = toggleScroll;
   $("singerAutoScroll").onchange = event => {
     if (event.target.checked !== scrolling) toggleScroll();
@@ -729,6 +942,8 @@
   }
 
   applyGuidanceMode(guidanceMode);
+  applySingerPersonalisation();
+  initialiseFullscreenRequest();
   initialiseLiveStatic();
   initialiseCustomScrollbar();
   setStandby();
