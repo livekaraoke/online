@@ -859,7 +859,8 @@
       "left",
       "deleted",
       "deletedbyhost",
-      "declined"
+      "declined",
+      "cancelled"
     ]);
 
     const previousPositions=new Map([...list.querySelectorAll('[data-ts-run-details]')].map(row=>[row.dataset.tsRunDetails,row.getBoundingClientRect().top]));
@@ -1097,7 +1098,7 @@
       if((state.sessionId||"")!==sessionId)throw Error('Session changed. Refresh before reordering.');
       if((data.sessionId||"")!==sessionId)throw Error('Run Order changed. Refresh before reordering.');
       const items=(data.items||[]).map(x=>({...x}));
-      const terminal=new Set(['playing','played','abandoned','left','declined','deleted','deletedbyhost']);
+      const terminal=new Set(['playing','played','abandoned','left','declined','deleted','deletedbyhost','cancelled']);
       const indexes=items.map((x,i)=>terminal.has(String(x.status||'').toLowerCase())?-1:i).filter(i=>i>=0);
       const at=indexes.findIndex(i=>items[i].id===itemId),to=at+direction;
       if(at<0||to<0||to>=indexes.length)return false;
