@@ -29,7 +29,7 @@
   <div id="appShell" class="app-shell" style="display:none;">
     <div id="sidebarContainer"></div>
 
-    <main class="analytics-main">
+    <main class="admin-main analytics-main">
       <header class="analytics-header">
         <div>
           <span class="eyebrow">BOOKINGS &amp; RECORDS / TEMPORARY REPORTING</span>
@@ -57,7 +57,7 @@
           <strong id="dataStatusLabel">Loading archived sessions…</strong>
           <span id="dataStatusMeta"></span>
         </div>
-        <div class="archive-note">Archive-first report • no realtime listeners • refreshes only when you ask</div>
+        <div class="archive-note">Archive-first report • analytics data uses no realtime listeners • refreshes only when you ask</div>
       </section>
 
       <nav class="report-jump-nav" aria-label="Analytics sections">
@@ -362,7 +362,7 @@
 
         <article class="report-card quality-notes">
           <h3>How this temporary report calculates things</h3>
-          <p>It reads <code>performanceSessions</code> once and uses the archived <code>requestSnapshot</code>, <code>playedSongsSnapshot</code>, <code>performanceLogSnapshot</code> and summary fields already saved when a session ends. It does not open realtime listeners and does not write analytics back to Firestore.</p>
+          <p>It reads <code>performanceSessions</code> once and uses the archived <code>requestSnapshot</code>, <code>playedSongsSnapshot</code>, <code>performanceLogSnapshot</code> and summary fields already saved when a session ends. The analytics dataset does not open realtime listeners and does not write analytics back to Firestore.</p>
           <p>“Played request” comes from request status (<code>completed</code>/<code>played</code>). “Performed” comes from the played-song/performance-log snapshots. These can differ legitimately, for example when you manually play a song that did not originate from a public request.</p>
         </article>
       </section>
@@ -376,7 +376,8 @@
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
   <script src="js/firebase.js?v=20260910-stage4"></script>
-  <script src="js/analytics-reports.js?v=20261001-admin-match"></script>
+  <script src="js/sidebar.js?v=20261001-analytics-shared-sidebar"></script>
+  <script src="js/analytics-reports.js?v=20261001-shared-sidebar"></script>
   <script src="../shared/shell.js?v=20260929-planner-tools"></script>
   <script src="../shared/inbox.js?v=20260925-artist-names"></script>
 </body>

@@ -137,9 +137,10 @@
         LK.profile.applyProfileToDashboard();
       }
 
-      // DB Logs intentionally avoids opening Firestore listeners of its own.
-      // This keeps the monitoring page from generating extra database reads.
-      if (!isDbLogsPage()) {
+      // DB Logs and Analytics intentionally avoid the operational sidebar
+      // listeners. Analytics still gets the normal user profile listener so
+      // the name, role and profile photo match the rest of LiveSuite.
+      if (!isLowReadSidebarPage()) {
         listenSidebarSongRequests();
         listenSidebarEnquiries();
         listenSidebarLiveSession();
@@ -150,8 +151,17 @@
     }
   }
 
+  function currentSidebarPage() {
+    return (location.pathname.split("/").pop() || "").toLowerCase();
+  }
+
   function isDbLogsPage() {
-    return (location.pathname.split("/").pop() || "").toLowerCase() === "db-logs.html";
+    return currentSidebarPage() === "db-logs.html";
+  }
+
+  function isLowReadSidebarPage() {
+    const page = currentSidebarPage();
+    return page === "db-logs.html" || page === "analytics-reports.html";
   }
 
   function bindSidebarProfile() {
