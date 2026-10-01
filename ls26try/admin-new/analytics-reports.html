@@ -57,7 +57,7 @@
           <strong id="dataStatusLabel">Loading archived sessions…</strong>
           <span id="dataStatusMeta"></span>
         </div>
-        <div class="archive-note">Archive-first report • no realtime listeners • refreshes only when you ask</div>
+        <div class="archive-note">Archive-first report • analytics data uses no realtime listeners • refreshes only when you ask</div>
       </section>
 
       <nav class="report-jump-nav" aria-label="Analytics sections">
@@ -362,7 +362,7 @@
 
         <article class="report-card quality-notes">
           <h3>How this temporary report calculates things</h3>
-          <p>It reads <code>performanceSessions</code> once and uses the archived <code>requestSnapshot</code>, <code>playedSongsSnapshot</code>, <code>performanceLogSnapshot</code> and summary fields already saved when a session ends. It does not open realtime listeners and does not write analytics back to Firestore.</p>
+          <p>It reads <code>performanceSessions</code> once and uses the archived <code>requestSnapshot</code>, <code>playedSongsSnapshot</code>, <code>performanceLogSnapshot</code> and summary fields already saved when a session ends. The analytics dataset does not open realtime listeners and does not write analytics back to Firestore.</p>
           <p>“Played request” comes from request status (<code>completed</code>/<code>played</code>). “Performed” comes from the played-song/performance-log snapshots. These can differ legitimately, for example when you manually play a song that did not originate from a public request.</p>
         </article>
       </section>
