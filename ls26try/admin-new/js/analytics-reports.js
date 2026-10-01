@@ -269,6 +269,48 @@
     if ($("dataStatusMeta")) $("dataStatusMeta").textContent = meta;
   }
 
+  function bindAnalyticsSidebarUi(root) {
+    if (!root) return;
+
+    const setBrandOpen = key => {
+      root.querySelectorAll("[data-sidebar-brand]").forEach(section => {
+        const button = section.querySelector("[data-sidebar-brand-toggle]");
+        const panel = section.querySelector(".suite-collapsible-panel");
+        const chevron = button?.querySelector(".suite-section-chevron");
+        const open = (section.dataset.sidebarBrand || "") === key;
+        if (button) {
+          button.setAttribute("aria-expanded", open ? "true" : "false");
+          button.classList.toggle("is-open", open);
+        }
+        if (panel) panel.hidden = !open;
+        if (chevron) chevron.textContent = open ? "▾" : "›";
+      });
+    };
+
+    root.querySelectorAll("[data-sidebar-brand-toggle]").forEach(button => {
+      button.addEventListener("click", () => {
+        const key = button.dataset.sidebarBrandToggle || "";
+        if (key) setBrandOpen(key);
+      });
+    });
+    setBrandOpen("live-karaoke");
+
+    const advanced = root.querySelector("[data-sidebar-advanced-toggle]");
+    const advancedPanel = root.querySelector("#sidebarAdvancedPanel");
+    const advancedChevron = root.querySelector("[data-sidebar-advanced-chevron]");
+    const setAdvanced = open => {
+      if (!advanced || !advancedPanel) return;
+      advanced.setAttribute("aria-expanded", open ? "true" : "false");
+      advancedPanel.hidden = !open;
+      if (advancedChevron) advancedChevron.textContent = open ? "▾" : "›";
+    };
+    advanced?.addEventListener("click", () => setAdvanced(advanced.getAttribute("aria-expanded") !== "true"));
+    setAdvanced(false);
+
+    const year = root.querySelector("[data-sidebar-current-year]");
+    if (year) year.textContent = String(new Date().getFullYear());
+  }
+
   async function loadSidebar() {
     const target = $("sidebarContainer");
     if (!target) return;
@@ -276,6 +318,7 @@
       const response = await fetch("includes/sidebar.html", { cache: "no-store" });
       if (!response.ok) throw new Error(`Sidebar request failed: ${response.status}`);
       target.innerHTML = await response.text();
+      bindAnalyticsSidebarUi(target);
 
       const current = target.querySelector('a[href="analytics-reports.html"]');
       current?.classList.add("active");
