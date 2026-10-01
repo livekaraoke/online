@@ -846,7 +846,7 @@
     const rect = canvas.getBoundingClientRect();
     const dpr = Math.max(1, window.devicePixelRatio || 1);
     canvas.width = Math.max(320, Math.floor(rect.width * dpr));
-    canvas.height = Math.floor(260 * dpr);
+    canvas.height = Math.floor(300 * dpr);
     const ctx = canvas.getContext("2d");
     ctx.scale(dpr,dpr);
 
@@ -859,7 +859,7 @@
     const colors = { sessions:"#9a77ed", requests:"#4cb9e5", played:"#49cf7e" };
 
     ctx.clearRect(0,0,width,height);
-    ctx.font = "8px system-ui";
+    ctx.font = "11px Arial, Helvetica, sans-serif";
     ctx.textBaseline = "middle";
 
     for (let i=0;i<=4;i++) {
