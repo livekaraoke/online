@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Analytics & Reports • LiveSuite</title>
+  <link rel="stylesheet" href="css/sidebar.css" />
+  <link rel="stylesheet" href="css/sidebar-suite.css" />
+  <link rel="stylesheet" href="css/analytics-reports.css" />
+</head>
+<body class="analytics-body">
+  <div id="passwordGate" class="password-gate">
+    <div class="gate-box">
+      <span class="eyebrow">LIVESUITE ADMIN</span>
+      <h2>Analytics &amp; Reports</h2>
+      <p>Sign in to view archived performance analytics.</p>
+      <input id="emailInput" type="email" placeholder="Email..." autocomplete="email" />
+      <input id="passwordInput" type="password" placeholder="Password..." autocomplete="current-password" />
+      <button type="button" onclick="adminLogin()">Login</button>
+      <p id="passwordError" class="error"></p>
+    </div>
+  </div>
+
+  <div id="appShell" class="app-shell" style="display:none;">
+    <div id="sidebarContainer"></div>
+
+    <main class="analytics-main">
+      <header class="analytics-header">
+        <div>
+          <span class="eyebrow">BOOKINGS &amp; RECORDS / TEMPORARY REPORTING</span>
+          <h1>Analytics &amp; Reports</h1>
+          <p>Performance, song demand, requester behaviour, venue trends and archive health from completed LiveSuite sessions.</p>
+        </div>
+        <div class="header-actions">
+          <button id="refreshBtn" class="ghost-btn" type="button" onclick="refreshAnalytics()">↻ Refresh data</button>
+          <div class="export-control">
+            <select id="exportType" aria-label="Export dataset">
+              <option value="sessions">Session report</option>
+              <option value="songs">Song report</option>
+              <option value="requesters">Requester report</option>
+              <option value="requests">Raw request archive</option>
+            </select>
+            <button type="button" onclick="exportAnalyticsCsv()">⇩ Export CSV</button>
+          </div>
+          <button class="primary-btn" type="button" onclick="copyAnalyticsSummary()">Copy summary</button>
+        </div>
+      </header>
+
+      <section class="report-status">
+        <div>
+          <span id="dataStatusDot" class="status-dot loading"></span>
+          <strong id="dataStatusLabel">Loading archived sessions…</strong>
+          <span id="dataStatusMeta"></span>
+        </div>
+        <div class="archive-note">Archive-first report • no realtime listeners • refreshes only when you ask</div>
+      </section>
+
+      <nav class="report-jump-nav" aria-label="Analytics sections">
+        <a href="#overview">Overview</a>
+        <a href="#trends">Trends</a>
+        <a href="#songs">Songs</a>
+        <a href="#requesters">Requesters</a>
+        <a href="#venues">Venues</a>
+        <a href="#sessions">Sessions</a>
+        <a href="#quality">Data quality</a>
+      </nav>
+
+      <section class="filter-panel">
+        <div class="filter-group preset-group">
+          <label>PERIOD</label>
+          <div class="preset-buttons" id="periodPresets">
+            <button type="button" data-period="30">30 days</button>
+            <button type="button" data-period="90">90 days</button>
+            <button type="button" data-period="365">1 year</button>
+            <button type="button" data-period="all" class="active">All time</button>
+          </div>
+        </div>
+        <div class="filter-group">
+          <label for="dateFromInput">FROM</label>
+          <input id="dateFromInput" type="date" />
+        </div>
+        <div class="filter-group">
+          <label for="dateToInput">TO</label>
+          <input id="dateToInput" type="date" />
+        </div>
+        <div class="filter-group">
+          <label for="venueFilter">VENUE</label>
+          <select id="venueFilter"><option value="all">All venues</option></select>
+        </div>
+        <div class="filter-group">
+          <label for="typeFilter">TYPE</label>
+          <select id="typeFilter"><option value="all">All session types</option></select>
+        </div>
+        <div class="filter-group filter-search">
+          <label for="searchInput">SEARCH</label>
+          <input id="searchInput" type="search" placeholder="Song, requester, venue, session…" />
+        </div>
+        <label class="toggle-filter">
+          <input id="includeTestInput" type="checkbox" />
+          <span>Include test sessions</span>
+        </label>
+      </section>
+
+      <section id="overview" class="report-section">
+        <div class="section-heading">
+          <div>
+            <span class="eyebrow">SELECTED PERIOD</span>
+            <h2>Performance overview</h2>
+          </div>
+          <span id="periodLabel" class="section-meta"></span>
+        </div>
+
+        <div id="kpiGrid" class="kpi-grid"></div>
+
+        <div class="two-column-grid overview-lower">
+          <article class="report-card">
+            <div class="card-heading">
+              <div>
+                <span class="eyebrow">AUTO-GENERATED</span>
+                <h3>What stands out</h3>
+              </div>
+              <span class="card-badge">Insights</span>
+            </div>
+            <div id="insightList" class="insight-list"></div>
+          </article>
+
+          <article class="report-card">
+            <div class="card-heading">
+              <div>
+                <span class="eyebrow">REQUEST LIFECYCLE</span>
+                <h3>Where requests ended up</h3>
+              </div>
+              <span id="requestLifecycleTotal" class="card-badge"></span>
+            </div>
+            <div id="requestLifecycle" class="lifecycle-list"></div>
+          </article>
+        </div>
+      </section>
+
+      <section id="trends" class="report-section">
+        <div class="section-heading">
+          <div>
+            <span class="eyebrow">VOLUME &amp; PACE</span>
+            <h2>Session trends</h2>
+          </div>
+          <span id="trendGranularityLabel" class="section-meta"></span>
+        </div>
+
+        <div class="two-column-grid">
+          <article class="report-card chart-card">
+            <div class="card-heading">
+              <div>
+                <span class="eyebrow">ACTIVITY OVER TIME</span>
+                <h3>Sessions, requests &amp; songs played</h3>
+              </div>
+              <div class="chart-legend">
+                <span><i class="legend-sessions"></i>Sessions</span>
+                <span><i class="legend-requests"></i>Requests</span>
+                <span><i class="legend-played"></i>Played</span>
+              </div>
+            </div>
+            <div class="canvas-wrap">
+              <canvas id="trendCanvas" height="260"></canvas>
+              <div id="trendEmpty" class="empty-state hidden">Not enough dated sessions to draw a trend.</div>
+            </div>
+          </article>
+
+          <article class="report-card">
+            <div class="card-heading">
+              <div>
+                <span class="eyebrow">WHEN SONGS HAPPEN</span>
+                <h3>Performance time profile</h3>
+              </div>
+              <span class="card-badge">Played songs</span>
+            </div>
+            <div id="dayProfile" class="day-profile"></div>
+            <div id="hourProfile" class="hour-profile"></div>
+          </article>
+        </div>
+      </section>
+
+      <section id="songs" class="report-section">
+        <div class="section-heading">
+          <div>
+            <span class="eyebrow">REPERTOIRE INTELLIGENCE</span>
+            <h2>Songs &amp; artists</h2>
+          </div>
+          <span id="songMetaLabel" class="section-meta"></span>
+        </div>
+
+        <div class="three-column-grid song-stats">
+          <article class="mini-card">
+            <span>REPEAT PERFORMANCE RATE</span>
+            <strong id="repeatRateMetric">—</strong>
+            <small>How often a performance repeats a song already played in the selected period.</small>
+          </article>
+          <article class="mini-card">
+            <span>MOST REQUESTED / NOT PLAYED</span>
+            <strong id="demandGapMetric">—</strong>
+            <small id="demandGapSub">No request gap found.</small>
+          </article>
+          <article class="mini-card">
+            <span>REPERTOIRE BREADTH</span>
+            <strong id="repertoireBreadthMetric">—</strong>
+            <small>Unique performed songs compared with total performances.</small>
+          </article>
+        </div>
+
+        <div class="two-column-grid">
+          <article class="report-card table-card">
+            <div class="card-heading">
+              <div>
+                <span class="eyebrow">TOP SONGS</span>
+                <h3>Demand &amp; performance</h3>
+              </div>
+              <select id="songSortSelect">
+                <option value="performed">Sort: most performed</option>
+                <option value="requested">Sort: most requested</option>
+                <option value="gap">Sort: biggest demand gap</option>
+                <option value="requesters">Sort: most requesters</option>
+              </select>
+            </div>
+            <div class="table-wrap">
+              <table class="analytics-table">
+                <thead><tr><th>#</th><th>Song</th><th>Requests</th><th>Performed</th><th>Req. played</th><th>People</th><th>Last seen</th></tr></thead>
+                <tbody id="songsTableBody"></tbody>
+              </table>
+            </div>
+          </article>
+
+          <article class="report-card table-card">
+            <div class="card-heading">
+              <div>
+                <span class="eyebrow">TOP ARTISTS</span>
+                <h3>Artist demand</h3>
+              </div>
+            </div>
+            <div id="artistBars" class="rank-bars"></div>
+          </article>
+        </div>
+      </section>
+
+      <section id="requesters" class="report-section">
+        <div class="section-heading">
+          <div>
+            <span class="eyebrow">AUDIENCE &amp; SINGERS</span>
+            <h2>Requester analytics</h2>
+          </div>
+          <span id="requesterMetaLabel" class="section-meta"></span>
+        </div>
+
+        <div class="two-column-grid">
+          <article class="report-card table-card">
+            <div class="card-heading">
+              <div>
+                <span class="eyebrow">MOST ACTIVE</span>
+                <h3>Requester leaderboard</h3>
+              </div>
+              <select id="requesterSortSelect">
+                <option value="requests">Sort: requests</option>
+                <option value="played">Sort: played</option>
+                <option value="sessions">Sort: sessions</option>
+                <option value="uniqueSongs">Sort: unique songs</option>
+              </select>
+            </div>
+            <div class="table-wrap">
+              <table class="analytics-table">
+                <thead><tr><th>#</th><th>Requester</th><th>Requests</th><th>Played</th><th>Rate</th><th>Sessions</th><th>Unique songs</th><th>Last seen</th></tr></thead>
+                <tbody id="requestersTableBody"></tbody>
+              </table>
+            </div>
+          </article>
+
+          <article class="report-card">
+            <div class="card-heading">
+              <div>
+                <span class="eyebrow">RETENTION SIGNALS</span>
+                <h3>Audience behaviour</h3>
+              </div>
+            </div>
+            <div id="audienceMetrics" class="audience-metrics"></div>
+          </article>
+        </div>
+      </section>
+
+      <section id="venues" class="report-section">
+        <div class="section-heading">
+          <div>
+            <span class="eyebrow">LOCATION COMPARISON</span>
+            <h2>Venue performance</h2>
+          </div>
+          <span id="venueMetaLabel" class="section-meta"></span>
+        </div>
+
+        <article class="report-card table-card">
+          <div class="table-wrap">
+            <table class="analytics-table venue-table">
+              <thead>
+                <tr><th>Venue</th><th>Sessions</th><th>Active hours</th><th>Requests</th><th>Played req.</th><th>Completion</th><th>Performed</th><th>Songs/hour</th><th>Unique people</th><th>Last session</th></tr>
+              </thead>
+              <tbody id="venuesTableBody"></tbody>
+            </table>
+          </div>
+        </article>
+      </section>
+
+      <section id="sessions" class="report-section">
+        <div class="section-heading">
+          <div>
+            <span class="eyebrow">SESSION-BY-SESSION</span>
+            <h2>Performance report</h2>
+          </div>
+          <span id="sessionMetaLabel" class="section-meta"></span>
+        </div>
+
+        <article class="report-card table-card">
+          <div class="card-heading session-card-heading">
+            <div class="session-sort-controls">
+              <select id="sessionSortSelect">
+                <option value="newest">Sort: newest</option>
+                <option value="requests">Sort: requests</option>
+                <option value="performed">Sort: songs played</option>
+                <option value="rate">Sort: request completion</option>
+                <option value="pace">Sort: songs/hour</option>
+                <option value="duration">Sort: duration</option>
+              </select>
+              <select id="sessionRowsSelect">
+                <option value="20">Show 20</option>
+                <option value="50">Show 50</option>
+                <option value="100">Show 100</option>
+                <option value="all">Show all</option>
+              </select>
+            </div>
+            <a class="text-link" href="performance-sessions.html">Open Session History →</a>
+          </div>
+          <div class="table-wrap">
+            <table class="analytics-table session-table">
+              <thead>
+                <tr><th>Date</th><th>Session</th><th>Venue</th><th>Duration</th><th>Requests</th><th>Played req.</th><th>Completion</th><th>Performed</th><th>People</th><th>Songs/hour</th><th>Breaks</th><th>Archive</th></tr>
+              </thead>
+              <tbody id="sessionsReportBody"></tbody>
+            </table>
+          </div>
+        </article>
+      </section>
+
+      <section id="quality" class="report-section">
+        <div class="section-heading">
+          <div>
+            <span class="eyebrow">TRUST THE NUMBERS</span>
+            <h2>Archive data quality</h2>
+          </div>
+          <span class="section-meta">Useful while older sessions are still inconsistent</span>
+        </div>
+
+        <div id="qualityGrid" class="quality-grid"></div>
+
+        <article class="report-card quality-notes">
+          <h3>How this temporary report calculates things</h3>
+          <p>It reads <code>performanceSessions</code> once and uses the archived <code>requestSnapshot</code>, <code>playedSongsSnapshot</code>, <code>performanceLogSnapshot</code> and summary fields already saved when a session ends. It does not open realtime listeners and does not write analytics back to Firestore.</p>
+          <p>“Played request” comes from request status (<code>completed</code>/<code>played</code>). “Performed” comes from the played-song/performance-log snapshots. These can differ legitimately, for example when you manually play a song that did not originate from a public request.</p>
+        </article>
+      </section>
+    </main>
+  </div>
+
+  <div id="toastBox" class="toast-box hidden" role="status"></div>
+
+  <script src="../firebase-projects.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="js/firebase.js"></script>
+  <script src="js/analytics-reports.js"></script>
+</body>
+</html>
