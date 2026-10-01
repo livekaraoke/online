@@ -1551,13 +1551,57 @@
 
   function captureOriginalChordText() {
     document.querySelectorAll(".host-section-body span, .host-section-body b, .host-section-body strong").forEach(el => {
-      const text = el.textContent.trim();
-      if (/^[A-G][#b]?(?:m|maj|min|dim|aug|sus|add|\d|\(|\)|\+|\-|\/|#|b)*$/i.test(text) && !el.dataset.originalChord) el.dataset.originalChord = text;
+      if (el.dataset.originalChord) return;
+
+      // Only capture the leaf-most formatted token. A parent span can include
+      // leading spacing plus a nested <b>/<strong>; treating that whole parent
+      // as the chord used to destroy the saved spacing when transpose ran.
+      if (el.querySelector("span,b,strong")) return;
+
+      const rawText = String(el.textContent || "");
+      const text = rawText.trim();
+      if (!/^[A-G][#b]?(?:m|maj|min|dim|aug|sus|add|\d|\(|\)|\+|\-|\/|#|b)*$/i.test(text)) return;
+
+      el.dataset.originalChord = text;
+
+      // Keep the exact original text/HTML in memory. LyricsCreator uses runs
+      // of spaces as real layout data, so replacing textContent with trim()'d
+      // chord text moves chords horizontally in LyricView.
+      el.__ls26OriginalChordText = rawText;
+      el.__ls26OriginalChordHtml = el.innerHTML;
     });
   }
+
+  function chordTextWithOriginalSpacing(el, transposed) {
+    const original = String(el.__ls26OriginalChordText ?? el.textContent ?? "");
+    const token = String(el.dataset.originalChord || "");
+    if (!token) return transposed;
+
+    const index = original.indexOf(token);
+    if (index < 0) return transposed;
+
+    return original.slice(0,index) + transposed + original.slice(index + token.length);
+  }
+
   function applyChordTranspose() {
     captureOriginalChordText();
-    document.querySelectorAll("[data-original-chord]").forEach(el => el.textContent = transposeChordToken(el.dataset.originalChord, chordShift));
+
+    document.querySelectorAll("[data-original-chord]").forEach(el => {
+      // Zero transpose must be a true identity operation. In particular,
+      // never rewrite textContent here: doing so used to strip leading spaces
+      // around a chord and visibly move it away from the position saved in
+      // LyricsCreator.
+      if ((Number(chordShift) || 0) === 0) {
+        if (typeof el.__ls26OriginalChordHtml === "string") {
+          el.innerHTML = el.__ls26OriginalChordHtml;
+        }
+        return;
+      }
+
+      const next = transposeChordToken(el.dataset.originalChord, chordShift);
+      el.textContent = chordTextWithOriginalSpacing(el, next);
+    });
+
     if ($("chordTransposeValue")) $("chordTransposeValue").textContent = String(chordShift);
   }
 
