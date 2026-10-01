@@ -959,3 +959,19 @@ select { font:inherit; }
   .export-control select { flex:1; max-width:none; }
   .report-status { align-items:flex-start; flex-direction:column; }
 }
+
+
+/* Analytics page offset for the fixed LiveSuite admin sidebar. */
+@media (min-width:700px) {
+  .analytics-main {
+    margin-left:245px;
+    width:calc(100% - 245px);
+  }
+}
+
+@media (max-width:699px) {
+  .analytics-main {
+    margin-left:0;
+    width:100%;
+  }
+}
