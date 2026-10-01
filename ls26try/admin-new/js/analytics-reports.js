@@ -312,6 +312,11 @@
   }
 
   async function loadSidebar() {
+    if (window.LK?.sidebar?.loadSidebar) {
+      await LK.sidebar.loadSidebar();
+      return;
+    }
+
     const target = $("sidebarContainer");
     if (!target) return;
     try {
