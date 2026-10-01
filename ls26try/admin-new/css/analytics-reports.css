@@ -46,10 +46,8 @@ textarea { font: inherit; }
 
 .analytics-main {
   min-width: 0;
-  margin-left: var(--d26-side, 210px);
-  width: calc(100% - var(--d26-side, 210px));
   max-width: 1500px;
-  padding: 20px 20px 34px;
+  padding-bottom: 34px;
 }
 
 /* Page header: same visual scale as ADMIN DASHBOARD. */
@@ -1007,14 +1005,6 @@ textarea { font: inherit; }
   font-size: 13px;
 }
 
-/* Large desktop: wider sidebar like the dashboard. */
-@media (min-width: 1500px) {
-  .analytics-main {
-    margin-left: var(--d26-side, 240px);
-    width: calc(100% - var(--d26-side, 240px));
-  }
-}
-
 /* At tablet/compact desktop width, stack detailed report cards for readability. */
 @media (max-width: 1200px) {
   .analytics-header {
@@ -1042,9 +1032,7 @@ textarea { font: inherit; }
 
 @media (max-width: 1000px) {
   .analytics-main {
-    margin-left: var(--d26-side, 185px);
-    width: calc(100% - var(--d26-side, 185px));
-    padding: 15px 12px 30px;
+    padding-bottom: 30px;
   }
 
   .analytics-header h1 { font-size: 32px; }
@@ -1068,9 +1056,7 @@ textarea { font: inherit; }
 
 @media (max-width: 760px) {
   .analytics-main {
-    margin-left: 0;
-    width: 100%;
-    padding: 15px 10px 28px;
+    padding-bottom: 28px;
   }
 
   .analytics-header h1 { font-size: 28px; }
