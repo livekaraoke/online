@@ -2653,9 +2653,9 @@
       document, window, root:$("chordTimingWorkspace"), songId:firebaseId,
       getSong:timingSongSnapshot,
       store:window.LS26TimingStore.create({db,document}), dialogs:window.LS26Dialogs,
-      // Deployed rules are not available in this checkout. Keep real UI writes
-      // disabled until the narrow musicalTiming authorization is verified.
-      allowSave:false
+      // Owner-only timing rules have been published. Verify the existing Admin
+      // session's token email before enabling an explicit timing transaction.
+      allowSave:true, auth:window.auth, ownerEmail:"leeborg23@gmail.com"
     });
   }).catch(async error => {
     console.error(error);

@@ -5,7 +5,7 @@
   else root.LS26TimingWorkspace=factory(root.LS26Timing,root.LS26Chords);
 })(typeof window==='object'?window:globalThis,function(model,chords){
   'use strict';
-  function mount({document,window,root,songId,getSong,store,dialogs,allowSave=false,reloadSong=()=>window.location.reload()}){
+  function mount({document,window,root,songId,getSong,store,dialogs,allowSave=false,auth=null,ownerEmail='',reloadSong=()=>window.location.reload()}){
     const tab=document.getElementById('chordTimingTab'),lyricsTab=document.getElementById('lyricsChordsTab');
     root.innerHTML=`
       <div class="ct-heading"><div><h2>CHORD TIMING</h2><p id="ctStatus" role="status" aria-live="polite"></p><small id="ctMeterSummary"></small></div>
@@ -37,6 +37,28 @@
     const $=id=>root.querySelector('#'+id),copy=model.clone;
     let active=false,busy=false,loaded=false,draft=null,base,clean='',history=[],selectedId=null,reviewId=null;
     let song=null,loadError='',conflict='',message='',reconciled=false;
+    let ownerAuthorized=!ownerEmail,authCheck=0;
+    let authMessage=ownerEmail?'Checking your sign-in for timing saving…':'';
+    const canSave=()=>allowSave&&ownerAuthorized;
+    // Check the same exact token email used by the owner's Firestore rule.
+    // Never log/retain the token or claims, and never change sign-in settings.
+    async function verifyOwner(user){
+      const check=++authCheck;
+      ownerAuthorized=false;
+      authMessage=user?'Checking your sign-in for timing saving…':'Sign in with your owner account in LiveSuite Admin, then reload this page to save timing.';
+      draw();
+      if(!user)return false;
+      try{
+        const result=await user.getIdTokenResult();
+        if(check!==authCheck||auth.currentUser!==user)return false;
+        ownerAuthorized=result.claims?.email===ownerEmail;
+        authMessage=ownerAuthorized?'':'Only the signed-in owner can save timing. Your local changes stay on this page.';
+      }catch(error){
+        if(check!==authCheck||auth?.currentUser!==user)return false;
+        authMessage='Could not verify your sign-in. Sign in again through LiveSuite Admin to save timing. Your local changes stay here.';
+      }
+      draw();return ownerAuthorized;
+    }
     const serial=()=>draft?JSON.stringify(draft):'';
     const dirty=()=>Boolean(draft&&serial()!==clean);
     const selected=()=>draft?.events.find(e=>e.id===selectedId);
@@ -94,8 +116,8 @@
       $('ctStatus').textContent=busy?'Working…':loadError?'Saved timing unavailable':state==='NEEDS_REVIEW'?'Some older timing needs your review':state==='PARTIAL'||state==='UNTIMED'?'Choose durations for untimed chords':reconciled?'Timing updated to match current song':'Timing ready';
       $('ctMeterSummary').textContent=draft?`${draft.meter.beatsPerBar}/${draft.meter.beatUnit}${draft.meter.assumed?' (assumed)':''} · durations in quarter-note beats`:'';
       $('ctNotice').textContent=message;
-      $('ctSaveNote').textContent=!songId?'Save this song in Lyrics & Chords first. Timing changes stay on this page.':!allowSave?'Online timing saving needs setup. Changes stay on this page.':loadError?'Saved timing could not be loaded. Saving is unavailable until a successful reload.':dirty()?'Unsaved timing changes':'No unsaved timing changes';
-      if(dirty()&&(!allowSave||loadError||!songId))$('ctSaveNote').textContent+=' Unsaved timing changes.';
+      $('ctSaveNote').textContent=!songId?'Save this song in Lyrics & Chords first. Timing changes stay on this page.':!allowSave?'Online timing saving needs setup. Changes stay on this page.':!ownerAuthorized?authMessage:loadError?'Saved timing could not be loaded. Saving is unavailable until a successful reload.':dirty()?'Unsaved timing changes':'No unsaved timing changes';
+      if(dirty()&&(!canSave()||loadError||!songId))$('ctSaveNote').textContent+=' Unsaved timing changes.';
       $('ctReload').hidden=!loadError&&!conflict;
       $('ctReloadSong').hidden=conflict!=='SOURCE_CHANGED'&&conflict!=='SONG_MISSING';
       $('ctReviewToggle').hidden=!draft?.reviewReasons.length;
@@ -113,7 +135,7 @@
       for(const id of ['ctPlus','ctMinus','ctClear','ctCustomToggle'])$(id).disabled=busy||!event;
       root.querySelectorAll('[data-ct-preset]').forEach(button=>button.disabled=busy||!event);
       $('ctPrevious').disabled=busy||index<=0;$('ctNext').disabled=busy||!event||index>=draft.events.length-1;
-      $('ctSave').disabled=busy||!draft||!dirty()||!songId||!allowSave||base===undefined||Boolean(loadError||conflict);
+      $('ctSave').disabled=busy||!draft||!dirty()||!songId||!canSave()||base===undefined||Boolean(loadError||conflict);
       $('ctUndo').disabled=busy||!history.length;
       for(const id of ['ctReload','ctReloadSong','ctReviewToggle'])$(id).disabled=busy;
       const rows=$('ctUnresolved');rows.replaceChildren();
@@ -171,6 +193,7 @@
     function undo(){if(busy||!history.length)return;const previous=history.pop();draft=previous.draft;selectedId=previous.selectedId;reviewId=previous.reviewId;message='Timing change undone.';draw();}
     async function save(){return run(async()=>{
       if(!allowSave||!songId||base===undefined||loadError||conflict||!dirty())return false;
+      if(ownerEmail&&!await verifyOwner(auth?.currentUser))return false;
       const source=await model.buildSource(getSong(),document);
       if(source.fingerprint!==draft.source.fingerprint){message='The lyrics changed. Return to Lyrics & Chords, then reopen Chord Timing to review.';return false;}
       const result=await store.save(songId,{timing:draft,base});
@@ -221,6 +244,12 @@
     window.addEventListener('resize',fitViewport);window.visualViewport?.addEventListener('resize',fitViewport);
     tab.disabled=false;tab.onclick=enter;lyricsTab.onclick=()=>active?exit():undefined;
     draw();
+    if(ownerEmail){
+      // Authentication notifications are local SDK state, not Firestore listeners.
+      const observe=auth?.onIdTokenChanged||auth?.onAuthStateChanged;
+      if(observe)observe.call(auth,user=>{void verifyOwner(user);});
+      else void verifyOwner(auth?.currentUser);
+    }
     return Object.freeze({enter,exit,select,step,setDuration:duration,undo,save,reload,assign:()=>resolve('assign'),discard:()=>resolve('discard'),acceptMeter:()=>resolve('meter'),
       snapshot:()=>({active,busy,loaded,dirty:dirty(),draft:draft?copy(draft):null,selectedId,reviewId,base:base===undefined?undefined:copy(base),conflict,loadError,undoCount:history.length})});
   }

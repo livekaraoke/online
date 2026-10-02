@@ -5,7 +5,7 @@ const model=require('../shared/timing-model.js'),stores=require('../shared/timin
 const workspace=require('../host/js/chord-timing-workspace.js');
 const copy=model.clone;
 const parent=html=>({title:'Local fixture',artist:'Fixture',timeSignature:'4/4',sections:[{type:'lyrics',title:'VERSE',html}]});
-async function setup({html='G D G C C/G Bbmaj7/D',savedHtml,allowSave=true,songId='fixture'}={}){
+async function setup({html='G D G C C/G Bbmaj7/D',savedHtml,allowSave=true,songId='fixture',auth=null,ownerEmail=''}={}){
  const {window,document}=parseHTML(fs.readFileSync(path.join(__dirname,'../host/lyricscreator.html'),'utf8'));
  window.matchMedia=()=>({matches:true});
  window.HTMLElement.prototype.getBoundingClientRect=function(){return {top:10,bottom:62,height:52,left:0,right:600,width:600};};
@@ -27,7 +27,7 @@ async function setup({html='G D G C C/G Bbmaj7/D',savedHtml,allowSave=true,songI
  const dialogs={async confirm(text,options){confirmations.push({text,options});return answers.length?answers.shift():true;}};
  const root=document.getElementById('chordTimingWorkspace');
  let reloads=0;
- const api=workspace.mount({document,window,root,songId,getSong:()=>copy(current),store:stores.create({db,document}),dialogs,allowSave,reloadSong:()=>reloads++});
+ const api=workspace.mount({document,window,root,songId,getSong:()=>copy(current),store:stores.create({db,document}),dialogs,allowSave,auth,ownerEmail,reloadSong:()=>reloads++});
  return {api,window,document,root,rows,calls,confirmations,answers,scrolls,timingPath,
   el:id=>document.getElementById(id),song:()=>copy(current),setSong:html=>current=parent(html),setMeter:value=>current.timeSignature=value,get reloads(){return reloads;},
   denyRead:()=>readError=Object.assign(Error('Denied'),{code:'permission-denied'}),allowRead:()=>readError=null,
@@ -167,4 +167,97 @@ test('ordinary Creator controller snapshots source without edits and keeps timin
  e.window.LS26Dialogs.confirm=async()=>true;await api.exit();await e.document.getElementById('saveSongBtn').onclick();
  const saved=JSON.stringify(e.window.__fixture.data['lyrics/song0']);for(const item of draft.events)assert.ok(!saved.includes(item.id));assert.ok(!saved.includes('durationBeats'));
  assert.equal(e.window.__fixture.calls.filter(c=>c[0]==='set'&&c[1].includes('/musicalTiming/')).length,0);
+});
+
+// Stage 4.1: authenticated owner writes, isolated in-memory Firestore only.
+const ownerEmail='leeborg23@gmail.com';
+const ownerUser=(email=ownerEmail)=>({email:ownerEmail,async getIdTokenResult(){return {claims:{email}};}});
+const settle=()=>new Promise(resolve=>setImmediate(resolve));
+function authFixture(user){
+ let notify;
+ const auth={currentUser:user,onIdTokenChanged(callback){notify=callback;queueMicrotask(()=>callback(auth.currentUser));return()=>{};},
+  async change(next){auth.currentUser=next;notify(next);await settle();}};
+ return auth;
+}
+test('owner token enables explicit compact save; repeated and slash chord IDs survive reload',async()=>{
+ const auth=authFixture(ownerUser()),e=await setup({auth,ownerEmail});await settle();
+ assert.equal(e.calls.length,0,'Auth verification must not load timing');
+ await e.api.enter();assert.equal(e.rows.has(e.timingPath),false);assert.equal(e.calls.length,1);
+ for(const [index,value] of [4,2.5,1.5,3.5,.5,6].entries()){e.api.select(index);e.api.setDuration(value);}
+ const before=e.api.snapshot().draft.events;assert.equal(new Set(before.map(x=>x.id)).size,6);
+ assert.equal(e.calls.filter(c=>c[0]==='write').length,0);assert.equal(e.el('ctSave').disabled,false);
+ e.calls.length=0;assert.equal(await e.api.save(),true);
+ assert.deepEqual(e.calls.map(c=>c[0]),['tx-get','tx-get','write']);assert.equal(e.calls[2][1],'lyrics/fixture/musicalTiming/v1');
+ assert.equal(e.api.snapshot().dirty,false);assert.equal(e.api.snapshot().base.revision,1);assert.match(e.el('ctNotice').textContent,/Timing saved/);
+ await e.api.reload();assert.deepEqual(e.api.snapshot().draft.events,before);assert.equal(e.el('ctSave').disabled,true);
+ // Firestore replaces only this parent document, not documents beneath it.
+ e.rows.set('lyrics/fixture',{...e.song(),title:'Updated normal parent'});
+ await e.api.reload();assert.deepEqual(e.api.snapshot().draft.events,before);
+});
+test('signed-out host can edit locally but cannot send a timing transaction',async()=>{
+ const e=await setup({auth:authFixture(null),ownerEmail});await settle();await e.api.enter();e.api.step(.5);
+ assert.equal(e.el('ctSave').disabled,true);assert.match(e.el('ctSaveNote').textContent,/Sign in with your owner account/);
+ assert.equal(await e.api.save(),false);assert.deepEqual(e.calls.map(c=>c[0]),['get']);assert.equal(e.api.snapshot().dirty,true);
+});
+test('client email alone cannot authorize saving when token claims do not match the rule',async()=>{
+ const e=await setup({auth:authFixture(ownerUser('member@example.test')),ownerEmail});await settle();await e.api.enter();e.api.step(.5);
+ assert.equal(e.el('ctSave').disabled,true);assert.match(e.el('ctSaveNote').textContent,/Only the signed-in owner/);
+ assert.equal(await e.api.save(),false);assert.equal(e.calls.length,1);
+});
+test('exact owner token email is required and missing claims or token errors fail closed',async()=>{
+ for(const user of [ownerUser('LeeBorg23@gmail.com'),{email:ownerEmail,async getIdTokenResult(){throw Error('Offline');}},
+  {email:ownerEmail,async getIdTokenResult(){return {claims:{}};}}]){
+  const e=await setup({auth:authFixture(user),ownerEmail});await settle();await e.api.enter();e.api.step(.5);
+  assert.equal(e.el('ctSave').disabled,true);assert.equal(await e.api.save(),false);assert.equal(e.calls.length,1);
+ }
+});
+test('sign-out revokes Save immediately and preserves local edits for a later owner sign-in',async()=>{
+ const auth=authFixture(ownerUser()),e=await setup({auth,ownerEmail});await settle();await e.api.enter();e.api.step(.5);
+ const draft=e.api.snapshot().draft;assert.equal(e.el('ctSave').disabled,false);
+ await auth.change(null);assert.equal(e.el('ctSave').disabled,true);assert.deepEqual(e.api.snapshot().draft,draft);
+ await auth.change(ownerUser());assert.equal(e.el('ctSave').disabled,false);assert.equal(e.calls.length,1);
+});
+test('late token verification from an old account cannot re-enable Save after sign-out',async()=>{
+ let resolveToken;const user={email:ownerEmail,getIdTokenResult:()=>new Promise(resolve=>resolveToken=resolve)};
+ const auth=authFixture(user),e=await setup({auth,ownerEmail});await settle();await e.api.enter();e.api.step(.5);
+ await auth.change(null);resolveToken({claims:{email:ownerEmail}});await settle();assert.equal(e.el('ctSave').disabled,true);
+ assert.equal(await e.api.save(),false);assert.equal(e.calls.length,1);
+});
+test('Save rechecks the actual user even if no auth notification has arrived',async()=>{
+ const auth=authFixture(ownerUser()),e=await setup({auth,ownerEmail});await settle();await e.api.enter();e.api.step(.5);
+ auth.currentUser=ownerUser('member@example.test');assert.equal(await e.api.save(),false);assert.equal(e.el('ctSave').disabled,true);assert.equal(e.calls.length,1);
+});
+test('reference visibility does not imply events: section type and source markup determine occurrences',async()=>{
+ const e=await setup();
+ const sections=[
+  {type:'hostNote',title:'UG CHORDS NOTES',html:'<span class="inserted-chord">G</span> D G'},
+  {type:'performanceNote',title:'Any custom reference title',text:'G D G C'},
+  {type:'tab',title:'CHORDS LEGEND',html:'<span class="inserted-chord">C/G</span>'},
+  {type:'lyrics',title:'CHORDS LEGEND',html:'SOLO: D C G x8 + x2 (10)<br>G = major chord<br>C/G = slash chord'},
+  {type:'lyrics',title:'VERSE',html:'G D G C'}
+ ];
+ const chords=require('../shared/chord-foundation.js'),extracted=chords.extractSections(sections,e.document);
+ assert.equal(extracted.sections.length,5);assert.equal(extracted.candidates.length,4);
+ assert.ok(extracted.candidates.every(c=>c.anchor.sectionIndex===4));
+ const draft=await model.createDraft(await model.buildSource({sections},e.document));assert.deepEqual(draft.events.map(x=>x.chord),['G','D','G','C']);
+ // A custom title cannot suppress genuine chord source in a lyrics section.
+ const titled=chords.extractSections([{type:'lyrics',title:'CHORDS LEGEND',html:'G D'}],e.document);
+ assert.equal(titled.candidates.length,2);
+});
+test('actual Creator wiring enables owner Save and ordinary parent Save preserves the timing subdocument',async()=>{
+ const {setup:actual,tick}=require('../verification/chord-foundation-pages.cjs'),e=actual('lyricscreator');
+ e.window.auth.currentUser.email=ownerEmail;
+ e.window.auth.currentUser.getIdTokenResult=async()=>({claims:{email:ownerEmail}});
+ for(let i=0;i<10;i++)await tick();
+ const api=e.window.LS26CreatorTiming,path='lyrics/song0/musicalTiming/v1';
+ assert.equal(e.window.__fixture.calls.filter(c=>c[1].includes('/musicalTiming/')).length,0);
+ await api.enter();api.step(1.5);assert.equal(e.document.getElementById('ctSave').disabled,false);
+ assert.equal(await api.save(),true);const saved=JSON.stringify(e.window.__fixture.data[path]);
+ assert.equal(api.snapshot().dirty,false);assert.equal(api.snapshot().base.revision,1);
+ e.window.LS26Dialogs.confirm=async()=>true;await api.exit();await e.document.getElementById('saveSongBtn').onclick();
+ assert.equal(JSON.stringify(e.window.__fixture.data[path]),saved);
+ for(const event of api.snapshot().draft.events)assert.ok(!JSON.stringify(e.window.__fixture.data['lyrics/song0']).includes(event.id));
+ await api.enter();await api.reload();assert.equal(JSON.stringify(e.window.__fixture.data[path]),saved);
+ assert.equal(api.snapshot().draft.events[0].durationBeats,1.5);
+ assert.equal(e.window.__fixture.calls.filter(c=>c[0]==='set'&&c[1]===path).length,1);
 });
