@@ -10,6 +10,9 @@
   const returnTo = params.get("returnTo") || "";
   const fromTitle = params.get("fromTitle") || "";
 
+  // Local occurrence snapshots are separate from the Firestore song object.
+  const chordOccurrences = window.LS26Chords.createModel();
+  window.LS26ChordOccurrences = Object.freeze({snapshot:()=>chordOccurrences.snapshot()});
   let currentSong = null;
   let currentSongId = songId;
   let performanceTempo = null;
@@ -829,6 +832,7 @@
   }
 
   function renderSections(song) {
+    chordOccurrences.update(window.LS26Chords.extractSections(song.sections || [], document));
     clearSectionPauseCountdown();
     const container = $("lyricsContent");
     container.innerHTML = "";
@@ -1526,27 +1530,8 @@
     relativeScrollFrame=requestAnimationFrame(frame);
   }
 
-  function chordParts(chord) {
-    const m = String(chord || "").match(/^([A-G])([#b]?)(.*)$/);
-    return m ? {root:m[1]+m[2], suffix:m[3]} : null;
-  }
-  const NOTES_SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
-  const NOTES_FLAT = ["C","Db","D","Eb","E","F","Gb","G","Ab","A","Bb","B"];
-  const NOTE_INDEX = {C:0,"B#":0,"C#":1,Db:1,D:2,"D#":3,Eb:3,E:4,Fb:4,F:5,"E#":5,"F#":6,Gb:6,G:7,"G#":8,Ab:8,A:9,"A#":10,Bb:10,B:11,Cb:11};
   function transposeChordToken(token, shift) {
-    const normalizedShift = ((Number(shift) || 0) % 12 + 12) % 12;
-    // Zero transpose is identity: never rewrite Bb as A# (or vice versa).
-    if (normalizedShift === 0) return token;
-    const split = token.split("/");
-    const main = chordParts(split[0]);
-    if (!main || NOTE_INDEX[main.root] == null) return token;
-    const mainNotes = main.root.includes("b") ? NOTES_FLAT : NOTES_SHARP;
-    const root = mainNotes[(NOTE_INDEX[main.root]+normalizedShift)%12] + main.suffix;
-    if (!split[1]) return root;
-    const bass = chordParts(split[1]);
-    if (!bass || NOTE_INDEX[bass.root] == null) return root;
-    const bassNotes = bass.root.includes("b") ? NOTES_FLAT : NOTES_SHARP;
-    return `${root}/${bassNotes[(NOTE_INDEX[bass.root]+normalizedShift)%12]}${bass.suffix}`;
+    return window.LS26Chords.transpose(token, Number(shift) || 0);
   }
 
   function captureOriginalChordText() {
@@ -1560,7 +1545,7 @@
 
       const rawText = String(el.textContent || "");
       const text = rawText.trim();
-      if (!/^[A-G][#b]?(?:m|maj|min|dim|aug|sus|add|\d|\(|\)|\+|\-|\/|#|b)*$/i.test(text)) return;
+      if (!window.LS26Chords.isChord(text)) return;
 
       el.dataset.originalChord = text;
 

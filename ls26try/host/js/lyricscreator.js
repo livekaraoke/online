@@ -9,7 +9,31 @@
   const firebaseId = new URLSearchParams(location.search).get("firebaseId");
 
   let sections = [];
+  // Never attach occurrence IDs or review metadata to sections/loadedSong.
+  const chordOccurrences = window.LS26Chords.createModel();
+  function refreshChordOccurrences() {
+    chordOccurrences.update(window.LS26Chords.extractSections(sections, document));
+  }
+  window.LS26ChordOccurrences = Object.freeze({
+    snapshot:()=>chordOccurrences.snapshot(),
+    refresh:()=>{syncSectionsFromDOM();return chordOccurrences.snapshot();}
+  });
   let loadedSong = null;
+  function timingSongSnapshot() {
+    // Read a detached snapshot. Entering timing never edits source HTML or
+    // participates in the normal editor's dirty/undo/save state.
+    const currentSections = JSON.parse(JSON.stringify(sections));
+    document.querySelectorAll("[data-title]").forEach(el => {
+      if (currentSections[Number(el.dataset.title)]) currentSections[Number(el.dataset.title)].title = String(el.value || "").toUpperCase();
+    });
+    document.querySelectorAll("[data-note]").forEach(el => {
+      if (currentSections[Number(el.dataset.note)]) currentSections[Number(el.dataset.note)].text = el.value;
+    });
+    document.querySelectorAll("[data-html]").forEach(el => {
+      if (currentSections[Number(el.dataset.html)]) currentSections[Number(el.dataset.html)].html = el.classList.contains("is-empty") ? "" : getCleanEditorHtmlForSave(el);
+    });
+    return {...(loadedSong || {}), sections:currentSections, timeSignature:$("timeSignatureInput").value};
+  }
   let dirty = false;
   let activeEditor = null;
   let savedRange = null;
@@ -1446,6 +1470,7 @@
     applySongValueColours();
     root.querySelectorAll("[data-placeholder]").forEach(updateEmptyEditor);
     updateOneShotGreenButtons();
+    refreshChordOccurrences();
     // Preview each section's dash colour immediately in the creator.
     requestAnimationFrame(refreshAllDashColours);
   }
@@ -1608,6 +1633,7 @@
         sections[i].style.titleColor = el.value || "";
       }
     });
+    refreshChordOccurrences();
   }
 
   function showConfirm(title, message) {
@@ -2029,6 +2055,7 @@
   });
 
   document.addEventListener("input", event => {
+    if (event.target.closest?.("[data-timing-workspace]")) return;
     if (event.target.matches("input, textarea, [contenteditable='true']")) markDirty();
     if (event.target.id === "songTitleInput" || event.target.id === "artistInput") updateEditingStatus();
     if (event.target.id === "capoInput") updateCapoColour();
@@ -2622,6 +2649,14 @@
     undoStack = [snapshotEditorState()];
     redoStack = [];
     updateUndoRedoButtons();
+    window.LS26CreatorTiming = window.LS26TimingWorkspace.mount({
+      document, window, root:$("chordTimingWorkspace"), songId:firebaseId,
+      getSong:timingSongSnapshot,
+      store:window.LS26TimingStore.create({db,document}), dialogs:window.LS26Dialogs,
+      // Deployed rules are not available in this checkout. Keep real UI writes
+      // disabled until the narrow musicalTiming authorization is verified.
+      allowSave:false
+    });
   }).catch(async error => {
     console.error(error);
     await LS26Dialogs.alert(`Could not load song: ${error.message}`);
