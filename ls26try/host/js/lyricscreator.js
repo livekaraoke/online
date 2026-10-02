@@ -32,7 +32,7 @@
     document.querySelectorAll("[data-html]").forEach(el => {
       if (currentSections[Number(el.dataset.html)]) currentSections[Number(el.dataset.html)].html = el.classList.contains("is-empty") ? "" : getCleanEditorHtmlForSave(el);
     });
-    return {...(loadedSong || {}), sections:currentSections, timeSignature:$("timeSignatureInput").value};
+    return {...(loadedSong || {}), sections:currentSections, timeSignature:$("timeSignatureInput").value,userBpm:$("userBpmInput").value,originalBpm:$("originalBpmInput").value};
   }
   let dirty = false;
   let activeEditor = null;

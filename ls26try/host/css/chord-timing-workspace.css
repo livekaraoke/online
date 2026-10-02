@@ -45,3 +45,34 @@
  .ct-navigation #ctMinus{grid-column:1;grid-row:2}#ctDuration{grid-column:2;grid-row:2}.ct-navigation #ctPlus{grid-column:3;grid-row:2}
  .ct-presets{grid-template-columns:repeat(4,minmax(48px,1fr))}.ct-actions button{flex-basis:40%}.ct-line{font-size:18px}.ct-song{padding-inline:6px}
 }
+/* Timing-only viewport: the real header and footer reserve their own rows. */
+html.ct-open{height:100%;overflow:hidden;overscroll-behavior:none}
+body.creator-page.ct-open{display:flex;flex-direction:column;height:100vh;height:var(--ct-viewport-height,100dvh);min-height:0!important;overflow:hidden!important;overscroll-behavior:none;margin:0!important;padding:0!important}
+body.ct-open #ls26StickyHeader{position:relative!important;inset:auto!important;flex:0 0 auto;width:100%;margin:0!important}
+body.ct-open .creator-shell{display:grid;grid-template-rows:auto minmax(0,1fr);flex:1 1 0;min-height:0;min-width:0;width:100%;max-width:1400px;margin:0 auto!important;padding:6px 10px!important;overflow:hidden}
+body.ct-open .ct-tabs{margin:0 0 6px;flex-wrap:nowrap}
+body.ct-open .ct-tabs button{padding:8px 16px}
+body.ct-open .ct-workspace{height:auto!important;min-height:0!important;max-height:none!important;min-width:0;overflow:hidden;padding:8px}
+body.ct-open .ct-reading-area,body.ct-open .ct-song{min-height:0}
+body.ct-open .ct-dock{position:static;padding-top:6px}
+body.ct-open .ct-heading h2{display:none}
+body.ct-open .ct-heading p{margin:0 0 3px}
+body.ct-open .ct-selection{margin-bottom:5px}
+body.ct-open .ct-presets,body.ct-open .ct-actions{margin-top:5px}
+body.ct-open .ls26-footer{flex:0 0 auto;margin:0!important;padding:3px 10px!important;min-height:44px}
+body.ct-open .ls26-footer .ls26-footer-brand{height:36px!important}
+body.ct-open .creator-scroll-top{display:none!important}
+@media(min-width:601px) and (max-width:1180px){body.ct-open .ct-workspace{font-size:16px}body.ct-open .ct-song{padding-top:2px}.ct-selection{line-height:1.25}}
+@media(max-height:560px){body.ct-open .ct-heading small{display:none}body.ct-open .ct-presets{display:flex;gap:5px;overflow-x:auto}body.ct-open .ct-presets button{flex:1;min-width:48px}body.ct-open .ct-save-note{margin:3px 0;font-size:12px}}
+.ct-performance-controls{display:flex;flex-direction:column;gap:6px}
+.ct-performance-summary{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:6px 0}.ct-performance-summary strong{font-size:28px;color:var(--ls-accent)}.ct-performance-summary output{margin-left:auto;font-size:16px}
+.ct-performance-options{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.ct-performance-options label{display:flex;gap:6px;align-items:center}.ct-performance-options select{min-height:48px;background:var(--ls-soft);color:var(--ls-text);border:1px solid var(--ls-border);border-radius:7px;font:inherit}.ct-performance-options input{min-height:24px;min-width:24px}
+.ct-performance-actions{display:grid;grid-template-columns:1fr 2fr 1fr 1fr;gap:8px}.ct-performance-actions button{min-height:64px;font-weight:800}#ctTapNextChord{font-size:23px;min-height:80px}
+.ct-performance .ct-navigation,.ct-performance .ct-presets,.ct-performance #ctClear,.ct-performance #ctCustomToggle,.ct-performance #ctPerformanceEnter,.ct-performance #ctUndo{display:none}
+.ct-performance .ct-actions{margin:0 0 6px}.ct-performance .ct-actions #ctSave{flex:none;min-width:160px}.ct-performance .ct-selection{font-size:15px}
+@media(min-width:601px) and (max-width:1180px){.ct-performance-actions{grid-template-columns:1fr 2fr 1fr}.ct-performance-actions #ctTapExit{grid-column:1/-1;min-height:48px}.ct-performance-options{gap:6px}.ct-performance-options button{padding:8px}.ct-performance-summary strong{font-size:25px}}
+@media(max-width:600px){.ct-performance-actions{grid-template-columns:1fr 1fr}.ct-performance-actions #ctTapNextChord{grid-column:1/-1;grid-row:1}.ct-performance-summary output{margin-left:0}.ct-performance-options{font-size:14px}}
+/* When a numeric keyboard is open, reserve space for that task instead of
+   squeezing the full manual dock into the smaller visual viewport. */
+.ct-custom-open .ct-navigation,.ct-custom-open .ct-presets,.ct-custom-open .ct-selection,.ct-custom-open .ct-save-note,.ct-custom-open .ct-actions button:not(#ctCustomToggle){display:none}
+.ct-custom-open .ct-custom{margin-top:5px}.ct-custom-open #ctCustomToggle{flex:none;min-width:150px}

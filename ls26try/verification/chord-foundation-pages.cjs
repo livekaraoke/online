@@ -30,7 +30,7 @@ function setup(page,ref){
   getComputedStyle:()=>({getPropertyValue:()=>'',fontSize:'23px',fontFamily:'Verdana'}),matchMedia:()=>({matches:false}),
   localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)},sessionStorage:{getItem:()=>null,setItem(){}},
   fetch:()=>{throw Error('Network is forbidden');},history:{replaceState(){}},innerHeight:900,scrollY:0,scrollTo(){}};
- Object.assign(window,{location,innerHeight:900,scrollY:0,scrollTo(){},scrollBy(){},requestAnimationFrame:ctx.requestAnimationFrame,LS26:{url:p=>'/ls26try/'+p,toast:msg=>events.push(msg)},LS26Dialogs:{alert:async msg=>{throw Error(msg);}},LS26Settings:{get:()=>({})}});
+ Object.assign(window,{location,innerHeight:900,scrollY:0,scrollTo(){},scrollBy(){},requestAnimationFrame:ctx.requestAnimationFrame,cancelAnimationFrame:ctx.cancelAnimationFrame,setInterval:ctx.setInterval,clearInterval:ctx.clearInterval,LS26:{url:p=>'/ls26try/'+p,toast:msg=>events.push(msg)},LS26Dialogs:{alert:async msg=>{throw Error(msg);}},LS26Settings:{get:()=>({})}});
  ctx.LS26=window.LS26;ctx.LS26Dialogs=window.LS26Dialogs;
  vm.createContext(ctx);vm.runInContext(read('verification/firebase-fixture.js',ref),ctx);
  ctx.firebase=window.firebase;ctx.__fixture=window.__fixture;
@@ -43,6 +43,9 @@ function setup(page,ref){
  run('shared/artist-names.js');run('shared/section-content.js');
  if(document.querySelector('script[src*="chord-foundation.js"]')){run('shared/chord-foundation.js');run('shared/musical-transport.js');}
  if(document.querySelector('script[src*="timing-model.js"]')){run('shared/timing-model.js');run('shared/timing-store.js');}
+ if(document.querySelector('script[src*="song-audio.js"]')){run('shared/metronome-engine.js');run('shared/song-audio.js');}
+ if(document.querySelector('script[src*="tap-timing.js"]')){run('shared/tap-timing.js');run('shared/performance-tempo.js');}
+ if(document.querySelector('script[src*="chord-playback.js"]')){run('shared/chord-playback.js');run('shared/lyricview-chord-follow.js');}
  if(document.querySelector('script[src*="chord-timing-workspace.js"]'))run('host/js/chord-timing-workspace.js');
  if(page==='lyricscreator')run('host/js/lyrics-common.js');else run('shared/performance-tempo.js');
  run('host/js/'+page+'.js');if(page==='lyricview')document.dispatchEvent(new window.Event('DOMContentLoaded'));

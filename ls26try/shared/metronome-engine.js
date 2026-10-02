@@ -34,7 +34,28 @@
       }
     }
   }
-  const api={normalize,tapTempo,stepDuration,Clock};
+  // Song timing uses absolute transport beats; a delayed scheduler skips
+  // missed clicks without changing the musical position or accumulating drift.
+  class TransportClock {
+    constructor(transport,getSettings,emit){this.transport=transport;this.getSettings=getSettings;this.emit=emit;this.step=null;}
+    reset(){this.step=null;}
+    position(step,s){const whole=Math.floor(step/s.division),sub=((step%s.division)+s.division)%s.division;return (whole+(s.division===2&&sub?s.swing/100:sub/s.division))*4/(s.beatUnit||4);}
+    schedule(now){
+      if(this.transport.snapshot().state!=='playing')return;
+      const s=this.getSettings(),beat=this.transport.getBeat(),unit=4/(s.beatUnit||4);
+      if(this.step===null)this.step=Math.floor(beat/unit*s.division);
+      this.step=Math.max(this.step,Math.floor(beat/unit*s.division));
+      while(this.position(this.step,s)<beat-.000001)this.step++;
+      for(let guard=0;guard<200;guard++){
+        const position=this.position(this.step,s),time=this.transport.timeAtBeat(position);
+        if(time===null||time>=now+.1)break;
+        const whole=Math.floor(this.step/s.division),index=((whole%s.beats)+s.beats)%s.beats,sub=((this.step%s.division)+s.division)%s.division;
+        if(time>=now-.005)this.emit({time,position,beat:index,sub,bar:Math.floor(whole/s.beats)+1,countIn:position<0,accent:s.accents[index],settings:s});
+        this.step++;
+      }
+    }
+  }
+  const api={normalize,tapTempo,stepDuration,Clock,TransportClock};
   if(typeof module==='object'&&module.exports)module.exports=api;
   else window.LS26Metronome=api;
 })();

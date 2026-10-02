@@ -30,13 +30,19 @@
           <button type="button" id="ctNext">NEXT CHORD</button>
         </div>
         <div class="ct-presets" aria-label="Set duration in beats">${[.5,1,1.5,2,3,4,6,8].map(n=>`<button type="button" data-ct-preset="${n}" aria-label="Set ${n} beats">${n}</button>`).join('')}</div>
-        <div class="ct-actions"><button type="button" id="ctSave" class="ct-primary">SAVE TIMING</button><button type="button" id="ctUndo">↶ UNDO</button><button type="button" id="ctClear">CLEAR</button><button type="button" id="ctCustomToggle" aria-expanded="false">CUSTOM…</button></div>
+        <div class="ct-actions"><button type="button" id="ctSave" class="ct-primary">SAVE TIMING</button><button type="button" id="ctUndo">↶ UNDO</button><button type="button" id="ctClear">CLEAR</button><button type="button" id="ctCustomToggle" aria-expanded="false">CUSTOM…</button><button type="button" id="ctPerformanceEnter">TAP TIMING</button></div>
+        <div id="ctPerformance" class="ct-performance-controls" hidden>
+          <div class="ct-performance-summary"><strong id="ctTapCurrent"></strong><span id="ctTapNext"></span><output id="ctTapBeat" role="status"></output></div>
+          <div class="ct-performance-options"><label>Count-in <select id="ctCountIn"><option value="0">NONE</option><option value="1" selected>1 BAR</option><option value="2">2 BARS</option></select></label><label><input id="ctClick" type="checkbox" checked> Metronome click</label><button type="button" id="ctBpmMinus" aria-label="Lower performance BPM">BPM −</button><output id="ctTapBpm"></output><button type="button" id="ctBpmPlus" aria-label="Raise performance BPM">BPM +</button></div>
+          <div class="ct-performance-actions"><button type="button" id="ctTapPlay">PLAY</button><button type="button" id="ctTapNextChord" class="ct-primary">NEXT CHORD / TAP</button><button type="button" id="ctTapUndo">UNDO LAST TAP</button><button type="button" id="ctTapExit">STOP / EXIT TAP TIMING</button></div>
+        </div>
         <form id="ctCustom" class="ct-custom" hidden><label>Duration in beats <input id="ctCustomValue" type="number" min="0.5" step="0.5" inputmode="decimal"></label><button type="submit">APPLY</button></form>
         <p id="ctSaveNote" class="ct-save-note"></p>
       </div>`;
     const $=id=>root.querySelector('#'+id),copy=model.clone;
     let active=false,busy=false,loaded=false,draft=null,base,clean='',history=[],selectedId=null,reviewId=null;
-    let song=null,loadError='',conflict='',message='',reconciled=false;
+    let song=null,loadError='',conflict='',message='',reconciled=false,editorScroll=0;
+    let performanceMode=false,audio=null,tapSession=null,tempo=null,performanceFrame=null;
     let ownerAuthorized=!ownerEmail,authCheck=0;
     let authMessage=ownerEmail?'Checking your sign-in for timing saving…':'';
     const canSave=()=>allowSave&&ownerAuthorized;
@@ -81,9 +87,7 @@
       if(!active)return;
       const height=window.visualViewport?.height||window.innerHeight;
       if(!Number.isFinite(height))return;
-      const header=document.getElementById('ls26StickyHeader');
-      const top=Math.max(0,root.getBoundingClientRect().top,header?.getBoundingClientRect().bottom||0);
-      root.style.height=Math.max(340,height-top-12)+'px';
+      document.body.style.setProperty('--ct-viewport-height',height+'px');
     }
     function buildSong(){
       const pane=$('ctSong'),scroll=pane.scrollTop;pane.replaceChildren();
@@ -137,6 +141,14 @@
       $('ctPrevious').disabled=busy||index<=0;$('ctNext').disabled=busy||!event||index>=draft.events.length-1;
       $('ctSave').disabled=busy||!draft||!dirty()||!songId||!canSave()||base===undefined||Boolean(loadError||conflict);
       $('ctUndo').disabled=busy||!history.length;
+      $('ctPerformanceEnter').disabled=busy||!draft?.events.length||Boolean(draft?.reviewReasons.length)||!window.LS26SongAudio||!window.LS26TapTiming;
+      $('ctPerformance').hidden=!performanceMode;
+      if(performanceMode){
+        root.querySelectorAll('[data-ct-index],[data-ct-preset]').forEach(button=>button.disabled=true);
+        for(const id of ['ctPlus','ctMinus','ctPrevious','ctNext','ctClear','ctCustomToggle','ctAssign','ctDiscard','ctAcceptMeter'])$(id).disabled=true;
+        $('ctSave').disabled=$('ctSave').disabled||audio?.snapshot().state==='playing';
+        drawPerformance();
+      }
       for(const id of ['ctReload','ctReloadSong','ctReviewToggle'])$(id).disabled=busy;
       const rows=$('ctUnresolved');rows.replaceChildren();
       draft?.unresolved.forEach((item,i)=>{
@@ -176,23 +188,61 @@
       chooseValid();buildSong();
     }
     async function enter(){return run(async()=>{
-      active=true;root.hidden=false;document.body.classList.add('ct-open');tab.setAttribute('aria-selected','true');lyricsTab.setAttribute('aria-selected','false');
+      if(!active)editorScroll=window.scrollY||0;
+      active=true;root.hidden=false;document.body.classList.add('ct-open');document.documentElement.classList.add('ct-open');tab.setAttribute('aria-selected','true');lyricsTab.setAttribute('aria-selected','false');
       await loadCurrent();fitViewport();window.requestAnimationFrame?.(fitViewport);root.focus({preventScroll:true});return true;
     });}
     async function exit(){return run(async()=>{
       if(dirty()&&!await dialogs.confirm('Keep your unsaved timing draft on this page and switch to Lyrics & Chords? Leaving the page will lose unsaved timing.',{title:'Unsaved timing',confirmText:'KEEP DRAFT & SWITCH'}))return false;
-      active=false;root.hidden=true;document.body.classList.remove('ct-open');tab.setAttribute('aria-selected','false');lyricsTab.setAttribute('aria-selected','true');lyricsTab.focus({preventScroll:true});return true;
+      stopPerformance();active=false;root.hidden=true;document.body.classList.remove('ct-open');document.documentElement.classList.remove('ct-open');document.body.style.removeProperty('--ct-viewport-height');tab.setAttribute('aria-selected','false');lyricsTab.setAttribute('aria-selected','true');lyricsTab.focus({preventScroll:true});window.scrollTo?.({top:editorScroll,behavior:'instant'});return true;
     });}
-    function select(index){if(busy||!draft?.events[index])return;selectedId=draft.events[index].id;draw();reveal();}
+    function select(index){if(busy||performanceMode||!draft?.events[index])return;selectedId=draft.events[index].id;draw();reveal();}
     function duration(value){
-      if(busy||!selected())return false;
+      if(busy||performanceMode||!selected())return false;
       try{const next=model.setDuration(draft,selectedId,value);if(JSON.stringify(next)===serial())return false;remember();draft=next;message='';draw();return true;}
       catch(error){message='Enter a positive duration in steps of 0.5 beats, or use Clear.';draw();return false;}
     }
     function step(amount){const value=selected()?.durationBeats;if(amount<0&&value===undefined)return;duration((value||0)+amount<=0?null:(value||0)+amount);}
-    function undo(){if(busy||!history.length)return;const previous=history.pop();draft=previous.draft;selectedId=previous.selectedId;reviewId=previous.reviewId;message='Timing change undone.';draw();}
+    function undo(){if(performanceMode)return undoTap();if(busy||!history.length)return;const previous=history.pop();draft=previous.draft;selectedId=previous.selectedId;reviewId=previous.reviewId;message='Timing change undone.';draw();}
+    function drawPerformance(){
+      if(!performanceMode||!audio)return;
+      const state=audio.snapshot(),session=tapSession?.snapshot(),event=selected();
+      $('ctTapCurrent').textContent=`CURRENT: ${event?.chord||'—'}`;
+      $('ctTapNext').textContent=`NEXT: ${draft.events[(session?.index??currentIndex())+1]?.chord||'Finish last chord'}`;
+      $('ctTapBeat').textContent=state.state==='playing'&&state.beat<0?`COUNT-IN · ${Math.ceil(-state.beat*2)/2} beats to start`:session?.complete?'Capture complete · Save when ready':`${state.state.toUpperCase()} · ${Math.max(0,state.beat-(session?.startBeat||0)).toFixed(2)} quarter-note beats`;
+      $('ctTapBpm').textContent=`${tempo?.get()||96} BPM`;
+      $('ctTapPlay').textContent=state.state==='playing'?'PAUSE':state.state==='paused'?'RESUME':'PLAY';
+      $('ctTapPlay').disabled=busy||audio.pending||Boolean(session?.complete);
+      $('ctTapNextChord').textContent=session?.index===draft.events.length-1?'FINISH CHORD / TAP':'NEXT CHORD / TAP';
+      $('ctTapNextChord').disabled=busy||state.state!=='playing'||state.beat<0||Boolean(session?.complete);
+      $('ctTapUndo').disabled=busy||!session?.undoCount;$('ctCountIn').disabled=state.state!=='stopped';
+    }
+    function performanceUi(){if(!performanceMode)return;drawPerformance();performanceFrame=window.requestAnimationFrame?.(performanceUi);}
+    function enterPerformance(){
+      if(busy||!draft?.events.length||draft.reviewReasons.length||!window.LS26SongAudio||!window.LS26TapTiming)return false;
+      performanceMode=true;root.classList.add('ct-performance');setCustom(false,false);
+      if(!tempo)tempo=window.LS26PerformanceTempo.create({song:getSong(),storage:window.sessionStorage,key:`ls26:currentBpm:${window.firebase?.app?.().options.projectId||'local'}:${songId}`,onChange:value=>{audio?.setBpm(value);drawPerformance();}});
+      if(!audio)audio=window.LS26SongAudio.create({window,getSettings:()=>({bpm:tempo.get(),beats:draft.meter.beatsPerBar,beatUnit:draft.meter.beatUnit,volume:$('ctClick').checked?65:0,division:1}),onState:()=>{if(performanceMode)draw();}});
+      tapSession=window.LS26TapTiming.create({clock:audio,events:draft.events,getDuration:id=>draft.events.find(e=>e.id===id)?.durationBeats,
+        onDuration:(id,value,{undo=false}={})=>{if(undo)history.pop();else remember();draft=model.setDuration(draft,id,value);},
+        onSelect:index=>{selectedId=draft.events[index].id;draw();reveal();}});
+      message='Press Play, wait for the count-in, then tap each harmony change. The last tap finishes the final chord.';draw();performanceUi();return true;
+    }
+    async function playPerformance(){
+      if(!performanceMode||busy||audio.pending)return false;
+      if(audio.snapshot().state==='playing'){audio.pause();draw();return true;}
+      try{
+        if(audio.snapshot().state==='paused')await audio.resume();
+        else{tapSession.begin(currentIndex());await audio.start({countInBeats:Number($('ctCountIn').value)*draft.meter.beatsPerBar*4/draft.meter.beatUnit});}
+        draw();return true;
+      }catch(error){message=error.message;draw();return false;}
+    }
+    function captureTap(){if(!performanceMode||busy)return false;const result=tapSession.capture();if(!result)return false;if(result.complete)audio.pause();message=`Captured ${result.duration} beats. Changes remain local until Save Timing.`;draw();return result;}
+    function undoTap(){if(!performanceMode||busy||!tapSession.undo())return false;message='Last tap undone. Retap the harmony change, or pause to correct.';draw();reveal();return true;}
+    function stopPerformance(){if(!performanceMode)return;performanceMode=false;audio?.stop();tapSession?.end();window.cancelAnimationFrame?.(performanceFrame);root.classList.remove('ct-performance');message='Tap Timing stopped. Your local durations are kept.';draw();}
+    function setCustom(open,focus=true){$('ctCustom').hidden=!open;root.classList.toggle('ct-custom-open',open);$('ctCustomToggle').setAttribute('aria-expanded',String(open));$('ctCustomToggle').textContent=open?'CLOSE CUSTOM':'CUSTOM…';if(focus)(open?$('ctCustomValue'):$('ctCustomToggle')).focus();}
     async function save(){return run(async()=>{
-      if(!allowSave||!songId||base===undefined||loadError||conflict||!dirty())return false;
+      if(!allowSave||!songId||base===undefined||loadError||conflict||!dirty()||performanceMode&&audio?.snapshot().state==='playing')return false;
       if(ownerEmail&&!await verifyOwner(auth?.currentUser))return false;
       const source=await model.buildSource(getSong(),document);
       if(source.fingerprint!==draft.source.fingerprint){message='The lyrics changed. Return to Lyrics & Chords, then reopen Chord Timing to review.';return false;}
@@ -226,22 +276,27 @@
       if(button.dataset.ctOld!==undefined){const index=Number(button.dataset.ctOld);reviewId=draft.unresolved[index].event.id;draw();root.querySelector(`[data-ct-old="${index}"]`)?.focus({preventScroll:true});return;}
       if(button.dataset.ctPreset!==undefined)return duration(Number(button.dataset.ctPreset));
       const actions={ctPrevious:()=>select(currentIndex()-1),ctNext:()=>select(currentIndex()+1),ctMinus:()=>step(-.5),ctPlus:()=>step(.5),ctClear:()=>duration(null),ctUndo:undo,ctSave:save,ctReload:reload,
+        ctPerformanceEnter:enterPerformance,ctTapPlay:playPerformance,ctTapNextChord:captureTap,ctTapUndo:undoTap,ctTapExit:stopPerformance,
+        ctBpmMinus:()=>tempo.set(tempo.get()-1),ctBpmPlus:()=>tempo.set(tempo.get()+1),
         ctAssign:()=>resolve('assign'),ctDiscard:()=>resolve('discard'),ctAcceptMeter:()=>resolve('meter'),
         ctReviewToggle:()=>{$('ctReview').hidden=!$('ctReview').hidden;draw();},
-        ctCustomToggle:()=>{$('ctCustom').hidden=!$('ctCustom').hidden;button.setAttribute('aria-expanded',String(!$('ctCustom').hidden));if(!$('ctCustom').hidden)$('ctCustomValue').focus();},
+        ctCustomToggle:()=>setCustom($('ctCustom').hidden),
         ctReloadSong:()=>run(async()=>{if(await dialogs.confirm('Reload the song? Unsaved lyrics and timing on this page will be lost.',{title:'Reload song',confirmText:'RELOAD SONG'})){clean=serial();reloadSong();}})};
       actions[button.id]?.();
     });
-    $('ctCustom').addEventListener('submit',event=>{event.preventDefault();const raw=$('ctCustomValue').value.trim();if(raw&&duration(Number(raw))){$('ctCustom').hidden=true;$('ctCustomToggle').setAttribute('aria-expanded','false');$('ctCustomToggle').focus();}});
+    $('ctCustom').addEventListener('submit',event=>{event.preventDefault();const raw=$('ctCustomValue').value.trim();if(raw&&duration(Number(raw)))setCustom(false);});
+    $('ctClick').onchange=()=>audio?.refresh();
     root.addEventListener('keydown',event=>{
       if(!active||busy||event.isComposing||event.altKey||event.target.closest?.('input,textarea,select,[role="textbox"],[role="combobox"],[contenteditable]:not([contenteditable="false"])'))return;
+      if(performanceMode&&event.repeat&&[' ','Enter'].includes(event.key)){event.preventDefault();return;}
       let action;
-      if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='z'&&!event.shiftKey)action=undo;
-      else if(!event.ctrlKey&&!event.metaKey)action={ArrowLeft:()=>select(currentIndex()-1),ArrowRight:()=>select(currentIndex()+1),'+':()=>step(.5),'-':()=>step(-.5)}[event.key];
+      if(performanceMode&&!event.ctrlKey&&!event.metaKey)action={' ':captureTap,Enter:playPerformance}[event.key];
+      if(!action&&(event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='z'&&!event.shiftKey)action=undo;
+      else if(!action&&!performanceMode&&!event.ctrlKey&&!event.metaKey)action={ArrowLeft:()=>select(currentIndex()-1),ArrowRight:()=>select(currentIndex()+1),'+':()=>step(.5),'-':()=>step(-.5)}[event.key];
       if(action){event.preventDefault();event.stopPropagation();action();}
     });
     window.addEventListener('beforeunload',event=>{if(dirty()){event.preventDefault();event.returnValue='';}});
-    window.addEventListener('resize',fitViewport);window.visualViewport?.addEventListener('resize',fitViewport);
+    window.addEventListener('resize',fitViewport);window.visualViewport?.addEventListener?.('resize',fitViewport);
     tab.disabled=false;tab.onclick=enter;lyricsTab.onclick=()=>active?exit():undefined;
     draw();
     if(ownerEmail){
@@ -251,6 +306,8 @@
       else void verifyOwner(auth?.currentUser);
     }
     return Object.freeze({enter,exit,select,step,setDuration:duration,undo,save,reload,assign:()=>resolve('assign'),discard:()=>resolve('discard'),acceptMeter:()=>resolve('meter'),
+      enterPerformance,playPerformance,captureTap,undoTap,stopPerformance,
+      performanceSnapshot:()=>({mode:performanceMode,transport:audio?.snapshot(),session:tapSession?.snapshot()}),
       snapshot:()=>({active,busy,loaded,dirty:dirty(),draft:draft?copy(draft):null,selectedId,reviewId,base:base===undefined?undefined:copy(base),conflict,loadError,undoCount:history.length})});
   }
   return Object.freeze({mount});

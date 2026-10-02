@@ -48,19 +48,23 @@
   const skip = 'script,style,button,select,textarea,.tab-block,.tab-line,.tab-dashes,.tab-note,.tab-cell,.note-cell,.inserted-blank-tab,.lyrics-song-link';
   const explicit = '.inserted-chord,.chord-token,[data-chord]';
   const blocks = new Set(['DIV','P','PRE','LI','UL','OL','BLOCKQUOTE']);
-  function logicalLines(element) {
-    const lines = [{text:'', marked:[]}];
+  function logicalLines(element,{locations=false,original=false}={}) {
+    const blank=()=>({text:'',marked:[],...(locations?{segments:[]}: {})});
+    const lines = [blank()];
     const line = () => lines[lines.length-1];
-    const newline = () => lines.push({text:'', marked:[]});
+    const newline = () => lines.push(blank());
+    function append(raw,marked,node,alias){
+      let offset=0;
+      String(raw).split(/(\r\n|\r|\n)/).forEach((piece,i)=>{
+        if(i%2){newline();offset+=piece.length;return;}
+        const text=piece.replace(/\u00a0/g,' '),start=line().text.length;line().text+=text;
+        if(marked&&text)line().marked.push([start,start+text.length]);
+        if(locations&&text)line().segments.push({start,end:start+text.length,node,offset,element:alias});offset+=piece.length;
+      });
+    }
     function visit(node, marked=false) {
       if (node.nodeType === 3) {
-        const text = String(node.nodeValue || '').replace(/\r\n?/g, '\n').replace(/\u00a0/g, ' ');
-        text.split('\n').forEach((piece,i) => {
-          if (i) newline();
-          const start = line().text.length;
-          line().text += piece;
-          if (marked && piece) line().marked.push([start,start+piece.length]);
-        });
+        append(node.nodeValue||'',marked,node);
         return;
       }
       if (node.nodeType !== 1) return;
@@ -72,6 +76,9 @@
       if (node.tagName === 'BR') { newline(); return; }
       const block = blocks.has(node.tagName);
       if (block && line().text) newline();
+      if(original&&typeof node.__ls26OriginalChordText==='string'){
+        append(node.__ls26OriginalChordText,true,null,node);if(block&&line().text)newline();return;
+      }
       const chordMarkup = node.matches(explicit) ||
         (node.matches('span,b,strong') && Boolean(parse(node.textContent)));
       for (const child of node.childNodes) visit(child, marked || chordMarkup);
@@ -184,5 +191,5 @@
     return Object.freeze({update(extracted,options){current=reconcile(current,extracted,options);return copy(current);},
       snapshot(){return current ? copy(current) : {version:1,events:[],unresolved:[],needsReview:false};}});
   }
-  return Object.freeze({parse,isChord:value=>Boolean(parse(value)),transpose,extractSections,reconcile,createModel});
+  return Object.freeze({parse,isChord:value=>Boolean(parse(value)),transpose,extractSections,logicalLines,reconcile,createModel});
 });

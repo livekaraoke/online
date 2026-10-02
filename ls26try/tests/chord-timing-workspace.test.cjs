@@ -261,3 +261,37 @@ test('actual Creator wiring enables owner Save and ordinary parent Save preserve
  assert.equal(api.snapshot().draft.events[0].durationBeats,1.5);
  assert.equal(e.window.__fixture.calls.filter(c=>c[0]==='set'&&c[1]===path).length,1);
 });
+
+test('timing viewport owns only internal scrolling and restores editor layout without replacing footer',async()=>{
+ const e=await setup(),footer=e.document.createElement('footer');footer.className='ls26-footer';footer.textContent='LiveSuite vFixture';e.document.body.append(footer);
+ e.window.scrollY=275;let restored; e.window.scrollTo=v=>restored=v;
+ e.window.visualViewport={height:780};await e.api.enter();
+ assert.equal(e.document.documentElement.classList.contains('ct-open'),true);assert.equal(e.document.body.style.getPropertyValue('--ct-viewport-height'),'780px');
+ assert.equal(e.document.querySelector('.ls26-footer'),footer);assert.equal(e.document.querySelectorAll('.ls26-footer').length,1);
+ e.window.visualViewport.height=520;e.window.dispatchEvent(new e.window.Event('resize'));assert.equal(e.document.body.style.getPropertyValue('--ct-viewport-height'),'520px');
+ e.window.visualViewport.height=780;e.window.dispatchEvent(new e.window.Event('resize'));assert.equal(e.document.body.style.getPropertyValue('--ct-viewport-height'),'780px');
+ await e.api.exit();assert.equal(e.document.documentElement.classList.contains('ct-open'),false);assert.equal(e.document.body.style.getPropertyValue('--ct-viewport-height'),undefined);assert.equal(restored.top,275);assert.equal(e.document.querySelector('.ls26-footer'),footer);
+ const css=fs.readFileSync(path.join(__dirname,'../host/css/chord-timing-workspace.css'),'utf8');
+ assert.match(css,/body\.creator-page\.ct-open\{[^}]*overflow:hidden!important/);assert.match(css,/100dvh/);assert.match(css,/grid-template-rows:auto minmax\(0,1fr\)/);assert.match(css,/\.ct-song\{[^}]*overflow:auto/);assert.match(css,/body\.ct-open \.ct-reading-area,body\.ct-open \.ct-song\{min-height:0\}/);
+});
+
+test('Performance workspace captures locally, protects shortcuts, undoes taps and saves/reloads one draft',async()=>{
+ const e=await setup();let now=0,clock;
+ e.window.LS26TapTiming=require('../shared/tap-timing.js');e.window.LS26PerformanceTempo=require('../shared/performance-tempo.js');
+ e.window.LS26SongAudio={create({getSettings,onState}){clock=require('../shared/musical-transport.js').create({now:()=>now,bpm:getSettings().bpm});return {...clock,pending:false,refresh(){},async start(options){clock.start(options);onState(clock.snapshot());return true;},async resume(){clock.resume();onState(clock.snapshot());return true;},pause(){clock.pause();onState(clock.snapshot());},stop(){clock.stop();onState(clock.snapshot());}};}};
+ await e.api.enter();assert.equal(e.api.enterPerformance(),true);e.el('ctCountIn').value='0';assert.equal(await e.api.playPerformance(),true);
+ const bpm=clock.snapshot().bpm;now=4*60/bpm;const result=e.api.captureTap();assert.equal(result.duration,4);assert.equal(values(e)[0],4);assert.equal(e.api.performanceSnapshot().session.index,1);
+ assert.equal(e.calls.filter(c=>c[0]==='write').length,0);assert.equal(e.el('ctSave').disabled,true);
+ assert.equal(e.api.undoTap(),true);assert.equal(values(e)[0],undefined);assert.equal(e.api.performanceSnapshot().session.index,0);
+ now=4.5*60/bpm;event(e,e.root,' ');assert.equal(values(e)[0],4.5);assert.equal(event(e,e.el('ctCountIn'),' ').defaultPrevented,false);
+ await e.api.playPerformance();assert.equal(clock.snapshot().state,'paused');const beat=clock.getBeat();now+=10;assert.equal(clock.getBeat(),beat);
+ await e.api.playPerformance();now+=1.5*60/bpm;assert.equal(e.api.captureTap().duration,1.5);assert.equal(values(e)[1],1.5);
+ e.api.stopPerformance();assert.equal(e.api.performanceSnapshot().mode,false);const before=e.api.snapshot().draft.events;
+ e.calls.length=0;assert.equal(await e.api.save(),true);assert.deepEqual(e.calls.map(c=>c[0]),['tx-get','tx-get','write']);await e.api.reload();assert.deepEqual(e.api.snapshot().draft.events,before);
+});
+
+test('custom input compacts the dock and restores it after apply/close',async()=>{
+ const e=await setup();await e.api.enter();click(e,'ctCustomToggle');assert.equal(e.root.classList.contains('ct-custom-open'),true);assert.equal(e.el('ctCustom').hidden,false);
+ e.el('ctCustomValue').value='2.5';e.el('ctCustom').dispatchEvent(new e.window.Event('submit',{bubbles:true,cancelable:true}));assert.equal(values(e)[0],2.5);assert.equal(e.root.classList.contains('ct-custom-open'),false);assert.equal(e.el('ctCustom').hidden,true);
+ click(e,'ctCustomToggle');click(e,'ctCustomToggle');assert.equal(e.root.classList.contains('ct-custom-open'),false);assert.equal(e.calls.filter(c=>c[0]==='write').length,0);
+});

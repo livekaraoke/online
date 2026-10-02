@@ -5,7 +5,7 @@
     const $=id=>document.getElementById(id),engine=window.LS26Metronome;
     const key='ls26:lyricviewMetronomeV1';let saved={};try{saved=JSON.parse(localStorage.getItem(key)||'{}')||{};}catch(_){}
     let options=engine.normalize(saved),follow=saved.follow===true,visual=saved.visual===true,taps=[];
-    let context,master,clock,timer,frame,running=false,starting=false,version=0,queue=[],nodes=new Set();
+    let context,master,clock,timer,frame,running=false,starting=false,version=0,queue=[],nodes=new Set(),songDriver;
     container.innerHTML=`<h3>METRONOME</h3><p class="lv-metro-tempo">Uses Current BPM · <strong id="lvMetroBpm">—</strong></p>
       <div class="lv-metro-actions"><button id="lvMetroStart" type="button" aria-pressed="false">Start click</button><button id="lvMetroTap" type="button">Tap tempo</button></div>
       <label class="lv-metro-check"><input id="lvMetroFollow" type="checkbox"> Follow bottom Play / Pause</label>
@@ -77,10 +77,26 @@
     }
     const current=()=>window.LS26Performance?.getBpm?.()||96;
     const settings=()=>({...options,bpm:current(),countIn:0,accents:Array.from({length:options.beats},(_,i)=>i===0&&$('lvMetroAccent').checked?2:1)});
+    function sharedDriver(){
+      if(!window.LS26SongAudio)return null;
+      if(!songDriver)songDriver=window.LS26SongAudio.create({window,getSettings:()=>{
+        const meter=window.LS26TimedView?.meter?.();return {...settings(),...(window.LS26TimedView?.enabled()&&meter?{beats:meter.beatsPerBar,beatUnit:meter.beatUnit}:{} )};
+      },onClick:event=>queue.push(event),onState:state=>{
+        if(state.state!=='playing'){running=false;starting=false;cancel();$('lvMetroStatus').textContent=state.state==='paused'?'Paused · beat retained':'Stopped';sync();}
+        window.dispatchEvent(new CustomEvent('ls26:transport-state',{detail:state}));
+      }});
+      return songDriver;
+    }
     function persist(){try{localStorage.setItem(key,JSON.stringify({...options,follow,visual,accent:$('lvMetroAccent').checked}));}catch(_) {}}
-    function sync(){ $('lvMetroBpm').textContent=current();$('lvMetroStart').textContent=running?'Stop click':'Start click';$('lvMetroStart').setAttribute('aria-pressed',String(running)); }
+    function sync(){
+      $('lvMetroBpm').textContent=current();$('lvMetroStart').textContent=running?'Stop click':songDriver?.snapshot().state==='paused'?'Resume click':'Start click';$('lvMetroStart').setAttribute('aria-pressed',String(running));
+      const meter=window.LS26TimedView?.enabled()&&window.LS26TimedView.meter();
+      $('lvMetroBeats').disabled=Boolean(meter);$('lvMetroBeats').value=meter?.beatsPerBar||options.beats;
+      $('lvMetroBeats').title=meter?`Uses song meter ${meter.beatsPerBar}/${meter.beatUnit} while Chord Follow is on`:'';
+    }
     function cancel(){clearInterval(timer);cancelAnimationFrame(frame);clearVisual();queue=[];for(const node of nodes){try{node.stop();}catch(_){}}nodes.clear();$('lvMetroBeat').classList.remove('active');}
-    function stop(message='Stopped'){version++;running=false;starting=false;cancel();if(master){master.gain.cancelScheduledValues(context.currentTime);master.gain.setValueAtTime(0,context.currentTime);}$('lvMetroStart').disabled=false;$('lvMetroStatus').textContent=message;sync();}
+    function stop(message='Stopped'){version++;running=false;starting=false;cancel();songDriver?.stop();if(master){master.gain.cancelScheduledValues(context.currentTime);master.gain.setValueAtTime(0,context.currentTime);}$('lvMetroStart').disabled=false;$('lvMetroStatus').textContent=message;sync();}
+    function pause(){version++;running=false;starting=false;cancel();songDriver?.pause();$('lvMetroStart').disabled=false;$('lvMetroStatus').textContent='Paused · beat retained';sync();}
     function emit(event){
       queue.push(event);if(!event.settings.volume)return;
       const osc=context.createOscillator(),gain=context.createGain(),time=event.time;
@@ -99,6 +115,11 @@
       if(running||starting||!window.LS26Performance?.song())return;
       const token=++version;starting=true;$('lvMetroStart').disabled=true;
       try{
+        const driver=sharedDriver();
+        if(driver){
+          const ok=await (driver.snapshot().state==='paused'?driver.resume():driver.start());if(token!==version||!ok)return;
+          context=driver.context;running=true;starting=false;draw();sync();$('lvMetroStatus').textContent='Playing';return;
+        }
         const Audio=window.AudioContext||window.webkitAudioContext;if(!Audio)throw Error('Audio is unavailable in this browser.');
         if(!context){context=new Audio();master=context.createGain();master.connect(context.destination);context.onstatechange=()=>{if(running&&context.state!=='running')stop('Audio paused. Tap Start click to resume.');};}
         // Called directly during the Play/tap gesture, before any database awaits.
@@ -117,16 +138,16 @@
     $('lvMetroFollow').onchange=e=>{follow=e.target.checked;persist();if(follow){if(window.LS26Performance?.isScrolling())start();else stop();}};
     $('lvMetroVisual').onchange=e=>{visual=e.target.checked;persist();if(!visual)clearVisual();};
     $('lvMetroAccent').onchange=persist;
-    for(const [id,name] of [['lvMetroBeats','beats'],['lvMetroDivision','division']])$(id).onchange=e=>{options=engine.normalize({...options,[name]:e.target.value});persist();if(running){cancel();clock=new engine.Clock(settings,emit);clock.start(context.currentTime+.05);timer=setInterval(()=>clock.schedule(context.currentTime),25);draw();}};
-    $('lvMetroVolume').oninput=e=>{options.volume=Number(e.target.value);$('lvMetroVolumeLabel').textContent=options.volume+'%';persist();if(running)master.gain.setTargetAtTime(options.volume/100,context.currentTime,.01);};
-    window.addEventListener('ls26:tempo-changed',sync);
+    for(const [id,name] of [['lvMetroBeats','beats'],['lvMetroDivision','division']])$(id).onchange=e=>{options=engine.normalize({...options,[name]:e.target.value});persist();if(running){cancel();if(songDriver)songDriver.refresh();else{clock=new engine.Clock(settings,emit);clock.start(context.currentTime+.05);timer=setInterval(()=>clock.schedule(context.currentTime),25);}draw();}};
+    $('lvMetroVolume').oninput=e=>{options.volume=Number(e.target.value);$('lvMetroVolumeLabel').textContent=options.volume+'%';persist();if(songDriver)songDriver.refresh();else if(running)master.gain.setTargetAtTime(options.volume/100,context.currentTime,.01);};
+    window.addEventListener('ls26:tempo-changed',()=>{sync();if(songDriver){queue=[];songDriver.setBpm(current());}});
     window.addEventListener('ls26:settings-applied',applyVisualSettings);
-    window.addEventListener('ls26:scroll-state',e=>{if(follow){if(e.detail.playing)start();else stop();}});
+    window.addEventListener('ls26:scroll-state',e=>{if(follow||window.LS26TimedView?.enabled()){if(e.detail.playing)start();else if(songDriver)pause();else stop();}});
     window.addEventListener('ls26:song-ready',()=>{stop();taps=[];sync();});
-    window.addEventListener('ls26:song-finished',()=>stop());
+    window.addEventListener('ls26:song-finished',()=>songDriver&&window.LS26TimedView?.enabled()?pause():stop());
     window.addEventListener('pagehide',()=>stop());
-    document.addEventListener('visibilitychange',()=>{if(document.hidden&&(running||starting))stop('Paused while hidden. Tap Start click to resume.');});
-    applyVisualSettings();sync();return {stop};
+    document.addEventListener('visibilitychange',()=>{if(document.hidden&&(running||starting)){if(songDriver)pause();else stop('Paused while hidden. Tap Start click to resume.');}});
+    applyVisualSettings();sync();const api={stop,pause,start,driver:sharedDriver};window.LS26Click=api;return api;
   }
   window.LS26LyricMetronome={mount};
 })();

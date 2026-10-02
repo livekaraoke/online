@@ -2483,3 +2483,11 @@ body.host-lyric-view-page {
   color:#7dffbc!important;
   box-shadow:0 0 18px rgba(33,217,135,.12)!important;
 }
+/* Optional timing controls use the existing dock; source HTML remains untouched. */
+.host-scroll-player #chordFollowBtn,.host-scroll-player #rejoinChordBtn,.host-scroll-player #resetChordTimingBtn{min-height:48px;padding:8px 12px;font-size:14px;font-weight:800;white-space:normal;border:1px solid var(--ls-border);border-radius:7px;background:var(--ls-panel);color:var(--ls-text)}
+.host-scroll-player #chordFollowBtn.active{border-color:var(--ls-accent);color:var(--ls-accent)}
+.host-scroll-player #rejoinChordBtn{border-color:var(--ls-warning);color:var(--ls-warning)}
+#chordFollowStatus{font-size:13px;color:var(--ls-muted);max-width:240px;overflow-wrap:anywhere}
+.host-section-body .ls26-active-chord{outline:2px solid var(--ls-accent);outline-offset:3px;border-radius:4px;background:#00cafa25!important;box-shadow:0 0 0 4px #00cafa15;color:var(--ls-accent)!important}
+@media(min-width:601px) and (max-width:1180px){.host-scroll-player:has(#chordFollowBtn){flex-wrap:wrap!important;gap:5px!important}#chordFollowStatus{max-width:180px;font-size:12px}.host-scroll-player #chordFollowBtn,.host-scroll-player #rejoinChordBtn,.host-scroll-player #resetChordTimingBtn{padding-inline:8px;font-size:13px}}
+@media(max-width:600px){.host-scroll-player:has(#chordFollowBtn){flex-wrap:wrap!important;gap:4px!important}#chordFollowStatus{flex-basis:100%;max-width:none;text-align:center;font-size:12px}}

@@ -1160,6 +1160,9 @@
   function queueSingerSync(force = false) {
     clearTimeout(singerSyncTimer);
     singerSyncTimer = null;
+    // Chord transport/highlighting/positioning remain entirely local. The
+    // existing pixel-scroll singer sync remains available in fallback mode.
+    if(window.LS26TimedView?.enabled())return;
 
     if (!currentSongId) return;
     if (!singerScrollSyncEnabled() && !force) return;
@@ -1446,6 +1449,9 @@
 
   function updateSectionProgress() {
     if (!sectionEls.length) return;
+    if(window.LS26TimedView?.enabled()){
+      updateGuitarTuningStickyState();updateQuickToolsStickyState();return;
+    }
 
     const anchor=performanceActivationAnchor();
 
@@ -2779,11 +2785,13 @@
     }
 
     if (autoScrollOn) {
+      if(window.LS26TimedView?.enabled())return;
       let last = performance.now();
       let fractionalY = 0;
 
       const tick = now => {
         if (!autoScrollOn) return;
+        if(window.LS26TimedView?.enabled())return;
 
         const dt = Math.min(50, Math.max(0, now - last));
         last = now;
@@ -3155,6 +3163,19 @@
         flushTempo:flushPerformanceTempo,
         nextDetails:renderEndNextSongDetails
       };
+      if(window.LS26ChordFollow){
+        window.LS26TimedView=window.LS26ChordFollow.mount({document,window,songId:currentSongId,getSong:()=>currentSong,
+          store:window.LS26TimingStore.create({db,document}),getAudio:()=>window.LS26Click?.driver(),onTranspose:applyChordTranspose,
+          onEnabled:()=>{if(autoScrollOn)startAutoScroll();},onFinish:()=>{void stopAutoScrollAtEnd();},
+          onSection:sourceIndex=>{
+            const index=sectionEls.findIndex(el=>Number(el.dataset.sectionIndex)===sourceIndex);if(index<0)return;
+            const changed=currentSectionIndex!==index;currentSectionIndex=index;
+            sectionEls.forEach((el,i)=>el.classList.toggle('current-section',i===index));
+            [...$("sectionProgress").children].forEach(el=>el.classList.toggle('active',Number(el.dataset.visibleIndex)===index&&!el.classList.contains('session-hidden')));
+            updateSectionFocusOpacity();if(changed)centerActiveProgressSection(true);
+          }
+        });
+      }
       window.dispatchEvent(new Event("ls26:song-ready"));
     } catch (err) {
       console.error(err);
@@ -3163,6 +3184,12 @@
   }
 
   window.addEventListener("pagehide",()=>{performanceTempo?.flush();});
+  window.addEventListener('ls26:transport-state',event=>{
+    if(!window.LS26TimedView?.enabled()||event.detail.state==='playing')return;
+    autoScrollOn=false;if(scrollTimer){cancelAnimationFrame(scrollTimer);scrollTimer=null;}
+    $('autoScrollBtn')?.classList.remove('active');
+    if($('autoScrollBtn')){$('autoScrollBtn').innerHTML='<svg class="ls26-play-icon" viewBox="0 0 32 32" aria-hidden="true"><path d="M7 3 29 16 7 29Z"/></svg>';$('autoScrollBtn').setAttribute('aria-label','Resume timed playback');}
+  });
   document.addEventListener("visibilitychange",()=>{if(document.hidden)performanceTempo?.flush();});
   document.addEventListener("DOMContentLoaded", init);
 })();
