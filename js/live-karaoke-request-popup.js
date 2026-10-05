@@ -3,7 +3,9 @@
 
   if (!/\/online\/(?:index\.html)?$/i.test(location.pathname)) return;
 
-  const FRAME_URL = "billylee26/?liveKaraokeMode=1#req";
+  // Dedicated duplicate of the BillyLee26 request experience for Live Karaoke.
+  // This intentionally does NOT load billylee26/.
+  const FRAME_URL = "livekaraoke26/#req";
   let overlay = null;
 
   function closePopup() {
@@ -32,9 +34,6 @@
     document.documentElement.classList.add("live-karaoke-request-open");
   }
 
-  // Expose the opener so the early landing-page guard can call it directly.
-  // This keeps REQUEST / SIGN UP in the current page instead of allowing the
-  // anchor's old href/target behaviour to win on mobile browsers.
   window.openLiveKaraokeRequestPopup = openPopup;
   window.closeLiveKaraokeRequestPopup = closePopup;
 
@@ -72,13 +71,9 @@
   });
 
   window.addEventListener("keydown", event => {
-    if (event.key === "Escape" && overlay) {
-      const dialog = overlay.querySelector("iframe")?.contentDocument?.getElementById("requestDialog");
-      if (!dialog?.open) closePopup();
-    }
+    if (event.key === "Escape" && overlay) closePopup();
   });
 
-  // Keep the links neutral even when renderSongAccess() rewrites their href.
   const observer = new MutationObserver(() => normaliseRequestLinks());
   observer.observe(document.documentElement, {
     subtree: true,
