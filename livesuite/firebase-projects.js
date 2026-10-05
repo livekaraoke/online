@@ -60,4 +60,13 @@
 
   window.LK_FIREBASE_CONFIG = getSelectedConfig();
   window.LK_FIREBASE_PROJECT = getSelectedKey();
+
+  // The public Live Karaoke landing page uses the same request experience as
+  // BillyLee26, adapted at runtime to the active Live Karaoke session.
+  if (/\/online\/(?:index\.html)?$/i.test(location.pathname)) {
+    const script = document.createElement("script");
+    script.src = new URL("../js/live-karaoke-request-popup.js?v=20261006-v1", document.currentScript?.src || location.href).href;
+    script.async = true;
+    document.head.appendChild(script);
+  }
 })();
