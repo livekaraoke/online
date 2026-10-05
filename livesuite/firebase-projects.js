@@ -64,9 +64,31 @@
   // The public Live Karaoke landing page uses the same request experience as
   // BillyLee26, adapted at runtime to the active Live Karaoke session.
   if (/\/online\/(?:index\.html)?$/i.test(location.pathname)) {
+    // Intercept the request links immediately, before the popup module finishes
+    // loading. This prevents Android/mobile browsers from following the old
+    // song-list href (or any stale target=_blank) during the short load window.
+    document.addEventListener("click", event => {
+      const button = event.target.closest?.("#heroRequestBtn,#songListBtn");
+      if (!button) return;
+      const disabled = button.getAttribute("aria-disabled") === "true" || button.classList.contains("disabled-button");
+      if (disabled) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+      button.setAttribute("href", "#");
+      button.removeAttribute("target");
+
+      if (typeof window.openLiveKaraokeRequestPopup === "function") {
+        window.openLiveKaraokeRequestPopup();
+      } else {
+        window.__liveKaraokeRequestOpenPending = true;
+      }
+    }, true);
+
     const script = document.createElement("script");
-    script.src = new URL("../js/live-karaoke-request-popup.js?v=20261006-v1", document.currentScript?.src || location.href).href;
-    script.async = true;
+    script.src = new URL("../js/live-karaoke-request-popup.js?v=20261006-v2", document.currentScript?.src || location.href).href;
+    script.async = false;
     document.head.appendChild(script);
   }
 })();
