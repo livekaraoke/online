@@ -1,15 +1,9 @@
 /*
-  Billy Lee YouTube video list.
+  Live Karaoke request app copy.
 
-  Paste each YouTube video URL into `url` below. The website automatically:
-  - extracts the video ID
-  - loads the thumbnail from YouTube
-  - opens the video inside the Billy Lee website
-
-  The embedded player is sandboxed and has no clickable YouTube controls, links,
-  channel/account navigation, or popup/top-navigation permissions.
-
-  You can add/remove/reorder entries freely.
+  This directory is an independent duplicate of the BillyLee26 request experience.
+  It uses the same design/functionality, but is permanently adapted to the Live Karaoke
+  session/settings/storage namespace and does not depend on the BillyLee26 runtime.
 */
 window.BILLY_LEE_YOUTUBE_VIDEOS = [
   {
@@ -34,13 +28,9 @@ window.BILLY_LEE_YOUTUBE_VIDEOS = [
   }
 ];
 
-/*
-  Live Karaoke embed mode reuses the BillyLee26 request UI verbatim while
-  keeping its data/settings/profile namespace separate. This runs before
-  app.js, so app.js sees the adapted Firestore and localStorage interfaces.
-*/
 (() => {
-  const liveKaraokeMode = new URLSearchParams(location.search).get("liveKaraokeMode") === "1";
+  // This duplicated app is always the Live Karaoke variant.
+  const liveKaraokeMode = true;
   if (!liveKaraokeMode) return;
 
   document.documentElement.classList.add("live-karaoke-request-embed");
@@ -125,9 +115,6 @@ window.BILLY_LEE_YOUTUBE_VIDEOS = [
       }
     });
 
-    // The main Live Karaoke page can explicitly lock the public list. If that
-    // happens while the embedded request UI is open, close it immediately so
-    // the reused Billy request code cannot bypass the host's lock.
     realDb.collection("karaoke").doc("state").onSnapshot(snapshot => {
       const state = snapshot.exists ? (snapshot.data() || {}) : {};
       if (state.songsOverride && state.songsEnabled !== true) {
@@ -166,8 +153,6 @@ window.BILLY_LEE_YOUTUBE_VIDEOS = [
   });
 })();
 
-// Request popup enhancements are kept in a dedicated module and loaded here so
-// existing page markup stays unchanged.
 (() => {
   const script = document.createElement("script");
   script.src = "js/request-ui-extras.js?v=20261006-favs-card-width";
