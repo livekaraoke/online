@@ -54,8 +54,6 @@ window.BILLY_LEE_YOUTUBE_VIDEOS = [
   `;
   document.head.appendChild(style);
 
-  // Give Live Karaoke its own saved profile/favourites while preserving the
-  // exact BillyLee26 request code and UI.
   if (!window.__liveKaraokeStorageMapped) {
     window.__liveKaraokeStorageMapped = true;
     const proto = window.Storage?.prototype;
@@ -73,9 +71,6 @@ window.BILLY_LEE_YOUTUBE_VIDEOS = [
     }
   }
 
-  // Map only the Billy website-settings document and request source metadata.
-  // All session/public-list/run-order paths remain the real shared LiveSuite
-  // paths, so the popup follows the active Live Karaoke session.
   const realDb = window.BillyLeeDB;
   if (realDb && !window.__liveKaraokeDbMapped) {
     window.__liveKaraokeDbMapped = true;
@@ -129,10 +124,20 @@ window.BILLY_LEE_YOUTUBE_VIDEOS = [
         return bindValue(target, prop);
       }
     });
+
+    // The main Live Karaoke page can explicitly lock the public list. If that
+    // happens while the embedded request UI is open, close it immediately so
+    // the reused Billy request code cannot bypass the host's lock.
+    realDb.collection("karaoke").doc("state").onSnapshot(snapshot => {
+      const state = snapshot.exists ? (snapshot.data() || {}) : {};
+      if (state.songsOverride && state.songsEnabled !== true) {
+        const dialog = document.getElementById("requestDialog");
+        if (dialog?.open) dialog.close();
+        else window.parent?.postMessage({ type: "live-karaoke-request-close" }, location.origin);
+      }
+    }, () => {});
   }
 
-  // Open the exact existing request dialog once BillyLee26 has initialised,
-  // then tell the parent landing page when its X/Escape closes it.
   window.addEventListener("DOMContentLoaded", () => {
     let attempts = 0;
     const timer = setInterval(() => {
