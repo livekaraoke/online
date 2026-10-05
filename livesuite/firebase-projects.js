@@ -61,12 +61,10 @@
   window.LK_FIREBASE_CONFIG = getSelectedConfig();
   window.LK_FIREBASE_PROJECT = getSelectedKey();
 
-  // The public Live Karaoke landing page uses the same request experience as
-  // BillyLee26, adapted at runtime to the active Live Karaoke session.
   if (/\/online\/(?:index\.html)?$/i.test(location.pathname)) {
-    // Intercept the request links immediately, before the popup module finishes
-    // loading. This prevents Android/mobile browsers from following the old
-    // song-list href (or any stale target=_blank) during the short load window.
+    // Own the REQUEST / SIGN UP click immediately. The old song-list href is
+    // never allowed to navigate; the dedicated Live Karaoke duplicate is
+    // opened inside an overlay on this same page.
     document.addEventListener("click", event => {
       const button = event.target.closest?.("#heroRequestBtn,#songListBtn");
       if (!button) return;
@@ -78,6 +76,7 @@
       event.stopImmediatePropagation();
       button.setAttribute("href", "#");
       button.removeAttribute("target");
+      button.removeAttribute("rel");
 
       if (typeof window.openLiveKaraokeRequestPopup === "function") {
         window.openLiveKaraokeRequestPopup();
@@ -86,8 +85,18 @@
       }
     }, true);
 
+    const neutralise = () => {
+      document.querySelectorAll?.("#heroRequestBtn,#songListBtn").forEach(button => {
+        if (button.getAttribute("aria-disabled") === "true" || button.classList.contains("disabled-button")) return;
+        button.setAttribute("href", "#");
+        button.removeAttribute("target");
+        button.removeAttribute("rel");
+      });
+    };
+    document.addEventListener("DOMContentLoaded", neutralise, { once:true });
+
     const script = document.createElement("script");
-    script.src = new URL("../js/live-karaoke-request-popup.js?v=20261006-v2", document.currentScript?.src || location.href).href;
+    script.src = new URL("../js/live-karaoke-request-popup.js?v=20261006-dedicated-v1", document.currentScript?.src || location.href).href;
     script.async = false;
     document.head.appendChild(script);
   }
