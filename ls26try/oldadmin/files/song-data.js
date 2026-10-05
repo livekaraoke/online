@@ -554,7 +554,7 @@ const songs = [
     hasLyrics: true
   },
   {
-    title: "Caroline",
+    title: "Caroline*",
     artist: "Status Quo",
     url: "lyrics/song.html?id=caroline",
     year: 1973,
