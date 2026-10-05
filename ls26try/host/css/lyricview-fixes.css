@@ -2483,11 +2483,29 @@ body.host-lyric-view-page {
   color:#7dffbc!important;
   box-shadow:0 0 18px rgba(33,217,135,.12)!important;
 }
-/* Optional timing controls use the existing dock; source HTML remains untouched. */
-.host-scroll-player #chordFollowBtn,.host-scroll-player #rejoinChordBtn,.host-scroll-player #resetChordTimingBtn{min-height:48px;padding:8px 12px;font-size:14px;font-weight:800;white-space:normal;border:1px solid var(--ls-border);border-radius:7px;background:var(--ls-panel);color:var(--ls-text)}
-.host-scroll-player #chordFollowBtn.active{border-color:var(--ls-accent);color:var(--ls-accent)}
-.host-scroll-player #rejoinChordBtn{border-color:var(--ls-warning);color:var(--ls-warning)}
-#chordFollowStatus{font-size:13px;color:var(--ls-muted);max-width:240px;overflow-wrap:anywhere}
+/* Stabilized performance dock. Higher specificity deliberately wins over the
+   older fixed heights/widths in performance.css, which loads after this file. */
+body.host-lyric-view-page{--ls26-footer-height:calc(40px + env(safe-area-inset-bottom,0px));--lv-dock-height:160px;padding-bottom:calc(var(--lv-dock-height) + var(--ls26-footer-height) + 24px)!important}
+body.host-lyric-view-page > .ls26-footer{height:var(--ls26-footer-height)!important;padding:3px 12px calc(3px + env(safe-area-inset-bottom,0px))!important;display:flex!important;align-items:center!important;justify-content:center!important;box-sizing:border-box!important}
+body.host-lyric-view-page > .ls26-footer .ls26-brand{height:30px!important;width:112px!important}
+body.host-lyric-view-page .host-bottom-dock{display:grid!important;grid-template-columns:minmax(0,1fr)!important;grid-template-rows:auto auto auto!important;gap:6px!important;height:auto!important;min-height:0!important;max-height:none!important;box-sizing:border-box!important;bottom:calc(var(--ls26-footer-height) + 6px)!important;left:10px!important;right:10px!important;padding:8px!important;overflow:visible!important}
+body.host-lyric-view-page .host-bottom-dock .host-scroll-player{display:grid!important;grid-template-columns:56px 110px 48px 60px 48px minmax(0,1fr)!important;align-items:center!important;justify-content:normal!important;height:auto!important;min-height:48px!important;gap:8px!important;padding:0!important;min-width:0!important;overflow:visible!important}
+body.host-lyric-view-page .host-bottom-dock .host-scroll-player button{width:auto!important;min-width:0!important;height:48px!important;min-height:48px!important;max-height:none!important;box-sizing:border-box!important;padding:6px 10px!important;white-space:nowrap!important;font-size:14px!important;line-height:1.15!important;flex-shrink:0!important}
+body.host-lyric-view-page .host-bottom-dock .host-scroll-player #autoScrollBtn{width:56px!important;min-width:56px!important;height:56px!important;min-height:56px!important;align-self:center!important}
+body.host-lyric-view-page .host-bottom-dock .host-scroll-player #scrollSpeedDown,body.host-lyric-view-page .host-bottom-dock .host-scroll-player #scrollSpeedUp{width:48px!important;min-width:48px!important;height:48px!important;min-height:48px!important;font-size:25px!important;padding:0!important}
+body.host-lyric-view-page .host-bottom-dock #scrollSpeedLabel{text-align:center!important;white-space:nowrap!important;font-size:17px!important}
+body.host-lyric-view-page .host-bottom-dock .chord-follow-actions{display:flex;gap:8px;justify-content:flex-end;align-items:center;min-width:0}
+body.host-lyric-view-page .host-bottom-dock .chord-follow-actions button{font-size:13px!important;font-weight:800!important;border:1px solid var(--ls-border)!important;border-radius:7px!important;background:var(--ls-panel)!important;color:var(--ls-text)!important}
+body.host-lyric-view-page .host-bottom-dock #chordFollowBtn{min-width:116px!important}
+body.host-lyric-view-page .host-bottom-dock #chordFollowBtn.active{border-color:var(--ls-accent)!important;color:var(--ls-accent)!important}
+body.host-lyric-view-page .host-bottom-dock #rejoinChordBtn{border-color:var(--ls-warning)!important;color:var(--ls-warning)!important}
+body.host-lyric-view-page .host-bottom-dock [hidden]{display:none!important}
+body.host-lyric-view-page .host-bottom-dock #sectionProgress.host-section-progress{height:auto!important;min-height:44px!important;max-width:100%!important;width:100%!important;min-width:0!important;box-sizing:border-box!important;overflow-x:auto!important;overflow-y:hidden!important;padding:4px!important}
+body.host-lyric-view-page .host-bottom-dock #chordFollowStatus{margin:0!important;max-width:none!important;min-width:0!important;width:auto!important;height:auto!important;white-space:pre-line!important;overflow:visible!important;overflow-wrap:anywhere!important;line-height:1.4!important;font-size:14px!important;color:var(--ls-muted)!important;padding:3px 6px!important}
+body.host-lyric-view-page .host-bottom-dock #chordFollowStatus.is-unavailable{padding:8px 12px!important;background:var(--ls-panel)!important;border-left:3px solid var(--ls-warning);border-radius:5px;color:var(--ls-text)!important}
+body.host-lyric-view-page .host-nav-pad{bottom:calc(var(--lv-dock-height) + var(--ls26-footer-height) + 20px)!important}
 .host-section-body .ls26-active-chord{outline:2px solid var(--ls-accent);outline-offset:3px;border-radius:4px;background:#00cafa25!important;box-shadow:0 0 0 4px #00cafa15;color:var(--ls-accent)!important}
-@media(min-width:601px) and (max-width:1180px){.host-scroll-player:has(#chordFollowBtn){flex-wrap:wrap!important;gap:5px!important}#chordFollowStatus{max-width:180px;font-size:12px}.host-scroll-player #chordFollowBtn,.host-scroll-player #rejoinChordBtn,.host-scroll-player #resetChordTimingBtn{padding-inline:8px;font-size:13px}}
-@media(max-width:600px){.host-scroll-player:has(#chordFollowBtn){flex-wrap:wrap!important;gap:4px!important}#chordFollowStatus{flex-basis:100%;max-width:none;text-align:center;font-size:12px}}
+@media(max-width:900px){body.host-lyric-view-page .host-bottom-dock .host-scroll-player{grid-template-columns:56px minmax(96px,1fr) 48px 60px 48px!important}body.host-lyric-view-page .host-bottom-dock .chord-follow-actions{grid-column:1/-1;display:grid;grid-template-columns:minmax(116px,1fr) minmax(110px,1fr) minmax(96px,1fr);justify-content:normal}}
+@media(max-width:600px){body.host-lyric-view-page .host-bottom-dock{left:5px!important;right:5px!important;padding:6px!important}body.host-lyric-view-page .host-bottom-dock .host-scroll-player{gap:5px!important}body.host-lyric-view-page .host-bottom-dock #chordFollowStatus{font-size:13px!important}}
+
+@media(max-width:900px){body.host-lyric-view-page .chord-follow-actions #chordFollowBtn{grid-column:1;grid-row:1}body.host-lyric-view-page .chord-follow-actions #rejoinChordBtn{grid-column:2;grid-row:1}body.host-lyric-view-page .chord-follow-actions #resetChordTimingBtn{grid-column:3;grid-row:1}}

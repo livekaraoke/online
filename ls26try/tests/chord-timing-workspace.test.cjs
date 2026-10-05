@@ -295,3 +295,30 @@ test('custom input compacts the dock and restores it after apply/close',async()=
  e.el('ctCustomValue').value='2.5';e.el('ctCustom').dispatchEvent(new e.window.Event('submit',{bubbles:true,cancelable:true}));assert.equal(values(e)[0],2.5);assert.equal(e.root.classList.contains('ct-custom-open'),false);assert.equal(e.el('ctCustom').hidden,true);
  click(e,'ctCustomToggle');click(e,'ctCustomToggle');assert.equal(e.root.classList.contains('ct-custom-open'),false);assert.equal(e.calls.filter(c=>c[0]==='write').length,0);
 });
+
+test('identical saved timing and navigation stay clean with no switch dialog',async()=>{
+ const e=await setup({html:'G D G C',savedHtml:'G D G C'});await e.api.enter();e.api.select(2);e.api.select(0);
+ assert.equal(e.api.snapshot().dirty,false);assert.equal(e.api.snapshot().manualDirty,false);assert.equal(e.api.snapshot().sourceChanged,false);assert.equal(e.el('ctSave').hidden,false);assert.equal(e.el('ctSave').disabled,true);
+ assert.equal(await e.api.exit(),true);assert.equal(e.confirmations.length,0);
+});
+test('source-only safe reconciliation is an update, not a manual edit or unload warning',async()=>{
+ const e=await setup({html:'G D<br>New words',savedHtml:'G D<br>Old words'});await e.api.enter();
+ assert.equal(e.api.snapshot().sourceChanged,true);assert.equal(e.api.snapshot().manualDirty,false);assert.equal(e.api.snapshot().needsReview,false);assert.equal(e.el('ctSave').disabled,false);
+ const unload=new e.window.Event('beforeunload',{cancelable:true});e.window.dispatchEvent(unload);assert.equal(unload.defaultPrevented,false);
+ await e.api.exit();assert.equal(e.confirmations[0].options.title,'Timing needs update');assert.match(e.confirmations[0].text,/chord structure changed/);
+ await e.api.enter();e.api.step(.5);assert.equal(e.api.snapshot().manualDirty,true);e.api.undo();assert.equal(e.api.snapshot().manualDirty,false);assert.equal(e.api.snapshot().sourceChanged,true);
+});
+test('new chords are untimed, safe timings are retained, and review counts distinguish them',async()=>{
+ const e=await setup({html:'G D<br>C Em<br>A F',savedHtml:'G D<br>C Em'});await e.api.enter();const state=e.api.snapshot();
+ assert.equal(state.total,6);assert.equal(state.timed,4);assert.equal(state.untimed,2);assert.equal(state.unresolved,0);assert.equal(state.manualDirty,false);assert.equal(state.needsReview,false);
+ assert.deepEqual(values(e),[.5,1,1.5,2,undefined,undefined]);click(e,'ctReviewToggle');assert.match(e.el('ctReviewSummary').textContent,/2 new chords/);assert.match(e.el('ctReviewSummary').textContent,/4 current chords have safe durations/);
+});
+test('real repeated-chord ambiguity stays in review without pretending manual edits occurred',async()=>{
+ const e=await setup({html:'G D G G C',savedHtml:'G D G C'});await e.api.enter();const state=e.api.snapshot();assert.equal(state.needsReview,true);assert.equal(state.manualDirty,false);assert.equal(state.unresolved,4);
+ assert.match(e.el('ctStatus').textContent,/4 previous chord timings need review/);assert.equal(e.el('ctSave').disabled,false);
+ assert.equal(await e.api.save(),true);assert.equal(e.api.snapshot().dirty,false);assert.equal(e.api.snapshot().needsReview,true);assert.equal(e.el('ctSave').disabled,true);assert.equal(e.api.snapshot().draft.unresolved.length,4);
+});
+test('genuine chord additions remain in the source model rather than restoring an older count',async()=>{
+ const e=await setup({html:Array.from({length:67},(_,i)=>i%2?'D':'G').join(' '),savedHtml:Array.from({length:25},(_,i)=>i%2?'D':'G').join(' ')});await e.api.enter();assert.equal(e.api.snapshot().total,67);assert.equal(e.root.querySelectorAll('[data-ct-index]').length,67);assert.equal(e.api.snapshot().manualDirty,false);assert.equal(e.calls.length,1);
+});
+test('persisted unresolved review alone is clean and switching tabs does not show an unsaved modal',async()=>{const e=await setup({html:'G D G G C',savedHtml:'G D G C'});await e.api.enter();await e.api.save();await e.api.reload();assert.equal(e.api.snapshot().needsReview,true);assert.equal(e.api.snapshot().dirty,false);assert.equal(e.api.snapshot().manualDirty,false);assert.equal(e.api.snapshot().sourceChanged,false);assert.equal(await e.api.exit(),true);assert.equal(e.confirmations.length,0);});

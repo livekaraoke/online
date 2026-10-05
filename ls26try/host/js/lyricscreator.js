@@ -35,6 +35,8 @@
     return {...(loadedSong || {}), sections:currentSections, timeSignature:$("timeSignatureInput").value,userBpm:$("userBpmInput").value,originalBpm:$("originalBpmInput").value};
   }
   let dirty = false;
+  let songSaving = false, editVersion = 0;
+  function syncSaveButton(){$("saveSongBtn").disabled=songSaving||!dirty;}
   let activeEditor = null;
   let savedRange = null;
   let internalClipboard = null;
@@ -612,13 +614,14 @@
   }
 
   function updateEditingStatus() {
+    syncSaveButton();
     const title = $("songTitleInput").value.trim() || "New Song";
     const artist = ArtistNames.display($("artistInput").value);
     $("creatorStatus").textContent = `Editing: ${title}${artist ? ` - ${artist}` : ""}`;
   }
 
   function markDirty() {
-    dirty = true;
+    dirty = true;editVersion++;
     updateEditingStatus();
     if (!historyApplying) {
       clearTimeout(markDirty._historyTimer);
@@ -1652,15 +1655,12 @@
   }
 
   async function leaveWithoutSaving() {
-    if (!dirty) {
-      history.back();
-      return;
+    const timing=window.LS26CreatorTiming?.snapshot();
+    if (dirty||timing?.manualDirty||timing?.sourceChanged) {
+      const text=dirty&&timing?.manualDirty?'Unsaved song and timing edits will be lost. Leave this page?':timing?.manualDirty?'Unsaved timing edits will be lost. Leave this page?':dirty?'Unsaved song changes will be lost. Leave this page?':'Timing needs update because the song changed. Saved timing remains available for review when you return. Leave this page?';
+      if(!await window.LS26Dialogs.confirm(text,{title:dirty||timing?.manualDirty?'Unsaved changes':'Timing needs update',confirmText:'LEAVE PAGE'})){syncSaveButton();return false;}
     }
-    const ok = await showConfirm("Discard Changes?", "Are you sure you want to cancel? All unsaved changes will be lost.");
-    if (ok) {
-      dirty = false;
-      history.back();
-    }
+    dirty=false;syncSaveButton();window.LS26CreatorTiming?.permitNavigation();history.back();return true;
   }
 
 
@@ -1770,6 +1770,7 @@
       updateEditingStatus();
       render();
       dirty = false;
+      syncSaveButton();
       return;
     }
 
@@ -1831,10 +1832,25 @@
     updateEditingStatus();
     render();
     dirty = migrationNeedsManualSave;
+    syncSaveButton();
   }
 
   async function save() {
+    if(songSaving)return false;
+    songSaving=true;syncSaveButton();
+    try{
+      const timing=window.LS26CreatorTiming?.snapshot();let saveBoth=false;
+      if(dirty&&timing?.manualDirty){
+        const decision=await window.LS26Dialogs.choose('Save both the song and timing, or save only the song and keep your timing draft here? Unresolved timing stays flagged for review.',{title:'Unsaved song and timing',choices:[{value:'both',label:'SAVE BOTH'},{value:'song',label:'SAVE SONG ONLY'}]});
+        if(!decision)return false;saveBoth=decision==='both';
+      }
+      return await saveSongRecord(saveBoth);
+    }finally{songSaving=false;syncSaveButton();}
+  }
+
+  async function saveSongRecord(saveBoth=false) {
     syncSectionsFromDOM();
+    const savedEditVersion=editVersion;
     const title = $("songTitleInput").value.trim();
     const artist = ArtistNames.display($("artistInput").value);
     if (!title || !artist) {
@@ -1904,12 +1920,24 @@
         );
       }
 
-      dirty = false;
-      location.href = `lyricview.html?id=${encodeURIComponent(id)}`;
+      dirty = editVersion!==savedEditVersion;loadedSong=data;syncSaveButton();
+      if(dirty){window.LS26?.toast('Song saved. New edits made during saving are still unsaved; save again before saving timing.');return true;}
+      const timing=window.LS26CreatorTiming;
+      if(timing?.snapshot().loaded){
+        await timing.refreshSource();
+        if(saveBoth&&!await timing.save()){
+          await window.LS26Dialogs.alert('The song was saved. Timing was not saved; your timing draft is still here. Open Chord Timing to review the conflict or error.');return false;
+        }
+        const state=timing.snapshot();
+        if(state.dirty||state.needsReview||saveBoth){
+          window.LS26?.toast(saveBoth?'Song and timing saved.':state.manualDirty?'Song saved. Your unsaved timing draft is kept here.':'Song saved. Timing needs update; review or save it in Chord Timing.');return true;
+        }
+      }
+      location.href = `lyricview.html?id=${encodeURIComponent(id)}`;return true;
     } catch (error) {
       console.error(error);
       await LS26Dialogs.alert(`Could not save song: ${error.message}`);
-      $("saveSongBtn").disabled = false;
+      syncSaveButton();return false;
     }
   }
 
@@ -2655,6 +2683,7 @@
       store:window.LS26TimingStore.create({db,document}), dialogs:window.LS26Dialogs,
       // Owner-only timing rules have been published. Verify the existing Admin
       // session's token email before enabling an explicit timing transaction.
+      reloadSong:()=>{dirty=false;syncSaveButton();window.LS26CreatorTiming?.permitNavigation();location.reload();},
       allowSave:true, auth:window.auth, ownerEmail:"leeborg23@gmail.com"
     });
   }).catch(async error => {

@@ -15,10 +15,14 @@
       let input;if(kind==='prompt'){input=document.createElement('input');input.value=String(initial??'');input.setAttribute('aria-label',String(message));form.append(input);}
       const actions=document.createElement('div');actions.className='ls26-dialog-actions';
       const ok=document.createElement('button');ok.type='submit';ok.className='primary';ok.textContent=options.confirmText||(kind==='confirm'?'Confirm':kind==='prompt'?'Save':'OK');actions.append(ok);
-      let result=kind==='prompt'?null:false;
+      let result=['prompt','choice'].includes(kind)?null:false;
+      if(kind==='choice'){
+        actions.replaceChildren();
+        for(const choice of options.choices||[]){const button=document.createElement('button');button.type='button';button.textContent=choice.label;button.dataset.choice=choice.value;button.onclick=()=>{result=choice.value;d.close();};actions.append(button);}
+      }
       if(kind!=='alert'){const cancel=document.createElement('button');cancel.type='button';cancel.textContent='Cancel';cancel.onclick=()=>d.close();actions.append(cancel);}
       form.append(actions);d.append(form);document.body.append(d);enhance(d);
-      form.onsubmit=e=>{e.preventDefault();result=kind==='prompt'?input.value:true;d.close();};
+      form.onsubmit=e=>{e.preventDefault();result=kind==='prompt'?input.value:kind==='choice'?null:true;d.close();};
       d.addEventListener('close',()=>{d.remove();resolve(result);},{once:true});d.showModal();(input||ok).focus();
     });
   }
@@ -26,7 +30,7 @@
     if(dialog.dataset.closing)return;dialog.dataset.closing='true';dialog.classList.add('ls26-fading-out');
     setTimeout(()=>{dialog.close();dialog.classList.remove('ls26-fading-out');delete dialog.dataset.closing;},matchMedia('(prefers-reduced-motion: reduce)').matches?0:160);
   }
-  window.LS26Dialogs={fadeClose,alert:message=>ask('alert',message),confirm:(message,options)=>ask('confirm',message,'',options),prompt:(message,initial)=>ask('prompt',message,initial)};
+  window.LS26Dialogs={fadeClose,alert:message=>ask('alert',message),choose:(message,options)=>ask('choice',message,'',options),confirm:(message,options)=>ask('confirm',message,'',options),prompt:(message,initial)=>ask('prompt',message,initial)};
   const overlays='dialog,.confirm-modal,.suite-modal,.admin-modal,.creator-modal,.session-modal,.events-modal,.venues-modal,.signup-modal,.custom-dialog,[role="dialog"]';
   function enhance(modal){
     if(modal.dataset.ls26Close)return;

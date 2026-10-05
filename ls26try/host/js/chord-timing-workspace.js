@@ -1,5 +1,5 @@
 /* Manual timing workspace. All edits are local; only explicit load/save use
- * the injected Stage 3 store. No transport, metronome, taps or playback hooks. */
+ * the injected Stage 3 store. Manual and tap edits share one local draft. */
 (function(root,factory){
   if(typeof module==='object'&&module.exports)module.exports=factory(require('../../shared/timing-model.js'),require('../../shared/chord-foundation.js'));
   else root.LS26TimingWorkspace=factory(root.LS26Timing,root.LS26Chords);
@@ -14,7 +14,7 @@
       <div class="ct-recovery"><button type="button" id="ctReload" hidden>RELOAD LATEST TIMING</button><button type="button" id="ctReloadSong" hidden>RELOAD SONG</button></div>
       <div class="ct-reading-area">
         <aside id="ctReview" class="ct-review" hidden aria-label="Review older timing">
-          <h3>Older timing to review</h3><p>Choose an older entry, then select its current chord in the song. Nothing is assigned automatically.</p>
+          <h3>Timing review</h3><p id="ctReviewSummary"></p><p id="ctReviewInstructions">Choose an older entry, then select its current chord in the song. Nothing is assigned automatically.</p>
           <div id="ctUnresolved"></div><p id="ctReviewTarget"></p><p id="ctMeterReview" hidden></p>
           <div class="ct-review-actions"><button type="button" id="ctAssign">ASSIGN TO SELECTED CHORD</button><button type="button" id="ctDiscard">DISCARD OLD TIMING</button><button type="button" id="ctAcceptMeter" hidden>USE CURRENT METER</button></div>
         </aside>
@@ -41,6 +41,7 @@
       </div>`;
     const $=id=>root.querySelector('#'+id),copy=model.clone;
     let active=false,busy=false,loaded=false,draft=null,base,clean='',history=[],selectedId=null,reviewId=null;
+    let manualBaseline='',inheritedManual=false,sourceUpdate=false,navigationApproved=false,savedEventIds=new Set();
     let song=null,loadError='',conflict='',message='',reconciled=false,editorScroll=0;
     let performanceMode=false,audio=null,tapSession=null,tempo=null,performanceFrame=null;
     let ownerAuthorized=!ownerEmail,authCheck=0;
@@ -65,8 +66,10 @@
       }
       draw();return ownerAuthorized;
     }
-    const serial=()=>draft?JSON.stringify(draft):'';
+    const serial=()=>model.semanticKey(draft);
     const dirty=()=>Boolean(draft&&serial()!==clean);
+    const manualDirty=()=>Boolean(draft&&(inheritedManual||serial()!==manualBaseline));
+    const state=()=>({...model.summary(draft),dirty:dirty(),manualDirty:manualDirty(),sourceChanged:sourceUpdate,needsSave:dirty()});
     const selected=()=>draft?.events.find(e=>e.id===selectedId);
     const currentIndex=()=>draft?.events.findIndex(e=>e.id===selectedId)??-1;
     const older=()=>draft?.unresolved.find(x=>x.event.id===reviewId);
@@ -115,18 +118,24 @@
       chooseValid();const event=selected(),index=currentIndex(),state=draft?model.status(draft):'UNTIMED';
       root.setAttribute('aria-busy',String(busy));
       tab.disabled=busy;lyricsTab.disabled=busy;
-      tab.textContent=dirty()?'CHORD TIMING •':'CHORD TIMING';
-      tab.setAttribute('aria-label',dirty()?'Chord Timing, unsaved changes':'Chord Timing');
-      $('ctStatus').textContent=busy?'Working…':loadError?'Saved timing unavailable':state==='NEEDS_REVIEW'?'Some older timing needs your review':state==='PARTIAL'||state==='UNTIMED'?'Choose durations for untimed chords':reconciled?'Timing updated to match current song':'Timing ready';
+      tab.textContent=manualDirty()?'CHORD TIMING •':sourceUpdate?'CHORD TIMING ↻':'CHORD TIMING';
+      tab.setAttribute('aria-label',manualDirty()?'Chord Timing, unsaved timing edits':sourceUpdate?'Chord Timing, timing needs update':'Chord Timing');
+      const counts=model.summary(draft),newUntimed=draft?.events.filter(e=>e.durationBeats===undefined&&!savedEventIds.has(e.id)).length||0;
+      const details=[counts.unresolved?`${counts.unresolved} previous chord ${counts.unresolvedTimed===counts.unresolved?'timings':'entries'} need review`:'',counts.untimed?`${counts.untimed} ${sourceUpdate?'current chords still need timing':'untimed chords'}`:'',counts.meterNeedsReview?'Meter needs review':''].filter(Boolean);
+      $('ctStatus').textContent=busy?'Working…':loadError?'Saved timing unavailable':details.length?details.join(' · '):reconciled||sourceUpdate?'Timing updated to match current song':'Timing ready';
+      if(!busy&&!loadError&&!base&&!sourceUpdate&&!counts.needsReview&&counts.untimed)$('ctStatus').textContent=`Choose durations for untimed chords · ${counts.untimed} still untimed`;
+      $('ctReviewInstructions').textContent=counts.unresolved?'Choose an older entry, then select its current chord in the song. Nothing is assigned automatically.':'Select an untimed current chord and choose its duration. Safe existing durations are retained.';
+      $('ctReviewSummary').textContent=`${counts.unresolved} older entries awaiting a decision. ${sourceUpdate?newUntimed+' new chords still need timing. ':''}${counts.timed} current chords have safe durations; these do not need manual review.`;
+      if(sourceUpdate&&!busy&&!loadError)$('ctStatus').textContent='Timing needs update · '+$('ctStatus').textContent;
       $('ctMeterSummary').textContent=draft?`${draft.meter.beatsPerBar}/${draft.meter.beatUnit}${draft.meter.assumed?' (assumed)':''} · durations in quarter-note beats`:'';
       $('ctNotice').textContent=message;
-      $('ctSaveNote').textContent=!songId?'Save this song in Lyrics & Chords first. Timing changes stay on this page.':!allowSave?'Online timing saving needs setup. Changes stay on this page.':!ownerAuthorized?authMessage:loadError?'Saved timing could not be loaded. Saving is unavailable until a successful reload.':dirty()?'Unsaved timing changes':'No unsaved timing changes';
-      if(dirty()&&(!canSave()||loadError||!songId))$('ctSaveNote').textContent+=' Unsaved timing changes.';
+      $('ctSaveNote').textContent=!songId?'Save this song in Lyrics & Chords first. Timing changes stay on this page.':!allowSave?'Online timing saving needs setup. Changes stay on this page.':!ownerAuthorized?authMessage:loadError?'Saved timing could not be loaded. Saving is unavailable until a successful reload.':manualDirty()?'Unsaved timing changes':sourceUpdate?'Timing needs update: the song changed. Save safe timing when ready; unresolved entries stay flagged for review.':'No unsaved timing changes';
+      if(dirty()&&(!canSave()||loadError||!songId))$('ctSaveNote').textContent+=manualDirty()?' Unsaved timing changes.':' Timing needs update.';
       $('ctReload').hidden=!loadError&&!conflict;
       $('ctReloadSong').hidden=conflict!=='SOURCE_CHANGED'&&conflict!=='SONG_MISSING';
-      $('ctReviewToggle').hidden=!draft?.reviewReasons.length;
+      $('ctReviewToggle').hidden=!draft?.reviewReasons.length&&!(sourceUpdate&&counts.untimed);
       $('ctReviewToggle').setAttribute('aria-expanded',String(!$('ctReview').hidden));
-      if(!draft?.reviewReasons.length)$('ctReview').hidden=true;
+      if($('ctReviewToggle').hidden)$('ctReview').hidden=true;
       const section=event?draft.source.sections[event.sourceAnchor.sectionIndex]:null;
       $('ctSelection').textContent=event?`${event.chord} · ${section.title||'Section '+(event.sourceAnchor.sectionIndex+1)} · Chord ${index+1} of ${draft.events.length} · Previous: ${draft.events[index-1]?.chord||'—'} · Next: ${draft.events[index+1]?.chord||'—'}`:'No chord selected';
       $('ctDuration').textContent=beats(event?.durationBeats);
@@ -157,6 +166,7 @@
         button.textContent=`${item.event.chord} · ${beats(item.event.durationBeats)} · Previous section ${a.sectionIndex+1}, line ${a.lineIndex+1}, chord ${a.slotIndex+1}`;rows.append(button);
       });
       $('ctReviewTarget').textContent=older()?`Assign older ${older().event.chord} (${beats(older().event.durationBeats)}) to ${event?event.chord+' · chord '+(index+1):'a selected chord'}. ${event?.durationBeats!==undefined?'Clear the current duration first to replace it.':'Select any current occurrence below; then confirm assignment.'}`:'No older chord selected.';
+      $('ctAssign').hidden=$('ctDiscard').hidden=$('ctReviewTarget').hidden=!draft?.unresolved.length;
       $('ctAssign').disabled=busy||!older()||!event||event.durationBeats!==undefined;
       $('ctDiscard').disabled=busy||!older();
       $('ctAcceptMeter').hidden=!draft?.reviewReasons.includes('meter-changed');$('ctAcceptMeter').disabled=busy;
@@ -176,13 +186,13 @@
         loaded=true;
         if(!['UNTIMED','VALID','RECONCILED','PARTIAL','NEEDS_REVIEW'].includes(result.status)){
           loadError=result.status;base=undefined;message='Could not load saved timing. Retry when available. Local edits will not replace any saved timing.';
-          if(!draft){draft=await model.createDraft(source);song=currentSong;clean=serial();}
+          if(!draft){draft=await model.createDraft(source);song=currentSong;clean=serial();manualBaseline=serial();}
         }else{
           draft=result.timing||await model.createDraft(result.source);song=currentSong;base=result.base;loadError='';conflict='';
-          reconciled=result.status==='RECONCILED';clean=result.sourceChanged?'':serial();history=[];message=reconciled?'Timing updated to match current song. Save when ready.':'';
+          reconciled=Boolean(result.sourceChanged);sourceUpdate=Boolean(result.sourceChanged);clean=sourceUpdate?'':serial();manualBaseline=serial();inheritedManual=false;savedEventIds=new Set(result.savedEventIds||draft.events.map(e=>e.id));history=[];message=sourceUpdate?'The song changed. Safe matches are preserved; new chords are untimed and uncertain older entries need review.':'';
         }
       }else if(draft&&draft.source.fingerprint!==source.fingerprint){
-        const result=await model.reconcile(draft,source);draft=result.timing;song=currentSong;history=[];reconciled=result.status==='RECONCILED';
+        const hadManual=manualDirty();const result=await model.reconcile(draft,source);draft=result.timing;song=currentSong;history=[];reconciled=true;sourceUpdate=true;manualBaseline=serial();inheritedManual=hadManual;
         message='Timing now reflects the current lyrics. Check any older timing that needs review.';
       }else if(!loadError)song=currentSong;
       chooseValid();buildSong();
@@ -193,13 +203,16 @@
       await loadCurrent();fitViewport();window.requestAnimationFrame?.(fitViewport);root.focus({preventScroll:true});return true;
     });}
     async function exit(){return run(async()=>{
-      if(dirty()&&!await dialogs.confirm('Keep your unsaved timing draft on this page and switch to Lyrics & Chords? Leaving the page will lose unsaved timing.',{title:'Unsaved timing',confirmText:'KEEP DRAFT & SWITCH'}))return false;
+      if(dirty()){
+        const text=manualDirty()?'Keep your unsaved timing edits on this page and switch to Lyrics & Chords? Save Timing before leaving the page.':"The song's chord structure changed. Some timing needs to be reviewed or saved against the updated song. Keep this timing draft and switch to Lyrics & Chords?";
+        if(!await dialogs.confirm(text,{title:manualDirty()?'Unsaved timing':'Timing needs update',confirmText:'KEEP DRAFT & SWITCH'}))return false;
+      }
       stopPerformance();active=false;root.hidden=true;document.body.classList.remove('ct-open');document.documentElement.classList.remove('ct-open');document.body.style.removeProperty('--ct-viewport-height');tab.setAttribute('aria-selected','false');lyricsTab.setAttribute('aria-selected','true');lyricsTab.focus({preventScroll:true});window.scrollTo?.({top:editorScroll,behavior:'instant'});return true;
     });}
     function select(index){if(busy||performanceMode||!draft?.events[index])return;selectedId=draft.events[index].id;draw();reveal();}
     function duration(value){
       if(busy||performanceMode||!selected())return false;
-      try{const next=model.setDuration(draft,selectedId,value);if(JSON.stringify(next)===serial())return false;remember();draft=next;message='';draw();return true;}
+      try{const next=model.setDuration(draft,selectedId,value);if(model.semanticKey(next)===serial())return false;remember();draft=next;message='';draw();return true;}
       catch(error){message='Enter a positive duration in steps of 0.5 beats, or use Clear.';draw();return false;}
     }
     function step(amount){const value=selected()?.durationBeats;if(amount<0&&value===undefined)return;duration((value||0)+amount<=0?null:(value||0)+amount);}
@@ -247,7 +260,7 @@
       const source=await model.buildSource(getSong(),document);
       if(source.fingerprint!==draft.source.fingerprint){message='The lyrics changed. Return to Lyrics & Chords, then reopen Chord Timing to review.';return false;}
       const result=await store.save(songId,{timing:draft,base});
-      if(result.status==='SAVED'){draft=result.timing;base=result.base;clean=serial();history=[];reconciled=false;message='Timing saved.';return true;}
+      if(result.status==='SAVED'){draft=result.timing;base=result.base;clean=serial();manualBaseline=serial();inheritedManual=false;sourceUpdate=false;history=[];reconciled=false;savedEventIds=new Set(draft.events.map(e=>e.id));message='Timing saved.';return true;}
       if(result.status==='CONFLICT'){
         conflict=result.code;message=result.code==='TIMING_CHANGED'?'Newer timing was saved elsewhere. Your draft is still here. Reload latest timing to continue.':'The saved song changed or is no longer available. Your draft is still here. Save/reload the song before saving timing.';
       }else{message='Timing was not saved. Your local changes are still here. Check access or connection and try again.';}
@@ -281,7 +294,7 @@
         ctAssign:()=>resolve('assign'),ctDiscard:()=>resolve('discard'),ctAcceptMeter:()=>resolve('meter'),
         ctReviewToggle:()=>{$('ctReview').hidden=!$('ctReview').hidden;draw();},
         ctCustomToggle:()=>setCustom($('ctCustom').hidden),
-        ctReloadSong:()=>run(async()=>{if(await dialogs.confirm('Reload the song? Unsaved lyrics and timing on this page will be lost.',{title:'Reload song',confirmText:'RELOAD SONG'})){clean=serial();reloadSong();}})};
+        ctReloadSong:()=>run(async()=>{if(await dialogs.confirm('Reload the song? Unsaved lyrics and timing on this page will be lost.',{title:'Reload song',confirmText:'RELOAD SONG'})){navigationApproved=true;reloadSong();}})};
       actions[button.id]?.();
     });
     $('ctCustom').addEventListener('submit',event=>{event.preventDefault();const raw=$('ctCustomValue').value.trim();if(raw&&duration(Number(raw)))setCustom(false);});
@@ -295,7 +308,7 @@
       else if(!action&&!performanceMode&&!event.ctrlKey&&!event.metaKey)action={ArrowLeft:()=>select(currentIndex()-1),ArrowRight:()=>select(currentIndex()+1),'+':()=>step(.5),'-':()=>step(-.5)}[event.key];
       if(action){event.preventDefault();event.stopPropagation();action();}
     });
-    window.addEventListener('beforeunload',event=>{if(dirty()){event.preventDefault();event.returnValue='';}});
+    window.addEventListener('beforeunload',event=>{if(manualDirty()&&!navigationApproved){event.preventDefault();event.returnValue='';}});
     window.addEventListener('resize',fitViewport);window.visualViewport?.addEventListener?.('resize',fitViewport);
     tab.disabled=false;tab.onclick=enter;lyricsTab.onclick=()=>active?exit():undefined;
     draw();
@@ -307,8 +320,10 @@
     }
     return Object.freeze({enter,exit,select,step,setDuration:duration,undo,save,reload,assign:()=>resolve('assign'),discard:()=>resolve('discard'),acceptMeter:()=>resolve('meter'),
       enterPerformance,playPerformance,captureTap,undoTap,stopPerformance,
+      refreshSource:()=>run(async()=>{if(loaded)await loadCurrent();return true;}),
+      permitNavigation:()=>{navigationApproved=true;},
       performanceSnapshot:()=>({mode:performanceMode,transport:audio?.snapshot(),session:tapSession?.snapshot()}),
-      snapshot:()=>({active,busy,loaded,dirty:dirty(),draft:draft?copy(draft):null,selectedId,reviewId,base:base===undefined?undefined:copy(base),conflict,loadError,undoCount:history.length})});
+      snapshot:()=>({active,busy,loaded,...state(),draft:draft?copy(draft):null,selectedId,reviewId,base:base===undefined?undefined:copy(base),conflict,loadError,undoCount:history.length})});
   }
   return Object.freeze({mount});
 });

@@ -29,7 +29,7 @@
           const snapshot=await ref.get({source:'server'});
           if(!snapshot.exists)return {status:'UNTIMED',timing:null,base:null,source};
           const timing=snapshot.data();await model.validate(timing,{persisted:true});
-          return {...await model.reconcile(timing,source),base:token(timing),source,sourceChanged:timing.source.fingerprint!==source.fingerprint};
+          return {...await model.reconcile(timing,source),base:token(timing),source,savedEventIds:timing.events.map(e=>e.id),sourceChanged:timing.source.fingerprint!==source.fingerprint};
         }catch(error){return failure(error);}
       },
       async save(songId,{timing,base}={}){

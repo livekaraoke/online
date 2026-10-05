@@ -138,6 +138,16 @@
     if(!timing.events.length||timing.events.some(e=>e.durationBeats===undefined))return 'PARTIAL';
     return changed?'RECONCILED':'VALID';
   }
+  // Local UI diagnostics only; not part of the persisted document schema.
+  function summary(timing,source) {
+    const events=timing?.events||candidates(source||{sections:[]});
+    const timed=events.filter(e=>typeof e.durationBeats==='number'&&e.durationBeats>0&&Number.isSafeInteger(e.durationBeats*2)).length;
+    const unresolved=timing?.unresolved||[],meterNeedsReview=Boolean(timing?.reviewReasons.includes('meter-changed'));
+    return {total:events.length,timed,untimed:events.length-timed,unresolved:unresolved.length,
+      unresolvedTimed:unresolved.filter(x=>x.event.durationBeats!==undefined).length,meterNeedsReview,
+      needsReview:Boolean(timing?.reviewReasons.length),ready:Boolean(timing&&events.length&&timed===events.length&&!timing.reviewReasons.length)};
+  }
+  const semanticKey=timing=>timing?stable(timing):'';
   function uniquePairs(oldRows,newRows,key) {
     const group=rows=>{const map=new Map();rows.forEach((r,i)=>{const k=key(r);map.set(k,[...(map.get(k)||[]),i]);});return map;};
     const a=group(oldRows),b=group(newRows),pairs=[];
@@ -207,5 +217,5 @@
     await validate(result);
     return {status:status(result,source.fingerprint!==timing.source.fingerprint),timing:result};
   }
-  return Object.freeze({SCHEMA_VERSION,MAX_BYTES,buildSource,validateSource,validate,createDraft,setDuration,reconcile,status,clone});
+  return Object.freeze({SCHEMA_VERSION,MAX_BYTES,buildSource,validateSource,validate,createDraft,setDuration,reconcile,status,summary,semanticKey,clone});
 });

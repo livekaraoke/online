@@ -74,5 +74,8 @@ body.ct-open .creator-scroll-top{display:none!important}
 @media(max-width:600px){.ct-performance-actions{grid-template-columns:1fr 1fr}.ct-performance-actions #ctTapNextChord{grid-column:1/-1;grid-row:1}.ct-performance-summary output{margin-left:0}.ct-performance-options{font-size:14px}}
 /* When a numeric keyboard is open, reserve space for that task instead of
    squeezing the full manual dock into the smaller visual viewport. */
-.ct-custom-open .ct-navigation,.ct-custom-open .ct-presets,.ct-custom-open .ct-selection,.ct-custom-open .ct-save-note,.ct-custom-open .ct-actions button:not(#ctCustomToggle){display:none}
+.ct-custom-open .ct-navigation,.ct-custom-open .ct-presets,.ct-custom-open .ct-selection,.ct-custom-open .ct-save-note,.ct-custom-open .ct-actions button:not(#ctCustomToggle):not(#ctSave){display:none}
 .ct-custom-open .ct-custom{margin-top:5px}.ct-custom-open #ctCustomToggle{flex:none;min-width:150px}
+
+/* Save remains visible, including the secondary Custom editor. */
+.ct-workspace #ctSave{display:block!important;white-space:nowrap}

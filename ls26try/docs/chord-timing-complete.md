@@ -83,3 +83,34 @@ alignment, pause/resume/BPM continuity, mistap undo, save/reload. In Viewer: ena
 follow before Play, transposed/repeated chords, section progression, anticipation,
 manual scroll during motion, persistent override and REJOIN CHORD. Also try an
 untimed/incomplete song and confirm the existing normal auto-scroll still works.
+
+## Stabilization: editor state and timing availability
+
+Timing has separate local `manualDirty`, `sourceChanged`, `needsSave` and
+`needsReview` diagnostics. Opening/navigation never counts as a manual edit.
+Persisted review items can be clean, while safe source reconciliation can need
+saving without any manual edits. A source-only update is reproducible and does
+not request a browser unload warning; genuine unsaved song/timing work does.
+Switching workspaces keeps the draft, with a custom explanation for its state.
+
+Save Song uses a custom SAVE BOTH / SAVE SONG ONLY / CANCEL decision when both
+song and timing are manually dirty. Song-only Save stays in the editor when a
+timing draft/update/review remains. It does not redirect into beforeunload.
+Cancel preserves dirty state. Successful Song Save clears only the saved song
+state; edits made during its asynchronous save remain dirty. Save Both is song
+Save followed by the existing conflict-safe timing transaction, not an atomic
+cross-document operation: a timing conflict retains its draft after song success.
+
+Save Timing stays visible. Stage 3 permits saving unresolved entries as explicit
+review state; this does not authorize playback or guess any mappings. Review
+shows older unresolved entries separately from new untimed occurrences and safe
+current durations. Counts come from the reconciled current event list; the
+recognition/parser and persistent schema have not changed.
+
+The Viewer dock has player/follow controls, a full-width section timeline, and
+an independent full-width availability/status panel. FOLLOW labels do not wrap.
+The existing footer has a separate reserved height. ResizeObserver reserves the
+actual dock height for content/navigation. Below 900px, follow controls use a
+second deliberate row. Chord Follow remains blocked until all current chords
+are timed and review/meter issues are resolved. Status gives timed/total,
+untimed and older review counts rather than a generic truncated error.
