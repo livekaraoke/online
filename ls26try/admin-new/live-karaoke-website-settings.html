@@ -1,0 +1,132 @@
+<!-- Copyright © 2026 LiveSuite. All rights reserved. -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../shared/artist-names.js?v=20260925-artist-names"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Live Karaoke Website Settings · LiveSuite</title>
+  <link rel="stylesheet" href="css/admin.css?v=20260910-stage4">
+  <link rel="stylesheet" href="css/sidebar.css?v=20260910-stage4">
+  <link rel="stylesheet" href="css/sidebar-suite.css?v=20260929-admin-polish">
+  <link rel="stylesheet" href="css/enquiries.css?v=20260910-stage4">
+  <link rel="stylesheet" href="css/admin-navigation.css?v=20260929-admin-polish">
+  <link rel="stylesheet" href="../shared/theme.css?v=20260930-release-preview-v2">
+  <link rel="stylesheet" href="css/billy-website-settings.css?v=20260930-request-test-mode-v2">
+  <script src="../shared/data.js?v=20260910-stage4"></script>
+</head>
+<body class="admin-body enquiries-page">
+  <div class="admin-shell">
+    <div id="sidebarContainer"></div>
+    <main class="admin-main enquiries-main billy-site-main">
+      <header class="enquiries-topbar billy-site-topbar">
+        <div>
+          <p class="enquiries-eyebrow">LIVE KARAOKE</p>
+          <h1>Website Settings</h1>
+          <p class="enquiries-subtitle">Configure the Live Requests popup on the main Live Karaoke website.</p>
+        </div>
+        <a class="billy-site-open" href="https://livekaraoke.github.io/online/" target="_blank" rel="noopener">Open website ↗</a>
+      </header>
+
+      <p id="billyWebsiteSettingsStatus" class="billy-site-status" role="status">Loading website settings…</p>
+
+      <section class="billy-site-card billy-site-master">
+        <div>
+          <h2>Song category cards</h2>
+          <p>Control the category shortcuts shown above the song search inside Request / Sign Up.</p>
+        </div>
+        <div class="billy-site-category-master-controls">
+          <label class="billy-site-card-size">
+            <span>Card width</span>
+            <input id="categoryCardSize" type="range" min="60" max="120" step="2" value="82">
+            <output id="categoryCardSizeValue" for="categoryCardSize">82 px</output>
+          </label>
+          <label class="billy-site-switch">
+            <input id="showCategoryCards" type="checkbox" checked>
+            <span>Show category cards</span>
+          </label>
+          <label class="billy-site-switch">
+            <input id="showArtistSearchCard" type="checkbox" checked>
+            <span>Show SEARCH BY ARTIST card</span>
+          </label>
+        </div>
+      </section>
+
+      <section class="billy-site-card">
+        <div class="billy-site-section-head">
+          <div>
+            <h2>Categories</h2>
+            <p>Rename cards, hide individual cards, reorder them and choose exactly which songs each card contains.</p>
+          </div>
+          <button id="addWebsiteCategoryBtn" class="billy-site-btn" type="button">＋ Add category</button>
+        </div>
+        <div id="websiteCategoryEditors" class="website-category-editors"></div>
+      </section>
+
+      <section class="billy-site-card">
+        <div class="billy-site-section-head">
+          <div>
+            <h2>Request Info / FAQ</h2>
+            <p>Edit the questions and answers shown in the INFO tab of the Live Karaoke request popup.</p>
+          </div>
+          <button id="addWebsiteFaqBtn" class="billy-site-btn" type="button">＋ Add question</button>
+        </div>
+        <div id="websiteFaqEditors" class="website-faq-editors"></div>
+      </section>
+
+      <!-- Billy's shared settings controller keeps these optional fields intact,
+           but they are intentionally not exposed on the Live Karaoke page. -->
+      <input id="websiteInstagramUrl" type="hidden">
+      <input id="websiteFacebookUrl" type="hidden">
+      <textarea id="websiteAboutShort" hidden></textarea>
+      <textarea id="websiteAboutDetailed" hidden></textarea>
+
+      <div class="billy-site-savebar">
+        <span id="billyWebsiteSaveStatus"></span>
+        <button id="resetWebsiteCategoriesBtn" class="billy-site-btn muted" type="button">Reset defaults</button>
+        <button id="saveBillyWebsiteSettingsBtn" class="billy-site-btn primary" type="button">Save Website Settings</button>
+      </div>
+    </main>
+  </div>
+
+  <script src="../firebase-projects.js?v=20261006-live-karaoke-settings"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="js/firebase.js?v=20260910-stage4"></script>
+  <script>
+    (() => {
+      const realDb = window.LK?.db;
+      if (!realDb) return;
+      const realCollection = realDb.collection.bind(realDb);
+      const bind = (target, prop) => {
+        const value = target[prop];
+        return typeof value === "function" ? value.bind(target) : value;
+      };
+      window.LK.db = new Proxy(realDb, {
+        get(target, prop) {
+          if (prop !== "collection") return bind(target, prop);
+          return name => {
+            const ref = realCollection(name);
+            if (name !== "karaokeControl") return ref;
+            return new Proxy(ref, {
+              get(collectionTarget, collectionProp) {
+                if (collectionProp === "doc") {
+                  return id => collectionTarget.doc(id === "billyLeeWebsiteSettings" ? "liveKaraokeWebsiteSettings" : id);
+                }
+                return bind(collectionTarget, collectionProp);
+              }
+            });
+          };
+        }
+      });
+    })();
+  </script>
+  <script src="js/sidebar.js?v=20260930-dynamic-version-v2"></script>
+  <script src="js/profile.js?v=20260929-members-align"></script>
+  <script src="js/auth.js?v=20260910-stage4"></script>
+  <script data-ls26-settings="1" src="../shared/app-settings.js?v=20260930-app-version"></script>
+  <script src="../shared/shell.js?v=20260930-release-preview-v3"></script>
+  <script src="js/billy-website-settings.js?v=20261006-live-karaoke-settings"></script>
+</body>
+</html>
