@@ -38,12 +38,17 @@
   window.openLiveKaraokeRequestPopup = openPopup;
   window.closeLiveKaraokeRequestPopup = closePopup;
 
+  function neutraliseRequestLink(button) {
+    if (!button) return;
+    if (button.getAttribute("href") !== "#") button.setAttribute("href", "#");
+    if (button.hasAttribute("target")) button.removeAttribute("target");
+    if (button.hasAttribute("rel")) button.removeAttribute("rel");
+  }
+
   function normaliseRequestLinks(root = document) {
     root.querySelectorAll?.("#heroRequestBtn,#songListBtn").forEach(button => {
       if (button.getAttribute("aria-disabled") === "true" || button.classList.contains("disabled-button")) return;
-      button.setAttribute("href", "#");
-      button.removeAttribute("target");
-      button.removeAttribute("rel");
+      neutraliseRequestLink(button);
     });
   }
 
@@ -57,8 +62,7 @@
     event.preventDefault();
     event.stopPropagation();
     event.stopImmediatePropagation();
-    button.setAttribute("href", "#");
-    button.removeAttribute("target");
+    neutraliseRequestLink(button);
     openPopup();
   }, true);
 
