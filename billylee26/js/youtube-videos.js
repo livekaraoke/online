@@ -33,3 +33,12 @@ window.BILLY_LEE_YOUTUBE_VIDEOS = [
     duration: ""
   }
 ];
+
+// Request popup enhancements are kept in a dedicated module and loaded here so
+// existing page markup stays unchanged.
+(() => {
+  const script = document.createElement("script");
+  script.src = "js/request-ui-extras.js?v=20261006-favs-card-width";
+  script.async = false;
+  document.head.appendChild(script);
+})();
