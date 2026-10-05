@@ -554,7 +554,7 @@ const songs = [
     hasLyrics: true
   },
   {
-    title: "Caroline*",
+    title: "Caroline***",
     artist: "Status Quo",
     url: "lyrics/song.html?id=caroline",
     year: 1973,
@@ -1331,7 +1331,7 @@ const songs = [
     hasLyrics: true
   },
   {
-    title: "I Don't Want to Talk About It",
+    title: "I Don't Want to Talk About It***",
     artist: "Rod Stewart",
     url: "lyrics/song.html?id=idontwanttotalkaboutit",
     year: 1975,
@@ -1625,7 +1625,7 @@ const songs = [
     hasLyrics: false
   },
   {
-    title: "Lady in Red",
+    title: "Lady in Red***",
     artist: "Chris de Burgh",
     url: "lyrics/song.html?id=ladyinred",
     year: 1986,
@@ -2864,7 +2864,7 @@ const songs = [
     hasLyrics: true
   },
   {
-    title: "Tequila Sunrise",
+    title: "Tequila Sunrise***",
     artist: "Eagles",
     url: "lyrics/song.html?id=tequilasunrise",
     year: 1973,
@@ -2969,7 +2969,7 @@ const songs = [
     hasLyrics: true
   },
   {
-    title: "Twist and shout",
+    title: "Twist and shout***",
     artist: "Beatles, The",
     url: "lyrics/song.html?id=twistandshout",
     year: 1963,
@@ -3494,7 +3494,7 @@ const songs = [
     hasLyrics: true
   },
   {
-    title: "My Way",
+    title: "My Way***",
     artist: "Frank Sinatra",
     url: "lyrics/song.html?id=myway",
     year: 1969,
@@ -3515,7 +3515,7 @@ const songs = [
     hasLyrics: true
   },
   {
-    title: "Redemption Song",
+    title: "Redemption Song***",
     artist: "Bob Marley",
     url: "lyrics/song.html?id=redemptionsong",
     year: 1980,
@@ -3536,7 +3536,7 @@ const songs = [
     hasLyrics: true
   },
   {
-    title: "My Sweet Lord",
+    title: "My Sweet Lord***",
     artist: "George Harrison",
     url: "lyrics/song.html?id=mysweetlord",
     year: 1970,
