@@ -64,4 +64,11 @@
 
   window.LK_FIREBASE_CONFIG = getSelectedConfig();
   window.LK_FIREBASE_PROJECT = getSelectedKey();
+
+  if (/\/online\/ls26try\/admin-new\//i.test(location.pathname)) {
+    const script = document.createElement("script");
+    script.src = new URL("admin-new/js/live-karaoke-sidebar-addon.js?v=20261006-v1", document.currentScript?.src || location.href).href;
+    script.async = true;
+    document.head.appendChild(script);
+  }
 })();
