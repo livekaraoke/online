@@ -18,6 +18,27 @@
   let sidebarEnquiriesUnsub = null;
   let sidebarProfileUnsub = null;
 
+  const typeCacheKey='ls26:eventTypeColours:v1';
+  function applyTypeColours(root,colors){
+    for(const [key,type]of Object.entries({'live-karaoke':'Live Karaoke','billy-lee':'Solo',roxanna:'Roxanna'})){
+      const button=root.querySelector(`[data-sidebar-brand-toggle="${key}"]`),colour=colors?.[type];
+      if(!button)continue;
+      button.style.borderRadius='8px';button.style.padding='12px';button.style.margin='8px 0';
+      button.style.setProperty('background','var(--ls-panel,#142533)','important');button.style.setProperty('color','var(--ls-text,#eef6fa)','important');
+      button.querySelector('.suite-section-chevron')?.style.setProperty('color','inherit');
+      if(!/^#[0-9a-f]{6}$/i.test(colour||''))continue;
+      const rgb=[1,3,5].map(i=>parseInt(colour.slice(i,i+2),16)/255).map(v=>v<=.04045?v/12.92:((v+.055)/1.055)**2.4);
+      const light=.2126*rgb[0]+.7152*rgb[1]+.0722*rgb[2];
+      button.style.setProperty('background',colour,'important');button.style.setProperty('color',light>.179?'#000000':'#ffffff','important');
+    }
+  }
+  async function loadTypeColours(root){
+    try{const cached=JSON.parse(localStorage.getItem(typeCacheKey)||'null');if(cached){applyTypeColours(root,cached.colors);if(Date.now()-cached.at<300000)return;}}catch(_){}
+    try{if(!window.LK?.db)return;const snap=await LK.db.collection('karaokeControl').doc('eventTypes').get();const colors=snap.exists?snap.data().colors||{}:{};cacheTypeColours(colors);applyTypeColours(root,colors);}catch(_){/* Current theme/cache remains usable offline. */}
+  }
+  function cacheTypeColours(colors){try{localStorage.setItem(typeCacheKey,JSON.stringify({at:Date.now(),colors}));}catch(_){}applyTypeColours(document,colors);}
+  window.addEventListener('ls26:event-types',event=>cacheTypeColours(event.detail.colors));
+  window.addEventListener('storage',event=>{if(event.key===typeCacheKey)try{applyTypeColours(document,JSON.parse(event.newValue).colors);}catch(_){}});
   function $(id) {
     return document.getElementById(id);
   }
@@ -128,6 +149,7 @@
         });
       });
 
+      void loadTypeColours(target);
       highlightCurrentPage();
       revealActiveSidebarDisclosure(target);
       window.dispatchEvent(new CustomEvent('ls26:sidebar-ready'));

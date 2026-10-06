@@ -811,6 +811,7 @@
         ...colors
       };
 
+      window.dispatchEvent(new CustomEvent('ls26:event-types',{detail:{colors:typeColors}}));
       populateTypeControls();
       renderEventTypeManager();
       renderEvents();

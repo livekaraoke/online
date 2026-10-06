@@ -38,7 +38,7 @@
     .ls26-singer-v31-line.is-current{font-size:var(--ls26-singer-current-scale,1.72em)!important;opacity:1!important;font-weight:950!important;border-left-color:var(--ls26-singer-current-colour,#16d8ff)!important;background:linear-gradient(90deg,color-mix(in srgb,var(--ls26-singer-current-colour,#16d8ff) 20%,transparent),color-mix(in srgb,var(--ls26-singer-current-colour,#16d8ff) 4%,transparent) 72%,transparent)!important;text-shadow:0 0 16px color-mix(in srgb,var(--ls26-singer-current-colour,#16d8ff) 20%,transparent);filter:none!important}
     .ls26-singer-v31-line.is-context{font-size:var(--ls26-singer-context-scale,1.48em)!important;opacity:.96!important;font-weight:850!important;filter:none!important}
     .ls26-singer-v31-line.is-muted{font-size:var(--ls26-singer-muted-scale,.82em)!important;opacity:var(--ls26-singer-muted-opacity,.60)!important;filter:saturate(.72)}
-    .ls26-singer-v31-line.is-chord-line{font-size:.92em!important;opacity:.84!important;font-weight:900!important;letter-spacing:.025em;color:#eafcff}
+    .ls26-singer-v31-line.is-chord-line{padding-top:calc(.05em + var(--ls26-singer-chord-before,0px));padding-bottom:calc(.05em + var(--ls26-singer-chord-after,0px));font-size:.92em!important;opacity:.84!important;font-weight:900!important;letter-spacing:.025em;color:#eafcff}
     body:not([data-guidance="guitaroke"]) #ls26SingerV31Lyrics .is-chord-line{display:none!important}
     body[data-guidance="normal"] #ls26SingerV31Lyrics .ls26-pro-format{font-style:normal!important;text-decoration:none!important}
     .ls26-singer-performance-cue{margin:14px auto;padding:9px 14px;width:max-content;max-width:90%;border:1px solid currentColor;border-radius:9px;text-align:center;font-weight:900}
@@ -87,6 +87,8 @@
   for(const [name,key,def,min,max,unit] of [
    ['current-scale','CurrentLineScale',1.72,1,2.5,'em'],['context-scale','ContextLineScale',1.48,.9,2.3,'em'],['muted-scale','MutedLineScale',.82,.45,1.4,'em'],['muted-opacity','MutedOpacity',.60,.2,1,'']
   ])root.setProperty('--ls26-singer-'+name,num('ls26:singer'+key,def,min,max)+unit);
+  root.setProperty('--ls26-singer-chord-before',num('ls26:singerChordSpaceAbove',0,0,40)+'px');
+  root.setProperty('--ls26-singer-chord-after',num('ls26:singerChordSpaceBelow',0,0,40)+'px');
   const colour=read('ls26:singerCurrentLineColour','#16d8ff');root.setProperty('--ls26-singer-current-colour',/^#[0-9a-f]{6}$/i.test(colour)?colour:'#16d8ff');
   const background=read('ls26:karaokeSingerBackground','#00131a');root.setProperty('--singer-custom-background',/^#[0-9a-f]{6}$/i.test(background)?background:'#00131a');
   $('singerBackgroundColor').value=background;text($('singerBackgroundColorValue'),background.toUpperCase());
@@ -96,6 +98,7 @@
   if(song&&guidance!==previousGuidance){renderSong();show();}
   updateHeader();updateControls();if(!auto)stopMovement();else follow();
  }
+ window.addEventListener('ls26:prompter-settings',applySettings);
  function updateControls(){
   $('singerControls').classList.toggle('hidden',!showBottom||lyrics.hidden);
   text($('singerPlayBtn'),latest?.phase==='playing'&&!localPaused?'Ⅱ':'▶');
@@ -103,6 +106,10 @@
  function installControls(){
   const button=document.createElement('button');button.type='button';button.dataset.guidance='guitaroke';button.textContent='Guitaroke';document.querySelector('.guidance-options').append(button);
   const settings=$('singerSettings');
+  const globalControls=document.createElement('div');globalControls.innerHTML='<button type="button" data-load-global>Reload global defaults</button><p role="status" data-global-status>Global defaults are saved in Admin → Prompter → Settings. Adjustments here stay on this device.</p>';settings.append(globalControls);
+  const globalStatus=globalControls.querySelector('[data-global-status]');
+  globalControls.querySelector('[data-load-global]').onclick=async()=>{const result=await window.LS26PrompterSettings.load(true);globalStatus.textContent=result.error?'Global settings unavailable; local settings retained.':result.remote?'Global defaults loaded.':'No global defaults saved yet.';};
+
   $('singerSettingsBtn').disabled=false;
   $('singerSettingsBtn').onclick=()=>settings.classList.toggle('hidden');
   $('closeSingerSettings').onclick=()=>settings.classList.add('hidden');
@@ -239,4 +246,5 @@
  window.addEventListener('resize',()=>{updateHeader();follow();});
  document.addEventListener('visibilitychange',()=>{if(document.hidden)stopMovement();else{show();channel?.postMessage({type:'request-state'});}});
  window.addEventListener('pagehide',()=>{destroyed=true;loadGeneration++;stopMovement();unsubscribe?.();channel?.close();},{once:true});
+ void window.LS26PrompterSettings?.load();
 })();

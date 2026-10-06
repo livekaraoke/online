@@ -62,6 +62,8 @@
       <div class="setting-row"><div class="setting-copy"><strong>Other buttons after press</strong><small>Opacity of the three navigation buttons that were not pressed.</small></div><div class="setting-control"><input id="lyricNavActiveOpacity" data-setting type="range" min="20" max="95" step="5"><output data-output="lyricNavActiveOpacity"></output></div></div>
       <div class="setting-row"><div class="setting-copy"><strong>Pressed button opacity</strong><small>Peak opacity of the navigation button you press.</small></div><div class="setting-control"><input id="lyricNavPressedOpacity" data-setting type="range" min="40" max="100" step="5"><output data-output="lyricNavPressedOpacity"></output></div></div>
       <div class="setting-row"><div class="setting-copy"><strong>Navigation fade duration</strong><small>How slowly the feedback returns to resting opacity. Lower is faster.</small></div><div class="setting-control"><input id="lyricNavFeedbackDuration" data-setting type="range" min="500" max="10000" step="100"><output data-output="lyricNavFeedbackDuration"></output></div></div>
+<div class="setting-row"><div class="setting-copy"><strong>Chord line space above</strong><small>Extra space around chord-only lines; zero preserves existing spacing.</small></div><div class="setting-control"><input id="chordLineSpaceAbove" data-setting type="range" min="0" max="40" step="1"><output data-output="chordLineSpaceAbove"></output></div></div>
+<div class="setting-row"><div class="setting-copy"><strong>Chord line space below</strong><small>Extra space around chord-only lines; zero preserves existing spacing.</small></div><div class="setting-control"><input id="chordLineSpaceBelow" data-setting type="range" min="0" max="40" step="1"><output data-output="chordLineSpaceBelow"></output></div></div>
       <div class="setting-row"><div class="setting-copy"><strong>Lyric text scale</strong><small>Scales the section content without changing saved song formatting.</small></div><div class="setting-control"><input id="lyricTextScale" data-setting type="range" min="75" max="150" step="5"><output data-output="lyricTextScale"></output></div></div>
       <div class="setting-row"><div class="setting-copy"><strong>Opening runway before first section</strong><small>Blank scrolling space before the first lyric section. Increase this for more preparation time before section 1 reaches the reading area.</small></div><div class="setting-control"><input id="lyricLeadInHeight" data-setting type="range" min="80" max="360" step="8"><output data-output="lyricLeadInHeight"></output></div></div>
       <div class="setting-row"><div class="setting-copy"><strong>Current-section activation position</strong><small>How far below the sticky LyricView header a section must reach before it becomes the highlighted current section.</small></div><div class="setting-control"><input id="lyricSectionActivationOffset" data-setting type="range" min="0" max="520" step="10"><output data-output="lyricSectionActivationOffset"></output></div></div>
@@ -105,15 +107,15 @@
   </div>
   <div class="settings-actions"><span id="settingsStatus"></span><button id="resetSettingsBtn" type="button">Reset defaults</button><button id="saveSettingsBtn" class="primary" type="button">Save Settings</button></div>
 </main></div>
-<script src="../firebase-projects.js?v=20260910-stage4"></script>
+<script src="../firebase-projects.js?v=20261006-chord-settings"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 <script src="js/firebase.js?v=20260910-stage4"></script>
-<script src="js/sidebar.js?v=20260930-dynamic-version"></script>
+<script src="js/sidebar.js?v=20261006-chord-settings"></script>
 <script src="js/profile.js?v=20260929-members-visible"></script>
 <script src="js/auth.js?v=20260910-stage4"></script>
-<script data-ls26-settings="1" src="../shared/app-settings.js?v=20261006-chord-visuals"></script>
+<script data-ls26-settings="1" src="../shared/app-settings.js?v=20261006-chord-settings"></script>
 <script src="../shared/shell.js?v=20260929-topbar-force-v7"></script>
-<script src="js/app-settings.js?v=20261006-chord-visuals"></script>
+<script src="js/app-settings.js?v=20261006-chord-settings"></script>
 </body></html>

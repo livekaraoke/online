@@ -1269,6 +1269,7 @@
         <button type="button" class="beat-colour beat-3" data-quick-colour="#ffe23d" title="Bold yellow timing marker">BEAT 3</button>
         <button type="button" class="beat-colour beat-4" data-quick-colour="#ff9d2e" title="Bold bright-orange timing marker">BEAT 4</button>
         <button type="button" data-insert-chord="${index}">＋ CHORD</button>
+        <button type="button" data-chord-tool="${index}">MARK / EDIT CHORD</button>
         <button type="button" data-insert-tab="${index}">＋ BLANK TAB</button>
         <button type="button" data-insert-link="${index}">＋ LINK</button>
         <label class="dash-colour-control" title="Colour every dash / hyphen character in this section">
@@ -2015,12 +2016,44 @@
     insertHTMLAtSelection(html);
   }
 
-  function openChordModal(editor) {
+  function openChordModal(editor, correction=false) {
+    if(!editor)return;
     captureSelection(editor);
-    $("chordInput").value = "G";
-    $("chordPreview").textContent = "G";
-    $("chordModal").classList.remove("hidden");
-    setTimeout(() => $("chordInput").select(), 30);
+    if(correction&&(!savedRange||!editor.contains(savedRange.commonAncestorContainer))){LS26Dialogs.alert('Select text in this section first.');return;}
+    if(correction&&savedRange&&editor.contains(savedRange.commonAncestorContainer)){
+      const node=savedRange.startContainer;
+      const marked=(node.nodeType===3?node.parentElement:node).closest?.('[data-ls26-chord],.inserted-chord,[data-chord],.chord-token');
+      if(marked&&editor.contains(marked)){savedRange.selectNode(marked);}
+      else if(savedRange.collapsed&&node.nodeType===3){
+        const text=node.nodeValue,at=savedRange.startOffset;
+        for(const token of text.matchAll(/\S+/g))if(token.index<=at&&token.index+token[0].length>=at){savedRange.setStart(node,token.index);savedRange.setEnd(node,token.index+token[0].length);break;}
+      }
+    }
+    const selected=correction?savedRange?.toString().trim()||'':'';
+    if(correction&&!selected){LS26Dialogs.alert('Select the text to mark, or tap inside an existing chord, then open the chord tool.');return;}
+    $('chordInput').value=selected||'G';$('chordPreview').textContent=selected||'G';
+    $('chordModal').querySelector('h3').textContent=correction?'MARK / EDIT CHORD':'INSERT CHORD';
+    $('insertChordConfirmBtn').textContent=correction?'MARK / UPDATE':'INSERT';
+    $('unmarkChordBtn').hidden=!correction;$('chordError').textContent='';
+    $('chordModal').classList.remove('hidden');
+    setTimeout(()=>$('chordInput').select(),30);
+  }
+  function applyChordCorrection(exclude=false){
+    const value=$('chordInput').value.trim();
+    if(!exclude&&!window.LS26Chords.isChord(value)){$('chordError').textContent='Enter one chord, such as (G), Am7 or Bbmaj7/D.';return;}
+    const displayed=exclude?savedRange?.toString():value;
+    if(!displayed)return;
+    $('chordModal').classList.add('hidden');
+    // execCommand strips data-only span attributes in Chromium. Use a Range
+    // and the editor's snapshot undo history so exclusion metadata survives.
+    if(!restoreSelection())return;
+    pushUndoState();
+    const selection=window.getSelection(),range=selection.getRangeAt(0);
+    const marker=document.createElement(exclude?'span':'strong');
+    marker.dataset.ls26Chord=exclude?'exclude':'include';if(!exclude)marker.className='inserted-chord';
+    marker.textContent=displayed;range.deleteContents();range.insertNode(marker);
+    range.setStartAfter(marker);range.collapse(true);selection.removeAllRanges();selection.addRange(range);
+    captureSelection(activeEditor);syncSectionsFromDOM();markDirty();pushUndoState();
   }
 
   function openColourModal(editor) {
@@ -2495,6 +2528,8 @@
       return;
     }
 
+    const chordToolButton=event.target.closest('[data-chord-tool]');
+    if(chordToolButton){openChordModal(chordToolButton.closest('.creator-section-body')?.querySelector('.creator-rich-editor'),true);return;}
     const chord = event.target.closest("[data-insert-chord]");
     if (chord) {
       const editor = chord.closest(".creator-section-body")?.querySelector(".creator-rich-editor");
@@ -2637,12 +2672,8 @@
       $("linkLabelInput").placeholder = `${song.title}${song.artist ? ` - ${song.artist}` : ""}`;
     }
   });
-  $("insertChordConfirmBtn").onclick = () => {
-    const chord = $("chordInput").value.trim();
-    if (!chord) return;
-    $("chordModal").classList.add("hidden");
-    insertHTMLAtSelection(`<strong class="inserted-chord">${esc(chord)}</strong>`);
-  };
+  $('insertChordConfirmBtn').onclick=()=>applyChordCorrection(false);
+  $('unmarkChordBtn').onclick=()=>applyChordCorrection(true);
   $("colourCancelBtn").onclick = () => $("colourModal").classList.add("hidden");
   $("templatesCancelBtn").onclick = () => {
     pendingTemplateInsertIndex = null;

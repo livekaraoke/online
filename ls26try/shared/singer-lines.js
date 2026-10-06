@@ -18,6 +18,7 @@
   const source=document.createElement('div');
   if(section.html)source.innerHTML=section.html;else source.textContent=section.text||'';
   const rows=chords.logicalLines(source,{locations:true});
+  const occurrences=chords.extractSections([section],document).candidates;
   const result=rows.map((row,sourceLineIndex)=>{
    const full=document.createElement('div'),lyrics=document.createElement('div');
    for(const segment of row.segments){
@@ -25,8 +26,9 @@
     if(node.parentElement?.closest('[data-performance-note],.performance-cue,.performance-note-line'))continue;
     const value=node.nodeValue.slice(segment.offset,segment.offset+segment.end-segment.start);
     let copy=document.createTextNode(value),parent=node.parentElement,isChord=false;
+    const excluded=Boolean(parent?.closest('[data-ls26-chord="exclude"]'));
     while(parent&&parent!==source){
-     if(parent.matches(chordSelector)||(parent.matches('span,b,strong')&&chords.parse(parent.textContent)))isChord=true;
+     if(!excluded&&(parent.matches(chordSelector)||(parent.matches('span,b,strong')&&chords.parse(parent.textContent))))isChord=true;
      if(inline.has(parent.tagName)){
       const wrap=document.createElement(parent.tagName.toLowerCase());
       // Keep lyric formatting; never copy handlers, IDs, editing attributes or URLs.
@@ -37,10 +39,18 @@
      }
      parent=parent.parentElement;
     }
-    full.append(copy.cloneNode(true));if(!isChord)lyrics.append(copy);
+    full.append(copy.cloneNode(true));
+    if(!isChord){
+     // Explicit exclusions can leave ordinary text beside automatic chords.
+     // Strip only actual shared occurrences, retaining the excluded text.
+     let lyricValue=value;
+     const overlaps=occurrences.filter(c=>c.anchor.lineIndex===sourceLineIndex&&c.anchor.start<segment.end&&c.anchor.end>segment.start);
+     for(const c of overlaps.reverse()){const a=Math.max(0,c.anchor.start-segment.start),b=Math.min(value.length,c.anchor.end-segment.start);lyricValue=lyricValue.slice(0,a)+lyricValue.slice(b);}
+     let leaf=copy;while(leaf.firstChild)leaf=leaf.firstChild;leaf.nodeValue=lyricValue;lyrics.append(copy);
+    }
    }
    const text=norm(lyrics.textContent),all=norm(full.textContent);
-   const isChord=chordOnly(all);
+   const isChord=!row.excluded.length&&chordOnly(all);
    // Plain-text instrumental/reference cues never become lyric focus rows.
    const cue=/^\[[^\]\n]{1,100}\]$/.test(text)||/^(?:(?:guitar|bass|drums?|piano)\s+)?(?:solo|riff|instrumental|interlude|break)(?:\s+(?:x|×)?\d+)?$/i.test(text);
    return {sourceLineIndex,kind:isChord?'chord':cue?'cue':'lyric',text:isChord?all:text,html:lyrics.innerHTML,guitarHtml:full.innerHTML};

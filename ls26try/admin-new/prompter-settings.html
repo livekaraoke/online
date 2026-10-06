@@ -31,13 +31,14 @@
         <div>
           <p class="enquiries-eyebrow">LIVE KARAOKE · LYRIC PROMPTER</p>
           <h1>Prompter Settings</h1>
-          <p class="enquiries-subtitle">Configure the Singer Screen defaults saved on this device.</p>
+          <p class="enquiries-subtitle">Configure global Singer Screen defaults, shared across devices.</p>
         </div>
         <a class="prompter-btn primary" href="../host/karaoke-lyric-view.html" target="_blank" rel="noopener">Open Singer Screen ↗</a>
       </header>
 
-      <p id="prompterSettingsStatus" class="prompter-status" role="status">Changes save automatically.</p>
+      <p id="prompterSettingsStatus" class="prompter-status" role="status">Loading global settings…</p>
 
+      <div class="prompter-actions"><button id="savePrompterSettings" class="prompter-btn primary" type="button">Save Global Settings</button><button id="reloadPrompterSettings" class="prompter-btn" type="button">Reload Global Settings</button></div>
       <div class="prompter-grid">
         <section class="prompter-card">
           <h2>Display</h2><p>These mirror the settings available directly on the Singer Screen.</p>
@@ -76,23 +77,25 @@
       </div>
 
       <section class="prompter-card" style="margin-top:16px">
-        <h2>Reset</h2><p>Restore the Singer Screen defaults on this browser/device.</p>
+        <h2>Guitaroke chord spacing</h2><p>Extra space around chord rows, in pixels. Normal Mode and Lyrics Pro are unaffected.</p><div class="prompter-fields"><label>Chord line space above<input id="prompterChordAbove" type="number" min="0" max="40" step="1"></label><label>Chord line space below<input id="prompterChordBelow" type="number" min="0" max="40" step="1"></label></div></section><section class="prompter-card" style="margin-top:16px"><h2>Reset</h2><p>Preview defaults, then save explicitly to share them globally.</p>
         <div class="prompter-actions"><button id="resetPrompterSettings" class="prompter-btn" type="button">Reset Prompter Settings</button></div>
       </section>
     </main>
   </div>
 
-  <script src="../firebase-projects.js?v=20261006-prompter-settings-v1"></script>
+  <script src="../firebase-projects.js?v=20261006-chord-settings"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
   <script src="js/firebase.js?v=20260910-stage4"></script>
-  <script src="js/sidebar.js?v=20261006-prompter-settings-v1"></script>
+  <script src="js/sidebar.js?v=20261006-chord-settings"></script>
   <script src="js/profile.js?v=20260929-members-align"></script>
   <script src="js/auth.js?v=20260910-stage4"></script>
-  <script data-ls26-settings="1" src="../shared/app-settings.js?v=20260930-app-version"></script>
+  <script data-ls26-settings="1" src="../shared/app-settings.js?v=20261006-chord-settings"></script>
   <script src="../shared/shell.js?v=20260930-release-preview-v3"></script>
   <script>document.addEventListener("DOMContentLoaded",()=>window.LK?.sidebar?.loadSidebar?.(),{once:true});</script>
-  <script src="js/prompter-settings.js?v=20261006-v1"></script>
+  <link rel="stylesheet" href="../shared/dialogs.css"><script src="../shared/dialogs.js"></script>
+  <script src="../shared/prompter-settings.js?v=20261006-chord-settings"></script>
+  <script src="js/prompter-settings.js?v=20261006-chord-settings"></script>
 </body>
 </html>

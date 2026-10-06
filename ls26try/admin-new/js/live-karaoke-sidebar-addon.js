@@ -68,15 +68,15 @@
     const prompterOpen=Boolean(open.prompter)||current==="prompter-settings.html";
     const websiteOpen=Boolean(open.website)||["live-karaoke-reviews.html","live-karaoke-website-settings.html"].includes(current);
 
-    const prompterGroup=makeGroup({id:"prompter",label:"Lyric Prompter",icon:"lsi-mic",open:prompterOpen,children:[
-      makeLink(base,{file:"../oldadmin/host/venuekaraokelyricbook.html",label:"Open Lyric Prompter",icon:"lsi-monitor",target:"_blank"}),
-      makeLink(base,{file:"prompter-settings.html",key:"prompter-settings",label:"Prompter Settings",icon:"lsi-settings"})
+    const prompterGroup=makeGroup({id:"prompter",label:"Prompter",icon:"lsi-mic",open:prompterOpen,children:[
+      makeLink(base,{file:"../oldadmin/host/venuekaraokelyricbook.html",label:"Open Prompter",icon:"lsi-monitor",target:"_blank"}),
+      makeLink(base,{file:"prompter-settings.html",key:"prompter-settings",label:"Settings",icon:"lsi-settings"})
     ]});
 
     const websiteGroup=makeGroup({id:"website",label:"Website",icon:"lsi-globe",open:websiteOpen,children:[
-      makeLink(base,{file:"https://livekaraoke.github.io/online/",label:"Open Website",icon:"lsi-globe",target:"_blank"}),
-      makeLink(base,{file:"live-karaoke-reviews.html",key:"live-karaoke-reviews",label:"Live Karaoke Reviews",icon:"lsi-message"}),
-      makeLink(base,{file:"live-karaoke-website-settings.html",key:"live-karaoke-website-settings",label:"Website Settings",icon:"lsi-settings"})
+      makeLink(base,{file:"https://livekaraoke.github.io/online/",label:"Open",icon:"lsi-globe",target:"_blank"}),
+      makeLink(base,{file:"live-karaoke-reviews.html",key:"live-karaoke-reviews",label:"Reviews",icon:"lsi-message"}),
+      makeLink(base,{file:"live-karaoke-website-settings.html",key:"live-karaoke-website-settings",label:"Settings",icon:"lsi-settings"})
     ]});
 
     nav.replaceChildren(prompterGroup);

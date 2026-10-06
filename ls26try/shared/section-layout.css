@@ -144,3 +144,6 @@
   font-synthesis:weight!important;
   text-shadow:none!important;
 }
+
+/* Inline row wrappers preserve source line indexes and saved whitespace. */
+.host-section-body .ls26-chord-row{display:inline-block;padding-top:var(--ls26-chord-line-space-before,0px);padding-bottom:var(--ls26-chord-line-space-after,0px);max-width:100%;vertical-align:baseline}

@@ -1,26 +1,17 @@
 (() => {
   "use strict";
 
-  const DEFAULTS={
-    guidance:"normal",theme:"default",font:"default",size:"normal",spacing:"normal",
-    background:"#00131a",bottomBar:true,autoScroll:true,speed:1,
-    focus:40,currentScale:1.72,contextScale:1.48,mutedScale:.82,mutedOpacity:.60,currentColour:"#16d8ff"
-  };
-  const KEYS={
-    guidance:"karaokeGuidanceMode",theme:"ls26:singerTheme",font:"ls26:singerFont",size:"ls26:singerTextSize",spacing:"ls26:singerSpacing",
-    background:"ls26:karaokeSingerBackground",bottomBar:"ls26:karaokeSingerBottomBar",autoScroll:"ls26:singerAutoScroll",speed:"ls26:singerScrollSpeed",
-    focus:"ls26:singerFocusPosition",currentScale:"ls26:singerCurrentLineScale",contextScale:"ls26:singerContextLineScale",mutedScale:"ls26:singerMutedLineScale",mutedOpacity:"ls26:singerMutedOpacity",currentColour:"ls26:singerCurrentLineColour"
-  };
+  const globalSettings=window.LS26PrompterSettings;
+  const {DEFAULTS,KEYS}=globalSettings;
   const $=id=>document.getElementById(id);
   const read=(name)=>{try{const v=localStorage.getItem(KEYS[name]);return v==null?DEFAULTS[name]:v;}catch(_){return DEFAULTS[name];}};
-  const write=(name,value)=>{try{localStorage.setItem(KEYS[name],String(value));}catch(_){}};
   const bool=value=>String(value)!=="false";
   const number=(value,fallback)=>Number.isFinite(Number(value))?Number(value):fallback;
 
   const controls={
     guidance:$("prompterGuidance"),theme:$("prompterTheme"),font:$("prompterFont"),size:$("prompterTextSize"),spacing:$("prompterSpacing"),
     background:$("prompterBackground"),bottomBar:$("prompterBottomBar"),autoScroll:$("prompterAutoScroll"),speed:$("prompterSpeed"),
-    focus:$("prompterFocus"),currentScale:$("prompterCurrentScale"),contextScale:$("prompterContextScale"),mutedScale:$("prompterMutedScale"),mutedOpacity:$("prompterMutedOpacity"),currentColour:$("prompterCurrentColour")
+    focus:$("prompterFocus"),currentScale:$("prompterCurrentScale"),contextScale:$("prompterContextScale"),mutedScale:$("prompterMutedScale"),mutedOpacity:$("prompterMutedOpacity"),currentColour:$("prompterCurrentColour"),chordAbove:$("prompterChordAbove"),chordBelow:$("prompterChordBelow")
   };
   const outputs={speed:$("prompterSpeedValue"),focus:$("prompterFocusValue"),currentScale:$("prompterCurrentScaleValue"),contextScale:$("prompterContextScaleValue"),mutedScale:$("prompterMutedScaleValue"),mutedOpacity:$("prompterMutedOpacityValue")};
   const status=$("prompterSettingsStatus"),preview=$("prompterPreview");
@@ -42,6 +33,7 @@
     controls.background.value=read("background");controls.bottomBar.checked=bool(read("bottomBar"));controls.autoScroll.checked=bool(read("autoScroll"));controls.speed.value=number(read("speed"),DEFAULTS.speed);
     controls.focus.value=number(read("focus"),DEFAULTS.focus);controls.currentScale.value=number(read("currentScale"),DEFAULTS.currentScale);controls.contextScale.value=number(read("contextScale"),DEFAULTS.contextScale);
     controls.mutedScale.value=number(read("mutedScale"),DEFAULTS.mutedScale);controls.mutedOpacity.value=number(read("mutedOpacity"),DEFAULTS.mutedOpacity);controls.currentColour.value=read("currentColour");
+    controls.chordAbove.value=read("chordAbove");controls.chordBelow.value=read("chordBelow");
     updateContextCopy();refresh();
   }
   function refresh(){
@@ -51,18 +43,14 @@
     preview.style.setProperty("--preview-bg",controls.background.value);preview.style.setProperty("--preview-current",controls.currentColour.value);preview.style.setProperty("--preview-current-scale",controls.currentScale.value);
     preview.style.setProperty("--preview-context-scale",controls.contextScale.value);preview.style.setProperty("--preview-muted-scale",controls.mutedScale.value);preview.style.setProperty("--preview-muted-opacity",controls.mutedOpacity.value);
   }
-  function saveAll(){
-    ["guidance","theme","font","size","spacing","speed","focus","currentScale","contextScale","mutedScale","mutedOpacity"].forEach(name=>write(name,controls[name].value));
-    write("background",controls.background.value);write("currentColour",controls.currentColour.value);write("bottomBar",controls.bottomBar.checked);write("autoScroll",controls.autoScroll.checked);
-    refresh();if(status){status.textContent="Prompter settings saved on this device. They will be used the next time the Singer Screen loads.";status.classList.add("is-success");}
-  }
-  function reset(){
-    Object.entries(KEYS).forEach(([name,key])=>{try{localStorage.removeItem(key);}catch(_){}});load();saveAll();if(status)status.textContent="Prompter settings reset to defaults.";
-  }
-
-  Object.values(controls).forEach(control=>{
-    if(!control)return;control.addEventListener(control.type==="range"||control.type==="color"?"input":"change",saveAll);
-  });
-  $("resetPrompterSettings")?.addEventListener("click",reset);
-  load();
+  let loading=true,dirty=false;
+  function values(){const out={};for(const [key,control]of Object.entries(controls))out[key]=control.type==='checkbox'?control.checked:control.value;return globalSettings.normalize(out);}
+  function changed(){dirty=true;globalSettings.apply(values());refresh();status.textContent='Unsaved global changes. Preview cached on this device; press Save Global Settings to share.';}
+  async function reload(){loading=true;Object.values(controls).forEach(c=>c.disabled=true);const result=await globalSettings.load(true);load();dirty=false;loading=false;Object.values(controls).forEach(c=>c.disabled=false);status.textContent=result.error?'Offline or access unavailable. Using local settings; global save will check access again.':result.remote?'Global settings loaded.':'No global defaults saved yet. Review these settings before the first save.';}
+  Object.values(controls).forEach(control=>control.addEventListener(control.type==='range'||control.type==='color'?'input':'change',()=>{if(!loading)changed();}));
+  $('savePrompterSettings').onclick=async()=>{if(loading)return;const button=$('savePrompterSettings');loading=true;button.disabled=true;Object.values(controls).forEach(c=>c.disabled=true);try{await globalSettings.save(values());dirty=false;status.textContent='Global Prompter settings saved. Other devices load them next session or after Reload Global Settings.';}catch(error){status.textContent=error.message;}finally{loading=false;button.disabled=false;Object.values(controls).forEach(c=>c.disabled=false);}};
+  $('reloadPrompterSettings').onclick=async()=>{if(loading)return;if(dirty&&!await LS26Dialogs.confirm('Discard local settings edits and reload the global defaults?'))return;await reload();};
+  $('resetPrompterSettings').onclick=async()=>{if(loading)return;if(!await LS26Dialogs.confirm('Preview default Prompter settings? Save Global Settings to publish them.'))return;globalSettings.apply(DEFAULTS);load();changed();};
+  window.addEventListener('beforeunload',event=>{if(dirty){event.preventDefault();event.returnValue='';}});
+  load();void reload();
 })();

@@ -11,6 +11,7 @@
     "lyricNavVerticalSize","lyricNavHorizontalSize","lyricTextScale",
     "lyricNavHorizontalGap","lyricNavVerticalGap",
     "lyricNavIdleOpacity","lyricNavActiveOpacity","lyricNavPressedOpacity","lyricNavFeedbackDuration",
+    "chordLineSpaceAbove","chordLineSpaceBelow",
     "lyricLeadInHeight","lyricSectionActivationOffset",
     "karaokeSingerActivePosition",
     "lyricPastSectionOpacity","lyricUpcomingSectionOpacity","lyricUpcomingFadeDistance","lyricPreviousFadeDistance",

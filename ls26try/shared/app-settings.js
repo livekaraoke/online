@@ -42,6 +42,8 @@
     lyricSectionFocusDuringPlayback: true,
     lyricSectionFocusWhenStopped: false,
     lyricTextScale: 100,
+    chordLineSpaceAbove: 0,
+    chordLineSpaceBelow: 0,
     lyricLeadInHeight: 192,
     lyricSectionActivationOffset: 320,
     karaokeSingerActivePosition: 42,
@@ -115,6 +117,8 @@
       lyricPreviousFadeDistance: clamp(raw.lyricPreviousFadeDistance,0,800,DEFAULTS.lyricPreviousFadeDistance),
       lyricSectionFocusDuringPlayback: raw.lyricSectionFocusDuringPlayback !== false,
       lyricSectionFocusWhenStopped: raw.lyricSectionFocusWhenStopped === true,
+      chordLineSpaceAbove: clamp(raw.chordLineSpaceAbove,0,40,0),
+      chordLineSpaceBelow: clamp(raw.chordLineSpaceBelow,0,40,0),
       lyricTextScale: clamp(raw.lyricTextScale,75,150,DEFAULTS.lyricTextScale),
       lyricLeadInHeight: clamp(raw.lyricLeadInHeight,80,360,DEFAULTS.lyricLeadInHeight),
       lyricSectionActivationOffset: clamp(raw.lyricSectionActivationOffset,0,520,DEFAULTS.lyricSectionActivationOffset),
@@ -148,6 +152,8 @@
   function apply(settings){
     const s=normalise(settings);
     const root=document.documentElement;
+    root.style.setProperty("--ls26-chord-line-space-before",s.chordLineSpaceAbove+"px");
+    root.style.setProperty("--ls26-chord-line-space-after",s.chordLineSpaceBelow+"px");
     root.style.setProperty("--ls26-status-value-size",s.statusValueFontSize+"px");
     root.style.setProperty("--ls26-status-label-size",s.statusLabelFontSize+"px");
     root.style.setProperty("--ls26-user-bpm-color",s.userBpmColor);

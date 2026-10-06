@@ -895,6 +895,7 @@
         body.innerHTML = cleanSectionHtml(section.html || section.text || "");
       }
 
+      spaceChordRows(body);
       applySectionDashColour(body, section.style?.dashColor || "#777777");
 
       header.addEventListener("click", () => {
@@ -1540,9 +1541,21 @@
     return window.LS26Chords.transpose(token, Number(shift) || 0);
   }
 
+  function spaceChordRows(body){
+    if(!document.createRange)return;
+    const rows=window.LS26Chords.logicalLines(body,{locations:true});
+    for(const row of rows.reverse()){
+      const tokens=row.text.trim().split(/\s+/),segments=row.segments;
+      if(!segments.length||!tokens.some(window.LS26Chords.isChord)||!tokens.every(t=>window.LS26Chords.isChord(t)||/^[|:()x0-9.\-]+$/.test(t)))continue;
+      const first=segments[0],last=segments.at(-1);if(!first.node||!last.node)continue;
+      const range=document.createRange();range.setStart(first.node,first.offset);range.setEnd(last.node,last.offset+last.end-last.start);
+      const wrap=document.createElement('span');wrap.className='ls26-chord-row';wrap.append(range.extractContents());range.insertNode(wrap);
+    }
+  }
+
   function captureOriginalChordText() {
     document.querySelectorAll(".host-section-body span, .host-section-body b, .host-section-body strong").forEach(el => {
-      if (el.dataset.originalChord) return;
+      if (el.dataset.originalChord || el.closest('[data-ls26-chord="exclude"]')) return;
 
       // Only capture the leaf-most formatted token. A parent span can include
       // leading spacing plus a nested <b>/<strong>; treating that whole parent

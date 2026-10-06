@@ -30,7 +30,7 @@
           <button type="button" id="ctNext">NEXT CHORD</button>
         </div>
         <div class="ct-presets" aria-label="Set duration in beats">${[.5,1,1.5,2,3,4,6,8].map(n=>`<button type="button" data-ct-preset="${n}" aria-label="Set ${n} beats">${n}</button>`).join('')}</div>
-        <div class="ct-actions"><button type="button" id="ctSave" class="ct-primary">SAVE TIMING</button><button type="button" id="ctUndo">↶ UNDO</button><button type="button" id="ctClear">CLEAR</button><button type="button" id="ctCustomToggle" aria-expanded="false">CUSTOM…</button><button type="button" id="ctPerformanceEnter">TAP TIMING</button></div>
+        <div class="ct-actions"><button type="button" id="ctSave" class="ct-primary">SAVE TIMING</button><button type="button" id="ctUndo">↶ UNDO</button><button type="button" id="ctClear">CLEAR</button><button type="button" id="ctCustomToggle" aria-expanded="false">CUSTOM…</button><button type="button" id="ctAutoFill">AUTO FILL SONG</button><button type="button" id="ctPerformanceEnter">TAP TIMING</button></div>
         <div id="ctPerformance" class="ct-performance-controls" hidden>
           <div class="ct-performance-summary"><strong id="ctTapCurrent"></strong><span id="ctTapNext"></span><output id="ctTapBeat" role="status"></output></div>
           <div class="ct-performance-options"><label>Count-in <select id="ctCountIn"><option value="0">NONE</option><option value="1" selected>1 BAR</option><option value="2">2 BARS</option></select></label><label><input id="ctClick" type="checkbox" checked> Metronome click</label><button type="button" id="ctBpmMinus" aria-label="Lower performance BPM">BPM −</button><output id="ctTapBpm"></output><button type="button" id="ctBpmPlus" aria-label="Raise performance BPM">BPM +</button></div>
@@ -150,6 +150,7 @@
       $('ctPrevious').disabled=busy||index<=0;$('ctNext').disabled=busy||!event||index>=draft.events.length-1;
       $('ctSave').disabled=busy||!draft||!dirty()||!songId||!canSave()||base===undefined||Boolean(loadError||conflict);
       $('ctUndo').disabled=busy||!history.length;
+      $('ctAutoFill').disabled=busy||performanceMode||!draft?.events.length;
       $('ctPerformanceEnter').disabled=busy||!draft?.events.length||Boolean(draft?.reviewReasons.length)||!window.LS26SongAudio||!window.LS26TapTiming;
       $('ctPerformance').hidden=!performanceMode;
       if(performanceMode){
@@ -253,6 +254,52 @@
     function captureTap(){if(!performanceMode||busy)return false;const result=tapSession.capture();if(!result)return false;if(result.complete)audio.pause();message=`Captured ${result.duration} beats. Changes remain local until Save Timing.`;draw();return result;}
     function undoTap(){if(!performanceMode||busy||!tapSession.undo())return false;message='Last tap undone. Retap the harmony change, or pause to correct.';draw();reveal();return true;}
     function stopPerformance(){if(!performanceMode)return;performanceMode=false;audio?.stop();tapSession?.end();window.cancelAnimationFrame?.(performanceFrame);root.classList.remove('ct-performance');message='Tap Timing stopped. Your local durations are kept.';draw();}
+    function openAutofill(){
+      if(busy||performanceMode||!draft?.events.length||!window.LS26TimingAutofill)return;
+      const engine=window.LS26TimingAutofill,dialog=document.createElement('dialog');dialog.className='ct-autofill';
+      dialog.setAttribute('aria-label','Auto Fill Song');dialog.innerHTML=`<h2>AUTO FILL SONG</h2><div data-af-body></div><div class="ct-af-actions"></div>`;
+      const body=dialog.querySelector('[data-af-body]'),actions=dialog.querySelector('.ct-af-actions');let groups=[],pending=null;
+      const button=(label,action)=>{const b=document.createElement('button');b.type='button';b.textContent=label;b.onclick=action;actions.append(b);return b;};
+      const paragraph=text=>{const p=document.createElement('p');p.textContent=text;body.append(p);return p;};
+      const close=()=>{dialog.close();dialog.remove();$('ctAutoFill').focus();};
+      function start(){
+        body.replaceChildren();actions.replaceChildren();paragraph('Choose a starting length for each chord-bearing line. You can adjust every progression next. Durations use quarter-note beats.');
+        const label=document.createElement('label');label.textContent='Default bars per chord line ';const input=document.createElement('input');input.type='number';input.min='.5';input.step='.5';input.value='2';label.append(input);body.append(label);
+        paragraph(`Song meter: ${draft.meter.beatsPerBar}/${draft.meter.beatUnit}. Inline TIME SIG changes are respected; lines containing a meter change are skipped for manual checking.`);
+        button('CANCEL',close);button('NEXT: PROGRESSIONS',()=>{if(!input.reportValidity()||Number(input.value)<=0)return;groups=engine.plan(song,draft,document,Number(input.value));templates();});
+      }
+      function templates(){
+        body.replaceChildren();actions.replaceChildren();paragraph('Keep existing durations unless you explicitly choose Replace. Wrappers such as (G) and G share a progression. Review every suggested template.');
+        groups.forEach((group,index)=>{
+          const card=document.createElement('section');card.className='ct-af-group';body.append(card);
+          const h=document.createElement('h3');h.textContent=`Progression ${index+1}: ${group.progression.join(' · ')} · used ${group.lines.length} times`;card.append(h);
+          const usage=document.createElement('p');usage.textContent=group.lines.map(l=>`${l.title}, line ${l.lineIndex+1}`).join(' · ');card.append(usage);
+          const existing=group.lines.reduce((n,l)=>n+l.events.filter(e=>e.durationBeats!==undefined).length,0),count=group.lines.reduce((n,l)=>n+l.events.length,0);
+          const evidence=document.createElement('p');evidence.textContent=`${existing===count?'EXISTING TIMING':existing?'MIXED':'AUTO-FILL TARGET'} · ${existing}/${count} already timed · ${group.evidence}`;card.append(evidence);
+          const barsLabel=document.createElement('label');barsLabel.textContent=`Bars per line (${group.meter.beatsPerBar}/${group.meter.beatUnit}) `;const bars=document.createElement('input');bars.type='number';bars.min='.5';bars.step='.5';bars.value=group.bars;barsLabel.append(bars);card.append(barsLabel);
+          const fields=document.createElement('div');fields.className='ct-af-durations';card.append(fields);const total=document.createElement('p');total.setAttribute('role','status');card.append(total);
+          const updateTotal=()=>{const sum=group.values.reduce((a,b)=>a+b,0),expected=group.bars*engine.bar(group.meter);total.textContent=`TOTAL: ${sum} / ${expected} quarter-note beats`;total.classList.toggle('ct-af-invalid',!engine.validate([group]));};
+          function durations(){fields.replaceChildren();group.progression.forEach((chord,i)=>{const label=document.createElement('label');label.textContent=chord;const input=document.createElement('input');input.type='number';input.inputMode='decimal';input.min='.5';input.step='.5';input.value=group.values[i]??'';input.oninput=()=>{group.values[i]=Number(input.value);updateTotal();};label.append(input);fields.append(label);});updateTotal();}
+          bars.onchange=()=>{group.bars=Number(bars.value);engine.suggest(group);durations();};durations();
+          for(const [key,text]of [['replace','Replace existing durations in this group'],['skip','Skip this progression; keep it for manual timing']]){
+            const label=document.createElement('label');label.className='ct-af-check';const check=document.createElement('input');check.type='checkbox';check.checked=group[key];check.onchange=()=>{group[key]=check.checked;updateTotal();};label.append(check,document.createTextNode(text));card.append(label);
+          }
+          if(group.mixed){const p=document.createElement('p');p.textContent='Meter changes inside this line. Keep skipped, or explicitly choose the line total after musical review.';card.append(p);}
+        });
+        const error=paragraph('');error.setAttribute('role','alert');button('CANCEL',close);button('BACK',start);button('REVIEW',()=>{if(!engine.validate(groups)){error.textContent='Each template must contain positive half-beat values totalling its chosen bars. Correct it or select Skip.';return;}pending=engine.apply(draft,groups);review();});
+      }
+      function review(){
+        body.replaceChildren();actions.replaceChildren();const changes=pending.events.filter((e,i)=>e.durationBeats!==draft.events[i].durationBeats).length;
+        paragraph(`${changes} chord durations will change locally. Event identities and unresolved older timing are retained. Nothing is saved until Save Timing.`);
+        const warnings=engine.warnings(pending,groups);warnings.forEach(paragraph);
+        let accepted=!warnings.length;
+        if(warnings.length){const label=document.createElement('label');label.className='ct-af-check';const check=document.createElement('input');check.type='checkbox';label.append(check,document.createTextNode('Accept these exceptions / leave them for manual verification'));body.append(label);check.onchange=()=>{accepted=check.checked;apply.disabled=!accepted;};}
+        else paragraph('Completed sections align to their current bar length. Pickups and intentional exceptions still need your musical judgement.');
+        button('CANCEL',close);button('BACK',templates);const apply=button('APPLY LOCALLY',()=>{if(!accepted)return;if(model.semanticKey(pending)!==serial()){remember();draft=pending;message='Song auto-filled · UNSAVED. Review the durations, then Save Timing.';draw();}close();});apply.disabled=!accepted;
+      }
+      dialog.addEventListener('close',()=>{dialog.remove();$('ctAutoFill').focus();},{once:true});dialog.addEventListener('cancel',event=>{event.preventDefault();close();});document.body.append(dialog);start();dialog.showModal();
+    }
+
     function setCustom(open,focus=true){$('ctCustom').hidden=!open;root.classList.toggle('ct-custom-open',open);$('ctCustomToggle').setAttribute('aria-expanded',String(open));$('ctCustomToggle').textContent=open?'CLOSE CUSTOM':'CUSTOM…';if(focus)(open?$('ctCustomValue'):$('ctCustomToggle')).focus();}
     async function save(){return run(async()=>{
       if(!allowSave||!songId||base===undefined||loadError||conflict||!dirty()||performanceMode&&audio?.snapshot().state==='playing')return false;
@@ -288,7 +335,7 @@
       if(button.dataset.ctIndex!==undefined)return select(Number(button.dataset.ctIndex));
       if(button.dataset.ctOld!==undefined){const index=Number(button.dataset.ctOld);reviewId=draft.unresolved[index].event.id;draw();root.querySelector(`[data-ct-old="${index}"]`)?.focus({preventScroll:true});return;}
       if(button.dataset.ctPreset!==undefined)return duration(Number(button.dataset.ctPreset));
-      const actions={ctPrevious:()=>select(currentIndex()-1),ctNext:()=>select(currentIndex()+1),ctMinus:()=>step(-.5),ctPlus:()=>step(.5),ctClear:()=>duration(null),ctUndo:undo,ctSave:save,ctReload:reload,
+      const actions={ctAutoFill:openAutofill,ctPrevious:()=>select(currentIndex()-1),ctNext:()=>select(currentIndex()+1),ctMinus:()=>step(-.5),ctPlus:()=>step(.5),ctClear:()=>duration(null),ctUndo:undo,ctSave:save,ctReload:reload,
         ctPerformanceEnter:enterPerformance,ctTapPlay:playPerformance,ctTapNextChord:captureTap,ctTapUndo:undoTap,ctTapExit:stopPerformance,
         ctBpmMinus:()=>tempo.set(tempo.get()-1),ctBpmPlus:()=>tempo.set(tempo.get()+1),
         ctAssign:()=>resolve('assign'),ctDiscard:()=>resolve('discard'),ctAcceptMeter:()=>resolve('meter'),

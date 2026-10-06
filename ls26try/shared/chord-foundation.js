@@ -18,18 +18,20 @@
   }
   function parse(value) {
     const symbol = String(value ?? '').trim();
-    const normalized = symbol.replace(/♯/g, '#').replace(/♭/g, 'b');
+    let core=symbol, prefix='', postfix='';
+    while ((core.startsWith('(')&&core.endsWith(')'))||(core.startsWith('[')&&core.endsWith(']'))) { prefix+=core[0];postfix=core.at(-1)+postfix;core=core.slice(1,-1); }
+    const normalized = core.replace(/♯/g, '#').replace(/♭/g, 'b');
     const pieces = normalized.split('/');
     const main = part(pieces[0]);
     const bass = pieces.length === 2 && pieces[1] ? part(pieces[1]) : null;
     if (main && (pieces.length === 1 || (pieces.length === 2 && bass))) {
-      return {symbol, ...main, bass, legacy:false};
+      return {symbol, core, prefix, postfix, ...main, bass, legacy:false};
     }
     // Preserve every spelling accepted by the previous recognition regex,
     // including incomplete legacy suffixes, without inferring a bass note.
     if (legacy.test(normalized)) {
       const m = normalized.match(/^([A-G])([#b]?)(.*)$/i);
-      return {symbol, root:m[1].toUpperCase()+m[2].toLowerCase(), suffix:m[3], bass:null, legacy:true};
+      return {symbol, core, prefix, postfix, root:m[1].toUpperCase()+m[2].toLowerCase(), suffix:m[3], bass:null, legacy:true};
     }
     return null;
   }
@@ -41,30 +43,31 @@
     const chord = parse(value);
     if (!chord) return value;
     const move = p => (p.root.includes('b') ? flat : sharp)[(notes[p.root]+step)%12]+p.suffix;
-    const text = move(chord)+(chord.bass ? '/'+move(chord.bass) : '');
+    const text = chord.prefix+move(chord)+(chord.bass ? '/'+move(chord.bass) : '')+chord.postfix;
     const raw = String(value), at = raw.indexOf(chord.symbol);
     return raw.slice(0,at)+text+raw.slice(at+chord.symbol.length);
   }
   const skip = 'script,style,button,select,textarea,.tab-block,.tab-line,.tab-dashes,.tab-note,.tab-cell,.note-cell,.inserted-blank-tab,.lyrics-song-link';
-  const explicit = '.inserted-chord,.chord-token,[data-chord]';
+  const explicit = '.inserted-chord,.chord-token,[data-chord],[data-ls26-chord="include"]';
   const blocks = new Set(['DIV','P','PRE','LI','UL','OL','BLOCKQUOTE']);
   function logicalLines(element,{locations=false,original=false}={}) {
-    const blank=()=>({text:'',marked:[],...(locations?{segments:[]}: {})});
+    const blank=()=>({text:'',marked:[],excluded:[],...(locations?{segments:[]}: {})});
     const lines = [blank()];
     const line = () => lines[lines.length-1];
     const newline = () => lines.push(blank());
-    function append(raw,marked,node,alias){
+    function append(raw,marked,node,alias,excluded=false){
       let offset=0;
       String(raw).split(/(\r\n|\r|\n)/).forEach((piece,i)=>{
         if(i%2){newline();offset+=piece.length;return;}
         const text=piece.replace(/\u00a0/g,' '),start=line().text.length;line().text+=text;
-        if(marked&&text)line().marked.push([start,start+text.length]);
+        if(excluded&&text)line().excluded.push([start,start+text.length]);
+        if(marked&&!excluded&&text)line().marked.push([start,start+text.length]);
         if(locations&&text)line().segments.push({start,end:start+text.length,node,offset,element:alias});offset+=piece.length;
       });
     }
-    function visit(node, marked=false) {
+    function visit(node, marked=false, excluded=false) {
       if (node.nodeType === 3) {
-        append(node.nodeValue||'',marked,node);
+        append(node.nodeValue||'',marked,node,null,excluded);
         return;
       }
       if (node.nodeType !== 1) return;
@@ -76,12 +79,13 @@
       if (node.tagName === 'BR') { newline(); return; }
       const block = blocks.has(node.tagName);
       if (block && line().text) newline();
-      if(original&&typeof node.__ls26OriginalChordText==='string'){
+      excluded=excluded||node.matches('[data-ls26-chord="exclude"]');
+      if(original&&!excluded&&typeof node.__ls26OriginalChordText==='string'){
         append(node.__ls26OriginalChordText,true,null,node);if(block&&line().text)newline();return;
       }
       const chordMarkup = node.matches(explicit) ||
         (node.matches('span,b,strong') && Boolean(parse(node.textContent)));
-      for (const child of node.childNodes) visit(child, marked || chordMarkup);
+      for (const child of node.childNodes) visit(child, marked || chordMarkup,excluded);
       if (block && line().text) newline();
     }
     for (const node of element.childNodes) visit(node);
@@ -107,6 +111,7 @@
           const symbol = token[0], chord = parse(symbol);
           if (!chord) continue;
           const start = token.index, end = start+symbol.length;
+          if(line.excluded.some(([a,b])=>a<end&&b>start))continue;
           let covered = start;
           for (const [a,b] of line.marked) if (a <= covered && b > covered) covered = b;
           if (!chordLine && covered < end) continue;
@@ -191,5 +196,5 @@
     return Object.freeze({update(extracted,options){current=reconcile(current,extracted,options);return copy(current);},
       snapshot(){return current ? copy(current) : {version:1,events:[],unresolved:[],needsReview:false};}});
   }
-  return Object.freeze({parse,isChord:value=>Boolean(parse(value)),transpose,extractSections,logicalLines,reconcile,createModel});
+  return Object.freeze({parse,canonical:value=>{const p=parse(value);return p?p.root+p.suffix+(p.bass?'/'+p.bass.root+p.bass.suffix:''):null;},isChord:value=>Boolean(parse(value)),transpose,extractSections,logicalLines,reconcile,createModel});
 });
