@@ -35,8 +35,10 @@
     if (!button || !target) return;
 
     if (!target.id) target.id = "live-karaoke-status";
-    button.setAttribute("href", "#live-karaoke-status");
-    button.removeAttribute("onclick");
+    if (button.getAttribute("href") !== "#live-karaoke-status") {
+      button.setAttribute("href", "#live-karaoke-status");
+    }
+    if (button.hasAttribute("onclick")) button.removeAttribute("onclick");
 
     if (button.dataset.liveKaraokeScrollBound === "1") return;
     button.dataset.liveKaraokeScrollBound = "1";
@@ -66,10 +68,10 @@
     container.dataset.htmlSteps = "1";
     container.innerHTML = `
       <div class="how-it-works-grid" role="list" aria-label="How Live Karaoke works">
-        ${howStep(1,"PICK A SONG","Browse the live songbook and choose what you want to sing.",`<svg viewBox="0 0 64 64"><path d="M18 12h30v36H18z"/><path d="M25 22h16M25 29h16M25 36h10"/><path d="M43 12v15"/><circle cx="39" cy="29" r="4"/></svg>`)}
-        ${howStep(2,"JOIN THE QUEUE","Add yourself to the singer rotation and wait for your turn.",`<svg viewBox="0 0 64 64"><circle cx="20" cy="23" r="7"/><circle cx="44" cy="23" r="7"/><path d="M8 47c1-9 6-14 12-14s11 5 12 14"/><path d="M32 47c1-9 6-14 12-14s11 5 12 14"/><path d="M27 16h10M32 11v10"/></svg>`)}
-        ${howStep(3,"GRAB THE MIC","When your name is called, step up and take the microphone.",`<svg viewBox="0 0 64 64"><path d="M38 12c6 6 6 15 0 21l-7 7-14-14 7-7c6-6 15-6 21 0z"/><path d="M27 37L13 51"/><path d="M10 54l7-2-5-5z"/></svg>`)}
-        ${howStep(4,"PERFORM LIVE!","Sing with live guitar, looping and a real crowd behind you.",`<svg viewBox="0 0 64 64"><path d="M12 48h40"/><path d="M18 48V32h28v16"/><path d="M32 14l3 7 8 1-6 5 2 8-7-4-7 4 2-8-6-5 8-1z"/><path d="M24 39h16"/></svg>`)}
+        ${howStep(1,"PICK A SONG","Browse the song list and choose what you want to sing.",`<svg viewBox="0 0 64 64"><path d="M18 12h30v36H18z"/><path d="M25 22h16M25 29h16M25 36h10"/><path d="M43 12v15"/><circle cx="39" cy="29" r="4"/></svg>`)}
+        ${howStep(2,"JOIN THE QUEUE","Add yourself to the next singer rotation and wait for your turn.",`<svg viewBox="0 0 64 64"><circle cx="20" cy="23" r="7"/><circle cx="44" cy="23" r="7"/><path d="M8 47c1-9 6-14 12-14s11 5 12 14"/><path d="M32 47c1-9 6-14 12-14s11 5 12 14"/><path d="M27 16h10M32 11v10"/></svg>`)}
+        ${howStep(3,"GRAB THE MIC","When your name is called, step up and take the microphone.",`<svg viewBox="0 0 64 64"><rect x="24" y="8" width="16" height="30" rx="8"/><path d="M18 29c0 8 6 14 14 14s14-6 14-14"/><path d="M32 43v10M23 54h18"/><path d="M28 14h8M28 20h8M28 26h8"/></svg>`)}
+        ${howStep(4,"PERFORM LIVE!","Sing with live guitar, looping and a real crowd.",`<svg viewBox="0 0 64 64"><path d="M32 7l7.2 14.6L55 23.9 43.5 35l2.7 15.7L32 43.3l-14.2 7.4L20.5 35 9 23.9l15.8-2.3z"/><path d="M14 11l4 4M50 11l-4 4M8 37h6M50 37h6"/></svg>`)}
       </div>
     `;
   }
@@ -116,7 +118,7 @@
       style.id = "live-karaoke-icon-theme-fix";
       doc.head.appendChild(style);
     }
-    style.textContent = `
+    const css = `
       #requestDialog .request-history-section-title>span{
         color:#ff5b5b!important;
         text-shadow:0 0 8px rgba(255,0,0,.16)!important;
@@ -125,6 +127,7 @@
         filter:grayscale(1) saturate(0)!important;
       }
     `;
+    if (style.textContent !== css) style.textContent = css;
   }
 
   function openSongbookFromButton(event) {
@@ -167,7 +170,7 @@
   function scheduleApply() {
     if (scheduled) return;
     scheduled = true;
-    queueMicrotask(() => {
+    requestAnimationFrame(() => {
       scheduled = false;
       applyStaticRefinements();
     });
