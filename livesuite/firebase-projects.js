@@ -131,7 +131,7 @@
     document.head.appendChild(refreshCss);
 
     const refreshScript = document.createElement("script");
-    refreshScript.src = new URL("../js/live-karaoke-public-refresh.js?v=20261006-public-content-v1", base).href;
+    refreshScript.src = new URL("../js/live-karaoke-public-refresh.js?v=20261006-booking-cta-v1", base).href;
     refreshScript.async = false;
     document.head.appendChild(refreshScript);
 
