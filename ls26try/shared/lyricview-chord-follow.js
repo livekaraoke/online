@@ -86,7 +86,7 @@ body.host-lyric-view-page #performanceQuickInfo .ls26-hide-karaoke{grid-column:6
 
   let loaded=false,pending=null,result=null,track=null,nodes=new Map(),on=false,wanted=readFollowPreference(),controlsVisible=readControlsPreference();
   let manual=false,frame=null,current=null,positionedLine=null,finished=false,lastY=window.scrollY||0,programmaticUntil=0,sourceMeter=null,scrollFrame=null,countInPrepared=false;
-  let suppressPlayRejoin=false,timingOffset=0,improvHeld=null,improvResumeBeat=null,pendingStart=null,selectedStart=null,startAnchor=null;
+  let suppressPlayRejoin=false,timingOffset=0,improvHeld=null,improvResumeBeat=null,pendingStart=null,selectedStart=null,startAnchor=null,normalScrollPausedByImprov=false;
   const handledImprovs=new Set();
   const api={enabled:()=>on,wanted:()=>wanted,meter:()=>sourceMeter,startBeat:()=>Number(selectedStart?.startBeat)||0,hasStart:()=>Boolean(selectedStart)};
   const name=event=>nodes.get(event.id)?.textContent.trim()||event.chord;
@@ -151,7 +151,13 @@ body.host-lyric-view-page #performanceQuickInfo .ls26-hide-karaoke{grid-column:6
   function enterImprovHold(gate,{resumeBeat=null,position=true}={}){
    if(!gate||improvHeld)return false;
    improvHeld=gate;improvResumeBeat=Number.isFinite(resumeBeat)?resumeBeat:null;
-   cancelPositionAnimation();programmaticUntil=Date.now()+180;gate.classList.add('ls26-improv-active');gate.setAttribute('aria-current','step');
+   cancelPositionAnimation();
+   if(frame!==null){window.cancelAnimationFrame?.(frame);frame=null;}
+   programmaticUntil=Date.now()+180;gate.classList.add('ls26-improv-active');gate.setAttribute('aria-current','step');
+   if(!on&&window.LS26Performance?.isScrolling?.()){
+    const play=document.getElementById('autoScrollBtn');
+    if(play){normalScrollPausedByImprov=true;suppressPlayRejoin=true;try{play.click();}finally{suppressPlayRejoin=false;}}
+   }
    if(position)positionNode(gate,900);
    notify('IMPROV HOLD · scrolling and Chord Follow are waiting. Metronome continues. Tap the IMPROV card to continue.');stateLabel();return true;
   }
@@ -161,11 +167,15 @@ body.host-lyric-view-page #performanceQuickInfo .ls26-hide-karaoke{grid-column:6
    if(on&&Number.isFinite(improvResumeBeat)&&Number.isFinite(state?.beat))timingOffset=Math.max(0,state.beat-improvResumeBeat);
    handledImprovs.add(gate);gate.classList.remove('ls26-improv-active');gate.removeAttribute('aria-current');improvHeld=null;improvResumeBeat=null;
    if(on){manual=false;positionedLine=null;stateLabel();notify('Continuing to the next chord');update();}
+   else if(normalScrollPausedByImprov){
+    normalScrollPausedByImprov=false;const play=document.getElementById('autoScrollBtn');
+    if(play&&!window.LS26Performance?.isScrolling?.()){suppressPlayRejoin=true;try{play.click();}finally{suppressPlayRejoin=false;}}
+   }
    return true;
   }
   function resetImprovs(){
    if(improvHeld){improvHeld.classList.remove('ls26-improv-active');improvHeld.removeAttribute('aria-current');}
-   handledImprovs.clear();improvHeld=null;improvResumeBeat=null;timingOffset=0;
+   handledImprovs.clear();improvHeld=null;improvResumeBeat=null;timingOffset=0;normalScrollPausedByImprov=false;
    allImprovs().forEach(gate=>{gate.classList.remove('ls26-improv-active');gate.removeAttribute('aria-current');});
   }
   function markImprovsBefore(event){const node=nodes.get(event?.id);if(!node)return;for(const gate of allImprovs())if(follows(gate,node))handledImprovs.add(gate);}
@@ -173,16 +183,6 @@ body.host-lyric-view-page #performanceQuickInfo .ls26-hide-karaoke{grid-column:6
    if(on||improvHeld||!window.LS26Performance?.isScrolling?.())return;
    const target=viewportTarget();const gate=allImprovs().find(item=>!handledImprovs.has(item)&&item.getBoundingClientRect().top<=target+4&&item.getBoundingClientRect().bottom>=target-44);
    if(gate)enterImprovHold(gate,{position:false});
-  }
-  function installScrollGuard(){
-   if(window.__ls26ImprovScrollGuardInstalled)return;window.__ls26ImprovScrollGuardInstalled=true;
-   const native=window.scrollBy?.bind(window);if(!native)return;
-   window.scrollBy=function(...args){
-    const held=window.LS26ImprovPause?.held?.();
-    const first=args[0],dy=typeof first==='object'?Number(first?.top||0):Number(args[1]||0);
-    if(held&&dy>0&&window.LS26Performance?.isScrolling?.())return;
-    return native(...args);
-   };
   }
 
   function sectionTitle(event){const section=document.querySelector(`.host-section[data-section-index="${event?.sourceAnchor?.sectionIndex}"]`);return section?.querySelector('.host-section-header strong')?.textContent?.trim()||'Section';}
@@ -225,19 +225,21 @@ body.host-lyric-view-page #performanceQuickInfo .ls26-hide-karaoke{grid-column:6
    const startBeat=playbackStartBeat();
    if(state.state==='stopped'){countInPrepared=false;queueUpdate();return;}
    if(Number(state.beat)<startBeat){if(state.state==='playing')prepareCountIn(state);queueUpdate();return;}
-   if(improvHeld){queueUpdate();return;}
+   // While improvising, stop the Chord Follow animation loop completely.
+   // The metronome/transport runs independently; tapping the card restarts update().
+   if(improvHeld)return;
    const logicalBeat=Math.max(0,(Number(state.beat)||0)-timingOffset),hit=track.at(logicalBeat);
    if(hit){
     const changed=current?.event.id!==hit.event.id;
     if(changed){
      const gate=pendingImprovBetween(current?.event||null,hit.event);
-     if(gate&&enterImprovHold(gate,{resumeBeat:hit.event.startBeat,position:true})){queueUpdate();return;}
+     if(gate&&enterImprovHold(gate,{resumeBeat:hit.event.startBeat,position:true}))return;
      clearActive();current=hit;nodes.get(hit.event.id)?.classList.add('ls26-active-chord');onSection(hit.event.sourceAnchor.sectionIndex);position(hit.event);
     }else current=hit;
     const summary=`${name(hit.event)} · chord ${hit.index+1} of ${track.events.length}${state?.state==='paused'?' · paused':''}`;if(!manual&&label.textContent!==summary)notify(summary);
    }
    if(state?.state==='playing'&&!hit&&logicalBeat>=track.totalBeats-1e-9&&!finished){
-    const gate=pendingImprovAfter(current?.event||null);if(gate&&enterImprovHold(gate,{resumeBeat:track.totalBeats,position:true})){queueUpdate();return;}
+    const gate=pendingImprovAfter(current?.event||null);if(gate&&enterImprovHold(gate,{resumeBeat:track.totalBeats,position:true}))return;
     finished=true;audio.pause();notify('Timed song complete');onFinish();
    }
    queueUpdate();
@@ -324,7 +326,6 @@ body.host-lyric-view-page #performanceQuickInfo .ls26-hide-karaoke{grid-column:6
   });
   window.addEventListener('pagehide',disable);
 
-  installScrollGuard();
   setupTransportButtons();
   window.LS26ImprovPause=Object.freeze({held:()=>Boolean(improvHeld),resume:()=>resumeImprov(),reset:resetImprovs});
   setControlsVisible(controlsVisible,{persist:false});stateLabel();
