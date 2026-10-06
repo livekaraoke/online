@@ -49,3 +49,89 @@
   const start=()=>{scan(document.body);new MutationObserver(records=>records.forEach(r=>r.addedNodes.forEach(scan))).observe(document.body,{subtree:true,childList:true});};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
 })();
+
+/* LyricsCreator: insert a spontaneous improvisation hold at the live caret.
+ * It deliberately uses the existing lyrics-song-link class so Creator and
+ * LyricView render the card with the same visual language as linked songs. */
+(() => {
+  'use strict';
+  if(!/\/lyricscreator\.html$/i.test(location.pathname))return;
+
+  const style=document.createElement('style');
+  style.id='ls26CreatorImprovLinkStyle';
+  style.textContent=`
+    .creator-page .section-improv-link-btn{display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:5px!important;min-height:32px!important;padding:5px 9px!important;border:1px solid rgba(0,202,250,.46)!important;border-radius:7px!important;background:rgba(0,202,250,.07)!important;color:#75e5ff!important;font-size:10px!important;font-weight:900!important;line-height:1!important;white-space:nowrap!important}
+    .creator-page .section-improv-link-btn:hover{border-color:#00cafa!important;background:rgba(0,202,250,.13)!important}
+    .creator-page .creator-rich-editor a.lyrics-improv-link{cursor:pointer!important}
+  `;
+  (document.head||document.documentElement).append(style);
+
+  let savedRange=null,savedEditor=null;
+  function editorFromNode(node){
+    const el=node?.nodeType===1?node:node?.parentElement;
+    return el?.closest?.('.creator-rich-editor[data-html]')||null;
+  }
+  function rememberSelection(){
+    const selection=window.getSelection?.();
+    if(!selection?.rangeCount)return;
+    const editor=editorFromNode(selection.anchorNode);
+    if(!editor)return;
+    try{savedRange=selection.getRangeAt(0).cloneRange();savedEditor=editor;}catch(_){}
+  }
+  document.addEventListener('selectionchange',rememberSelection);
+  document.addEventListener('keyup',rememberSelection,true);
+  document.addEventListener('input',event=>{if(editorFromNode(event.target))rememberSelection();},true);
+
+  function rangeFor(editor){
+    const selection=window.getSelection?.();
+    if(selection?.rangeCount){
+      const live=selection.getRangeAt(0);
+      if(editor.contains(live.commonAncestorContainer))return live.cloneRange();
+    }
+    if(savedRange&&savedEditor===editor&&editor.contains(savedRange.commonAncestorContainer))return savedRange.cloneRange();
+    return null;
+  }
+  function notifyNoCaret(){
+    window.LS26Dialogs?.alert?.('Place the typing cursor in this section first, then press INSERT IMPROV HOLD.');
+  }
+  function insertHold(editor){
+    const range=rangeFor(editor);if(!range){notifyNoCaret();return;}
+    const link=document.createElement('a');
+    link.className='lyrics-song-link lyrics-improv-link';
+    link.href='#';
+    link.dataset.improvLink='1';
+    link.setAttribute('contenteditable','false');
+    link.setAttribute('role','button');
+    link.setAttribute('aria-label','Improvisation hold. Tap during performance to continue to the next chord.');
+    link.textContent='⏸ IMPROV — TAP TO CONTINUE';
+    range.deleteContents();range.insertNode(link);
+    const after=document.createTextNode('\u200b');link.parentNode.insertBefore(after,link.nextSibling);
+    const selection=window.getSelection?.();
+    if(selection){const next=document.createRange();next.setStartAfter(after);next.collapse(true);selection.removeAllRanges();selection.addRange(next);savedRange=next.cloneRange();savedEditor=editor;}
+    editor.classList.remove('is-empty');
+    try{editor.dispatchEvent(new InputEvent('input',{bubbles:true,inputType:'insertHTML',data:null}));}catch(_){editor.dispatchEvent(new Event('input',{bubbles:true}));}
+    editor.focus({preventScroll:true});
+    window.LS26?.toast?.('Improvisation hold inserted');
+  }
+  function addButton(strip){
+    if(!strip||strip.querySelector('.section-improv-link-btn'))return;
+    const index=strip.dataset.visibilityStrip;if(index==null)return;
+    const editor=document.querySelector(`.creator-rich-editor[data-html="${index}"]`);if(!editor)return;
+    const button=document.createElement('button');button.type='button';button.className='section-improv-link-btn';button.innerHTML='<span aria-hidden="true">⏸</span><span>IMPROV HOLD</span>';
+    button.title='Insert an improvisation hold card at the current typing cursor';
+    button.setAttribute('aria-label','Insert improvisation hold at the current typing cursor');
+    button.addEventListener('pointerdown',event=>event.preventDefault());
+    button.addEventListener('mousedown',event=>event.preventDefault());
+    button.onclick=()=>insertHold(editor);
+    const copy=strip.querySelector('.section-copy-btn');if(copy)strip.insertBefore(button,copy);else strip.append(button);
+  }
+  function scanCreator(root=document){
+    if(root?.matches?.('.section-visibility-strip[data-visibility-strip]'))addButton(root);
+    root?.querySelectorAll?.('.section-visibility-strip[data-visibility-strip]').forEach(addButton);
+  }
+  const start=()=>{
+    scanCreator(document);
+    new MutationObserver(records=>records.forEach(record=>record.addedNodes.forEach(node=>{if(node.nodeType===1)scanCreator(node);}))).observe(document.body,{subtree:true,childList:true});
+  };
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
+})();
