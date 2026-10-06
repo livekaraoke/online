@@ -1,0 +1,233 @@
+/* Live Karaoke public-site refinement layer. */
+
+:root{
+  --lk-red:#ff2b2b;
+  --lk-red-bright:#ff4a4a;
+  --lk-green:#39e06f;
+  --lk-green-dark:#0c5f2c;
+  --lk-panel:#0b0b0b;
+  --lk-line:rgba(255,43,43,.38);
+}
+
+/* Use the real repository banner asset and keep the hero compact. */
+.hero{
+  height:auto!important;
+  min-height:0!important;
+  padding:42px 20px 22px!important;
+  background:
+    linear-gradient(rgba(0,0,0,.76),rgba(0,0,0,.88)),
+    url('../img/banner.png') center/cover no-repeat!important;
+}
+.hero-content{
+  width:min(900px,100%)!important;
+  max-width:900px!important;
+}
+.hero-banner{
+  margin-bottom:28px!important;
+  animation:none!important;
+  filter:drop-shadow(0 0 12px rgba(255,0,0,.22))!important;
+}
+.hero h1,
+.main-button{
+  animation:none!important;
+}
+.main-button{
+  box-shadow:0 0 10px rgba(255,0,0,.22)!important;
+}
+.main-button:hover{
+  transform:translateY(-1px)!important;
+  box-shadow:0 0 14px rgba(255,0,0,.34)!important;
+}
+
+/* Live hero panel: request CTA is deliberately green so it reads as the action. */
+.hero-live-now{
+  margin-top:22px!important;
+  margin-bottom:0!important;
+}
+.hero-request-btn,
+.hero-request-btn.main-button{
+  border-color:rgba(57,224,111,.88)!important;
+  background:linear-gradient(180deg,rgba(26,122,58,.95),rgba(10,67,31,.98))!important;
+  color:#f4fff7!important;
+  box-shadow:0 0 10px rgba(57,224,111,.24)!important;
+  text-shadow:none!important;
+}
+.hero-request-btn:hover,
+.hero-request-btn.main-button:hover{
+  border-color:#5cf08c!important;
+  background:linear-gradient(180deg,#238a49,#0c5f2c)!important;
+  box-shadow:0 0 15px rgba(57,224,111,.36)!important;
+}
+.hero-request-btn.disabled-button{
+  border-color:#555!important;
+  background:#0d0d0d!important;
+  color:#777!important;
+  box-shadow:none!important;
+}
+
+/* Keep the status strip vertically centred with even air around its card. */
+.live-status-section{
+  min-height:86px!important;
+  padding:10px 15px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+}
+#liveStatus{
+  width:min(800px,100%)!important;
+  margin:0 auto!important;
+}
+.live-status-section .live-box,
+.public-live-box,
+.next-live-karaoke-box{
+  margin:0 auto!important;
+}
+
+/* HOW IT WORKS: real HTML text with lightweight inline illustrations. */
+.instructions-container{
+  width:100%!important;
+  max-width:1000px!important;
+  margin:42px auto 8px!important;
+  padding:0!important;
+  display:block!important;
+}
+.how-it-works-grid{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:14px;
+}
+.how-step{
+  position:relative;
+  min-height:210px;
+  padding:22px 16px 18px;
+  border:1px solid rgba(255,43,43,.42);
+  border-radius:10px;
+  background:linear-gradient(180deg,#111,#090909);
+  box-shadow:0 8px 22px rgba(0,0,0,.34),0 0 10px rgba(255,0,0,.07);
+  text-align:center;
+}
+.how-step-number{
+  position:absolute;
+  top:10px;
+  left:10px;
+  width:27px;
+  height:27px;
+  display:grid;
+  place-items:center;
+  border:1px solid var(--lk-red-bright);
+  border-radius:50%;
+  color:#fff;
+  background:#160505;
+  font-weight:900;
+  font-size:.86rem;
+}
+.how-step-icon{
+  width:76px;
+  height:76px;
+  margin:8px auto 14px;
+  display:grid;
+  place-items:center;
+  color:#fff;
+}
+.how-step-icon svg{
+  width:68px;
+  height:68px;
+  fill:none;
+  stroke:var(--lk-red-bright);
+  stroke-width:1.8;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+  filter:drop-shadow(0 0 5px rgba(255,0,0,.22));
+}
+.how-step h3{
+  margin:0!important;
+  color:#fff!important;
+  font-size:1.05rem!important;
+  letter-spacing:1.3px!important;
+  text-shadow:none!important;
+}
+.how-step p{
+  margin:8px auto 0!important;
+  color:#aaa!important;
+  font-size:.85rem!important;
+  line-height:1.45!important;
+}
+
+/* The event name below the time is redundant on the Live Karaoke page. */
+.event-subheading{display:none!important;}
+
+/* Song list is always a browseable entry point. Requests are gated inside the popup. */
+#songListBtn.song-list-browse-btn,
+#songListBtn.main-button{
+  cursor:pointer!important;
+  opacity:1!important;
+}
+
+/* Keep ordinary chrome premium/static; motion is reserved for live indicators. */
+.hero-live-pulse,
+.public-live-dot,
+.live-now,
+.live-now-small{
+  animation-duration:1.35s!important;
+}
+
+@media(max-width:760px){
+  .hero{
+    padding:28px 14px 16px!important;
+  }
+  .hero-banner{
+    width:min(92vw,900px)!important;
+    margin-bottom:22px!important;
+  }
+  .hero-live-now{
+    width:min(650px,96vw)!important;
+  }
+  .how-it-works-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:10px;
+  }
+  .how-step{
+    min-height:178px;
+    padding:18px 10px 14px;
+  }
+  .how-step-icon{
+    width:58px;
+    height:58px;
+    margin-top:12px;
+  }
+  .how-step-icon svg{
+    width:54px;
+    height:54px;
+  }
+  .how-step h3{
+    font-size:.9rem!important;
+  }
+  .how-step p{
+    font-size:.74rem!important;
+  }
+  .live-status-section{
+    min-height:76px!important;
+    padding:8px 10px!important;
+  }
+}
+
+@media(max-width:430px){
+  .how-it-works-grid{
+    grid-template-columns:1fr 1fr;
+  }
+}
+
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{
+    scroll-behavior:auto!important;
+    animation-duration:.001ms!important;
+    animation-iteration-count:1!important;
+    transition-duration:.001ms!important;
+  }
+  .hero-live-pulse,
+  .public-live-dot,
+  .live-now,
+  .live-now-small{
+    animation:none!important;
+  }
+}
