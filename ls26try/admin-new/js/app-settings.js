@@ -15,6 +15,7 @@
     "karaokeSingerActivePosition",
     "lyricPastSectionOpacity","lyricUpcomingSectionOpacity","lyricUpcomingFadeDistance","lyricPreviousFadeDistance",
     "lyricSectionFocusDuringPlayback","lyricSectionFocusWhenStopped",
+    "chordFollowCurrentColor","chordStartHereColor","improvCountdownColor",
     "metronomeBeat1Color","metronomeBeat2Color","metronomeBeat3Color","metronomeBeat4Color",
     "metronomeFlashBrightness","metronomeEdgeThickness","metronomeFlashDuration",
     "metronomeShowBeatNumber","metronomeNumberSize","metronomeNumberOpacity","metronomeNumberVerticalPosition",
