@@ -1,4 +1,4 @@
-/* LiveSuite LyricView -> Singer Screen bridge v3.
+/* LiveSuite LyricView -> Singer Screen bridge v3.2.
  * Keeps the singer display aligned with LyricView in both pixel-scroll and
  * Chord Follow modes. BroadcastChannel gives same-device tabs low-latency
  * updates; Firestore remains the cross-device fallback.
@@ -13,7 +13,7 @@
   const COLLECTION = 'karaokeControl';
   const DOC = 'liveLyrics';
   const CHANNEL = 'ls26-singer-live-v3';
-  const LOCAL_SYNC_MS = 120;
+  const LOCAL_SYNC_MS = 50;
   const REMOTE_SYNC_MS = 2000;
   const songId = String(new URLSearchParams(location.search).get('id') || '').trim();
 
@@ -32,6 +32,7 @@
   let lastRemoteSection = null;
   let lastRemoteLyric = '';
   let lastProgressSample = null;
+  const lyricMapCache = new Map();
 
   const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
   const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
@@ -126,19 +127,52 @@
       .map(line => line.replace(/\u200b/g, '').replace(/\s+/g, ' ').trim());
   }
 
-  function lyricAfterChord(sectionIndex, lineIndex) {
+  function sectionLyricMap(sectionIndex) {
+    const key = Number(sectionIndex);
+    if (lyricMapCache.has(key)) return lyricMapCache.get(key);
+    const section = currentSong()?.sections?.[key];
+    if (!section) return [];
+    const source = visualLines(section.html || section.text || '');
+    const singerHtml = window.LyricsCommon?.singerHTMLFromSection?.(section) || '';
+    const displayed = visualLines(singerHtml).filter(Boolean);
+    const mapped = [];
+    let cursor = 0;
+    displayed.forEach(text => {
+      const wanted = norm(text);
+      if (!wanted) return;
+      let match = -1;
+      for (let i = cursor; i < source.length; i += 1) {
+        const candidate = norm(source[i]);
+        if (!candidate) continue;
+        if (candidate === wanted || candidate.includes(wanted) || wanted.includes(candidate)) { match = i; break; }
+      }
+      if (match >= 0) {
+        mapped.push({ sourceLineIndex:match, text });
+        cursor = match + 1;
+      }
+    });
+    lyricMapCache.set(key, mapped);
+    return mapped;
+  }
+
+  function lyricTargetForChord(sectionIndex, lineIndex) {
     const sections = currentSong()?.sections || [];
     const section = sections[Number(sectionIndex)];
-    if (!section) return '';
+    if (!section) return { lineIndex:-1, text:'' };
     const lines = visualLines(section.html || section.text || '');
-    const start = Number.isFinite(Number(lineIndex)) ? Number(lineIndex) + 1 : 0;
+    const start = Number.isFinite(Number(lineIndex)) ? Number(lineIndex) : 0;
+    let target = -1;
     for (let i = Math.max(0, start); i < lines.length; i += 1) {
       const text = lines[i];
       if (!text || chordOnly(text)) continue;
       if (/^(time\s+\d+\/\d+|performance note|host note|improv\b)/i.test(text)) continue;
-      return text;
+      target = i;
+      break;
     }
-    return '';
+    if (target < 0) return { lineIndex:-1, text:'' };
+    const map = sectionLyricMap(sectionIndex);
+    const exact = map.find(row => row.sourceLineIndex === target) || map.find(row => row.sourceLineIndex >= target);
+    return exact ? { lineIndex:exact.sourceLineIndex, text:exact.text } : { lineIndex:target, text:lines[target] };
   }
 
   function visibleSections() {
@@ -176,13 +210,16 @@
     let active = null;
     let sourceIndex = -1;
     let activeLineIndex = -1;
+    let currentLyricLineIndex = -1;
     let currentLyricText = '';
 
     if (activeChord) {
       sourceIndex = Number(activeChord.dataset.ls26SectionIndex);
       activeLineIndex = Number(activeChord.dataset.ls26LineIndex);
       active = sections.find(el => Number(el.dataset.sectionIndex) === sourceIndex) || null;
-      currentLyricText = lyricAfterChord(sourceIndex, activeLineIndex);
+      const target = lyricTargetForChord(sourceIndex, activeLineIndex);
+      currentLyricLineIndex = target.lineIndex;
+      currentLyricText = target.text;
     }
 
     if (!active) {
@@ -213,6 +250,7 @@
       sectionProgress:Number(progress.toFixed(4)),
       progressRatePerMs:Number(rate.toFixed(8)),
       activeLineIndex:Number.isFinite(activeLineIndex) ? activeLineIndex : -1,
+      currentLyricLineIndex:Number.isFinite(currentLyricLineIndex) ? currentLyricLineIndex : -1,
       currentLyricText,
       scrollFraction:Number(clamp(scrollY / maxHostScroll, 0, 1).toFixed(5)),
       followOn:followOn(),
@@ -223,9 +261,9 @@
   function pushSync({ forceRemote=false } = {}) {
     if (!state || !isPlaying() || countInActive) return;
     const sync = buildSync();
-    const lyricKey = norm(sync.currentLyricText);
+    const lyricKey = `${sync.sourceIndex}:${sync.currentLyricLineIndex}:${norm(sync.currentLyricText)}`;
     const sectionChanged = sync.sourceIndex !== lastRemoteSection;
-    const lyricChanged = lyricKey && lyricKey !== lastRemoteLyric;
+    const lyricChanged = lyricKey !== lastRemoteLyric;
     const remote = forceRemote || sectionChanged || lyricChanged || Date.now() - lastRemoteAt >= REMOTE_SYNC_MS;
     state = { ...state, phase:'playing', playing:true, sync, countInBeat:0, updatedAtMs:Date.now() };
     postLocal();
@@ -283,7 +321,9 @@
       countInActive = false;
       publish({ phase:'playing', playing:true, countInBeat:0, sync:buildSync() }, { remote:true });
       pushSync({ forceRemote:true });
+      return;
     }
+    if (isPlaying()) pushSync();
   }
 
   function installPlayInterlock() {
@@ -328,7 +368,7 @@
         }
         lastPlaying = playing;
       }
-    }, 250);
+    }, 200);
   }
 
   async function start() {
