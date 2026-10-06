@@ -23,7 +23,7 @@ window.auth =
    established creator script order. */
 if (/\/lyricscreator\.html$/i.test(String(location.pathname || ""))) {
   const helper = document.createElement("script");
-  helper.src = "js/inline-performance-tools.js?v=20261006-inline-section-tools-v2";
+  helper.src = "js/inline-performance-tools.js?v=20261006-inline-section-tools-v3";
   helper.async = false;
   (document.head || document.documentElement).appendChild(helper);
 }
