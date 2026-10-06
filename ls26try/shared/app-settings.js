@@ -45,6 +45,9 @@
     lyricLeadInHeight: 192,
     lyricSectionActivationOffset: 320,
     karaokeSingerActivePosition: 42,
+    chordFollowCurrentColor: "#00cafa",
+    chordStartHereColor: "#ffd05a",
+    improvCountdownColor: "#ff8a24",
     metronomeBeat1Color: "#ffd05a",
     metronomeBeat2Color: "#00cafa",
     metronomeBeat3Color: "#00cafa",
@@ -116,6 +119,9 @@
       lyricLeadInHeight: clamp(raw.lyricLeadInHeight,80,360,DEFAULTS.lyricLeadInHeight),
       lyricSectionActivationOffset: clamp(raw.lyricSectionActivationOffset,0,520,DEFAULTS.lyricSectionActivationOffset),
       karaokeSingerActivePosition: clamp(raw.karaokeSingerActivePosition,25,60,DEFAULTS.karaokeSingerActivePosition),
+      chordFollowCurrentColor: colour(raw.chordFollowCurrentColor,DEFAULTS.chordFollowCurrentColor),
+      chordStartHereColor: colour(raw.chordStartHereColor,DEFAULTS.chordStartHereColor),
+      improvCountdownColor: colour(raw.improvCountdownColor,DEFAULTS.improvCountdownColor),
       metronomeBeat1Color: colour(raw.metronomeBeat1Color,DEFAULTS.metronomeBeat1Color),
       metronomeBeat2Color: colour(raw.metronomeBeat2Color,DEFAULTS.metronomeBeat2Color),
       metronomeBeat3Color: colour(raw.metronomeBeat3Color,DEFAULTS.metronomeBeat3Color),
@@ -183,6 +189,9 @@
     root.style.setProperty("--ls26-lyric-lead-in-height",s.lyricLeadInHeight+"px");
     root.style.setProperty("--ls26-section-activation-offset",s.lyricSectionActivationOffset+"px");
     root.style.setProperty("--ls26-karaoke-singer-active-position",s.karaokeSingerActivePosition+"%");
+    root.style.setProperty("--ls26-chord-follow-color",s.chordFollowCurrentColor);
+    root.style.setProperty("--ls26-start-here-color",s.chordStartHereColor);
+    root.style.setProperty("--ls26-improv-countdown-color",s.improvCountdownColor);
     root.style.setProperty("--ls26-metro-beat-1-color",s.metronomeBeat1Color);
     root.style.setProperty("--ls26-metro-beat-2-color",s.metronomeBeat2Color);
     root.style.setProperty("--ls26-metro-beat-3-color",s.metronomeBeat3Color);
