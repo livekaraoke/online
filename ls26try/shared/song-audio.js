@@ -11,25 +11,14 @@
    if(window.__ls26LyricViewPolishInstalled||!document.body?.classList.contains('host-lyric-view-page'))return;
    window.__ls26LyricViewPolishInstalled=true;
    const style=document.createElement('style');style.id='ls26LyricViewPolish';style.textContent=`
-.host-section.ls26-improv-visible-section{opacity:1!important;filter:none!important}
-.host-section.ls26-improv-visible-section a.lyrics-song-link[data-improv-link].ls26-improv-active{position:relative!important;z-index:5!important;opacity:1!important;filter:none!important;color:#ffe36f!important;border-color:#ffd54a!important;background:rgba(255,193,7,.13)!important;box-shadow:0 0 0 3px rgba(255,213,74,.24),0 0 28px rgba(255,193,7,.34)!important}
+.host-section:has(a.lyrics-song-link[data-improv-link].ls26-improv-active){opacity:1!important;filter:none!important}
+.host-section a.lyrics-song-link[data-improv-link].ls26-improv-active{position:relative!important;z-index:5!important;opacity:1!important;filter:none!important;color:#ffe36f!important;border-color:#ffd54a!important;background:rgba(255,193,7,.13)!important;box-shadow:0 0 0 3px rgba(255,213,74,.24),0 0 28px rgba(255,193,7,.34)!important}
 `;(document.head||document.documentElement).append(style);
-   const syncImprovVisibility=()=>{
-    document.querySelectorAll('.host-section.ls26-improv-visible-section').forEach(section=>{
-     if(!section.querySelector('a.lyrics-song-link[data-improv-link].ls26-improv-active'))section.classList.remove('ls26-improv-visible-section');
-    });
-    document.querySelectorAll('a.lyrics-song-link[data-improv-link].ls26-improv-active').forEach(gate=>gate.closest('.host-section')?.classList.add('ls26-improv-visible-section'));
-   };
-   if(window.MutationObserver){
-    const observer=new window.MutationObserver(syncImprovVisibility);
-    observer.observe(document.body,{subtree:true,attributes:true,attributeFilter:['class']});
-   }
    document.addEventListener('click',event=>{
     if(!event.target.closest?.('#autoScrollBtn'))return;
     document.querySelectorAll('.ls26-start-here-selected').forEach(node=>node.classList.remove('ls26-start-here-selected'));
     document.querySelectorAll('#sectionProgress .ls26-start-section').forEach(node=>node.classList.remove('ls26-start-section'));
    },true);
-   syncImprovVisibility();
   };
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});else install();
  }
