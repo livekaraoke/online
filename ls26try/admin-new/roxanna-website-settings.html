@@ -1,0 +1,52 @@
+<!-- Copyright © 2026 LiveSuite. All rights reserved. -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Roxanna Website Settings · LiveSuite</title>
+  <link rel="stylesheet" href="css/admin.css?v=20260910-stage4">
+  <link rel="stylesheet" href="css/sidebar.css?v=20260910-stage4">
+  <link rel="stylesheet" href="css/sidebar-suite.css?v=20260929-admin-polish">
+  <link rel="stylesheet" href="css/enquiries.css?v=20260910-stage4">
+  <link rel="stylesheet" href="css/admin-navigation.css?v=20260929-admin-polish">
+  <link rel="stylesheet" href="../shared/theme.css?v=20260930-release-preview-v2">
+  <style>
+    .roxanna-site-main{max-width:1100px}
+    .roxanna-site-topbar{display:flex;align-items:flex-start;justify-content:space-between;gap:18px}
+    .roxanna-site-card{margin-top:22px;padding:22px;border:1px solid var(--ls-border,#264451);border-radius:10px;background:var(--ls-panel,#07151c)}
+    .roxanna-site-card h2{margin:0 0 8px}
+    .roxanna-site-card p{margin:0;color:var(--ls-muted,#91a0a8);line-height:1.55}
+    .roxanna-site-open{display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:8px 14px;border:1px solid #f28a00;border-radius:8px;color:#ffd59d;text-decoration:none;background:rgba(242,138,0,.1);font-weight:800;white-space:nowrap}
+  </style>
+</head>
+<body class="admin-body enquiries-page">
+  <div class="admin-shell">
+    <div id="sidebarContainer"></div>
+    <main class="admin-main enquiries-main roxanna-site-main">
+      <header class="enquiries-topbar roxanna-site-topbar">
+        <div>
+          <p class="enquiries-eyebrow">Roxanna</p>
+          <h1>Website Settings</h1>
+          <p class="enquiries-subtitle">Roxanna website controls can be added here as the public site becomes configurable.</p>
+        </div>
+        <a class="roxanna-site-open" href="https://livekaraoke.github.io/online/roxanna/" target="_blank" rel="noopener">Open website ↗</a>
+      </header>
+
+      <section class="roxanna-site-card">
+        <h2>Website</h2>
+        <p>The sidebar now keeps Roxanna website access together under Website → Open / Settings. No editable Roxanna website fields have been wired to Firestore yet.</p>
+      </section>
+    </main>
+  </div>
+
+  <script src="../firebase-projects.js?v=20261007-sidebar-groups-v1"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="js/firebase.js?v=20260910-stage4"></script>
+  <script src="js/sidebar.js?v=20260930-dynamic-version-v2"></script>
+  <script src="js/profile.js?v=20260929-members-align"></script>
+  <script src="js/auth.js?v=20260910-stage4"></script>
+</body>
+</html>
