@@ -20,6 +20,9 @@ body.host-lyric-view-page .performance-quick-slave #quickSlaveLyricsSelect{width
 body.host-lyric-view-page .performance-quick-slave #quickSendSlaveLyricsBtn{min-width:108px!important;min-height:34px!important;height:34px!important;padding:5px 8px!important;font-size:10px!important;white-space:nowrap!important}
 body.host-lyric-view-page #performanceQuickInfo .ls26-hide-karaoke{grid-column:6!important;grid-row:1!important;width:34px!important;min-width:34px!important;height:34px!important;min-height:34px!important;font-size:26px!important}
 .host-section-body .ls26-active-chord{outline:2px solid var(--ls-accent);outline-offset:3px;border-radius:4px;background:#00cafa25!important;box-shadow:0 0 0 4px #00cafa15;color:var(--ls-accent)!important}
+.host-section-body .ls26-timed-chord{cursor:pointer}
+.host-section-body .ls26-start-here-selected{border-radius:4px;box-shadow:0 0 0 3px rgba(255,208,90,.62),0 0 18px rgba(255,208,90,.18)!important}
+.host-section-body .ls26-start-here-candidate{border-radius:4px;box-shadow:0 0 0 3px rgba(255,208,90,.34)!important}
 #songInfoDrawer.song-info-drawer{z-index:2147482600!important}
 #chordFollowFloatCard{position:fixed!important;width:clamp(220px,26vw,300px)!important;max-width:calc(100vw - 24px)!important;box-sizing:border-box!important;padding:7px!important;border:1px solid color-mix(in srgb,var(--ls-accent) 42%,var(--ls-border))!important;border-radius:10px!important;background:rgba(2,18,27,.96)!important;box-shadow:0 10px 28px rgba(0,0,0,.42),0 0 18px rgba(0,202,250,.08)!important;z-index:2147481550!important;backdrop-filter:blur(8px)!important}
 #chordFollowFloatCard[hidden]{display:none!important}
@@ -35,6 +38,12 @@ body.host-lyric-view-page #performanceQuickInfo .ls26-hide-karaoke{grid-column:6
 #chordFollowFloatCard #chordFollowStatus{display:block!important;min-width:0!important;max-width:100%!important;max-height:52px!important;margin:5px 1px 0!important;padding:0!important;overflow:auto!important;color:var(--ls-muted)!important;font-size:9px!important;font-weight:750!important;line-height:1.25!important;white-space:pre-line!important;overflow-wrap:anywhere!important}
 #chordFollowFloatCard #chordFollowStatus[hidden]{display:none!important}
 #chordFollowFloatCard #chordFollowStatus.is-unavailable{color:var(--ls-warning)!important}
+#ls26StartHereCard{position:fixed;display:flex;align-items:center;gap:6px;max-width:min(330px,calc(100vw - 20px));padding:7px 8px;border:1px solid rgba(255,208,90,.7);border-radius:9px;background:rgba(4,18,25,.97);box-shadow:0 10px 28px rgba(0,0,0,.42),0 0 18px rgba(255,208,90,.12);z-index:2147481500;box-sizing:border-box}
+#ls26StartHereCard[hidden]{display:none!important}
+#ls26StartHereCard .ls26-start-label{min-width:0;flex:1 1 auto;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#ffe38a;font-size:10px;font-weight:850}
+#ls26StartHereCard button{height:32px;min-height:32px;border:1px solid rgba(255,208,90,.62);border-radius:6px;background:rgba(255,208,90,.09);color:#ffe38a;font-size:10px;font-weight:950;white-space:nowrap;padding:4px 8px}
+#ls26StartHereCard .ls26-start-cancel{width:30px;min-width:30px;padding:0;color:var(--ls-muted);border-color:var(--ls-border);background:var(--ls-panel)}
+#sectionProgress .progress-section.ls26-start-section{filter:drop-shadow(0 0 5px rgba(255,208,90,.5))}
 .host-scroll-player .ls26-track-nav-btn{display:inline-grid!important;place-items:center!important;flex:0 0 42px!important;width:42px!important;min-width:42px!important;max-width:42px!important;height:42px!important;min-height:42px!important;max-height:42px!important;margin:0!important;padding:0!important;border:1px solid var(--ls-border)!important;border-radius:50%!important;background:rgba(3,21,31,.92)!important;color:var(--ls-text)!important;box-shadow:inset 0 0 0 1px rgba(0,202,250,.04)!important}
 .host-scroll-player .ls26-track-nav-btn:hover,.host-scroll-player .ls26-track-nav-btn:focus-visible{border-color:var(--ls-accent)!important;color:var(--ls-accent)!important}
 .host-scroll-player .ls26-track-nav-btn svg{display:block!important;width:21px!important;height:21px!important;fill:currentColor!important;stroke:none!important}
@@ -60,6 +69,11 @@ body.host-lyric-view-page #performanceQuickInfo .ls26-hide-karaoke{grid-column:6
   const head=document.createElement('div');head.className='chord-follow-card-head';head.append(controls,close);
   card.id='chordFollowFloatCard';card.className='performance-chord-follow';card.setAttribute('aria-label','Chord Follow controls');card.append(head,label);document.body.append(card);
 
+  const startCard=document.createElement('div'),startLabel=document.createElement('span'),startConfirm=document.createElement('button'),startCancel=document.createElement('button');
+  startCard.id='ls26StartHereCard';startCard.hidden=true;startCard.setAttribute('role','dialog');startCard.setAttribute('aria-label','Choose song start');
+  startLabel.className='ls26-start-label';startConfirm.type=startCancel.type='button';startConfirm.textContent='▶ START HERE';startCancel.className='ls26-start-cancel';startCancel.textContent='×';startCancel.setAttribute('aria-label','Cancel start selection');
+  startCard.append(startLabel,startConfirm,startCancel);document.body.append(startCard);
+
   const sizeDock=()=>{const outer=dock?.closest('.host-bottom-dock');if(outer)document.body.style.setProperty('--lv-dock-height',outer.getBoundingClientRect().height+'px');};
   const Observer=window.ResizeObserver;if(Observer&&dock)new Observer(sizeDock).observe(dock.closest('.host-bottom-dock')||dock);window.addEventListener('resize',sizeDock);sizeDock();
 
@@ -72,9 +86,9 @@ body.host-lyric-view-page #performanceQuickInfo .ls26-hide-karaoke{grid-column:6
 
   let loaded=false,pending=null,result=null,track=null,nodes=new Map(),on=false,wanted=readFollowPreference(),controlsVisible=readControlsPreference();
   let manual=false,frame=null,current=null,positionedLine=null,finished=false,lastY=window.scrollY||0,programmaticUntil=0,sourceMeter=null,scrollFrame=null,countInPrepared=false;
-  let suppressPlayRejoin=false,timingOffset=0,improvHeld=null,improvResumeBeat=null;
+  let suppressPlayRejoin=false,timingOffset=0,improvHeld=null,improvResumeBeat=null,pendingStart=null,selectedStart=null,startAnchor=null;
   const handledImprovs=new Set();
-  const api={enabled:()=>on,wanted:()=>wanted,meter:()=>sourceMeter};
+  const api={enabled:()=>on,wanted:()=>wanted,meter:()=>sourceMeter,startBeat:()=>Number(selectedStart?.startBeat)||0,hasStart:()=>Boolean(selectedStart)};
   const name=event=>nodes.get(event.id)?.textContent.trim()||event.chord;
   const allImprovs=()=>[...document.querySelectorAll(IMPROV_SELECTOR)];
 
@@ -84,10 +98,20 @@ body.host-lyric-view-page #performanceQuickInfo .ls26-hide-karaoke{grid-column:6
   function clear(){clearActive();current=null;}
   function placeCard(){if(card.hidden)return;const nav=document.querySelector('.host-nav-pad'),rect=nav?.getBoundingClientRect?.();const right=rect?Math.max(12,window.innerWidth-rect.right):14;const bottom=rect?Math.max(100,window.innerHeight-rect.top+10):220;card.style.right=right+'px';card.style.bottom=bottom+'px';}
   function setControlsVisible(value,{persist=true,broadcast=false}={}){controlsVisible=Boolean(value);card.hidden=!controlsVisible;if(persist)writeControlsPreference(controlsVisible);if(controlsVisible)window.requestAnimationFrame?.(placeCard);if(broadcast)window.dispatchEvent(new CustomEvent('ls26:chord-follow-controls-visibility',{detail:{visible:controlsVisible,source:'follow-card'}}));}
+  function songPlaying(){return getAudio()?.snapshot?.().state==='playing'||Boolean(window.LS26Performance?.isScrolling?.());}
   function stateLabel(){button.setAttribute('aria-pressed',String(wanted));button.classList.toggle('active',wanted);button.textContent=wanted?'FOLLOW: ON':'FOLLOW: OFF';button.setAttribute('aria-label',wanted?'Chord Follow on':'Chord Follow off');rejoin.hidden=!on||!manual;reset.hidden=!on;if(controlsVisible)window.requestAnimationFrame?.(placeCard);}
   function notify(message,unavailable=false){label.textContent=message;label.title=String(message||'').replace(/\s*\n\s*/g,' · ');label.hidden=!message;label.classList.toggle('is-unavailable',unavailable);sizeDock();if(controlsVisible)window.requestAnimationFrame?.(placeCard);}
   function cancelPositionAnimation(){if(scrollFrame!==null){window.cancelAnimationFrame?.(scrollFrame);scrollFrame=null;}}
-  function suspend(){if(!on||improvHeld)return;manual=true;cancelPositionAnimation();programmaticUntil=0;notify('Positioning paused · timing continues. Use REJOIN to resume following.');stateLabel();}
+  function suspend(){
+   if(!on||improvHeld)return;
+   cancelPositionAnimation();programmaticUntil=0;
+   if(songPlaying()){
+    // During live playback the performer may look around, but Follow stays
+    // armed and automatically takes the screen back on the next chord line.
+    manual=false;notify('Manual view · Chord Follow returns on the next chord line.');stateLabel();return;
+   }
+   manual=true;notify('Positioning paused · scroll freely. Press Play or REJOIN to resume following.');stateLabel();
+  }
   function area(){const top=(document.getElementById('ls26StickyHeader')?.getBoundingClientRect().bottom||0)+12,bottom=(document.querySelector('.host-bottom-dock')?.getBoundingClientRect().top||window.innerHeight)-16;return {top,bottom,height:Math.max(80,bottom-top)};}
   function viewportTarget(){const box=area();return box.top+box.height*.18;}
   function nodeScrollTarget(node){if(!node)return null;const section=node.closest?.('.host-section');if(section?.classList.contains('collapsed')||section?.classList.contains('session-visibility-hidden'))return null;const rect=node.getBoundingClientRect(),max=Math.max(0,document.documentElement.scrollHeight-window.innerHeight);return Math.max(0,Math.min(max,(window.scrollY||0)+rect.top-viewportTarget()));}
@@ -106,7 +130,14 @@ body.host-lyric-view-page #performanceQuickInfo .ls26-hide-karaoke{grid-column:6
    if(rememberLine)positionedLine=line;animateScrollTo(target.y,duration);
   }
   function positionNode(node,duration=900){const y=nodeScrollTarget(node);if(y!==null)animateScrollTo(y,duration);}
-  function prepareCountIn(state){if(countInPrepared||manual||improvHeld||!track?.events?.length||!(state?.beat<0))return;const first=track.events[0],bpm=Math.max(1,Number(state.bpm)||96),remainingMs=Math.max(700,Math.min(3600,(-state.beat)*60000/bpm));position(first,true,remainingMs,false);countInPrepared=true;notify(`Count-in · ${name(first)} next`);}
+  function playbackStartEvent(){return selectedStart||track?.events?.[0]||null;}
+  function playbackStartBeat(){return Number(playbackStartEvent()?.startBeat)||0;}
+  function prepareCountIn(state){
+   const targetEvent=playbackStartEvent(),targetBeat=playbackStartBeat();
+   if(countInPrepared||manual||improvHeld||!targetEvent||!(Number(state?.beat)<targetBeat))return;
+   const bpm=Math.max(1,Number(state.bpm)||96),remainingBeats=Math.max(.001,targetBeat-Number(state.beat)),remainingMs=Math.max(700,Math.min(4200,remainingBeats*60000/bpm));
+   position(targetEvent,true,remainingMs,false);countInPrepared=true;notify(`Count-in · ${name(targetEvent)} next`);
+  }
 
   function follows(a,b){return Boolean(a&&b&&(a.compareDocumentPosition(b)&window.Node.DOCUMENT_POSITION_FOLLOWING));}
   function pendingImprovBetween(previousEvent,nextEvent){
@@ -137,6 +168,7 @@ body.host-lyric-view-page #performanceQuickInfo .ls26-hide-karaoke{grid-column:6
    handledImprovs.clear();improvHeld=null;improvResumeBeat=null;timingOffset=0;
    allImprovs().forEach(gate=>{gate.classList.remove('ls26-improv-active');gate.removeAttribute('aria-current');});
   }
+  function markImprovsBefore(event){const node=nodes.get(event?.id);if(!node)return;for(const gate of allImprovs())if(follows(gate,node))handledImprovs.add(gate);}
   function maybeHoldNormalScroll(){
    if(on||improvHeld||!window.LS26Performance?.isScrolling?.())return;
    const target=viewportTarget();const gate=allImprovs().find(item=>!handledImprovs.has(item)&&item.getBoundingClientRect().top<=target+4&&item.getBoundingClientRect().bottom>=target-44);
@@ -153,12 +185,46 @@ body.host-lyric-view-page #performanceQuickInfo .ls26-hide-karaoke{grid-column:6
    };
   }
 
+  function sectionTitle(event){const section=document.querySelector(`.host-section[data-section-index="${event?.sourceAnchor?.sectionIndex}"]`);return section?.querySelector('.host-section-header strong')?.textContent?.trim()||'Section';}
+  function eventForNode(node){for(const event of track?.events||[])if(nodes.get(event.id)===node)return event;return null;}
+  function clearStartCandidate(){for(const node of nodes.values())node.classList.remove('ls26-start-here-candidate');pendingStart=null;startAnchor=null;startCard.hidden=true;}
+  function clearStartSelection(){
+   clearStartCandidate();for(const node of nodes.values())node.classList.remove('ls26-start-here-selected');
+   document.querySelectorAll('#sectionProgress .progress-section').forEach(item=>item.classList.remove('ls26-start-section'));
+   selectedStart=null;
+  }
+  function placeStartCard(anchor=startAnchor){
+   if(startCard.hidden||!anchor?.getBoundingClientRect)return;const rect=anchor.getBoundingClientRect(),width=Math.min(330,Math.max(220,startCard.offsetWidth||280));
+   let left=Math.max(10,Math.min(window.innerWidth-width-10,rect.left+rect.width/2-width/2)),top=rect.bottom+8;
+   const height=startCard.offsetHeight||46;if(top+height>window.innerHeight-10)top=Math.max(10,rect.top-height-8);startCard.style.left=left+'px';startCard.style.top=top+'px';
+  }
+  function proposeStart(event,anchor=nodes.get(event?.id)){
+   if(!on||!event||songPlaying())return false;
+   clearStartCandidate();pendingStart=event;startAnchor=anchor||nodes.get(event.id);nodes.get(event.id)?.classList.add('ls26-start-here-candidate');
+   startLabel.textContent=`${sectionTitle(event)} · ${name(event)} · chord ${track.events.indexOf(event)+1}`;startCard.hidden=false;window.requestAnimationFrame?.(()=>placeStartCard());return true;
+  }
+  function commitStart(){
+   if(!pendingStart||songPlaying())return;
+   const chosen=pendingStart;clearStartCandidate();for(const node of nodes.values())node.classList.remove('ls26-start-here-selected');
+   document.querySelectorAll('#sectionProgress .progress-section').forEach(item=>item.classList.remove('ls26-start-section'));
+   selectedStart=chosen;nodes.get(chosen.id)?.classList.add('ls26-start-here-selected');
+   const marker=[...document.querySelectorAll('#sectionProgress .progress-section')].find(item=>Number(item.dataset.ls26SectionIndex)===Number(chosen.sourceAnchor.sectionIndex));marker?.classList.add('ls26-start-section');
+   getAudio()?.stop();finished=false;countInPrepared=false;cancelPositionAnimation();clearActive();current=null;positionedLine=null;manual=false;resetImprovs();markImprovsBefore(chosen);programmaticUntil=Date.now()+1000;stateLabel();position(chosen,true,700);
+   notify(`START HERE set · ${sectionTitle(chosen)} · ${name(chosen)}. Press Play for the 1-bar count-in.`);
+  }
+  function firstEventInSection(sectionIndex){return track?.events?.find(event=>Number(event.sourceAnchor.sectionIndex)===Number(sectionIndex))||null;}
+  function mapProgressSections(){
+   const sections=[...document.querySelectorAll('.host-section')],markers=[...document.querySelectorAll('#sectionProgress .progress-section')];
+   markers.forEach((marker,index)=>{const section=sections[index];if(section)marker.dataset.ls26SectionIndex=section.dataset.sectionIndex;});
+  }
+
   function queueUpdate(){if(frame===null)frame=window.requestAnimationFrame?.(()=>{frame=null;update();})??null;}
   function update(){
    if(!on||!track)return;
    const audio=getAudio(),state=audio?.snapshot();if(!state){queueUpdate();return;}
+   const startBeat=playbackStartBeat();
    if(state.state==='stopped'){countInPrepared=false;queueUpdate();return;}
-   if(state.beat<0){if(state.state==='playing')prepareCountIn(state);queueUpdate();return;}
+   if(Number(state.beat)<startBeat){if(state.state==='playing')prepareCountIn(state);queueUpdate();return;}
    if(improvHeld){queueUpdate();return;}
    const logicalBeat=Math.max(0,(Number(state.beat)||0)-timingOffset),hit=track.at(logicalBeat);
    if(hit){
@@ -177,21 +243,27 @@ body.host-lyric-view-page #performanceQuickInfo .ls26-hide-karaoke{grid-column:6
    queueUpdate();
   }
 
+  async function ensureTrack(){
+   if(track&&nodes.size)return true;
+   const saved=await load();
+   if(!['VALID','RECONCILED'].includes(saved.status)||!(track=playback.timeline(saved.timing))){
+    const c=model.summary(saved.timing,saved.source),reasons=[];
+    if(saved.status==='UNTIMED')reasons.push('No saved timing exists.');
+    else if(!saved.timing)reasons.push('Saved timing could not be loaded. Check access or connection; unsupported timing must be reviewed in LyricsCreator.');
+    else{reasons.push(`${c.timed} of ${c.total} chords are timed.`);if(c.untimed)reasons.push(`${c.untimed} ${c.untimed===1?'chord still needs':'chords still need'} timing.`);if(c.unresolved)reasons.push(`${c.unresolved} previous chord timings need review.`);if(c.meterNeedsReview)reasons.push('The song meter needs review.');}
+    notify('CHORD FOLLOW UNAVAILABLE\n'+reasons.join('\n')+'\nNormal auto-scroll remains available.',true);return false;
+   }
+   sourceMeter=saved.timing.meter;
+   if(!visibleSections()){notify('CHORD FOLLOW UNAVAILABLE\nShow and expand all timed sections before enabling Chord Follow.',true);return false;}
+   const bodies=new Map([...document.querySelectorAll('.host-section')].map(section=>[Number(section.dataset.sectionIndex),section.querySelector('.host-section-body')]));
+   if(!nodes.size){nodes=playback.bind(track.events,bodies,document);onTranspose();mapProgressSections();}
+   return true;
+  }
+
   async function enable({initial=false}={}){
    if(on)return true;button.disabled=true;
    try{
-    const saved=await load();
-    if(!['VALID','RECONCILED'].includes(saved.status)||!(track=playback.timeline(saved.timing))){
-     const c=model.summary(saved.timing,saved.source),reasons=[];
-     if(saved.status==='UNTIMED')reasons.push('No saved timing exists.');
-     else if(!saved.timing)reasons.push('Saved timing could not be loaded. Check access or connection; unsupported timing must be reviewed in LyricsCreator.');
-     else{reasons.push(`${c.timed} of ${c.total} chords are timed.`);if(c.untimed)reasons.push(`${c.untimed} ${c.untimed===1?'chord still needs':'chords still need'} timing.`);if(c.unresolved)reasons.push(`${c.unresolved} previous chord timings need review.`);if(c.meterNeedsReview)reasons.push('The song meter needs review.');}
-     notify('CHORD FOLLOW UNAVAILABLE\n'+reasons.join('\n')+'\nNormal auto-scroll remains available.',true);return false;
-    }
-    sourceMeter=saved.timing.meter;
-    if(!visibleSections()){notify('CHORD FOLLOW UNAVAILABLE\nShow and expand all timed sections before enabling Chord Follow.',true);return false;}
-    const bodies=new Map([...document.querySelectorAll('.host-section')].map(section=>[Number(section.dataset.sectionIndex),section.querySelector('.host-section-body')]));
-    if(!nodes.size){nodes=playback.bind(track.events,bodies,document);onTranspose();}
+    if(!await ensureTrack())return false;
     if(!getAudio())throw Error('The metronome is not ready. Reload the page.');
     on=true;manual=false;finished=false;positionedLine=null;countInPrepared=false;resetImprovs();cancelPositionAnimation();programmaticUntil=0;
     if(initial){window.scrollTo?.(0,0);lastY=0;}else lastY=window.scrollY||0;
@@ -199,10 +271,10 @@ body.host-lyric-view-page #performanceQuickInfo .ls26-hide-karaoke{grid-column:6
    }catch(error){notify('CHORD FOLLOW UNAVAILABLE\n'+error.message+' Normal auto-scroll remains available.',true);return false;}
    finally{button.disabled=false;}
   }
-  function disable(){const wasOn=on;on=false;manual=false;countInPrepared=false;cancelPositionAnimation();window.cancelAnimationFrame?.(frame);frame=null;clear();stateLabel();notify('Normal auto-scroll');if(wasOn)getAudio()?.pause();onEnabled(false);}
-  function rejoinCurrent(){if(!on||improvHeld)return;manual=false;positionedLine=null;stateLabel();position(current?.event||track?.events?.[0],true,1050);notify(current?`${name(current.event)} · following`:'Following first chord');}
+  function disable(){const wasOn=on;on=false;manual=false;countInPrepared=false;cancelPositionAnimation();window.cancelAnimationFrame?.(frame);frame=null;clearStartCandidate();clear();stateLabel();notify('Normal auto-scroll');if(wasOn)getAudio()?.pause();onEnabled(false);}
+  function rejoinCurrent(){if(!on||improvHeld)return;manual=false;positionedLine=null;stateLabel();position(current?.event||selectedStart||track?.events?.[0],true,1050);notify(current?`${name(current.event)} · following`:'Following selected start');}
   function resetPosition(){
-   getAudio()?.stop();finished=false;countInPrepared=false;cancelPositionAnimation();clear();positionedLine=null;resetImprovs();manual=false;programmaticUntil=Date.now()+1300;stateLabel();
+   getAudio()?.stop();finished=false;countInPrepared=false;cancelPositionAnimation();clear();positionedLine=null;clearStartSelection();resetImprovs();manual=false;programmaticUntil=Date.now()+1300;stateLabel();
    window.scrollTo?.({top:0,behavior:window.matchMedia?.('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});lastY=0;if(on)update();
   }
 
@@ -220,20 +292,34 @@ body.host-lyric-view-page #performanceQuickInfo .ls26-hide-karaoke{grid-column:6
 
   button.onclick=()=>{if(wanted){wanted=false;writeFollowPreference(false);disable();stateLabel();}else{wanted=true;writeFollowPreference(true);stateLabel();enable();}};
   rejoin.onclick=rejoinCurrent;reset.onclick=resetPosition;close.onclick=()=>setControlsVisible(false,{persist:true,broadcast:true});
+  startConfirm.onclick=commitStart;startCancel.onclick=clearStartCandidate;
   window.addEventListener('ls26:chord-follow-controls-visibility',event=>{if(event.detail?.source==='follow-card')return;setControlsVisible(event.detail?.visible!==false,{persist:true,broadcast:false});});
 
   const play=document.getElementById('autoScrollBtn');
-  play?.addEventListener('click',()=>{if(suppressPlayRejoin)return;const starting=!window.LS26Performance?.isScrolling?.();if(starting&&on&&manual&&!improvHeld)rejoinCurrent();},true);
+  play?.addEventListener('click',()=>{
+   if(suppressPlayRejoin)return;const starting=!window.LS26Performance?.isScrolling?.();if(!starting||!on||improvHeld)return;
+   const freshStart=getAudio()?.snapshot?.().state==='stopped'&&selectedStart;
+   if(freshStart){manual=false;positionedLine=null;countInPrepared=false;stateLabel();notify(`Count-in · ${name(selectedStart)} next`);return;}
+   if(manual)rejoinCurrent();
+  },true);
 
-  window.addEventListener('wheel',e=>{if(!e.target.closest?.('input,select,textarea,.song-info-drawer,.host-bottom-dock,#chordFollowFloatCard'))suspend();},{passive:true});
+  window.addEventListener('wheel',e=>{if(!e.target.closest?.('input,select,textarea,.song-info-drawer,.host-bottom-dock,#chordFollowFloatCard,#ls26StartHereCard'))suspend();},{passive:true});
   let touch;window.addEventListener('touchstart',e=>{touch=e.touches?.[0]?{x:e.touches[0].clientX,y:e.touches[0].clientY,target:e.target}:null;},{passive:true});
-  window.addEventListener('touchmove',e=>{if(touch&&e.touches?.[0]&&Math.abs(e.touches[0].clientY-touch.y)>8&&!touch.target.closest?.('button,input,select,textarea,.song-info-drawer,.host-bottom-dock,#chordFollowFloatCard'))suspend();},{passive:true});
+  window.addEventListener('touchmove',e=>{if(touch&&e.touches?.[0]&&Math.abs(e.touches[0].clientY-touch.y)>8&&!touch.target.closest?.('button,input,select,textarea,.song-info-drawer,.host-bottom-dock,#chordFollowFloatCard,#ls26StartHereCard'))suspend();},{passive:true});
   window.addEventListener('pointerdown',e=>{if((e.target===document.documentElement||e.target===document.body)&&e.clientX>=window.innerWidth-24)suspend();},{passive:true});
   window.addEventListener('keydown',e=>{if(!e.target.closest?.('input,textarea,select,button,[contenteditable],[role="textbox"]')&&['PageUp','PageDown','Home','End','ArrowUp','ArrowDown',' '].includes(e.key))suspend();});
-  window.addEventListener('scroll',()=>{const y=window.scrollY||0;if(Math.abs(y-lastY)>2&&Date.now()>programmaticUntil)suspend();lastY=y;maybeHoldNormalScroll();},{passive:true});
-  window.addEventListener('resize',()=>window.requestAnimationFrame?.(placeCard));window.addEventListener('orientationchange',()=>setTimeout(placeCard,120));
+  window.addEventListener('scroll',()=>{const y=window.scrollY||0;if(Math.abs(y-lastY)>2&&Date.now()>programmaticUntil)suspend();lastY=y;maybeHoldNormalScroll();if(!startCard.hidden)placeStartCard();},{passive:true});
+  window.addEventListener('resize',()=>{window.requestAnimationFrame?.(placeCard);if(!startCard.hidden)window.requestAnimationFrame?.(()=>placeStartCard());});window.addEventListener('orientationchange',()=>setTimeout(()=>{placeCard();placeStartCard();},120));
   document.addEventListener('click',e=>{
    const gate=e.target.closest?.(IMPROV_SELECTOR);if(gate){e.preventDefault();resumeImprov(gate);return;}
+   const timed=e.target.closest?.('.ls26-timed-chord');
+   if(timed&&on&&!songPlaying()){
+    const event=eventForNode(timed);if(event){e.preventDefault();proposeStart(event,timed);return;}
+   }
+   const marker=e.target.closest?.('#sectionProgress .progress-section');
+   if(marker&&on&&!songPlaying()){
+    mapProgressSections();const event=firstEventInSection(marker.dataset.ls26SectionIndex);if(event)proposeStart(event,marker);
+   }
    if(e.target.closest?.('#navUpBtn,#navDownBtn,#navPrevBtn,#navNextBtn,.progress-section'))suspend();
   });
   window.addEventListener('pagehide',disable);
@@ -243,7 +329,7 @@ body.host-lyric-view-page #performanceQuickInfo .ls26-hide-karaoke{grid-column:6
   window.LS26ImprovPause=Object.freeze({held:()=>Boolean(improvHeld),resume:()=>resumeImprov(),reset:resetImprovs});
   setControlsVisible(controlsVisible,{persist:false});stateLabel();
   if(wanted){const autoEnable=()=>{if(wanted)enable({initial:true});};if(typeof window.requestAnimationFrame==='function')window.requestAnimationFrame(autoEnable);else Promise.resolve().then(autoEnable);}
-  return Object.freeze({...api,enable,disable,update,suspend,rejoin:rejoinCurrent,reset:resetPosition,position,setControlsVisible,snapshot:()=>({enabled:on,wanted,manual,controlsVisible,loaded,status:result?.status,completeness:result?model.summary(result.timing,result.source):null,event:current?.event,index:current?.index,totalBeats:track?.totalBeats,improvHeld:Boolean(improvHeld),timingOffset})});
+  return Object.freeze({...api,enable,disable,update,suspend,rejoin:rejoinCurrent,reset:resetPosition,position,setControlsVisible,snapshot:()=>({enabled:on,wanted,manual,controlsVisible,loaded,status:result?.status,completeness:result?model.summary(result.timing,result.source):null,event:current?.event,index:current?.index,totalBeats:track?.totalBeats,improvHeld:Boolean(improvHeld),timingOffset,startBeat:Number(selectedStart?.startBeat)||0,startEvent:selectedStart||null})});
  }
  return Object.freeze({mount});
 });
