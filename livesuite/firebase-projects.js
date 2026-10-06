@@ -62,9 +62,37 @@
   window.LK_FIREBASE_PROJECT = getSelectedKey();
 
   if (/\/online\/(?:index\.html)?$/i.test(location.pathname)) {
-    // Own the REQUEST / SIGN UP click immediately. The old song-list href is
-    // never allowed to navigate; the dedicated Live Karaoke duplicate is
-    // opened inside an overlay on this same page.
+    function turnIntoButton(node) {
+      if (!node) return node;
+      if (node.tagName === "A") {
+        const button = document.createElement("button");
+        for (const attr of [...node.attributes]) {
+          if (["href", "target", "rel"].includes(attr.name)) continue;
+          button.setAttribute(attr.name, attr.value);
+        }
+        button.type = "button";
+        button.innerHTML = node.innerHTML;
+        node.replaceWith(button);
+        return button;
+      }
+      node.removeAttribute("href");
+      node.removeAttribute("target");
+      node.removeAttribute("rel");
+      if (node.tagName === "BUTTON") node.type = "button";
+      return node;
+    }
+
+    function hardenRequestControls() {
+      document.querySelectorAll?.("#heroRequestBtn,#songListBtn").forEach(turnIntoButton);
+    }
+
+    document.addEventListener("pointerdown", event => {
+      const button = event.target.closest?.("#heroRequestBtn,#songListBtn");
+      if (!button) return;
+      const disabled = button.getAttribute("aria-disabled") === "true" || button.classList.contains("disabled-button");
+      if (!disabled) event.preventDefault();
+    }, true);
+
     document.addEventListener("click", event => {
       const button = event.target.closest?.("#heroRequestBtn,#songListBtn");
       if (!button) return;
@@ -74,9 +102,7 @@
       event.preventDefault();
       event.stopPropagation();
       event.stopImmediatePropagation();
-      button.setAttribute("href", "#");
-      button.removeAttribute("target");
-      button.removeAttribute("rel");
+      hardenRequestControls();
 
       if (typeof window.openLiveKaraokeRequestPopup === "function") {
         window.openLiveKaraokeRequestPopup();
@@ -85,18 +111,18 @@
       }
     }, true);
 
-    const neutralise = () => {
-      document.querySelectorAll?.("#heroRequestBtn,#songListBtn").forEach(button => {
-        if (button.getAttribute("aria-disabled") === "true" || button.classList.contains("disabled-button")) return;
-        button.setAttribute("href", "#");
-        button.removeAttribute("target");
-        button.removeAttribute("rel");
-      });
-    };
-    document.addEventListener("DOMContentLoaded", neutralise, { once:true });
+    document.addEventListener("DOMContentLoaded", hardenRequestControls, { once:true });
+
+    const observer = new MutationObserver(hardenRequestControls);
+    observer.observe(document.documentElement, {
+      subtree:true,
+      childList:true,
+      attributes:true,
+      attributeFilter:["href","target","rel","class","aria-disabled"]
+    });
 
     const script = document.createElement("script");
-    script.src = new URL("../js/live-karaoke-request-popup.js?v=20261006-dedicated-v1", document.currentScript?.src || location.href).href;
+    script.src = new URL("../js/live-karaoke-request-popup.js?v=20261006-dedicated-v3", document.currentScript?.src || location.href).href;
     script.async = false;
     document.head.appendChild(script);
   }
