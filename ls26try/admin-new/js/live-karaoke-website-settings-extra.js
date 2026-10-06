@@ -2,22 +2,36 @@
 (() => {
   "use strict";
 
-  const $ = id => document.getElementById(id);
-  const select = $("liveKaraokeDefaultSetlist");
-  const status = $("liveKaraokeDefaultSetlistStatus");
-  const contentStatus = $("liveKaraokePageContentStatus");
-  const saveButton = $("saveBillyWebsiteSettingsBtn");
-  const resetButton = $("resetWebsiteCategoriesBtn");
-  const bookingFaqEditors = $("bookingFaqEditors");
-  const addBookingFaqBtn = $("addBookingFaqBtn");
-  if (!select || !window.LK?.db || !window.LK?.auth) return;
+  const $=id=>document.getElementById(id);
+  const select=$("liveKaraokeDefaultSetlist");
+  const status=$("liveKaraokeDefaultSetlistStatus");
+  const contentStatus=$("liveKaraokePageContentStatus");
+  const saveButton=$("saveBillyWebsiteSettingsBtn");
+  const resetButton=$("resetWebsiteCategoriesBtn");
+  const bookingFaqEditors=$("bookingFaqEditors");
+  const addBookingFaqBtn=$("addBookingFaqBtn");
+  if(!select||!window.LK?.db||!window.LK?.auth)return;
 
-  const settingsRef = () => LK.db.collection("karaokeControl").doc("liveKaraokeWebsiteSettings");
+  const settingsRef=()=>LK.db.collection("karaokeControl").doc("liveKaraokeWebsiteSettings");
+  const clamp=(value,min,max,fallback)=>Math.max(min,Math.min(max,Number.isFinite(Number(value))?Number(value):fallback));
+  const from=(obj,key,fallback,max=1000)=>String(obj?.[key]!==undefined?obj[key]:fallback).slice(0,max);
 
-  const DEFAULT_PUBLIC_PAGE = {
+  const DEFAULT_PUBLIC_PAGE={
     heroSupportingLine:"Choose a song. Grab the mic. Sing it live with guitar and looping.",
+    heroTitleFontSize:29,
+    heroSupportingFontSize:16,
     getStartedText:"GET STARTED",
     getStartedColor:"#d92727",
+    showHero:true,
+    showLiveStatus:true,
+    showAbout:true,
+    showHow:true,
+    showEvents:true,
+    showReviews:true,
+    showSongList:true,
+    showBooking:true,
+    showCommunity:true,
+    showFooter:true,
     aboutTitle:"WHAT IS LIVE KARAOKE?",
     aboutLead:"A live music experience where YOU become the singer.",
     aboutBody1:"Choose from 150+ rock, pop, indie, classics and party anthems, grab the mic and perform with live guitar and looping — no backing tracks.",
@@ -33,6 +47,8 @@
     ],
     eventsTitle:"EVENTS",
     eventsSubtitle:"See where Live Karaoke is happening next and find your next chance to grab the mic and sing live.",
+    reviewsTitle:"REVIEWS",
+    reviewsSubtitle:"What singers and guests say about Live Karaoke.",
     songListTitle:"SONG LIST ACCESS",
     songListDescription:"Browse 150+ songs anytime. When Live Karaoke is live, request your song and join the next singer rotation.",
     songListButtonText:"BROWSE SONGS",
@@ -50,7 +66,7 @@
     communitySocialsTitle:"SOCIALS"
   };
 
-  const DEFAULT_BOOKING_FAQS = [
+  const DEFAULT_BOOKING_FAQS=[
     {id:"equipment",question:"What equipment do you provide?",answer:"Live Karaoke can provide the live guitar and looping setup, microphones and sound system needed for the performance. Tell us about your venue and existing equipment when enquiring and we’ll confirm the best setup."},
     {id:"space",question:"How much space do you need?",answer:"The setup is flexible and can work in surprisingly compact spaces. We need a clear performance area, room for singers to step up to the microphones and access to power. Send us your venue details and we can advise on the ideal setup."},
     {id:"duration",question:"How long is a typical Live Karaoke performance?",answer:"The format can be adapted to the event. Tell us your preferred start and finish times and we’ll recommend a performance length, breaks and format that suits the occasion."},
@@ -64,319 +80,150 @@
     {id:"advance",question:"How far in advance should we book?",answer:"As early as possible is best, particularly for weekends, weddings and larger events. Last-minute enquiries are also welcome whenever availability allows."}
   ];
 
-  let setlists = [];
-  let ready = false;
-  let publicPage = structuredClone(DEFAULT_PUBLIC_PAGE);
-  let bookingFaqs = DEFAULT_BOOKING_FAQS.map(item => ({...item}));
+  let setlists=[];
+  let ready=false;
+  let publicPage=structuredClone(DEFAULT_PUBLIC_PAGE);
+  let bookingFaqs=DEFAULT_BOOKING_FAQS.map(item=>({...item}));
 
-  function esc(value) {
-    return String(value ?? "").replace(/[&<>\"]/g, char => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[char]));
-  }
+  function esc(value){return String(value??"").replace(/[&<>\"]/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[char]));}
+  function slug(value,fallback="item"){const cleaned=String(value||"").toLowerCase().trim().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"");return cleaned||fallback;}
+  function setStatus(message,error=false){if(!status)return;status.textContent=message||"";status.classList.toggle("error",!!error);}
+  function setContentStatus(message,error=false){if(!contentStatus)return;contentStatus.textContent=message||"";contentStatus.classList.toggle("error",!!error);}
+  function setlistName(item){return String(item?.name||item?.title||item?.label||item?.id||"Untitled setlist").trim();}
+  function normaliseHex(value,fallback="#d92727"){const v=String(value||"").trim();return /^#[0-9a-f]{6}$/i.test(v)?v.toLowerCase():fallback;}
 
-  function slug(value, fallback="item") {
-    const cleaned = String(value || "").toLowerCase().trim().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"");
-    return cleaned || fallback;
-  }
-
-  function setStatus(message, error=false) {
-    if (!status) return;
-    status.textContent = message || "";
-    status.classList.toggle("error", !!error);
-  }
-
-  function setContentStatus(message, error=false) {
-    if (!contentStatus) return;
-    contentStatus.textContent = message || "";
-    contentStatus.classList.toggle("error", !!error);
-  }
-
-  function setlistName(item) {
-    return String(item?.name || item?.title || item?.label || item?.id || "Untitled setlist").trim();
-  }
-
-  function normaliseHex(value, fallback="#d92727") {
-    const v = String(value || "").trim();
-    return /^#[0-9a-f]{6}$/i.test(v) ? v.toLowerCase() : fallback;
-  }
-
-  function normalisePublicPage(data={}) {
-    const source = data && typeof data === "object" ? data : {};
-    const steps = Array.isArray(source.howSteps) ? source.howSteps : [];
-    const cards = Array.isArray(source.bookingCards) ? source.bookingCards : [];
-    return {
-      heroSupportingLine:String(source.heroSupportingLine || DEFAULT_PUBLIC_PAGE.heroSupportingLine).slice(0,220),
-      getStartedText:String(source.getStartedText || DEFAULT_PUBLIC_PAGE.getStartedText).slice(0,60),
-      getStartedColor:normaliseHex(source.getStartedColor, DEFAULT_PUBLIC_PAGE.getStartedColor),
-      aboutTitle:String(source.aboutTitle || DEFAULT_PUBLIC_PAGE.aboutTitle).slice(0,100),
-      aboutLead:String(source.aboutLead || DEFAULT_PUBLIC_PAGE.aboutLead).slice(0,220),
-      aboutBody1:String(source.aboutBody1 || DEFAULT_PUBLIC_PAGE.aboutBody1).slice(0,700),
-      aboutBody2:String(source.aboutBody2 || DEFAULT_PUBLIC_PAGE.aboutBody2).slice(0,700),
-      aboutHighlight:String(source.aboutHighlight || DEFAULT_PUBLIC_PAGE.aboutHighlight).slice(0,220),
-      aboutBooking:String(source.aboutBooking || DEFAULT_PUBLIC_PAGE.aboutBooking).slice(0,220),
-      howTitle:String(source.howTitle || DEFAULT_PUBLIC_PAGE.howTitle).slice(0,100),
-      howSteps:DEFAULT_PUBLIC_PAGE.howSteps.map((fallback,index)=>({
-        title:String(steps[index]?.title || fallback.title).slice(0,60),
-        text:String(steps[index]?.text || fallback.text).slice(0,300)
-      })),
-      eventsTitle:String(source.eventsTitle || DEFAULT_PUBLIC_PAGE.eventsTitle).slice(0,100),
-      eventsSubtitle:String(source.eventsSubtitle || DEFAULT_PUBLIC_PAGE.eventsSubtitle).slice(0,400),
-      songListTitle:String(source.songListTitle || DEFAULT_PUBLIC_PAGE.songListTitle).slice(0,100),
-      songListDescription:String(source.songListDescription || DEFAULT_PUBLIC_PAGE.songListDescription).slice(0,500),
-      songListButtonText:String(source.songListButtonText || DEFAULT_PUBLIC_PAGE.songListButtonText).slice(0,60),
-      bookingTitle:String(source.bookingTitle || DEFAULT_PUBLIC_PAGE.bookingTitle).slice(0,100),
-      bookingIntro:String(source.bookingIntro || DEFAULT_PUBLIC_PAGE.bookingIntro).slice(0,600),
-      bookingButtonText:String(source.bookingButtonText || DEFAULT_PUBLIC_PAGE.bookingButtonText).slice(0,60),
-      bookingQuestionsTitle:String(source.bookingQuestionsTitle || DEFAULT_PUBLIC_PAGE.bookingQuestionsTitle).slice(0,100),
-      bookingCards:DEFAULT_PUBLIC_PAGE.bookingCards.map((fallback,index)=>({
-        title:String(cards[index]?.title || fallback.title).slice(0,80),
-        text:String(cards[index]?.text || fallback.text).slice(0,400)
-      })),
-      communityTitle:String(source.communityTitle || DEFAULT_PUBLIC_PAGE.communityTitle).slice(0,100),
-      communityDescription:String(source.communityDescription || DEFAULT_PUBLIC_PAGE.communityDescription).slice(0,500),
-      communitySocialsTitle:String(source.communitySocialsTitle || DEFAULT_PUBLIC_PAGE.communitySocialsTitle).slice(0,80)
+  function normalisePublicPage(data={}){
+    const source=data&&typeof data==="object"?data:{};
+    const steps=Array.isArray(source.howSteps)?source.howSteps:[];
+    const cards=Array.isArray(source.bookingCards)?source.bookingCards:[];
+    const result={
+      heroSupportingLine:from(source,"heroSupportingLine",DEFAULT_PUBLIC_PAGE.heroSupportingLine,220),
+      heroTitleFontSize:clamp(source.heroTitleFontSize,18,52,DEFAULT_PUBLIC_PAGE.heroTitleFontSize),
+      heroSupportingFontSize:clamp(source.heroSupportingFontSize,12,32,DEFAULT_PUBLIC_PAGE.heroSupportingFontSize),
+      getStartedText:from(source,"getStartedText",DEFAULT_PUBLIC_PAGE.getStartedText,60),
+      getStartedColor:normaliseHex(source.getStartedColor,DEFAULT_PUBLIC_PAGE.getStartedColor),
+      aboutTitle:from(source,"aboutTitle",DEFAULT_PUBLIC_PAGE.aboutTitle,100),
+      aboutLead:from(source,"aboutLead",DEFAULT_PUBLIC_PAGE.aboutLead,220),
+      aboutBody1:from(source,"aboutBody1",DEFAULT_PUBLIC_PAGE.aboutBody1,700),
+      aboutBody2:from(source,"aboutBody2",DEFAULT_PUBLIC_PAGE.aboutBody2,700),
+      aboutHighlight:from(source,"aboutHighlight",DEFAULT_PUBLIC_PAGE.aboutHighlight,220),
+      aboutBooking:from(source,"aboutBooking",DEFAULT_PUBLIC_PAGE.aboutBooking,220),
+      howTitle:from(source,"howTitle",DEFAULT_PUBLIC_PAGE.howTitle,100),
+      howSteps:DEFAULT_PUBLIC_PAGE.howSteps.map((fallback,index)=>({title:from(steps[index]||{},"title",fallback.title,60),text:from(steps[index]||{},"text",fallback.text,300)})),
+      eventsTitle:from(source,"eventsTitle",DEFAULT_PUBLIC_PAGE.eventsTitle,100),
+      eventsSubtitle:from(source,"eventsSubtitle",DEFAULT_PUBLIC_PAGE.eventsSubtitle,400),
+      reviewsTitle:from(source,"reviewsTitle",DEFAULT_PUBLIC_PAGE.reviewsTitle,100),
+      reviewsSubtitle:from(source,"reviewsSubtitle",DEFAULT_PUBLIC_PAGE.reviewsSubtitle,400),
+      songListTitle:from(source,"songListTitle",DEFAULT_PUBLIC_PAGE.songListTitle,100),
+      songListDescription:from(source,"songListDescription",DEFAULT_PUBLIC_PAGE.songListDescription,500),
+      songListButtonText:from(source,"songListButtonText",DEFAULT_PUBLIC_PAGE.songListButtonText,60),
+      bookingTitle:from(source,"bookingTitle",DEFAULT_PUBLIC_PAGE.bookingTitle,100),
+      bookingIntro:from(source,"bookingIntro",DEFAULT_PUBLIC_PAGE.bookingIntro,600),
+      bookingButtonText:from(source,"bookingButtonText",DEFAULT_PUBLIC_PAGE.bookingButtonText,60),
+      bookingQuestionsTitle:from(source,"bookingQuestionsTitle",DEFAULT_PUBLIC_PAGE.bookingQuestionsTitle,100),
+      bookingCards:DEFAULT_PUBLIC_PAGE.bookingCards.map((fallback,index)=>({title:from(cards[index]||{},"title",fallback.title,80),text:from(cards[index]||{},"text",fallback.text,400)})),
+      communityTitle:from(source,"communityTitle",DEFAULT_PUBLIC_PAGE.communityTitle,100),
+      communityDescription:from(source,"communityDescription",DEFAULT_PUBLIC_PAGE.communityDescription,500),
+      communitySocialsTitle:from(source,"communitySocialsTitle",DEFAULT_PUBLIC_PAGE.communitySocialsTitle,80)
     };
+    ["showHero","showLiveStatus","showAbout","showHow","showEvents","showReviews","showSongList","showBooking","showCommunity","showFooter"].forEach(key=>result[key]=source[key]!==false);
+    return result;
   }
 
-  function normaliseBookingFaq(item,index) {
-    return {
-      id:slug(item?.id || `booking-faq-${index+1}`, `booking-faq-${index+1}`),
-      question:String(item?.question || "Question").trim().slice(0,120),
-      answer:String(item?.answer || "").trim().slice(0,900)
-    };
+  function normaliseBookingFaq(item,index){return{id:slug(item?.id||`booking-faq-${index+1}`,`booking-faq-${index+1}`),question:String(item?.question||"Question").trim().slice(0,120),answer:String(item?.answer||"").trim().slice(0,900)};}
+  function value(id,fallback=""){return String($(id)?.value??fallback).trim();}
+  function setValue(id,next){const el=$(id);if(el)el.value=next??"";}
+  function checked(id,fallback=true){const el=$(id);return el?el.checked:fallback;}
+  function setChecked(id,next){const el=$(id);if(el)el.checked=next!==false;}
+
+  function injectExtraControls(){
+    const defaultCard=select.closest("section");
+    if(defaultCard&&!$("lkSectionVisibilityCard")){
+      const card=document.createElement("section");card.id="lkSectionVisibilityCard";card.className="billy-site-card";
+      const items=[
+        ["showHero","Hero / banner"],["showLiveStatus","Live Now / next-event strip"],["showAbout","What Is Live Karaoke?"],["showHow","How It Works"],["showEvents","Events"],["showReviews","Reviews"],["showSongList","Song List Access"],["showBooking","Book / Enquire"],["showCommunity","Join the Community"],["showFooter","Footer"]
+      ];
+      card.innerHTML=`<div class="billy-site-section-head"><div><h2>Section visibility</h2><p>Choose which sections appear on the public Live Karaoke website.</p></div></div><div class="billy-site-category-master-controls" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px 16px">${items.map(([key,label])=>`<label class="billy-site-switch"><input id="lk_${key}" type="checkbox" checked><span>${esc(label)}</span></label>`).join("")}</div>`;
+      defaultCard.insertAdjacentElement("afterend",card);
+    }
+
+    const heroCard=$("lkHeroSupportingLine")?.closest("section");
+    if(heroCard&&!$("lkHeroTitleFontSize")){
+      const fields=heroCard.querySelector(".website-faq-fields");
+      fields?.insertAdjacentHTML("beforeend",`<label>LIVE KARAOKE IN MALTA font size (px)<input id="lkHeroTitleFontSize" type="number" min="18" max="52" step="1"></label><label>Supporting line font size (px)<input id="lkHeroSupportingFontSize" type="number" min="12" max="32" step="1"></label>`);
+    }
+
+    const eventsCard=$("lkEventsTitle")?.closest("section");
+    if(eventsCard&&!$("lkReviewsTitle")){
+      const card=document.createElement("section");card.className="billy-site-card";
+      card.innerHTML=`<div class="billy-site-section-head"><div><h2>Reviews</h2><p>Edit the public Reviews heading and supporting text. Which reviews are published is managed from Live Karaoke Reviews.</p></div></div><div class="website-faq-fields"><label>Section title<input id="lkReviewsTitle" type="text" maxlength="100"></label><label>Subheading<textarea id="lkReviewsSubtitle" rows="2" maxlength="400"></textarea></label></div>`;
+      eventsCard.insertAdjacentElement("afterend",card);
+    }
   }
 
-  function value(id, fallback="") {
-    return String($(id)?.value ?? fallback).trim();
+  function renderPublicPage(){
+    setValue("lkHeroSupportingLine",publicPage.heroSupportingLine);setValue("lkHeroTitleFontSize",publicPage.heroTitleFontSize);setValue("lkHeroSupportingFontSize",publicPage.heroSupportingFontSize);
+    setValue("lkGetStartedText",publicPage.getStartedText);setValue("lkGetStartedColor",publicPage.getStartedColor);setValue("lkGetStartedColorText",publicPage.getStartedColor);
+    ["showHero","showLiveStatus","showAbout","showHow","showEvents","showReviews","showSongList","showBooking","showCommunity","showFooter"].forEach(key=>setChecked(`lk_${key}`,publicPage[key]));
+    setValue("lkAboutTitle",publicPage.aboutTitle);setValue("lkAboutLead",publicPage.aboutLead);setValue("lkAboutBody1",publicPage.aboutBody1);setValue("lkAboutBody2",publicPage.aboutBody2);setValue("lkAboutHighlight",publicPage.aboutHighlight);setValue("lkAboutBooking",publicPage.aboutBooking);
+    setValue("lkHowTitle",publicPage.howTitle);publicPage.howSteps.forEach((step,index)=>{setValue(`lkHowStep${index+1}Title`,step.title);setValue(`lkHowStep${index+1}Text`,step.text);});
+    setValue("lkEventsTitle",publicPage.eventsTitle);setValue("lkEventsSubtitle",publicPage.eventsSubtitle);setValue("lkReviewsTitle",publicPage.reviewsTitle);setValue("lkReviewsSubtitle",publicPage.reviewsSubtitle);
+    setValue("lkSongListTitle",publicPage.songListTitle);setValue("lkSongListDescription",publicPage.songListDescription);setValue("lkSongListButtonText",publicPage.songListButtonText);
+    setValue("lkBookingTitle",publicPage.bookingTitle);setValue("lkBookingIntro",publicPage.bookingIntro);setValue("lkBookingButtonText",publicPage.bookingButtonText);setValue("lkBookingQuestionsTitle",publicPage.bookingQuestionsTitle);
+    publicPage.bookingCards.forEach((card,index)=>{setValue(`lkBookingCard${index+1}Title`,card.title);setValue(`lkBookingCard${index+1}Text`,card.text);});
+    setValue("lkCommunityTitle",publicPage.communityTitle);setValue("lkCommunityDescription",publicPage.communityDescription);setValue("lkCommunitySocialsTitle",publicPage.communitySocialsTitle);
   }
 
-  function setValue(id, next) {
-    const el = $(id);
-    if (el) el.value = next ?? "";
-  }
-
-  function renderPublicPage() {
-    setValue("lkHeroSupportingLine", publicPage.heroSupportingLine);
-    setValue("lkGetStartedText", publicPage.getStartedText);
-    setValue("lkGetStartedColor", publicPage.getStartedColor);
-    setValue("lkGetStartedColorText", publicPage.getStartedColor);
-    setValue("lkAboutTitle", publicPage.aboutTitle);
-    setValue("lkAboutLead", publicPage.aboutLead);
-    setValue("lkAboutBody1", publicPage.aboutBody1);
-    setValue("lkAboutBody2", publicPage.aboutBody2);
-    setValue("lkAboutHighlight", publicPage.aboutHighlight);
-    setValue("lkAboutBooking", publicPage.aboutBooking);
-    setValue("lkHowTitle", publicPage.howTitle);
-    publicPage.howSteps.forEach((step,index)=>{
-      setValue(`lkHowStep${index+1}Title`, step.title);
-      setValue(`lkHowStep${index+1}Text`, step.text);
-    });
-    setValue("lkEventsTitle", publicPage.eventsTitle);
-    setValue("lkEventsSubtitle", publicPage.eventsSubtitle);
-    setValue("lkSongListTitle", publicPage.songListTitle);
-    setValue("lkSongListDescription", publicPage.songListDescription);
-    setValue("lkSongListButtonText", publicPage.songListButtonText);
-    setValue("lkBookingTitle", publicPage.bookingTitle);
-    setValue("lkBookingIntro", publicPage.bookingIntro);
-    setValue("lkBookingButtonText", publicPage.bookingButtonText);
-    setValue("lkBookingQuestionsTitle", publicPage.bookingQuestionsTitle);
-    publicPage.bookingCards.forEach((card,index)=>{
-      setValue(`lkBookingCard${index+1}Title`, card.title);
-      setValue(`lkBookingCard${index+1}Text`, card.text);
-    });
-    setValue("lkCommunityTitle", publicPage.communityTitle);
-    setValue("lkCommunityDescription", publicPage.communityDescription);
-    setValue("lkCommunitySocialsTitle", publicPage.communitySocialsTitle);
-  }
-
-  function collectPublicPage() {
-    const color = normaliseHex(value("lkGetStartedColorText", value("lkGetStartedColor", DEFAULT_PUBLIC_PAGE.getStartedColor)), DEFAULT_PUBLIC_PAGE.getStartedColor);
+  function collectPublicPage(){
+    const color=normaliseHex(value("lkGetStartedColorText",value("lkGetStartedColor",DEFAULT_PUBLIC_PAGE.getStartedColor)),DEFAULT_PUBLIC_PAGE.getStartedColor);
     return normalisePublicPage({
-      heroSupportingLine:value("lkHeroSupportingLine", DEFAULT_PUBLIC_PAGE.heroSupportingLine),
-      getStartedText:value("lkGetStartedText", DEFAULT_PUBLIC_PAGE.getStartedText),
-      getStartedColor:color,
-      aboutTitle:value("lkAboutTitle", DEFAULT_PUBLIC_PAGE.aboutTitle),
-      aboutLead:value("lkAboutLead", DEFAULT_PUBLIC_PAGE.aboutLead),
-      aboutBody1:value("lkAboutBody1", DEFAULT_PUBLIC_PAGE.aboutBody1),
-      aboutBody2:value("lkAboutBody2", DEFAULT_PUBLIC_PAGE.aboutBody2),
-      aboutHighlight:value("lkAboutHighlight", DEFAULT_PUBLIC_PAGE.aboutHighlight),
-      aboutBooking:value("lkAboutBooking", DEFAULT_PUBLIC_PAGE.aboutBooking),
-      howTitle:value("lkHowTitle", DEFAULT_PUBLIC_PAGE.howTitle),
-      howSteps:[1,2,3,4].map((n,index)=>({
-        title:value(`lkHowStep${n}Title`, DEFAULT_PUBLIC_PAGE.howSteps[index].title),
-        text:value(`lkHowStep${n}Text`, DEFAULT_PUBLIC_PAGE.howSteps[index].text)
-      })),
-      eventsTitle:value("lkEventsTitle", DEFAULT_PUBLIC_PAGE.eventsTitle),
-      eventsSubtitle:value("lkEventsSubtitle", DEFAULT_PUBLIC_PAGE.eventsSubtitle),
-      songListTitle:value("lkSongListTitle", DEFAULT_PUBLIC_PAGE.songListTitle),
-      songListDescription:value("lkSongListDescription", DEFAULT_PUBLIC_PAGE.songListDescription),
-      songListButtonText:value("lkSongListButtonText", DEFAULT_PUBLIC_PAGE.songListButtonText),
-      bookingTitle:value("lkBookingTitle", DEFAULT_PUBLIC_PAGE.bookingTitle),
-      bookingIntro:value("lkBookingIntro", DEFAULT_PUBLIC_PAGE.bookingIntro),
-      bookingButtonText:value("lkBookingButtonText", DEFAULT_PUBLIC_PAGE.bookingButtonText),
-      bookingQuestionsTitle:value("lkBookingQuestionsTitle", DEFAULT_PUBLIC_PAGE.bookingQuestionsTitle),
-      bookingCards:[1,2,3].map((n,index)=>({
-        title:value(`lkBookingCard${n}Title`, DEFAULT_PUBLIC_PAGE.bookingCards[index].title),
-        text:value(`lkBookingCard${n}Text`, DEFAULT_PUBLIC_PAGE.bookingCards[index].text)
-      })),
-      communityTitle:value("lkCommunityTitle", DEFAULT_PUBLIC_PAGE.communityTitle),
-      communityDescription:value("lkCommunityDescription", DEFAULT_PUBLIC_PAGE.communityDescription),
-      communitySocialsTitle:value("lkCommunitySocialsTitle", DEFAULT_PUBLIC_PAGE.communitySocialsTitle)
+      heroSupportingLine:value("lkHeroSupportingLine",DEFAULT_PUBLIC_PAGE.heroSupportingLine),heroTitleFontSize:value("lkHeroTitleFontSize",DEFAULT_PUBLIC_PAGE.heroTitleFontSize),heroSupportingFontSize:value("lkHeroSupportingFontSize",DEFAULT_PUBLIC_PAGE.heroSupportingFontSize),
+      getStartedText:value("lkGetStartedText",DEFAULT_PUBLIC_PAGE.getStartedText),getStartedColor:color,
+      showHero:checked("lk_showHero"),showLiveStatus:checked("lk_showLiveStatus"),showAbout:checked("lk_showAbout"),showHow:checked("lk_showHow"),showEvents:checked("lk_showEvents"),showReviews:checked("lk_showReviews"),showSongList:checked("lk_showSongList"),showBooking:checked("lk_showBooking"),showCommunity:checked("lk_showCommunity"),showFooter:checked("lk_showFooter"),
+      aboutTitle:value("lkAboutTitle",DEFAULT_PUBLIC_PAGE.aboutTitle),aboutLead:value("lkAboutLead",DEFAULT_PUBLIC_PAGE.aboutLead),aboutBody1:value("lkAboutBody1",DEFAULT_PUBLIC_PAGE.aboutBody1),aboutBody2:value("lkAboutBody2",DEFAULT_PUBLIC_PAGE.aboutBody2),aboutHighlight:value("lkAboutHighlight",DEFAULT_PUBLIC_PAGE.aboutHighlight),aboutBooking:value("lkAboutBooking",DEFAULT_PUBLIC_PAGE.aboutBooking),
+      howTitle:value("lkHowTitle",DEFAULT_PUBLIC_PAGE.howTitle),howSteps:[1,2,3,4].map((n,index)=>({title:value(`lkHowStep${n}Title`,DEFAULT_PUBLIC_PAGE.howSteps[index].title),text:value(`lkHowStep${n}Text`,DEFAULT_PUBLIC_PAGE.howSteps[index].text)})),
+      eventsTitle:value("lkEventsTitle",DEFAULT_PUBLIC_PAGE.eventsTitle),eventsSubtitle:value("lkEventsSubtitle",DEFAULT_PUBLIC_PAGE.eventsSubtitle),reviewsTitle:value("lkReviewsTitle",DEFAULT_PUBLIC_PAGE.reviewsTitle),reviewsSubtitle:value("lkReviewsSubtitle",DEFAULT_PUBLIC_PAGE.reviewsSubtitle),
+      songListTitle:value("lkSongListTitle",DEFAULT_PUBLIC_PAGE.songListTitle),songListDescription:value("lkSongListDescription",DEFAULT_PUBLIC_PAGE.songListDescription),songListButtonText:value("lkSongListButtonText",DEFAULT_PUBLIC_PAGE.songListButtonText),
+      bookingTitle:value("lkBookingTitle",DEFAULT_PUBLIC_PAGE.bookingTitle),bookingIntro:value("lkBookingIntro",DEFAULT_PUBLIC_PAGE.bookingIntro),bookingButtonText:value("lkBookingButtonText",DEFAULT_PUBLIC_PAGE.bookingButtonText),bookingQuestionsTitle:value("lkBookingQuestionsTitle",DEFAULT_PUBLIC_PAGE.bookingQuestionsTitle),bookingCards:[1,2,3].map((n,index)=>({title:value(`lkBookingCard${n}Title`,DEFAULT_PUBLIC_PAGE.bookingCards[index].title),text:value(`lkBookingCard${n}Text`,DEFAULT_PUBLIC_PAGE.bookingCards[index].text)})),
+      communityTitle:value("lkCommunityTitle",DEFAULT_PUBLIC_PAGE.communityTitle),communityDescription:value("lkCommunityDescription",DEFAULT_PUBLIC_PAGE.communityDescription),communitySocialsTitle:value("lkCommunitySocialsTitle",DEFAULT_PUBLIC_PAGE.communitySocialsTitle)
     });
   }
 
-  function renderBookingFaqs() {
-    if (!bookingFaqEditors) return;
-    bookingFaqEditors.innerHTML = bookingFaqs.map((faq,index)=>`
-      <article class="website-faq-editor" data-booking-faq-editor="${esc(faq.id)}">
-        <div class="website-faq-fields">
-          <label>Question<input type="text" maxlength="120" data-booking-faq-field="question" data-booking-faq-id="${esc(faq.id)}" value="${esc(faq.question)}"></label>
-          <label>Answer<textarea maxlength="900" rows="3" data-booking-faq-field="answer" data-booking-faq-id="${esc(faq.id)}">${esc(faq.answer)}</textarea></label>
-        </div>
-        <div class="website-faq-actions">
-          <button type="button" data-booking-faq-up="${esc(faq.id)}" ${index===0?"disabled":""}>↑ Move up</button>
-          <button type="button" data-booking-faq-down="${esc(faq.id)}" ${index===bookingFaqs.length-1?"disabled":""}>↓ Move down</button>
-          <button type="button" class="danger" data-booking-faq-delete="${esc(faq.id)}">Delete</button>
-        </div>
-      </article>
-    `).join("") || '<p class="website-song-empty">No booking questions. Add one to begin.</p>';
+  function renderBookingFaqs(){
+    if(!bookingFaqEditors)return;
+    bookingFaqEditors.innerHTML=bookingFaqs.map((faq,index)=>`<article class="website-faq-editor" data-booking-faq-editor="${esc(faq.id)}"><div class="website-faq-fields"><label>Question<input type="text" maxlength="120" data-booking-faq-field="question" data-booking-faq-id="${esc(faq.id)}" value="${esc(faq.question)}"></label><label>Answer<textarea maxlength="900" rows="3" data-booking-faq-field="answer" data-booking-faq-id="${esc(faq.id)}">${esc(faq.answer)}</textarea></label></div><div class="website-faq-actions"><button type="button" data-booking-faq-up="${esc(faq.id)}" ${index===0?"disabled":""}>↑ Move up</button><button type="button" data-booking-faq-down="${esc(faq.id)}" ${index===bookingFaqs.length-1?"disabled":""}>↓ Move down</button><button type="button" class="danger" data-booking-faq-delete="${esc(faq.id)}">Delete</button></div></article>`).join("")||'<p class="website-song-empty">No booking questions. Add one to begin.</p>';
   }
+  function syncBookingFaqInputs(){bookingFaqEditors?.querySelectorAll("[data-booking-faq-field]").forEach(input=>{const faq=bookingFaqs.find(item=>item.id===input.dataset.bookingFaqId);if(faq)faq[input.dataset.bookingFaqField]=String(input.value||"").trim();});}
 
-  function syncBookingFaqInputs() {
-    bookingFaqEditors?.querySelectorAll("[data-booking-faq-field]").forEach(input=>{
-      const faq = bookingFaqs.find(item => item.id === input.dataset.bookingFaqId);
-      if (!faq) return;
-      faq[input.dataset.bookingFaqField] = String(input.value || "").trim();
-    });
-  }
-
-  async function load() {
-    setStatus("Loading setlists…");
-    setContentStatus("Loading public website content…");
-    try {
-      const [listSnap, settingsSnap] = await Promise.all([
-        LK.db.collection("lyricsSetlists").get(),
-        settingsRef().get()
-      ]);
-
-      setlists = listSnap.docs.map(doc => ({ id:doc.id, ...(doc.data() || {}) }))
-        .sort((a,b) => setlistName(a).localeCompare(setlistName(b), undefined, {sensitivity:"base"}));
-
-      const settings = settingsSnap.exists ? (settingsSnap.data() || {}) : {};
-      const selectedId = String(settings.defaultBrowseSetlistId || "").trim();
-      publicPage = normalisePublicPage(settings.publicPage || {});
-      const rawBookingFaqs = Array.isArray(settings.bookingFaqs) && settings.bookingFaqs.length ? settings.bookingFaqs : DEFAULT_BOOKING_FAQS;
-      bookingFaqs = rawBookingFaqs.slice(0,30).map(normaliseBookingFaq);
-
-      select.innerHTML = '<option value="">Use current public song list</option>' + setlists.map(item =>
-        `<option value="${esc(item.id)}">${esc(setlistName(item))}</option>`
-      ).join("");
-      select.value = selectedId;
-      renderPublicPage();
-      renderBookingFaqs();
-      ready = true;
-      setStatus(selectedId
-        ? `Default browse setlist: ${setlistName(setlists.find(item => item.id === selectedId) || {id:selectedId})}`
-        : "When no Live Karaoke session is active, the popup will use the current public song list unless you choose a setlist here.");
+  async function load(){
+    setStatus("Loading setlists…");setContentStatus("Loading public website content…");
+    try{
+      const [listSnap,settingsSnap]=await Promise.all([LK.db.collection("lyricsSetlists").get(),settingsRef().get()]);
+      setlists=listSnap.docs.map(doc=>({id:doc.id,...(doc.data()||{})})).sort((a,b)=>setlistName(a).localeCompare(setlistName(b),undefined,{sensitivity:"base"}));
+      const settings=settingsSnap.exists?(settingsSnap.data()||{}):{};const selectedId=String(settings.defaultBrowseSetlistId||"").trim();
+      publicPage=normalisePublicPage(settings.publicPage||{});
+      const rawBookingFaqs=Array.isArray(settings.bookingFaqs)&&settings.bookingFaqs.length?settings.bookingFaqs:DEFAULT_BOOKING_FAQS;bookingFaqs=rawBookingFaqs.slice(0,30).map(normaliseBookingFaq);
+      select.innerHTML='<option value="">Use current public song list</option>'+setlists.map(item=>`<option value="${esc(item.id)}">${esc(setlistName(item))}</option>`).join("");select.value=selectedId;
+      renderPublicPage();renderBookingFaqs();ready=true;
+      setStatus(selectedId?`Default browse setlist: ${setlistName(setlists.find(item=>item.id===selectedId)||{id:selectedId})}`:"When no Live Karaoke session is active, the popup will use the current public song list unless you choose a setlist here.");
       setContentStatus(`${bookingFaqs.length} booking question${bookingFaqs.length===1?"":"s"} loaded · public page content ready.`);
-    } catch (error) {
-      console.error("Could not load Live Karaoke website settings", error);
-      setStatus(error.message || "Could not load setlists.", true);
-      setContentStatus(error.message || "Could not load public website content.", true);
-    }
+    }catch(error){console.error("Could not load Live Karaoke website settings",error);setStatus(error.message||"Could not load setlists.",true);setContentStatus(error.message||"Could not load public website content.",true);}
   }
 
-  async function saveLiveKaraokeExtras() {
-    if (!ready || !LK.auth.currentUser) return;
-    syncBookingFaqInputs();
-    publicPage = collectPublicPage();
-    bookingFaqs = bookingFaqs.map(normaliseBookingFaq).filter(item => item.question && item.answer);
-    const id = String(select.value || "").trim();
-    const item = setlists.find(row => row.id === id) || null;
-    try {
-      await settingsRef().set({
-        defaultBrowseSetlistId:id,
-        defaultBrowseSetlistName:item ? setlistName(item) : "",
-        publicPage,
-        bookingFaqs,
-        updatedAt:firebase.firestore.FieldValue.serverTimestamp(),
-        updatedBy:LK.auth.currentUser.uid
-      }, {merge:true});
-      setStatus(id
-        ? `Default browse setlist saved: ${setlistName(item)}`
-        : "Default browse setlist saved: current public song list.");
-      setContentStatus(`Public website content saved · ${bookingFaqs.length} booking question${bookingFaqs.length===1?"":"s"}.`);
-    } catch (error) {
-      console.error("Could not save Live Karaoke website settings", error);
-      setStatus(error.message || "Could not save the default songbook.", true);
-      setContentStatus(error.message || "Could not save public website content.", true);
-    }
+  async function saveLiveKaraokeExtras(){
+    if(!ready||!LK.auth.currentUser)return;syncBookingFaqInputs();publicPage=collectPublicPage();bookingFaqs=bookingFaqs.map(normaliseBookingFaq).filter(item=>item.question&&item.answer);
+    const id=String(select.value||"").trim();const item=setlists.find(row=>row.id===id)||null;
+    try{await settingsRef().set({defaultBrowseSetlistId:id,defaultBrowseSetlistName:item?setlistName(item):"",publicPage,bookingFaqs,updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:LK.auth.currentUser.uid},{merge:true});setStatus(id?`Default browse setlist saved: ${setlistName(item)}`:"Default browse setlist saved: current public song list.");setContentStatus(`Public website content saved · ${bookingFaqs.length} booking question${bookingFaqs.length===1?"":"s"}.`);}catch(error){console.error("Could not save Live Karaoke website settings",error);setStatus(error.message||"Could not save the default songbook.",true);setContentStatus(error.message||"Could not save public website content.",true);}
   }
 
-  function resetExtras() {
-    select.value = "";
-    publicPage = structuredClone(DEFAULT_PUBLIC_PAGE);
-    bookingFaqs = DEFAULT_BOOKING_FAQS.map(item => ({...item}));
-    renderPublicPage();
-    renderBookingFaqs();
-    setStatus("Default browse setlist reset locally. Press Save Website Settings to publish it.");
-    setContentStatus("Public page content and Booking Questions reset to defaults locally. Press Save Website Settings to publish them.");
-  }
+  function resetExtras(){select.value="";publicPage=structuredClone(DEFAULT_PUBLIC_PAGE);bookingFaqs=DEFAULT_BOOKING_FAQS.map(item=>({...item}));renderPublicPage();renderBookingFaqs();setStatus("Default browse setlist reset locally. Press Save Website Settings to publish it.");setContentStatus("Public page content, visibility and Booking Questions reset to defaults locally. Press Save Website Settings to publish them.");}
 
-  select.addEventListener("change", () => {
-    const item = setlists.find(row => row.id === select.value) || null;
-    setStatus(item
-      ? `Will use ${setlistName(item)} for browsing when no Live Karaoke session is active. Press Save Website Settings.`
-      : "Will use the current public song list when no Live Karaoke session is active. Press Save Website Settings.");
-  });
-
-  const colorPicker = $("lkGetStartedColor");
-  const colorText = $("lkGetStartedColorText");
-  colorPicker?.addEventListener("input", () => { if (colorText) colorText.value = colorPicker.value; });
-  colorText?.addEventListener("change", () => {
-    const next = normaliseHex(colorText.value, publicPage.getStartedColor || DEFAULT_PUBLIC_PAGE.getStartedColor);
-    colorText.value = next;
-    if (colorPicker) colorPicker.value = next;
-  });
-
-  addBookingFaqBtn?.addEventListener("click", () => {
-    syncBookingFaqInputs();
-    if (bookingFaqs.length >= 30) return;
-    const id = `booking-faq-${Date.now()}`;
-    bookingFaqs.push({id,question:"New question",answer:""});
-    renderBookingFaqs();
-    bookingFaqEditors?.querySelector(`[data-booking-faq-id="${CSS.escape(id)}"]`)?.focus();
-  });
-
-  bookingFaqEditors?.addEventListener("input", event => {
-    const input = event.target.closest?.("[data-booking-faq-field]");
-    if (!input) return;
-    const faq = bookingFaqs.find(item => item.id === input.dataset.bookingFaqId);
-    if (faq) faq[input.dataset.bookingFaqField] = String(input.value || "");
-  });
-
-  bookingFaqEditors?.addEventListener("click", event => {
-    const deleteBtn = event.target.closest?.("[data-booking-faq-delete]");
-    const upBtn = event.target.closest?.("[data-booking-faq-up]");
-    const downBtn = event.target.closest?.("[data-booking-faq-down]");
-    const id = deleteBtn?.dataset.bookingFaqDelete || upBtn?.dataset.bookingFaqUp || downBtn?.dataset.bookingFaqDown;
-    if (!id) return;
-    syncBookingFaqInputs();
-    const index = bookingFaqs.findIndex(item => item.id === id);
-    if (index < 0) return;
-    if (deleteBtn) bookingFaqs.splice(index,1);
-    else if (upBtn && index > 0) [bookingFaqs[index-1], bookingFaqs[index]] = [bookingFaqs[index], bookingFaqs[index-1]];
-    else if (downBtn && index < bookingFaqs.length-1) [bookingFaqs[index+1], bookingFaqs[index]] = [bookingFaqs[index], bookingFaqs[index+1]];
-    renderBookingFaqs();
-  });
-
-  saveButton?.addEventListener("click", () => {
-    // The shared controller saves category/request-popup settings. This merge adds Live Karaoke-only fields.
-    setTimeout(() => void saveLiveKaraokeExtras(), 0);
-  });
-
-  resetButton?.addEventListener("click", resetExtras);
-
-  LK.auth.onAuthStateChanged(user => {
-    if (user && !ready) void load();
-  });
+  injectExtraControls();
+  select.addEventListener("change",()=>{const item=setlists.find(row=>row.id===select.value)||null;setStatus(item?`Will use ${setlistName(item)} for browsing when no Live Karaoke session is active. Press Save Website Settings.`:"Will use the current public song list when no Live Karaoke session is active. Press Save Website Settings.");});
+  const colorPicker=$("lkGetStartedColor"),colorText=$("lkGetStartedColorText");colorPicker?.addEventListener("input",()=>{if(colorText)colorText.value=colorPicker.value;});colorText?.addEventListener("change",()=>{const next=normaliseHex(colorText.value,publicPage.getStartedColor||DEFAULT_PUBLIC_PAGE.getStartedColor);colorText.value=next;if(colorPicker)colorPicker.value=next;});
+  addBookingFaqBtn?.addEventListener("click",()=>{syncBookingFaqInputs();if(bookingFaqs.length>=30)return;const id=`booking-faq-${Date.now()}`;bookingFaqs.push({id,question:"New question",answer:""});renderBookingFaqs();bookingFaqEditors?.querySelector(`[data-booking-faq-id="${CSS.escape(id)}"]`)?.focus();});
+  bookingFaqEditors?.addEventListener("input",event=>{const input=event.target.closest?.("[data-booking-faq-field]");if(!input)return;const faq=bookingFaqs.find(item=>item.id===input.dataset.bookingFaqId);if(faq)faq[input.dataset.bookingFaqField]=String(input.value||"");});
+  bookingFaqEditors?.addEventListener("click",event=>{const deleteBtn=event.target.closest?.("[data-booking-faq-delete]"),upBtn=event.target.closest?.("[data-booking-faq-up]"),downBtn=event.target.closest?.("[data-booking-faq-down]");const id=deleteBtn?.dataset.bookingFaqDelete||upBtn?.dataset.bookingFaqUp||downBtn?.dataset.bookingFaqDown;if(!id)return;syncBookingFaqInputs();const index=bookingFaqs.findIndex(item=>item.id===id);if(index<0)return;if(deleteBtn)bookingFaqs.splice(index,1);else if(upBtn&&index>0)[bookingFaqs[index-1],bookingFaqs[index]]=[bookingFaqs[index],bookingFaqs[index-1]];else if(downBtn&&index<bookingFaqs.length-1)[bookingFaqs[index+1],bookingFaqs[index]]=[bookingFaqs[index],bookingFaqs[index+1]];renderBookingFaqs();});
+  saveButton?.addEventListener("click",()=>setTimeout(()=>void saveLiveKaraokeExtras(),0));resetButton?.addEventListener("click",resetExtras);
+  LK.auth.onAuthStateChanged(user=>{if(user&&!ready)void load();});
 })();
