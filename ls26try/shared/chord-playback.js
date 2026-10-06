@@ -22,12 +22,21 @@
    if(segments.length!==1||!segments[0].node)throw Error('A chord cannot be highlighted safely.');
    const segment=segments[0];plans.push({event,node:segment.node,start:segment.offset+a.start-segment.start,end:segment.offset+a.end-segment.start});
   }
+  function tag(node,event){
+   node.classList.add('ls26-timed-chord');
+   node.dataset.ls26EventId=String(event.id||'');
+   node.dataset.ls26StartBeat=String(Number(event.startBeat)||0);
+   node.dataset.ls26EndBeat=String(Number(event.endBeat)||0);
+   node.dataset.ls26SectionIndex=String(event.sourceAnchor?.sectionIndex??'');
+   node.dataset.ls26LineIndex=String(event.sourceAnchor?.lineIndex??'');
+   result.set(event.id,node);
+  }
   // Wrap only after every correspondence validates. Work backwards in each
   // text node, retaining all source whitespace and formatting around tokens.
-  for(const plan of plans.filter(p=>p.target)){plan.target.classList.add('ls26-timed-chord');result.set(plan.event.id,plan.target);}
+  for(const plan of plans.filter(p=>p.target))tag(plan.target,plan.event);
   for(const plan of plans.filter(p=>p.node).reverse()){
-   const text=plan.node.nodeValue,span=document.createElement('span');span.className='ls26-timed-chord';span.textContent=text.slice(plan.start,plan.end);
-   const after=document.createTextNode(text.slice(plan.end));plan.node.nodeValue=text.slice(0,plan.start);plan.node.parentNode.insertBefore(span,plan.node.nextSibling);span.parentNode.insertBefore(after,span.nextSibling);result.set(plan.event.id,span);
+   const text=plan.node.nodeValue,span=document.createElement('span');span.textContent=text.slice(plan.start,plan.end);
+   const after=document.createTextNode(text.slice(plan.end));plan.node.nodeValue=text.slice(0,plan.start);plan.node.parentNode.insertBefore(span,plan.node.nextSibling);span.parentNode.insertBefore(after,span.nextSibling);tag(span,plan.event);
   }
   return result;
  }
