@@ -116,6 +116,29 @@
   color:#fff!important;
 }
 
+/* Small decorative marks for the three booking cards. */
+.booking-benefits .lk-booking-card-icon{
+  width:50px;
+  height:50px;
+  margin:0 0 14px;
+  display:grid;
+  place-items:center;
+  color:var(--lk-red-bright);
+}
+.booking-benefits .lk-booking-card-icon svg{
+  width:46px;
+  height:46px;
+  fill:none;
+  stroke:currentColor;
+  stroke-width:1.8;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+.booking-benefits .lk-booking-icon-secondary{
+  stroke:#fff;
+  opacity:.9;
+}
+
 /* HOW IT WORKS: real HTML text with lightweight inline illustrations. */
 .instructions-container{
   width:100%!important;

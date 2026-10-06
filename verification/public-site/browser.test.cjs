@@ -70,6 +70,14 @@ async function fill(page) {
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth <= innerWidth),true);
     assert.equal(await page.locator('.hero-banner').evaluate(n=>n.complete && n.naturalWidth===1774),true);
     assert.match(await page.locator('.hero-banner').evaluate(n=>n.currentSrc),/banner.avif$/);
+    assert.equal(await page.locator('.booking-benefits article .lk-booking-card-icon').count(),3);
+    assert.equal(await page.locator('.booking-benefits article .lk-booking-card-icon[aria-hidden="true"] svg').count(),3);
+    assert.equal(await page.evaluate(()=>[...document.querySelectorAll('.booking-benefits article')].every(card=>card.firstElementChild?.classList.contains('lk-booking-card-icon')&&card.children[1]?.tagName==='H3')),true);
+    assert.deepEqual(await page.locator('#about .about-booking').evaluate(n=>({text:n.textContent,plain:n.firstChild?.nodeValue,strong:n.querySelector('strong')?.textContent})),{
+      text:'Perfect for bars, venues, private parties and events.',
+      plain:'Perfect for ',
+      strong:'bars, venues, private parties and events.'
+    });
     await page.screenshot({path:'/tmp/lk-public-screens/'+width+'x'+height+'.png',fullPage:true});
     const summary=page.locator('.booking-faq summary').first();
     await summary.focus(); await page.keyboard.press('Enter');
