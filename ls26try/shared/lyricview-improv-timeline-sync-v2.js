@@ -1,12 +1,14 @@
 /* Keep dynamic meter and Chord Follow aligned across IMPROV holds.
- * The metronome continues physically; the song timeline is shifted by the exact
- * Chord Follow timingOffset after release. Future TIME SIG markers shift with it.
+ * The metronome continues physically, but while an IMPROV hold is active it must
+ * repeat the meter/bar that was actually playing immediately BEFORE the hold.
+ * Future TIME SIG markers must not advance until Chord Follow resumes.
  */
 (() => {
   'use strict';
   if (!/\/host\/lyricview\.html$/i.test(String(location.pathname || ''))) return;
 
   const EPS = 1e-7;
+  const IMPROV_SELECTOR = 'a.lyrics-song-link[data-improv-link]';
   let rawMap = null;
   let mapWrapper = null;
   let rawTimedView = null;
@@ -15,6 +17,7 @@
   let heldMeter = null;
   let pendingReleaseBeat = null;
   let resumeAnchor = null;
+  let statusObserver = null;
 
   function physicalBeat() {
     try {
@@ -82,6 +85,8 @@
   }
 
   function nextTransportSegment(startBeat) {
+    /* While improvising there IS deliberately no next song-meter segment.
+       The click keeps cycling the held meter until the performer resumes. */
     if (heldMeter) return null;
     const start = Number(startBeat);
     let source = null;
@@ -103,14 +108,14 @@
   function installMapWrapper() {
     const current = window.LS26MeterMap;
     if (!current) return false;
-    if (current === mapWrapper || current.__ls26ImprovTimelineSyncV2) return true;
+    if (current === mapWrapper || current.__ls26ImprovTimelineSyncV3) return true;
     rawMap = current;
     mapWrapper = {
       current: currentTransportSegment,
       nextAfter: nextTransportSegment,
       segments() { return sourceSegments().map(item => ({ ...item, startBeat:item.startBeat + timelineOffset })); },
       rebuild() { return rawMap?.rebuild?.(); },
-      __ls26ImprovTimelineSyncV2: true
+      __ls26ImprovTimelineSyncV3: true
     };
     window.LS26MeterMap = mapWrapper;
     return true;
@@ -119,7 +124,7 @@
   function installTimedViewWrapper() {
     const current = window.LS26TimedView;
     if (!current) return false;
-    if (current === timedWrapper || current.__ls26ImprovTimelineSyncV2View) return true;
+    if (current === timedWrapper || current.__ls26ImprovTimelineSyncV3View) return true;
     rawTimedView = current;
     timedWrapper = {
       ...current,
@@ -128,20 +133,61 @@
         return mapWrapper?.current?.(physicalBeat()) || rawTimedView?.meter?.();
       }
     };
-    Object.defineProperty(timedWrapper,'__ls26ImprovTimelineSyncV2View',{value:true,enumerable:false});
+    Object.defineProperty(timedWrapper,'__ls26ImprovTimelineSyncV3View',{value:true,enumerable:false});
     if (current.__ls26DynamicMeterWrapper) Object.defineProperty(timedWrapper,'__ls26DynamicMeterWrapper',{value:true,enumerable:false});
     timedWrapper = Object.freeze(timedWrapper);
     window.LS26TimedView = timedWrapper;
     return true;
   }
 
-  function lockCurrentMeter() {
+  function activeImprovGate() {
+    return document.querySelector(`${IMPROV_SELECTOR}.ls26-improv-active`);
+  }
+
+  function logicalBeatImmediatelyBeforeHold() {
+    const gate = activeImprovGate();
+
+    /* Chord Follow deliberately leaves the previously-playing chord highlighted
+       when it enters an IMPROV hold. That is the strongest source of truth. */
+    const active = document.querySelector('.ls26-active-chord[data-ls26-start-beat]');
+    if (active) {
+      const end = Number(active.dataset.ls26EndBeat);
+      if (Number.isFinite(end)) return Math.max(0, end - 0.0001);
+      const start = Number(active.dataset.ls26StartBeat);
+      if (Number.isFinite(start)) return Math.max(0, start);
+    }
+
+    /* Fallback: locate the final timed chord before the IMPROV card in DOM order.
+       Using its end-minus-epsilon guarantees a TIME SIG after the card cannot leak
+       backwards into the held improvisation meter. */
+    if (gate) {
+      let previous = null;
+      for (const chord of document.querySelectorAll('.ls26-timed-chord[data-ls26-start-beat]')) {
+        if (chord.compareDocumentPosition(gate) & Node.DOCUMENT_POSITION_FOLLOWING) previous = chord;
+        else if (gate.compareDocumentPosition(chord) & Node.DOCUMENT_POSITION_FOLLOWING) break;
+      }
+      if (previous) {
+        const end = Number(previous.dataset.ls26EndBeat);
+        if (Number.isFinite(end)) return Math.max(0, end - 0.0001);
+        const start = Number(previous.dataset.ls26StartBeat);
+        if (Number.isFinite(start)) return Math.max(0, start);
+      }
+    }
+
+    /* Last resort only. Normally the active/previous chord path above is used. */
+    return Math.max(0, physicalBeat() - timelineOffset);
+  }
+
+  function lockPreHoldMeter() {
     installMapWrapper();
     if (heldMeter) return;
-    const logical = physicalBeat() - timelineOffset;
+    const logical = logicalBeatImmediatelyBeforeHold();
     const source = segmentAtLogical(logical);
     const adjusted = adjustedSegment(source, logical);
     heldMeter = { ...adjusted };
+    window.dispatchEvent(new CustomEvent('ls26:improv-meter-held', {
+      detail:{ logicalBeat:logical, beatsPerBar:heldMeter.beatsPerBar, beatUnit:heldMeter.beatUnit }
+    }));
   }
 
   function applyRelease(releaseBeat) {
@@ -164,10 +210,30 @@
     }));
   }
 
+  function syncHoldFromStatus() {
+    const status = String(document.getElementById('chordFollowStatus')?.textContent || '');
+    /* Lock as soon as the hold begins — NOT when Continue is tapped. This is the
+       key behaviour: future TIME SIG markers never advance while waiting. */
+    if (/IMPROV HOLD/i.test(status) && !/IMPROV EXIT QUEUED/i.test(status)) lockPreHoldMeter();
+  }
+
+  function observeHoldStatus() {
+    const status = document.getElementById('chordFollowStatus');
+    if (!status) return false;
+    if (status.dataset.ls26PreHoldMeterObserved === '1') return true;
+    status.dataset.ls26PreHoldMeterObserved = '1';
+    statusObserver = new MutationObserver(syncHoldFromStatus);
+    statusObserver.observe(status,{subtree:true,childList:true,characterData:true,attributes:true});
+    syncHoldFromStatus();
+    return true;
+  }
+
   window.addEventListener('ls26:improv-release-countdown', event => {
     const detail = event.detail || {};
     if (detail.active === true) {
-      lockCurrentMeter();
+      /* By this point the meter should already be locked from IMPROV HOLD. Keep
+         the same held bar through the whole exit countdown. */
+      lockPreHoldMeter();
       const release = Number(detail.releaseBeat);
       pendingReleaseBeat = Number.isFinite(release) ? release : null;
       return;
@@ -188,6 +254,7 @@
   function installAll() {
     installMapWrapper();
     installTimedViewWrapper();
+    observeHoldStatus();
   }
 
   const start = () => {
@@ -196,7 +263,7 @@
     const timer = setInterval(() => {
       attempts += 1;
       installAll();
-      if (attempts > 120 && mapWrapper && timedWrapper) clearInterval(timer);
+      if (attempts > 120 && mapWrapper && timedWrapper && document.getElementById('chordFollowStatus')) clearInterval(timer);
     },100);
   };
 
