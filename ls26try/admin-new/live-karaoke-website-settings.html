@@ -32,6 +32,22 @@
 
       <section class="billy-site-card billy-site-master">
         <div>
+          <h2>Default songbook</h2>
+          <p>Choose which Lyrics setlist visitors can browse when no Live Karaoke session is running. During a live session, the active public song list still takes priority.</p>
+        </div>
+        <div class="billy-site-category-master-controls">
+          <label class="billy-site-card-size" style="min-width:min(440px,100%)">
+            <span>Offline / default browse setlist</span>
+            <select id="liveKaraokeDefaultSetlist" style="width:100%;min-height:42px">
+              <option value="">Loading setlists…</option>
+            </select>
+          </label>
+        </div>
+        <p id="liveKaraokeDefaultSetlistStatus" class="billy-site-status" role="status"></p>
+      </section>
+
+      <section class="billy-site-card billy-site-master">
+        <div>
           <h2>Song category cards</h2>
           <p>Control the category shortcuts shown above the song search inside Request / Sign Up.</p>
         </div>
@@ -128,5 +144,6 @@
   <script data-ls26-settings="1" src="../shared/app-settings.js?v=20260930-app-version"></script>
   <script src="../shared/shell.js?v=20260930-release-preview-v3"></script>
   <script src="js/billy-website-settings.js?v=20261006-live-karaoke-settings"></script>
+  <script src="js/live-karaoke-website-settings-extra.js?v=20261006-default-songbook-v1"></script>
 </body>
 </html>
