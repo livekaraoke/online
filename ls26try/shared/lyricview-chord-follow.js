@@ -19,12 +19,13 @@ body.host-lyric-view-page .performance-quick-slave{grid-column:4 / 6!important;g
 body.host-lyric-view-page .performance-quick-slave #quickSlaveLyricsSelect{width:100%!important;max-width:190px!important;min-width:0!important;min-height:34px!important;height:34px!important;padding:0 6px!important;font-size:10px!important}
 body.host-lyric-view-page .performance-quick-slave #quickSendSlaveLyricsBtn{min-width:108px!important;min-height:34px!important;height:34px!important;padding:5px 8px!important;font-size:10px!important;white-space:nowrap!important}
 body.host-lyric-view-page #performanceQuickInfo .ls26-hide-karaoke{grid-column:6!important;grid-row:1!important;width:34px!important;min-width:34px!important;height:34px!important;min-height:34px!important;font-size:26px!important}
-.host-section-body .ls26-active-chord{outline:2px solid var(--ls-accent);outline-offset:3px;border-radius:4px;background:#00cafa25!important;box-shadow:0 0 0 4px #00cafa15;color:var(--ls-accent)!important}
+.host-section-body .ls26-active-chord{outline:2px solid var(--ls26-chord-follow-color,var(--ls-accent));outline-offset:3px;border-radius:4px;background:color-mix(in srgb,var(--ls26-chord-follow-color,var(--ls-accent)) 14%,transparent)!important;box-shadow:0 0 0 4px color-mix(in srgb,var(--ls26-chord-follow-color,var(--ls-accent)) 9%,transparent)!important;color:var(--ls26-chord-follow-color,var(--ls-accent))!important}
+html.ls26-hide-active-chord .host-section-body .ls26-active-chord{outline:none!important;background:transparent!important;box-shadow:none!important;color:inherit!important}
 .host-section-body .ls26-timed-chord{cursor:pointer}
-.host-section-body .ls26-start-here-selected{border-radius:4px;box-shadow:0 0 0 3px rgba(255,208,90,.62),0 0 18px rgba(255,208,90,.18)!important}
-.host-section-body .ls26-start-here-candidate{border-radius:4px;box-shadow:0 0 0 3px rgba(255,208,90,.34)!important}
+.host-section-body .ls26-start-here-selected{border-radius:4px;box-shadow:0 0 0 3px color-mix(in srgb,var(--ls26-start-here-color,#ffd05a) 62%,transparent),0 0 18px color-mix(in srgb,var(--ls26-start-here-color,#ffd05a) 18%,transparent)!important}
+.host-section-body .ls26-start-here-candidate{border-radius:4px;box-shadow:0 0 0 3px color-mix(in srgb,var(--ls26-start-here-color,#ffd05a) 34%,transparent)!important}
 #songInfoDrawer.song-info-drawer{z-index:2147482600!important}
-#chordFollowFloatCard{position:fixed!important;width:clamp(220px,26vw,300px)!important;max-width:calc(100vw - 24px)!important;box-sizing:border-box!important;padding:7px!important;border:1px solid color-mix(in srgb,var(--ls-accent) 42%,var(--ls-border))!important;border-radius:10px!important;background:rgba(2,18,27,.96)!important;box-shadow:0 10px 28px rgba(0,0,0,.42),0 0 18px rgba(0,202,250,.08)!important;z-index:2147481550!important;backdrop-filter:blur(8px)!important}
+#chordFollowFloatCard{position:fixed!important;width:clamp(235px,28vw,320px)!important;max-width:calc(100vw - 24px)!important;box-sizing:border-box!important;padding:7px!important;border:1px solid color-mix(in srgb,var(--ls-accent) 42%,var(--ls-border))!important;border-radius:10px!important;background:rgba(2,18,27,.96)!important;box-shadow:0 10px 28px rgba(0,0,0,.42),0 0 18px rgba(0,202,250,.08)!important;z-index:2147481550!important;backdrop-filter:blur(8px)!important}
 #chordFollowFloatCard[hidden]{display:none!important}
 #chordFollowFloatCard .chord-follow-card-head{display:flex!important;align-items:center!important;gap:5px!important;min-width:0!important}
 #chordFollowFloatCard .chord-follow-actions{display:flex!important;align-items:center!important;gap:5px!important;flex:1 1 auto!important;min-width:0!important}
@@ -35,23 +36,28 @@ body.host-lyric-view-page #performanceQuickInfo .ls26-hide-karaoke{grid-column:6
 #chordFollowFloatCard #resetChordTimingBtn{flex:0 1 auto!important}
 #chordFollowFloatCard #closeChordFollowControls{flex:0 0 30px!important;width:30px!important;min-width:30px!important;padding:0!important;font-size:17px!important;color:var(--ls-muted)!important}
 #chordFollowFloatCard [hidden]{display:none!important}
+#chordFollowFloatCard .chord-follow-card-options{display:grid!important;grid-template-columns:1fr 1fr!important;gap:5px!important;margin-top:6px!important}
+#chordFollowFloatCard .chord-follow-card-check{display:flex!important;align-items:center!important;gap:5px!important;min-width:0!important;padding:5px 6px!important;border:1px solid color-mix(in srgb,var(--ls-border) 80%,transparent)!important;border-radius:6px!important;color:var(--ls-muted)!important;font-size:8.5px!important;font-weight:800!important;line-height:1.15!important}
+#chordFollowFloatCard .chord-follow-card-check input{flex:0 0 auto!important;margin:0!important;accent-color:var(--ls-accent)!important}
+#chordFollowFloatCard .chord-follow-card-check:has(input:checked){color:var(--ls-text)!important;border-color:color-mix(in srgb,var(--ls-accent) 35%,var(--ls-border))!important}
+#chordFollowFloatCard .chord-follow-card-check:has(input:disabled){opacity:.55!important}
 #chordFollowFloatCard #chordFollowStatus{display:block!important;min-width:0!important;max-width:100%!important;max-height:52px!important;margin:5px 1px 0!important;padding:0!important;overflow:auto!important;color:var(--ls-muted)!important;font-size:9px!important;font-weight:750!important;line-height:1.25!important;white-space:pre-line!important;overflow-wrap:anywhere!important}
 #chordFollowFloatCard #chordFollowStatus[hidden]{display:none!important}
 #chordFollowFloatCard #chordFollowStatus.is-unavailable{color:var(--ls-warning)!important}
-#ls26StartHereCard{position:fixed;display:flex;align-items:center;gap:6px;max-width:min(330px,calc(100vw - 20px));padding:7px 8px;border:1px solid rgba(255,208,90,.7);border-radius:9px;background:rgba(4,18,25,.97);box-shadow:0 10px 28px rgba(0,0,0,.42),0 0 18px rgba(255,208,90,.12);z-index:2147481500;box-sizing:border-box}
+#ls26StartHereCard{position:fixed;display:flex;align-items:center;gap:6px;max-width:min(330px,calc(100vw - 20px));padding:7px 8px;border:1px solid color-mix(in srgb,var(--ls26-start-here-color,#ffd05a) 70%,transparent);border-radius:9px;background:rgba(4,18,25,.97);box-shadow:0 10px 28px rgba(0,0,0,.42),0 0 18px color-mix(in srgb,var(--ls26-start-here-color,#ffd05a) 12%,transparent);z-index:2147481500;box-sizing:border-box}
 #ls26StartHereCard[hidden]{display:none!important}
-#ls26StartHereCard .ls26-start-label{min-width:0;flex:1 1 auto;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#ffe38a;font-size:10px;font-weight:850}
-#ls26StartHereCard button{height:32px;min-height:32px;border:1px solid rgba(255,208,90,.62);border-radius:6px;background:rgba(255,208,90,.09);color:#ffe38a;font-size:10px;font-weight:950;white-space:nowrap;padding:4px 8px}
+#ls26StartHereCard .ls26-start-label{min-width:0;flex:1 1 auto;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ls26-start-here-color,#ffd05a);font-size:10px;font-weight:850}
+#ls26StartHereCard button{height:32px;min-height:32px;border:1px solid color-mix(in srgb,var(--ls26-start-here-color,#ffd05a) 62%,transparent);border-radius:6px;background:color-mix(in srgb,var(--ls26-start-here-color,#ffd05a) 9%,transparent);color:var(--ls26-start-here-color,#ffd05a);font-size:10px;font-weight:950;white-space:nowrap;padding:4px 8px}
 #ls26StartHereCard .ls26-start-cancel{width:30px;min-width:30px;padding:0;color:var(--ls-muted);border-color:var(--ls-border);background:var(--ls-panel)}
-#sectionProgress .progress-section.ls26-start-section{filter:drop-shadow(0 0 5px rgba(255,208,90,.5))}
+#sectionProgress .progress-section.ls26-start-section{filter:drop-shadow(0 0 5px color-mix(in srgb,var(--ls26-start-here-color,#ffd05a) 50%,transparent))}
 .host-scroll-player .ls26-track-nav-btn{display:inline-grid!important;place-items:center!important;flex:0 0 42px!important;width:42px!important;min-width:42px!important;max-width:42px!important;height:42px!important;min-height:42px!important;max-height:42px!important;margin:0!important;padding:0!important;border:1px solid var(--ls-border)!important;border-radius:50%!important;background:rgba(3,21,31,.92)!important;color:var(--ls-text)!important;box-shadow:inset 0 0 0 1px rgba(0,202,250,.04)!important}
 .host-scroll-player .ls26-track-nav-btn:hover,.host-scroll-player .ls26-track-nav-btn:focus-visible{border-color:var(--ls-accent)!important;color:var(--ls-accent)!important}
 .host-scroll-player .ls26-track-nav-btn svg{display:block!important;width:21px!important;height:21px!important;fill:currentColor!important;stroke:none!important}
 .host-scroll-player #nextRunOrderSongBtn.ls26-track-nav-btn{font-size:0!important;line-height:0!important}
 .host-section-body ${IMPROV_SELECTOR}{cursor:pointer!important}
 .host-section-body ${IMPROV_SELECTOR}.ls26-improv-active{outline:2px solid var(--ls-warning)!important;outline-offset:3px!important;box-shadow:0 0 0 4px color-mix(in srgb,var(--ls-warning) 16%,transparent),0 0 24px color-mix(in srgb,var(--ls-warning) 20%,transparent)!important}
-@media(max-width:900px){body.host-lyric-view-page .performance-quick-karaoke{grid-template-columns:62px minmax(160px,.8fr) 28px minmax(145px,165px) minmax(100px,1fr) 32px!important;column-gap:5px!important}body.host-lyric-view-page .performance-quick-primary .quick-split-action{grid-template-columns:minmax(0,1fr) 28px!important}body.host-lyric-view-page .performance-quick-primary #quickKaraokeMenuBtn{width:28px!important;min-width:28px!important}body.host-lyric-view-page .performance-quick-slave{grid-template-columns:minmax(105px,155px) minmax(100px,1fr)!important}body.host-lyric-view-page .performance-quick-slave #quickSlaveLyricsSelect{max-width:155px!important}#chordFollowFloatCard{width:250px!important}.host-scroll-player .ls26-track-nav-btn{flex-basis:40px!important;width:40px!important;min-width:40px!important;max-width:40px!important;height:40px!important;min-height:40px!important;max-height:40px!important}}
-@media(max-width:700px){body.host-lyric-view-page .performance-quick-karaoke{grid-template-columns:58px minmax(150px,1.1fr) 28px 32px!important;grid-template-rows:auto auto!important}body.host-lyric-view-page .performance-quick-karaoke>.performance-quick-label{grid-column:1!important;grid-row:1!important}body.host-lyric-view-page .performance-quick-primary{grid-column:2 / 4!important;grid-row:1!important}body.host-lyric-view-page #performanceQuickInfo .ls26-hide-karaoke{grid-column:4!important;grid-row:1!important}body.host-lyric-view-page .performance-quick-slave{grid-column:1 / -1!important;grid-row:2!important;grid-template-columns:minmax(0,1fr) auto!important}body.host-lyric-view-page .performance-quick-slave #quickSlaveLyricsSelect{max-width:none!important}#chordFollowFloatCard{width:min(250px,calc(100vw - 24px))!important}}
+@media(max-width:900px){body.host-lyric-view-page .performance-quick-karaoke{grid-template-columns:62px minmax(160px,.8fr) 28px minmax(145px,165px) minmax(100px,1fr) 32px!important;column-gap:5px!important}body.host-lyric-view-page .performance-quick-primary .quick-split-action{grid-template-columns:minmax(0,1fr) 28px!important}body.host-lyric-view-page .performance-quick-primary #quickKaraokeMenuBtn{width:28px!important;min-width:28px!important}body.host-lyric-view-page .performance-quick-slave{grid-template-columns:minmax(105px,155px) minmax(100px,1fr)!important}body.host-lyric-view-page .performance-quick-slave #quickSlaveLyricsSelect{max-width:155px!important}#chordFollowFloatCard{width:270px!important}.host-scroll-player .ls26-track-nav-btn{flex-basis:40px!important;width:40px!important;min-width:40px!important;max-width:40px!important;height:40px!important;min-height:40px!important;max-height:40px!important}}
+@media(max-width:700px){body.host-lyric-view-page .performance-quick-karaoke{grid-template-columns:58px minmax(150px,1.1fr) 28px 32px!important;grid-template-rows:auto auto!important}body.host-lyric-view-page .performance-quick-karaoke>.performance-quick-label{grid-column:1!important;grid-row:1!important}body.host-lyric-view-page .performance-quick-primary{grid-column:2 / 4!important;grid-row:1!important}body.host-lyric-view-page #performanceQuickInfo .ls26-hide-karaoke{grid-column:4!important;grid-row:1!important}body.host-lyric-view-page .performance-quick-slave{grid-column:1 / -1!important;grid-row:2!important;grid-template-columns:minmax(0,1fr) auto!important}body.host-lyric-view-page .performance-quick-slave #quickSlaveLyricsSelect{max-width:none!important}#chordFollowFloatCard{width:min(270px,calc(100vw - 24px))!important}}
 `;(document.head||document.documentElement).append(style);
  }
 
@@ -67,7 +73,13 @@ body.host-lyric-view-page #performanceQuickInfo .ls26-hide-karaoke{grid-column:6
   label.id='chordFollowStatus';label.setAttribute('role','status');label.setAttribute('aria-live','polite');label.textContent='';label.hidden=true;
   const controls=document.createElement('div');controls.className='chord-follow-actions';controls.append(button,rejoin,reset);
   const head=document.createElement('div');head.className='chord-follow-card-head';head.append(controls,close);
-  card.id='chordFollowFloatCard';card.className='performance-chord-follow';card.setAttribute('aria-label','Chord Follow controls');card.append(head,label);document.body.append(card);
+
+  const visualCheck=document.createElement('input'),beat1OnlyCheck=document.createElement('input');
+  visualCheck.type=beat1OnlyCheck.type='checkbox';visualCheck.id='chordFollowVisualBeatFlash';beat1OnlyCheck.id='chordFollowBeat1Only';
+  const visualLabel=document.createElement('label'),beat1Label=document.createElement('label');visualLabel.className=beat1Label.className='chord-follow-card-check';
+  visualLabel.append(visualCheck,document.createTextNode('Visual Beat Flash'));beat1Label.append(beat1OnlyCheck,document.createTextNode('Beat 1 Flash Only'));
+  const optionsRow=document.createElement('div');optionsRow.className='chord-follow-card-options';optionsRow.append(visualLabel,beat1Label);
+  card.id='chordFollowFloatCard';card.className='performance-chord-follow';card.setAttribute('aria-label','Chord Follow controls');card.append(head,optionsRow,label);document.body.append(card);
 
   const startCard=document.createElement('div'),startLabel=document.createElement('span'),startConfirm=document.createElement('button'),startCancel=document.createElement('button');
   startCard.id='ls26StartHereCard';startCard.hidden=true;startCard.setAttribute('role','dialog');startCard.setAttribute('aria-label','Choose song start');
@@ -79,18 +91,36 @@ body.host-lyric-view-page #performanceQuickInfo .ls26-hide-karaoke{grid-column:6
 
   const FOLLOW_PREF_KEY='ls26.lyricview.chordFollow.enabled';
   const CONTROLS_PREF_KEY='ls26.lyricview.chordFollow.controlsVisible';
+  const METRO_PREF_KEY='ls26:lyricviewMetronomeV1';
   const readFollowPreference=()=>{try{return window.localStorage?.getItem(FOLLOW_PREF_KEY)==='1';}catch{return false;}};
   const writeFollowPreference=value=>{try{window.localStorage?.setItem(FOLLOW_PREF_KEY,value?'1':'0');}catch{}};
   const readControlsPreference=()=>{try{const value=window.localStorage?.getItem(CONTROLS_PREF_KEY);return value===null||value==='1';}catch{return true;}};
   const writeControlsPreference=value=>{try{window.localStorage?.setItem(CONTROLS_PREF_KEY,value?'1':'0');}catch{}};
+  const readMetroPrefs=()=>{try{return JSON.parse(window.localStorage?.getItem(METRO_PREF_KEY)||'{}')||{};}catch{return {};}};
+  const writeMetroPrefs=patch=>{try{const next={...readMetroPrefs(),...patch};window.localStorage?.setItem(METRO_PREF_KEY,JSON.stringify(next));return next;}catch{return {...readMetroPrefs(),...patch};}};
 
   let loaded=false,pending=null,result=null,track=null,nodes=new Map(),on=false,wanted=readFollowPreference(),controlsVisible=readControlsPreference();
   let manual=false,frame=null,current=null,positionedLine=null,finished=false,lastY=window.scrollY||0,programmaticUntil=0,sourceMeter=null,scrollFrame=null,countInPrepared=false;
   let suppressPlayRejoin=false,timingOffset=0,improvHeld=null,improvResumeBeat=null,pendingStart=null,selectedStart=null,startAnchor=null,normalScrollPausedByImprov=false;
+  let improvReleaseBeat=null,improvOrangeFromBeat=null,improvReleaseTimer=null;
   const handledImprovs=new Set();
   const api={enabled:()=>on,wanted:()=>wanted,meter:()=>sourceMeter,startBeat:()=>Number(selectedStart?.startBeat)||0,hasStart:()=>Boolean(selectedStart)};
   const name=event=>nodes.get(event.id)?.textContent.trim()||event.chord;
   const allImprovs=()=>[...document.querySelectorAll(IMPROV_SELECTOR)];
+
+  const initialMetroPrefs=readMetroPrefs();
+  visualCheck.checked=initialMetroPrefs.visual===true;beat1OnlyCheck.checked=initialMetroPrefs.visualBeat1Only===true;beat1OnlyCheck.disabled=!visualCheck.checked;
+  document.documentElement.classList.toggle('ls26-hide-active-chord',initialMetroPrefs.showChordHighlight===false);
+
+  function syncVisualChecks(detail={}){
+   if(typeof detail.visual==='boolean')visualCheck.checked=detail.visual;
+   if(typeof detail.beat1Only==='boolean')beat1OnlyCheck.checked=detail.beat1Only;
+   beat1OnlyCheck.disabled=!visualCheck.checked;
+  }
+  function requestVisualPrefs(){
+   const detail={visual:visualCheck.checked,beat1Only:beat1OnlyCheck.checked,source:'follow-card'};writeMetroPrefs({visual:detail.visual,visualBeat1Only:detail.beat1Only});beat1OnlyCheck.disabled=!detail.visual;
+   window.dispatchEvent(new CustomEvent('ls26:visual-beat-settings-request',{detail}));
+  }
 
   function visibleSections(){return track?.events.every(e=>{const section=document.querySelector(`.host-section[data-section-index="${e.sourceAnchor.sectionIndex}"]`);return section&&!section.classList.contains('collapsed')&&!section.classList.contains('session-visibility-hidden');});}
   async function load(){if(loaded)return result;if(pending)return pending;pending=store.load(songId,getSong()).then(value=>{loaded=true;result=value;return value;}).finally(()=>{pending=null;});return pending;}
@@ -106,8 +136,6 @@ body.host-lyric-view-page #performanceQuickInfo .ls26-hide-karaoke{grid-column:6
    if(!on||improvHeld)return;
    cancelPositionAnimation();programmaticUntil=0;
    if(songPlaying()){
-    // During live playback the performer may look around, but Follow stays
-    // armed and automatically takes the screen back on the next chord line.
     manual=false;notify('Manual view · Chord Follow returns on the next chord line.');stateLabel();return;
    }
    manual=true;notify('Positioning paused · scroll freely. Press Play or REJOIN to resume following.');stateLabel();
@@ -148,9 +176,17 @@ body.host-lyric-view-page #performanceQuickInfo .ls26-hide-karaoke{grid-column:6
    const start=event?nodes.get(event.id):null;if(!start)return null;
    return allImprovs().find(gate=>!handledImprovs.has(gate)&&gate!==improvHeld&&follows(start,gate))||null;
   }
+  function barTransportBeats(){
+   const beats=Math.max(1,Number(sourceMeter?.beatsPerBar)||4),unit=Math.max(1,Number(sourceMeter?.beatUnit)||4);return beats*4/unit;
+  }
+  function clearImprovReleaseCountdown(){
+   if(improvReleaseTimer!==null){window.clearInterval(improvReleaseTimer);improvReleaseTimer=null;}
+   improvReleaseBeat=null;improvOrangeFromBeat=null;
+   window.dispatchEvent(new CustomEvent('ls26:improv-release-countdown',{detail:{active:false}}));
+  }
   function enterImprovHold(gate,{resumeBeat=null,position=true}={}){
    if(!gate||improvHeld)return false;
-   improvHeld=gate;improvResumeBeat=Number.isFinite(resumeBeat)?resumeBeat:null;
+   clearImprovReleaseCountdown();improvHeld=gate;improvResumeBeat=Number.isFinite(resumeBeat)?resumeBeat:null;
    cancelPositionAnimation();
    if(frame!==null){window.cancelAnimationFrame?.(frame);frame=null;}
    programmaticUntil=Date.now()+180;gate.classList.add('ls26-improv-active');gate.setAttribute('aria-current','step');
@@ -159,23 +195,38 @@ body.host-lyric-view-page #performanceQuickInfo .ls26-hide-karaoke{grid-column:6
     if(play){normalScrollPausedByImprov=true;suppressPlayRejoin=true;try{play.click();}finally{suppressPlayRejoin=false;}}
    }
    if(position)positionNode(gate,900);
-   notify('IMPROV HOLD · scrolling and Chord Follow are waiting. Metronome continues. Tap the IMPROV card to continue.');stateLabel();return true;
+   notify('IMPROV HOLD · scrolling and Chord Follow are waiting. Metronome continues. Tap the IMPROV card to queue the next 1.');stateLabel();return true;
   }
-  function resumeImprov(gate=improvHeld){
+  function finishImprovRelease(gate=improvHeld){
    if(!gate||gate!==improvHeld)return false;
-   const state=getAudio()?.snapshot?.();
-   if(on&&Number.isFinite(improvResumeBeat)&&Number.isFinite(state?.beat))timingOffset=Math.max(0,state.beat-improvResumeBeat);
-   handledImprovs.add(gate);gate.classList.remove('ls26-improv-active');gate.removeAttribute('aria-current');improvHeld=null;improvResumeBeat=null;
-   if(on){manual=false;positionedLine=null;stateLabel();notify('Continuing to the next chord');update();}
+   const state=getAudio()?.snapshot?.(),releaseAt=Number.isFinite(improvReleaseBeat)?improvReleaseBeat:Number(state?.beat);
+   if(on&&Number.isFinite(improvResumeBeat)&&Number.isFinite(releaseAt))timingOffset=Math.max(0,releaseAt-improvResumeBeat);
+   clearImprovReleaseCountdown();handledImprovs.add(gate);gate.classList.remove('ls26-improv-active');gate.removeAttribute('aria-current');improvHeld=null;improvResumeBeat=null;
+   if(on){manual=false;positionedLine=null;stateLabel();notify('Continuing from the next chord');update();}
    else if(normalScrollPausedByImprov){
     normalScrollPausedByImprov=false;const play=document.getElementById('autoScrollBtn');
     if(play&&!window.LS26Performance?.isScrolling?.()){suppressPlayRejoin=true;try{play.click();}finally{suppressPlayRejoin=false;}}
    }
    return true;
   }
+  function checkImprovRelease(){
+   if(!improvHeld||!Number.isFinite(improvReleaseBeat))return;
+   const state=getAudio()?.snapshot?.(),beat=Number(state?.beat);if(Number.isFinite(beat)&&beat>=improvReleaseBeat-.002)finishImprovRelease(improvHeld);
+  }
+  function scheduleImprovRelease(gate=improvHeld){
+   if(!gate||gate!==improvHeld)return false;if(Number.isFinite(improvReleaseBeat))return true;
+   const state=getAudio()?.snapshot?.(),nowBeat=Number(state?.beat);
+   if(!on||!Number.isFinite(improvResumeBeat)||!Number.isFinite(nowBeat))return finishImprovRelease(gate);
+   const bar=Math.max(.5,barTransportBeats()),minimumLead=6;
+   let release=Math.ceil((nowBeat+minimumLead-1e-7)/bar)*bar;if(release-nowBeat<minimumLead-1e-6)release+=bar;
+   improvReleaseBeat=release;improvOrangeFromBeat=release-bar;
+   window.dispatchEvent(new CustomEvent('ls26:improv-release-countdown',{detail:{active:true,orangeFromBeat:improvOrangeFromBeat,releaseBeat:improvReleaseBeat}}));
+   if(improvReleaseTimer!==null)window.clearInterval(improvReleaseTimer);improvReleaseTimer=window.setInterval(checkImprovRelease,25);
+   const approx=Math.max(minimumLead,Math.ceil(release-nowBeat));notify(`IMPROV EXIT QUEUED · ${approx} beats maximum to the next 1. Final bar flashes orange.`);stateLabel();return true;
+  }
   function resetImprovs(){
    if(improvHeld){improvHeld.classList.remove('ls26-improv-active');improvHeld.removeAttribute('aria-current');}
-   handledImprovs.clear();improvHeld=null;improvResumeBeat=null;timingOffset=0;normalScrollPausedByImprov=false;
+   clearImprovReleaseCountdown();handledImprovs.clear();improvHeld=null;improvResumeBeat=null;timingOffset=0;normalScrollPausedByImprov=false;
    allImprovs().forEach(gate=>{gate.classList.remove('ls26-improv-active');gate.removeAttribute('aria-current');});
   }
   function markImprovsBefore(event){const node=nodes.get(event?.id);if(!node)return;for(const gate of allImprovs())if(follows(gate,node))handledImprovs.add(gate);}
@@ -225,8 +276,6 @@ body.host-lyric-view-page #performanceQuickInfo .ls26-hide-karaoke{grid-column:6
    const startBeat=playbackStartBeat();
    if(state.state==='stopped'){countInPrepared=false;queueUpdate();return;}
    if(Number(state.beat)<startBeat){if(state.state==='playing')prepareCountIn(state);queueUpdate();return;}
-   // While improvising, stop the Chord Follow animation loop completely.
-   // The metronome/transport runs independently; tapping the card restarts update().
    if(improvHeld)return;
    const logicalBeat=Math.max(0,(Number(state.beat)||0)-timingOffset),hit=track.at(logicalBeat);
    if(hit){
@@ -273,7 +322,7 @@ body.host-lyric-view-page #performanceQuickInfo .ls26-hide-karaoke{grid-column:6
    }catch(error){notify('CHORD FOLLOW UNAVAILABLE\n'+error.message+' Normal auto-scroll remains available.',true);return false;}
    finally{button.disabled=false;}
   }
-  function disable(){const wasOn=on;on=false;manual=false;countInPrepared=false;cancelPositionAnimation();window.cancelAnimationFrame?.(frame);frame=null;clearStartCandidate();clear();stateLabel();notify('Normal auto-scroll');if(wasOn)getAudio()?.pause();onEnabled(false);}
+  function disable(){const wasOn=on;on=false;manual=false;countInPrepared=false;cancelPositionAnimation();window.cancelAnimationFrame?.(frame);frame=null;clearStartCandidate();clear();resetImprovs();stateLabel();notify('Normal auto-scroll');if(wasOn)getAudio()?.pause();onEnabled(false);}
   function rejoinCurrent(){if(!on||improvHeld)return;manual=false;positionedLine=null;stateLabel();position(current?.event||selectedStart||track?.events?.[0],true,1050);notify(current?`${name(current.event)} · following`:'Following selected start');}
   function resetPosition(){
    getAudio()?.stop();finished=false;countInPrepared=false;cancelPositionAnimation();clear();positionedLine=null;clearStartSelection();resetImprovs();manual=false;programmaticUntil=Date.now()+1300;stateLabel();
@@ -294,8 +343,11 @@ body.host-lyric-view-page #performanceQuickInfo .ls26-hide-karaoke{grid-column:6
 
   button.onclick=()=>{if(wanted){wanted=false;writeFollowPreference(false);disable();stateLabel();}else{wanted=true;writeFollowPreference(true);stateLabel();enable();}};
   rejoin.onclick=rejoinCurrent;reset.onclick=resetPosition;close.onclick=()=>setControlsVisible(false,{persist:true,broadcast:true});
-  startConfirm.onclick=commitStart;startCancel.onclick=clearStartCandidate;
+  startConfirm.onclick=commitStart;startCancel.onclick=clearStartCandidate;visualCheck.onchange=requestVisualPrefs;beat1OnlyCheck.onchange=requestVisualPrefs;
   window.addEventListener('ls26:chord-follow-controls-visibility',event=>{if(event.detail?.source==='follow-card')return;setControlsVisible(event.detail?.visible!==false,{persist:true,broadcast:false});});
+  window.addEventListener('ls26:visual-beat-settings',event=>{if(event.detail?.source==='follow-card')return;syncVisualChecks(event.detail||{});});
+  window.addEventListener('ls26:chord-highlight-visibility',event=>{const visible=event.detail?.visible!==false;document.documentElement.classList.toggle('ls26-hide-active-chord',!visible);});
+  window.addEventListener('ls26:metronome-beat',event=>{if(improvHeld&&Number.isFinite(improvReleaseBeat)&&Number(event.detail?.position)>=improvReleaseBeat-.000001)finishImprovRelease(improvHeld);});
 
   const play=document.getElementById('autoScrollBtn');
   play?.addEventListener('click',()=>{
@@ -313,7 +365,7 @@ body.host-lyric-view-page #performanceQuickInfo .ls26-hide-karaoke{grid-column:6
   window.addEventListener('scroll',()=>{const y=window.scrollY||0;if(Math.abs(y-lastY)>2&&Date.now()>programmaticUntil)suspend();lastY=y;maybeHoldNormalScroll();if(!startCard.hidden)placeStartCard();},{passive:true});
   window.addEventListener('resize',()=>{window.requestAnimationFrame?.(placeCard);if(!startCard.hidden)window.requestAnimationFrame?.(()=>placeStartCard());});window.addEventListener('orientationchange',()=>setTimeout(()=>{placeCard();placeStartCard();},120));
   document.addEventListener('click',e=>{
-   const gate=e.target.closest?.(IMPROV_SELECTOR);if(gate){e.preventDefault();resumeImprov(gate);return;}
+   const gate=e.target.closest?.(IMPROV_SELECTOR);if(gate){e.preventDefault();scheduleImprovRelease(gate);return;}
    const timed=e.target.closest?.('.ls26-timed-chord');
    if(timed&&on&&!songPlaying()){
     const event=eventForNode(timed);if(event){e.preventDefault();proposeStart(event,timed);return;}
@@ -327,10 +379,11 @@ body.host-lyric-view-page #performanceQuickInfo .ls26-hide-karaoke{grid-column:6
   window.addEventListener('pagehide',disable);
 
   setupTransportButtons();
-  window.LS26ImprovPause=Object.freeze({held:()=>Boolean(improvHeld),resume:()=>resumeImprov(),reset:resetImprovs});
+  window.LS26ImprovPause=Object.freeze({held:()=>Boolean(improvHeld),resume:()=>scheduleImprovRelease(),reset:resetImprovs});
   setControlsVisible(controlsVisible,{persist:false});stateLabel();
+  window.dispatchEvent(new CustomEvent('ls26:visual-beat-settings-request',{detail:{visual:visualCheck.checked,beat1Only:beat1OnlyCheck.checked,source:'follow-card'}}));
   if(wanted){const autoEnable=()=>{if(wanted)enable({initial:true});};if(typeof window.requestAnimationFrame==='function')window.requestAnimationFrame(autoEnable);else Promise.resolve().then(autoEnable);}
-  return Object.freeze({...api,enable,disable,update,suspend,rejoin:rejoinCurrent,reset:resetPosition,position,setControlsVisible,snapshot:()=>({enabled:on,wanted,manual,controlsVisible,loaded,status:result?.status,completeness:result?model.summary(result.timing,result.source):null,event:current?.event,index:current?.index,totalBeats:track?.totalBeats,improvHeld:Boolean(improvHeld),timingOffset,startBeat:Number(selectedStart?.startBeat)||0,startEvent:selectedStart||null})});
+  return Object.freeze({...api,enable,disable,update,suspend,rejoin:rejoinCurrent,reset:resetPosition,position,setControlsVisible,snapshot:()=>({enabled:on,wanted,manual,controlsVisible,loaded,status:result?.status,completeness:result?model.summary(result.timing,result.source):null,event:current?.event,index:current?.index,totalBeats:track?.totalBeats,improvHeld:Boolean(improvHeld),improvReleaseBeat,timingOffset,startBeat:Number(selectedStart?.startBeat)||0,startEvent:selectedStart||null})});
  }
  return Object.freeze({mount});
 });
