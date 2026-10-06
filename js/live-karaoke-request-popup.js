@@ -3,7 +3,9 @@
 
   if (!/\/online\/(?:index\.html)?$/i.test(location.pathname)) return;
 
-  const FRAME_URL = "livekaraoke26/#req";
+  // Request-only Live Karaoke document. This is not /billylee26/ and does not
+  // contain the Billy Lee website shell.
+  const FRAME_URL = "livekaraoke26/request.html#req";
   let overlay = null;
   let frame = null;
 
