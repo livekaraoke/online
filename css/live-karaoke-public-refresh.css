@@ -84,6 +84,38 @@
   margin:0 auto!important;
 }
 
+/* About: concise explanation first, then a clear booking-oriented finish. */
+#about{
+  max-width:900px!important;
+  margin-left:auto!important;
+  margin-right:auto!important;
+}
+#about p{
+  max-width:780px;
+  margin-left:auto!important;
+  margin-right:auto!important;
+  line-height:1.7!important;
+}
+#about .about-lead{
+  margin-top:24px!important;
+  margin-bottom:14px!important;
+  color:#fff!important;
+  font-size:1.12rem!important;
+}
+#about .about-highlight{
+  margin-top:20px!important;
+  color:#fff!important;
+  font-size:1.02rem!important;
+}
+#about .about-booking{
+  margin-top:18px!important;
+  color:#bdbdbd!important;
+  font-size:.96rem!important;
+}
+#about .about-booking strong{
+  color:#fff!important;
+}
+
 /* HOW IT WORKS: real HTML text with lightweight inline illustrations. */
 .instructions-container{
   width:100%!important;
@@ -216,6 +248,12 @@
   }
   .hero-live-now{
     width:min(650px,96vw)!important;
+  }
+  #about .about-lead{
+    font-size:1.02rem!important;
+  }
+  #about p{
+    line-height:1.62!important;
   }
   .how-it-works-grid{
     grid-template-columns:repeat(2,minmax(0,1fr));
