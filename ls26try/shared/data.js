@@ -76,7 +76,8 @@
     }
 
     if (document.getElementById('topStatusContainer')) {
-      loadSharedHelper('manual-request.js?v=20261006-manual-request-v1','ls26ManualRequestLoader');
+      loadSharedHelper('manual-request.js?v=20261006-manual-request-v2','ls26ManualRequestLoader');
+      loadSharedHelper('manual-request-button-layout.js?v=20261006-manual-request-layout-v1','ls26ManualRequestLayoutLoader');
     }
 
     if (/\/admin-new\/performance-sessions\.html$/i.test(path)) {
