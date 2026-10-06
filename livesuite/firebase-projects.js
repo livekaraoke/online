@@ -132,5 +132,10 @@
     script.src = new URL("../js/live-karaoke-request-popup.js?v=20261006-red-theme-v7", base).href;
     script.async = false;
     document.head.appendChild(script);
+
+    const freshRequestScript = document.createElement("script");
+    freshRequestScript.src = new URL("../js/live-karaoke-request-fresh.js?v=20261006-offline-browse-v2", base).href;
+    freshRequestScript.async = false;
+    document.head.appendChild(freshRequestScript);
   }
 })();
