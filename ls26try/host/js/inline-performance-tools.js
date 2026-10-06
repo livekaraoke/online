@@ -22,10 +22,10 @@
       .creator-page .section-performance-note-inline-btn{border:1px solid rgba(65,227,122,.52)!important;background:rgba(65,227,122,.08)!important;color:#75f2a0!important}
       .creator-page .section-time-signature-btn:hover{border-color:#ffb240!important;background:rgba(255,178,64,.14)!important}
       .creator-page .section-performance-note-inline-btn:hover{border-color:#41e37a!important;background:rgba(65,227,122,.14)!important}
-      .creator-page .creator-rich-editor .ls26-time-signature-change,.creator-page .creator-rich-editor .ls26-inline-performance-note{display:inline-block!important;vertical-align:middle!important;margin:2px 5px!important;padding:4px 8px!important;border-radius:7px!important;font-size:11px!important;font-weight:900!important;line-height:1.1!important;white-space:nowrap!important;user-select:none!important}
-      .creator-page .creator-rich-editor .ls26-time-signature-change{border:1px solid rgba(255,178,64,.65)!important;background:rgba(255,178,64,.10)!important;color:#ffc86a!important}
+      .creator-page .creator-rich-editor .ls26-time-signature-change,.creator-page .creator-rich-editor .ls26-inline-performance-note{display:block!important;width:max-content!important;max-width:calc(100% - 24px)!important;vertical-align:middle!important;margin:10px auto!important;border-radius:7px!important;font-weight:950!important;line-height:1.15!important;white-space:normal!important;text-align:center!important;user-select:none!important}
+      .creator-page .creator-rich-editor .ls26-time-signature-change{padding:6px 10px!important;border:1px solid rgba(255,178,64,.65)!important;background:rgba(255,178,64,.10)!important;color:#ffc86a!important;font-size:13px!important}
       .creator-page .creator-rich-editor .ls26-time-signature-change::before{content:'TIME ' attr(data-time-signature)!important}
-      .creator-page .creator-rich-editor .ls26-inline-performance-note{border:1px solid rgba(65,227,122,.58)!important;background:rgba(65,227,122,.10)!important;color:#75f2a0!important}
+      .creator-page .creator-rich-editor .ls26-inline-performance-note{padding:7px 12px!important;border:1px solid rgba(65,227,122,.58)!important;background:rgba(65,227,122,.10)!important;color:#75f2a0!important;font-size:16px!important}
       .creator-page .creator-rich-editor .ls26-inline-performance-note::before{content:'PERFORMANCE NOTE · ' attr(data-performance-note)!important}
     `;
     (document.head||document.documentElement).append(style);
@@ -52,9 +52,13 @@
       const selection=window.getSelection?.();
       if(selection){const next=document.createRange();next.setStartAfter(after);next.collapse(true);selection.removeAllRanges();selection.addRange(next);savedRange=next.cloneRange();savedEditor=editor;}
     }
+    function restoreViewport(scrollTop){
+      const top=Math.max(0,Number(scrollTop)||0);
+      const restore=()=>{try{window.scrollTo(0,top);}catch(_){}};
+      restore();requestAnimationFrame(()=>{restore();requestAnimationFrame(restore);});
+    }
     function commitInsertion(editor,node,label){
-      const range=rangeFor(editor);
-      if(!range){window.LS26Dialogs?.alert?.('Place the typing cursor in this section first, then press '+label+'.');return false;}
+      const range=rangeFor(editor);if(!range){window.LS26Dialogs?.alert?.('Place the typing cursor in this section first, then press '+label+'.');return false;}
       range.deleteContents();range.insertNode(node);restoreCaretAfter(node,editor);editor.classList.remove('is-empty');
       try{editor.dispatchEvent(new InputEvent('input',{bubbles:true,inputType:'insertHTML',data:null}));}catch(_){editor.dispatchEvent(new Event('input',{bubbles:true}));}
       editor.focus({preventScroll:true});return true;
@@ -62,22 +66,30 @@
     function marker(className){const span=document.createElement('span');span.className=className;span.setAttribute('contenteditable','false');span.dataset.ls26Nonmusical='1';return span;}
 
     async function insertTimeSignature(editor){
+      const scrollTop=window.scrollY;
       const current=(document.getElementById('timeSignatureInput')?.value||'4/4').trim();
-      const raw=await window.LS26Dialogs?.prompt?.('Time signature from this point (for example 3/4, 6/8 or 7/8)',current);
+      const promptPromise=window.LS26Dialogs?.prompt?.('Time signature from this point (for example 3/4, 6/8 or 7/8)',current);
+      requestAnimationFrame(()=>restoreViewport(scrollTop));
+      const raw=await promptPromise;restoreViewport(scrollTop);
       if(raw==null)return;
       const match=String(raw).trim().match(/^(\d{1,2})\s*\/\s*(1|2|4|8|16)$/);
       const beats=match?Number(match[1]):0;
-      if(!match||beats<1||beats>32){await window.LS26Dialogs?.alert?.('Use a time signature such as 3/4, 4/4, 6/8 or 7/8. The top number can be 1–32.');return;}
+      if(!match||beats<1||beats>32){await window.LS26Dialogs?.alert?.('Use a time signature such as 3/4, 4/4, 6/8 or 7/8. The top number can be 1–32.');restoreViewport(scrollTop);return;}
       const signature=beats+'/'+match[2],span=marker('ls26-time-signature-change');
       span.dataset.timeSignature=signature;span.setAttribute('aria-label','Time signature changes to '+signature+' from here');span.title='Time signature changes to '+signature+' from here';
       if(commitInsertion(editor,span,'TIME SIGNATURE'))window.LS26?.toast?.('Time signature change inserted: '+signature);
+      restoreViewport(scrollTop);
     }
     async function insertPerformanceNote(editor){
-      const raw=await window.LS26Dialogs?.prompt?.('Performance note for this point in the section (always visible on the singer screen)');
+      const scrollTop=window.scrollY;
+      const promptPromise=window.LS26Dialogs?.prompt?.('Performance note for this point in the section (always visible on the singer screen)');
+      requestAnimationFrame(()=>restoreViewport(scrollTop));
+      const raw=await promptPromise;restoreViewport(scrollTop);
       if(raw==null||!String(raw).trim())return;
       const text=String(raw).trim(),span=marker('ls26-inline-performance-note');
       span.dataset.performanceNote=text;span.setAttribute('aria-label','Performance note: '+text);span.title='Performance note: '+text;
       if(commitInsertion(editor,span,'PERFORMANCE NOTE'))window.LS26?.toast?.('Performance note inserted');
+      restoreViewport(scrollTop);
     }
 
     function makeButton(className,label,title,handler){
