@@ -42,7 +42,9 @@ if (typeof document !== 'undefined' && /\/host\/lyricview\.html$/i.test(String(l
   load('../shared/lyricview-follow-polish.js?v=20261006-follow-polish-v1',()=>{
     load('../shared/lyricview-follow-refinements-v2.js?v=20261006-follow-refinements-v3',()=>{
       load('../shared/lyricview-improv-timeline-sync-v2.js?v=20261006-improv-timeline-v3',()=>{
-        load('../shared/lyricview-inline-markers-v1.js?v=20261006-inline-markers-v1');
+        load('../shared/lyricview-inline-markers-v1.js?v=20261006-inline-markers-v1',()=>{
+          load('../shared/lyricview-note-styles-v1.js?v=20261006-note-styles-v1');
+        });
       });
     });
   });
