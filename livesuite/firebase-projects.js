@@ -118,6 +118,11 @@
     refreshCss.href = new URL("../css/live-karaoke-public-refresh.css?v=20261006-spacing-fix-v1", base).href;
     document.head.appendChild(refreshCss);
 
+    const enquiryCss = document.createElement("link");
+    enquiryCss.rel = "stylesheet";
+    enquiryCss.href = new URL("../css/live-karaoke-enquiry-green.css?v=20261006-enquiry-green-v1", base).href;
+    document.head.appendChild(enquiryCss);
+
     const refreshScript = document.createElement("script");
     refreshScript.src = new URL("../js/live-karaoke-public-refresh.js?v=20261006-reviews-v2", base).href;
     refreshScript.async = false;
