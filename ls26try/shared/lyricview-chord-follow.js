@@ -72,8 +72,8 @@ body.host-lyric-view-page #performanceQuickInfo .ls26-hide-karaoke{grid-column:6
 
   let loaded=false,pending=null,result=null,track=null,nodes=new Map(),on=false,wanted=readFollowPreference(),controlsVisible=readControlsPreference();
   let manual=false,frame=null,current=null,positionedLine=null,finished=false,lastY=window.scrollY||0,programmaticUntil=0,sourceMeter=null,scrollFrame=null,countInPrepared=false;
-  let suppressPlayRejoin=false,timingOffset=0,improvHeld=null,improvResumeBeat=null,improvHoldRawBeat=null;
-  const handledImprovs=new WeakSet();
+  let suppressPlayRejoin=false,timingOffset=0,improvHeld=null,improvResumeBeat=null;
+  const handledImprovs=new Set();
   const api={enabled:()=>on,wanted:()=>wanted,meter:()=>sourceMeter};
   const name=event=>nodes.get(event.id)?.textContent.trim()||event.chord;
   const allImprovs=()=>[...document.querySelectorAll(IMPROV_SELECTOR)];
@@ -113,9 +113,13 @@ body.host-lyric-view-page #performanceQuickInfo .ls26-hide-karaoke{grid-column:6
    const end=nodes.get(nextEvent?.id);if(!end)return null;const start=previousEvent?nodes.get(previousEvent.id):null;
    return allImprovs().find(gate=>!handledImprovs.has(gate)&&gate!==improvHeld&&(!start||follows(start,gate))&&follows(gate,end))||null;
   }
-  function enterImprovHold(gate,{rawBeat=null,resumeBeat=null,position=true}={}){
+  function pendingImprovAfter(event){
+   const start=event?nodes.get(event.id):null;if(!start)return null;
+   return allImprovs().find(gate=>!handledImprovs.has(gate)&&gate!==improvHeld&&follows(start,gate))||null;
+  }
+  function enterImprovHold(gate,{resumeBeat=null,position=true}={}){
    if(!gate||improvHeld)return false;
-   improvHeld=gate;improvHoldRawBeat=Number.isFinite(rawBeat)?rawBeat:null;improvResumeBeat=Number.isFinite(resumeBeat)?resumeBeat:null;
+   improvHeld=gate;improvResumeBeat=Number.isFinite(resumeBeat)?resumeBeat:null;
    cancelPositionAnimation();programmaticUntil=Date.now()+180;gate.classList.add('ls26-improv-active');gate.setAttribute('aria-current','step');
    if(position)positionNode(gate,900);
    notify('IMPROV HOLD · scrolling and Chord Follow are waiting. Metronome continues. Tap the IMPROV card to continue.');stateLabel();return true;
@@ -124,13 +128,13 @@ body.host-lyric-view-page #performanceQuickInfo .ls26-hide-karaoke{grid-column:6
    if(!gate||gate!==improvHeld)return false;
    const state=getAudio()?.snapshot?.();
    if(on&&Number.isFinite(improvResumeBeat)&&Number.isFinite(state?.beat))timingOffset=Math.max(0,state.beat-improvResumeBeat);
-   handledImprovs.add(gate);gate.classList.remove('ls26-improv-active');gate.removeAttribute('aria-current');improvHeld=null;improvHoldRawBeat=null;improvResumeBeat=null;
+   handledImprovs.add(gate);gate.classList.remove('ls26-improv-active');gate.removeAttribute('aria-current');improvHeld=null;improvResumeBeat=null;
    if(on){manual=false;positionedLine=null;stateLabel();notify('Continuing to the next chord');update();}
    return true;
   }
   function resetImprovs(){
    if(improvHeld){improvHeld.classList.remove('ls26-improv-active');improvHeld.removeAttribute('aria-current');}
-   improvHeld=null;improvResumeBeat=null;improvHoldRawBeat=null;timingOffset=0;
+   handledImprovs.clear();improvHeld=null;improvResumeBeat=null;timingOffset=0;
    allImprovs().forEach(gate=>{gate.classList.remove('ls26-improv-active');gate.removeAttribute('aria-current');});
   }
   function maybeHoldNormalScroll(){
@@ -161,12 +165,15 @@ body.host-lyric-view-page #performanceQuickInfo .ls26-hide-karaoke{grid-column:6
     const changed=current?.event.id!==hit.event.id;
     if(changed){
      const gate=pendingImprovBetween(current?.event||null,hit.event);
-     if(gate&&enterImprovHold(gate,{rawBeat:state.beat,resumeBeat:hit.event.startBeat,position:true})){queueUpdate();return;}
+     if(gate&&enterImprovHold(gate,{resumeBeat:hit.event.startBeat,position:true})){queueUpdate();return;}
      clearActive();current=hit;nodes.get(hit.event.id)?.classList.add('ls26-active-chord');onSection(hit.event.sourceAnchor.sectionIndex);position(hit.event);
     }else current=hit;
     const summary=`${name(hit.event)} · chord ${hit.index+1} of ${track.events.length}${state?.state==='paused'?' · paused':''}`;if(!manual&&label.textContent!==summary)notify(summary);
    }
-   if(state?.state==='playing'&&!hit&&logicalBeat>=track.totalBeats-1e-9&&!finished){finished=true;audio.pause();notify('Timed song complete');onFinish();}
+   if(state?.state==='playing'&&!hit&&logicalBeat>=track.totalBeats-1e-9&&!finished){
+    const gate=pendingImprovAfter(current?.event||null);if(gate&&enterImprovHold(gate,{resumeBeat:track.totalBeats,position:true})){queueUpdate();return;}
+    finished=true;audio.pause();notify('Timed song complete');onFinish();
+   }
    queueUpdate();
   }
 
@@ -186,7 +193,7 @@ body.host-lyric-view-page #performanceQuickInfo .ls26-hide-karaoke{grid-column:6
     const bodies=new Map([...document.querySelectorAll('.host-section')].map(section=>[Number(section.dataset.sectionIndex),section.querySelector('.host-section-body')]));
     if(!nodes.size){nodes=playback.bind(track.events,bodies,document);onTranspose();}
     if(!getAudio())throw Error('The metronome is not ready. Reload the page.');
-    on=true;manual=false;finished=false;positionedLine=null;countInPrepared=false;timingOffset=0;resetImprovs();cancelPositionAnimation();programmaticUntil=0;
+    on=true;manual=false;finished=false;positionedLine=null;countInPrepared=false;resetImprovs();cancelPositionAnimation();programmaticUntil=0;
     if(initial){window.scrollTo?.(0,0);lastY=0;}else lastY=window.scrollY||0;
     stateLabel();onEnabled(true);getAudio().stop();update();return true;
    }catch(error){notify('CHORD FOLLOW UNAVAILABLE\n'+error.message+' Normal auto-scroll remains available.',true);return false;}
@@ -201,8 +208,8 @@ body.host-lyric-view-page #performanceQuickInfo .ls26-hide-karaoke{grid-column:6
 
   function setupTransportButtons(){
    const player=dock,next=document.getElementById('nextRunOrderSongBtn');if(!player||!next)return;
-   next.classList.add('ls26-track-nav-btn','ls26-track-next');next.setAttribute('aria-label','Next song');next.title='Next song';next.innerHTML='<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M6 6v20h3V6H6zm5 1 15 9-15 9V7z"/></svg>';
-   let previous=document.getElementById('previousTrackResetBtn');if(!previous){previous=document.createElement('button');previous.id='previousTrackResetBtn';previous.type='button';previous.className='ls26-track-nav-btn ls26-track-previous';previous.setAttribute('aria-label','Restart song from the top');previous.title='Restart song from the top';previous.innerHTML='<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M23 6v20h3V6h-3zm-2 1L6 16l15 9V7z"/></svg>';player.insertBefore(previous,next);}
+   next.classList.add('ls26-track-nav-btn','ls26-track-next');next.setAttribute('aria-label','Next song');next.title='Next song';next.innerHTML='<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M23 6h3v20h-3V6zM6 7l15 9-15 9V7z"/></svg>';
+   let previous=document.getElementById('previousTrackResetBtn');if(!previous){previous=document.createElement('button');previous.id='previousTrackResetBtn';previous.type='button';previous.className='ls26-track-nav-btn ls26-track-previous';previous.setAttribute('aria-label','Restart song from the top');previous.title='Restart song from the top';previous.innerHTML='<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M6 6h3v20H6V6zm20 1-15 9 15 9V7z"/></svg>';player.insertBefore(previous,next);}
    previous.onclick=()=>{
     if(window.LS26Performance?.isScrolling?.()){
      suppressPlayRejoin=true;try{document.getElementById('autoScrollBtn')?.click();}finally{suppressPlayRejoin=false;}
