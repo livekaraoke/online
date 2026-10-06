@@ -153,6 +153,40 @@
   line-height:1.45!important;
 }
 
+/* Events: cleaner hierarchy and more readable venue details. */
+.events-intro{
+  max-width:680px!important;
+  margin:0 auto 22px!important;
+  color:#bcbcbc!important;
+  font-size:1.02rem!important;
+  line-height:1.6!important;
+  font-weight:400!important;
+  letter-spacing:.01em!important;
+}
+.live-event-type{
+  display:none!important;
+}
+.live-karaoke-event-card h3{
+  text-transform:uppercase!important;
+  margin-top:10px!important;
+  margin-bottom:8px!important;
+  letter-spacing:2.4px!important;
+}
+.live-karaoke-event-card h4{
+  min-height:0!important;
+  margin:0 auto 24px!important;
+  color:#dedede!important;
+  font-family:Arial,Helvetica,sans-serif!important;
+  font-size:1rem!important;
+  font-weight:600!important;
+  line-height:1.45!important;
+  letter-spacing:1px!important;
+  text-transform:none!important;
+}
+.live-karaoke-event-card .maps-btn{
+  margin-top:18px!important;
+}
+
 /* The event name below the time is redundant on the Live Karaoke page. */
 .event-subheading{display:none!important;}
 
@@ -208,6 +242,14 @@
   .live-status-section{
     min-height:76px!important;
     padding:8px 10px!important;
+  }
+  .events-intro{
+    font-size:.96rem!important;
+    margin-bottom:18px!important;
+  }
+  .live-karaoke-event-card h4{
+    font-size:.96rem!important;
+    letter-spacing:.7px!important;
   }
 }
 
