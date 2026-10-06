@@ -50,6 +50,7 @@
     });
 
     document.querySelectorAll('.session-modal .request-history-host-note').forEach(note => {
+      if (note.classList.contains('is-manual-request')) return;
       const value = note.textContent || '';
       if (!/manual request added by host/i.test(value)) return;
       note.classList.add('is-manual-request');
