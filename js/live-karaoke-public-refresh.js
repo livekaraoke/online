@@ -106,6 +106,40 @@
     }
   }
 
+  function applyPopupIconTheme() {
+    const iframe = document.getElementById("liveKaraokeRequestFrame");
+    const doc = iframe?.contentDocument;
+    if (!doc?.head) return;
+    let style = doc.getElementById("live-karaoke-icon-theme-fix");
+    if (!style) {
+      style = doc.createElement("style");
+      style.id = "live-karaoke-icon-theme-fix";
+      doc.head.appendChild(style);
+    }
+    style.textContent = `
+      #requestDialog .request-history-section-title>span{
+        color:#ff5b5b!important;
+        text-shadow:0 0 8px rgba(255,0,0,.16)!important;
+      }
+      #requestDialog .request-bottom-tabs button>span{
+        filter:grayscale(1) saturate(0)!important;
+      }
+    `;
+  }
+
+  function openSongbookFromButton(event) {
+    const button = event.target.closest?.("#songListBtn");
+    if (!button) return;
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation();
+    if (typeof window.openLiveKaraokeRequestPopup === "function") {
+      window.openLiveKaraokeRequestPopup();
+    } else {
+      window.__liveKaraokeRequestOpenPending = true;
+    }
+  }
+
   function applyStaticRefinements() {
     ensureFavicons();
     setupGetStarted();
@@ -115,6 +149,19 @@
     keepSongListBrowseable();
     markHeroRequest();
   }
+
+  document.addEventListener("pointerdown", event => {
+    if (event.target.closest?.("#songListBtn")) event.preventDefault();
+  }, true);
+  document.addEventListener("click", openSongbookFromButton, true);
+
+  window.addEventListener("message", event => {
+    if (event.origin !== location.origin) return;
+    if (event.data?.type === "live-karaoke-request-ready") {
+      applyPopupIconTheme();
+      requestAnimationFrame(applyPopupIconTheme);
+    }
+  });
 
   let scheduled = false;
   function scheduleApply() {
