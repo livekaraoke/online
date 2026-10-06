@@ -25,12 +25,24 @@
   const outputs={speed:$("prompterSpeedValue"),focus:$("prompterFocusValue"),currentScale:$("prompterCurrentScaleValue"),contextScale:$("prompterContextScaleValue"),mutedScale:$("prompterMutedScaleValue"),mutedOpacity:$("prompterMutedOpacityValue")};
   const status=$("prompterSettingsStatus"),preview=$("prompterPreview");
 
+  function updateContextCopy(){
+    const label=controls.contextScale?.closest("label");
+    if(label&&label.firstChild?.nodeType===Node.TEXT_NODE)label.firstChild.nodeValue="Previous & next two lines size";
+    if(!preview)return;
+    const lines=[...preview.querySelectorAll(".prompter-preview-line")];
+    if(lines[4]){lines[4].className="prompter-preview-line context";lines[4].textContent="Line below the current line";}
+    if(lines[5]){lines[5].className="prompter-preview-line context";lines[5].textContent="Line two below the current line";}
+    if(!preview.querySelector("[data-prompter-later-line]")){
+      const later=document.createElement("span");later.className="prompter-preview-line muted";later.dataset.prompterLaterLine="1";later.textContent="Later lyric line";preview.appendChild(later);
+    }
+  }
+
   function load(){
     controls.guidance.value=read("guidance");controls.theme.value=read("theme");controls.font.value=read("font");controls.size.value=read("size");controls.spacing.value=read("spacing");
     controls.background.value=read("background");controls.bottomBar.checked=bool(read("bottomBar"));controls.autoScroll.checked=bool(read("autoScroll"));controls.speed.value=number(read("speed"),DEFAULTS.speed);
     controls.focus.value=number(read("focus"),DEFAULTS.focus);controls.currentScale.value=number(read("currentScale"),DEFAULTS.currentScale);controls.contextScale.value=number(read("contextScale"),DEFAULTS.contextScale);
     controls.mutedScale.value=number(read("mutedScale"),DEFAULTS.mutedScale);controls.mutedOpacity.value=number(read("mutedOpacity"),DEFAULTS.mutedOpacity);controls.currentColour.value=read("currentColour");
-    refresh();
+    updateContextCopy();refresh();
   }
   function refresh(){
     outputs.speed.textContent=`${Number(controls.speed.value).toFixed(2)}×`;outputs.focus.textContent=`${controls.focus.value}%`;
