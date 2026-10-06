@@ -59,6 +59,7 @@
     if (/\/host\/lyricscreator\.html$/i.test(path)) {
       loadPageHelper('js/inline-note-editor-v4.js?v=20261006-inline-note-editor-v4','ls26InlineNoteEditorV4Loader');
     } else if (/\/host\/karaoke-lyric-view\.html$/i.test(path)) {
+      try { if (window.__ls26SingerSavedGuidance) localStorage.setItem('karaokeGuidanceMode', window.__ls26SingerSavedGuidance); } catch (_) {}
       loadPageHelper('js/singer-screen-upgrades.js?v=20261006-singer-screen-v2','ls26SingerScreenV2Loader');
     } else if (/\/host\/lyricview\.html$/i.test(path)) {
       loadPageHelper('js/lyricview-singer-bridge.js?v=20261006-singer-bridge-v2','ls26SingerBridgeV2Loader');
