@@ -41,5 +41,11 @@ if (typeof document !== 'undefined' && /\/host\/lyricview\.html$/i.test(String(l
   const helper=document.createElement('script');
   helper.src='../shared/lyricview-follow-polish.js?v=20261006-follow-polish-v1';
   helper.async=false;
+  helper.addEventListener('load',()=>{
+    const refinements=document.createElement('script');
+    refinements.src='../shared/lyricview-follow-refinements-v2.js?v=20261006-follow-refinements-v2';
+    refinements.async=false;
+    (document.head||document.documentElement).appendChild(refinements);
+  },{once:true});
   (document.head||document.documentElement).appendChild(helper);
 }
