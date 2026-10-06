@@ -303,27 +303,25 @@
     }, beatMs * 4);
   }
 
-  function onActualMetronomeBeat(event) {
-    const detail = event.detail || {};
+  function onTransportSync(event) {
     if (!followOn()) return;
-    if (detail.countIn) {
+    const detail = event.detail || {};
+    if (detail.phase === 'countin') {
       countInActive = true;
       publish({
         phase:'countin',
         playing:false,
         countInBeat:clamp(Number(detail.beat) || 1, 1, 32),
-        countInBeatAtMs:Date.now(),
+        countInBeatAtMs:Number(detail.atMs) || Date.now(),
         sync:null
       }, { remote:true });
       return;
     }
-    if (countInActive) {
+    if (detail.phase === 'playing') {
       countInActive = false;
-      publish({ phase:'playing', playing:true, countInBeat:0, sync:buildSync() }, { remote:true });
+      publish({ phase:'playing', playing:true, countInBeat:0, countInBeatAtMs:0, sync:buildSync() }, { remote:true });
       pushSync({ forceRemote:true });
-      return;
     }
-    if (isPlaying()) pushSync();
   }
 
   function installPlayInterlock() {
@@ -390,7 +388,7 @@
     postLocal();
     await writeRemote();
     installPlayInterlock();
-    window.addEventListener('ls26:metronome-beat', onActualMetronomeBeat);
+    window.addEventListener('ls26:singer-transport-sync', onTransportSync);
     startLoops();
     lastPlaying = isPlaying();
 
