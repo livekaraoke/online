@@ -124,7 +124,7 @@
     document.head.appendChild(enquiryCss);
 
     const refreshScript = document.createElement("script");
-    refreshScript.src = new URL("../js/live-karaoke-public-refresh.js?v=20261006-reviews-v2", base).href;
+    refreshScript.src = new URL("../js/live-karaoke-public-refresh.js?v=20261006-review-name-v1", base).href;
     refreshScript.async = false;
     document.head.appendChild(refreshScript);
 
