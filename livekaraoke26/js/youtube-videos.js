@@ -125,6 +125,26 @@ window.BILLY_LEE_YOUTUBE_VIDEOS = [];
       };
     }
 
+    // The copied Billy request app normally refuses to open its request dialog
+    // without an active performance session. Live Karaoke intentionally allows
+    // the songbook to be browsed at any time, so expose a request-app-only test
+    // session while offline. Real request availability is still determined by
+    // resolveLiveKaraokeSessionActive() below and offline song actions remain
+    // disabled, so this only unlocks the browser UI; it does not open requests.
+    function virtualWebsiteSettingsSnapshot(original) {
+      const originalData = original?.exists ? (original.data() || {}) : {};
+      return {
+        exists:true,
+        id:original?.id || "liveKaraokeWebsiteSettings",
+        ref:original?.ref,
+        data:() => ({
+          ...originalData,
+          enableLiveRequestTestMode:true,
+          requestTestSessionId:String(originalData.requestTestSessionId || "live-karaoke-browse-preview")
+        })
+      };
+    }
+
     const wrapDocument = (ref, collectionName, documentId) => new Proxy(ref, {
       get(target, prop) {
         if (prop === "get" && collectionName === "karaokeControl" && documentId === "publicSongList") {
@@ -140,6 +160,21 @@ window.BILLY_LEE_YOUTUBE_VIDEOS = [];
               return original;
             }
           };
+        }
+        if (collectionName === "karaokeControl" && documentId === "liveKaraokeWebsiteSettings") {
+          if (prop === "get") {
+            return async () => virtualWebsiteSettingsSnapshot(await target.get());
+          }
+          if (prop === "onSnapshot") {
+            return (next, error, complete) => target.onSnapshot(
+              snapshot => {
+                if (typeof next === "function") next(virtualWebsiteSettingsSnapshot(snapshot));
+                else if (next?.next) next.next(virtualWebsiteSettingsSnapshot(snapshot));
+              },
+              typeof next === "function" ? error : next?.error,
+              typeof next === "function" ? complete : next?.complete
+            );
+          }
         }
         if (prop === "set" && collectionName === "publicSignupSessions") {
           return (data, options) => target.set({
@@ -211,6 +246,17 @@ window.BILLY_LEE_YOUTUBE_VIDEOS = [];
     document.addEventListener("click", event => {
       const action = event.target.closest?.("#requestDialog .song-action[data-song-id]");
       if (!action || liveKaraokeSessionActive) return;
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+      setBrowseNotice();
+    }, true);
+
+    // Belt-and-braces protection for the synthetic browse-preview session:
+    // never allow SEND REQUEST outside a real Live Karaoke session.
+    document.addEventListener("click", event => {
+      const send = event.target.closest?.("#sendRequestBtn");
+      if (!send || liveKaraokeSessionActive) return;
       event.preventDefault();
       event.stopPropagation();
       event.stopImmediatePropagation();
