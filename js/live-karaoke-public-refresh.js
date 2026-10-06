@@ -84,6 +84,12 @@
     document.querySelectorAll(".event-subheading").forEach(node => node.remove());
   }
 
+  function refineEventsIntro() {
+    const intro = document.querySelector(".events-intro");
+    const copy = "See where Live Karaoke is happening next and find your next chance to grab the mic and sing live.";
+    if (intro && intro.textContent.trim() !== copy) intro.textContent = copy;
+  }
+
   function keepSongListBrowseable() {
     const button = document.getElementById("songListBtn");
     if (button) {
@@ -126,6 +132,18 @@
       #requestDialog .request-bottom-tabs button>span{
         filter:grayscale(1) saturate(0)!important;
       }
+      #requestDialog .song-row:not(.selected) .song-action:not(:disabled):not([data-live-karaoke-browse-only="1"]){
+        color:#57ee84!important;
+        border-color:rgba(57,224,111,.78)!important;
+        background:rgba(9,69,29,.18)!important;
+        box-shadow:0 0 10px rgba(57,224,111,.08)!important;
+      }
+      #requestDialog .song-row:not(.selected) .song-action:not(:disabled):not([data-live-karaoke-browse-only="1"]):hover{
+        color:#effff3!important;
+        border-color:#63f08f!important;
+        background:rgba(18,122,50,.42)!important;
+        box-shadow:0 0 14px rgba(57,224,111,.2)!important;
+      }
     `;
     if (style.textContent !== css) style.textContent = css;
   }
@@ -149,6 +167,7 @@
     buildHowItWorks();
     removeEmailIcon();
     removeEventSubheadings();
+    refineEventsIntro();
     keepSongListBrowseable();
     markHeroRequest();
   }
