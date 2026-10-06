@@ -1,0 +1,98 @@
+<!-- Copyright © 2026 LiveSuite. All rights reserved. -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Prompter Settings · LiveSuite</title>
+  <link rel="stylesheet" href="css/admin.css?v=20260910-stage4">
+  <link rel="stylesheet" href="css/sidebar.css?v=20260910-stage4">
+  <link rel="stylesheet" href="css/sidebar-suite.css?v=20260929-admin-polish">
+  <link rel="stylesheet" href="css/enquiries.css?v=20260910-stage4">
+  <link rel="stylesheet" href="css/admin-navigation.css?v=20260929-admin-polish">
+  <link rel="stylesheet" href="../shared/theme.css?v=20260930-release-preview-v2">
+  <link rel="stylesheet" href="css/billy-website-settings.css?v=20260930-request-test-mode-v2">
+  <script src="../shared/data.js?v=20260910-stage4"></script>
+  <style>
+    .prompter-main{min-width:0}.prompter-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.prompter-card{padding:18px;border:1px solid #29424f;border-radius:12px;background:linear-gradient(180deg,#09161d,#071117)}
+    .prompter-card h2{margin:0 0 6px;color:#fff;font-size:1.02rem}.prompter-card p{margin:0 0 16px;color:#8fa5af;font-size:.84rem;line-height:1.5}.prompter-fields{display:grid;gap:13px}.prompter-fields label{display:grid;gap:6px;color:#9fb4be;font-size:.76rem;font-weight:850;letter-spacing:.05em;text-transform:uppercase}
+    .prompter-fields select,.prompter-fields input[type="number"],.prompter-fields input[type="text"]{min-height:42px;border:1px solid #31505e;border-radius:8px;background:#071219;color:#eef7fa;padding:8px 10px;font:inherit}.prompter-inline{display:flex!important;grid-template-columns:none!important;align-items:center;justify-content:space-between;gap:14px;min-height:42px;padding:8px 10px;border:1px solid #27424e;border-radius:8px;background:#08141b}
+    .prompter-range{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:9px;align-items:center}.prompter-range input{width:100%}.prompter-range output{min-width:62px;color:#66dcf3;font-weight:900;text-align:right}.prompter-colour{display:flex;gap:10px;align-items:center}.prompter-colour input[type="color"]{width:72px;height:42px;padding:3px;border:1px solid #31505e;border-radius:8px;background:#071219}
+    .prompter-preview{--preview-bg:#00131a;--preview-current:#16d8ff;--preview-current-scale:1.72;--preview-context-scale:1.48;--preview-muted-scale:.82;--preview-muted-opacity:.6;margin-top:16px;padding:24px;border:1px solid #29424f;border-radius:12px;background:var(--preview-bg);color:#fff;overflow:hidden}.prompter-preview-line{display:block;margin:5px 0;transform-origin:left center}.prompter-preview-line.current{font-size:calc(1rem * var(--preview-current-scale));font-weight:950;border-left:4px solid var(--preview-current);padding-left:10px;background:linear-gradient(90deg,color-mix(in srgb,var(--preview-current) 20%,transparent),transparent 75%)}.prompter-preview-line.context{font-size:calc(1rem * var(--preview-context-scale));font-weight:850}.prompter-preview-line.muted{font-size:calc(1rem * var(--preview-muted-scale));opacity:var(--preview-muted-opacity)}
+    .prompter-actions{display:flex;gap:10px;flex-wrap:wrap}.prompter-btn{border:1px solid #31505e;border-radius:8px;background:#0a1820;color:#eaf5f8;padding:10px 14px;font:inherit;font-weight:850;cursor:pointer}.prompter-btn.primary{border-color:#2e9d5c;background:#0b3a23;color:#caffdc}.prompter-status{margin:14px 0;color:#90a7b1}.prompter-status.is-success{color:#7ee7a6}
+    @media(max-width:850px){.prompter-grid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body class="admin-body enquiries-page">
+  <div class="admin-shell">
+    <div id="sidebarContainer"></div>
+    <main class="admin-main enquiries-main prompter-main">
+      <header class="enquiries-topbar">
+        <div>
+          <p class="enquiries-eyebrow">LIVE KARAOKE · LYRIC PROMPTER</p>
+          <h1>Prompter Settings</h1>
+          <p class="enquiries-subtitle">Configure the Singer Screen defaults saved on this device.</p>
+        </div>
+        <a class="prompter-btn primary" href="../host/karaoke-lyric-view.html" target="_blank" rel="noopener">Open Singer Screen ↗</a>
+      </header>
+
+      <p id="prompterSettingsStatus" class="prompter-status" role="status">Changes save automatically.</p>
+
+      <div class="prompter-grid">
+        <section class="prompter-card">
+          <h2>Display</h2><p>These mirror the settings available directly on the Singer Screen.</p>
+          <div class="prompter-fields">
+            <label>Guidance<select id="prompterGuidance"><option value="normal">Normal Mode</option><option value="pro">Lyrics Pro</option><option value="guitaroke">Guitaroke</option></select></label>
+            <label>Theme<select id="prompterTheme"><option value="default">Default</option><option value="warm">Warm</option><option value="contrast">High Contrast</option></select></label>
+            <label>Font<select id="prompterFont"><option value="default">Default</option><option value="arial">Arial</option><option value="dyslexic">OpenDyslexic</option></select></label>
+            <label>Text size<select id="prompterTextSize"><option value="small">Small</option><option value="normal">Normal</option><option value="large">Large</option><option value="xlarge">Extra Large</option></select></label>
+            <label>Line spacing<select id="prompterSpacing"><option value="normal">Default</option><option value="loose">Loose</option><option value="looser">Looser</option></select></label>
+            <label>Background colour<span class="prompter-colour"><input id="prompterBackground" type="color" value="#00131a"></span></label>
+            <label class="prompter-inline">Show bottom Play / Speed bar<input id="prompterBottomBar" type="checkbox" checked></label>
+            <label class="prompter-inline">Auto-scroll<input id="prompterAutoScroll" type="checkbox" checked></label>
+            <label>Scroll speed<span class="prompter-range"><input id="prompterSpeed" type="range" min="0.25" max="3" step="0.25" value="1"><output id="prompterSpeedValue">1.00×</output></span></label>
+          </div>
+        </section>
+
+        <section class="prompter-card">
+          <h2>Live lyric focus</h2><p>Fine-tune how the current line and surrounding lyrics appear while LyricView is playing.</p>
+          <div class="prompter-fields">
+            <label>Current line screen position<span class="prompter-range"><input id="prompterFocus" type="range" min="25" max="60" step="1" value="40"><output id="prompterFocusValue">40%</output></span></label>
+            <label>Current line size<span class="prompter-range"><input id="prompterCurrentScale" type="range" min="1.1" max="2.3" step="0.05" value="1.72"><output id="prompterCurrentScaleValue">1.72×</output></span></label>
+            <label>Previous two lines size<span class="prompter-range"><input id="prompterContextScale" type="range" min="1" max="2.1" step="0.05" value="1.48"><output id="prompterContextScaleValue">1.48×</output></span></label>
+            <label>Other lyric size<span class="prompter-range"><input id="prompterMutedScale" type="range" min="0.5" max="1.2" step="0.05" value="0.82"><output id="prompterMutedScaleValue">0.82×</output></span></label>
+            <label>Other lyric opacity<span class="prompter-range"><input id="prompterMutedOpacity" type="range" min="0.25" max="1" step="0.05" value="0.60"><output id="prompterMutedOpacityValue">60%</output></span></label>
+            <label>Current line highlight colour<span class="prompter-colour"><input id="prompterCurrentColour" type="color" value="#16d8ff"></span></label>
+          </div>
+          <div id="prompterPreview" class="prompter-preview" aria-label="Singer line preview">
+            <span class="prompter-preview-line muted">Earlier lyric line</span>
+            <span class="prompter-preview-line context">Line two above the current line</span>
+            <span class="prompter-preview-line context">Line above the current line</span>
+            <span class="prompter-preview-line current">Current lyric line</span>
+            <span class="prompter-preview-line muted">Upcoming lyric line</span>
+            <span class="prompter-preview-line muted">Later lyric line</span>
+          </div>
+        </section>
+      </div>
+
+      <section class="prompter-card" style="margin-top:16px">
+        <h2>Reset</h2><p>Restore the Singer Screen defaults on this browser/device.</p>
+        <div class="prompter-actions"><button id="resetPrompterSettings" class="prompter-btn" type="button">Reset Prompter Settings</button></div>
+      </section>
+    </main>
+  </div>
+
+  <script src="../firebase-projects.js?v=20261006-prompter-settings-v1"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="js/firebase.js?v=20260910-stage4"></script>
+  <script src="js/sidebar.js?v=20261006-prompter-settings-v1"></script>
+  <script src="js/profile.js?v=20260929-members-align"></script>
+  <script src="js/auth.js?v=20260910-stage4"></script>
+  <script data-ls26-settings="1" src="../shared/app-settings.js?v=20260930-app-version"></script>
+  <script src="../shared/shell.js?v=20260930-release-preview-v3"></script>
+  <script>document.addEventListener("DOMContentLoaded",()=>window.LK?.sidebar?.loadSidebar?.(),{once:true});</script>
+  <script src="js/prompter-settings.js?v=20261006-v1"></script>
+</body>
+</html>
