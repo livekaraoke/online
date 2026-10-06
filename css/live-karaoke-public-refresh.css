@@ -9,6 +9,8 @@
   --lk-line:rgba(255,43,43,.38);
 }
 
+[data-lk-hidden="true"]{display:none!important;}
+
 /* Use the real repository banner asset and keep the hero compact. */
 .hero{
   height:auto!important;
@@ -105,12 +107,12 @@
 #about .about-highlight{
   margin-top:20px!important;
   color:#fff!important;
-  font-size:1.02rem!important;
+  font-size:1.16rem!important;
 }
 #about .about-booking{
   margin-top:18px!important;
-  color:#bdbdbd!important;
-  font-size:.96rem!important;
+  color:#d8d8d8!important;
+  font-size:1.32rem!important;
 }
 #about .about-booking strong{
   color:#fff!important;
@@ -242,9 +244,72 @@
 .live-karaoke-event-card .maps-btn{
   margin-top:18px!important;
 }
-
-/* The event name below the time is redundant on the Live Karaoke page. */
 .event-subheading{display:none!important;}
+
+/* Approved public reviews. */
+.live-karaoke-reviews-section{
+  background:#080808!important;
+  border-top:1px solid rgba(255,43,43,.16);
+  border-bottom:1px solid rgba(255,43,43,.12);
+}
+.live-karaoke-reviews-intro{
+  max-width:680px!important;
+  margin:0 auto 24px!important;
+  color:#bcbcbc!important;
+  font-size:1rem!important;
+  line-height:1.6!important;
+  font-weight:400!important;
+}
+.live-karaoke-reviews-grid{
+  width:min(1040px,100%);
+  margin:0 auto;
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:16px;
+}
+.live-karaoke-review-card{
+  min-height:190px;
+  padding:22px 20px;
+  display:flex;
+  flex-direction:column;
+  border:1px solid rgba(255,43,43,.34);
+  border-radius:10px;
+  background:linear-gradient(180deg,#111,#090909);
+  box-shadow:0 8px 22px rgba(0,0,0,.3),0 0 10px rgba(255,0,0,.05);
+  text-align:left;
+}
+.live-karaoke-review-stars{
+  margin-bottom:14px;
+  color:#ff4949;
+  font-size:1.02rem;
+  letter-spacing:.16em;
+}
+.live-karaoke-review-card blockquote{
+  flex:1;
+  margin:0 0 18px;
+  padding:0;
+  color:#f2f2f2;
+  font-size:.98rem;
+  line-height:1.6;
+  font-style:normal;
+}
+.live-karaoke-review-person{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px 10px;
+  align-items:baseline;
+  padding-top:14px;
+  border-top:1px solid rgba(255,255,255,.08);
+}
+.live-karaoke-review-person strong{
+  color:#fff;
+  font-size:.9rem;
+  letter-spacing:.05em;
+}
+.live-karaoke-review-person span{
+  color:#929292;
+  font-size:.8rem;
+}
 
 /* Song list is always a browseable entry point. Requests are gated inside the popup. */
 #songListBtn.song-list-browse-btn,
@@ -274,6 +339,12 @@
   }
   #about .about-lead{
     font-size:1.02rem!important;
+  }
+  #about .about-highlight{
+    font-size:1.08rem!important;
+  }
+  #about .about-booking{
+    font-size:1.2rem!important;
   }
   #about p{
     line-height:1.62!important;
@@ -305,13 +376,22 @@
     min-height:76px!important;
     padding:8px 10px!important;
   }
-  .events-intro{
+  .events-intro,
+  .live-karaoke-reviews-intro{
     font-size:.96rem!important;
     margin-bottom:18px!important;
   }
   .live-karaoke-event-card h4{
     font-size:.96rem!important;
     letter-spacing:.7px!important;
+  }
+  .live-karaoke-reviews-grid{
+    grid-template-columns:1fr;
+    gap:12px;
+  }
+  .live-karaoke-review-card{
+    min-height:0;
+    padding:18px 16px;
   }
 }
 
