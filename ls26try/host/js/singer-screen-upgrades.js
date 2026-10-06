@@ -21,7 +21,6 @@
 
   function read(key,fallback){try{return localStorage.getItem(key)||fallback;}catch(_){return fallback;}}
   function save(key,value){try{localStorage.setItem(key,String(value));}catch(_){}}
-  const esc=value=>String(value??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 
   const style=document.createElement('style');
   style.id='ls26SingerScreenV2Style';
@@ -118,7 +117,7 @@
   function sectionHtml(section){
     const base=window.LyricsCommon?.singerHTMLFromSection?.(section)||'';
     if(guidance!=='guitaroke')return base;
-    if(section?.visibleOnSingerScreen===false)return base; // hidden section: only patched Performance Notes survive
+    if(section?.visibleOnSingerScreen===false)return base;
     if(String(section?.type||'').toLowerCase()==='tab')return base;
     return cleanGuitarokeHTML(section)||base;
   }
@@ -192,7 +191,7 @@
     if(!control||!song||lyrics.hidden)return;
     const playback=control.singerPlayback||{},playing=playback.state==='playing';
     if(playing){
-      const sync=control.singerSync,sections=singerSections();
+      const sync=control.singerV2Sync||control.singerSync,sections=singerSections();
       if(sync?.enabled&&sections.length){
         const active=resolveSection(sync,sections);
         if(active){
