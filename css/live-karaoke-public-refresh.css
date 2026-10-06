@@ -245,6 +245,18 @@
   margin-top:18px!important;
 }
 .event-subheading{display:none!important;}
+.live-karaoke-event-time-note{
+  display:block!important;
+  margin:22px auto 0!important;
+  padding:0!important;
+  color:#ff5b5b!important;
+  font-size:.8rem!important;
+  line-height:1.5!important;
+  font-weight:500!important;
+  letter-spacing:.02em!important;
+  text-align:center!important;
+  opacity:1!important;
+}
 
 /* Approved public reviews. */
 .live-karaoke-reviews-section{
@@ -309,6 +321,16 @@
 .live-karaoke-review-person span{
   color:#929292;
   font-size:.8rem;
+}
+
+/* Booking FAQ CTA: keep clear space after the final question and centre it. */
+#enquire .booking-faq .lk-booking-faq-cta{
+  display:table!important;
+  width:auto!important;
+  max-width:calc(100% - 24px)!important;
+  margin:32px auto 4px!important;
+  float:none!important;
+  text-align:center!important;
 }
 
 /* Song list is always a browseable entry point. Requests are gated inside the popup. */
@@ -384,6 +406,13 @@
   .live-karaoke-event-card h4{
     font-size:.96rem!important;
     letter-spacing:.7px!important;
+  }
+  .live-karaoke-event-time-note{
+    margin-top:18px!important;
+    font-size:.75rem!important;
+  }
+  #enquire .booking-faq .lk-booking-faq-cta{
+    margin-top:28px!important;
   }
   .live-karaoke-reviews-grid{
     grid-template-columns:1fr;
