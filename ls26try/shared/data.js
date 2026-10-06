@@ -4,6 +4,11 @@
  */
 (() => {
   'use strict';
+  const pagePath=String(location.pathname||'');
+  if (/\/host\/karaoke-lyric-view\.html$/i.test(pagePath)) {
+    try { window.__ls26SingerSavedGuidance = localStorage.getItem('karaokeGuidanceMode') || 'normal'; } catch (_) { window.__ls26SingerSavedGuidance='normal'; }
+  }
+
   const pending = new Map();
   const TTL = 15 * 60 * 1000;
   const scope = () => `${firebase.app().options.projectId}:${firebase.auth?.().currentUser?.uid || 'host'}`;
