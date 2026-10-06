@@ -35,3 +35,11 @@
   if(typeof module==='object'&&module.exports)module.exports={create};
   else window.LS26PerformanceTempo={create};
 })();
+
+/* LyricView-only follow-card polish and inline time-signature support. */
+if (typeof document !== 'undefined' && /\/host\/lyricview\.html$/i.test(String(location.pathname || ''))) {
+  const helper=document.createElement('script');
+  helper.src='../shared/lyricview-follow-polish.js?v=20261006-follow-polish-v1';
+  helper.async=false;
+  (document.head||document.documentElement).appendChild(helper);
+}
