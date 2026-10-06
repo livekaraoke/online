@@ -1,5 +1,6 @@
 /* LiveSuite Singer Screen v3.2 focused fixes.
  * Exact lyric-line focus, stronger singer hierarchy, and reliable controls.
+ * Deliberately event-driven: the existing singer renderer owns continuous movement.
  */
 (() => {
   'use strict';
@@ -48,13 +49,11 @@
   document.head.appendChild(style);
 
   function applyPrompterPreferences() {
-    const focus = cssNumber('ls26:singerFocusPosition', 40, 20, 65);
     const current = cssNumber('ls26:singerCurrentLineScale', 1.72, 1, 2.5);
     const context = cssNumber('ls26:singerContextLineScale', 1.48, .9, 2.3);
     const muted = cssNumber('ls26:singerMutedLineScale', .82, .45, 1.4);
     const opacity = cssNumber('ls26:singerMutedOpacity', .60, .2, 1);
     const colour = /^#[0-9a-f]{6}$/i.test(read('ls26:singerCurrentLineColour', '#16d8ff')) ? read('ls26:singerCurrentLineColour', '#16d8ff') : '#16d8ff';
-    document.documentElement.style.setProperty('--ls26-singer-focus-pct', String(focus / 100));
     document.documentElement.style.setProperty('--ls26-singer-current-scale', `${current}em`);
     document.documentElement.style.setProperty('--ls26-singer-context-scale', `${context}em`);
     document.documentElement.style.setProperty('--ls26-singer-muted-scale', `${muted}em`);
@@ -124,15 +123,13 @@
       }
     }
     const wanted = String(sync.currentLyricText || '').replace(/\s+/g, ' ').trim().toLowerCase();
-    if (wanted) {
-      const lines = allLyricLines();
-      return lines.find(line => line.textContent.replace(/\s+/g, ' ').trim().toLowerCase() === wanted)
-        || lines.find(line => {
-          const text = line.textContent.replace(/\s+/g, ' ').trim().toLowerCase();
-          return text.includes(wanted) || wanted.includes(text);
-        }) || null;
-    }
-    return null;
+    if (!wanted) return null;
+    const lines = allLyricLines();
+    return lines.find(line => line.textContent.replace(/\s+/g, ' ').trim().toLowerCase() === wanted)
+      || lines.find(line => {
+        const text = line.textContent.replace(/\s+/g, ' ').trim().toLowerCase();
+        return text.includes(wanted) || wanted.includes(text);
+      }) || null;
   }
 
   let lastFocused = null;
@@ -142,43 +139,29 @@
     const lines = allLyricLines();
     const idx = lines.indexOf(current);
     if (idx < 0) return;
-    if (current !== lastFocused) {
-      lines.forEach((line, index) => {
-        line.classList.toggle('is-current', index === idx);
-        line.classList.toggle('is-context-featured', index === idx - 1 || index === idx - 2);
-        line.classList.remove('is-upcoming-featured');
-        line.classList.toggle('is-muted', index !== idx && index !== idx - 1 && index !== idx - 2);
-      });
-      lastFocused = current;
-    }
+    lines.forEach((line, index) => {
+      line.classList.toggle('is-current', index === idx);
+      line.classList.toggle('is-context-featured', index === idx - 1 || index === idx - 2);
+      line.classList.remove('is-upcoming-featured');
+      line.classList.toggle('is-muted', index !== idx && index !== idx - 1 && index !== idx - 2);
+    });
+    lastFocused = current;
     if (scroll) {
       const headerBottom = document.querySelector('.singer-topbar')?.getBoundingClientRect().bottom || 0;
       const pct = cssNumber('ls26:singerFocusPosition', 40, 20, 65) / 100;
       const anchor = Math.max(headerBottom + 44, innerHeight * pct);
       const target = Math.max(0, current.getBoundingClientRect().top + scrollY - anchor);
       const delta = target - scrollY;
-      if (Math.abs(delta) > 1) scrollBy(0, delta * (Math.abs(delta) > innerHeight * .35 ? .22 : .14));
+      if (Math.abs(delta) > 2) scrollBy(0, delta * (Math.abs(delta) > innerHeight * .35 ? .32 : .20));
     }
   }
 
-  let latest = null;
   let channel = null;
   let firestoreUnsub = null;
-  let frame = 0;
   function applyState(state) {
     if (!state || Number(state.version) !== 3) return;
-    latest = state;
     requestAnimationFrame(() => focusSingerLine(state.sync, { scroll:state.phase === 'playing' }));
-    if (state.phase === 'playing' && !frame) frame = requestAnimationFrame(tick);
-    if (state.phase !== 'playing' && frame) { cancelAnimationFrame(frame); frame = 0; }
   }
-  function tick() {
-    frame = 0;
-    if (!latest || latest.phase !== 'playing') return;
-    focusSingerLine(latest.sync, { scroll:true });
-    frame = requestAnimationFrame(tick);
-  }
-
   function startSyncListener() {
     try {
       if ('BroadcastChannel' in window) {
@@ -200,12 +183,9 @@
   installControls();
   startSyncListener();
   window.addEventListener('storage', event => {
-    if (String(event.key || '').startsWith('ls26:singer') || event.key === 'karaokeGuidanceMode' || event.key === 'ls26:karaokeSingerBackground' || event.key === 'ls26:karaokeSingerBottomBar') {
-      applyPrompterPreferences();
-    }
+    if (String(event.key || '').startsWith('ls26:singer') || event.key === 'karaokeGuidanceMode' || event.key === 'ls26:karaokeSingerBackground' || event.key === 'ls26:karaokeSingerBottomBar') applyPrompterPreferences();
   });
   window.addEventListener('pagehide', () => {
-    if (frame) cancelAnimationFrame(frame);
     try { channel?.close(); } catch (_) {}
     try { firestoreUnsub?.(); } catch (_) {}
   }, { once:true });
