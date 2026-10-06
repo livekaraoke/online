@@ -1,0 +1,90 @@
+<!-- Copyright © 2026 LiveSuite. All rights reserved. -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Live Karaoke Reviews · LiveSuite</title>
+  <link rel="stylesheet" href="css/admin.css?v=20260910-stage4">
+  <link rel="stylesheet" href="css/sidebar.css?v=20260910-stage4">
+  <link rel="stylesheet" href="css/sidebar-suite.css?v=20260929-admin-polish">
+  <link rel="stylesheet" href="css/enquiries.css?v=20260910-stage4">
+  <link rel="stylesheet" href="css/admin-navigation.css?v=20260929-admin-polish">
+  <link rel="stylesheet" href="../shared/theme.css?v=20260930-release-preview-v2">
+  <script src="../shared/data.js?v=20260910-stage4"></script>
+  <style>
+    .lk-reviews-main{min-width:0}
+    .lk-reviews-toolbar{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin:0 0 18px}
+    .lk-review-filter,.lk-review-action{border:1px solid #31505e;border-radius:8px;background:#09151c;color:#dceaf0;padding:9px 13px;font:inherit;font-size:.82rem;font-weight:800;cursor:pointer}
+    .lk-review-filter.active{border-color:#6bd7ee;color:#fff;background:#0c2731}
+    .lk-review-filter span{margin-left:5px;color:#86a4b2}
+    .lk-review-action.primary{border-color:#2e9d5c;background:#0b3a23;color:#caffdc}
+    .lk-review-action.danger{border-color:#8c3942;background:#381217;color:#ffc5ca}
+    .lk-review-action:disabled{opacity:.45;cursor:not-allowed}
+    .lk-reviews-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:0 0 18px}
+    .lk-reviews-summary article{padding:14px 16px;border:1px solid #233946;border-radius:10px;background:#08131a}
+    .lk-reviews-summary span{display:block;color:#8499a5;font-size:.72rem;font-weight:850;letter-spacing:.07em;text-transform:uppercase}
+    .lk-reviews-summary strong{display:block;margin-top:5px;color:#fff;font-size:1.45rem}
+    .lk-reviews-list{display:grid;gap:14px}
+    .lk-review-card{border:1px solid #27404c;border-radius:12px;background:linear-gradient(180deg,#09161d,#071117);padding:17px 18px}
+    .lk-review-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:12px}
+    .lk-review-person strong{display:block;color:#fff;font-size:1rem}.lk-review-person small{display:block;margin-top:3px;color:#8fa4ae}
+    .lk-review-status{padding:5px 8px;border:1px solid #3d5662;border-radius:999px;color:#aac0ca;font-size:.68rem;font-weight:900;letter-spacing:.08em;text-transform:uppercase}
+    .lk-review-status.pending{border-color:#8b7133;color:#ffd977;background:#2b220b}.lk-review-status.approved{border-color:#2d8753;color:#8df1b2;background:#0d2d1d}.lk-review-status.private{border-color:#686878;color:#c6c6d4;background:#1b1b24}.lk-review-status.rejected{border-color:#843f48;color:#ffafb6;background:#2d1115}.lk-review-status.withdrawn{opacity:.7}
+    .lk-review-stars{color:#ffd464;letter-spacing:.14em;margin-bottom:10px}.lk-review-copy{margin:0;color:#e7edf0;line-height:1.58;white-space:pre-wrap}.lk-review-empty-copy{color:#718690;font-style:italic}
+    .lk-review-meta{display:flex;gap:8px 16px;flex-wrap:wrap;margin-top:13px;color:#738994;font-size:.74rem}
+    .lk-review-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:15px;padding-top:13px;border-top:1px solid rgba(125,157,173,.13)}
+    .lk-review-note{margin:0 0 18px;color:#91a5af;font-size:.87rem;line-height:1.55}
+    .lk-reviews-empty{padding:36px 18px;text-align:center;border:1px dashed #2c4652;border-radius:12px;color:#8297a1}
+    @media(max-width:850px){.lk-reviews-summary{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    @media(max-width:560px){.lk-reviews-summary{grid-template-columns:1fr 1fr}.lk-review-head{display:block}.lk-review-status{display:inline-block;margin-top:9px}.lk-review-actions .lk-review-action{flex:1}}
+  </style>
+</head>
+<body class="admin-body enquiries-page">
+  <div class="admin-shell">
+    <div id="sidebarContainer"></div>
+    <main class="admin-main enquiries-main lk-reviews-main">
+      <header class="enquiries-topbar">
+        <div>
+          <p class="enquiries-eyebrow">LIVE KARAOKE</p>
+          <h1>Live Karaoke Reviews</h1>
+          <p class="enquiries-subtitle">Review feedback submitted from the public request profile and choose what appears on the Live Karaoke website.</p>
+        </div>
+        <button id="publishApprovedReviewsBtn" class="lk-review-action primary" type="button">Republish approved</button>
+      </header>
+
+      <p id="liveKaraokeReviewsStatus" class="billy-site-status" role="status">Loading reviews…</p>
+      <p class="lk-review-note">Private reviews are visible here for your records but cannot be published. Approving a public review publishes only the reviewer name, country, rating and review text — no email or device information is exposed.</p>
+
+      <section class="lk-reviews-summary" aria-label="Review summary">
+        <article><span>Pending</span><strong id="lkReviewPendingCount">0</strong></article>
+        <article><span>Published</span><strong id="lkReviewApprovedCount">0</strong></article>
+        <article><span>Private</span><strong id="lkReviewPrivateCount">0</strong></article>
+        <article><span>Total</span><strong id="lkReviewTotalCount">0</strong></article>
+      </section>
+
+      <div class="lk-reviews-toolbar" role="group" aria-label="Review filters">
+        <button class="lk-review-filter active" data-review-filter="all" type="button">All <span id="lkFilterAllCount">0</span></button>
+        <button class="lk-review-filter" data-review-filter="pending" type="button">Pending <span id="lkFilterPendingCount">0</span></button>
+        <button class="lk-review-filter" data-review-filter="approved" type="button">Published <span id="lkFilterApprovedCount">0</span></button>
+        <button class="lk-review-filter" data-review-filter="private" type="button">Private <span id="lkFilterPrivateCount">0</span></button>
+        <button class="lk-review-filter" data-review-filter="rejected" type="button">Rejected <span id="lkFilterRejectedCount">0</span></button>
+      </div>
+
+      <section id="liveKaraokeReviewsList" class="lk-reviews-list" aria-live="polite"></section>
+    </main>
+  </div>
+
+  <script src="../firebase-projects.js?v=20261006-reviews-admin-v1"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="js/firebase.js?v=20260910-stage4"></script>
+  <script src="js/sidebar.js?v=20260930-dynamic-version-v2"></script>
+  <script src="js/profile.js?v=20260929-members-align"></script>
+  <script src="js/auth.js?v=20260910-stage4"></script>
+  <script data-ls26-settings="1" src="../shared/app-settings.js?v=20260930-app-version"></script>
+  <script src="../shared/shell.js?v=20260930-release-preview-v3"></script>
+  <script src="js/live-karaoke-reviews.js?v=20261006-reviews-v1"></script>
+</body>
+</html>
