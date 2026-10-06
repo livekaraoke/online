@@ -122,7 +122,7 @@
     });
 
     const script = document.createElement("script");
-    script.src = new URL("../js/live-karaoke-request-popup.js?v=20261006-red-theme-v5", document.currentScript?.src || location.href).href;
+    script.src = new URL("../js/live-karaoke-request-popup.js?v=20261006-red-theme-v6", document.currentScript?.src || location.href).href;
     script.async = false;
     document.head.appendChild(script);
   }
