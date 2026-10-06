@@ -37,6 +37,16 @@
   }
   function schedule(){if(transport?.snapshot().state==='playing')clock.schedule(context.currentTime);}
   function reschedule(){cancel();clock=new engine.TransportClock(transport,settings,emit);schedule();timer=window.setInterval(schedule,25);}
+  function timedLyricResumeBeat(){
+   try{
+    if(!window.document?.body?.classList.contains('host-lyric-view-page')||!window.LS26TimedView?.enabled?.())return null;
+    const timed=window.LS26TimedView.snapshot?.();
+    const eventBeat=Number(timed?.event?.startBeat);
+    if(!Number.isFinite(eventBeat)||eventBeat<0)return null;
+    const offset=Number(timed?.timingOffset);
+    return eventBeat+(Number.isFinite(offset)&&offset>0?offset:0);
+   }catch(_){return null;}
+  }
   async function activate(resume,options={}){
    const request=++version;pending=true;
    try{
@@ -60,10 +70,17 @@
   }
   function pause(){version++;pending=false;cancel();transport?.pause();onState(snapshot());return snapshot();}
   function stop(){version++;pending=false;cancel();transport?.stop();onState(snapshot());return snapshot();}
+  function resume(){
+   if(transport?.snapshot().state==='paused'){
+    const beat=timedLyricResumeBeat();
+    if(Number.isFinite(beat)&&beat>=0)transport.seek(beat);
+   }
+   return activate(true);
+  }
   function setBpm(value){if(transport){transport.setBpm(Number(value));if(snapshot().state==='playing')reschedule();}return snapshot();}
   window.addEventListener?.('pagehide',stop);
   window.document?.addEventListener('visibilitychange',()=>{if(window.document.hidden)pause();});
-  return Object.freeze({start:options=>activate(false,options),resume:()=>activate(true),pause,stop,setBpm,
+  return Object.freeze({start:options=>activate(false,options),resume,pause,stop,setBpm,
    seek:beat=>{transport?.seek(beat);if(transport&&snapshot().state==='playing')reschedule();return snapshot();},
    refresh:()=>{if(transport&&snapshot().state==='playing')reschedule();},snapshot,getBeat:()=>snapshot().beat,
    get pending(){return pending;},get context(){return context;},get transport(){return transport;}});
