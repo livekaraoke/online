@@ -40,13 +40,16 @@ body.host-lyric-view-page #performanceQuickInfo .ls26-hide-karaoke{grid-column:7
   if(quickBar){const slot=document.createElement('div');slot.className='performance-chord-follow';slot.append(controls,label);const primary=quickBar.querySelector('.performance-quick-primary');if(primary)quickBar.insertBefore(slot,primary);else quickBar.append(slot);}else{dock.append(controls);(dock.closest('.host-bottom-dock')||dock.parentNode).append(label);}
   const sizeDock=()=>{const outer=dock.closest('.host-bottom-dock');if(outer)document.body.style.setProperty('--lv-dock-height',outer.getBoundingClientRect().height+'px');};
   const Observer=window.ResizeObserver;if(Observer)new Observer(sizeDock).observe(dock.closest('.host-bottom-dock')||dock);window.addEventListener('resize',sizeDock);sizeDock();
-  let loaded=false,pending=null,result=null,track=null,nodes=new Map(),on=false,manual=false,frame=null,current=null,positionedLine=null,anticipated=null,finished=false,lastY=window.scrollY||0,programmaticUntil=0,sourceMeter=null;
+  const FOLLOW_PREF_KEY='ls26.lyricview.chordFollow.enabled';
+  const readFollowPreference=()=>{try{return window.localStorage?.getItem(FOLLOW_PREF_KEY)==='1';}catch{return false;}};
+  const writeFollowPreference=value=>{try{window.localStorage?.setItem(FOLLOW_PREF_KEY,value?'1':'0');}catch{}};
+  let loaded=false,pending=null,result=null,track=null,nodes=new Map(),on=false,wanted=readFollowPreference(),manual=false,frame=null,current=null,positionedLine=null,anticipated=null,finished=false,lastY=window.scrollY||0,programmaticUntil=0,sourceMeter=null;
   const api={enabled:()=>on,meter:()=>sourceMeter};
   const name=event=>nodes.get(event.id)?.textContent.trim()||event.chord;
   function visibleSections(){return track?.events.every(e=>{const card=document.querySelector(`.host-section[data-section-index="${e.sourceAnchor.sectionIndex}"]`);return card&&!card.classList.contains('collapsed')&&!card.classList.contains('session-visibility-hidden');});}
   async function load(){if(loaded)return result;if(pending)return pending;pending=store.load(songId,getSong()).then(value=>{loaded=true;result=value;return value;}).finally(()=>{pending=null;});return pending;}
   function clear(){for(const node of nodes.values())node.classList.remove('ls26-active-chord');current=null;}
-  function stateLabel(){button.setAttribute('aria-pressed',String(on));button.classList.toggle('active',on);button.textContent=on?'FOLLOW: ON':'FOLLOW: OFF';button.setAttribute('aria-label',on?'Chord Follow on':'Chord Follow off');rejoin.hidden=!on||!manual;reset.hidden=!on;}
+  function stateLabel(){button.setAttribute('aria-pressed',String(wanted));button.classList.toggle('active',wanted);button.textContent=wanted?'FOLLOW: ON':'FOLLOW: OFF';button.setAttribute('aria-label',wanted?'Chord Follow on':'Chord Follow off');rejoin.hidden=!on||!manual;reset.hidden=!on;}
   function notify(message,unavailable=false){label.textContent=message;label.title=String(message||'').replace(/\s*\n\s*/g,' · ');label.hidden=!message;label.classList.toggle('is-unavailable',unavailable);sizeDock();}
   function suspend(){if(!on)return;manual=true;if(programmaticUntil>Date.now())window.scrollTo?.({top:window.scrollY||0,behavior:'instant'});programmaticUntil=0;notify('Positioning paused · timing continues. Use REJOIN to resume following.');stateLabel();}
   function area(){const top=(document.getElementById('ls26StickyHeader')?.getBoundingClientRect().bottom||0)+12,bottom=(document.querySelector('.host-bottom-dock')?.getBoundingClientRect().top||window.innerHeight)-16;return {top,bottom,height:Math.max(80,bottom-top)};}
@@ -56,7 +59,7 @@ body.host-lyric-view-page #performanceQuickInfo .ls26-hide-karaoke{grid-column:7
    if(!node||card?.classList.contains('collapsed')||card?.classList.contains('session-visibility-hidden')){suspend();return;}
    const rect=node.getBoundingClientRect(),box=area(),line=event.sourceAnchor.sectionIndex+':'+event.sourceAnchor.lineIndex;
    if(!force&&line===positionedLine)return;
-   const target=box.top+box.height*.40,delta=rect.top-target;
+   const target=box.top+box.height*.18,delta=rect.top-target;
    positionedLine=line;
    if(Math.abs(delta)<3&&!force)return;
    programmaticUntil=Date.now()+1200;
@@ -67,7 +70,7 @@ body.host-lyric-view-page #performanceQuickInfo .ls26-hide-karaoke{grid-column:7
   function disable(){const wasOn=on;on=false;manual=false;window.cancelAnimationFrame?.(frame);frame=null;clear();stateLabel();notify('Normal auto-scroll');if(wasOn)getAudio()?.pause();onEnabled(false);}
   function rejoinCurrent(){if(!on)return;manual=false;positionedLine=null;stateLabel();position(current?.event,true);notify(current?`${name(current.event)} · following`:'Following current chord');}
   function resetPosition(){if(!on)return;getAudio()?.stop();finished=false;clear();positionedLine=null;anticipated=null;update();}
-  button.onclick=()=>on?disable():enable();rejoin.onclick=rejoinCurrent;reset.onclick=resetPosition;
+  button.onclick=()=>{if(wanted){wanted=false;writeFollowPreference(false);disable();stateLabel();}else{wanted=true;writeFollowPreference(true);stateLabel();enable();}};rejoin.onclick=rejoinCurrent;reset.onclick=resetPosition;
   window.addEventListener('wheel',e=>{if(!e.target.closest?.('input,select,textarea,.song-info-drawer,.host-bottom-dock'))suspend();},{passive:true});
   let touch;window.addEventListener('touchstart',e=>{touch=e.touches?.[0]?{x:e.touches[0].clientX,y:e.touches[0].clientY,target:e.target}:null;},{passive:true});window.addEventListener('touchmove',e=>{if(touch&&e.touches?.[0]&&Math.abs(e.touches[0].clientY-touch.y)>8&&!touch.target.closest?.('button,input,select,textarea,.song-info-drawer,.host-bottom-dock'))suspend();},{passive:true});
   window.addEventListener('pointerdown',e=>{if((e.target===document.documentElement||e.target===document.body)&&e.clientX>=window.innerWidth-24)suspend();},{passive:true});
@@ -75,6 +78,8 @@ body.host-lyric-view-page #performanceQuickInfo .ls26-hide-karaoke{grid-column:7
   window.addEventListener('scroll',()=>{const y=window.scrollY||0;if(Math.abs(y-lastY)>2&&Date.now()>programmaticUntil)suspend();lastY=y;},{passive:true});
   document.addEventListener('click',e=>{if(e.target.closest?.('#navUpBtn,#navDownBtn,#navPrevBtn,#navNextBtn,.progress-section'))suspend();});
   window.addEventListener('pagehide',disable);
+  stateLabel();
+  if(wanted){const autoEnable=()=>{if(wanted)enable();};if(typeof window.requestAnimationFrame==='function')window.requestAnimationFrame(autoEnable);else Promise.resolve().then(autoEnable);}
   return Object.freeze({...api,enable,disable,update,suspend,rejoin:rejoinCurrent,reset:resetPosition,position,snapshot:()=>({enabled:on,manual,loaded,status:result?.status,completeness:result?model.summary(result.timing,result.source):null,event:current?.event,index:current?.index,totalBeats:track?.totalBeats})});
  }
  return Object.freeze({mount});
