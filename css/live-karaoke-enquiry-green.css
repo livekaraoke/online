@@ -1,0 +1,19 @@
+/* Focused Live Karaoke enquiry CTA override. */
+#lkEnquirySubmit.booking-enquiry-submit,
+#lkEnquirySubmit.main-button{
+  border-color:rgba(57,224,111,.9)!important;
+  background:linear-gradient(180deg,#238a49,#0c5f2c)!important;
+  color:#f4fff7!important;
+  box-shadow:0 0 12px rgba(57,224,111,.28)!important;
+  text-shadow:none!important;
+}
+#lkEnquirySubmit.booking-enquiry-submit:hover,
+#lkEnquirySubmit.main-button:hover{
+  border-color:#6cf29a!important;
+  background:linear-gradient(180deg,#2b9d55,#116b35)!important;
+  box-shadow:0 0 16px rgba(57,224,111,.38)!important;
+}
+#lkEnquirySubmit:disabled{
+  opacity:.6!important;
+  cursor:not-allowed!important;
+}
