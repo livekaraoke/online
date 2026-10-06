@@ -63,6 +63,7 @@
       loadPageHelper('js/singer-screen-upgrades.js?v=20261006-singer-screen-v3','ls26SingerScreenV3Loader');
     } else if (/\/host\/lyricview\.html$/i.test(path)) {
       loadPageHelper('js/lyricview-singer-bridge.js?v=20261006-singer-bridge-v3','ls26SingerBridgeV3Loader');
+      loadPageHelper('js/lyricview-singer-transport-sync-v3.js?v=20261006-singer-transport-v3','ls26SingerTransportV3Loader');
     }
   }
   if (document.readyState === 'complete') loadFocusedHelpers();
