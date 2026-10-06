@@ -100,38 +100,26 @@
     document.addEventListener("click", event => {
       const button = event.target.closest?.("#heroRequestBtn,#songListBtn");
       if (!button || isBlocked(button)) return;
-
       event.preventDefault();
       event.stopPropagation();
       event.stopImmediatePropagation();
       hardenRequestControls();
-
-      if (typeof window.openLiveKaraokeRequestPopup === "function") {
-        window.openLiveKaraokeRequestPopup();
-      } else {
-        window.__liveKaraokeRequestOpenPending = true;
-      }
+      if (typeof window.openLiveKaraokeRequestPopup === "function") window.openLiveKaraokeRequestPopup();
+      else window.__liveKaraokeRequestOpenPending = true;
     }, true);
 
     document.addEventListener("DOMContentLoaded", hardenRequestControls, { once:true });
-
     const observer = new MutationObserver(hardenRequestControls);
-    observer.observe(document.documentElement, {
-      subtree:true,
-      childList:true,
-      attributes:true,
-      attributeFilter:["href","target","rel","class","aria-disabled"]
-    });
+    observer.observe(document.documentElement, {subtree:true,childList:true,attributes:true,attributeFilter:["href","target","rel","class","aria-disabled"]});
 
     const base = document.currentScript?.src || location.href;
-
     const refreshCss = document.createElement("link");
     refreshCss.rel = "stylesheet";
-    refreshCss.href = new URL("../css/live-karaoke-public-refresh.css?v=20261006-reviews-v1", base).href;
+    refreshCss.href = new URL("../css/live-karaoke-public-refresh.css?v=20261006-reviews-v2", base).href;
     document.head.appendChild(refreshCss);
 
     const refreshScript = document.createElement("script");
-    refreshScript.src = new URL("../js/live-karaoke-public-refresh.js?v=20261006-reviews-v1", base).href;
+    refreshScript.src = new URL("../js/live-karaoke-public-refresh.js?v=20261006-reviews-v2", base).href;
     refreshScript.async = false;
     document.head.appendChild(refreshScript);
 
