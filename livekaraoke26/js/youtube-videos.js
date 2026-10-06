@@ -1,46 +1,31 @@
 /*
   Live Karaoke request app copy.
 
-  This directory is an independent duplicate of the BillyLee26 request experience.
-  It uses the same design/functionality, but is permanently adapted to the Live Karaoke
-  session/settings/storage namespace and does not depend on the BillyLee26 runtime.
+  This directory is independent from /billylee26/. It keeps the copied request
+  experience but is permanently adapted to Live Karaoke data/settings/storage.
 */
-window.BILLY_LEE_YOUTUBE_VIDEOS = [
-  {
-    url: "https://www.youtube.com/watch?v=T4z0bFzz_Gc?si=xAmZKTeNHvfMv_sa",
-    title: "Live Acoustic Cover",
-    duration: "3:49"
-  },
-  {
-    url: "",
-    title: "Live Looping Medley",
-    duration: ""
-  },
-  {
-    url: "",
-    title: "One Guitar. Countless Sounds.",
-    duration: ""
-  },
-  {
-    url: "",
-    title: "Live Loop Performance",
-    duration: ""
-  }
-];
+window.BILLY_LEE_YOUTUBE_VIDEOS = [];
 
 (() => {
-  // This duplicated app is always the Live Karaoke variant.
-  const liveKaraokeMode = true;
-  if (!liveKaraokeMode) return;
-
+  document.title = "Live Karaoke Requests";
   document.documentElement.classList.add("live-karaoke-request-embed");
 
   const style = document.createElement("style");
   style.textContent = `
     html.live-karaoke-request-embed,
-    html.live-karaoke-request-embed body{background:transparent!important;min-height:100%!important}
-    html.live-karaoke-request-embed body>:not(dialog){visibility:hidden!important}
-    html.live-karaoke-request-embed dialog{visibility:visible!important}
+    html.live-karaoke-request-embed body{
+      background:transparent!important;
+      min-height:100%!important;
+    }
+    html.live-karaoke-request-embed body>:not(dialog){
+      display:none!important;
+    }
+    html.live-karaoke-request-embed dialog{
+      visibility:visible!important;
+    }
+    html.live-karaoke-request-embed dialog::backdrop{
+      background:transparent!important;
+    }
   `;
   document.head.appendChild(style);
 
@@ -140,6 +125,7 @@ window.BILLY_LEE_YOUTUBE_VIDEOS = [
       }
 
       if (dialog?.open) {
+        window.parent?.postMessage({ type: "live-karaoke-request-ready" }, location.origin);
         clearInterval(timer);
         return;
       }
