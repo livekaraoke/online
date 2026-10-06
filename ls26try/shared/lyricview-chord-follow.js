@@ -383,7 +383,13 @@ html.ls26-hide-active-chord .host-section-body .ls26-active-chord{outline:none!i
   setControlsVisible(controlsVisible,{persist:false});stateLabel();
   window.dispatchEvent(new CustomEvent('ls26:visual-beat-settings-request',{detail:{visual:visualCheck.checked,beat1Only:beat1OnlyCheck.checked,source:'follow-card'}}));
   if(wanted){const autoEnable=()=>{if(wanted)enable({initial:true});};if(typeof window.requestAnimationFrame==='function')window.requestAnimationFrame(autoEnable);else Promise.resolve().then(autoEnable);}
-  return Object.freeze({...api,enable,disable,update,suspend,rejoin:rejoinCurrent,reset:resetPosition,position,setControlsVisible,snapshot:()=>({enabled:on,wanted,manual,controlsVisible,loaded,status:result?.status,completeness:result?model.summary(result.timing,result.source):null,event:current?.event,index:current?.index,totalBeats:track?.totalBeats,improvHeld:Boolean(improvHeld),improvReleaseBeat,timingOffset,startBeat:Number(selectedStart?.startBeat)||0,startEvent:selectedStart||null})});
+  function restartBeat(physicalBeat){
+   if(!on||improvHeld||!track||physicalBeat<playbackStartBeat())return null;
+   const hit=track.at(Math.max(0,physicalBeat-timingOffset));
+   const event=hit?.event||current?.event;
+   return event?event.startBeat+timingOffset:null;
+  }
+  return Object.freeze({...api,restartBeat,enable,disable,update,suspend,rejoin:rejoinCurrent,reset:resetPosition,position,setControlsVisible,snapshot:()=>({enabled:on,wanted,manual,controlsVisible,loaded,status:result?.status,completeness:result?model.summary(result.timing,result.source):null,event:current?.event,index:current?.index,totalBeats:track?.totalBeats,improvHeld:Boolean(improvHeld),improvReleaseBeat,timingOffset,startBeat:Number(selectedStart?.startBeat)||0,startEvent:selectedStart||null})});
  }
  return Object.freeze({mount});
 });

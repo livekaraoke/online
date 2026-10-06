@@ -10,7 +10,6 @@
 
   const PERF_DEFAULT = '#75F2A0';
   const HOST_DEFAULT = '#9BDCFF';
-  const esc = value => String(value ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   const validColour = (value, fallback) => /^#[0-9a-f]{6}$/i.test(String(value || '')) ? String(value).toUpperCase() : fallback;
   const clampSize = value => Math.max(10, Math.min(40, Math.round(Number(value) || 18)));
 
@@ -23,9 +22,10 @@
       color:var(--ls26-host-note-color,${HOST_DEFAULT})!important;
       font-size:var(--ls26-host-note-size,18px)!important;
     }
+    .creator-page dialog.ls26-dialog{position:fixed!important}
     .ls26-inline-note-modal[hidden]{display:none!important}
     .ls26-inline-note-modal{position:fixed;inset:0;z-index:250000;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(0,5,9,.72);backdrop-filter:blur(3px)}
-    .ls26-inline-note-box{width:min(620px,calc(100vw - 30px));max-height:calc(100vh - 40px);overflow:auto;border:1px solid rgba(0,202,255,.45);border-radius:14px;background:#001923;color:#edfaff;box-shadow:0 18px 70px rgba(0,0,0,.62);padding:18px}
+    .ls26-inline-note-box{width:min(620px,calc(100vw - 30px));max-height:calc(100vh - 40px);max-height:calc(100dvh - 40px);overflow:auto;border:1px solid rgba(0,202,255,.45);border-radius:14px;background:#001923;color:#edfaff;box-shadow:0 18px 70px rgba(0,0,0,.62);padding:18px}
     .ls26-inline-note-box h3{margin:0 0 15px;color:#12d9ff;font-size:21px}
     .ls26-inline-note-field{display:block;margin:0 0 14px;font-size:12px;font-weight:900;letter-spacing:.06em;color:#9fc3cf}
     .ls26-inline-note-field textarea,.ls26-inline-note-field input[type=number],.ls26-inline-note-field input[type=text]{box-sizing:border-box;width:100%;margin-top:7px;border:1px solid #214957;border-radius:9px;background:#001119;color:#fff;padding:11px 12px;font:inherit;font-size:16px;letter-spacing:0}
@@ -46,8 +46,7 @@
   let savedEditor=null;
   let activeResolve=null;
   let activeType='performance';
-  let activeMarker=null;
-  let activeEditor=null;
+  let previousFocus=null;
 
   function editorFromNode(node){
     const el=node?.nodeType===1?node:node?.parentElement;
@@ -106,7 +105,7 @@
   modal.className='ls26-inline-note-modal';
   modal.hidden=true;
   modal.innerHTML=`
-    <div class="ls26-inline-note-box" role="dialog" aria-modal="true" aria-labelledby="ls26InlineNoteTitle">
+    <div class="ls26-inline-note-box" role="dialog" aria-modal="true" data-ls26-close="true" aria-labelledby="ls26InlineNoteTitle">
       <h3 id="ls26InlineNoteTitle">EDIT NOTE</h3>
       <label class="ls26-inline-note-field">NOTE TEXT<textarea id="ls26InlineNoteText" maxlength="1500"></textarea></label>
       <div class="ls26-inline-note-style-row">
@@ -145,11 +144,18 @@
     modal.hidden=true;
     document.body.classList.remove('ls26-inline-note-modal-open');
     const resolve=activeResolve;activeResolve=null;
+    previousFocus?.focus?.({preventScroll:true});
     if(resolve)resolve(result);
   }
   modal.querySelector('#ls26InlineNoteCancel').onclick=()=>closeModal(null);
   modal.addEventListener('pointerdown',event=>{if(event.target===modal)closeModal(null);});
   document.addEventListener('keydown',event=>{if(!modal.hidden&&event.key==='Escape'){event.preventDefault();closeModal(null);}},true);
+  modal.addEventListener('keydown',event=>{
+    if(event.key!=='Tab')return;
+    const fields=[...modal.querySelectorAll('textarea,input,button')],first=fields[0],last=fields.at(-1);
+    if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}
+    else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}
+  });
   modal.querySelector('#ls26InlineNoteSave').onclick=()=>{
     const fallback=activeType==='host'?HOST_DEFAULT:PERF_DEFAULT;
     const text=textInput.value.trim();
@@ -158,7 +164,8 @@
   };
 
   function openModal(type,initial={}){
-    activeType=type;
+    if(activeResolve)return Promise.resolve(null);
+    previousFocus=document.activeElement;activeType=type;
     const fallback=type==='host'?HOST_DEFAULT:PERF_DEFAULT;
     modal.querySelector('#ls26InlineNoteTitle').textContent=type==='host'?'HOST NOTE':'PERFORMANCE NOTE';
     textInput.value=String(initial.text||'');
@@ -185,8 +192,9 @@
     node.title='Tap to edit '+(type==='host'?'host':'performance')+' note';
     try{
       range.deleteContents();range.insertNode(node);
-      const after=document.createTextNode('\u200b');node.parentNode.insertBefore(after,node.nextSibling);
-      const next=document.createRange();next.setStartAfter(after);next.collapse(true);
+      // A collapsed DOM boundary after the zero-text marker is sufficient.
+      // Do not append a sentinel lyric character/line that changes timing source.
+      const next=document.createRange();next.setStartAfter(node);next.collapse(true);
       const selection=window.getSelection?.();if(selection){selection.removeAllRanges();selection.addRange(next);savedRange=next.cloneRange();savedEditor=editor;}
       editor.classList.remove('is-empty');dispatchEdit(editor);editor.focus({preventScroll:true});
       window.LS26?.toast?.((type==='host'?'Host':'Performance')+' note inserted');
@@ -204,18 +212,9 @@
     dispatchEdit(editor);
   }
 
-  // Capture before the older sequential-prompt handler so only this modal runs.
+  // One owner: toolbar buttons delegate here; markers open this same editor.
+  window.LS26InlineNoteEditor=Object.freeze({createNote});
   document.addEventListener('click',event=>{
-    const perfButton=event.target.closest?.('.section-performance-note-inline-btn');
-    const hostButton=event.target.closest?.('.section-host-note-inline-btn');
-    if(perfButton||hostButton){
-      event.preventDefault();event.stopImmediatePropagation();
-      const strip=(perfButton||hostButton).closest('.section-visibility-strip[data-visibility-strip]');
-      const index=strip?.dataset?.visibilityStrip;
-      const editor=index==null?null:document.querySelector(`.creator-rich-editor[data-html="${CSS.escape(String(index))}"]`);
-      if(editor)void createNote(hostButton?'host':'performance',editor);
-      return;
-    }
     const perf=event.target.closest?.('.creator-rich-editor .ls26-inline-performance-note');
     const host=event.target.closest?.('.creator-rich-editor .ls26-inline-host-note');
     if(perf||host){

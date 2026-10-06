@@ -1162,7 +1162,7 @@
     singerSyncTimer = null;
     // Chord transport/highlighting/positioning remain entirely local. The
     // existing pixel-scroll singer sync remains available in fallback mode.
-    if(window.LS26TimedView?.enabled())return;
+    if(window.LS26TimedView?.enabled()||window.LS26SingerBridge)return;
 
     if (!currentSongId) return;
     if (!singerScrollSyncEnabled() && !force) return;
@@ -2796,7 +2796,7 @@
         const dt = Math.min(50, Math.max(0, now - last));
         last = now;
 
-        if (!document.hidden && Date.now()>=manualSectionUntil && Date.now()>=sectionPauseUntil) {
+        if (!document.hidden && !window.LS26SingerBridge?.countingIn() && Date.now()>=manualSectionUntil && Date.now()>=sectionPauseUntil) {
           fractionalY += dt * AUTO_SCROLL_BASE_PX_PER_MS * sectionScrollSpeedForIndex(currentSectionIndex);
 
           const wholePixels = Math.floor(fractionalY);

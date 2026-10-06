@@ -6,9 +6,6 @@
   'use strict';
   const pagePath=String(location.pathname||'');
   const dataScriptUrl=document.currentScript?.src||location.href;
-  if (/\/host\/karaoke-lyric-view\.html$/i.test(pagePath)) {
-    try { window.__ls26SingerSavedGuidance = localStorage.getItem('karaokeGuidanceMode') || 'normal'; } catch (_) { window.__ls26SingerSavedGuidance='normal'; }
-  }
 
   const pending = new Map();
   const TTL = 15 * 60 * 1000;
@@ -47,14 +44,6 @@
 
   // Focused page helpers are loaded after the existing page has initialised so
   // they can extend, rather than replace, the established LiveSuite behaviour.
-  function loadPageHelper(src, id) {
-    if (document.getElementById(id)) return;
-    const script=document.createElement('script');
-    script.id=id;
-    script.src=new URL(src,location.href).href;
-    script.async=false;
-    document.body.appendChild(script);
-  }
   function loadSharedHelper(src,id) {
     if (document.getElementById(id)) return;
     const script=document.createElement('script');
@@ -65,16 +54,6 @@
   }
   function loadFocusedHelpers() {
     const path=String(location.pathname||'');
-    if (/\/host\/lyricscreator\.html$/i.test(path)) {
-      loadPageHelper('js/inline-note-editor-v4.js?v=20261006-inline-note-editor-v4','ls26InlineNoteEditorV4Loader');
-    } else if (/\/host\/karaoke-lyric-view\.html$/i.test(path)) {
-      try { if (window.__ls26SingerSavedGuidance) localStorage.setItem('karaokeGuidanceMode', window.__ls26SingerSavedGuidance); } catch (_) {}
-      loadPageHelper('js/singer-screen-upgrades.js?v=20261006-singer-screen-v3','ls26SingerScreenV3Loader');
-    } else if (/\/host\/lyricview\.html$/i.test(path)) {
-      loadPageHelper('js/lyricview-singer-bridge.js?v=20261006-singer-bridge-v3','ls26SingerBridgeV3Loader');
-      loadPageHelper('js/lyricview-singer-transport-sync-v3.js?v=20261006-singer-transport-v3','ls26SingerTransportV3Loader');
-    }
-
     if (document.getElementById('topStatusContainer')) {
       loadSharedHelper('manual-request.js?v=20261006-manual-request-v2','ls26ManualRequestLoader');
       loadSharedHelper('manual-request-button-layout.js?v=20261006-manual-request-layout-v1','ls26ManualRequestLayoutLoader');

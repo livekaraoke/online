@@ -75,50 +75,17 @@
       span.style.setProperty('--ls26-performance-note-size',size+'px');span.style.setProperty('--ls26-performance-note-color',c);
     }
 
-    async function editPerformanceMarker(span,editor,{isNew=false}={}){
-      const scrollTop=window.scrollY;
-      const raw=await ask('Performance note text',span.dataset.performanceNote||'');restoreViewport(scrollTop);if(raw==null||!String(raw).trim()){if(isNew)span.remove();return false;}
-      const rawSize=await ask('Performance note size in px (10–40)',String(noteSize(span.dataset.performanceNoteSize||18)));restoreViewport(scrollTop);if(rawSize==null){if(isNew)span.remove();return false;}
-      const size=noteSize(rawSize);
-      const rawColour=await ask('Performance note colour (hex, e.g. #75F2A0)',colour(span.dataset.performanceNoteColor||'#75F2A0'));restoreViewport(scrollTop);if(rawColour==null){if(isNew)span.remove();return false;}
-      const c=colour(rawColour);
-      span.dataset.performanceNote=String(raw).trim();span.dataset.performanceNoteSize=String(size);span.dataset.performanceNoteColor=c;applyPerformanceStyle(span);
-      span.setAttribute('aria-label','Performance note: '+span.dataset.performanceNote);span.title='Tap to edit performance note';
-      if(!isNew)dispatchEdit(editor);restoreViewport(scrollTop);return true;
-    }
-
-    async function insertPerformanceNote(editor){
-      const scrollTop=window.scrollY,span=marker('ls26-inline-performance-note');span.dataset.performanceNote='';span.dataset.performanceNoteSize='18';span.dataset.performanceNoteColor='#75F2A0';applyPerformanceStyle(span);
-      if(!commitInsertion(editor,span,'PERFORMANCE NOTE'))return;
-      const ok=await editPerformanceMarker(span,editor,{isNew:true});if(ok){dispatchEdit(editor);window.LS26?.toast?.('Performance note inserted');}restoreViewport(scrollTop);
-    }
-
-    async function editHostMarker(span,editor,{isNew=false}={}){
-      const scrollTop=window.scrollY,raw=await ask('Host note text',span.dataset.hostNote||'');restoreViewport(scrollTop);
-      if(raw==null||!String(raw).trim()){if(isNew)span.remove();return false;}
-      span.dataset.hostNote=String(raw).trim();span.setAttribute('aria-label','Host note: '+span.dataset.hostNote);span.title='Tap to edit host note';if(!isNew)dispatchEdit(editor);return true;
-    }
-    async function insertHostNote(editor){
-      const scrollTop=window.scrollY,span=marker('ls26-inline-host-note');span.dataset.hostNote='';if(!commitInsertion(editor,span,'HOST NOTE'))return;
-      const ok=await editHostMarker(span,editor,{isNew:true});if(ok){dispatchEdit(editor);window.LS26?.toast?.('Host note inserted');}restoreViewport(scrollTop);
-    }
-
     function makeButton(className,label,title,handler){const button=document.createElement('button');button.type='button';button.className=className;button.innerHTML=label;button.title=title;button.addEventListener('pointerdown',event=>event.preventDefault());button.addEventListener('mousedown',event=>event.preventDefault());button.onclick=handler;return button;}
     function addButtons(strip){
       if(!strip||strip.dataset.ls26InlineToolsV3==='1')return;const index=strip.dataset.visibilityStrip;if(index==null)return;
       const editor=document.querySelector(`.creator-rich-editor[data-html="${CSS.escape(String(index))}"]`);if(!editor)return;strip.dataset.ls26InlineToolsV3='1';
       const time=makeButton('section-time-signature-btn','<span aria-hidden="true">⏱</span><span>TIME SIG</span>','Insert a time-signature change at the current typing cursor',()=>insertTimeSignature(editor));
-      const perf=makeButton('section-performance-note-inline-btn','<span aria-hidden="true">★</span><span>PERF NOTE</span>','Insert a performance note at the current typing cursor',()=>insertPerformanceNote(editor));
-      const host=makeButton('section-host-note-inline-btn','<span aria-hidden="true">◆</span><span>HOST NOTE</span>','Insert a host-only note at the current typing cursor',()=>insertHostNote(editor));
+      const perf=makeButton('section-performance-note-inline-btn','<span aria-hidden="true">★</span><span>PERF NOTE</span>','Insert a performance note at the current typing cursor',()=>window.LS26InlineNoteEditor?.createNote('performance',editor));
+      const host=makeButton('section-host-note-inline-btn','<span aria-hidden="true">◆</span><span>HOST NOTE</span>','Insert a host-only note at the current typing cursor',()=>window.LS26InlineNoteEditor?.createNote('host',editor));
       const improv=strip.querySelector('.section-improv-link-btn'),copy=strip.querySelector('.section-copy-btn'),before=improv||copy||null;strip.insertBefore(time,before);strip.insertBefore(perf,before);strip.insertBefore(host,before);
       editor.querySelectorAll('.ls26-inline-performance-note').forEach(applyPerformanceStyle);
     }
     function scan(root=document){if(root?.matches?.('.section-visibility-strip[data-visibility-strip]'))addButtons(root);root?.querySelectorAll?.('.section-visibility-strip[data-visibility-strip]').forEach(addButtons);root?.querySelectorAll?.('.ls26-inline-performance-note').forEach(applyPerformanceStyle);}
-
-    document.addEventListener('click',event=>{
-      const perf=event.target.closest?.('.creator-rich-editor .ls26-inline-performance-note');if(perf){event.preventDefault();const editor=editorFromNode(perf);if(editor)editPerformanceMarker(perf,editor);return;}
-      const host=event.target.closest?.('.creator-rich-editor .ls26-inline-host-note');if(host){event.preventDefault();const editor=editorFromNode(host);if(editor)editHostMarker(host,editor);}
-    });
 
     const start=()=>{scan(document);new MutationObserver(records=>records.forEach(record=>record.addedNodes.forEach(node=>{if(node.nodeType===1)scan(node);}))).observe(document.body,{subtree:true,childList:true});};
     if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();

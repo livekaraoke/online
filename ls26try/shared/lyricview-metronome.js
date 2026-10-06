@@ -130,14 +130,14 @@
       }
       $('lvMetroBeat').classList.toggle('active',context.currentTime-lastBeatAt<.09);frame=requestAnimationFrame(draw);
     }
-    async function start(){
+    async function start({fromBottom=false}={}){
       if(running||starting||!window.LS26Performance?.song())return;
       const token=++version;starting=true;$('lvMetroStart').disabled=true;
       try{
         const driver=sharedDriver();
         if(driver){
           const snapshot=driver.snapshot(),meter=window.LS26TimedView?.enabled()?window.LS26TimedView?.meter?.():null;
-          const countInBeats=meter?Math.max(.5,Number(meter.beatsPerBar||4)*4/Number(meter.beatUnit||4)):0;
+          const countInBeats=meter?Math.max(.5,Number(meter.beatsPerBar||4)*4/Number(meter.beatUnit||4)):(fromBottom?options.beats:0);
           const ok=await (snapshot.state==='paused'?driver.resume():driver.start(countInBeats?{countInBeats}:{}));if(token!==version||!ok)return;
           context=driver.context;running=true;starting=false;draw();sync();$('lvMetroStatus').textContent=countInBeats?'Count-in · 1 bar':'Playing';return;
         }
@@ -175,7 +175,7 @@
     $('lvMetroVolume').oninput=e=>{options.volume=Number(e.target.value);$('lvMetroVolumeLabel').textContent=options.volume+'%';persist();if(songDriver)songDriver.refresh();else if(running)master.gain.setTargetAtTime(options.volume/100,context.currentTime,.01);};
     window.addEventListener('ls26:tempo-changed',()=>{sync();if(songDriver){queue=[];songDriver.setBpm(current());}});
     window.addEventListener('ls26:settings-applied',applyVisualSettings);
-    window.addEventListener('ls26:scroll-state',e=>{if(follow||window.LS26TimedView?.enabled()){if(e.detail.playing)start();else if(songDriver)pause();else stop();}});
+    window.addEventListener('ls26:scroll-state',e=>{if(follow||window.LS26TimedView?.enabled()||window.LS26SingerBridge){if(e.detail.playing)start({fromBottom:true});else if(songDriver)pause();else stop();}});
     window.addEventListener('ls26:song-ready',()=>{stop();taps=[];sync();});
     window.addEventListener('ls26:song-finished',()=>songDriver&&window.LS26TimedView?.enabled()?pause():stop());
     window.addEventListener('pagehide',()=>stop());

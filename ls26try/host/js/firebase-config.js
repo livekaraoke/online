@@ -23,11 +23,11 @@ window.auth =
    established creator script order. */
 if (/\/lyricscreator\.html$/i.test(String(location.pathname || ""))) {
   const helper = document.createElement("script");
-  helper.src = "js/inline-performance-tools.js?v=20261006-inline-section-tools-v3";
+  helper.src = "js/inline-performance-tools.js?v=20261006-singer-stable";
   helper.async = false;
   helper.addEventListener("load", () => {
     const noteEditor = document.createElement("script");
-    noteEditor.src = "js/inline-note-style-editor-v1.js?v=20261006-note-style-editor-v1";
+    noteEditor.src = "js/inline-note-editor-v4.js?v=20261006-singer-stable";
     noteEditor.async = false;
     (document.head || document.documentElement).appendChild(noteEditor);
   }, { once:true });

@@ -22,21 +22,15 @@
 
   let state = null;
   let localTimer = 0;
-  let watchTimer = 0;
-  let manualCountTimer = 0;
-  let manualCountFinishTimer = 0;
-  let programmaticStart = false;
+
   let countInActive = false;
-  let lastPlaying = false;
+
   let lastRemoteAt = 0;
-  let lastRemoteSection = null;
-  let lastRemoteLyric = '';
   let lastProgressSample = null;
   const lyricMapCache = new Map();
 
   const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
   const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
-  const norm = value => String(value || '').replace(/\u200b/g, '').replace(/\s+/g, ' ').trim().toLowerCase();
 
   async function waitForReady() {
     for (let i = 0; i < 150; i += 1) {
@@ -81,6 +75,7 @@
     lastRemoteAt = Date.now();
     try {
       await ref().set({
+        reset:false,
         currentLyricsSongId:songId,
         currentSongId:songId,
         songTitle:payload.title,
@@ -107,72 +102,14 @@
     if (remote) void writeRemote();
   }
 
-  function chordOnly(text) {
-    const line = String(text || '').trim();
-    if (!line || line.length > 120) return false;
-    const tokens = line.split(/\s+/).filter(Boolean);
-    if (!tokens.length || tokens.length > 16) return false;
-    return tokens.every(token => /^([A-G](?:#|b)?(?:maj|min|m|sus|dim|aug|add)?\d*(?:\/[A-G](?:#|b)?)?|[|:()xX0-9.\-+*]+)$/.test(token));
-  }
-
-  function visualLines(html) {
-    const root = document.createElement('div');
-    root.innerHTML = String(html || '')
-      .replace(/<br\s*\/?\s*>/gi, '\n')
-      .replace(/<\/(div|p|pre|li|h[1-6])>/gi, '\n</$1>');
-    root.querySelectorAll('script,style,.ls26-inline-host-note,[data-host-note]').forEach(node => node.remove());
-    return String(root.textContent || '')
-      .replace(/\r/g, '')
-      .split('\n')
-      .map(line => line.replace(/\u200b/g, '').replace(/\s+/g, ' ').trim());
-  }
-
   function sectionLyricMap(sectionIndex) {
-    const key = Number(sectionIndex);
-    if (lyricMapCache.has(key)) return lyricMapCache.get(key);
-    const section = currentSong()?.sections?.[key];
-    if (!section) return [];
-    const source = visualLines(section.html || section.text || '');
-    const singerHtml = window.LyricsCommon?.singerHTMLFromSection?.(section) || '';
-    const displayed = visualLines(singerHtml).filter(Boolean);
-    const mapped = [];
-    let cursor = 0;
-    displayed.forEach(text => {
-      const wanted = norm(text);
-      if (!wanted) return;
-      let match = -1;
-      for (let i = cursor; i < source.length; i += 1) {
-        const candidate = norm(source[i]);
-        if (!candidate) continue;
-        if (candidate === wanted || candidate.includes(wanted) || wanted.includes(candidate)) { match = i; break; }
-      }
-      if (match >= 0) {
-        mapped.push({ sourceLineIndex:match, text });
-        cursor = match + 1;
-      }
-    });
-    lyricMapCache.set(key, mapped);
-    return mapped;
+    const key=Number(sectionIndex);
+    if(!lyricMapCache.has(key))lyricMapCache.set(key,window.LS26SingerLines.section(currentSong()?.sections?.[key]||{},document));
+    return lyricMapCache.get(key);
   }
-
-  function lyricTargetForChord(sectionIndex, lineIndex) {
-    const sections = currentSong()?.sections || [];
-    const section = sections[Number(sectionIndex)];
-    if (!section) return { lineIndex:-1, text:'' };
-    const lines = visualLines(section.html || section.text || '');
-    const start = Number.isFinite(Number(lineIndex)) ? Number(lineIndex) : 0;
-    let target = -1;
-    for (let i = Math.max(0, start); i < lines.length; i += 1) {
-      const text = lines[i];
-      if (!text || chordOnly(text)) continue;
-      if (/^(time\s+\d+\/\d+|performance note|host note|improv\b)/i.test(text)) continue;
-      target = i;
-      break;
-    }
-    if (target < 0) return { lineIndex:-1, text:'' };
-    const map = sectionLyricMap(sectionIndex);
-    const exact = map.find(row => row.sourceLineIndex === target) || map.find(row => row.sourceLineIndex >= target);
-    return exact ? { lineIndex:exact.sourceLineIndex, text:exact.text } : { lineIndex:target, text:lines[target] };
+  function lyricTargetForChord(sectionIndex,lineIndex) {
+    const row=window.LS26SingerLines.target(sectionLyricMap(sectionIndex),lineIndex);
+    return row?{lineIndex:row.sourceLineIndex,text:row.text}:{lineIndex:-1,text:''};
   }
 
   function visibleSections() {
@@ -204,6 +141,12 @@
   }
 
   function buildSync() {
+    // Timed playback needs source anchors only, never repeated layout scans.
+    const timed=followOn()?window.LS26TimedView?.snapshot?.():null;
+    if(timed?.event){
+      const {sectionIndex,lineIndex}=timed.event.sourceAnchor,target=lyricTargetForChord(sectionIndex,lineIndex);
+      return {sourceIndex:sectionIndex,activeLineIndex:lineIndex,currentLyricLineIndex:target.lineIndex,currentLyricText:target.text,followOn:true,updatedAtMs:Date.now()};
+    }
     const sections = visibleSections();
     const anchor = performanceAnchor();
     const activeChord = document.querySelector('.ls26-active-chord[data-ls26-section-index]');
@@ -261,112 +204,38 @@
   function pushSync({ forceRemote=false } = {}) {
     if (!state || !isPlaying() || countInActive) return;
     const sync = buildSync();
-    const lyricKey = `${sync.sourceIndex}:${sync.currentLyricLineIndex}:${norm(sync.currentLyricText)}`;
-    const sectionChanged = sync.sourceIndex !== lastRemoteSection;
-    const lyricChanged = lyricKey !== lastRemoteLyric;
-    const remote = forceRemote || sectionChanged || lyricChanged || Date.now() - lastRemoteAt >= REMOTE_SYNC_MS;
+    const remote = forceRemote || Date.now() - lastRemoteAt >= REMOTE_SYNC_MS;
     state = { ...state, phase:'playing', playing:true, sync, countInBeat:0, updatedAtMs:Date.now() };
     postLocal();
     if (remote) {
-      lastRemoteSection = sync.sourceIndex;
-      lastRemoteLyric = lyricKey;
       void writeRemote();
     }
   }
 
-  function clearManualCountIn() {
-    clearInterval(manualCountTimer); manualCountTimer = 0;
-    clearTimeout(manualCountFinishTimer); manualCountFinishTimer = 0;
-  }
-
-  function startManualCountIn() {
-    if (countInActive) return;
-    clearManualCountIn();
-    countInActive = true;
-    const bpm = currentBpm();
-    const beatMs = 60000 / bpm;
-    let beat = 1;
-    const fire = () => publish({ phase:'countin', playing:false, countInBeat:beat, countInBeatAtMs:Date.now(), sync:null }, { remote:true });
-    fire();
-    manualCountTimer = setInterval(() => {
-      beat += 1;
-      if (beat <= 4) fire();
-    }, beatMs);
-    manualCountFinishTimer = setTimeout(() => {
-      clearManualCountIn();
-      countInActive = false;
-      programmaticStart = true;
-      try { document.getElementById('autoScrollBtn')?.click(); }
-      finally { programmaticStart = false; }
-      publish({ phase:'playing', playing:true, countInBeat:0, sync:buildSync() }, { remote:true });
-      pushSync({ forceRemote:true });
-    }, beatMs * 4);
-  }
-
-  function onTransportSync(event) {
-    if (!followOn()) return;
-    const detail = event.detail || {};
-    if (detail.phase === 'countin') {
-      countInActive = true;
-      publish({
-        phase:'countin',
-        playing:false,
-        countInBeat:clamp(Number(detail.beat) || 1, 1, 32),
-        countInBeatAtMs:Number(detail.atMs) || Date.now(),
-        sync:null
-      }, { remote:true });
-      return;
-    }
-    if (detail.phase === 'playing') {
-      countInActive = false;
-      publish({ phase:'playing', playing:true, countInBeat:0, countInBeatAtMs:0, sync:buildSync() }, { remote:true });
-      pushSync({ forceRemote:true });
+  function stopSync(){clearInterval(localTimer);localTimer=0;}
+  function startSync(){if(!localTimer)localTimer=setInterval(()=>pushSync(),LOCAL_SYNC_MS);}
+  function onTransportState(event){
+    const snap=event.detail||{};
+    if(snap.state==='playing'&&isPlaying()){
+      const target=followOn()?(Number(window.LS26TimedView?.startBeat?.())||0):0;
+      countInActive=Number(snap.beat)<target-1e-5;
+      publish({phase:countInActive?'countin':'playing',playing:!countInActive,countInBeat:0,sync:countInActive?null:buildSync()},{remote:true});
+      if(countInActive)stopSync();else startSync();
+    } else if((snap.state==='paused'||snap.state==='stopped')&&state?.phase!=='preview'&&state?.phase!=='paused'&&state?.phase!=='complete'){
+      countInActive=false;stopSync();publish({phase:'paused',playing:false,countInBeat:0,sync:buildSync()},{remote:true});
     }
   }
-
-  function installPlayInterlock() {
-    const button = document.getElementById('autoScrollBtn');
-    if (!button) return;
-
-    window.addEventListener('click', event => {
-      if (programmaticStart || event.target?.closest?.('#autoScrollBtn') !== button) return;
-      const starting = !isPlaying();
-      if (!starting) {
-        clearManualCountIn();
-        countInActive = false;
-        setTimeout(() => publish({ phase:'paused', playing:false, countInBeat:0, sync:buildSync() }, { remote:true }), 0);
-        return;
-      }
-
-      if (!followOn()) {
-        event.preventDefault();
-        event.stopImmediatePropagation();
-        startManualCountIn();
-      } else {
-        countInActive = true;
-        publish({ phase:'countin', playing:false, countInBeat:0, countInBeatAtMs:Date.now(), sync:null }, { remote:true });
-      }
-    }, true);
-  }
-
-  function startLoops() {
-    localTimer = setInterval(() => {
-      if (isPlaying() && !countInActive) pushSync();
-    }, LOCAL_SYNC_MS);
-
-    watchTimer = setInterval(() => {
-      const playing = isPlaying();
-      if (playing !== lastPlaying && !countInActive) {
-        if (playing) {
-          publish({ phase:'playing', playing:true, countInBeat:0, sync:buildSync() }, { remote:true });
-          pushSync({ forceRemote:true });
-        } else {
-          const complete = !document.getElementById('endCompletionPanel')?.hidden;
-          publish({ phase:complete ? 'complete' : 'paused', playing:false, countInBeat:0, sync:buildSync() }, { remote:true });
-        }
-        lastPlaying = playing;
-      }
-    }, 200);
+  function onBeat(event){
+    if(!isPlaying())return;
+    const beat=event.detail||{};
+    if(beat.countIn){
+      countInActive=true;stopSync();
+      // This is the metronome's due audio beat, including dynamic meter.
+      // Local delivery every beat; remote state remains rate limited.
+      publish({phase:'countin',playing:false,countInBeat:beat.beat,sync:null},{remote:Date.now()-lastRemoteAt>=REMOTE_SYNC_MS});
+    }else if(countInActive){
+      countInActive=false;publish({phase:'playing',playing:true,countInBeat:0,sync:buildSync()},{remote:true});startSync();
+    }
   }
 
   async function start() {
@@ -386,17 +255,22 @@
       updatedAtMs:Date.now()
     };
     postLocal();
-    await writeRemote();
-    installPlayInterlock();
-    window.addEventListener('ls26:singer-transport-sync', onTransportSync);
-    startLoops();
-    lastPlaying = isPlaying();
+    void writeRemote();
+    window.addEventListener('ls26:transport-state',onTransportState);
+    window.addEventListener('ls26:metronome-beat',onBeat);
+    window.addEventListener('ls26:scroll-state',event=>{
+      if(event.detail?.playing&&window.LS26Click?.driver?.().snapshot().state==='stopped')countInActive=true;
+      if(!event.detail?.playing&&state?.phase!=='paused'&&state?.phase!=='complete'){countInActive=false;stopSync();publish({phase:'paused',playing:false,countInBeat:0,sync:buildSync()},{remote:true});}
+    });
+    window.addEventListener('ls26:song-finished',()=>{stopSync();publish({phase:'complete',playing:false,countInBeat:0,sync:buildSync()},{remote:true});});
+    if(channel)channel.onmessage=event=>{if(event.data?.type==='request-state')postLocal();};
 
     window.addEventListener('pagehide', () => {
-      clearInterval(localTimer); clearInterval(watchTimer); clearManualCountIn();
+      stopSync();
       try { channel?.close(); } catch (_) {}
     }, { once:true });
   }
 
+  window.LS26SingerBridge=Object.freeze({countingIn:()=>countInActive});
   void start();
 })();
