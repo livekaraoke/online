@@ -25,7 +25,17 @@
     // Audio unlock happens immediately in the touch gesture, before awaiting.
     await context.resume();if(request!==version)return false;if(context.state!=='running')throw Error('Tap Play to enable audio.');
     transport.setBpm(settings().bpm);
-    if(resume&&transport.snapshot().state==='paused')transport.resume();else transport.start({...options,delaySeconds:.05});
+    if(resume&&transport.snapshot().state==='paused')transport.resume();
+    else{
+     const startOptions={...(options||{})};
+     // LyricView can choose a deliberate timed start point. Keep this transport
+     // concern local: callers that do not expose startBeat() continue at beat 0.
+     if(startOptions.beat==null){
+      const selected=Number(window.LS26TimedView?.startBeat?.());
+      if(Number.isFinite(selected)&&selected>=0)startOptions.beat=selected;
+     }
+     transport.start({...startOptions,delaySeconds:.05});
+    }
     pending=false;reschedule();onState(snapshot());return true;
    }catch(error){if(request===version){pending=false;pause();}throw error;}
   }
