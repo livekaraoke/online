@@ -5,6 +5,7 @@
 (() => {
   'use strict';
   const pagePath=String(location.pathname||'');
+  const dataScriptUrl=document.currentScript?.src||location.href;
   if (/\/host\/karaoke-lyric-view\.html$/i.test(pagePath)) {
     try { window.__ls26SingerSavedGuidance = localStorage.getItem('karaokeGuidanceMode') || 'normal'; } catch (_) { window.__ls26SingerSavedGuidance='normal'; }
   }
@@ -54,6 +55,14 @@
     script.async=false;
     document.body.appendChild(script);
   }
+  function loadSharedHelper(src,id) {
+    if (document.getElementById(id)) return;
+    const script=document.createElement('script');
+    script.id=id;
+    script.src=new URL(src,dataScriptUrl).href;
+    script.async=false;
+    document.body.appendChild(script);
+  }
   function loadFocusedHelpers() {
     const path=String(location.pathname||'');
     if (/\/host\/lyricscreator\.html$/i.test(path)) {
@@ -64,6 +73,14 @@
     } else if (/\/host\/lyricview\.html$/i.test(path)) {
       loadPageHelper('js/lyricview-singer-bridge.js?v=20261006-singer-bridge-v3','ls26SingerBridgeV3Loader');
       loadPageHelper('js/lyricview-singer-transport-sync-v3.js?v=20261006-singer-transport-v3','ls26SingerTransportV3Loader');
+    }
+
+    if (document.getElementById('topStatusContainer')) {
+      loadSharedHelper('manual-request.js?v=20261006-manual-request-v1','ls26ManualRequestLoader');
+    }
+
+    if (/\/admin-new\/performance-sessions\.html$/i.test(path)) {
+      loadSharedHelper('session-history-fixes.js?v=20261006-request-history-fix-v1','ls26SessionHistoryFixLoader');
     }
   }
   if (document.readyState === 'complete') loadFocusedHelpers();
