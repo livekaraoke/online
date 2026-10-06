@@ -86,18 +86,20 @@
       document.querySelectorAll?.("#heroRequestBtn,#songListBtn").forEach(turnIntoButton);
     }
 
+    function isBlocked(button) {
+      if (button?.id === "songListBtn") return false;
+      return button?.getAttribute("aria-disabled") === "true" || button?.classList.contains("disabled-button");
+    }
+
     document.addEventListener("pointerdown", event => {
       const button = event.target.closest?.("#heroRequestBtn,#songListBtn");
       if (!button) return;
-      const disabled = button.getAttribute("aria-disabled") === "true" || button.classList.contains("disabled-button");
-      if (!disabled) event.preventDefault();
+      if (!isBlocked(button)) event.preventDefault();
     }, true);
 
     document.addEventListener("click", event => {
       const button = event.target.closest?.("#heroRequestBtn,#songListBtn");
-      if (!button) return;
-      const disabled = button.getAttribute("aria-disabled") === "true" || button.classList.contains("disabled-button");
-      if (disabled) return;
+      if (!button || isBlocked(button)) return;
 
       event.preventDefault();
       event.stopPropagation();
@@ -121,8 +123,20 @@
       attributeFilter:["href","target","rel","class","aria-disabled"]
     });
 
+    const base = document.currentScript?.src || location.href;
+
+    const refreshCss = document.createElement("link");
+    refreshCss.rel = "stylesheet";
+    refreshCss.href = new URL("../css/live-karaoke-public-refresh.css?v=20261006-public-refresh-v1", base).href;
+    document.head.appendChild(refreshCss);
+
+    const refreshScript = document.createElement("script");
+    refreshScript.src = new URL("../js/live-karaoke-public-refresh.js?v=20261006-public-refresh-v1", base).href;
+    refreshScript.async = false;
+    document.head.appendChild(refreshScript);
+
     const script = document.createElement("script");
-    script.src = new URL("../js/live-karaoke-request-popup.js?v=20261006-red-theme-v6", document.currentScript?.src || location.href).href;
+    script.src = new URL("../js/live-karaoke-request-popup.js?v=20261006-red-theme-v7", base).href;
     script.async = false;
     document.head.appendChild(script);
   }
