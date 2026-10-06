@@ -48,9 +48,8 @@ body{
 /* HERO */
 .hero{
     height:100vh;
-    background:
-        linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.8)),
-        url('banner.jpg');
+    background:linear-gradient(rgba(0,0,0,.76),rgba(0,0,0,.88)),url('../img/banner.png') center/cover no-repeat;
+    background:linear-gradient(rgba(0,0,0,.76),rgba(0,0,0,.88)),image-set(url('../img/banner.avif') type('image/avif'),url('../img/banner.webp') type('image/webp'),url('../img/banner.png') type('image/png')) center/cover no-repeat;
     background-size:cover;
     background-position:center;
     display:flex;
@@ -1524,3 +1523,27 @@ width: 100%;
 .booking-enquiry-success h2{margin:0 0 12px;font-size:30px}
 .booking-enquiry-success p{color:#ddd;line-height:1.6;margin:0 auto 22px;max-width:520px}
 .booking-enquiry-success .main-button{display:inline-block;min-width:180px;cursor:pointer}
+
+/* Focused public-site additions; preserve the original artwork and palette. */
+.hero .hero-banner{height:auto;max-width:100%}
+.hero h1.public-hero-title{font-size:clamp(1.15rem,3.5vw,1.8rem);letter-spacing:.13em;line-height:1.4;margin:0 0 10px;text-shadow:none;animation:none}
+.public-hero-copy{font-size:1rem;line-height:1.6;color:#d4d4d4;margin:0 auto 24px;max-width:620px}
+.booking-benefits{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin:30px 0 22px;text-align:left}
+.booking-benefits article{padding:22px 18px;background:#111;border:1px solid #493030;border-top:3px solid #b92c2c;border-radius:8px;overflow-wrap:anywhere}
+.section .booking-benefits h3{font-size:1rem;line-height:1.5;letter-spacing:.08em;margin:0 0 12px;text-shadow:none}
+.section .booking-benefits p{font-size:1rem;line-height:1.6;margin:0;color:#d4d4d4}
+.booking-faq{margin:42px auto 0;max-width:760px;text-align:left}
+.section .booking-faq h3{font-size:1.2rem;letter-spacing:.1em;margin:0 0 18px;text-shadow:none}
+.booking-faq details{border-top:1px solid #493030;padding:0 14px;background:#111}
+.booking-faq details:last-child{border-bottom:1px solid #493030}
+.booking-faq summary{cursor:pointer;padding:18px 0;color:#f4f4f4;font-size:1rem;line-height:1.5;font-weight:600}
+.section .booking-faq p{font-size:1rem;line-height:1.65;margin:0 0 18px;color:#d4d4d4}
+:where(a,button,summary,input,select,textarea):focus-visible{outline:2px solid #ff7777;outline-offset:4px}
+.booking-enquiry-grid input,.booking-enquiry-grid select,.booking-enquiry-grid textarea{font:inherit;font-size:1rem;min-width:0}
+.booking-enquiry-grid label>span{font-size:.875rem}
+.booking-enquiry-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.enquiry-trap{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+.booking-enquiry-dialog [hidden]{display:none!important}
+@media(max-width:760px){.booking-benefits{grid-template-columns:1fr}}
+@media(max-width:650px){.booking-enquiry-grid{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto} .hero-banner,.main-button{animation:none}}

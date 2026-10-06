@@ -14,9 +14,10 @@
   height:auto!important;
   min-height:0!important;
   padding:42px 20px 22px!important;
+  background:linear-gradient(rgba(0,0,0,.76),rgba(0,0,0,.88)),url('../img/banner.png') center/cover no-repeat!important;
   background:
     linear-gradient(rgba(0,0,0,.76),rgba(0,0,0,.88)),
-    url('../img/banner.png') center/cover no-repeat!important;
+    image-set(url('../img/banner.avif') type('image/avif'), url('../img/banner.webp') type('image/webp'), url('../img/banner.png') type('image/png')) center/cover no-repeat!important;
 }
 .hero-content{
   width:min(900px,100%)!important;

@@ -4,11 +4,26 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>LIVE KARAOKE</title>
-  <link rel="stylesheet" href="css/style.css">
+  <title>Live Karaoke Malta | Live Guitar &amp; Event Entertainment</title>
+  <meta name="description" content="Live Karaoke in Malta with real live guitar and looping. Discover karaoke events or book interactive entertainment for venues, corporate events, weddings and private parties.">
+  <link rel="canonical" href="https://livekaraoke.github.io/online/">
+  <meta property="og:title" content="Live Karaoke in Malta — You Sing • I Play">
+  <meta property="og:description" content="Sing with live guitar and looping. Find public karaoke events or book Live Karaoke for your venue, wedding or private event in Malta.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://livekaraoke.github.io/online/">
+  <meta property="og:image" content="https://livekaraoke.github.io/online/img/banner.png">
+  <meta property="og:image:alt" content="Live Karaoke — vintage microphone, distressed white lettering and You Sing • I Play in red neon">
+  <meta property="og:site_name" content="Live Karaoke">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Live Karaoke in Malta — You Sing • I Play">
+  <meta name="twitter:description" content="Real live guitar, looping and audience participation. Karaoke events and entertainment for venues, weddings and private events in Malta.">
+  <meta name="twitter:image" content="https://livekaraoke.github.io/online/img/banner.png">
+  <meta name="twitter:image:alt" content="Live Karaoke — You Sing • I Play">
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","@id":"https://livekaraoke.github.io/online/#brand","name":"Live Karaoke","url":"https://livekaraoke.github.io/online/","logo":"https://livekaraoke.github.io/online/img/banner.png","sameAs":["https://facebook.com/livekaraokemt","https://instagram.com/livekaraoke.mt"]}</script>
+  <link rel="stylesheet" href="css/style.css?v=20261006-focused-1">
 
   <link rel="icon" href="favicon.ico" sizes="any">
-  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="icon" type="image/png" href="favicon-32x32.png" sizes="32x32">
 </head>
 
 <body>
@@ -18,7 +33,13 @@
     <div class="overlay"></div>
 
     <div class="hero-content">
-      <img src="img/banner.png" alt="Live Karaoke Banner" class="hero-banner">
+      <picture>
+        <source srcset="img/banner.avif" type="image/avif">
+        <source srcset="img/banner.webp" type="image/webp">
+        <img src="img/banner.png" alt="Live Karaoke — You Sing • I Play, with vintage microphone artwork" class="hero-banner" width="1774" height="887" decoding="async" fetchpriority="high">
+      </picture>
+      <h1 class="public-hero-title">LIVE KARAOKE IN MALTA</h1>
+      <p class="public-hero-copy">Live guitar, looping and an interactive live-music experience.</p>
       <!--<a href="list/index.html" class="main-button">
         REQUEST A SONG
       </a>
@@ -75,7 +96,7 @@
   <section id="howitworks" class="section">
     <h2>HOW IT WORKS</h2>
     <div class="instructions-container">
-      <img src="img/howitworks-1.png" alt="How To Join Karaoke">
+      <img src="img/howitworks-1.png" alt="Pick a song, join the queue, grab the mic and perform live" loading="lazy" decoding="async">
     </div>
   </section>
 
@@ -83,6 +104,10 @@
   <script src="livesuite/firebase-projects.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-check-compat.js"></script>
+  <script src="js/public-enquiry-config.js"></script>
+  <script src="js/public-app-check.js"></script>
+  <script src="js/public-event-time.js"></script>
 
   <script>
     (() => {
@@ -160,42 +185,30 @@
           return false;
         }
 
+        const start = LKEventTime.start(event);
+        const end = LKEventTime.end(event);
+        if (!start) return false;
+        if (end && end.getTime() <= Date.now()) return false;
+        if (!end && LKEventTime.localDate(start) < LKEventTime.localDate(new Date())) return false;
         return true;
       }
 
       function eventDate(event) {
-        if (!event?.date) return null;
-
-        const date = new Date(
-          `${event.date}T${event.startTime || "00:00"}:00`
-        );
-
-        return Number.isNaN(date.getTime()) ? null : date;
+        return LKEventTime.start(event);
       }
 
       function nextLiveKaraokeEvent() {
         return upcomingEvents
           .filter(event => isLiveKaraokeType(event.type))
           .filter(eventStillUpcoming)
-          .sort((a,b) =>
-            `${a.date || "9999-12-31"}T${a.startTime || "23:59"}`
-              .localeCompare(
-                `${b.date || "9999-12-31"}T${b.startTime || "23:59"}`
-              )
-          )[0] || null;
+          .sort(LKEventTime.compare)[0] || null;
       }
 
       function formatEvent(event) {
         const date = eventDate(event);
         if (!date) return "Date TBC";
 
-        const dateText = date.toLocaleDateString(undefined, {
-          weekday:"short",
-          day:"numeric",
-          month:"short"
-        });
-
-        return `${dateText}${event.startTime ? ` · ${event.startTime}` : ""}`;
+        return `${LKEventTime.day(date)} · ${LKEventTime.hasStartTime(event) ? LKEventTime.time(date) + " (Malta time)" : "Time TBC"}`;
       }
 
       function countdown(event) {
@@ -360,14 +373,10 @@
         const events = upcomingEvents
           .filter(event => isLiveKaraokeType(event.type))
           .filter(eventStillUpcoming)
-          .sort((a,b) =>
-            `${a.date || "9999-12-31"}T${a.startTime || "23:59"}`
-              .localeCompare(
-                `${b.date || "9999-12-31"}T${b.startTime || "23:59"}`
-              )
-          )
+          .sort(LKEventTime.compare)
           .slice(0,4);
 
+        renderEventSchema(events);
         if (!events.length) {
           container.innerHTML = `
             <div class="event-card live-event-empty">
@@ -380,13 +389,7 @@
 
         container.innerHTML = events.map(event => {
           const date = eventDate(event);
-          const day = date
-            ? date.toLocaleDateString(undefined, {
-                weekday:"short",
-                day:"numeric",
-                month:"short"
-              }).toUpperCase()
-            : "DATE TBC";
+          const day = date ? LKEventTime.day(date).toUpperCase() : "DATE TBC";
 
           const venue = event.venue || "Venue TBC";
           const address =
@@ -404,7 +407,7 @@
               <h3>${esc(venue)}</h3>
               ${address ? `<h4>${esc(address)}</h4>` : ""}
               <p><b>${esc(day)}</b></p>
-              <h5>&bull; ${esc(event.startTime || "TIME TBC")} &bull;</h5>
+              <h5>&bull; ${esc(date && LKEventTime.hasStartTime(event) ? LKEventTime.time(date) + " (Malta time)" : "TIME TBC")} &bull;</h5>
               <span class="event-subheading">${esc(event.name || "Live Karaoke")}</span>
 
               ${
@@ -421,6 +424,37 @@
             </article>
           `;
         }).join("");
+      }
+
+      function renderEventSchema(events) {
+        let node = document.getElementById("public-event-schema");
+        if (!node) {
+          node = document.createElement("script");
+          node.id = "public-event-schema";
+          node.type = "application/ld+json";
+          document.head.appendChild(node);
+        }
+        const url = document.querySelector('link[rel="canonical"]').href;
+        const data = events.filter(event => eventDate(event) > new Date() && LKEventTime.hasStartTime(event) && event.venue).map(event => {
+          const start = eventDate(event);
+          const end = LKEventTime.end(event);
+          const item = {
+            "@type":"Event", "@id":`${url}#event-${encodeURIComponent(event.id)}`,
+            name:event.name || `Live Karaoke at ${event.venue}`,
+            startDate:start.toISOString(),
+            location:{"@type":"Place",name:event.venue},
+            eventStatus:String(event.status || "").toLowerCase() === "postponed" ? "https://schema.org/EventPostponed" : "https://schema.org/EventScheduled",
+            eventAttendanceMode:"https://schema.org/OfflineEventAttendanceMode",
+            url, image:`${url}img/banner.png`,
+            description:"Live Karaoke with real live guitar and looping accompaniment.",
+            organizer:{"@id":`${url}#brand`}
+          };
+          const address = event.address || event.venueLocation;
+          if (address) item.location.address = address;
+          if (end && end > start) item.endDate = end.toISOString();
+          return item;
+        });
+        node.textContent = JSON.stringify({"@context":"https://schema.org","@graph":data});
       }
 
       function renderPublicStatus() {
@@ -494,8 +528,15 @@
 
             renderPublicStatus();
           }, error => {
-            console.error("Performance session listener failed:", error);
+            publicListenerError();
           });
+      }
+
+      function publicListenerError() {
+        const list = document.getElementById("liveKaraokeEventsList");
+        if (list && list.querySelector(".live-event-loading")) {
+          list.textContent = "Events are temporarily unavailable. Please try again shortly.";
+        }
       }
 
       db.collection("upcomingEvents").onSnapshot(snapshot => {
@@ -505,7 +546,7 @@
         }));
         renderUpcomingLiveKaraokeEvents();
         renderPublicStatus();
-      }, console.error);
+      }, publicListenerError);
 
       db.collection("karaokeControl").doc("currentSession").onSnapshot(doc => {
         const previousId = currentSessionId();
@@ -519,19 +560,22 @@
         } else {
           renderPublicStatus();
         }
-      }, console.error);
+      }, publicListenerError);
 
       db.collection("karaoke").doc("state").onSnapshot(doc => {
         karaokeState = doc.exists ? (doc.data() || {}) : {};
         renderPublicStatus();
-      }, console.error);
+      }, publicListenerError);
 
       db.collection("karaokeControl").doc("runOrder").onSnapshot(doc => {
         runOrder = doc.exists ? (doc.data() || {}) : { items:[] };
         renderLivePanel();
-      }, console.error);
+      }, publicListenerError);
 
-      setInterval(renderPublicStatus, 30000);
+      setInterval(() => {
+        renderPublicStatus();
+        renderUpcomingLiveKaraokeEvents();
+      }, 30000);
     })();
   </script>
 
@@ -564,14 +608,30 @@
   <section class="section dark-section enquiry-section" id="enquire">
     <h2>BOOK / ENQUIRE</h2>
     <p>Bring Live Karaoke to your venue, corporate event, wedding, private party or special occasion.</p>
+    <div class="booking-benefits">
+      <article><h3>BARS &amp; VENUES</h3><p>Interactive live music that gives customers a reason to stay, sing and come back.</p></article>
+      <article><h3>CORPORATE EVENTS</h3><p>Get teams and guests involved with real live accompaniment and a social atmosphere.</p></article>
+      <article><h3>WEDDINGS &amp; PRIVATE PARTIES</h3><p>Make guests part of the entertainment with live guitar, looping and song requests.</p></article>
+    </div>
     <button class="main-button enquiry-open-btn" id="liveKaraokeEnquiryOpen" type="button">BOOK / ENQUIRE</button>
+    <div class="booking-faq"><h3>BOOKING QUESTIONS</h3>
+      <details><summary>What equipment do you provide?</summary><p>Live Karaoke uses live guitar, looping, microphones and a sound system. Tell us about your venue so we can confirm the setup for your event.</p></details>
+      <details><summary>How much space do you need?</summary><p>We need a clear performance area, room for singers and access to power. Send us your venue details and we can confirm a suitable setup.</p></details>
+      <details><summary>How long is a typical Live Karaoke performance?</summary><p>The length and breaks depend on the event. Include your preferred start and finish times in your enquiry so we can agree a suitable format.</p></details>
+      <details><summary>How do song requests work?</summary><p>Browse the song list, choose a song and join the singer rotation. The host manages the running order during the session.</p></details>
+      <details><summary>Do singers need experience?</summary><p>No. First-time singers are welcome. Pick a song you enjoy and join in at your own pace.</p></details>
+      <details><summary>Can people who do not want to sing still take part?</summary><p>Yes. Enjoy the live music, support the singers and sing along from the audience.</p></details>
+      <details><summary>Can Live Karaoke be booked for private events?</summary><p>Yes. Enquire about weddings, private parties, corporate events and other occasions using the booking form.</p></details>
+      <details><summary>Do you travel to venues across Malta?</summary><p>Enquiries are welcome from venues across Malta. Share the location so we can confirm availability and arrangements.</p></details>
+      <details><summary>How far in advance should we book?</summary><p>Get in touch as soon as you have a date in mind. Availability depends on existing bookings; you can also enquire about a last-minute event.</p></details>
+    </div>
   </section>
 
-  <dialog class="booking-enquiry-dialog" id="liveKaraokeEnquiryDialog">
+  <dialog class="booking-enquiry-dialog" id="liveKaraokeEnquiryDialog" aria-labelledby="bookingEnquiryTitle">
     <button class="booking-enquiry-close" id="liveKaraokeEnquiryClose" type="button" aria-label="Close">×</button>
     <div class="booking-enquiry-head">
       <span>LIVE KARAOKE</span>
-      <h2>Book / Enquire</h2>
+      <h2 id="bookingEnquiryTitle">Book / Enquire</h2>
       <p>Tell us about your event and we’ll get back to you.</p>
     </div>
     <form id="liveKaraokeEnquiryForm" class="booking-enquiry-form">
@@ -582,10 +642,11 @@
         <label><span>EVENT / BOOKING TYPE *</span><select id="lkEnquiryEventType" required><option value="">Choose one…</option><option>Venue / Bar / Restaurant</option><option>Corporate Event</option><option>Wedding</option><option>Private Party</option><option>Hotel / Resort</option><option>Festival / Public Event</option><option>Other</option></select></label>
         <label><span>PREFERRED DATE</span><input id="lkEnquiryDate" type="date"></label>
         <label><span>VENUE / LOCALITY</span><input id="lkEnquiryVenue" type="text" maxlength="140" placeholder="Venue name or locality"></label>
-        <label><span>ESTIMATED GUESTS</span><input id="lkEnquiryGuests" type="number" min="0" step="1" placeholder="Optional"></label>
+        <label><span>ESTIMATED GUESTS</span><input id="lkEnquiryGuests" type="number" max="100000" min="0" step="1" placeholder="Optional"></label>
         <label><span>COMPANY / ORGANISATION</span><input id="lkEnquiryCompany" type="text" maxlength="120" placeholder="Optional"></label>
         <label class="wide"><span>MESSAGE / DETAILS *</span><textarea id="lkEnquiryMessage" rows="5" maxlength="1500" required placeholder="Tell us about the event, timings, venue and anything else useful."></textarea></label>
       </div>
+      <div class="enquiry-trap" aria-hidden="true"><label>Leave this field empty<input id="lkEnquiryWebsite" type="text" tabindex="-1" autocomplete="off"></label></div>
       <button id="lkEnquirySubmit" class="main-button booking-enquiry-submit" type="submit">SEND ENQUIRY</button>
       <p id="lkEnquiryStatus" class="booking-enquiry-status" aria-live="polite"></p>
     </form>
@@ -614,14 +675,14 @@
     </h3>
 
     <div class="social-icons">
-      <a href="https://facebook.com/livekaraokemt" target="_blank">
-        <img src="img/fb-icon.png" alt="Facebook">
+      <a href="https://facebook.com/livekaraokemt" target="_blank" rel="noopener">
+        <img src="img/fb-icon.png" alt="Facebook" width="40" height="40" loading="lazy" decoding="async">
       </a>
-      <a href="https://instagram.com/livekaraoke.mt" target="_blank">
-        <img src="img/insta-icon.png" alt="Instagram">
+      <a href="https://instagram.com/livekaraoke.mt" target="_blank" rel="noopener">
+        <img src="img/insta-icon.png" alt="Instagram" width="40" height="40" loading="lazy" decoding="async">
       </a>
       <!--
-      <a href="https://twitter.com/livekaraokemt" target="_blank">
+      <a href="https://twitter.com/livekaraokemt" target="_blank" rel="noopener">
         <img src="img/x-icon.png" alt="Twitter">
       </a>
       -->
@@ -636,7 +697,7 @@
   <!-- FOOTER -->
   <footer>
     <p>
-      LIVE KARAOKE © 2025
+      © <span id="copyrightYear"></span> Live Karaoke
     </p>
     <p class="footer-small">
       Live Music • Real People • Real Atmosphere
@@ -649,6 +710,7 @@
 
 
   
+document.getElementById("copyrightYear").textContent = new Intl.DateTimeFormat("en", {timeZone:"Europe/Malta",year:"numeric"}).format(new Date());
 function smoothScroll(e) {
     e.preventDefault();
 
@@ -714,9 +776,21 @@ function smoothScroll(e) {
   successClose.addEventListener("click", () => dialog.close());
   dialog.addEventListener("click", event => { if (event.target === dialog) dialog.close(); });
 
+  let submitting = false;
+  let lastSentAt = 0;
   form.addEventListener("submit", async event => {
     event.preventDefault();
-    if (!form.reportValidity()) return;
+    if (submitting || !form.reportValidity()) return;
+    if (document.getElementById("lkEnquiryWebsite").value) {
+      status.textContent = "Please leave the website field empty.";
+      return;
+    }
+    if (Date.now() - lastSentAt < 60000) {
+      status.textContent = "Your enquiry was already sent. Please wait a minute before sending another.";
+      return;
+    }
+    submitting = true;
+    form.setAttribute("aria-busy", "true");
     const guestsRaw = document.getElementById("lkEnquiryGuests").value;
     submitBtn.disabled = true;
     status.className = "booking-enquiry-status";
@@ -724,7 +798,7 @@ function smoothScroll(e) {
     try {
       const db = firebase.firestore();
       const name = document.getElementById("lkEnquiryName").value.trim();
-      await db.collection("bookingEnquiries").add({
+      const payload = {
         status: "pending",
         source: "Live Karaoke Website",
         sourceKey: "live-karaoke",
@@ -739,21 +813,44 @@ function smoothScroll(e) {
         company: document.getElementById("lkEnquiryCompany").value.trim(),
         estimatedGuests: guestsRaw ? Number(guestsRaw) : null,
         message: document.getElementById("lkEnquiryMessage").value.trim(),
-        pageUrl: location.href,
+        pageUrl: "https://livekaraoke.github.io/online/",
         createdAt: firebase.firestore.FieldValue.serverTimestamp(),
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
+      };
+      const limits = {name:80,email:120,phone:50,eventType:40,preferredDate:10,venueOrLocality:140,company:120,message:1500};
+      for (const [key,max] of Object.entries(limits)) {
+        if (typeof payload[key] !== "string" || payload[key].length > max || /[<>\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/.test(payload[key])) {
+          throw new Error("validation");
+        }
+      }
+      const types = [...document.getElementById("lkEnquiryEventType").options].map(option => option.value).filter(Boolean);
+      if (!payload.name || !payload.message || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(payload.email) || !types.includes(payload.eventType) ||
+          (payload.estimatedGuests !== null && (!Number.isInteger(payload.estimatedGuests) || payload.estimatedGuests < 0 || payload.estimatedGuests > 100000))) throw new Error("validation");
+      const project = firebase.app().options.projectId;
+      if (window.LK_PUBLIC_APP_CHECK_KEYS?.[project]) {
+        if (!window.LK_PUBLIC_APP_CHECK_READY) throw new Error("appcheck");
+        await firebase.appCheck().getToken();
+      }
+      await db.collection("bookingEnquiries").add(payload);
+      lastSentAt = Date.now();
       form.reset();
       status.className = "booking-enquiry-status success";
       status.textContent = "";
       form.hidden = true;
       successMessage.textContent = `Thanks ${name}! Your enquiry has been sent successfully.`;
       success.hidden = false;
+      successClose.focus();
     } catch (error) {
-      console.error("Could not send Live Karaoke booking enquiry", error);
+
       status.className = "booking-enquiry-status error";
-      status.textContent = "Could not send the enquiry. Please try again.";
+      status.textContent = error.message === "validation"
+        ? "Please check your details. Use plain text, a valid email and the field limits shown."
+        : error.code === "permission-denied" || error.message === "appcheck"
+          ? "Could not verify your enquiry. Please reload and try again, or contact us through our social pages."
+          : "Could not send the enquiry. Check your connection and try again.";
     } finally {
+      submitting = false;
+      form.removeAttribute("aria-busy");
       submitBtn.disabled = false;
     }
   });

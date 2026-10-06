@@ -1,0 +1,38 @@
+// MERGE INSIDE match /databases/{database}/documents in the existing rules.
+// Not a replacement for the project's rules. See SECURITY-ROLLOUT.md.
+function lkPlain(value, maximum) {
+  return value is string && value.size() <= maximum &&
+    !value.matches('[\\s\\S]*[<>][\\s\\S]*') &&
+    !value.matches('[\\s\\S]*[\\x00-\\x08\\x0B\\x0C\\x0E-\\x1F\\x7F][\\s\\S]*');
+}
+function validLiveKaraokeEnquiry() {
+  let d = request.resource.data;
+  let keys = ['status','source','sourceKey','type','performerType','name','email',
+    'phone','eventType','preferredDate','venueOrLocality','company',
+    'estimatedGuests','message','pageUrl','createdAt','updatedAt'];
+  return d.keys().hasAll(keys) && d.keys().hasOnly(keys) &&
+    d.status == 'pending' && d.source == 'Live Karaoke Website' &&
+    d.sourceKey == 'live-karaoke' && d.type == 'Live Karaoke' &&
+    d.performerType == 'Live Karaoke' &&
+    lkPlain(d.name,80) && d.name.matches('.*[^\\s].*') &&
+    lkPlain(d.email,120) && d.email.matches('^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$') &&
+    lkPlain(d.phone,50) &&
+    d.eventType in ['Venue / Bar / Restaurant','Corporate Event','Wedding',
+      'Private Party','Hotel / Resort','Festival / Public Event','Other'] &&
+    lkPlain(d.preferredDate,10) &&
+    (d.preferredDate == '' || d.preferredDate.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')) &&
+    lkPlain(d.venueOrLocality,140) && lkPlain(d.company,120) &&
+    (d.estimatedGuests == null || (d.estimatedGuests is int &&
+      d.estimatedGuests >= 0 && d.estimatedGuests <= 100000)) &&
+    lkPlain(d.message,1500) && d.message.matches('[\\s\\S]*[^\\s][\\s\\S]*') &&
+    d.pageUrl == 'https://livekaraoke.github.io/online/' &&
+    d.createdAt is timestamp && d.updatedAt is timestamp &&
+    d.createdAt == request.time && d.updatedAt == request.time;
+}
+match /bookingEnquiries/{enquiryId} {
+  allow create: if validLiveKaraokeEnquiry();
+  // No public reads, updates or deletes. Keep existing verified staff-only
+  // read/update/delete permissions in this match, with the project's actual
+  // admin predicate. Do not substitute merely "request.auth != null".
+  allow read, update, delete: if false;
+}
