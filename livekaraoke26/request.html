@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en" class="live-karaoke-request-standalone">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#02080d">
+  <title>Live Karaoke Requests</title>
+  <script src="../ls26try/shared/artist-names.js?v=20260925-artist-names"></script>
+  <link rel="stylesheet" href="css/style.css?v=20261006-live-karaoke-request-only">
+  <style>
+    html,body{margin:0;min-height:100%;background:transparent!important}
+    body{overflow:hidden}
+    .request-support{display:none!important}
+    dialog::backdrop{background:transparent!important}
+  </style>
+</head>
+<body>
+  <div class="request-support" aria-hidden="true">
+    <div id="heroGigs"></div><button id="watchLiveBtn" type="button"></button><div id="nextGigs"></div>
+    <section id="livePanel"></section><img id="playerArt" alt=""><span id="liveStateLabel"></span>
+    <span id="currentSongTitle"></span><span id="currentSongArtist"></span><span id="sessionVenue"></span>
+    <span id="sessionType"></span><span id="progressBar"></span><span id="stateIcon"></span><span id="elapsedTime"></span>
+    <span id="queueCount"></span><button id="requestSongBtn" type="button"></button>
+    <button id="viewAllGigsBtn" type="button"></button><button id="openBookingDialogBtn" type="button"></button>
+    <button id="aboutReadMoreBtn" type="button"></button><button id="viewMoreVideosBtn" type="button"></button>
+    <button id="videoPlayPauseBtn" type="button"></button><button id="viewMorePhotosBtn" type="button"></button>
+    <button id="photoPrevBtn" type="button"></button><button id="photoNextBtn" type="button"></button>
+    <button id="shareBtn" type="button"></button><div id="videoPreviewGrid"></div><div id="allVideosGrid"></div>
+    <iframe id="youtubePlayerFrame" title="Video"></iframe><span id="videoPlayerTitle"></span>
+    <div id="allPhotosGrid"></div><img id="lightboxPhoto" alt=""><span id="lightboxCaption"></span>
+    <a id="footerInstagramLink"></a><a id="footerFacebookLink"></a><div id="aboutShortText"></div><div id="aboutDetailedText"></div>
+    <dialog id="eventDialog"><div id="eventDialogBody"></div></dialog><dialog id="allGigsDialog"><div id="allGigsList"></div></dialog>
+    <dialog id="bookingDialog"></dialog><form id="bookingForm"><input id="enquiryName"><input id="enquiryEmail"><input id="enquiryPhone"><select id="enquiryEventType"><option></option></select><input id="enquiryDate"><input id="enquiryVenue"><input id="enquiryCompany"><input id="enquiryGuests"><textarea id="enquiryMessage"></textarea><button id="bookingSubmitBtn" type="submit"></button><span id="bookingStatus"></span><span id="bookingSuccessMessage"></span><div id="bookingSuccess"></div></form>
+    <dialog id="aboutDialog"></dialog><dialog id="allVideosDialog"></dialog><dialog id="videoPlayerDialog"></dialog><dialog id="allPhotosDialog"></dialog><dialog id="photoLightboxDialog"></dialog>
+  </div>
+
+  <dialog id="requestNoteDialog" class="modal request-note-dialog">
+    <div class="request-note-modal-card">
+      <div class="request-note-modal-head">
+        <div><span class="eyebrow">MY REQUESTS</span><h2>EDIT NOTE</h2></div>
+        <button class="modal-close" data-close="requestNoteDialog" aria-label="Close note editor">×</button>
+      </div>
+      <p id="requestNoteDialogSong" class="request-note-modal-song"></p>
+      <label for="requestNoteDialogInput">NOTE FOR THE HOST</label>
+      <textarea id="requestNoteDialogInput" maxlength="240" rows="5" placeholder="Add or update your note…"></textarea>
+      <p id="requestNoteDialogStatus" class="request-note-modal-status" role="status"></p>
+      <div class="request-note-modal-actions">
+        <button id="requestNoteDialogCancelBtn" type="button" class="small-btn ghost">CANCEL</button>
+        <button id="requestNoteDialogSaveBtn" type="button" class="primary-btn">SAVE NOTE</button>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog id="requestActionConfirmDialog" class="modal request-action-confirm-dialog">
+    <div class="request-action-confirm-card">
+      <div class="request-action-confirm-icon" aria-hidden="true">!</div>
+      <h2 id="requestActionConfirmTitle">CONFIRM</h2>
+      <p id="requestActionConfirmMessage"></p>
+      <div class="request-action-confirm-actions">
+        <button id="requestActionConfirmCancelBtn" type="button" class="small-btn ghost">KEEP</button>
+        <button id="requestActionConfirmOkBtn" type="button" class="request-action-confirm-ok">CONFIRM</button>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog id="requestDialog" class="modal request-modal">
+    <div class="request-modal-top">
+      <div class="request-header">
+        <span class="eyebrow">LIVE REQUESTS</span>
+        <div class="request-title-line">
+          <h2>REQUEST A SONG</h2>
+          <button id="editRequesterNameBtn" class="requesting-as-inline" type="button" title="Open profile" aria-label="Open profile">
+            <span>REQUESTING AS</span><strong id="requesterNameLabel">Guest</strong><i aria-hidden="true">✎</i>
+          </button>
+        </div>
+      </div>
+      <button class="modal-close request-modal-close" data-close="requestDialog" aria-label="Close">×</button>
+    </div>
+
+    <section id="requestSongStep" class="request-song-step">
+      <div class="request-tab-stage">
+        <section id="requestNameGate" class="request-name-gate">
+          <div class="request-name-gate-card">
+            <span class="eyebrow">LIVE REQUESTS</span><h3>WHAT'S YOUR NAME?</h3><p>Enter your name to request a song.</p>
+            <label for="requestStartName">YOUR NAME</label>
+            <input id="requestStartName" type="text" maxlength="60" placeholder="Your name" autocomplete="name">
+            <button id="requestStartContinueBtn" class="primary-btn" type="button">CONTINUE TO SONG LIST →</button>
+          </div>
+        </section>
+
+        <section id="requestProfilePanel" class="request-tab-panel request-profile-panel" data-request-panel="profile" hidden>
+          <div class="request-panel-heading request-profile-heading"><h3>YOUR PROFILE</h3><p>Saved on this device for faster requests.</p></div>
+          <div class="request-profile-grid">
+            <div class="request-field request-name-field"><label for="singerName">NAME</label><div class="request-name-control"><input id="singerName" type="text" maxlength="60" placeholder="Your name" autocomplete="name"><button id="forgetRequestProfileBtn" class="forget-profile-btn" type="button">FORGET USER</button></div></div>
+            <div class="request-field request-email-field"><label for="requestProfileEmail">EMAIL ADDRESS <small>OPTIONAL · PROFILE RECOVERY</small></label><div class="request-email-control"><input id="requestProfileEmail" type="email" maxlength="160" placeholder="you@example.com" autocomplete="email"></div><small class="request-email-help">Saved for future profile recovery.</small></div>
+            <label class="request-field request-country-field">COUNTRY <small>OPTIONAL</small><input id="requestProfileCountry" type="text" maxlength="80" placeholder="e.g. Malta" autocomplete="country-name"></label>
+            <label class="request-field request-age-field">AGE RANGE <small>OPTIONAL</small><select id="requestProfileAge"><option value="">Prefer not to say</option><option>Under 18</option><option>18–24</option><option>25–34</option><option>35–44</option><option>45–54</option><option>55–64</option><option>65+</option></select></label>
+            <label class="request-field request-gender-field">GENDER <small>OPTIONAL</small><select id="requestProfileGender"><option value="">Prefer not to say</option><option>Female</option><option>Male</option><option>Non-binary</option><option>Other</option></select></label>
+          </div>
+          <div class="request-review-card">
+            <div class="request-review-heading"><h3>RATE / REVIEW YOUR EXPERIENCE</h3><span class="request-review-optional">OPTIONAL</span></div>
+            <div class="request-review-rating"><span class="request-review-label">RATING</span><input id="requestReviewRating" type="hidden" value=""><div class="request-star-row" role="group" aria-label="Rating out of five"><button type="button" data-review-rating="1" aria-label="1 star">★</button><button type="button" data-review-rating="2" aria-label="2 stars">★</button><button type="button" data-review-rating="3" aria-label="3 stars">★</button><button type="button" data-review-rating="4" aria-label="4 stars">★</button><button type="button" data-review-rating="5" aria-label="5 stars">★</button><button id="clearReviewRatingBtn" class="clear-rating-btn" type="button">CLEAR</button></div></div>
+            <label class="request-review-text" for="requestReviewText"><span>REVIEW</span><textarea id="requestReviewText" maxlength="1000" rows="3" placeholder="How was your experience?"></textarea></label>
+            <label class="request-review-private"><input id="requestReviewPrivate" type="checkbox"><span><strong>Keep this review private</strong><small>It will be saved but will not be eligible to appear on the website.</small></span></label>
+          </div>
+          <div class="request-profile-actions"><button id="continueRequestBtn" class="primary-btn" type="button">SAVE PROFILE</button><button id="recoverRequestProfileBtn" class="recover-profile-btn" type="button" disabled aria-disabled="true" title="Profile recovery is coming soon">RECOVER PROFILE</button><span id="requestProfileStatus" class="request-profile-status" role="status"></span></div>
+        </section>
+
+        <section id="requestBrowser" class="request-tab-panel request-browser" data-request-panel="songs">
+          <div class="request-panel-heading"><span class="eyebrow">SONG LIST</span><h3>CHOOSE A SONG</h3></div>
+          <div id="requestCategoryGrid" class="request-category-grid" aria-label="Song categories"></div>
+          <div id="requestAlphabetRow" class="request-alphabet-row" aria-label="Jump by first letter"></div>
+          <div class="request-controls"><input id="songSearch" type="search" placeholder="Search song or artist…" autocomplete="off" inputmode="search"><button id="clearSongCategoryBtn" class="request-filter-clear" type="button" hidden>SHOW ALL</button></div>
+          <div id="requestNotice" class="request-notice">Choose a song. Tap + to continue.</div>
+          <div id="songResults" class="song-results"></div>
+        </section>
+
+        <section id="requestConfirmPanel" class="request-tab-panel request-confirm-panel" hidden>
+          <button id="backToSongListBtn" class="request-back-btn" type="button">← SONG LIST</button>
+          <div class="request-confirm-card"><span class="eyebrow">YOUR REQUEST</span><h3 id="requestConfirmSongTitle">Song</h3><p id="requestConfirmSongArtist"></p><dl><div><dt>REQUESTING AS</dt><dd id="requestConfirmName"></dd></div></dl><label class="request-note-label" for="requestNote">OPTIONAL NOTE / COMMENT</label><textarea id="requestNote" rows="4" maxlength="240" placeholder="Anything you'd like the host to know?"></textarea><button id="sendRequestBtn" class="primary-btn request-send-btn" type="button">SEND REQUEST</button></div>
+        </section>
+
+        <section id="requestMyRequestsPanel" class="request-tab-panel request-my-panel" data-request-panel="requests" hidden><div class="request-panel-heading"><span class="eyebrow">LIVE STATUS</span><h3>MY REQUESTS</h3><p>Accepted requests follow the current LiveSuite Run Order.</p></div><div id="myRequests" class="my-requests-scroll"></div></section>
+
+        <section id="requestMyDataPanel" class="request-tab-panel request-my-data-panel" data-request-panel="data" hidden>
+          <div class="request-panel-heading request-data-heading"><span class="eyebrow">YOUR LIVE REQUESTS</span><h3>MY DATA</h3><p>Your request history, favourites and stats saved for this profile/device.</p></div>
+          <div class="request-history-tabs request-data-tabs" role="tablist" aria-label="My data sections"><button type="button" class="active" data-request-history-tab="overview" role="tab">OVERVIEW</button><button type="button" data-request-history-tab="history" role="tab">HISTORY</button><button type="button" data-request-history-tab="favourites" role="tab">FAVOURITES</button><button type="button" data-request-history-tab="sessions" role="tab">SESSIONS</button></div>
+          <div class="request-history-body request-data-body"><div id="requestHistoryLoading" class="request-history-loading">Loading your request history…</div><section id="requestHistoryOverview" class="request-history-panel" data-request-history-panel="overview"></section><section id="requestHistoryHistory" class="request-history-panel" data-request-history-panel="history" hidden></section><section id="requestHistoryFavourites" class="request-history-panel" data-request-history-panel="favourites" hidden></section><section id="requestHistorySessions" class="request-history-panel" data-request-history-panel="sessions" hidden></section></div>
+        </section>
+
+        <section id="requestInfoPanel" class="request-tab-panel request-info-panel" data-request-panel="info" hidden><div class="request-panel-heading"><span class="eyebrow">HELP</span><h3>HOW REQUESTS WORK</h3></div><div id="requestInfoList" class="request-info-list"></div></section>
+
+        <section id="requestSuccess" class="request-success" hidden><div class="success-mark">✓</div><h3>REQUEST SENT</h3><p id="requestSuccessText">Your request has been sent and is awaiting approval.</p><div class="request-success-actions"><button id="requestAnotherBtn" class="primary-btn" type="button">REQUEST ANOTHER SONG →</button><button id="viewMyRequestsBtn" class="primary-btn" type="button">VIEW MY REQUESTS →</button></div></section>
+      </div>
+
+      <nav class="request-bottom-tabs" aria-label="Live request sections"><button type="button" data-request-tab="profile" aria-label="Profile" title="Profile"><span aria-hidden="true">👤</span><small>PROFILE</small></button><button type="button" data-request-tab="songs" class="active"><span aria-hidden="true">♫</span><small>SONG LIST</small></button><button type="button" data-request-tab="requests"><span aria-hidden="true">☷</span><small>MY REQUESTS</small></button><button type="button" data-request-tab="data"><span aria-hidden="true">▦</span><small>MY DATA</small></button><button type="button" data-request-tab="info" aria-label="Information" title="Information"><span aria-hidden="true">ⓘ</span><small>INFO</small></button></nav>
+    </section>
+  </dialog>
+
+  <script src="db/currentdb.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="js/firebase-config.js?v=20261006-live-karaoke"></script>
+  <script src="js/youtube-videos.js?v=20261006-request-only"></script>
+  <script src="js/app.js?v=20260930-artist-alpha-profile-v3"></script>
+</body>
+</html>
