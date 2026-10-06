@@ -127,11 +127,11 @@
 
     const refreshCss = document.createElement("link");
     refreshCss.rel = "stylesheet";
-    refreshCss.href = new URL("../css/live-karaoke-public-refresh.css?v=20261006-booking-icons-v1", base).href;
+    refreshCss.href = new URL("../css/live-karaoke-public-refresh.css?v=20261006-reviews-v1", base).href;
     document.head.appendChild(refreshCss);
 
     const refreshScript = document.createElement("script");
-    refreshScript.src = new URL("../js/live-karaoke-public-refresh.js?v=20261006-booking-icons-v1", base).href;
+    refreshScript.src = new URL("../js/live-karaoke-public-refresh.js?v=20261006-reviews-v1", base).href;
     refreshScript.async = false;
     document.head.appendChild(refreshScript);
 
