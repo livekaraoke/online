@@ -76,6 +76,20 @@
     `;
   }
 
+  function buildAboutCopy() {
+    const section = document.getElementById("about");
+    if (!section || section.dataset.liveKaraokeCopy === "1") return;
+    section.dataset.liveKaraokeCopy = "1";
+    section.innerHTML = `
+      <h2>WHAT IS LIVE KARAOKE?</h2>
+      <p class="about-lead"><strong>A live music experience where YOU become the singer.</strong></p>
+      <p>Choose from <strong>150+ rock, pop, indie, classics and party anthems</strong>, grab the mic and perform with <strong>live guitar and looping — no backing tracks.</strong></p>
+      <p>We provide the lyrics, up to two microphones and the live accompaniment. Whether you're a first-timer or a confident performer, it's spontaneous, social and designed to get the whole room involved.</p>
+      <p class="about-highlight"><strong>More than karaoke. A real live performance experience.</strong></p>
+      <p class="about-booking">Perfect for <strong>bars, venues, private parties and events.</strong></p>
+    `;
+  }
+
   function removeEmailIcon() {
     document.querySelectorAll('.social-icons a[href^="mailto:"]').forEach(node => node.remove());
   }
@@ -164,6 +178,7 @@
   function applyStaticRefinements() {
     ensureFavicons();
     setupGetStarted();
+    buildAboutCopy();
     buildHowItWorks();
     removeEmailIcon();
     removeEventSubheadings();
