@@ -115,7 +115,7 @@
     const base = document.currentScript?.src || location.href;
     const refreshCss = document.createElement("link");
     refreshCss.rel = "stylesheet";
-    refreshCss.href = new URL("../css/live-karaoke-public-refresh.css?v=20261006-reviews-v2", base).href;
+    refreshCss.href = new URL("../css/live-karaoke-public-refresh.css?v=20261006-spacing-fix-v1", base).href;
     document.head.appendChild(refreshCss);
 
     const refreshScript = document.createElement("script");
