@@ -44,7 +44,10 @@
       {title:"BARS & VENUES",text:"Interactive live music that gives customers a reason to stay longer, get involved, sing and come back."},
       {title:"CORPORATE EVENTS",text:"Break the ice and get the whole room involved with live music, audience participation and plenty of memorable moments."},
       {title:"WEDDINGS & PRIVATE PARTIES",text:"Turn your guests into part of the entertainment with live guitar, looping and song requests throughout the celebration."}
-    ]
+    ],
+    communityTitle:"JOIN THE COMMUNITY",
+    communityDescription:"Follow Live Karaoke for upcoming events, new songs and live-session updates.",
+    communitySocialsTitle:"SOCIALS"
   };
 
   const DEFAULT_BOOKING_FAQS = [
@@ -127,7 +130,10 @@
       bookingCards:DEFAULT_PUBLIC_PAGE.bookingCards.map((fallback,index)=>({
         title:String(cards[index]?.title || fallback.title).slice(0,80),
         text:String(cards[index]?.text || fallback.text).slice(0,400)
-      }))
+      })),
+      communityTitle:String(source.communityTitle || DEFAULT_PUBLIC_PAGE.communityTitle).slice(0,100),
+      communityDescription:String(source.communityDescription || DEFAULT_PUBLIC_PAGE.communityDescription).slice(0,500),
+      communitySocialsTitle:String(source.communitySocialsTitle || DEFAULT_PUBLIC_PAGE.communitySocialsTitle).slice(0,80)
     };
   }
 
@@ -177,6 +183,9 @@
       setValue(`lkBookingCard${index+1}Title`, card.title);
       setValue(`lkBookingCard${index+1}Text`, card.text);
     });
+    setValue("lkCommunityTitle", publicPage.communityTitle);
+    setValue("lkCommunityDescription", publicPage.communityDescription);
+    setValue("lkCommunitySocialsTitle", publicPage.communitySocialsTitle);
   }
 
   function collectPublicPage() {
@@ -208,7 +217,10 @@
       bookingCards:[1,2,3].map((n,index)=>({
         title:value(`lkBookingCard${n}Title`, DEFAULT_PUBLIC_PAGE.bookingCards[index].title),
         text:value(`lkBookingCard${n}Text`, DEFAULT_PUBLIC_PAGE.bookingCards[index].text)
-      }))
+      })),
+      communityTitle:value("lkCommunityTitle", DEFAULT_PUBLIC_PAGE.communityTitle),
+      communityDescription:value("lkCommunityDescription", DEFAULT_PUBLIC_PAGE.communityDescription),
+      communitySocialsTitle:value("lkCommunitySocialsTitle", DEFAULT_PUBLIC_PAGE.communitySocialsTitle)
     });
   }
 
