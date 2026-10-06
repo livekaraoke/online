@@ -45,6 +45,12 @@ if (typeof document !== 'undefined' && /\/host\/lyricview\.html$/i.test(String(l
     const refinements=document.createElement('script');
     refinements.src='../shared/lyricview-follow-refinements-v2.js?v=20261006-follow-refinements-v2';
     refinements.async=false;
+    refinements.addEventListener('load',()=>{
+      const improvSync=document.createElement('script');
+      improvSync.src='../shared/lyricview-improv-timeline-sync-v1.js?v=20261006-improv-timeline-sync-v1';
+      improvSync.async=false;
+      (document.head||document.documentElement).appendChild(improvSync);
+    },{once:true});
     (document.head||document.documentElement).appendChild(refinements);
   },{once:true});
   (document.head||document.documentElement).appendChild(helper);
