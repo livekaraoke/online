@@ -27,8 +27,8 @@
     .host-section-body .ls26-time-signature-change,.host-section-body .ls26-inline-performance-note{display:block!important;width:max-content!important;max-width:calc(100% - 28px)!important;margin:10px auto!important;text-align:center!important;white-space:normal!important;line-height:1.15!important}
     .host-section-body .ls26-time-signature-change{font-size:13px!important;padding:6px 10px!important}
     .host-section-body .ls26-inline-performance-note{font-size:16px!important;padding:7px 12px!important}
-    html.ls26-hide-lyric-navigation .host-nav-pad{display:none!important}
-    html.ls26-hide-lyric-navigation #chordFollowFloatCard{right:14px!important;left:auto!important;top:58%!important;bottom:auto!important;transform:translateY(-50%)!important}
+    html.ls26-hide-lyric-navigation .host-nav-pad{visibility:hidden!important;opacity:0!important;pointer-events:none!important}
+    html.ls26-hide-lyric-navigation #chordFollowFloatCard{right:var(--ls26-nav-slot-right,14px)!important;left:auto!important;top:var(--ls26-nav-slot-top,58%)!important;bottom:auto!important;transform:translateY(-50%)!important}
   `;
   (document.head || document.documentElement).append(style);
 
@@ -139,8 +139,15 @@
 
   function applyNavVisibility(show, persist = true) {
     const visible = show !== false;
-    document.documentElement.classList.toggle('ls26-hide-lyric-navigation', !visible);
     const pad = document.querySelector('.host-nav-pad');
+    if (pad) {
+      const rect = pad.getBoundingClientRect();
+      if (rect.width > 0 && rect.height > 0) {
+        document.documentElement.style.setProperty('--ls26-nav-slot-right', Math.max(12, window.innerWidth - rect.right) + 'px');
+        document.documentElement.style.setProperty('--ls26-nav-slot-top', (rect.top + rect.height / 2) + 'px');
+      }
+    }
+    document.documentElement.classList.toggle('ls26-hide-lyric-navigation', !visible);
     if (pad) pad.setAttribute('aria-hidden', visible ? 'false' : 'true');
     const input = $('lvMetroShowNavigationButtons');
     if (input) input.checked = visible;
@@ -186,6 +193,9 @@
   window.addEventListener('ls26:song-ready', () => {
     lockedMeter = null;
     setTimeout(installAll, 0);
+  });
+  window.addEventListener('resize', () => {
+    if (document.documentElement.classList.contains('ls26-hide-lyric-navigation')) applyNavVisibility(false, false);
   });
 
   function installAll() {
