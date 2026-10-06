@@ -25,5 +25,11 @@ if (/\/lyricscreator\.html$/i.test(String(location.pathname || ""))) {
   const helper = document.createElement("script");
   helper.src = "js/inline-performance-tools.js?v=20261006-inline-section-tools-v3";
   helper.async = false;
+  helper.addEventListener("load", () => {
+    const noteEditor = document.createElement("script");
+    noteEditor.src = "js/inline-note-style-editor-v1.js?v=20261006-note-style-editor-v1";
+    noteEditor.async = false;
+    (document.head || document.documentElement).appendChild(noteEditor);
+  }, { once:true });
   (document.head || document.documentElement).appendChild(helper);
 }
