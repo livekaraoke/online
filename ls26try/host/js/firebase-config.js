@@ -18,3 +18,12 @@ window.auth =
   typeof firebase.auth === "function"
     ? firebase.auth()
     : null;
+
+/* LyricsCreator-only inline metadata tools. Loaded here to avoid changing the
+   established creator script order. */
+if (/\/lyricscreator\.html$/i.test(String(location.pathname || ""))) {
+  const helper = document.createElement("script");
+  helper.src = "js/inline-performance-tools.js?v=20261006-inline-section-tools-v1";
+  helper.async = false;
+  (document.head || document.documentElement).appendChild(helper);
+}
