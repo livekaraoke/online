@@ -43,6 +43,7 @@
     try{await controlRef().set({...data,singerBridgeUpdatedAtMs:Date.now()},{merge:true});}
     catch(error){console.warn('Singer bridge update failed:',error);}
   }
+  const legacySyncOff=()=>({enabled:false,playing:false,songId,updatedAtMs:Date.now()});
   async function sendPreview(){
     if(!songId||previewSent)return;
     const {title,artist}=songMeta();
@@ -55,7 +56,8 @@
       displayState:'preview',
       reset:false,
       singerPlayback:{state:'preview',songId,title,artist,updatedAtMs:Date.now()},
-      singerSync:{enabled:false,playing:false,songId,activeSourceIndex:-1,previousSourceIndex:-1,nextSourceIndex:-1,sectionProgress:0,progressRatePerMs:0,updatedAtMs:Date.now()}
+      singerSync:legacySyncOff(),
+      singerV2Sync:{enabled:false,playing:false,songId,activeSourceIndex:-1,previousSourceIndex:-1,nextSourceIndex:-1,sectionProgress:0,progressRatePerMs:0,updatedAtMs:Date.now()}
     });
   }
 
@@ -112,7 +114,7 @@
   async function writeSync(){
     if(!isPlaying()||countInPending)return;
     const sync=buildSync();
-    await write({displayState:'song',singerPlayback:{state:'playing',songId,bpm:currentBpm(),updatedAtMs:Date.now()},singerSync:sync});
+    await write({displayState:'song',singerPlayback:{state:'playing',songId,bpm:currentBpm(),updatedAtMs:Date.now()},singerV2Sync:sync,singerSync:legacySyncOff()});
   }
   function startSyncLoop(){
     clearInterval(syncTimer);syncTimer=setInterval(()=>{if(isPlaying()&&!countInPending)void writeSync();},SYNC_MS);
@@ -122,16 +124,17 @@
 
   async function beginCountIn({delayHostStart=false}={}){
     clearTimeout(countInTimer);countInTimer=0;countInPending=true;
-    const bpm=currentBpm(),beats=4,beatMs=60000/bpm,start=Date.now()+90,playAt=start+(beats*beatMs);
+    const bpm=currentBpm(),beats=4,beatMs=60000/bpm,start=Date.now()+350,playAt=start+(beats*beatMs);
     await write({
       displayState:'song',
       singerPlayback:{state:'countin',songId,bpm,countInBeats:beats,countInStartMs:start,playAtMs:playAt,updatedAtMs:Date.now()},
-      singerSync:{enabled:false,playing:false,songId,activeSourceIndex:-1,previousSourceIndex:-1,nextSourceIndex:-1,sectionProgress:0,progressRatePerMs:0,updatedAtMs:Date.now()}
+      singerSync:legacySyncOff(),
+      singerV2Sync:{enabled:false,playing:false,songId,activeSourceIndex:-1,previousSourceIndex:-1,nextSourceIndex:-1,sectionProgress:0,progressRatePerMs:0,updatedAtMs:Date.now()}
     });
     countInTimer=setTimeout(async()=>{
       countInPending=false;
       if(delayHostStart&&!isPlaying())window.LS26Performance?.play?.();
-      await write({displayState:'song',singerPlayback:{state:'playing',songId,bpm:currentBpm(),updatedAtMs:Date.now()}});
+      await write({displayState:'song',singerPlayback:{state:'playing',songId,bpm:currentBpm(),updatedAtMs:Date.now()},singerSync:legacySyncOff()});
       lastPlaying=isPlaying();
       startSyncLoop();
     },Math.max(0,playAt-Date.now()));
@@ -153,7 +156,7 @@
         if(!before&&after){void beginCountIn({delayHostStart:false});}
         else if(before&&!after){
           clearTimeout(countInTimer);countInPending=false;stopSyncLoop();
-          void write({singerPlayback:{state:'paused',songId,bpm:currentBpm(),updatedAtMs:Date.now()},singerSync:{enabled:false,playing:false,songId,updatedAtMs:Date.now()}});
+          void write({singerPlayback:{state:'paused',songId,bpm:currentBpm(),updatedAtMs:Date.now()},singerV2Sync:{enabled:false,playing:false,songId,updatedAtMs:Date.now()},singerSync:legacySyncOff()});
         }
         lastPlaying=after;
       },0);
@@ -169,7 +172,7 @@
       const playing=isPlaying();
       if(playing!==lastPlaying&&!countInPending){
         if(playing){void beginCountIn({delayHostStart:false});}
-        else{stopSyncLoop();void write({singerPlayback:{state:'paused',songId,bpm:currentBpm(),updatedAtMs:Date.now()},singerSync:{enabled:false,playing:false,songId,updatedAtMs:Date.now()}});}
+        else{stopSyncLoop();void write({singerPlayback:{state:'paused',songId,bpm:currentBpm(),updatedAtMs:Date.now()},singerV2Sync:{enabled:false,playing:false,songId,updatedAtMs:Date.now()},singerSync:legacySyncOff()});}
         lastPlaying=playing;
       }
     },300);
