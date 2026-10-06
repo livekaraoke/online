@@ -14,6 +14,14 @@
   <link rel="stylesheet" href="../shared/theme.css?v=20260930-release-preview-v2">
   <link rel="stylesheet" href="css/billy-website-settings.css?v=20260930-request-test-mode-v2">
   <script src="../shared/data.js?v=20260910-stage4"></script>
+  <style>
+    .lk-content-note{margin:0;color:#9fb0bb;font-size:.9rem;line-height:1.5}
+    .lk-color-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+    .lk-color-row input[type="color"]{width:64px;height:42px;padding:3px;border:1px solid #31505e;border-radius:8px;background:#071219}
+    .lk-content-stack{display:grid;gap:12px}
+    .lk-content-stack .website-faq-editor{margin:0}
+    .lk-step-label{font-size:.78rem;font-weight:800;letter-spacing:.08em;color:#74d8f0;text-transform:uppercase;margin-bottom:2px}
+  </style>
 </head>
 <body class="admin-body enquiries-page">
   <div class="admin-shell">
@@ -23,7 +31,7 @@
         <div>
           <p class="enquiries-eyebrow">LIVE KARAOKE</p>
           <h1>Website Settings</h1>
-          <p class="enquiries-subtitle">Configure the Live Requests popup on the main Live Karaoke website.</p>
+          <p class="enquiries-subtitle">Configure the public Live Karaoke website and its Live Requests popup.</p>
         </div>
         <a class="billy-site-open" href="https://livekaraoke.github.io/online/" target="_blank" rel="noopener">Open website ↗</a>
       </header>
@@ -45,6 +53,117 @@
         </div>
         <p id="liveKaraokeDefaultSetlistStatus" class="billy-site-status" role="status"></p>
       </section>
+
+      <section class="billy-site-card">
+        <div class="billy-site-section-head">
+          <div>
+            <h2>Hero</h2>
+            <p>Edit the short line below the main banner and the GET STARTED call-to-action.</p>
+          </div>
+        </div>
+        <div class="website-faq-fields">
+          <label>Supporting line<input id="lkHeroSupportingLine" type="text" maxlength="220"></label>
+          <label>GET STARTED button text<input id="lkGetStartedText" type="text" maxlength="60"></label>
+          <label>GET STARTED button colour
+            <span class="lk-color-row">
+              <input id="lkGetStartedColor" type="color" value="#d92727" aria-label="GET STARTED button colour">
+              <input id="lkGetStartedColorText" type="text" maxlength="7" value="#d92727" pattern="#[0-9A-Fa-f]{6}" style="max-width:130px">
+            </span>
+          </label>
+        </div>
+      </section>
+
+      <section class="billy-site-card">
+        <div class="billy-site-section-head">
+          <div>
+            <h2>What Is Live Karaoke?</h2>
+            <p>Edit the public explanation of the Live Karaoke concept.</p>
+          </div>
+        </div>
+        <div class="website-faq-fields">
+          <label>Section title<input id="lkAboutTitle" type="text" maxlength="100"></label>
+          <label>Opening line<input id="lkAboutLead" type="text" maxlength="220"></label>
+          <label>Main paragraph<textarea id="lkAboutBody1" rows="3" maxlength="700"></textarea></label>
+          <label>Second paragraph<textarea id="lkAboutBody2" rows="3" maxlength="700"></textarea></label>
+          <label>Highlight line<input id="lkAboutHighlight" type="text" maxlength="220"></label>
+          <label>Booking line<input id="lkAboutBooking" type="text" maxlength="220"></label>
+        </div>
+      </section>
+
+      <section class="billy-site-card">
+        <div class="billy-site-section-head">
+          <div>
+            <h2>How It Works</h2>
+            <p>Edit the section title and the wording for each of the four public steps. Illustrations remain fixed.</p>
+          </div>
+        </div>
+        <div class="website-faq-fields" style="margin-bottom:14px">
+          <label>Section title<input id="lkHowTitle" type="text" maxlength="100"></label>
+        </div>
+        <div class="lk-content-stack">
+          <article class="website-faq-editor">
+            <div class="lk-step-label">Step 1</div>
+            <div class="website-faq-fields"><label>Title<input id="lkHowStep1Title" type="text" maxlength="60"></label><label>Description<textarea id="lkHowStep1Text" rows="2" maxlength="300"></textarea></label></div>
+          </article>
+          <article class="website-faq-editor">
+            <div class="lk-step-label">Step 2</div>
+            <div class="website-faq-fields"><label>Title<input id="lkHowStep2Title" type="text" maxlength="60"></label><label>Description<textarea id="lkHowStep2Text" rows="2" maxlength="300"></textarea></label></div>
+          </article>
+          <article class="website-faq-editor">
+            <div class="lk-step-label">Step 3</div>
+            <div class="website-faq-fields"><label>Title<input id="lkHowStep3Title" type="text" maxlength="60"></label><label>Description<textarea id="lkHowStep3Text" rows="2" maxlength="300"></textarea></label></div>
+          </article>
+          <article class="website-faq-editor">
+            <div class="lk-step-label">Step 4</div>
+            <div class="website-faq-fields"><label>Title<input id="lkHowStep4Title" type="text" maxlength="60"></label><label>Description<textarea id="lkHowStep4Text" rows="2" maxlength="300"></textarea></label></div>
+          </article>
+        </div>
+      </section>
+
+      <section class="billy-site-card">
+        <div class="billy-site-section-head"><div><h2>Events</h2><p>Edit the heading and supporting text above the upcoming Live Karaoke events.</p></div></div>
+        <div class="website-faq-fields">
+          <label>Section title<input id="lkEventsTitle" type="text" maxlength="100"></label>
+          <label>Subheading<textarea id="lkEventsSubtitle" rows="2" maxlength="400"></textarea></label>
+        </div>
+      </section>
+
+      <section class="billy-site-card">
+        <div class="billy-site-section-head"><div><h2>Song List Access</h2><p>Edit the public songbook section shown above the booking area.</p></div></div>
+        <div class="website-faq-fields">
+          <label>Section title<input id="lkSongListTitle" type="text" maxlength="100"></label>
+          <label>Description<textarea id="lkSongListDescription" rows="3" maxlength="500"></textarea></label>
+          <label>Button text<input id="lkSongListButtonText" type="text" maxlength="60"></label>
+        </div>
+      </section>
+
+      <section class="billy-site-card">
+        <div class="billy-site-section-head"><div><h2>Book / Enquire</h2><p>Edit the booking section title, introduction, audience cards and enquiry button.</p></div></div>
+        <div class="website-faq-fields" style="margin-bottom:14px">
+          <label>Section title<input id="lkBookingTitle" type="text" maxlength="100"></label>
+          <label>Introduction<textarea id="lkBookingIntro" rows="3" maxlength="600"></textarea></label>
+          <label>Button text<input id="lkBookingButtonText" type="text" maxlength="60"></label>
+          <label>Booking Questions title<input id="lkBookingQuestionsTitle" type="text" maxlength="100"></label>
+        </div>
+        <div class="lk-content-stack">
+          <article class="website-faq-editor"><div class="lk-step-label">Booking card 1</div><div class="website-faq-fields"><label>Title<input id="lkBookingCard1Title" type="text" maxlength="80"></label><label>Text<textarea id="lkBookingCard1Text" rows="3" maxlength="400"></textarea></label></div></article>
+          <article class="website-faq-editor"><div class="lk-step-label">Booking card 2</div><div class="website-faq-fields"><label>Title<input id="lkBookingCard2Title" type="text" maxlength="80"></label><label>Text<textarea id="lkBookingCard2Text" rows="3" maxlength="400"></textarea></label></div></article>
+          <article class="website-faq-editor"><div class="lk-step-label">Booking card 3</div><div class="website-faq-fields"><label>Title<input id="lkBookingCard3Title" type="text" maxlength="80"></label><label>Text<textarea id="lkBookingCard3Text" rows="3" maxlength="400"></textarea></label></div></article>
+        </div>
+      </section>
+
+      <section class="billy-site-card">
+        <div class="billy-site-section-head">
+          <div>
+            <h2>Booking Questions</h2>
+            <p>Add, edit, remove and reorder the FAQ items shown underneath the BOOK / ENQUIRE section.</p>
+          </div>
+          <button id="addBookingFaqBtn" class="billy-site-btn" type="button">＋ Add question</button>
+        </div>
+        <div id="bookingFaqEditors" class="website-faq-editors"></div>
+      </section>
+
+      <p id="liveKaraokePageContentStatus" class="billy-site-status" role="status"></p>
 
       <section class="billy-site-card billy-site-master">
         <div>
@@ -144,6 +263,6 @@
   <script data-ls26-settings="1" src="../shared/app-settings.js?v=20260930-app-version"></script>
   <script src="../shared/shell.js?v=20260930-release-preview-v3"></script>
   <script src="js/billy-website-settings.js?v=20261006-live-karaoke-settings"></script>
-  <script src="js/live-karaoke-website-settings-extra.js?v=20261006-default-songbook-v1"></script>
+  <script src="js/live-karaoke-website-settings-extra.js?v=20261006-public-content-v1"></script>
 </body>
 </html>
