@@ -16,5 +16,22 @@
   }
 
   if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-  window.BillyLeeDB = firebase.firestore();
+
+  const rawDb = firebase.firestore();
+  const capability = window.LS26PublicRequestCapability;
+  const cryptoApi = window.crypto || window.msCrypto;
+
+  if (capability && cryptoApi && typeof cryptoApi.getRandomValues === "function") {
+    window.BillyLeeDB = capability.wrap({
+      db: rawDb,
+      firebase,
+      storage: window.localStorage,
+      cryptoApi
+    });
+  } else {
+    // Request creation still works under the narrowed rules, but this browser
+    // cannot privately prove ownership for later note edits/cancellation.
+    console.warn("Secure request ownership capability unavailable; using create-only compatibility mode.");
+    window.BillyLeeDB = rawDb;
+  }
 })();
