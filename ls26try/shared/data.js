@@ -62,6 +62,14 @@
     if (/\/admin-new\/performance-sessions\.html$/i.test(path)) {
       loadSharedHelper('session-history-fixes.js?v=20261006-request-history-fix-v1','ls26SessionHistoryFixLoader');
     }
+
+    if (/\/host\/(?:lyricview|karaoke-lyric-view)\.html$/i.test(path)) {
+      loadSharedHelper('chord-beat-labels.js?v=20261007-beat-labels-v1','ls26ChordBeatLabelsLoader');
+    }
+
+    if (/\/host\/karaoke-lyric-view\.html$/i.test(path)) {
+      loadSharedHelper('singer-screen-polish.js?v=20261007-singer-polish-v1','ls26SingerScreenPolishLoader');
+    }
   }
   if (document.readyState === 'complete') loadFocusedHelpers();
   else window.addEventListener('load', loadFocusedHelpers, {once:true});
