@@ -66,9 +66,14 @@
   window.LK_FIREBASE_PROJECT = getSelectedKey();
 
   if (/\/online\/ls26try\/admin-new\//i.test(location.pathname)) {
-    const script = document.createElement("script");
-    script.src = new URL("admin-new/js/live-karaoke-sidebar-addon.js?v=20261007-sidebar-groups-v2", document.currentScript?.src || location.href).href;
-    script.async = true;
-    document.head.appendChild(script);
+    const addon = document.createElement("script");
+    addon.src = new URL("admin-new/js/live-karaoke-sidebar-addon.js?v=20261007-sidebar-groups-v2", document.currentScript?.src || location.href).href;
+    addon.async = true;
+    document.head.appendChild(addon);
+
+    const caseFix = document.createElement("script");
+    caseFix.src = new URL("admin-new/js/sidebar-label-case-fix.js?v=20261007-sidebar-case-v1", document.currentScript?.src || location.href).href;
+    caseFix.async = true;
+    document.head.appendChild(caseFix);
   }
 })();
