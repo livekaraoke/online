@@ -64,11 +64,11 @@
     }
 
     if (/\/host\/(?:lyricview|karaoke-lyric-view)\.html$/i.test(path)) {
-      loadSharedHelper('chord-beat-labels.js?v=20261007-beat-labels-v1','ls26ChordBeatLabelsLoader');
+      loadSharedHelper('chord-beat-labels.js?v=20261007-beat-labels-v2','ls26ChordBeatLabelsLoader');
     }
 
     if (/\/host\/karaoke-lyric-view\.html$/i.test(path)) {
-      loadSharedHelper('singer-screen-polish.js?v=20261007-singer-polish-v1','ls26SingerScreenPolishLoader');
+      loadSharedHelper('singer-screen-polish.js?v=20261007-singer-polish-v2','ls26SingerScreenPolishLoader');
     }
   }
   if (document.readyState === 'complete') loadFocusedHelpers();
