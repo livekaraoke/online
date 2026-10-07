@@ -11,10 +11,10 @@
   const controls={
     guidance:$("prompterGuidance"),theme:$("prompterTheme"),font:$("prompterFont"),size:$("prompterTextSize"),spacing:$("prompterSpacing"),
     background:$("prompterBackground"),bottomBar:$("prompterBottomBar"),autoScroll:$("prompterAutoScroll"),speed:$("prompterSpeed"),
-    focus:$("prompterFocus"),currentScale:$("prompterCurrentScale"),contextScale:$("prompterContextScale"),mutedScale:$("prompterMutedScale"),mutedOpacity:$("prompterMutedOpacity"),currentColour:$("prompterCurrentColour"),chordAbove:$("prompterChordAbove"),chordBelow:$("prompterChordBelow")
+    focus:$("prompterFocus"),sectionTitleAlign:$("prompterSectionTitleAlign"),sectionTitleX:$("prompterSectionTitleX"),currentScale:$("prompterCurrentScale"),contextScale:$("prompterContextScale"),mutedScale:$("prompterMutedScale"),mutedOpacity:$("prompterMutedOpacity"),currentColour:$("prompterCurrentColour"),chordAbove:$("prompterChordAbove"),chordBelow:$("prompterChordBelow")
   };
-  const outputs={speed:$("prompterSpeedValue"),focus:$("prompterFocusValue"),currentScale:$("prompterCurrentScaleValue"),contextScale:$("prompterContextScaleValue"),mutedScale:$("prompterMutedScaleValue"),mutedOpacity:$("prompterMutedOpacityValue")};
-  const status=$("prompterSettingsStatus"),preview=$("prompterPreview");
+  const outputs={speed:$("prompterSpeedValue"),focus:$("prompterFocusValue"),sectionTitleX:$("prompterSectionTitleXValue"),currentScale:$("prompterCurrentScaleValue"),contextScale:$("prompterContextScaleValue"),mutedScale:$("prompterMutedScaleValue"),mutedOpacity:$("prompterMutedOpacityValue")};
+  const status=$("prompterSettingsStatus"),preview=$("prompterPreview"),sectionTitlePreview=$("prompterSectionTitlePreview");
 
   function updateContextCopy(){
     const label=controls.contextScale?.closest("label");
@@ -28,27 +28,37 @@
     }
   }
 
+  function resolvedSectionTitleX(){
+    const mode=controls.sectionTitleAlign.value;
+    if(mode==='center')return 50;
+    if(mode==='right')return 100;
+    if(mode==='custom')return Math.max(0,Math.min(100,Number(controls.sectionTitleX.value)||0));
+    return 0;
+  }
+
   function load(){
     controls.guidance.value=read("guidance");controls.theme.value=read("theme");controls.font.value=read("font");controls.size.value=read("size");controls.spacing.value=read("spacing");
     controls.background.value=read("background");controls.bottomBar.checked=bool(read("bottomBar"));controls.autoScroll.checked=bool(read("autoScroll"));controls.speed.value=number(read("speed"),DEFAULTS.speed);
-    controls.focus.value=number(read("focus"),DEFAULTS.focus);controls.currentScale.value=number(read("currentScale"),DEFAULTS.currentScale);controls.contextScale.value=number(read("contextScale"),DEFAULTS.contextScale);
+    controls.focus.value=number(read("focus"),DEFAULTS.focus);controls.sectionTitleAlign.value=read("sectionTitleAlign");controls.sectionTitleX.value=number(read("sectionTitleX"),DEFAULTS.sectionTitleX);controls.currentScale.value=number(read("currentScale"),DEFAULTS.currentScale);controls.contextScale.value=number(read("contextScale"),DEFAULTS.contextScale);
     controls.mutedScale.value=number(read("mutedScale"),DEFAULTS.mutedScale);controls.mutedOpacity.value=number(read("mutedOpacity"),DEFAULTS.mutedOpacity);controls.currentColour.value=read("currentColour");
     controls.chordAbove.value=read("chordAbove");controls.chordBelow.value=read("chordBelow");
     updateContextCopy();refresh();
   }
   function refresh(){
-    outputs.speed.textContent=`${Number(controls.speed.value).toFixed(2)}×`;outputs.focus.textContent=`${controls.focus.value}%`;
+    outputs.speed.textContent=`${Number(controls.speed.value).toFixed(2)}×`;outputs.focus.textContent=`${controls.focus.value}%`;outputs.sectionTitleX.textContent=`${controls.sectionTitleX.value}%`;
     outputs.currentScale.textContent=`${Number(controls.currentScale.value).toFixed(2)}×`;outputs.contextScale.textContent=`${Number(controls.contextScale.value).toFixed(2)}×`;
     outputs.mutedScale.textContent=`${Number(controls.mutedScale.value).toFixed(2)}×`;outputs.mutedOpacity.textContent=`${Math.round(Number(controls.mutedOpacity.value)*100)}%`;
+    controls.sectionTitleX.disabled=controls.sectionTitleAlign.value!=="custom";
     preview.style.setProperty("--preview-bg",controls.background.value);preview.style.setProperty("--preview-current",controls.currentColour.value);preview.style.setProperty("--preview-current-scale",controls.currentScale.value);
     preview.style.setProperty("--preview-context-scale",controls.contextScale.value);preview.style.setProperty("--preview-muted-scale",controls.mutedScale.value);preview.style.setProperty("--preview-muted-opacity",controls.mutedOpacity.value);
+    if(sectionTitlePreview){const x=resolvedSectionTitleX();sectionTitlePreview.style.left=`${x}%`;sectionTitlePreview.style.transform=`translateX(${-x}%)`;}
   }
   let loading=true,dirty=false;
   function values(){const out={};for(const [key,control]of Object.entries(controls))out[key]=control.type==='checkbox'?control.checked:control.value;return globalSettings.normalize(out);}
   function changed(){dirty=true;globalSettings.apply(values());refresh();status.textContent='Unsaved global changes. Preview cached on this device; press Save Global Settings to share.';}
-  async function reload(){loading=true;Object.values(controls).forEach(c=>c.disabled=true);const result=await globalSettings.load(true);load();dirty=false;loading=false;Object.values(controls).forEach(c=>c.disabled=false);status.textContent=result.error?'Offline or access unavailable. Using local settings; global save will check access again.':result.remote?'Global settings loaded.':'No global defaults saved yet. Review these settings before the first save.';}
+  async function reload(){loading=true;Object.values(controls).forEach(c=>c.disabled=true);const result=await globalSettings.load(true);load();dirty=false;loading=false;Object.values(controls).forEach(c=>c.disabled=false);refresh();status.textContent=result.error?'Offline or access unavailable. Using local settings; global save will check access again.':result.remote?'Global settings loaded.':'No global defaults saved yet. Review these settings before the first save.';}
   Object.values(controls).forEach(control=>control.addEventListener(control.type==='range'||control.type==='color'?'input':'change',()=>{if(!loading)changed();}));
-  $('savePrompterSettings').onclick=async()=>{if(loading)return;const button=$('savePrompterSettings');loading=true;button.disabled=true;Object.values(controls).forEach(c=>c.disabled=true);try{await globalSettings.save(values());dirty=false;status.textContent='Global Prompter settings saved. Other devices load them next session or after Reload Global Settings.';}catch(error){status.textContent=error.message;}finally{loading=false;button.disabled=false;Object.values(controls).forEach(c=>c.disabled=false);}};
+  $('savePrompterSettings').onclick=async()=>{if(loading)return;const button=$('savePrompterSettings');loading=true;button.disabled=true;Object.values(controls).forEach(c=>c.disabled=true);try{await globalSettings.save(values());dirty=false;status.textContent='Global Prompter settings saved. Other devices load them next session or after Reload Global Settings.';}catch(error){status.textContent=error.message;}finally{loading=false;button.disabled=false;Object.values(controls).forEach(c=>c.disabled=false);refresh();}};
   $('reloadPrompterSettings').onclick=async()=>{if(loading)return;if(dirty&&!await LS26Dialogs.confirm('Discard local settings edits and reload the global defaults?'))return;await reload();};
   $('resetPrompterSettings').onclick=async()=>{if(loading)return;if(!await LS26Dialogs.confirm('Preview default Prompter settings? Save Global Settings to publish them.'))return;globalSettings.apply(DEFAULTS);load();changed();};
   window.addEventListener('beforeunload',event=>{if(dirty){event.preventDefault();event.returnValue='';}});
