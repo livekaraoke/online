@@ -4,13 +4,14 @@
   function mount(container){
     const $=id=>document.getElementById(id),engine=window.LS26Metronome;
     const key='ls26:lyricviewMetronomeV1',controlsKey='ls26.lyricview.chordFollow.controlsVisible';let saved={};try{saved=JSON.parse(localStorage.getItem(key)||'{}')||{};}catch(_){}
-    let options=engine.normalize(saved),follow=saved.follow===true,visual=saved.visual===true,visualBeat1Only=saved.visualBeat1Only===true,showChordHighlight=saved.showChordHighlight!==false,taps=[];
+    let options=engine.normalize(saved),follow=saved.follow===true,countInEnabled=saved.countInEnabled!==false,visual=saved.visual===true,visualBeat1Only=saved.visualBeat1Only===true,showChordHighlight=saved.showChordHighlight!==false,taps=[];
     let showFollowControls=true;try{const value=localStorage.getItem(controlsKey);showFollowControls=value===null||value==='1';}catch(_){}
     let context,master,clock,timer,frame,running=false,starting=false,version=0,queue=[],nodes=new Set(),songDriver;
     let improvCountdown={active:false,orangeFromBeat:null,releaseBeat:null};
     container.innerHTML=`<h3>METRONOME</h3><p class="lv-metro-tempo">Uses Current BPM · <strong id="lvMetroBpm">—</strong></p>
       <div class="lv-metro-actions"><button id="lvMetroStart" type="button" aria-pressed="false">Start click</button><button id="lvMetroTap" type="button">Tap tempo</button></div>
       <label class="lv-metro-check"><input id="lvMetroFollow" type="checkbox"> Follow bottom Play / Pause</label>
+      <label class="lv-metro-check"><input id="lvMetroCountIn" type="checkbox"> Count-in</label>
       <label class="lv-metro-check"><input id="lvMetroVisual" type="checkbox"> Visual Beat Flash</label>
       <label class="lv-metro-check"><input id="lvMetroBeat1Only" type="checkbox"> Beat 1 Flash Only</label>
       <label class="lv-metro-check"><input id="lvMetroShowChordHighlight" type="checkbox"> Show Current Chord Highlight</label>
@@ -20,170 +21,55 @@
       <label class="lv-metro-check"><input id="lvMetroAccent" type="checkbox"> Accent first beat</label>
       <label class="lv-metro-volume">Volume <output id="lvMetroVolumeLabel"></output><input id="lvMetroVolume" type="range" min="0" max="100" step="1"></label>
       <p id="lvMetroStatus" role="status">Stopped</p><span id="lvMetroBeat" class="lv-metro-beat" aria-hidden="true">●</span>`;
-    const visualDefaults={
-      metronomeBeat1Color:'#ffd05a',metronomeBeat2Color:'#00cafa',metronomeBeat3Color:'#00cafa',metronomeBeat4Color:'#00cafa',
-      improvCountdownColor:'#ff8a24',metronomeFlashBrightness:72,metronomeEdgeThickness:8,metronomeFlashDuration:120,
-      metronomeShowBeatNumber:true,metronomeNumberSize:220,metronomeNumberOpacity:42,metronomeNumberVerticalPosition:31
-    };
+    const visualDefaults={metronomeBeat1Color:'#ffd05a',metronomeBeat2Color:'#00cafa',metronomeBeat3Color:'#00cafa',metronomeBeat4Color:'#00cafa',improvCountdownColor:'#ff8a24',metronomeFlashBrightness:72,metronomeEdgeThickness:8,metronomeFlashDuration:120,metronomeShowBeatNumber:true,metronomeNumberSize:220,metronomeNumberOpacity:42,metronomeNumberVerticalPosition:31};
     function getVisualSettings(){return {...visualDefaults,...(window.LS26Settings?.get?.()||{})};}
-    function ensureVisualStyles(){
-      if(document.getElementById('lvMetroVisualStyles'))return;
-      const style=document.createElement('style');style.id='lvMetroVisualStyles';
-      style.textContent=`
-        #lvMetroScreenBeat{position:fixed;inset:0;z-index:50000;pointer-events:none;color:var(--ls26-metro-beat-2-color,#00cafa)}
-        #lvMetroScreenBeat .lv-metro-screen-edge{position:absolute;background:currentColor;opacity:0;transition:opacity 45ms linear;box-shadow:0 0 26px currentColor,0 0 62px currentColor}
-        #lvMetroScreenBeat .lv-metro-screen-edge.left,#lvMetroScreenBeat .lv-metro-screen-edge.right{top:0;bottom:0;width:var(--ls26-metro-edge-thickness,8px)}
-        #lvMetroScreenBeat .lv-metro-screen-edge.left{left:0}#lvMetroScreenBeat .lv-metro-screen-edge.right{right:0}
-        #lvMetroScreenBeat .lv-metro-screen-edge.top,#lvMetroScreenBeat .lv-metro-screen-edge.bottom{left:0;right:0;height:var(--ls26-metro-edge-thickness,8px)}
-        #lvMetroScreenBeat .lv-metro-screen-edge.top{top:0}#lvMetroScreenBeat .lv-metro-screen-edge.bottom{bottom:0}
-        #lvMetroScreenBeat.pulse .lv-metro-screen-edge.left,#lvMetroScreenBeat.pulse .lv-metro-screen-edge.right{opacity:var(--ls26-metro-flash-opacity,.72)}
-        #lvMetroScreenBeat.pulse.beat-one .lv-metro-screen-edge.top,#lvMetroScreenBeat.pulse.beat-one .lv-metro-screen-edge.bottom{opacity:var(--ls26-metro-flash-opacity,.72)}
-        #lvMetroScreenBeat:not(.beat-one) .lv-metro-screen-edge.top,#lvMetroScreenBeat:not(.beat-one) .lv-metro-screen-edge.bottom{opacity:0!important}
-        #lvMetroScreenBeat .lv-metro-screen-number{position:absolute;right:clamp(18px,4vw,54px);top:var(--ls26-metro-number-top,31%);transform:translateY(-50%);display:grid;place-items:center;width:var(--ls26-metro-number-size,220px);height:var(--ls26-metro-number-size,220px);box-sizing:border-box;border:4px solid currentColor;border-radius:50%;background:rgba(0,10,18,.08);box-shadow:0 0 30px currentColor;color:inherit;font-size:var(--ls26-metro-number-font-size,99px);font-weight:950;line-height:1;opacity:0;transition:opacity 45ms linear}
-        #lvMetroScreenBeat.pulse .lv-metro-screen-number{opacity:var(--ls26-metro-number-opacity,.42)}
-        html.ls26-hide-metro-number #lvMetroScreenBeat .lv-metro-screen-number{display:none}
-        #lvMetroScreenBeat.accented .lv-metro-screen-edge{box-shadow:0 0 34px currentColor,0 0 82px currentColor}
-        #lvMetroScreenBeat.accented .lv-metro-screen-number{border-width:6px;box-shadow:0 0 38px currentColor,0 0 82px currentColor}
-      `;
-      document.head.appendChild(style);
-    }
-    function ensureVisualLayer(){
-      ensureVisualStyles();let layer=document.getElementById('lvMetroScreenBeat');if(layer)return layer;
-      layer=document.createElement('div');layer.id='lvMetroScreenBeat';layer.setAttribute('aria-hidden','true');
-      layer.innerHTML='<span class="lv-metro-screen-edge top"></span><span class="lv-metro-screen-edge right"></span><span class="lv-metro-screen-edge bottom"></span><span class="lv-metro-screen-edge left"></span><span class="lv-metro-screen-number"></span>';
-      document.body.appendChild(layer);return layer;
-    }
-    function applyVisualSettings(){
-      const s=getVisualSettings(),root=document.documentElement;
-      root.style.setProperty('--ls26-metro-flash-opacity',String(Number(s.metronomeFlashBrightness||72)/100));
-      root.style.setProperty('--ls26-metro-edge-thickness',Number(s.metronomeEdgeThickness||8)+'px');
-      root.style.setProperty('--ls26-metro-number-size',Number(s.metronomeNumberSize||220)+'px');
-      root.style.setProperty('--ls26-metro-number-font-size',Math.round(Number(s.metronomeNumberSize||220)*.45)+'px');
-      root.style.setProperty('--ls26-metro-number-opacity',String(Number(s.metronomeNumberOpacity||42)/100));
-      root.style.setProperty('--ls26-metro-number-top',Number(s.metronomeNumberVerticalPosition||31)+'%');
-      root.classList.toggle('ls26-hide-metro-number',s.metronomeShowBeatNumber===false);
-      return s;
-    }
-    let visualTimer;
-    function clearVisual(){
-      clearTimeout(visualTimer);const layer=document.getElementById('lvMetroScreenBeat');if(layer){layer.classList.remove('pulse','accented','beat-one');}
-    }
-    function isImprovOrange(event){
-      const p=Number(event?.position);return improvCountdown.active&&Number.isFinite(p)&&Number.isFinite(improvCountdown.orangeFromBeat)&&Number.isFinite(improvCountdown.releaseBeat)&&p>=improvCountdown.orangeFromBeat-.000001&&p<improvCountdown.releaseBeat-.000001;
-    }
-    function flashVisual(event){
-      if(!visual||event.sub!==0)return;
-      const orange=isImprovOrange(event);if(visualBeat1Only&&event.beat!==0&&!orange)return;
-      const s=applyVisualSettings(),layer=ensureVisualLayer(),beat=event.beat+1,colourIndex=(event.beat%4)+1,accented=event.beat===0&&event.accent===2;
-      layer.style.color=orange?(s.improvCountdownColor||visualDefaults.improvCountdownColor):(s['metronomeBeat'+colourIndex+'Color']||visualDefaults['metronomeBeat'+colourIndex+'Color']);
-      layer.querySelector('.lv-metro-screen-number').textContent=String(beat);
-      layer.classList.toggle('beat-one',event.beat===0);
-      layer.classList.toggle('accented',accented);
-      layer.classList.add('pulse');
-      clearTimeout(visualTimer);
-      const duration=Number(s.metronomeFlashDuration||120);
-      visualTimer=setTimeout(()=>layer.classList.remove('pulse'),Math.round(duration*(accented?1.3:1)));
-    }
+    function ensureVisualStyles(){if(document.getElementById('lvMetroVisualStyles'))return;const style=document.createElement('style');style.id='lvMetroVisualStyles';style.textContent=`
+      #lvMetroScreenBeat{position:fixed;inset:0;z-index:50000;pointer-events:none;color:var(--ls26-metro-beat-2-color,#00cafa)}
+      #lvMetroScreenBeat .lv-metro-screen-edge{position:absolute;background:currentColor;opacity:0;transition:opacity 45ms linear;box-shadow:0 0 26px currentColor,0 0 62px currentColor}
+      #lvMetroScreenBeat .lv-metro-screen-edge.left,#lvMetroScreenBeat .lv-metro-screen-edge.right{top:0;bottom:0;width:var(--ls26-metro-edge-thickness,8px)}#lvMetroScreenBeat .lv-metro-screen-edge.left{left:0}#lvMetroScreenBeat .lv-metro-screen-edge.right{right:0}
+      #lvMetroScreenBeat .lv-metro-screen-edge.top,#lvMetroScreenBeat .lv-metro-screen-edge.bottom{left:0;right:0;height:var(--ls26-metro-edge-thickness,8px)}#lvMetroScreenBeat .lv-metro-screen-edge.top{top:0}#lvMetroScreenBeat .lv-metro-screen-edge.bottom{bottom:0}
+      #lvMetroScreenBeat.pulse .lv-metro-screen-edge.left,#lvMetroScreenBeat.pulse .lv-metro-screen-edge.right{opacity:var(--ls26-metro-flash-opacity,.72)}#lvMetroScreenBeat.pulse.beat-one .lv-metro-screen-edge.top,#lvMetroScreenBeat.pulse.beat-one .lv-metro-screen-edge.bottom{opacity:var(--ls26-metro-flash-opacity,.72)}#lvMetroScreenBeat:not(.beat-one) .lv-metro-screen-edge.top,#lvMetroScreenBeat:not(.beat-one) .lv-metro-screen-edge.bottom{opacity:0!important}
+      #lvMetroScreenBeat .lv-metro-screen-number{position:absolute;right:clamp(18px,4vw,54px);top:var(--ls26-metro-number-top,31%);transform:translateY(-50%);display:grid;place-items:center;width:var(--ls26-metro-number-size,220px);height:var(--ls26-metro-number-size,220px);box-sizing:border-box;border:4px solid currentColor;border-radius:50%;background:rgba(0,10,18,.08);box-shadow:0 0 30px currentColor;color:inherit;font-size:var(--ls26-metro-number-font-size,99px);font-weight:950;line-height:1;opacity:0;transition:opacity 45ms linear}#lvMetroScreenBeat.pulse .lv-metro-screen-number{opacity:var(--ls26-metro-number-opacity,.42)}html.ls26-hide-metro-number #lvMetroScreenBeat .lv-metro-screen-number{display:none}#lvMetroScreenBeat.accented .lv-metro-screen-edge{box-shadow:0 0 34px currentColor,0 0 82px currentColor}#lvMetroScreenBeat.accented .lv-metro-screen-number{border-width:6px;box-shadow:0 0 38px currentColor,0 0 82px currentColor}
+    `;document.head.appendChild(style);}
+    function ensureVisualLayer(){ensureVisualStyles();let layer=document.getElementById('lvMetroScreenBeat');if(layer)return layer;layer=document.createElement('div');layer.id='lvMetroScreenBeat';layer.setAttribute('aria-hidden','true');layer.innerHTML='<span class="lv-metro-screen-edge top"></span><span class="lv-metro-screen-edge right"></span><span class="lv-metro-screen-edge bottom"></span><span class="lv-metro-screen-edge left"></span><span class="lv-metro-screen-number"></span>';document.body.appendChild(layer);return layer;}
+    function applyVisualSettings(){const s=getVisualSettings(),root=document.documentElement;root.style.setProperty('--ls26-metro-flash-opacity',String(Number(s.metronomeFlashBrightness||72)/100));root.style.setProperty('--ls26-metro-edge-thickness',Number(s.metronomeEdgeThickness||8)+'px');root.style.setProperty('--ls26-metro-number-size',Number(s.metronomeNumberSize||220)+'px');root.style.setProperty('--ls26-metro-number-font-size',Math.round(Number(s.metronomeNumberSize||220)*.45)+'px');root.style.setProperty('--ls26-metro-number-opacity',String(Number(s.metronomeNumberOpacity||42)/100));root.style.setProperty('--ls26-metro-number-top',Number(s.metronomeNumberVerticalPosition||31)+'%');root.classList.toggle('ls26-hide-metro-number',s.metronomeShowBeatNumber===false);return s;}
+    let visualTimer;function clearVisual(){clearTimeout(visualTimer);const layer=document.getElementById('lvMetroScreenBeat');if(layer)layer.classList.remove('pulse','accented','beat-one');}
+    function isImprovOrange(event){const p=Number(event?.position);return improvCountdown.active&&Number.isFinite(p)&&Number.isFinite(improvCountdown.orangeFromBeat)&&Number.isFinite(improvCountdown.releaseBeat)&&p>=improvCountdown.orangeFromBeat-.000001&&p<improvCountdown.releaseBeat-.000001;}
+    function flashVisual(event){if(!visual||event.sub!==0)return;const orange=isImprovOrange(event);if(visualBeat1Only&&event.beat!==0&&!orange)return;const s=applyVisualSettings(),layer=ensureVisualLayer(),beat=event.beat+1,colourIndex=(event.beat%4)+1,accented=event.beat===0&&event.accent===2;layer.style.color=orange?(s.improvCountdownColor||visualDefaults.improvCountdownColor):(s['metronomeBeat'+colourIndex+'Color']||visualDefaults['metronomeBeat'+colourIndex+'Color']);layer.querySelector('.lv-metro-screen-number').textContent=String(beat);layer.classList.toggle('beat-one',event.beat===0);layer.classList.toggle('accented',accented);layer.classList.add('pulse');clearTimeout(visualTimer);const duration=Number(s.metronomeFlashDuration||120);visualTimer=setTimeout(()=>layer.classList.remove('pulse'),Math.round(duration*(accented?1.3:1)));}
     const current=()=>window.LS26Performance?.getBpm?.()||96;
     const settings=()=>({...options,bpm:current(),countIn:0,accents:Array.from({length:options.beats},(_,i)=>i===0&&$('lvMetroAccent').checked?2:1)});
-    function sharedDriver(){
-      if(!window.LS26SongAudio)return null;
-      if(!songDriver)songDriver=window.LS26SongAudio.create({window,getSettings:()=>{
-        const meter=window.LS26TimedView?.meter?.();return {...settings(),...(window.LS26TimedView?.enabled()&&meter?{beats:meter.beatsPerBar,beatUnit:meter.beatUnit}:{} )};
-      },onClick:event=>queue.push(event),onState:state=>{
-        if(state.state!=='playing'){running=false;starting=false;cancel();$('lvMetroStatus').textContent=state.state==='paused'?'Paused · beat retained':'Stopped';sync();}
-        window.dispatchEvent(new CustomEvent('ls26:transport-state',{detail:state}));
-      }});
-      return songDriver;
-    }
-    function persist(){try{localStorage.setItem(key,JSON.stringify({...options,follow,visual,visualBeat1Only,showChordHighlight,accent:$('lvMetroAccent').checked}));}catch(_) {}}
+    function sharedDriver(){if(!window.LS26SongAudio)return null;if(!songDriver)songDriver=window.LS26SongAudio.create({window,getSettings:()=>{const meter=window.LS26TimedView?.meter?.();return {...settings(),...(window.LS26TimedView?.enabled()&&meter?{beats:meter.beatsPerBar,beatUnit:meter.beatUnit}:{})};},onClick:event=>queue.push(event),onState:state=>{if(state.state!=='playing'){running=false;starting=false;cancel();$('lvMetroStatus').textContent=state.state==='paused'?'Paused · beat retained':'Stopped';sync();}window.dispatchEvent(new CustomEvent('ls26:transport-state',{detail:state}));}});return songDriver;}
+    function persist(){try{localStorage.setItem(key,JSON.stringify({...options,follow,countInEnabled,visual,visualBeat1Only,showChordHighlight,accent:$('lvMetroAccent').checked}));}catch(_) {}}
     function persistControls(){try{localStorage.setItem(controlsKey,showFollowControls?'1':'0');}catch(_) {}}
     function broadcastVisual(source='metronome-setting'){window.dispatchEvent(new CustomEvent('ls26:visual-beat-settings',{detail:{visual,beat1Only:visualBeat1Only,source}}));}
+    function broadcastCountIn(source='metronome-setting'){window.dispatchEvent(new CustomEvent('ls26:count-in-setting',{detail:{enabled:countInEnabled,source}}));}
     function broadcastChordHighlight(source='metronome-setting'){window.dispatchEvent(new CustomEvent('ls26:chord-highlight-visibility',{detail:{visible:showChordHighlight,source}}));}
     function sync(){
-      $('lvMetroBpm').textContent=current();$('lvMetroStart').textContent=running?'Stop click':songDriver?.snapshot().state==='paused'?'Resume click':'Start click';$('lvMetroStart').setAttribute('aria-pressed',String(running));
-      const meter=window.LS26TimedView?.enabled()&&window.LS26TimedView.meter();
-      $('lvMetroBeats').disabled=Boolean(meter);$('lvMetroBeats').value=meter?.beatsPerBar||options.beats;
-      $('lvMetroBeats').title=meter?`Uses song meter ${meter.beatsPerBar}/${meter.beatUnit} while Chord Follow is on`:'';
-      if($('lvMetroShowChordFollowControls'))$('lvMetroShowChordFollowControls').checked=showFollowControls;
-      if($('lvMetroVisual'))$('lvMetroVisual').checked=visual;
-      if($('lvMetroBeat1Only'))$('lvMetroBeat1Only').checked=visualBeat1Only;
-      if($('lvMetroShowChordHighlight'))$('lvMetroShowChordHighlight').checked=showChordHighlight;
+      $('lvMetroBpm').textContent=current();$('lvMetroStart').textContent=running?'Stop click':songDriver?.snapshot().state==='paused'?'Resume click':'Start click';$('lvMetroStart').setAttribute('aria-pressed',String(running));const meter=window.LS26TimedView?.enabled()&&window.LS26TimedView.meter();$('lvMetroBeats').disabled=Boolean(meter);$('lvMetroBeats').value=meter?.beatsPerBar||options.beats;$('lvMetroBeats').title=meter?`Uses song meter ${meter.beatsPerBar}/${meter.beatUnit} while Chord Follow is on`:'';
+      $('lvMetroCountIn').checked=countInEnabled;$('lvMetroVisual').checked=visual;$('lvMetroBeat1Only').checked=visualBeat1Only;$('lvMetroShowChordHighlight').checked=showChordHighlight;if($('lvMetroShowChordFollowControls'))$('lvMetroShowChordFollowControls').checked=showFollowControls;if($('quickCountInToggle'))$('quickCountInToggle').checked=countInEnabled;if($('quickVisualBeatToggle'))$('quickVisualBeatToggle').checked=visual;
     }
-    function cancel(){clearInterval(timer);cancelAnimationFrame(frame);clearVisual();queue=[];for(const node of nodes){try{node.stop();}catch(_){}}nodes.clear();$('lvMetroBeat').classList.remove('active');}
+    function cancel(){clearInterval(timer);cancelAnimationFrame(frame);clearVisual();queue=[];for(const node of nodes){try{node.stop();}catch(_) {}}nodes.clear();$('lvMetroBeat').classList.remove('active');}
     function stop(message='Stopped'){version++;running=false;starting=false;cancel();songDriver?.stop();if(master){master.gain.cancelScheduledValues(context.currentTime);master.gain.setValueAtTime(0,context.currentTime);}$('lvMetroStart').disabled=false;$('lvMetroStatus').textContent=message;sync();}
     function pause(){version++;running=false;starting=false;cancel();songDriver?.pause();$('lvMetroStart').disabled=false;$('lvMetroStatus').textContent='Paused · beat retained';sync();}
-    function emit(event){
-      queue.push(event);if(!event.settings.volume)return;
-      const osc=context.createOscillator(),gain=context.createGain(),time=event.time;
-      osc.type='sine';osc.frequency.setValueAtTime(event.sub?700:event.accent===2?1600:1000,time);
-      gain.gain.setValueAtTime(.0001,time);gain.gain.exponentialRampToValueAtTime(event.sub ? .14 : event.accent===2 ? .5 : .3,time+.002);gain.gain.exponentialRampToValueAtTime(.0001,time+.045);
-      osc.connect(gain);gain.connect(master);nodes.add(osc);osc.onended=()=>{nodes.delete(osc);osc.disconnect();gain.disconnect();};osc.start(time);osc.stop(time+.055);
-    }
-    let lastBeatAt=-1;
-    function draw(){
-      if(!running)return;
-      let event,lastFullBeat=null;while(queue.length&&queue[0].time<=context.currentTime){event=queue.shift();if(event.sub===0)lastFullBeat=event;}
-      if(lastFullBeat){
-        event=lastFullBeat;lastBeatAt=event.time;$('lvMetroBeat').textContent=String(event.beat+1);flashVisual(event);$('lvMetroStatus').textContent=event.countIn?'Count-in · 1 bar':'Playing';
-        window.dispatchEvent(new CustomEvent('ls26:metronome-beat',{detail:{position:Number(event.position),beat:event.beat+1,beatIndex:event.beat,bar:event.bar,countIn:Boolean(event.countIn)}}));
-      }
-      $('lvMetroBeat').classList.toggle('active',context.currentTime-lastBeatAt<.09);frame=requestAnimationFrame(draw);
-    }
+    function emit(event){queue.push(event);if(!event.settings.volume)return;const osc=context.createOscillator(),gain=context.createGain(),time=event.time;osc.type='sine';osc.frequency.setValueAtTime(event.sub?700:event.accent===2?1600:1000,time);gain.gain.setValueAtTime(.0001,time);gain.gain.exponentialRampToValueAtTime(event.sub?.14:event.accent===2?.5:.3,time+.002);gain.gain.exponentialRampToValueAtTime(.0001,time+.045);osc.connect(gain);gain.connect(master);nodes.add(osc);osc.onended=()=>{nodes.delete(osc);osc.disconnect();gain.disconnect();};osc.start(time);osc.stop(time+.055);}
+    let lastBeatAt=-1;function draw(){if(!running)return;let event,lastFullBeat=null;while(queue.length&&queue[0].time<=context.currentTime){event=queue.shift();if(event.sub===0)lastFullBeat=event;}if(lastFullBeat){event=lastFullBeat;lastBeatAt=event.time;$('lvMetroBeat').textContent=String(event.beat+1);flashVisual(event);$('lvMetroStatus').textContent=event.countIn?'Count-in · 1 bar':'Playing';window.dispatchEvent(new CustomEvent('ls26:metronome-beat',{detail:{position:Number(event.position),beat:event.beat+1,beatIndex:event.beat,bar:event.bar,countIn:Boolean(event.countIn)}}));}$('lvMetroBeat').classList.toggle('active',context.currentTime-lastBeatAt<.09);frame=requestAnimationFrame(draw);}
     async function start({fromBottom=false}={}){
-      if(running||starting||!window.LS26Performance?.song())return;
-      const token=++version;starting=true;$('lvMetroStart').disabled=true;
-      try{
-        const driver=sharedDriver();
-        if(driver){
-          const snapshot=driver.snapshot(),meter=window.LS26TimedView?.enabled()?window.LS26TimedView?.meter?.():null;
-          const countInBeats=meter?Math.max(.5,Number(meter.beatsPerBar||4)*4/Number(meter.beatUnit||4)):(fromBottom?options.beats:0);
-          const ok=await (snapshot.state==='paused'?driver.resume():driver.start(countInBeats?{countInBeats}:{}));if(token!==version||!ok)return;
-          context=driver.context;running=true;starting=false;draw();sync();$('lvMetroStatus').textContent=countInBeats?'Count-in · 1 bar':'Playing';return;
-        }
-        const Audio=window.AudioContext||window.webkitAudioContext;if(!Audio)throw Error('Audio is unavailable in this browser.');
-        if(!context){context=new Audio();master=context.createGain();master.connect(context.destination);context.onstatechange=()=>{if(running&&context.state!=='running')stop('Audio paused. Tap Start click to resume.');};}
-        await context.resume();if(token!==version)return;
-        if(context.state!=='running')throw Error('Tap Start click to enable audio.');
-        master.gain.setValueAtTime(options.volume/100,context.currentTime);running=true;starting=false;
-        clock=new engine.Clock(settings,emit);clock.start(context.currentTime+.05);clock.schedule(context.currentTime);
-        timer=setInterval(()=>clock.schedule(context.currentTime),25);draw();sync();$('lvMetroStatus').textContent='Playing';
-      }catch(error){if(token===version)stop(error.message);}
-      finally{if(token===version){starting=false;$('lvMetroStart').disabled=false;}}
+      if(running||starting||!window.LS26Performance?.song())return;const token=++version;starting=true;$('lvMetroStart').disabled=true;
+      try{const driver=sharedDriver();if(driver){const snapshot=driver.snapshot(),meter=window.LS26TimedView?.enabled()?window.LS26TimedView?.meter?.():null,countInBeats=countInEnabled&&fromBottom?(meter?Math.max(.5,Number(meter.beatsPerBar||4)*4/Number(meter.beatUnit||4)):options.beats):0;const ok=await(snapshot.state==='paused'?driver.resume():driver.start(countInBeats?{countInBeats}:{}));if(token!==version||!ok)return;context=driver.context;running=true;starting=false;draw();sync();$('lvMetroStatus').textContent=countInBeats?'Count-in · 1 bar':'Playing';return;}
+        const Audio=window.AudioContext||window.webkitAudioContext;if(!Audio)throw Error('Audio is unavailable in this browser.');if(!context){context=new Audio();master=context.createGain();master.connect(context.destination);context.onstatechange=()=>{if(running&&context.state!=='running')stop('Audio paused. Tap Start click to resume.');};}await context.resume();if(token!==version)return;if(context.state!=='running')throw Error('Tap Start click to enable audio.');master.gain.setValueAtTime(options.volume/100,context.currentTime);running=true;starting=false;clock=new engine.Clock(settings,emit);clock.start(context.currentTime+.05);clock.schedule(context.currentTime);timer=setInterval(()=>clock.schedule(context.currentTime),25);draw();sync();$('lvMetroStatus').textContent='Playing';
+      }catch(error){if(token===version)stop(error.message);}finally{if(token===version){starting=false;$('lvMetroStart').disabled=false;}}
     }
-    $('lvMetroFollow').checked=follow;$('lvMetroVisual').checked=visual;$('lvMetroBeat1Only').checked=visualBeat1Only;$('lvMetroShowChordHighlight').checked=showChordHighlight;$('lvMetroAccent').checked=saved.accent!==false;$('lvMetroShowChordFollowControls').checked=showFollowControls;
-    $('lvMetroBeats').value=options.beats;$('lvMetroDivision').value=options.division;$('lvMetroVolume').value=options.volume;$('lvMetroVolumeLabel').textContent=options.volume+'%';
-    $('lvMetroStart').onclick=()=>running||starting?stop():start();
-    $('lvMetroTap').onclick=()=>{const tap=engine.tapTempo(taps,performance.now());taps=tap.times;if(tap.bpm){window.LS26Performance?.setBpm(tap.bpm);sync();}$('lvMetroStatus').textContent=tap.bpm?`${tap.bpm} BPM · ${taps.length} taps`:'Tap again to measure tempo';};
-    $('lvMetroFollow').onchange=e=>{follow=e.target.checked;persist();if(follow){if(window.LS26Performance?.isScrolling())start();else stop();}};
-    $('lvMetroVisual').onchange=e=>{visual=e.target.checked;persist();if(!visual)clearVisual();broadcastVisual();};
-    $('lvMetroBeat1Only').onchange=e=>{visualBeat1Only=e.target.checked;persist();broadcastVisual();};
-    $('lvMetroShowChordHighlight').onchange=e=>{showChordHighlight=e.target.checked;persist();broadcastChordHighlight();};
-    $('lvMetroShowChordFollowControls').onchange=e=>{showFollowControls=e.target.checked;persistControls();window.dispatchEvent(new CustomEvent('ls26:chord-follow-controls-visibility',{detail:{visible:showFollowControls,source:'metronome-setting'}}));};
-    window.addEventListener('ls26:chord-follow-controls-visibility',event=>{if(event.detail?.source==='metronome-setting')return;showFollowControls=event.detail?.visible!==false;persistControls();sync();});
-    window.addEventListener('ls26:visual-beat-settings-request',event=>{
-      if(event.detail?.source==='metronome-setting')return;
-      if(typeof event.detail?.visual==='boolean')visual=event.detail.visual;
-      if(typeof event.detail?.beat1Only==='boolean')visualBeat1Only=event.detail.beat1Only;
-      persist();if(!visual)clearVisual();sync();broadcastVisual('metronome-setting');
-    });
-    window.addEventListener('ls26:improv-release-countdown',event=>{
-      const d=event.detail||{};improvCountdown=d.active?{active:true,orangeFromBeat:Number(d.orangeFromBeat),releaseBeat:Number(d.releaseBeat)}:{active:false,orangeFromBeat:null,releaseBeat:null};
-    });
-    $('lvMetroAccent').onchange=persist;
-    for(const [id,name] of [['lvMetroBeats','beats'],['lvMetroDivision','division']])$(id).onchange=e=>{options=engine.normalize({...options,[name]:e.target.value});persist();if(running){cancel();if(songDriver)songDriver.refresh();else{clock=new engine.Clock(settings,emit);clock.start(context.currentTime+.05);timer=setInterval(()=>clock.schedule(context.currentTime),25);}draw();}};
-    $('lvMetroVolume').oninput=e=>{options.volume=Number(e.target.value);$('lvMetroVolumeLabel').textContent=options.volume+'%';persist();if(songDriver)songDriver.refresh();else if(running)master.gain.setTargetAtTime(options.volume/100,context.currentTime,.01);};
-    window.addEventListener('ls26:tempo-changed',()=>{sync();if(songDriver){queue=[];songDriver.setBpm(current());}});
-    window.addEventListener('ls26:settings-applied',applyVisualSettings);
-    window.addEventListener('ls26:scroll-state',e=>{if(follow||window.LS26TimedView?.enabled()||window.LS26SingerBridge){if(e.detail.playing)start({fromBottom:true});else if(songDriver)pause();else stop();}});
-    window.addEventListener('ls26:song-ready',()=>{stop();taps=[];sync();});
-    window.addEventListener('ls26:song-finished',()=>songDriver&&window.LS26TimedView?.enabled()?pause():stop());
-    window.addEventListener('pagehide',()=>stop());
-    document.addEventListener('visibilitychange',()=>{if(document.hidden&&(running||starting)){if(songDriver)pause();else stop('Paused while hidden. Tap Start click to resume.');}});
-    applyVisualSettings();sync();
-    window.dispatchEvent(new CustomEvent('ls26:chord-follow-controls-visibility',{detail:{visible:showFollowControls,source:'metronome-setting'}}));
-    broadcastVisual();broadcastChordHighlight();
-    const api={stop,pause,start,driver:sharedDriver};window.LS26Click=api;return api;
+    function setCountIn(enabled,source='metronome-setting'){countInEnabled=enabled!==false;persist();const driver=sharedDriver(),snapshot=driver?.snapshot?.();if(!countInEnabled&&snapshot?.state==='playing'&&Number(snapshot.beat)<0)driver.seek(0);sync();broadcastCountIn(source);}
+    function setVisual(enabled,source='metronome-setting'){visual=enabled===true;persist();if(!visual)clearVisual();sync();broadcastVisual(source);}
+    $('lvMetroFollow').checked=follow;$('lvMetroCountIn').checked=countInEnabled;$('lvMetroVisual').checked=visual;$('lvMetroBeat1Only').checked=visualBeat1Only;$('lvMetroShowChordHighlight').checked=showChordHighlight;$('lvMetroAccent').checked=saved.accent!==false;$('lvMetroShowChordFollowControls').checked=showFollowControls;$('lvMetroBeats').value=options.beats;$('lvMetroDivision').value=options.division;$('lvMetroVolume').value=options.volume;$('lvMetroVolumeLabel').textContent=options.volume+'%';
+    $('lvMetroStart').onclick=()=>running||starting?stop():start();$('lvMetroTap').onclick=()=>{const tap=engine.tapTempo(taps,performance.now());taps=tap.times;if(tap.bpm){window.LS26Performance?.setBpm(tap.bpm);sync();}$('lvMetroStatus').textContent=tap.bpm?`${tap.bpm} BPM · ${taps.length} taps`:'Tap again to measure tempo';};$('lvMetroFollow').onchange=e=>{follow=e.target.checked;persist();if(follow){if(window.LS26Performance?.isScrolling())start();else stop();}};$('lvMetroCountIn').onchange=e=>setCountIn(e.target.checked);$('lvMetroVisual').onchange=e=>setVisual(e.target.checked);$('lvMetroBeat1Only').onchange=e=>{visualBeat1Only=e.target.checked;persist();broadcastVisual();};$('lvMetroShowChordHighlight').onchange=e=>{showChordHighlight=e.target.checked;persist();broadcastChordHighlight();};$('lvMetroShowChordFollowControls').onchange=e=>{showFollowControls=e.target.checked;persistControls();window.dispatchEvent(new CustomEvent('ls26:chord-follow-controls-visibility',{detail:{visible:showFollowControls,source:'metronome-setting'}}));};
+    window.addEventListener('ls26:count-in-setting-request',event=>{if(event.detail?.source==='metronome-setting')return;if(typeof event.detail?.enabled==='boolean')setCountIn(event.detail.enabled,'metronome-setting');});
+    window.addEventListener('ls26:visual-beat-settings-request',event=>{if(event.detail?.source==='metronome-setting')return;if(typeof event.detail?.visual==='boolean')visual=event.detail.visual;if(typeof event.detail?.beat1Only==='boolean')visualBeat1Only=event.detail.beat1Only;persist();if(!visual)clearVisual();sync();broadcastVisual('metronome-setting');});
+    window.addEventListener('ls26:chord-follow-controls-visibility',event=>{if(event.detail?.source==='metronome-setting')return;showFollowControls=event.detail?.visible!==false;persistControls();sync();});window.addEventListener('ls26:improv-release-countdown',event=>{const d=event.detail||{};improvCountdown=d.active?{active:true,orangeFromBeat:Number(d.orangeFromBeat),releaseBeat:Number(d.releaseBeat)}:{active:false,orangeFromBeat:null,releaseBeat:null};});
+    $('lvMetroAccent').onchange=persist;for(const [id,name]of[['lvMetroBeats','beats'],['lvMetroDivision','division']])$(id).onchange=e=>{options=engine.normalize({...options,[name]:e.target.value});persist();if(running){cancel();if(songDriver)songDriver.refresh();else{clock=new engine.Clock(settings,emit);clock.start(context.currentTime+.05);timer=setInterval(()=>clock.schedule(context.currentTime),25);}draw();}};$('lvMetroVolume').oninput=e=>{options.volume=Number(e.target.value);$('lvMetroVolumeLabel').textContent=options.volume+'%';persist();if(songDriver)songDriver.refresh();else if(running)master.gain.setTargetAtTime(options.volume/100,context.currentTime,.01);};
+    window.addEventListener('ls26:tempo-changed',()=>{sync();if(songDriver){queue=[];songDriver.setBpm(current());}});window.addEventListener('ls26:settings-applied',applyVisualSettings);window.addEventListener('ls26:scroll-state',e=>{if(follow||window.LS26TimedView?.enabled()||window.LS26SingerBridge){if(e.detail.playing)start({fromBottom:true});else if(songDriver)pause();else stop();}});window.addEventListener('ls26:song-ready',()=>{stop();taps=[];sync();});window.addEventListener('ls26:song-finished',()=>songDriver&&window.LS26TimedView?.enabled()?pause():stop());window.addEventListener('pagehide',()=>stop());document.addEventListener('visibilitychange',()=>{if(document.hidden&&(running||starting)){if(songDriver)pause();else stop('Paused while hidden. Tap Start click to resume.');}});
+    applyVisualSettings();sync();window.dispatchEvent(new CustomEvent('ls26:chord-follow-controls-visibility',{detail:{visible:showFollowControls,source:'metronome-setting'}}));broadcastCountIn();broadcastVisual();broadcastChordHighlight();
+    const api={stop,pause,start,driver:sharedDriver,setCountInEnabled:setCountIn,setVisualBeat:setVisual,get countInEnabled(){return countInEnabled;},get visualEnabled(){return visual;}};window.LS26Click=api;return api;
   }
   window.LS26LyricMetronome={mount};
 })();
