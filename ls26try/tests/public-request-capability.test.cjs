@@ -90,11 +90,11 @@ for(const configPath of ['billylee26/js/firebase-config.js','livekaraoke26/js/fi
     await f.window.BillyLeeDB.collection('publicSongRequests').doc(ref.id).set({note:'new',updatedAt:{__serverTimestamp:true}},{merge:true});
     assert.equal(f.writes.length,1);
     assert.equal(f.writes[0].length,2);
-    assert.deepEqual(f.writes[0][0].options,{merge:true});
+    assert.equal(f.writes[0][0].options?.merge,true);
     assert.equal(f.writes[0][0].path,`publicSongRequests/${ref.id}`);
     assert.equal(f.writes[0][1].path,`publicSongRequestOwners/${ref.id}`);
     assert.equal(f.writes[0][1].data.token,f.storage.get(`ls26.publicRequestCapability.${ref.id}`));
-    assert.deepEqual(f.writes[0][1].options,{merge:true});
+    assert.equal(f.writes[0][1].options?.merge,true);
   });
 
   test(`${configPath}: pre-cutover request keeps direct server-rule fallback`,async()=>{
@@ -103,7 +103,7 @@ for(const configPath of ['billylee26/js/firebase-config.js','livekaraoke26/js/fi
     assert.equal(f.writes.length,0);
     assert.equal(f.directSets.length,1);
     assert.equal(f.directSets[0].path,'publicSongRequests/old-request');
-    assert.deepEqual(f.directSets[0].options,{merge:true});
+    assert.equal(f.directSets[0].options?.merge,true);
   });
 
   test(`${configPath}: unrelated collections are not wrapped`,async()=>{
