@@ -4,7 +4,6 @@
  */
 (() => {
   'use strict';
-  const pagePath=String(location.pathname||'');
   const dataScriptUrl=document.currentScript?.src||location.href;
   const pending=new Map(),TTL=15*60*1000;
   const scope=()=>`${firebase.app().options.projectId}:${firebase.auth?.().currentUser?.uid||'host'}`;
@@ -24,7 +23,9 @@
     const path=String(location.pathname||'');
     if(document.getElementById('topStatusContainer')){loadSharedHelper('manual-request.js?v=20261006-manual-request-v2','ls26ManualRequestLoader');loadSharedHelper('manual-request-button-layout.js?v=20261006-manual-request-layout-v1','ls26ManualRequestLayoutLoader');}
     if(/\/admin-new\/performance-sessions\.html$/i.test(path))loadSharedHelper('session-history-fixes.js?v=20261006-request-history-fix-v1','ls26SessionHistoryFixLoader');
-    if(/\/host\/(?:lyricview|karaoke-lyric-view)\.html$/i.test(path))loadSharedHelper('chord-beat-labels.js?v=20261007-singer-suite-v4','ls26ChordBeatLabelsLoader');
+    // LyricView receives the helper here; Singer Screen loads it directly so it
+    // is available before the first Guitaroke render without a duplicate fetch.
+    if(/\/host\/lyricview\.html$/i.test(path))loadSharedHelper('chord-beat-labels.js?v=20261007-singer-suite-v4','ls26ChordBeatLabelsLoader');
   }
   if(document.readyState==='complete')loadFocusedHelpers();else window.addEventListener('load',loadFocusedHelpers,{once:true});
 })();
