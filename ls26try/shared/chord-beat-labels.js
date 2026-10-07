@@ -5,7 +5,6 @@
 
   const cache = new Map();
   const clamp = (value,min,max) => Math.max(min,Math.min(max,value));
-  const escId = value => String(value || '').replace(/[^a-zA-Z0-9_-]/g,'_');
 
   function installStyles() {
     if (document.getElementById('ls26ChordBeatLabelStyles')) return;
@@ -92,7 +91,9 @@
 
   function existing(root,event) {
     const id = String(event?.id || '');
-    return id ? root.querySelector(`.ls26-chord-beat-marker[data-ls26-beat-event="${CSS.escape ? CSS.escape(id) : escId(id)}"]`) : null;
+    if (!id) return null;
+    return [...root.querySelectorAll('.ls26-chord-beat-marker')]
+      .find(node => node.dataset.ls26BeatEvent === id) || null;
   }
 
   function closestChordElement(node,root,symbol) {
@@ -143,10 +144,6 @@
     range.collapse(true);
     range.insertNode(marker);
     return true;
-  }
-
-  function clearMarkers(root) {
-    root?.querySelectorAll?.('.ls26-chord-beat-marker').forEach(node => node.remove());
   }
 
   function decorateLyricView(timing) {
