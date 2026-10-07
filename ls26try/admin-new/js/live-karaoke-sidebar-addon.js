@@ -24,10 +24,12 @@
     style.textContent=`
       .suite-sidebar .suite-nav-section-title,
       .suite-sidebar .suite-collapsible-heading{
-        text-transform:none!important;
+        text-transform:uppercase!important;
       }
       .suite-sidebar .lk-sidebar-group{display:block}
-      .suite-sidebar .lk-sidebar-group-toggle{display:grid!important;grid-template-columns:26px minmax(0,1fr) auto!important;width:100%;border:0;background:transparent;color:inherit;text-align:left}
+      .suite-sidebar .lk-sidebar-group-toggle{display:grid!important;grid-template-columns:26px minmax(0,1fr) auto!important;width:100%;border:0;background:transparent;color:inherit;text-align:left;text-transform:none!important}
+      .suite-sidebar .lk-sidebar-group-toggle .suite-nav-label,
+      .suite-sidebar .lk-sidebar-group-panel .suite-nav-label{text-transform:none!important}
       .suite-sidebar .lk-sidebar-group-toggle .suite-nav-chevron{transition:transform .16s ease}
       .suite-sidebar .lk-sidebar-group-toggle[aria-expanded="true"] .suite-nav-chevron{transform:rotate(90deg)}
       .suite-sidebar .lk-sidebar-group-panel{margin-left:18px;padding-left:8px;border-left:1px solid rgba(127,153,170,.22)}
@@ -80,20 +82,20 @@
 
   function normaliseSidebarLabels(root){
     const replacements=[
-      [".live-title > span:first-child","Live overview"],
-      [".records-title","Bookings & records"],
-      [".tools-title","Tools"],
-      [".music-title","Music"],
-      [".system-title","System"]
+      [".live-title > span:first-child","LIVE OVERVIEW"],
+      [".records-title","BOOKINGS & RECORDS"],
+      [".tools-title","TOOLS"],
+      [".music-title","MUSIC"],
+      [".system-title","SYSTEM"]
     ];
     replacements.forEach(([selector,label])=>{
       const node=root.querySelector(selector);
       if(node)node.textContent=label;
     });
     const liveBadge=root.querySelector("#sidebarLiveNowBadge");
-    if(liveBadge)liveBadge.textContent="● Live now";
+    if(liveBadge)liveBadge.textContent="● LIVE NOW";
 
-    const brandLabels={"live-karaoke":"Live Karaoke","billy-lee":"Billy Lee",roxanna:"Roxanna"};
+    const brandLabels={"live-karaoke":"LIVE KARAOKE","billy-lee":"BILLY LEE",roxanna:"ROXANNA"};
     Object.entries(brandLabels).forEach(([key,label])=>{
       const button=root.querySelector(`[data-sidebar-brand-toggle="${key}"]`);
       const text=button?.querySelector("span:first-child");
