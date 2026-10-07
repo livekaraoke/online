@@ -1,3 +1,13 @@
+// ISOLATED KIOSK FRAGMENT — DO NOT DEPLOY THIS FILE BY ITSELF.
+//
+// Emulator testing of the real/current rules shape exposed broad anonymous write
+// grants outside this fragment. Those grants can bypass kiosk-only restrictions
+// because Firestore ORs matching allow statements.
+//
+// Use `security-hardening.fragment` plus `SECURITY-HARDENING.md` for the current
+// merge plan. This file is retained because the original isolated kiosk emulator
+// harness uses it to prove the kiosk-specific validation in isolation.
+//
 // Merge ONLY after reviewing the complete deployed rules. See README.md.
 // Put these functions/matches inside match /databases/{database}/documents.
 // Reuse the actual existing isOwner() predicate (do not redefine it here).
