@@ -8,6 +8,7 @@
   const CHANNEL = 'ls26-singer-live-v3';
   const read = (key,fallback) => { try { return localStorage.getItem(key) ?? fallback; } catch (_) { return fallback; } };
   const clamp = (v,min,max) => Math.max(min,Math.min(max,v));
+  let applyingFastFocus = false;
 
   function installStyles() {
     if (document.getElementById('ls26SingerScreenPolishStyles')) return;
@@ -59,12 +60,17 @@
     const lines = currentLines();
     const index = lines.indexOf(line);
     if (index < 0) return;
-    lines.forEach((item,i) => {
-      const distance = Math.abs(i-index);
-      item.classList.toggle('is-current',distance === 0);
-      item.classList.toggle('is-context',distance === 1 || distance === 2);
-      item.classList.toggle('is-muted',distance > 2);
-    });
+    applyingFastFocus = true;
+    try {
+      lines.forEach((item,i) => {
+        const distance = Math.abs(i-index);
+        item.classList.toggle('is-current',distance === 0);
+        item.classList.toggle('is-context',distance === 1 || distance === 2);
+        item.classList.toggle('is-muted',distance > 2);
+      });
+    } finally {
+      queueMicrotask(() => { applyingFastFocus = false; });
+    }
   }
 
   function autoScrollAllowed() {
@@ -105,6 +111,7 @@
     const root = document.getElementById('ls26SingerV31Lyrics');
     if (!root) return;
     const observer = new MutationObserver(mutations => {
+      if (applyingFastFocus) return;
       for (const mutation of mutations) {
         if (mutation.type !== 'attributes' || mutation.attributeName !== 'class') continue;
         const node = mutation.target;
