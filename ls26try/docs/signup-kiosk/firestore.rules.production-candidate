@@ -1,0 +1,760 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner() {
+      return signedIn()
+        && request.auth.token.email == "leeborg23@gmail.com";
+    }
+
+    function validReminder(data) {
+      return data.text is string
+        && data.text.size() > 0
+        && data.text.size() <= 5000
+        && data.status in ['pending', 'completed', 'archived']
+        && data.priority in ['low', 'normal', 'high']
+        && data.category is string
+        && data.category.size() <= 80
+        && data.link is string
+        && data.link.size() <= 2000
+        && (data.dueAt == null || data.dueAt is timestamp);
+    }
+
+    function publicText(value, maximum) {
+      return value is string
+        && value.size() <= maximum;
+    }
+
+    function publicNonBlankText(value, maximum) {
+      return publicText(value, maximum)
+        && value.matches('.*[^\\s].*');
+    }
+
+    /*
+     * LIVE KARAOKE REVIEWS
+     *
+     * Public users may submit/update only review_ documents.
+     * They can never approve or publish their own reviews.
+     * Moderation is owner-only.
+     */
+    function isLiveKaraokeReviewId(profileId) {
+      return profileId.matches('^review_.+$');
+    }
+
+    function validLiveKaraokeReview(data, profileId) {
+      return isLiveKaraokeReviewId(profileId)
+
+        && data.reviewRecord == true
+        && data.source == 'livekaraoke26-request-popup'
+
+        && data.reviewKey is string
+        && data.reviewKey.size() > 0
+        && data.reviewKey.size() <= 120
+        && profileId == 'review_' + data.reviewKey
+
+        && data.name is string
+        && data.name.size() <= 80
+
+        && data.country is string
+        && data.country.size() <= 80
+
+        && (
+          data.rating == null
+          || (
+            data.rating is number
+            && data.rating >= 1
+            && data.rating <= 5
+          )
+        )
+
+        && data.review is string
+        && data.review.size() <= 1200
+
+        && data.reviewPrivate is bool
+
+        // Public submissions can never approve themselves.
+        && data.reviewApproved == false
+
+        && data.reviewStatus in [
+          'pending',
+          'private',
+          'withdrawn'
+        ]
+
+        && data.requesterDeviceId is string
+        && data.requesterDeviceId.size() <= 160
+
+        // Keep private/public state consistent.
+        && (
+          (
+            data.review.size() == 0
+            && data.rating == null
+            && data.reviewStatus == 'withdrawn'
+          )
+          ||
+          (
+            (
+              data.review.size() > 0
+              || data.rating != null
+            )
+            &&
+            (
+              (
+                data.reviewPrivate == true
+                && data.reviewStatus == 'private'
+              )
+              ||
+              (
+                data.reviewPrivate == false
+                && data.reviewStatus == 'pending'
+              )
+            )
+          )
+        );
+    }
+
+    /*
+     * PUBLIC SONG REQUEST SECURITY
+     *
+     * Normal public requests can still be created anonymously, but malformed
+     * requests and host-result fields are rejected. Public editing/cancellation
+     * requires a private per-request capability stored outside the readable
+     * request document.
+     */
+    function isKioskRequest(requestId) {
+      return requestId.matches('^kiosk_.*')
+        || request.resource.data.get('source', '') == 'signup-kiosk';
+    }
+
+    function validNormalPublicRequestCreate(requestId) {
+      let d = request.resource.data;
+      let singer = d.get(
+        'singerName',
+        d.get('name', d.get('requesterName', ''))
+      );
+
+      return !requestId.matches('^kiosk_.*')
+        && d.get('source', '') != 'signup-kiosk'
+        && d.keys().hasAll([
+          'source',
+          'sessionId',
+          'songId',
+          'createdAt'
+        ])
+        && d.keys().size() <= 40
+        && publicNonBlankText(d.get('source', ''), 80)
+        && publicNonBlankText(d.get('sessionId', ''), 180)
+        && publicNonBlankText(d.get('songId', ''), 180)
+        && publicNonBlankText(singer, 80)
+        && publicText(d.get('songTitle', ''), 220)
+        && publicText(d.get('songArtist', d.get('artist', '')), 220)
+        && publicText(d.get('note', ''), 300)
+        && publicText(d.get('comment', ''), 300)
+        && d.get('status', 'active') in [
+          'active',
+          'pending',
+          'waiting'
+        ]
+        && d.createdAt == request.time
+        && exists(
+          /databases/$(database)/documents/lyrics/$(d.songId)
+        )
+        && !d.keys().hasAny([
+          'acceptedAt',
+          'acceptedBy',
+          'approvedAt',
+          'approvedBy',
+          'playedAt',
+          'completedAt',
+          'declinedAt',
+          'declinedBy',
+          'rejectedAt',
+          'rejectedBy',
+          'rejectionReason',
+          'hostNote',
+          'outcome',
+          'result'
+        ]);
+    }
+
+    function publicRequestChangedOnly(allowed) {
+      return request.resource.data
+        .diff(resource.data)
+        .affectedKeys()
+        .hasOnly(allowed);
+    }
+
+    function validPublicNoteEdit() {
+      return publicRequestChangedOnly([
+          'note',
+          'comment',
+          'updatedAt'
+        ])
+        && request.resource.data.get('status', '')
+          == resource.data.get('status', '')
+        && publicText(request.resource.data.get('note', ''), 300)
+        && publicText(request.resource.data.get('comment', ''), 300)
+        && request.resource.data.updatedAt == request.time;
+    }
+
+    function validPublicCancellation() {
+      return publicRequestChangedOnly([
+          'status',
+          'reason',
+          'cancelledAt',
+          'updatedAt'
+        ])
+        && resource.data.get('status', '') in [
+          'active',
+          'pending',
+          'waiting',
+          'accepted',
+          'queued'
+        ]
+        && request.resource.data.status == 'cancelled'
+        && request.resource.data.reason == 'Cancelled by requester'
+        && request.resource.data.cancelledAt == request.time
+        && request.resource.data.updatedAt == request.time;
+    }
+
+    function hasFreshPublicRequestCapability(requestId) {
+      let before = get(
+        /databases/$(database)/documents/publicSongRequestOwners/$(requestId)
+      ).data;
+      let after = getAfter(
+        /databases/$(database)/documents/publicSongRequestOwners/$(requestId)
+      ).data;
+
+      return before.token is string
+        && before.token.matches('^[a-f0-9]{64}$')
+        && after.token == before.token
+        && after.createdAt == before.createdAt
+        && after.proofAt == request.time;
+    }
+
+    function validRequesterUpdate(requestId) {
+      return !requestId.matches('^kiosk_.*')
+        && resource.data.get('source', '') != 'signup-kiosk'
+        && hasFreshPublicRequestCapability(requestId)
+        && (
+          validPublicNoteEdit()
+          || validPublicCancellation()
+        );
+    }
+
+    /*
+     * SIGN-UP KIOSK SECURITY
+     */
+    function kioskConfig() {
+      return get(
+        /databases/$(database)/documents/signupKioskAdmin/control
+      ).data;
+    }
+
+    function kioskCurrent(c) {
+      let session = get(
+        /databases/$(database)/documents/karaokeControl/currentSession
+      ).data;
+
+      return session.active == true
+        && c.sessionId == session.sessionId;
+    }
+
+    function kioskText(value, maximum) {
+      return value is string
+        && value.size() <= maximum
+        && !value.matches('[\\s\\S]*[<>][\\s\\S]*');
+    }
+
+    function validKioskRequest(requestId) {
+      let d = request.resource.data;
+      let c = kioskConfig();
+      let receipt = getAfter(
+        /databases/$(database)/documents/signupKioskReceipts/$(requestId)
+      ).data;
+      let view = get(
+        /databases/$(database)/documents/signupKioskViews/$(c.token)
+      ).data;
+      let song = view.songs[d.songId];
+
+      return requestId.matches('^kiosk_[a-f0-9]{32}$')
+        && d.keys().hasAll([
+          'source',
+          'requestType',
+          'status',
+          'sessionId',
+          'publicSetlistId',
+          'publicSetlistName',
+          'kioskRevision',
+          'venue',
+          'songId',
+          'songTitle',
+          'songArtist',
+          'singerName',
+          'note',
+          'createdAt'
+        ])
+        && d.keys().hasOnly([
+          'source',
+          'requestType',
+          'status',
+          'sessionId',
+          'publicSetlistId',
+          'publicSetlistName',
+          'kioskRevision',
+          'venue',
+          'songId',
+          'songTitle',
+          'songArtist',
+          'singerName',
+          'note',
+          'createdAt'
+        ])
+        && c.schemaVersion == 1
+        && c.enabled == true
+        && kioskCurrent(c)
+        && get(
+          /databases/$(database)/documents/karaoke/state
+        ).data.songsEnabled == true
+        && receipt.token == c.token
+        && receipt.createdAt == request.time
+        && view.enabled == true
+        && view.revision == c.revision
+        && view.sessionId == c.sessionId
+        && d.kioskRevision == c.revision
+        && d.sessionId == c.sessionId
+        && d.publicSetlistId == c.setlistId
+        && d.publicSetlistName == view.setlistName
+        && d.venue == view.venue
+        && d.source == 'signup-kiosk'
+        && d.requestType == 'karaoke-song-request'
+        && d.status == 'pending'
+        && d.songTitle == song.title
+        && d.songArtist == song.artist
+        && kioskText(d.singerName, 80)
+        && d.singerName.matches('.*[^\\s].*')
+        && kioskText(d.note, 300)
+        && d.createdAt == request.time;
+    }
+
+    /*
+     * HOST-CONTROLLED MUSIC DATA
+     */
+    match /lyrics/{songId} {
+      allow read: if true;
+      allow create, update, delete: if isOwner();
+
+      match /musicalTiming/{timingId} {
+        allow read: if true;
+        allow create, update, delete: if isOwner();
+      }
+    }
+
+    match /lyricsSetlists/{setlistId} {
+      allow read: if true;
+      allow create, update, delete: if isOwner();
+    }
+
+    match /songlists/{docId} {
+      allow read: if true;
+      allow create, update, delete: if isOwner();
+    }
+
+    match /songlistSections/{docId} {
+      allow read: if true;
+      allow create, update, delete: if isOwner();
+    }
+
+    match /songlistSongs/{docId} {
+      allow read: if true;
+      allow create, update, delete: if isOwner();
+    }
+
+    /*
+     * NORMAL PUBLIC REQUESTS + KIOSK REQUESTS
+     */
+    match /publicSongRequests/{requestId} {
+      // Kept public for compatibility with the existing public queue/status UI.
+      allow read: if true;
+
+      allow create: if isOwner()
+        || (
+          isKioskRequest(requestId)
+            ? validKioskRequest(requestId)
+            : validNormalPublicRequestCreate(requestId)
+        );
+
+      allow update: if isOwner()
+        || validRequesterUpdate(requestId);
+
+      allow delete: if isOwner();
+    }
+
+    /*
+     * PRIVATE PUBLIC-REQUEST OWNERSHIP PROOF
+     *
+     * Never publicly readable. New BillyLee26/LiveKaraoke26 requests can create
+     * one in the same batch as the public request. Requester edits must refresh
+     * proofAt in the same atomic batch while keeping the secret unchanged.
+     */
+    match /publicSongRequestOwners/{requestId} {
+      allow read: if isOwner();
+
+      allow create: if isOwner()
+        || (
+          !requestId.matches('^kiosk_.*')
+          && !exists(
+            /databases/$(database)/documents/publicSongRequests/$(requestId)
+          )
+          && request.resource.data.keys().hasAll([
+            'token',
+            'createdAt',
+            'proofAt'
+          ])
+          && request.resource.data.keys().hasOnly([
+            'token',
+            'createdAt',
+            'proofAt'
+          ])
+          && request.resource.data.token is string
+          && request.resource.data.token.matches('^[a-f0-9]{64}$')
+          && request.resource.data.createdAt == request.time
+          && request.resource.data.proofAt == request.time
+          && getAfter(
+            /databases/$(database)/documents/publicSongRequests/$(requestId)
+          ).data.createdAt == request.time
+          && getAfter(
+            /databases/$(database)/documents/publicSongRequests/$(requestId)
+          ).data.get('source', '') != 'signup-kiosk'
+        );
+
+      allow update: if isOwner()
+        || (
+          resource.data.token is string
+          && resource.data.token.matches('^[a-f0-9]{64}$')
+          && request.resource.data.keys().hasAll([
+            'token',
+            'createdAt',
+            'proofAt'
+          ])
+          && request.resource.data.keys().hasOnly([
+            'token',
+            'createdAt',
+            'proofAt'
+          ])
+          && request.resource.data.token == resource.data.token
+          && request.resource.data.createdAt == resource.data.createdAt
+          && request.resource.data.proofAt == request.time
+          && getAfter(
+            /databases/$(database)/documents/publicSongRequests/$(requestId)
+          ).data.updatedAt == request.time
+        );
+
+      allow delete: if isOwner();
+    }
+
+    /*
+     * PHYSICAL SIGN-UP KIOSK
+     */
+    match /signupKioskAdmin/{documentId} {
+      allow read, write: if isOwner();
+    }
+
+    match /signupKioskViews/{token} {
+      allow get: if isOwner()
+        || (
+          token.matches('^[a-f0-9]{64}$')
+          && kioskConfig().token == token
+          && kioskCurrent(kioskConfig())
+        );
+
+      allow list, create, update, delete: if isOwner();
+    }
+
+    match /signupKioskReceipts/{requestId} {
+      allow read: if isOwner();
+
+      allow create: if requestId.matches('^kiosk_[a-f0-9]{32}$')
+        && request.resource.data.keys().hasAll([
+          'token',
+          'createdAt'
+        ])
+        && request.resource.data.keys().hasOnly([
+          'token',
+          'createdAt'
+        ])
+        && request.resource.data.token == kioskConfig().token
+        && request.resource.data.createdAt == request.time
+        && getAfter(
+          /databases/$(database)/documents/publicSongRequests/$(requestId)
+        ).data.source == 'signup-kiosk'
+        && getAfter(
+          /databases/$(database)/documents/publicSongRequests/$(requestId)
+        ).data.createdAt == request.time;
+
+      allow update, delete: if false;
+    }
+
+    /*
+     * Legacy public signup sessions are retained unchanged in this focused pass.
+     * They are not host-control documents and need a separate schema/ownership
+     * migration before their anonymous permissions can safely be narrowed.
+     */
+    match /publicSignupSessions/{docId} {
+      allow read, write: if true;
+    }
+
+    /*
+     * PERFORMANCE / SESSION DATA
+     */
+    match /performanceSessions/{sessionId} {
+      allow read: if true;
+      allow create, update, delete: if isOwner();
+
+      match /performedSongs/{docId} {
+        allow read: if true;
+        allow create, update, delete: if isOwner();
+      }
+
+      // Session activity records for song-note edits.
+      match /activityLog/{logId} {
+        allow read, create: if isOwner();
+        allow update, delete: if false;
+      }
+    }
+
+    match /performanceLogs/{docId} {
+      // Public song-list code reads these to determine songs already performed.
+      allow read: if true;
+      allow create, update, delete: if isOwner();
+    }
+
+    match /performedSongs/{docId} {
+      allow read, create, update, delete: if isOwner();
+    }
+
+    /*
+     * LIVE CONTROL DOCUMENTS
+     */
+    match /karaoke/{docId} {
+      allow read: if true;
+      allow create, update, delete: if isOwner();
+    }
+
+    match /karaokeControl/{docId} {
+      // Existing public websites/screens need these control documents.
+      allow read: if true;
+      allow create, update, delete: if isOwner();
+    }
+
+    match /liveLyrics/{docId} {
+      allow read: if true;
+      allow create, update, delete: if isOwner();
+    }
+
+    /*
+     * NOTES / SETTINGS
+     */
+    match /notes/{docId} {
+      // Notes can contain private host information; do not expose them publicly.
+      allow read, create, update, delete: if isOwner();
+    }
+
+    match /noteSettings/{docId} {
+      // Lyric/public renderers may read presentation defaults.
+      allow read: if true;
+      allow create, update, delete: if isOwner();
+    }
+
+    // Song Inbox capture and management.
+    match /songInbox/{songId} {
+      allow read: if isOwner();
+
+      allow create, update: if isOwner()
+        && request.resource.data.title is string
+        && request.resource.data.title.size() > 0
+        && request.resource.data.title.size() <= 180
+        && request.resource.data.artist is string
+        && request.resource.data.artist.size() <= 140
+        && request.resource.data.requestCount is int
+        && request.resource.data.requestCount >= 1
+        && request.resource.data.status
+          in ['New', 'To Learn', 'Added', 'Skip']
+        && request.resource.data.recentCaptureIds is list
+        && request.resource.data.recentCaptureIds.size() <= 40
+        && request.resource.data.recentOccurrences is list
+        && request.resource.data.recentOccurrences.size() <= 20;
+
+      allow delete: if false;
+    }
+
+    // App Updates capture, editing, completion and reopening.
+    match /appUpdateNotes/{noteId} {
+      allow read: if isOwner();
+
+      allow create, update: if isOwner()
+        && request.resource.data.text is string
+        && request.resource.data.text.size() > 0
+        && request.resource.data.text.size() <= 5000
+        && request.resource.data.completed is bool;
+
+      allow delete: if false;
+    }
+
+    // Reminders: capture, editing, completion, reopening and archiving.
+    match /reminders/{reminderId} {
+      allow read: if isOwner()
+        && resource.data.createdBy == request.auth.uid;
+
+      allow create: if isOwner()
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.createdAt == request.time
+        && validReminder(request.resource.data);
+
+      allow update: if isOwner()
+        && resource.data.createdBy == request.auth.uid
+        && request.resource.data.createdBy == resource.data.createdBy
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.diff(resource.data)
+          .affectedKeys().hasOnly([
+            'text',
+            'date',
+            'time',
+            'dueAt',
+            'timeZone',
+            'priority',
+            'category',
+            'link',
+            'status',
+            'updatedAt'
+          ])
+        && validReminder(request.resource.data);
+
+      allow delete: if false;
+    }
+
+    /*
+     * PUBLIC EVENT DATA
+     */
+    match /upcomingEvents/{docId} {
+      allow read: if true;
+      allow create, update, delete: if isOwner();
+    }
+
+    match /venues/{docId} {
+      allow read: if true;
+      allow create, update, delete: if isOwner();
+    }
+
+    /*
+     * BOOKING ENQUIRIES
+     *
+     * Public create is intentionally preserved for all current Billy Lee,
+     * Live Karaoke and Roxanna enquiry forms. Existing owner-only management is
+     * retained. This should receive its own cross-site schema/App Check pass.
+     */
+    match /bookingEnquiries/{enquiryId} {
+      allow create: if true;
+      allow read, update, delete: if isOwner();
+    }
+
+    /*
+     * LIVE KARAOKE REVIEW SUBMISSIONS
+     */
+    match /websiteRequesterProfiles/{profileId} {
+
+      // Required by the Live Karaoke Reviews admin page.
+      allow read: if isOwner();
+
+      // New public review.
+      allow create: if isOwner()
+        || (
+          validLiveKaraokeReview(
+            request.resource.data,
+            profileId
+          )
+
+          && request.resource.data.submittedAt == request.time
+          && request.resource.data.updatedAt == request.time
+
+          && request.resource.data.keys().hasOnly([
+            'source',
+            'reviewRecord',
+            'reviewKey',
+            'name',
+            'country',
+            'rating',
+            'review',
+            'reviewPrivate',
+            'reviewApproved',
+            'reviewStatus',
+            'requesterDeviceId',
+            'submittedAt',
+            'updatedAt'
+          ])
+        );
+
+      // Public user editing/resubmitting their review.
+      // Approval metadata cannot be changed by the public.
+      allow update: if isOwner()
+        || (
+          validLiveKaraokeReview(
+            request.resource.data,
+            profileId
+          )
+
+          && resource.data.reviewRecord == true
+          && resource.data.source == 'livekaraoke26-request-popup'
+
+          && request.resource.data.reviewKey
+              == resource.data.reviewKey
+
+          && request.resource.data.updatedAt
+              == request.time
+
+          && request.resource.data
+            .diff(resource.data)
+            .affectedKeys()
+            .hasOnly([
+              'name',
+              'country',
+              'rating',
+              'review',
+              'reviewPrivate',
+              'reviewApproved',
+              'reviewStatus',
+              'requesterDeviceId',
+              'submittedAt',
+              'updatedAt'
+            ])
+        );
+
+      // Only you can permanently delete a submitted review.
+      allow delete: if isOwner();
+    }
+
+    match /userProfiles/{uid} {
+      allow read: if signedIn();
+
+      allow create: if signedIn()
+        && request.auth.uid == uid;
+
+      allow update: if signedIn()
+        && (
+          request.auth.uid == uid
+          || isOwner()
+        );
+
+      allow delete: if isOwner();
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
