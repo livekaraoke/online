@@ -28,7 +28,8 @@ Anonymous requesters do not have Firebase Authentication identities. Request IDs
 are visible to public request/history clients, so knowing an ID cannot safely be
 treated as ownership.
 
-New BillyLee26 and LiveKaraoke26 requests now use a private per-request capability:
+The staged migration uses a private per-request capability for new BillyLee26 and
+LiveKaraoke26 requests:
 
 1. The browser generates a 256-bit random token with Web Crypto.
 2. One Firestore batch creates:
@@ -45,17 +46,14 @@ The token is never stored in `publicSongRequests`, so public queue/history reads
 not disclose it. `publicSongRequestOwners` must never be anonymously readable.
 
 Other existing public request clients that only create requests do not need the
-capability shim. Their creates remain compatible with the normal public-create
+capability wrapper. Their creates remain compatible with the normal public-create
 validator in the merge fragment. They simply cannot anonymously edit a request
 unless they later adopt the ownership capability.
 
 ## Repository-side work already staged
 
-- `billylee26/js/firebase-config.js` wraps only `publicSongRequests` add/set calls
-  with the private capability batch. Other collections retain their existing SDK
-  behavior.
-- `livekaraoke26/js/firebase-config.js` has the same behavior. Its existing
-  Live Karaoke adapter composes on top of this wrapper.
+- `ls26try/shared/public-request-capability.js` contains the reusable capability
+  wrapper, but is intentionally **not loaded by any production page yet**.
 - `ls26try/tests/public-request-capability.test.cjs` verifies atomic create,
   capability-backed edit, pre-cutover fallback and unrelated-collection behavior.
 - `security-hardening.fragment` contains the merge-oriented rule shape for:
@@ -64,6 +62,24 @@ unless they later adopt the ownership capability.
   - private owner companion documents
   - kiosk request/receipt/view validation
   - owner-write hardening for host-controlled collections
+- The existing `billylee26/js/firebase-config.js` and
+  `livekaraoke26/js/firebase-config.js` remain unchanged in production. This is
+  deliberate: enabling the wrapper before Firestore allows the companion proof
+  document would make the whole atomic request create fail.
+
+After the complete rules are deployed and verified, the public pages can load the
+wrapper and replace their existing raw `firebase.firestore()` database with:
+
+```js
+window.BillyLeeDB = window.LS26PublicRequestCapability.wrap({
+  db: firebase.firestore(),
+  firebase,
+  storage: window.localStorage,
+  cryptoApi: window.crypto || window.msCrypto
+});
+```
+
+Do that cut-over only in the same controlled rollout as the rules activation.
 
 ## Production merge requirements
 
@@ -90,8 +106,11 @@ When merging:
 6. Run the emulator against the **complete merged rules file**, not only an
    isolated fragment.
 7. Verify both positive and negative cases before publishing rules.
-8. Only after the deployed rules pass should `signup/kiosk-policy.js` be changed
-   to `rulesVerified: true`.
+8. Publish the complete rules.
+9. Only after successful rules verification, enable the staged public-request
+   capability wrapper on BillyLee26/LiveKaraoke26 and run their request flows.
+10. Only after the deployed rules pass should `signup/kiosk-policy.js` be changed
+    to `rulesVerified: true`.
 
 ## Required verification matrix
 
@@ -152,8 +171,10 @@ Owner/Admin operation must continue to work.
 2. Merge the hardening fragment into that exact file.
 3. Emulator-test the complete rules.
 4. Publish rules.
-5. Confirm ordinary public requests and owner LiveSuite still work.
-6. Flip `signup/kiosk-policy.js` to `rulesVerified: true` and cache-bust the kiosk
+5. Confirm ordinary public request creation and owner LiveSuite still work.
+6. Enable the staged capability wrapper for BillyLee26/LiveKaraoke26 and verify
+   requester note edit/cancel with the deployed rules.
+7. Flip `signup/kiosk-policy.js` to `rulesVerified: true` and cache-bust the kiosk
    policy references.
-7. Publish the kiosk setlist from LiveSuite Requests.
-8. Test one clearly identified kiosk request before using the iPad with guests.
+8. Publish the kiosk setlist from LiveSuite Requests.
+9. Test one clearly identified kiosk request before using the iPad with guests.
