@@ -12,142 +12,87 @@
   <link rel="stylesheet" href="css/admin-navigation.css?v=20260929-admin-polish">
   <link rel="stylesheet" href="../shared/theme.css?v=20260930-release-preview-v2">
   <link rel="stylesheet" href="css/billy-website-settings.css?v=20260930-request-test-mode-v2">
-  <script src="../shared/data.js?v=20261007-singer-display-v2"></script>
+  <script src="../shared/data.js?v=20261007-singer-suite-v4"></script>
   <style>
     .prompter-main{min-width:0}.prompter-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.prompter-card{padding:18px;border:1px solid #29424f;border-radius:12px;background:linear-gradient(180deg,#09161d,#071117)}
     .prompter-card h2{margin:0 0 6px;color:#fff;font-size:1.02rem}.prompter-card h3{margin:16px 0 8px;color:#dcebf0;font-size:.82rem;text-transform:uppercase;letter-spacing:.06em}.prompter-card p{margin:0 0 16px;color:#8fa5af;font-size:.84rem;line-height:1.5}.prompter-fields{display:grid;gap:13px}.prompter-fields.two-col{grid-template-columns:repeat(2,minmax(0,1fr))}.prompter-fields label{display:grid;gap:6px;color:#9fb4be;font-size:.76rem;font-weight:850;letter-spacing:.05em;text-transform:uppercase}
     .prompter-fields select,.prompter-fields input[type="number"],.prompter-fields input[type="text"]{min-height:42px;border:1px solid #31505e;border-radius:8px;background:#071219;color:#eef7fa;padding:8px 10px;font:inherit}.prompter-inline{display:flex!important;grid-template-columns:none!important;align-items:center;justify-content:space-between;gap:14px;min-height:42px;padding:8px 10px;border:1px solid #27424e;border-radius:8px;background:#08141b}
-    .prompter-range{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:9px;align-items:center}.prompter-range input{width:100%}.prompter-range output{min-width:70px;color:#66dcf3;font-weight:900;text-align:right}.prompter-range input:disabled{opacity:.38}.prompter-colour{display:flex;gap:10px;align-items:center}.prompter-colour input[type="color"]{width:72px;height:42px;padding:3px;border:1px solid #31505e;border-radius:8px;background:#071219}
-    .prompter-preview{--preview-bg:#00131a;--preview-current:#16d8ff;--preview-current-scale:1.72;--preview-context-scale:1.48;--preview-muted-scale:.82;--preview-muted-opacity:.6;margin-top:16px;padding:24px;border:1px solid #29424f;border-radius:12px;background:var(--preview-bg);color:#fff;overflow:hidden}.prompter-preview-section-title{position:relative;display:block;width:max-content;max-width:100%;margin:0 0 12px;color:#cbd7dc;font-size:.72rem;letter-spacing:.08em;text-transform:uppercase}.prompter-preview-line{display:block;margin:5px 0;transform-origin:left center}.prompter-preview-line.current{font-size:calc(1rem * var(--preview-current-scale));font-weight:950;border-left:4px solid var(--preview-current);padding-left:10px;background:linear-gradient(90deg,color-mix(in srgb,var(--preview-current) 20%,transparent),transparent 75%)}.prompter-preview-line.context{font-size:calc(1rem * var(--preview-context-scale));font-weight:850}.prompter-preview-line.muted{font-size:calc(1rem * var(--preview-muted-scale));opacity:var(--preview-muted-opacity)}
-    .prompter-actions{display:flex;gap:10px;flex-wrap:wrap}.prompter-btn{border:1px solid #31505e;border-radius:8px;background:#0a1820;color:#eaf5f8;padding:10px 14px;font:inherit;font-weight:850;cursor:pointer}.prompter-btn.primary{border-color:#2e9d5c;background:#0b3a23;color:#caffdc}.prompter-status{margin:14px 0;color:#90a7b1}.prompter-status.is-success{color:#7ee7a6}.prompter-note{padding:10px 12px;border:1px solid rgba(49,80,94,.65);border-radius:8px;background:#071219;color:#8fa5af;font-size:.78rem;line-height:1.45}
+    .prompter-range{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:9px;align-items:center}.prompter-range input{width:100%}.prompter-range output{min-width:72px;color:#66dcf3;font-weight:900;text-align:right}.prompter-range input:disabled,.prompter-colour input:disabled{opacity:.38}.prompter-colour{display:flex;gap:10px;align-items:center}.prompter-colour input[type="color"]{width:72px;height:42px;padding:3px;border:1px solid #31505e;border-radius:8px;background:#071219}
+    .prompter-preview{--preview-bg:#00131a;--preview-current:#16d8ff;--preview-current-scale:1.72;--preview-context-scale:1.48;--preview-muted-scale:.82;--preview-muted-opacity:.6;--preview-weight:760;--preview-spacing:0px;margin-top:16px;padding:24px;border:1px solid #29424f;border-radius:12px;background:var(--preview-bg);color:#fff;overflow:hidden}.prompter-preview-section-title{position:relative;display:block;width:max-content;max-width:100%;margin:0 0 12px;padding:5px 9px;border:1px solid currentColor;border-radius:7px;color:#42f35c;font-size:.72rem;letter-spacing:.08em;text-transform:uppercase}.prompter-preview-line{display:block;margin:5px 0;transform-origin:left center;font-weight:var(--preview-weight);letter-spacing:var(--preview-spacing)}.prompter-preview-line.current{font-size:calc(1rem * var(--preview-current-scale));border-left:4px solid var(--preview-current);padding-left:10px;background:linear-gradient(90deg,color-mix(in srgb,var(--preview-current) 20%,transparent),transparent 75%)}.prompter-preview-line.context{font-size:calc(1rem * var(--preview-context-scale))}.prompter-preview-line.muted{font-size:calc(1rem * var(--preview-muted-scale));opacity:var(--preview-muted-opacity)}
+    .prompter-actions{display:flex;gap:10px;flex-wrap:wrap}.prompter-btn{border:1px solid #31505e;border-radius:8px;background:#0a1820;color:#eaf5f8;padding:10px 14px;font:inherit;font-weight:850;cursor:pointer}.prompter-btn.primary{border-color:#2e9d5c;background:#0b3a23;color:#caffdc}.prompter-status{margin:14px 0;color:#90a7b1}.prompter-status.is-success{color:#7ee7a6}
     @media(max-width:850px){.prompter-grid,.prompter-fields.two-col{grid-template-columns:1fr}}
   </style>
 </head>
 <body class="admin-body enquiries-page">
-  <div class="admin-shell">
-    <div id="sidebarContainer"></div>
-    <main class="admin-main enquiries-main prompter-main">
-      <header class="enquiries-topbar">
-        <div>
-          <p class="enquiries-eyebrow">LIVE KARAOKE · LYRIC PROMPTER</p>
-          <h1>Prompter Settings</h1>
-          <p class="enquiries-subtitle">Configure global Singer Screen defaults, shared across devices.</p>
-        </div>
-        <a class="prompter-btn primary" href="../host/karaoke-lyric-view.html" target="_blank" rel="noopener">Open Singer Screen ↗</a>
-      </header>
+  <div class="admin-shell"><div id="sidebarContainer"></div><main class="admin-main enquiries-main prompter-main">
+    <header class="enquiries-topbar"><div><p class="enquiries-eyebrow">LIVE KARAOKE · LYRIC PROMPTER</p><h1>Prompter Settings</h1><p class="enquiries-subtitle">Configure global Singer Screen defaults, shared across devices.</p></div><a class="prompter-btn primary" href="../host/karaoke-lyric-view.html" target="_blank" rel="noopener">Open Singer Screen ↗</a></header>
+    <p id="prompterSettingsStatus" class="prompter-status" role="status">Loading global settings…</p>
+    <div class="prompter-actions"><button id="savePrompterSettings" class="prompter-btn primary" type="button">Save Global Settings</button><button id="reloadPrompterSettings" class="prompter-btn" type="button">Reload Global Settings</button></div>
 
-      <p id="prompterSettingsStatus" class="prompter-status" role="status">Loading global settings…</p>
-      <div class="prompter-actions"><button id="savePrompterSettings" class="prompter-btn primary" type="button">Save Global Settings</button><button id="reloadPrompterSettings" class="prompter-btn" type="button">Reload Global Settings</button></div>
+    <div class="prompter-grid">
+      <section class="prompter-card"><h2>Display</h2><p>Core typography and screen presentation.</p><div class="prompter-fields">
+        <label>Guidance<select id="prompterGuidance"><option value="normal">Normal Mode</option><option value="pro">Lyrics Pro</option><option value="guitaroke">Guitaroke</option></select></label>
+        <label>Theme<select id="prompterTheme"><option value="default">Default</option><option value="warm">Warm</option><option value="contrast">High Contrast</option></select></label>
+        <label>Font<select id="prompterFont"><option value="default">Default</option><option value="arial">Arial</option><option value="dyslexic">OpenDyslexic</option></select></label>
+        <label>Text size<select id="prompterTextSize"><option value="small">Small</option><option value="normal">Normal</option><option value="large">Large</option><option value="xlarge">Extra Large</option></select></label>
+        <label>Line spacing<select id="prompterSpacing"><option value="normal">Default</option><option value="loose">Loose</option><option value="looser">Looser</option></select></label>
+        <label>Lyrics weight<span class="prompter-range"><input id="prompterLyricsWeight" type="range" min="400" max="900" step="50" value="760"><output id="prompterLyricsWeightValue">760</output></span></label>
+        <label>Character spacing<span class="prompter-range"><input id="prompterCharacterSpacing" type="range" min="-0.5" max="3" step="0.1" value="0"><output id="prompterCharacterSpacingValue">0px</output></span></label>
+        <label>Background colour<span class="prompter-colour"><input id="prompterBackground" type="color" value="#00131a"></span></label>
+        <label class="prompter-inline">Show bottom Play / Speed bar<input id="prompterBottomBar" type="checkbox" checked></label>
+      </div></section>
 
-      <div class="prompter-grid">
-        <section class="prompter-card">
-          <h2>Display</h2><p>These mirror the settings available directly on the Singer Screen.</p>
-          <div class="prompter-fields">
-            <label>Guidance<select id="prompterGuidance"><option value="normal">Normal Mode</option><option value="pro">Lyrics Pro</option><option value="guitaroke">Guitaroke</option></select></label>
-            <label>Theme<select id="prompterTheme"><option value="default">Default</option><option value="warm">Warm</option><option value="contrast">High Contrast</option></select></label>
-            <label>Font<select id="prompterFont"><option value="default">Default</option><option value="arial">Arial</option><option value="dyslexic">OpenDyslexic</option></select></label>
-            <label>Text size<select id="prompterTextSize"><option value="small">Small</option><option value="normal">Normal</option><option value="large">Large</option><option value="xlarge">Extra Large</option></select></label>
-            <label>Line spacing<select id="prompterSpacing"><option value="normal">Default</option><option value="loose">Loose</option><option value="looser">Looser</option></select></label>
-            <label>Background colour<span class="prompter-colour"><input id="prompterBackground" type="color" value="#00131a"></span></label>
-            <label class="prompter-inline">Show bottom Play / Speed bar<input id="prompterBottomBar" type="checkbox" checked></label>
-            <label class="prompter-inline">Auto-scroll<input id="prompterAutoScroll" type="checkbox" checked></label>
-            <label>Scroll speed<span class="prompter-range"><input id="prompterSpeed" type="range" min="0.25" max="3" step="0.25" value="1"><output id="prompterSpeedValue">1.00×</output></span></label>
-          </div>
-        </section>
+      <section class="prompter-card"><h2>Live lyric focus</h2><p>Controls the active line and movement toward its focus position.</p><div class="prompter-fields">
+        <label>Current line screen position<span class="prompter-range"><input id="prompterFocus" type="range" min="20" max="65" step="1" value="40"><output id="prompterFocusValue">40%</output></span></label>
+        <label>Current line size<span class="prompter-range"><input id="prompterCurrentScale" type="range" min="1" max="2.5" step="0.05" value="1.72"><output id="prompterCurrentScaleValue">1.72×</output></span></label>
+        <label>Fallback context size<span class="prompter-range"><input id="prompterContextScale" type="range" min="0.9" max="2.3" step="0.05" value="1.48"><output id="prompterContextScaleValue">1.48×</output></span></label>
+        <label>Fallback distant lyric size<span class="prompter-range"><input id="prompterMutedScale" type="range" min="0.45" max="1.4" step="0.05" value="0.82"><output id="prompterMutedScaleValue">0.82×</output></span></label>
+        <label>Fallback distant lyric opacity<span class="prompter-range"><input id="prompterMutedOpacity" type="range" min="0.20" max="1" step="0.05" value="0.60"><output id="prompterMutedOpacityValue">60%</output></span></label>
+        <label>Current lyric highlight colour<span class="prompter-colour"><input id="prompterCurrentColour" type="color" value="#16d8ff"></span></label>
+        <label>Smooth scroll response<span class="prompter-range"><input id="prompterScrollSmoothingMs" type="range" min="180" max="1600" step="20" value="720"><output id="prompterScrollSmoothingMsValue">720ms</output></span></label>
+      </div><div id="prompterPreview" class="prompter-preview" aria-label="Singer line preview"><strong id="prompterSectionTitlePreview" class="prompter-preview-section-title">VERSE</strong><span class="prompter-preview-line muted">Earlier lyric line</span><span class="prompter-preview-line context">Line above the current line</span><span class="prompter-preview-line current">Current lyric line</span><span class="prompter-preview-line context">Next lyric line</span><span class="prompter-preview-line muted">Later lyric line</span></div></section>
 
-        <section class="prompter-card">
-          <h2>Live lyric focus</h2><p>Fine-tune where the active lyric and section heading sit on the Singer Screen.</p>
-          <div class="prompter-fields">
-            <label>Current line screen position<span class="prompter-range"><input id="prompterFocus" type="range" min="25" max="60" step="1" value="40"><output id="prompterFocusValue">40%</output></span></label>
-            <label>Section title horizontal position<select id="prompterSectionTitleAlign"><option value="left">Far left</option><option value="center">Centre</option><option value="right">Far right</option><option value="custom">Custom</option></select></label>
-            <label>Custom section title position<span class="prompter-range"><input id="prompterSectionTitleX" type="range" min="-20" max="100" step="1" value="0"><output id="prompterSectionTitleXValue">0%</output></span></label>
-            <label>Current line size<span class="prompter-range"><input id="prompterCurrentScale" type="range" min="1.1" max="2.3" step="0.05" value="1.72"><output id="prompterCurrentScaleValue">1.72×</output></span></label>
-            <label>Fallback context size<span class="prompter-range"><input id="prompterContextScale" type="range" min="1" max="2.1" step="0.05" value="1.48"><output id="prompterContextScaleValue">1.48×</output></span></label>
-            <label>Fallback distant lyric size<span class="prompter-range"><input id="prompterMutedScale" type="range" min="0.5" max="1.2" step="0.05" value="0.82"><output id="prompterMutedScaleValue">0.82×</output></span></label>
-            <label>Fallback distant lyric opacity<span class="prompter-range"><input id="prompterMutedOpacity" type="range" min="0.20" max="1" step="0.05" value="0.60"><output id="prompterMutedOpacityValue">60%</output></span></label>
-            <label>Current lyric highlight colour<span class="prompter-colour"><input id="prompterCurrentColour" type="color" value="#16d8ff"></span></label>
-          </div>
-          <div id="prompterPreview" class="prompter-preview" aria-label="Singer line preview">
-            <strong id="prompterSectionTitlePreview" class="prompter-preview-section-title">VERSE</strong>
-            <span class="prompter-preview-line muted">Earlier lyric line</span>
-            <span class="prompter-preview-line context">Line above the current line</span>
-            <span class="prompter-preview-line current">Current lyric line</span>
-            <span class="prompter-preview-line context">Next lyric line</span>
-            <span class="prompter-preview-line muted">Later lyric line</span>
-          </div>
-        </section>
+      <section class="prompter-card"><h2>Section headings</h2><p>Compact section badges such as VERSE, CHORUS and INTERLUDE.</p><div class="prompter-fields">
+        <label>Horizontal position<select id="prompterSectionTitleAlign"><option value="left">Far left</option><option value="center">Centre</option><option value="right">Far right</option><option value="custom">Custom</option></select></label>
+        <label>Custom position<span class="prompter-range"><input id="prompterSectionTitleX" type="range" min="-20" max="100" step="1" value="0"><output id="prompterSectionTitleXValue">0%</output></span></label>
+        <label>Colour mode<select id="prompterSectionColourMode"><option value="follow">Follow section colour</option><option value="custom">Custom</option></select></label>
+        <label>Custom heading colour<span class="prompter-colour"><input id="prompterSectionCustomColour" type="color" value="#42f35c"></span></label>
+      </div></section>
+
+      <section class="prompter-card"><h2>Performance notes</h2><p>Centred stage-direction cards displayed as “SECTION - (Note)”.</p><div class="prompter-fields">
+        <label>Font colour<span class="prompter-colour"><input id="prompterPerformanceNoteColour" type="color" value="#75f2a0"></span></label>
+        <label>Font size<span class="prompter-range"><input id="prompterPerformanceNoteSize" type="range" min="12" max="48" step="1" value="24"><output id="prompterPerformanceNoteSizeValue">24px</output></span></label>
+        <label>Border colour<span class="prompter-colour"><input id="prompterPerformanceNoteBorderColour" type="color" value="#45c979"></span></label>
+        <label>Card padding<span class="prompter-range"><input id="prompterPerformanceNotePadding" type="range" min="4" max="36" step="1" value="14"><output id="prompterPerformanceNotePaddingValue">14px</output></span></label>
+        <label>Space above / below<span class="prompter-range"><input id="prompterPerformanceNoteSpacing" type="range" min="0" max="60" step="1" value="20"><output id="prompterPerformanceNoteSpacingValue">20px</output></span></label>
+      </div></section>
+
+      <section class="prompter-card"><h2>Guitaroke</h2><p>Timed chord presentation in LyricView and Guitaroke.</p><div class="prompter-fields">
+        <label>Current chord colour<span class="prompter-colour"><input id="prompterChordCurrentColour" type="color" value="#16d8ff"></span></label>
+        <label>Other chord opacity while playing<span class="prompter-range"><input id="prompterChordInactiveOpacity" type="range" min="0.15" max="1" step="0.05" value="0.68"><output id="prompterChordInactiveOpacityValue">68%</output></span></label>
+        <label>Chord line space above<input id="prompterChordAbove" type="number" min="0" max="40" step="1"></label><label>Chord line space below<input id="prompterChordBelow" type="number" min="0" max="40" step="1"></label>
+      </div></section>
+
+      <section class="prompter-card"><h2>Scroll / Sync</h2><p>Local Singer Screen movement and LyricView synchronization.</p><div class="prompter-fields">
+        <label class="prompter-inline">Singer auto-scroll<input id="prompterAutoScroll" type="checkbox" checked></label>
+        <label class="prompter-inline">Sync Singer with LyricView<input id="prompterSyncSinger" type="checkbox" checked></label>
+        <label>Scroll speed<span class="prompter-range"><input id="prompterSpeed" type="range" min="0.25" max="3" step="0.25" value="1"><output id="prompterSpeedValue">1.00×</output></span></label>
+      </div></section>
+    </div>
+
+    <section class="prompter-card" style="margin-top:16px"><h2>Lyric fade profile</h2><p>Distance counts lyric lines only: chords, performance notes, host notes and headings are ignored.</p>
+      <h3>Previous lines</h3><div class="prompter-fields two-col">
+        <label>Previous line size<span class="prompter-range"><input id="prompterPastSizeRatio" type="range" min="0.50" max="1" step="0.01" value="0.88"><output id="prompterPastSizeRatioValue">88%</output></span></label><label>1 line above opacity<span class="prompter-range"><input id="prompterPast1Opacity" type="range" min="0.05" max="1" step="0.05" value="0.70"><output id="prompterPast1OpacityValue">70%</output></span></label><label>2 lines above opacity<span class="prompter-range"><input id="prompterPast2Opacity" type="range" min="0.05" max="1" step="0.05" value="0.40"><output id="prompterPast2OpacityValue">40%</output></span></label><label>Older lines opacity<span class="prompter-range"><input id="prompterPastFarOpacity" type="range" min="0.02" max="1" step="0.01" value="0.20"><output id="prompterPastFarOpacityValue">20%</output></span></label>
+      </div><h3>Next two lines</h3><div class="prompter-fields two-col">
+        <label>Next line size<span class="prompter-range"><input id="prompterNext1SizeRatio" type="range" min="0.50" max="1" step="0.01" value="0.95"><output id="prompterNext1SizeRatioValue">95%</output></span></label><label>Next line opacity<span class="prompter-range"><input id="prompterNext1Opacity" type="range" min="0.05" max="1" step="0.01" value="0.90"><output id="prompterNext1OpacityValue">90%</output></span></label><label>Second next line size<span class="prompter-range"><input id="prompterNext2SizeRatio" type="range" min="0.50" max="1" step="0.01" value="0.90"><output id="prompterNext2SizeRatioValue">90%</output></span></label><label>Second next line opacity<span class="prompter-range"><input id="prompterNext2Opacity" type="range" min="0.05" max="1" step="0.01" value="0.86"><output id="prompterNext2OpacityValue">86%</output></span></label>
+      </div><h3>Upcoming gradual fade</h3><div class="prompter-fields two-col">
+        <label>Near future size<span class="prompter-range"><input id="prompterFutureNearSizeRatio" type="range" min="0.45" max="1" step="0.01" value="0.80"><output id="prompterFutureNearSizeRatioValue">80%</output></span></label><label>Near future opacity<span class="prompter-range"><input id="prompterFutureNearOpacity" type="range" min="0.02" max="1" step="0.01" value="0.80"><output id="prompterFutureNearOpacityValue">80%</output></span></label><label>Mid future size<span class="prompter-range"><input id="prompterFutureMidSizeRatio" type="range" min="0.45" max="1" step="0.01" value="0.72"><output id="prompterFutureMidSizeRatioValue">72%</output></span></label><label>Mid fade start opacity<span class="prompter-range"><input id="prompterFutureMidStartOpacity" type="range" min="0.02" max="1" step="0.01" value="0.60"><output id="prompterFutureMidStartOpacityValue">60%</output></span></label><label>Mid fade end opacity<span class="prompter-range"><input id="prompterFutureMidEndOpacity" type="range" min="0.02" max="1" step="0.01" value="0.40"><output id="prompterFutureMidEndOpacityValue">40%</output></span></label><label>Far future size<span class="prompter-range"><input id="prompterFutureFarSizeRatio" type="range" min="0.40" max="1" step="0.01" value="0.70"><output id="prompterFutureFarSizeRatioValue">70%</output></span></label><label>Far fade start opacity<span class="prompter-range"><input id="prompterFutureFarStartOpacity" type="range" min="0.02" max="1" step="0.01" value="0.20"><output id="prompterFutureFarStartOpacityValue">20%</output></span></label><label>Far fade end opacity<span class="prompter-range"><input id="prompterFutureFarEndOpacity" type="range" min="0.02" max="1" step="0.01" value="0.05"><output id="prompterFutureFarEndOpacityValue">5%</output></span></label>
       </div>
-
-      <section class="prompter-card" style="margin-top:16px">
-        <h2>Performance notes</h2>
-        <p>Performance notes remain visible even when that section's Singer Screen lyrics are hidden. They are centred as “SECTION - (Note)”.</p>
-        <div class="prompter-fields two-col">
-          <label>Performance note colour<span class="prompter-colour"><input id="prompterPerformanceNoteColour" type="color" value="#75f2a0"></span></label>
-          <label>Performance note font size<span class="prompter-range"><input id="prompterPerformanceNoteSize" type="range" min="12" max="48" step="1" value="24"><output id="prompterPerformanceNoteSizeValue">24px</output></span></label>
-        </div>
-      </section>
-
-      <section class="prompter-card" style="margin-top:16px">
-        <h2>Guitaroke chords</h2>
-        <p>Controls timed chord emphasis in LyricView and Guitaroke. Beat duration is displayed with solid beat dots.</p>
-        <div class="prompter-fields two-col">
-          <label>Current chord colour<span class="prompter-colour"><input id="prompterChordCurrentColour" type="color" value="#16d8ff"></span></label>
-          <label>Other chord opacity<span class="prompter-range"><input id="prompterChordInactiveOpacity" type="range" min="0.15" max="1" step="0.05" value="0.68"><output id="prompterChordInactiveOpacityValue">68%</output></span></label>
-          <label>Chord line space above<input id="prompterChordAbove" type="number" min="0" max="40" step="1"></label>
-          <label>Chord line space below<input id="prompterChordBelow" type="number" min="0" max="40" step="1"></label>
-        </div>
-      </section>
-
-      <section class="prompter-card" style="margin-top:16px">
-        <h2>Lyric fade profile</h2>
-        <p>Controls the gradual size and opacity falloff around the active line. Sizes are percentages of the current highlighted line.</p>
-        <h3>Previous lines</h3>
-        <div class="prompter-fields two-col">
-          <label>Previous line size<span class="prompter-range"><input id="prompterPastSizeRatio" type="range" min="0.50" max="1" step="0.01" value="0.88"><output id="prompterPastSizeRatioValue">88%</output></span></label>
-          <label>1 line above opacity<span class="prompter-range"><input id="prompterPast1Opacity" type="range" min="0.05" max="1" step="0.05" value="0.70"><output id="prompterPast1OpacityValue">70%</output></span></label>
-          <label>2 lines above opacity<span class="prompter-range"><input id="prompterPast2Opacity" type="range" min="0.05" max="1" step="0.05" value="0.40"><output id="prompterPast2OpacityValue">40%</output></span></label>
-          <label>Older lines opacity<span class="prompter-range"><input id="prompterPastFarOpacity" type="range" min="0.02" max="1" step="0.01" value="0.20"><output id="prompterPastFarOpacityValue">20%</output></span></label>
-        </div>
-        <h3>Next two lines</h3>
-        <div class="prompter-fields two-col">
-          <label>Next line size<span class="prompter-range"><input id="prompterNext1SizeRatio" type="range" min="0.50" max="1" step="0.01" value="0.95"><output id="prompterNext1SizeRatioValue">95%</output></span></label>
-          <label>Next line opacity<span class="prompter-range"><input id="prompterNext1Opacity" type="range" min="0.05" max="1" step="0.01" value="0.90"><output id="prompterNext1OpacityValue">90%</output></span></label>
-          <label>Second next line size<span class="prompter-range"><input id="prompterNext2SizeRatio" type="range" min="0.50" max="1" step="0.01" value="0.90"><output id="prompterNext2SizeRatioValue">90%</output></span></label>
-          <label>Second next line opacity<span class="prompter-range"><input id="prompterNext2Opacity" type="range" min="0.05" max="1" step="0.01" value="0.86"><output id="prompterNext2OpacityValue">86%</output></span></label>
-        </div>
-        <h3>Upcoming gradual fade</h3>
-        <div class="prompter-fields two-col">
-          <label>Near future size<span class="prompter-range"><input id="prompterFutureNearSizeRatio" type="range" min="0.45" max="1" step="0.01" value="0.80"><output id="prompterFutureNearSizeRatioValue">80%</output></span></label>
-          <label>Near future opacity<span class="prompter-range"><input id="prompterFutureNearOpacity" type="range" min="0.02" max="1" step="0.01" value="0.80"><output id="prompterFutureNearOpacityValue">80%</output></span></label>
-          <label>Mid future size<span class="prompter-range"><input id="prompterFutureMidSizeRatio" type="range" min="0.45" max="1" step="0.01" value="0.72"><output id="prompterFutureMidSizeRatioValue">72%</output></span></label>
-          <label>Mid fade start opacity<span class="prompter-range"><input id="prompterFutureMidStartOpacity" type="range" min="0.02" max="1" step="0.01" value="0.60"><output id="prompterFutureMidStartOpacityValue">60%</output></span></label>
-          <label>Mid fade end opacity<span class="prompter-range"><input id="prompterFutureMidEndOpacity" type="range" min="0.02" max="1" step="0.01" value="0.40"><output id="prompterFutureMidEndOpacityValue">40%</output></span></label>
-          <label>Far future size<span class="prompter-range"><input id="prompterFutureFarSizeRatio" type="range" min="0.40" max="1" step="0.01" value="0.70"><output id="prompterFutureFarSizeRatioValue">70%</output></span></label>
-          <label>Far fade start opacity<span class="prompter-range"><input id="prompterFutureFarStartOpacity" type="range" min="0.02" max="1" step="0.01" value="0.20"><output id="prompterFutureFarStartOpacityValue">20%</output></span></label>
-          <label>Far fade end opacity<span class="prompter-range"><input id="prompterFutureFarEndOpacity" type="range" min="0.02" max="1" step="0.01" value="0.05"><output id="prompterFutureFarEndOpacityValue">5%</output></span></label>
-        </div>
-        <p class="prompter-note" style="margin-top:14px">Default profile: current line 100%; next two lines about 90%; following lines about 80%; then 60→40%; distant upcoming lines 20→5%. Previous lines fade much faster.</p>
-      </section>
-
-      <section class="prompter-card" style="margin-top:16px"><h2>Reset</h2><p>Preview defaults, then save explicitly to share them globally.</p>
-        <div class="prompter-actions"><button id="resetPrompterSettings" class="prompter-btn" type="button">Reset Prompter Settings</button></div>
-      </section>
-    </main>
-  </div>
-
-  <script src="../firebase-projects.js?v=20261007-sidebar-case-v1"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-  <script src="js/firebase.js?v=20260910-stage4"></script>
-  <script src="js/sidebar.js?v=20261006-chord-settings"></script>
-  <script src="js/profile.js?v=20260929-members-align"></script>
-  <script src="js/auth.js?v=20260910-stage4"></script>
-  <script data-ls26-settings="1" src="../shared/app-settings.js?v=20261006-chord-settings"></script>
-  <script src="../shared/shell.js?v=20260930-release-preview-v3"></script>
-  <script>document.addEventListener("DOMContentLoaded",()=>window.LK?.sidebar?.loadSidebar?.(),{once:true});</script>
-  <link rel="stylesheet" href="../shared/dialogs.css"><script src="../shared/dialogs.js"></script>
-  <script src="../shared/prompter-settings.js?v=20261007-singer-display-v2"></script>
-  <script src="js/prompter-settings.js?v=20261007-singer-display-v2"></script>
+    </section>
+    <section class="prompter-card" style="margin-top:16px"><h2>Reset</h2><p>Preview defaults, then save explicitly to share them globally.</p><div class="prompter-actions"><button id="resetPrompterSettings" class="prompter-btn" type="button">Reset Prompter Settings</button></div></section>
+  </main></div>
+  <script src="../firebase-projects.js?v=20261007-sidebar-case-v1"></script><script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="js/firebase.js?v=20260910-stage4"></script><script src="js/sidebar.js?v=20261006-chord-settings"></script><script src="js/profile.js?v=20260929-members-align"></script><script src="js/auth.js?v=20260910-stage4"></script><script data-ls26-settings="1" src="../shared/app-settings.js?v=20261006-chord-settings"></script><script src="../shared/shell.js?v=20260930-release-preview-v3"></script><script>document.addEventListener("DOMContentLoaded",()=>window.LK?.sidebar?.loadSidebar?.(),{once:true});</script>
+  <link rel="stylesheet" href="../shared/dialogs.css"><script src="../shared/dialogs.js"></script><script src="../shared/prompter-settings.js?v=20261007-singer-suite-v4"></script><script src="js/prompter-settings.js?v=20261007-singer-suite-v4"></script>
 </body>
 </html>
