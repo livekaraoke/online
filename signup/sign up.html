@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta name="robots" content="noindex,nofollow">
+<title>Sign up to sing · Live Karaoke</title>
+<link rel="stylesheet" href="signup.css?v=20261007-kiosk1">
+</head>
+<body>
+<main id="kiosk">
+<header><p class="brand">LIVE <strong>KARAOKE</strong></p><h1>SIGN UP TO SING</h1><p id="listTitle">Tonight's song list</p></header>
+<div id="notice" class="notice" role="status" aria-live="polite">Loading song list…</div>
+<button id="refresh" class="secondary" type="button">REFRESH SONG LIST</button>
+<noscript><p class="notice">JavaScript is required. Please ask the host.</p></noscript>
+<form id="signupForm" autocomplete="off" novalidate>
+<fieldset id="fields" disabled>
+<label for="singerName">YOUR NAME</label>
+<input id="singerName" name="singerName" maxlength="80" autocomplete="off" autocorrect="off" required>
+<label for="songSearch">CHOOSE A SONG</label>
+<div class="search"><input id="songSearch" type="search" placeholder="Search title or artist" autocomplete="off" autocorrect="off" autocapitalize="none"><button id="clearSearch" class="secondary" type="button">CLEAR</button></div>
+<p id="resultCount" class="hint" aria-live="polite"></p>
+<div id="songResults" class="songs" role="group" aria-label="Song results"></div>
+<button id="moreSongs" class="secondary" type="button" hidden>SHOW MORE SONGS</button>
+<div id="selection" class="selection" aria-live="polite">No song selected</div>
+<label for="note">OPTIONAL NOTE</label>
+<textarea id="note" name="note" rows="2" maxlength="300" autocomplete="off" placeholder="Anything Billy should know?"></textarea>
+<button id="send" class="send" type="submit" disabled>SEND REQUEST</button>
+</fieldset>
+</form>
+<section id="success" class="success" role="status" hidden><h2>REQUEST SENT</h2><p>You're in!<br>Billy has received your request.</p><p>Ready for the next singer in a moment…</p></section>
+<footer>LIVE KARAOKE · Please ask the host if you need a hand.</footer>
+</main>
+<script src="kiosk-policy.js?v=20261007-kiosk1"></script>
+<script src="signup.js?v=20261007-kiosk1"></script>
+</body></html>

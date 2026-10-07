@@ -1,0 +1,12 @@
+/* Scoped to the Requests kiosk controls. */
+#openSignupKiosk { min-height:48px; margin:12px 0; }
+#signupKioskPanel { border:1px solid var(--border,#444); padding:20px; margin:0 0 24px; border-radius:12px; }
+#signupKioskPanel[hidden] { display:none; }
+#signupKioskPanel fieldset { border:0; margin:0; padding:0; min-width:0; }
+#signupKioskPanel label { display:block; margin:14px 0 6px; }
+#signupKioskPanel input,#signupKioskPanel select { width:100%; max-width:640px; min-height:48px; }
+#signupKioskPanel button { min-height:48px; margin:6px 6px 6px 0; }
+#signupKioskPanel .kiosk-actions { display:flex; flex-wrap:wrap; margin:14px 0; }
+#kioskUrl { display:block; overflow-wrap:anywhere; margin:14px 0; }
+#kioskUrl[hidden] { display:none; }
+#kioskMessage { white-space:pre-line; padding:12px; border-left:4px solid #e53948; }

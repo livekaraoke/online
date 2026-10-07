@@ -1,0 +1,63 @@
+// Merge ONLY after reviewing the complete deployed rules. See README.md.
+// Put these functions/matches inside match /databases/{database}/documents.
+// Reuse the actual existing isOwner() predicate (do not redefine it here).
+function kioskConfig() {
+  return get(/databases/$(database)/documents/signupKioskAdmin/control).data;
+}
+function kioskCurrent(c) {
+  let session = get(/databases/$(database)/documents/karaokeControl/currentSession).data;
+  return session.active == true && c.sessionId == session.sessionId;
+}
+function kioskText(value, maximum) {
+  return value is string && value.size() <= maximum && !value.matches('[\\s\\S]*[<>][\\s\\S]*');
+}
+function isKioskRequest(id) {
+  return id.matches('^kiosk_.*') || request.resource.data.get('source', '') == 'signup-kiosk';
+}
+function validKioskRequest(id) {
+  let d = request.resource.data;
+  let c = kioskConfig();
+  let receipt = getAfter(/databases/$(database)/documents/signupKioskReceipts/$(id)).data;
+  let view = get(/databases/$(database)/documents/signupKioskViews/$(c.token)).data;
+  let song = view.songs[d.songId];
+  return id.matches('^kiosk_[a-f0-9]{32}$') &&
+    d.keys().hasAll(['source','requestType','status','sessionId','publicSetlistId','publicSetlistName','kioskRevision','venue','songId','songTitle','songArtist','singerName','note','createdAt']) &&
+    d.keys().hasOnly(['source','requestType','status','sessionId','publicSetlistId','publicSetlistName','kioskRevision','venue','songId','songTitle','songArtist','singerName','note','createdAt']) &&
+    c.schemaVersion == 1 && c.enabled == true && kioskCurrent(c) &&
+    get(/databases/$(database)/documents/karaoke/state).data.songsEnabled == true &&
+    receipt.token == c.token && receipt.createdAt == request.time &&
+    view.enabled == true && view.revision == c.revision && view.sessionId == c.sessionId &&
+    d.kioskRevision == c.revision && d.sessionId == c.sessionId &&
+    d.publicSetlistId == c.setlistId && d.publicSetlistName == view.setlistName && d.venue == view.venue &&
+    d.source == 'signup-kiosk' && d.requestType == 'karaoke-song-request' && d.status == 'pending' &&
+    d.songTitle == song.title && d.songArtist == song.artist &&
+    kioskText(d.singerName,80) && d.singerName.matches('.*[^\\s].*') && kioskText(d.note,300) &&
+    d.createdAt == request.time;
+}
+match /signupKioskAdmin/{documentId} {
+  allow read, write: if isOwner();
+}
+match /signupKioskViews/{token} {
+  allow get: if isOwner() || (token.matches('^[a-f0-9]{64}$') && kioskConfig().token == token && kioskCurrent(kioskConfig()));
+  allow list, create, update, delete: if isOwner();
+}
+match /signupKioskReceipts/{requestId} {
+  // Secret token never enters the existing publicly readable request records.
+  allow read: if isOwner();
+  allow create: if requestId.matches('^kiosk_[a-f0-9]{32}$') &&
+    request.resource.data.keys().hasAll(['token','createdAt']) &&
+    request.resource.data.keys().hasOnly(['token','createdAt']) &&
+    request.resource.data.token == kioskConfig().token &&
+    request.resource.data.createdAt == request.time &&
+    getAfter(/databases/$(database)/documents/publicSongRequests/$(requestId)).data.source == 'signup-kiosk' &&
+    getAfter(/databases/$(database)/documents/publicSongRequests/$(requestId)).data.createdAt == request.time;
+  allow update, delete: if false;
+}
+// INTEGRATE inside the EXISTING publicSongRequests match, do not just append:
+// allow create: if isOwner() ||
+//   (isKioskRequest(requestId) ? validKioskRequest(requestId) : EXISTING_PUBLIC_CREATE_PREDICATE);
+// Keep existing public read and existing legitimate requester update behavior.
+// On EVERY anonymous update/delete rule add !requestId.matches('^kiosk_.*').
+// Host queue actions must retain their existing verified staff permissions.
+// Check all wildcard allows: Firestore ORs matching rules. A broad allow defeats
+// these restrictions. Never substitute true for EXISTING_PUBLIC_CREATE_PREDICATE.

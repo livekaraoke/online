@@ -57,7 +57,7 @@
       const title = req.songTitle || req.title || "Untitled";
       const artist = req.songArtist || req.artist || "";
       const name = req.singerName || req.name || "Unknown";
-      const locationAge = [req.requesterCountry || req.location, req.requesterAgeRange || req.ageRange].filter(Boolean).join(" · ");
+      const locationAge = [req.source === "signup-kiosk" ? "SIGN-UP KIOSK" : "", req.requesterCountry || req.location, req.requesterAgeRange || req.ageRange].filter(Boolean).join(" · ");
       const bpm = req.userBpm || req.songUserBpm || req.bpm || "-";
 
       row.innerHTML = `

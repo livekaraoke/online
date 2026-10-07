@@ -614,7 +614,7 @@
   function pendingRequestTime(request) {
     const raw = request?.createdAt || request?.requestedAt || request?.created || null;
     if (raw?.toMillis) return raw.toMillis();
-    const date = toDate(raw);
+    const date = tsDate(raw);
     return date?.getTime?.() || 0;
   }
 
@@ -662,7 +662,7 @@
         <div class="ts-pending-request-row${cancelled?" is-cancelled":""}" data-ls-request="${esc(request.id)}">
           <div class="ts-pending-main">
             <strong>${esc(request.songTitle || request.title || "Untitled Song")}</strong>
-            <small>${esc(ArtistNames.display(request.artist || request.songArtist || ""))} · ${esc(request.singerName || request.name || "Singer")} · ${esc(request.requesterCountry || request.location || "")}</small>
+            <small>${esc(ArtistNames.display(request.artist || request.songArtist || ""))} · ${esc(request.singerName || request.name || "Singer")} · ${esc(request.requesterCountry || request.location || "")}${request.source === "signup-kiosk" ? " · SIGN-UP KIOSK" : ""}</small>
             ${cancelled?`<em class="ts-request-cancelled-label">CANCELLED BY REQUESTER</em>`:""}
           </div>
           ${request.note?`<div class="ls26-request-note">${esc(request.note)}</div>`:''}
