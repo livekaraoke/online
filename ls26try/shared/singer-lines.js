@@ -11,13 +11,29 @@
  const inline=new Set(['SPAN','B','STRONG','I','EM','U','S','MARK','SMALL','SUB','SUP']);
  const norm=value=>String(value||'').replace(/[\u200b\ufffc]/g,'').replace(/\s+/g,' ').trim();
  function chordOnly(text){const tokens=norm(text).split(/\s+/).filter(Boolean);return tokens.some(t=>chords.parse(t))&&tokens.every(t=>chords.parse(t)||/^[|:()xX0-9.\-+*]+$/.test(t));}
+ function performanceCues(source,rows,section){
+  const title=String(section?.title||'').trim();
+  const result=[];
+  const cues=[...source.querySelectorAll('[data-performance-note]')].filter(n=>!n.closest('[data-host-note],.host-note'));
+  for(const cue of cues){
+   const text=String(cue.dataset.performanceNote||'').trim();if(!text)continue;
+   const index=rows.findIndex(row=>row.segments.some(s=>s.node&&(cue.compareDocumentPosition(s.node)&4)));
+   const at=index<0?rows.length:index;
+   result.push({sourceLineIndex:at,kind:'cue',performance:true,sectionTitle:title,text,size:Math.max(10,Math.min(40,Number(cue.dataset.performanceNoteSize)||18)),colour:/^#[0-9a-f]{6}$/i.test(cue.dataset.performanceNoteColor||'')?cue.dataset.performanceNoteColor:'#75F2A0'});
+  }
+  return result;
+ }
  function section(section,document){
   const type=String(section?.type||'lyrics').toLowerCase();
-  if(['hostnote','host-note','tab','separator'].includes(type)||section?.visibleOnSingerScreen===false)return [];
-  if(['performancenote','performance-note'].includes(type))return [{kind:'cue',text:section.text||section.title||'',sourceLineIndex:-1}];
+  if(['hostnote','host-note','tab','separator'].includes(type))return [];
+  if(['performancenote','performance-note'].includes(type))return [{kind:'cue',performance:true,sectionTitle:String(section.title||'').trim(),text:section.text||section.note||section.title||'',sourceLineIndex:-1,size:18,colour:'#75F2A0'}];
   const source=document.createElement('div');
   if(section.html)source.innerHTML=section.html;else source.textContent=section.text||'';
   const rows=chords.logicalLines(source,{locations:true});
+  const cueRows=performanceCues(source,rows,section);
+  // A hidden Singer Screen section still exposes its explicit PERFORMANCE NOTE.
+  // This keeps stage directions visible without showing that section's lyrics.
+  if(section?.visibleOnSingerScreen===false)return cueRows;
   const occurrences=chords.extractSections([section],document).candidates;
   const result=rows.map((row,sourceLineIndex)=>{
    const full=document.createElement('div'),lyrics=document.createElement('div');
@@ -31,7 +47,6 @@
      if(!excluded&&(parent.matches(chordSelector)||(parent.matches('span,b,strong')&&chords.parse(parent.textContent))))isChord=true;
      if(inline.has(parent.tagName)){
       const wrap=document.createElement(parent.tagName.toLowerCase());
-      // Keep lyric formatting; never copy handlers, IDs, editing attributes or URLs.
       for(const property of ['color','font-weight','font-style','text-decoration','background-color']){
        const v=parent.style.getPropertyValue(property);if(v)wrap.style.setProperty(property,v);
       }
@@ -41,8 +56,6 @@
     }
     full.append(copy.cloneNode(true));
     if(!isChord){
-     // Explicit exclusions can leave ordinary text beside automatic chords.
-     // Strip only actual shared occurrences, retaining the excluded text.
      let lyricValue=value;
      const overlaps=occurrences.filter(c=>c.anchor.lineIndex===sourceLineIndex&&c.anchor.start<segment.end&&c.anchor.end>segment.start);
      for(const c of overlaps.reverse()){const a=Math.max(0,c.anchor.start-segment.start),b=Math.min(value.length,c.anchor.end-segment.start);lyricValue=lyricValue.slice(0,a)+lyricValue.slice(b);}
@@ -51,22 +64,14 @@
    }
    const text=norm(lyrics.textContent),all=norm(full.textContent);
    const isChord=!row.excluded.length&&chordOnly(all);
-   // Plain-text instrumental/reference cues never become lyric focus rows.
    const cue=/^\[[^\]\n]{1,100}\]$/.test(text)||/^(?:(?:guitar|bass|drums?|piano)\s+)?(?:solo|riff|instrumental|interlude|break)(?:\s+(?:x|×)?\d+)?$/i.test(text);
    return {sourceLineIndex,kind:isChord?'chord':cue?'cue':'lyric',text:isChord?all:text,html:lyrics.innerHTML,guitarHtml:full.innerHTML};
   });
-  const cues=[...source.querySelectorAll('[data-performance-note]')].filter(n=>!n.closest('[data-host-note],.host-note'));
-  for(const cue of cues){
-   const text=String(cue.dataset.performanceNote||'').trim();if(!text)continue;
-   const index=rows.findIndex(row=>row.segments.some(s=>s.node&&(cue.compareDocumentPosition(s.node)&4)));
-   const at=index<0?rows.length:index;
-   result.push({sourceLineIndex:at,kind:'cue',text,size:Math.max(10,Math.min(40,Number(cue.dataset.performanceNoteSize)||18)),colour:/^#[0-9a-f]{6}$/i.test(cue.dataset.performanceNoteColor||'')?cue.dataset.performanceNoteColor:'#75F2A0'});
-  }
+  result.push(...cueRows);
   return result.filter(row=>row.text).sort((a,b)=>a.sourceLineIndex-b.sourceLineIndex||(a.kind==='cue'?-1:1));
  }
  function target(rows,chordLineIndex){
   const index=Number(chordLineIndex);if(!Number.isInteger(index)||index<0)return null;
-  // Inline chords share the lyric row; chord-only rows lead into the next lyric.
   return rows.find(row=>row.kind==='lyric'&&row.sourceLineIndex>=index)||null;
  }
  return Object.freeze({section,target,chordOnly});
