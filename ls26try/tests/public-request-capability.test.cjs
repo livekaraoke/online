@@ -2,7 +2,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const capability = require('../shared/public-request-capability.js');
 
-function fixture(){
+function fixture({batchError=null}={}){
   const writes=[];
   const directSets=[];
   const storage=new Map();
@@ -29,7 +29,10 @@ function fixture(){
       const staged=[];
       return {
         set(ref,data,options){staged.push({path:ref.path,data,options});return this;},
-        async commit(){writes.push(staged.slice());}
+        async commit(){
+          writes.push(staged.slice());
+          if(batchError)throw batchError;
+        }
       };
     }
   };
@@ -55,6 +58,29 @@ test('new public request creates request and private capability atomically',asyn
   assert.equal(f.writes[0][1].path,'publicSongRequestOwners/auto-1');
   assert.match(f.writes[0][1].data.token,/^[a-f0-9]{64}$/);
   assert.equal(f.storage.get('ls26.publicRequestCapability.auto-1'),f.writes[0][1].data.token);
+  assert.equal(f.directSets.length,0);
+});
+
+test('permission denied before rules rollout falls back to the legacy direct create',async()=>{
+  const error=Object.assign(new Error('denied'),{code:'permission-denied'});
+  const f=fixture({batchError:error});
+  const ref=await f.wrapped.collection('publicSongRequests').add({sessionId:'s1',source:'test'});
+  assert.equal(f.writes.length,1);
+  assert.equal(f.writes[0].length,2);
+  assert.equal(f.directSets.length,1);
+  assert.equal(f.directSets[0].add,true);
+  assert.equal(f.directSets[0].data.sessionId,'s1');
+  assert.equal(ref.id,'legacy-2');
+  assert.equal(f.storage.has('ls26.publicRequestCapability.auto-1'),false);
+});
+
+test('non-permission create failure never falls back to an unprotected request',async()=>{
+  const error=Object.assign(new Error('offline'),{code:'unavailable'});
+  const f=fixture({batchError:error});
+  await assert.rejects(
+    f.wrapped.collection('publicSongRequests').add({sessionId:'s1',source:'test'}),
+    /offline/
+  );
   assert.equal(f.directSets.length,0);
 });
 
@@ -95,4 +121,10 @@ test('capability token is 256-bit hex and key is request scoped',()=>{
   assert.match(token,/^[a-f0-9]{64}$/);
   assert.equal(token.length,64);
   assert.equal(capability.capabilityKey('abc'),'ls26.publicRequestCapability.abc');
+});
+
+test('permission-denied detector is deliberately narrow',()=>{
+  assert.equal(capability.isPermissionDenied({code:'permission-denied'}),true);
+  assert.equal(capability.isPermissionDenied({code:'firestore/permission-denied'}),true);
+  assert.equal(capability.isPermissionDenied({code:'unavailable'}),false);
 });
