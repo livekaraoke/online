@@ -3,8 +3,11 @@
  * IMPORTANT: This module is intentionally NOT loaded by the public sites yet.
  * It must only be enabled after the matching Firestore rules have been merged,
  * emulator-tested and deployed. Until then the existing request clients remain
- * unchanged so public request creation cannot be broken by an unavailable proof
- * collection.
+ * unchanged.
+ *
+ * The create path includes a narrow permission-denied fallback so the wrapper
+ * can also be enabled just before a rules cut-over without breaking request
+ * creation while the old rules still reject publicSongRequestOwners.
  */
 (function(root,factory){
   const api=factory();
@@ -37,6 +40,11 @@
     try{storage?.setItem?.(capabilityKey(requestId),token);}catch(_){}
   }
 
+  function isPermissionDenied(error){
+    const code=String(error?.code||'').toLowerCase();
+    return code==='permission-denied'||code==='firestore/permission-denied';
+  }
+
   function bound(target,prop){
     const value=target[prop];
     return typeof value==='function'?value.bind(target):value;
@@ -58,9 +66,19 @@
       const batch=db.batch();
       batch.set(requestRef,data||{});
       batch.set(proofRef,{token,createdAt:stamp,proofAt:stamp});
-      await batch.commit();
-      rememberToken(storage,requestRef.id,token);
-      return requestRef;
+
+      try{
+        await batch.commit();
+        rememberToken(storage,requestRef.id,token);
+        return requestRef;
+      }catch(error){
+        // Before the new rules are live, the private proof collection is denied.
+        // Because the failed batch is atomic, no request was created. Fall back
+        // only for a rules permission denial and preserve the current public
+        // request-create behavior. Other failures still surface to the caller.
+        if(!isPermissionDenied(error))throw error;
+        return db.collection('publicSongRequests').add(data||{});
+      }
     }
 
     function secureSet(ref,data,options,originalSet){
@@ -113,5 +131,5 @@
     });
   }
 
-  return Object.freeze({PREFIX,capabilityKey,createToken,readToken,wrap});
+  return Object.freeze({PREFIX,capabilityKey,createToken,readToken,isPermissionDenied,wrap});
 });
