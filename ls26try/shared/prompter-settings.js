@@ -4,9 +4,10 @@
  'use strict';
  const DEFAULTS={
   guidance:'normal',theme:'default',font:'default',size:'normal',spacing:'normal',background:'#00131a',bottomBar:true,autoScroll:true,speed:1,focus:40,
+  lyricsWeight:760,characterSpacing:0,scrollSmoothingMs:720,syncSinger:true,
   currentScale:1.72,contextScale:1.48,mutedScale:.82,mutedOpacity:.60,currentColour:'#16d8ff',
-  chordAbove:0,chordBelow:0,sectionTitleAlign:'left',sectionTitleX:0,
-  performanceNoteColour:'#75f2a0',performanceNoteSize:24,
+  chordAbove:0,chordBelow:0,sectionTitleAlign:'left',sectionTitleX:0,sectionColourMode:'follow',sectionCustomColour:'#42f35c',
+  performanceNoteColour:'#75f2a0',performanceNoteSize:24,performanceNoteBorderColour:'#45c979',performanceNotePadding:14,performanceNoteSpacing:20,
   chordCurrentColour:'#16d8ff',chordInactiveOpacity:.68,
   pastSizeRatio:.88,past1Opacity:.70,past2Opacity:.40,pastFarOpacity:.20,
   next1SizeRatio:.95,next1Opacity:.90,next2SizeRatio:.90,next2Opacity:.86,
@@ -16,9 +17,10 @@
  };
  const KEYS={
   guidance:'karaokeGuidanceMode',theme:'ls26:singerTheme',font:'ls26:singerFont',size:'ls26:singerTextSize',spacing:'ls26:singerSpacing',background:'ls26:karaokeSingerBackground',bottomBar:'ls26:karaokeSingerBottomBar',autoScroll:'ls26:singerAutoScroll',speed:'ls26:singerScrollSpeed',focus:'ls26:singerFocusPosition',
+  lyricsWeight:'ls26:singerLyricsWeight',characterSpacing:'ls26:singerCharacterSpacing',scrollSmoothingMs:'ls26:singerScrollSmoothingMs',syncSinger:'ls26:syncSingerScroll',
   currentScale:'ls26:singerCurrentLineScale',contextScale:'ls26:singerContextLineScale',mutedScale:'ls26:singerMutedLineScale',mutedOpacity:'ls26:singerMutedOpacity',currentColour:'ls26:singerCurrentLineColour',
-  chordAbove:'ls26:singerChordSpaceAbove',chordBelow:'ls26:singerChordSpaceBelow',sectionTitleAlign:'ls26:singerSectionTitleAlign',sectionTitleX:'ls26:singerSectionTitleX',
-  performanceNoteColour:'ls26:singerPerformanceNoteColour',performanceNoteSize:'ls26:singerPerformanceNoteSize',
+  chordAbove:'ls26:singerChordSpaceAbove',chordBelow:'ls26:singerChordSpaceBelow',sectionTitleAlign:'ls26:singerSectionTitleAlign',sectionTitleX:'ls26:singerSectionTitleX',sectionColourMode:'ls26:singerSectionColourMode',sectionCustomColour:'ls26:singerSectionCustomColour',
+  performanceNoteColour:'ls26:singerPerformanceNoteColour',performanceNoteSize:'ls26:singerPerformanceNoteSize',performanceNoteBorderColour:'ls26:singerPerformanceNoteBorderColour',performanceNotePadding:'ls26:singerPerformanceNotePadding',performanceNoteSpacing:'ls26:singerPerformanceNoteSpacing',
   chordCurrentColour:'ls26:singerChordCurrentColour',chordInactiveOpacity:'ls26:singerChordInactiveOpacity',
   pastSizeRatio:'ls26:singerPastSizeRatio',past1Opacity:'ls26:singerPast1Opacity',past2Opacity:'ls26:singerPast2Opacity',pastFarOpacity:'ls26:singerPastFarOpacity',
   next1SizeRatio:'ls26:singerNext1SizeRatio',next1Opacity:'ls26:singerNext1Opacity',next2SizeRatio:'ls26:singerNext2SizeRatio',next2Opacity:'ls26:singerNext2Opacity',
@@ -27,17 +29,31 @@
   futureFarSizeRatio:'ls26:singerFutureFarSizeRatio',futureFarStartOpacity:'ls26:singerFutureFarStartOpacity',futureFarEndOpacity:'ls26:singerFutureFarEndOpacity'
  };
  const ranges={
-  speed:[.25,3],focus:[20,65],currentScale:[1,2.5],contextScale:[.9,2.3],mutedScale:[.45,1.4],mutedOpacity:[.2,1],chordAbove:[0,40],chordBelow:[0,40],sectionTitleX:[-20,100],
-  performanceNoteSize:[12,48],chordInactiveOpacity:[.15,1],
+  speed:[.25,3],focus:[20,65],lyricsWeight:[400,900],characterSpacing:[-.5,3],scrollSmoothingMs:[180,1600],
+  currentScale:[1,2.5],contextScale:[.9,2.3],mutedScale:[.45,1.4],mutedOpacity:[.2,1],chordAbove:[0,40],chordBelow:[0,40],sectionTitleX:[-20,100],
+  performanceNoteSize:[12,48],performanceNotePadding:[4,36],performanceNoteSpacing:[0,60],chordInactiveOpacity:[.15,1],
   pastSizeRatio:[.5,1],past1Opacity:[.05,1],past2Opacity:[.05,1],pastFarOpacity:[.02,1],
   next1SizeRatio:[.5,1],next1Opacity:[.05,1],next2SizeRatio:[.5,1],next2Opacity:[.05,1],
   futureNearSizeRatio:[.45,1],futureNearOpacity:[.02,1],futureMidSizeRatio:[.45,1],futureMidStartOpacity:[.02,1],futureMidEndOpacity:[.02,1],
   futureFarSizeRatio:[.4,1],futureFarStartOpacity:[.02,1],futureFarEndOpacity:[.02,1]
  };
- const choices={guidance:['normal','pro','guitaroke'],theme:['default','warm','contrast'],font:['default','arial','dyslexic'],size:['small','normal','large','xlarge'],spacing:['normal','loose','looser'],sectionTitleAlign:['left','center','right','custom']};
+ const choices={
+  guidance:['normal','pro','guitaroke'],theme:['default','warm','contrast'],font:['default','arial','dyslexic'],size:['small','normal','large','xlarge'],spacing:['normal','loose','looser'],
+  sectionTitleAlign:['left','center','right','custom'],sectionColourMode:['follow','custom']
+ };
  const project=window.firebase?.app?.().options?.projectId||'default';
  const cacheKey='ls26:prompterGlobal:v1:'+project,sessionKey='ls26:prompterGlobal:loaded:'+project;let revision=null,pending=null;
- function normalize(raw={}){const out={...DEFAULTS};for(const key of Object.keys(out)){const v=raw[key];if(v===undefined)continue;if(ranges[key]){const n=Number(v);if(Number.isFinite(n))out[key]=Math.max(ranges[key][0],Math.min(ranges[key][1],n));}else if(choices[key]){if(choices[key].includes(v))out[key]=v;}else if(typeof out[key]==='boolean')out[key]=v===true||v==='true';else if(/^#[0-9a-f]{6}$/i.test(v))out[key]=v;}return out;}
+ function normalize(raw={}){
+  const out={...DEFAULTS};
+  for(const key of Object.keys(out)){
+   const v=raw[key];if(v===undefined)continue;
+   if(ranges[key]){const n=Number(v);if(Number.isFinite(n))out[key]=Math.max(ranges[key][0],Math.min(ranges[key][1],n));}
+   else if(choices[key]){if(choices[key].includes(v))out[key]=v;}
+   else if(typeof out[key]==='boolean')out[key]=v===true||v==='true';
+   else if(/^#[0-9a-f]{6}$/i.test(v))out[key]=v;
+  }
+  return out;
+ }
  function get(){const raw={};try{for(const [key,storage]of Object.entries(KEYS)){const value=localStorage.getItem(storage);if(value!==null)raw[key]=value;}}catch(_){}return normalize(raw);}
  function apply(values){const next=normalize(values);try{for(const [key,storage]of Object.entries(KEYS))localStorage.setItem(storage,String(next[key]));}catch(_){}window.dispatchEvent(new CustomEvent('ls26:prompter-settings',{detail:next}));return next;}
  const db=()=>window.db||window.LK?.db||window.firebase?.firestore?.();
