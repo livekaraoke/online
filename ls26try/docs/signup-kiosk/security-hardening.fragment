@@ -1,0 +1,288 @@
+// SECURITY HARDENING MERGE FRAGMENT — DO NOT DEPLOY BY APPENDING THIS BELOW
+// EXISTING BROAD allow read, write: if true RULES.
+//
+// Firestore ORs matching allow statements. The broad anonymous write rules for
+// the collections listed below MUST be replaced/removed in the real production
+// rules file. Reuse the existing isOwner() helper from production rules.
+//
+// This fragment is intentionally merge-oriented because this repository does
+// not contain the complete deployed Firestore rules file.
+
+// ---------------------------------------------------------------------------
+// Shared validation helpers
+// ---------------------------------------------------------------------------
+function publicText(value, maximum) {
+  return value is string &&
+    value.size() <= maximum &&
+    !value.matches('[\\s\\S]*[<>][\\s\\S]*');
+}
+
+function publicNonBlankText(value, maximum) {
+  return publicText(value, maximum) && value.matches('.*[^\\s].*');
+}
+
+function isKioskRequest(requestId) {
+  return requestId.matches('^kiosk_.*') ||
+    request.resource.data.get('source', '') == 'signup-kiosk';
+}
+
+function kioskConfig() {
+  return get(/databases/$(database)/documents/signupKioskAdmin/control).data;
+}
+
+function kioskCurrent(c) {
+  let session = get(/databases/$(database)/documents/karaokeControl/currentSession).data;
+  return session.active == true && c.sessionId == session.sessionId;
+}
+
+function validKioskRequest(requestId) {
+  let d = request.resource.data;
+  let c = kioskConfig();
+  let receipt = getAfter(/databases/$(database)/documents/signupKioskReceipts/$(requestId)).data;
+  let view = get(/databases/$(database)/documents/signupKioskViews/$(c.token)).data;
+  let song = view.songs[d.songId];
+
+  return requestId.matches('^kiosk_[a-f0-9]{32}$') &&
+    d.keys().hasAll([
+      'source','requestType','status','sessionId','publicSetlistId',
+      'publicSetlistName','kioskRevision','venue','songId','songTitle',
+      'songArtist','singerName','note','createdAt'
+    ]) &&
+    d.keys().hasOnly([
+      'source','requestType','status','sessionId','publicSetlistId',
+      'publicSetlistName','kioskRevision','venue','songId','songTitle',
+      'songArtist','singerName','note','createdAt'
+    ]) &&
+    c.schemaVersion == 1 &&
+    c.enabled == true &&
+    kioskCurrent(c) &&
+    get(/databases/$(database)/documents/karaoke/state).data.songsEnabled == true &&
+    receipt.token == c.token &&
+    receipt.createdAt == request.time &&
+    view.enabled == true &&
+    view.revision == c.revision &&
+    view.sessionId == c.sessionId &&
+    d.kioskRevision == c.revision &&
+    d.sessionId == c.sessionId &&
+    d.publicSetlistId == c.setlistId &&
+    d.publicSetlistName == view.setlistName &&
+    d.venue == view.venue &&
+    d.source == 'signup-kiosk' &&
+    d.requestType == 'karaoke-song-request' &&
+    d.status == 'pending' &&
+    d.songTitle == song.title &&
+    d.songArtist == song.artist &&
+    publicNonBlankText(d.singerName, 80) &&
+    publicText(d.note, 300) &&
+    d.createdAt == request.time;
+}
+
+// Normal website/list requests are intentionally validated by required identity
+// and bounded public fields rather than hasOnly(), because several existing
+// request clients carry different harmless profile/list metadata. Kiosk records
+// never enter this branch.
+function validNormalPublicRequestCreate(requestId) {
+  let d = request.resource.data;
+  let singer = d.get('singerName', d.get('name', d.get('requesterName', '')));
+  let note = d.get('note', '');
+  let comment = d.get('comment', '');
+
+  return !requestId.matches('^kiosk_.*') &&
+    d.get('source', '') != 'signup-kiosk' &&
+    publicNonBlankText(d.get('source', ''), 80) &&
+    publicNonBlankText(d.get('sessionId', ''), 180) &&
+    publicNonBlankText(d.get('songId', ''), 180) &&
+    publicNonBlankText(singer, 80) &&
+    publicText(d.get('songTitle', ''), 220) &&
+    publicText(d.get('songArtist', d.get('artist', '')), 220) &&
+    publicText(note, 300) &&
+    publicText(comment, 300) &&
+    d.get('status', '') in ['active', 'pending'] &&
+    d.createdAt == request.time &&
+    exists(/databases/$(database)/documents/lyrics/$(d.songId)) &&
+    // Anonymous creates must never pre-populate host decision/result fields.
+    !d.keys().hasAny([
+      'acceptedAt','acceptedBy','approvedAt','approvedBy','playedAt',
+      'completedAt','declinedAt','declinedBy','rejectedAt','rejectedBy',
+      'rejectionReason','hostNote','outcome','result'
+    ]);
+}
+
+function publicRequestChangedOnly(allowed) {
+  return request.resource.data.diff(resource.data).affectedKeys().hasOnly(allowed);
+}
+
+function validPublicNoteEdit() {
+  return publicRequestChangedOnly(['note','comment','updatedAt']) &&
+    request.resource.data.get('status', '') == resource.data.get('status', '') &&
+    publicText(request.resource.data.get('note', ''), 300) &&
+    publicText(request.resource.data.get('comment', ''), 300) &&
+    request.resource.data.updatedAt == request.time;
+}
+
+function validPublicCancellation() {
+  return publicRequestChangedOnly(['status','reason','cancelledAt','updatedAt']) &&
+    resource.data.get('status', '') in ['active','pending','accepted'] &&
+    request.resource.data.status == 'cancelled' &&
+    request.resource.data.reason == 'Cancelled by requester' &&
+    request.resource.data.cancelledAt == request.time &&
+    request.resource.data.updatedAt == request.time;
+}
+
+// New BillyLee26/LiveKaraoke26 requests receive a private random capability in
+// publicSongRequestOwners/{requestId}. The request document never contains it.
+// A requester update must atomically refresh proofAt with the same secret.
+function hasFreshPublicRequestCapability(requestId) {
+  let before = get(/databases/$(database)/documents/publicSongRequestOwners/$(requestId)).data;
+  let after = getAfter(/databases/$(database)/documents/publicSongRequestOwners/$(requestId)).data;
+  return before.token is string &&
+    before.token.matches('^[a-f0-9]{64}$') &&
+    after.token == before.token &&
+    after.createdAt == before.createdAt &&
+    after.proofAt == request.time;
+}
+
+function validRequesterUpdate(requestId) {
+  return !requestId.matches('^kiosk_.*') &&
+    resource.data.get('source', '') != 'signup-kiosk' &&
+    hasFreshPublicRequestCapability(requestId) &&
+    (validPublicNoteEdit() || validPublicCancellation());
+}
+
+// ---------------------------------------------------------------------------
+// REPLACE the existing broad publicSongRequests match with this shape.
+// Keep public read because current public queue/profile/request-history clients
+// rely on it. Owner remains able to manage the queue.
+// ---------------------------------------------------------------------------
+match /publicSongRequests/{requestId} {
+  allow read: if true;
+
+  allow create: if isOwner() ||
+    (isKioskRequest(requestId)
+      ? validKioskRequest(requestId)
+      : validNormalPublicRequestCreate(requestId));
+
+  allow update: if isOwner() || validRequesterUpdate(requestId);
+  allow delete: if isOwner();
+}
+
+// Private capability companion. Anonymous clients can create one only in the
+// same atomic batch that creates a new normal public request. They can refresh
+// proofAt only with the unchanged secret and a paired request update.
+match /publicSongRequestOwners/{requestId} {
+  allow read: if isOwner();
+
+  allow create: if isOwner() || (
+    !requestId.matches('^kiosk_.*') &&
+    !exists(/databases/$(database)/documents/publicSongRequests/$(requestId)) &&
+    request.resource.data.keys().hasAll(['token','createdAt','proofAt']) &&
+    request.resource.data.keys().hasOnly(['token','createdAt','proofAt']) &&
+    request.resource.data.token is string &&
+    request.resource.data.token.matches('^[a-f0-9]{64}$') &&
+    request.resource.data.createdAt == request.time &&
+    request.resource.data.proofAt == request.time &&
+    getAfter(/databases/$(database)/documents/publicSongRequests/$(requestId)).data.createdAt == request.time &&
+    getAfter(/databases/$(database)/documents/publicSongRequests/$(requestId)).data.get('source', '') != 'signup-kiosk'
+  );
+
+  allow update: if isOwner() || (
+    resource.data.token is string &&
+    resource.data.token.matches('^[a-f0-9]{64}$') &&
+    request.resource.data.keys().hasAll(['token','createdAt','proofAt']) &&
+    request.resource.data.keys().hasOnly(['token','createdAt','proofAt']) &&
+    request.resource.data.token == resource.data.token &&
+    request.resource.data.createdAt == resource.data.createdAt &&
+    request.resource.data.proofAt == request.time &&
+    getAfter(/databases/$(database)/documents/publicSongRequests/$(requestId)).data.updatedAt == request.time
+  );
+
+  allow delete: if isOwner();
+}
+
+// ---------------------------------------------------------------------------
+// Kiosk private/public documents
+// ---------------------------------------------------------------------------
+match /signupKioskAdmin/{documentId} {
+  allow read, write: if isOwner();
+}
+
+match /signupKioskViews/{token} {
+  allow get: if isOwner() ||
+    (token.matches('^[a-f0-9]{64}$') &&
+     kioskConfig().token == token &&
+     kioskCurrent(kioskConfig()));
+
+  allow list, create, update, delete: if isOwner();
+}
+
+match /signupKioskReceipts/{requestId} {
+  allow read: if isOwner();
+
+  allow create: if requestId.matches('^kiosk_[a-f0-9]{32}$') &&
+    request.resource.data.keys().hasAll(['token','createdAt']) &&
+    request.resource.data.keys().hasOnly(['token','createdAt']) &&
+    request.resource.data.token == kioskConfig().token &&
+    request.resource.data.createdAt == request.time &&
+    getAfter(/databases/$(database)/documents/publicSongRequests/$(requestId)).data.source == 'signup-kiosk' &&
+    getAfter(/databases/$(database)/documents/publicSongRequests/$(requestId)).data.createdAt == request.time;
+
+  allow update, delete: if false;
+}
+
+// ---------------------------------------------------------------------------
+// HOST-CONTROLLED COLLECTION HARDENING
+// ---------------------------------------------------------------------------
+// These matches must REPLACE any current anonymous `allow write: if true` or
+// `allow read, write: if true` grants for the same paths. Public read is retained
+// where the current public websites/screens depend on it.
+
+match /lyrics/{songId} {
+  allow read: if true;
+  allow create, update, delete: if isOwner();
+
+  match /musicalTiming/{timingId} {
+    allow read: if true;
+    allow create, update, delete: if isOwner();
+  }
+}
+
+match /lyricsSetlists/{setlistId} {
+  allow read: if true;
+  allow create, update, delete: if isOwner();
+}
+
+match /karaokeControl/{documentId} {
+  allow read: if true;
+  allow create, update, delete: if isOwner();
+}
+
+match /karaoke/{documentId} {
+  allow read: if true;
+  allow create, update, delete: if isOwner();
+}
+
+match /performanceSessions/{sessionId} {
+  allow read: if true;
+  allow create, update, delete: if isOwner();
+
+  match /{subcollection}/{documentId} {
+    allow read: if true;
+    allow create, update, delete: if isOwner();
+  }
+}
+
+match /noteSettings/{documentId} {
+  allow read: if true;
+  allow create, update, delete: if isOwner();
+}
+
+match /liveLyrics/{documentId} {
+  allow read: if true;
+  allow create, update, delete: if isOwner();
+}
+
+// If the deployed rules also contain broad anonymous writes for older data-model
+// aliases such as songlists/songlistSections/songlistSongs/performanceLogs, harden
+// those in the same way unless a verified public write workflow still exists.
+// Do not replace unrelated booking/review/reminder/requester-profile predicates
+// without reviewing their existing validated public-create/update behavior.
