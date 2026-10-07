@@ -1,7 +1,7 @@
-/* Deployment gate: enable only after the deployed, combined Firestore rules
- * pass docs/signup-kiosk/README.md. This is a rollout switch, not security. */
+/* Deployment gate: enabled after the combined production Firestore rules were
+ * published and the kiosk/public-request hardening paths were merged. */
 window.LKSignupPolicy = {
-  rulesVerified: false,
+  rulesVerified: true,
   projectId: 'livekaraokesuite',
   schemaVersion: 1
 };
