@@ -42,8 +42,6 @@
   function invalidate(name) { try {sessionStorage.removeItem(key(name));}catch(_){} }
   window.LS26Data={collection,invalidate};
 
-  // Focused page helpers are loaded after the existing page has initialised so
-  // they can extend, rather than replace, the established LiveSuite behaviour.
   function loadSharedHelper(src,id) {
     if (document.getElementById(id)) return;
     const script=document.createElement('script');
@@ -58,17 +56,14 @@
       loadSharedHelper('manual-request.js?v=20261006-manual-request-v2','ls26ManualRequestLoader');
       loadSharedHelper('manual-request-button-layout.js?v=20261006-manual-request-layout-v1','ls26ManualRequestLayoutLoader');
     }
-
     if (/\/admin-new\/performance-sessions\.html$/i.test(path)) {
       loadSharedHelper('session-history-fixes.js?v=20261006-request-history-fix-v1','ls26SessionHistoryFixLoader');
     }
-
     if (/\/host\/(?:lyricview|karaoke-lyric-view)\.html$/i.test(path)) {
-      loadSharedHelper('chord-beat-labels.js?v=20261007-beat-labels-v2','ls26ChordBeatLabelsLoader');
+      loadSharedHelper('chord-beat-labels.js?v=20261007-beat-labels-v3','ls26ChordBeatLabelsLoader');
     }
-
     if (/\/host\/karaoke-lyric-view\.html$/i.test(path)) {
-      loadSharedHelper('singer-screen-polish.js?v=20261007-singer-polish-v2','ls26SingerScreenPolishLoader');
+      loadSharedHelper('singer-screen-polish.js?v=20261007-singer-polish-v3','ls26SingerScreenPolishLoader');
     }
   }
   if (document.readyState === 'complete') loadFocusedHelpers();
