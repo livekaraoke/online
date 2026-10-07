@@ -42,7 +42,7 @@
     if (rounded > 16) return {text:`● ×${rounded}`,width:2.9,label:`${rounded} beats`};
     const full = Math.floor(rounded + 1e-9),half = rounded - full >= .49;
     const parts = Array(full).fill('●');if (half) parts.push('◐');
-    return {text:parts.join(' '),width:Math.max(.48,(full+(half?.65:0))*.52+.10),label:`${rounded} ${rounded===1?'beat':'beats'}`};
+    return {text:parts.join(' '),width:Math.max(.48,(full+(half ? .65 : 0))*.52+.10),label:`${rounded} ${rounded===1?'beat':'beats'}`};
   }
 
   async function loadTiming(songId) {
