@@ -67,7 +67,7 @@
 
   if (/\/online\/ls26try\/admin-new\//i.test(location.pathname)) {
     const addon = document.createElement("script");
-    addon.src = new URL("admin-new/js/live-karaoke-sidebar-addon.js?v=20261007-sidebar-groups-v2", document.currentScript?.src || location.href).href;
+    addon.src = new URL("admin-new/js/live-karaoke-sidebar-addon.js?v=20261007-sidebar-groups-v3", document.currentScript?.src || location.href).href;
     addon.async = true;
     document.head.appendChild(addon);
 
