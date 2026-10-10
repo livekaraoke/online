@@ -29,6 +29,12 @@ if (/\/lyricscreator\.html$/i.test(String(location.pathname || ""))) {
     const noteEditor = document.createElement("script");
     noteEditor.src = "js/inline-note-editor-v4.js?v=20261006-singer-stable";
     noteEditor.async = false;
+    noteEditor.addEventListener("load", () => {
+      const improvConfig = document.createElement("script");
+      improvConfig.src = "js/improv-chord-config-v1.js?v=20261010-improv-chords-v1";
+      improvConfig.async = false;
+      (document.head || document.documentElement).appendChild(improvConfig);
+    }, { once:true });
     (document.head || document.documentElement).appendChild(noteEditor);
   }, { once:true });
   (document.head || document.documentElement).appendChild(helper);
