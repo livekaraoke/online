@@ -18,7 +18,7 @@
   const millis=value=>asDate(value)?.getTime?.()||0;
   const stars=rating=>{const n=Math.max(0,Math.min(5,Math.round(Number(rating)||0)));return n?`${"★".repeat(n)}${"☆".repeat(5-n)}`:"No rating";};
   const reviewerKey=item=>String(item.reviewKey||item.requesterDeviceId||item.id||"");
-  const state=item=>item.reviewPrivate===true?"private":item.reviewApproved===true?"approved":(["rejected","withdrawn"].includes(String(item.reviewStatus||"").toLowerCase())?String(item.reviewStatus).toLowerCase():"pending");
+  const state=item=>item.reviewApproved===true?"approved":(["rejected","withdrawn"].includes(String(item.reviewStatus||"").toLowerCase())?String(item.reviewStatus).toLowerCase():"pending");
 
   function setStatus(message,error=false){status.textContent=message||"";status.classList.toggle("error",!!error);}
 
@@ -59,10 +59,11 @@
   }
 
   function count(kind){return reviews.filter(item=>state(item)===kind).length;}
+  function anonymousCount(){return reviews.filter(item=>item.reviewPrivate===true).length;}
   function updateCounts(){
-    const pending=count("pending"),approved=count("approved"),privateCount=count("private"),rejected=count("rejected");
-    $("lkReviewPendingCount").textContent=String(pending);$("lkReviewApprovedCount").textContent=String(approved);$("lkReviewPrivateCount").textContent=String(privateCount);$("lkReviewTotalCount").textContent=String(reviews.length);
-    $("lkFilterAllCount").textContent=String(reviews.length);$("lkFilterPendingCount").textContent=String(pending);$("lkFilterApprovedCount").textContent=String(approved);$("lkFilterPrivateCount").textContent=String(privateCount);$("lkFilterRejectedCount").textContent=String(rejected);
+    const pending=count("pending"),approved=count("approved"),anonymous=anonymousCount(),rejected=count("rejected");
+    $("lkReviewPendingCount").textContent=String(pending);$("lkReviewApprovedCount").textContent=String(approved);$("lkReviewPrivateCount").textContent=String(anonymous);$("lkReviewTotalCount").textContent=String(reviews.length);
+    $("lkFilterAllCount").textContent=String(reviews.length);$("lkFilterPendingCount").textContent=String(pending);$("lkFilterApprovedCount").textContent=String(approved);$("lkFilterPrivateCount").textContent=String(anonymous);$("lkFilterRejectedCount").textContent=String(rejected);
   }
 
   function formatDate(item){
@@ -71,31 +72,38 @@
   }
 
   function card(item){
-    const current=state(item),hasText=!!item.review,canApprove=current!=="private"&&hasText;
+    const current=state(item),hasText=!!item.review,canApprove=hasText;
     const actions=current==="approved"
       ? `<button class="lk-review-action" type="button" data-review-unpublish="${esc(item.id)}">Unpublish</button>`
-      : `<button class="lk-review-action primary" type="button" data-review-approve="${esc(item.id)}" ${canApprove?"":"disabled"}>Approve &amp; publish</button>${current!=="private"?`<button class="lk-review-action danger" type="button" data-review-reject="${esc(item.id)}">Reject</button>`:""}`;
-    return `<article class="lk-review-card" data-review-id="${esc(item.id)}"><div class="lk-review-head"><div class="lk-review-person"><strong>${esc(item.name||"Live Karaoke guest")}</strong><small>${esc(item.country||"Country not provided")}</small></div><span class="lk-review-status ${esc(current)}">${esc(current==="approved"?"Published":current)}</span></div><div class="lk-review-stars" aria-label="${esc(item.rating?`${item.rating} out of 5 stars`:"No rating")}">${esc(stars(item.rating))}</div><p class="lk-review-copy ${hasText?"":"lk-review-empty-copy"}">${hasText?esc(item.review):"No written review was provided."}</p><div class="lk-review-meta">${formatDate(item)?`<span>${esc(formatDate(item))}</span>`:""}<span>${item.reviewPrivate?"Marked private by reviewer":"Eligible for public review"}</span></div><div class="lk-review-actions">${actions}</div></article>`;
+      : `<button class="lk-review-action primary" type="button" data-review-approve="${esc(item.id)}" ${canApprove?"":"disabled"}>Approve &amp; publish</button><button class="lk-review-action danger" type="button" data-review-reject="${esc(item.id)}">Reject</button>`;
+    const privacy=item.reviewPrivate?"Name hidden on public website":"Name eligible to appear publicly";
+    return `<article class="lk-review-card" data-review-id="${esc(item.id)}"><div class="lk-review-head"><div class="lk-review-person"><strong>${esc(item.name||"Live Karaoke guest")}</strong><small>${esc(item.country||"Country not provided")}</small></div><span class="lk-review-status ${esc(current)}">${esc(current==="approved"?"Published":current)}</span></div><div class="lk-review-stars" aria-label="${esc(item.rating?`${item.rating} out of 5 stars`:"No rating")}">${esc(stars(item.rating))}</div><p class="lk-review-copy ${hasText?"":"lk-review-empty-copy"}">${hasText?esc(item.review):"No written review was provided."}</p><div class="lk-review-meta">${formatDate(item)?`<span>${esc(formatDate(item))}</span>`:""}<span>${privacy}</span></div><div class="lk-review-actions">${actions}</div></article>`;
   }
 
   function render(){
     updateCounts();
     document.querySelectorAll("[data-review-filter]").forEach(button=>button.classList.toggle("active",button.dataset.reviewFilter===filter));
-    const visible=filter==="all"?reviews:reviews.filter(item=>state(item)===filter);
-    list.innerHTML=visible.length?visible.map(card).join(""):`<div class="lk-reviews-empty">No ${filter==="all"?"reviews":filter+" reviews"} to show.</div>`;
+    const visible=filter==="all"?reviews:filter==="private"?reviews.filter(item=>item.reviewPrivate===true):reviews.filter(item=>state(item)===filter);
+    const label=filter==="private"?"anonymous":filter;
+    list.innerHTML=visible.length?visible.map(card).join(""):`<div class="lk-reviews-empty">No ${filter==="all"?"reviews":label+" reviews"} to show.</div>`;
   }
 
   async function publishApproved(snapshot=null){
     const snap=snapshot||await LK.db.collection(PROFILES).get();
-    const approved=dedupe(snap.docs.map(normalise)).filter(item=>item.reviewApproved===true&&item.reviewPrivate!==true&&item.review).slice(0,24);
-    const publicReviews=approved.map(item=>({id:item.reviewKey||item.id,name:item.name||"Live Karaoke guest",country:item.country||"",rating:item.rating||null,review:item.review}));
+    const approved=dedupe(snap.docs.map(normalise)).filter(item=>item.reviewApproved===true&&item.review).slice(0,24);
+    const publicReviews=approved.map(item=>({
+      name:item.reviewPrivate?"":(item.name||"Live Karaoke guest"),
+      country:item.country||"",
+      rating:item.rating||null,
+      review:item.review
+    }));
     await settingsRef().set({publicReviews,reviewsUpdatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:LK.auth.currentUser?.uid||""},{merge:true});
     return publicReviews.length;
   }
 
   async function moderate(id,action){
     const item=reviews.find(review=>review.id===id);if(!item||!LK.auth.currentUser)return;
-    if(action==="approve"&&(item.reviewPrivate||!item.review))return;
+    if(action==="approve"&&!item.review)return;
     const button=list.querySelector(`[data-review-${action}="${CSS.escape(id)}"]`);if(button)button.disabled=true;
     setStatus(`${action==="approve"?"Publishing":action==="reject"?"Rejecting":"Unpublishing"} review…`);
     try{
