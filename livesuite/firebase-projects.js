@@ -61,7 +61,11 @@
   window.LK_FIREBASE_CONFIG = getSelectedConfig();
   window.LK_FIREBASE_PROJECT = getSelectedKey();
 
-  if (/\/online\/(?:index\.html)?$/i.test(location.pathname)) {
+  const isPublicLiveKaraokeSite =
+    /\/online\/(?:index\.html)?$/i.test(location.pathname) ||
+    (/^(?:www\.)?livekaraoke\.eu$/i.test(location.hostname) && /^\/(?:index\.html)?$/i.test(location.pathname));
+
+  if (isPublicLiveKaraokeSite) {
     function turnIntoButton(node) {
       if (!node) return node;
       if (node.tagName === "A") {
