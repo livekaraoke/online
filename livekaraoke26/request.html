@@ -73,6 +73,7 @@
             <span>REQUESTING AS</span><strong id="requesterNameLabel">Guest</strong><i aria-hidden="true">✎</i>
           </button>
         </div>
+        <div id="requestGateStatus" class="request-gate-status" role="status" aria-live="polite">REQUESTS CLOSED · BROWSE THE SONG LIST</div>
       </div>
       <button class="modal-close request-modal-close" data-close="requestDialog" aria-label="Close">×</button>
     </div>
@@ -101,7 +102,7 @@
             <div class="request-review-heading"><h3>RATE / REVIEW YOUR EXPERIENCE</h3><span class="request-review-optional">OPTIONAL</span></div>
             <div class="request-review-rating"><span class="request-review-label">RATING</span><input id="requestReviewRating" type="hidden" value=""><div class="request-star-row" role="group" aria-label="Rating out of five"><button type="button" data-review-rating="1" aria-label="1 star">★</button><button type="button" data-review-rating="2" aria-label="2 stars">★</button><button type="button" data-review-rating="3" aria-label="3 stars">★</button><button type="button" data-review-rating="4" aria-label="4 stars">★</button><button type="button" data-review-rating="5" aria-label="5 stars">★</button><button id="clearReviewRatingBtn" class="clear-rating-btn" type="button">CLEAR</button></div></div>
             <label class="request-review-text" for="requestReviewText"><span>REVIEW</span><textarea id="requestReviewText" maxlength="1000" rows="3" placeholder="How was your experience?"></textarea></label>
-            <label class="request-review-private"><input id="requestReviewPrivate" type="checkbox"><span><strong>Keep this review private</strong><small>It will be saved but will not be eligible to appear on the website.</small></span></label>
+            <label class="request-review-private"><input id="requestReviewPrivate" type="checkbox"><span><strong>Keep my name private</strong><small>Only Name, Country, Review Rating and Review can be shown publicly. Tick this to hide your name and publish the review anonymously.</small></span></label>
           </div>
           <div class="request-profile-actions"><button id="continueRequestBtn" class="primary-btn" type="button">SAVE PROFILE</button><button id="recoverRequestProfileBtn" class="recover-profile-btn" type="button" disabled aria-disabled="true" title="Profile recovery is coming soon">RECOVER PROFILE</button><span id="requestProfileStatus" class="request-profile-status" role="status"></span></div>
         </section>
@@ -120,7 +121,7 @@
           <div class="request-confirm-card"><span class="eyebrow">YOUR REQUEST</span><h3 id="requestConfirmSongTitle">Song</h3><p id="requestConfirmSongArtist"></p><dl><div><dt>REQUESTING AS</dt><dd id="requestConfirmName"></dd></div></dl><label class="request-note-label" for="requestNote">OPTIONAL NOTE / COMMENT</label><textarea id="requestNote" rows="4" maxlength="240" placeholder="Anything you'd like the host to know?"></textarea><button id="sendRequestBtn" class="primary-btn request-send-btn" type="button">SEND REQUEST</button></div>
         </section>
 
-        <section id="requestMyRequestsPanel" class="request-tab-panel request-my-panel" data-request-panel="requests" hidden><div class="request-panel-heading"><span class="eyebrow">LIVE STATUS</span><h3>MY REQUESTS</h3><p>Accepted requests follow the current LiveSuite Run Order.</p></div><div id="myRequests" class="my-requests-scroll"></div></section>
+        <section id="requestMyRequestsPanel" class="request-tab-panel request-my-panel" data-request-panel="requests" hidden><div class="request-panel-heading"><span class="eyebrow">LIVE STATUS</span><h3>MY REQUESTS</h3><p>Accepted requests are added to the next singer rotation.</p></div><div id="myRequests" class="my-requests-scroll"></div><section id="requestPublicQueue" class="request-public-queue"><div class="request-public-queue-head"><strong>QUEUE</strong><span>NEXT 5 SONGS</span></div><div id="requestPublicQueueList" class="request-public-queue-list"></div></section></section>
 
         <section id="requestMyDataPanel" class="request-tab-panel request-my-data-panel" data-request-panel="data" hidden>
           <div class="request-panel-heading request-data-heading"><span class="eyebrow">YOUR LIVE REQUESTS</span><h3>MY DATA</h3><p>Your request history, favourites and stats saved for this profile/device.</p></div>
@@ -141,7 +142,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
   <script src="js/firebase-config.js?v=20261006-live-karaoke"></script>
-  <script src="js/youtube-videos.js?v=20261006-offline-songbook-v2"></script>
+  <script src="js/youtube-videos.js?v=20261013-request-lifecycle-v1"></script>
   <script src="js/app.js?v=20260930-artist-alpha-profile-v3"></script>
 </body>
 </html>
