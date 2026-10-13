@@ -12,10 +12,10 @@
   ];
   const DEFAULT_FAQS = [
     {id:"how-request",question:"How do I request a song?",answer:"Open SONG LIST, search or browse a category, tap + on a song, add an optional note, then press SEND REQUEST."},
-    {id:"after-send",question:"What happens after I send it?",answer:"Your request starts as pending. When accepted it appears in LiveSuite Run Order and MY REQUESTS shows your live queue position."},
+    {id:"after-send",question:"What happens after I send it?",answer:"Your request starts as pending. When accepted it is added to the performance queue and MY REQUESTS shows its live position."},
     {id:"change-request",question:"Can I change my request?",answer:"You can edit your note while the request is still waiting or queued. You can also cancel your own request before it starts playing."},
     {id:"rejected",question:"Why was my request rejected?",answer:"If the host rejects or removes a request, MY REQUESTS shows REJECTED together with the reason supplied by the host."},
-    {id:"queue",question:"Queue position",answer:"Queue positions follow LiveSuite Run Order and may change when the host reorders the performance."},
+    {id:"queue",question:"Queue position",answer:"Queue positions follow the host's current running order and may change when the performance is reordered."},
     {id:"tips",question:"Tips",answer:"Add a note if you need a different key, want to sing with someone, or want the host to know something before your turn."}
   ];
   const DEFAULT_CONTENT = {
@@ -26,10 +26,12 @@
     aboutDetailed:"Billy Lee is a singer, guitarist and live performer based in Malta, with more than two decades of experience performing at venues, concerts, festivals and private events in Malta and the UK.\n\nHis solo setup is centred around guitar, vocals and live looping. Using a loop station, parts are recorded and layered live — rhythm guitar, lead parts, percussion and vocal harmonies can all be built into an arrangement in real time. This allows a solo performance to develop naturally from a simple acoustic foundation into a much fuller sound, without relying on a fixed backing arrangement.\n\nThe repertoire covers a wide range of material, with a strong foundation in rock alongside acoustic and contemporary favourites. Rather than reproducing every song in exactly the same way, arrangements can be adapted to the setting, the audience and the pace of the night. Requests and spontaneous changes are part of that approach, keeping the performance flexible and genuinely live.\n\nBilly is also behind Live Karaoke, an interactive live music experience that puts the audience at the centre of the performance. Guests choose and request songs to sing live, backed by Billy on guitar and vocals. It combines the accessibility of karaoke with the spontaneity and interaction of a live musician, allowing each performance to adapt to the singer and the room.\n\nBilly has also worked extensively in band settings. He currently fronts Roxanna, a Malta-based hard rock band formed in 2023, performing as lead vocalist and guitarist alongside Billy B on bass and backing vocals and Salvo on drums. The band draws from classic and modern hard rock, with elements of grunge and alternative rock, and also performs acoustic material in more intimate settings.\n\nWhether performing solo, hosting Live Karaoke or playing with Roxanna, the focus remains on musicianship, strong arrangements and audience connection - adapting each show to the setting and the people in the room."
   };
 
+  const requestButtonDefault=()=>String($("websiteRequestButtonText")?.dataset.defaultText||"REQUEST A SONG").trim()||"REQUEST A SONG";
   let songs = [];
   let state = {
     enableLiveRequestTestMode:false,
     requestTestSessionId:"",
+    requestButtonText:"REQUEST A SONG",
     showCategoryCards:true,
     showArtistSearchCard:true,
     categoryCardSize:DEFAULT_CONTENT.categoryCardSize,
@@ -101,6 +103,7 @@
     return {
       enableLiveRequestTestMode:data.enableLiveRequestTestMode===true,
       requestTestSessionId:String(data.requestTestSessionId||""),
+      requestButtonText:String(data.requestButtonText||requestButtonDefault()).trim().slice(0,60)||requestButtonDefault(),
       showCategoryCards:data.showCategoryCards!==false,
       showArtistSearchCard:data.showArtistSearchCard!==false,
       categoryCardSize:Math.max(60,Math.min(120,Number(data.categoryCardSize)||DEFAULT_CONTENT.categoryCardSize)),
@@ -142,6 +145,7 @@
 
   function render(){
     if($("enableLiveRequestTestMode"))$("enableLiveRequestTestMode").checked=state.enableLiveRequestTestMode===true;
+    if($("websiteRequestButtonText"))$("websiteRequestButtonText").value=state.requestButtonText||requestButtonDefault();
     $("showCategoryCards").checked=state.showCategoryCards!==false;
     if($("showArtistSearchCard"))$("showArtistSearchCard").checked=state.showArtistSearchCard!==false;
     if($("categoryCardSize")){
@@ -246,6 +250,7 @@
       state.requestTestSessionId=testModeEnabled
         ? (state.requestTestSessionId||`billylee-test-${Date.now()}`)
         : "";
+      state.requestButtonText=String($("websiteRequestButtonText")?.value||requestButtonDefault()).trim().slice(0,60)||requestButtonDefault();
       state.showCategoryCards=$("showCategoryCards").checked;
       state.showArtistSearchCard=$("showArtistSearchCard")?.checked!==false;
       state.categoryCardSize=Math.max(60,Math.min(120,Number($("categoryCardSize")?.value)||DEFAULT_CONTENT.categoryCardSize));
@@ -256,6 +261,7 @@
       await SETTINGS_DOC().set({
         enableLiveRequestTestMode:state.enableLiveRequestTestMode,
         requestTestSessionId:state.requestTestSessionId,
+        requestButtonText:state.requestButtonText,
         showCategoryCards:state.showCategoryCards,
         showArtistSearchCard:state.showArtistSearchCard,
         categoryCardSize:state.categoryCardSize,
@@ -308,6 +314,7 @@
     state={
       enableLiveRequestTestMode:false,
       requestTestSessionId:"",
+      requestButtonText:requestButtonDefault(),
       showCategoryCards:true,
       showArtistSearchCard:true,
       categoryCardSize:DEFAULT_CONTENT.categoryCardSize,
