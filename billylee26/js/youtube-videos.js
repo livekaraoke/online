@@ -153,7 +153,7 @@ window.BILLY_LEE_YOUTUBE_VIDEOS = [
 
 // This parser-blocking load must run before app.js so the existing request app
 // receives the pre-session request ID and gate-aware Firestore wrapper.
-document.write('<script src="../js/public-request-lifecycle.js?v=20261013-request-lifecycle-v2"><\\/script>');
+document.write('<script src="../js/public-request-lifecycle.js?v=20261013-request-lifecycle-v2"><\/script>');
 
 // Request popup enhancements are kept in a dedicated module and loaded here so
 // existing page markup stays unchanged.
