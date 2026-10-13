@@ -320,6 +320,17 @@
     finally { startingPerformance = false; }
   }
 
+  async function autoOpenRequestsOnSessionStart() {
+    try {
+      const snap = await LK.db.collection("noteSettings").doc("livesuiteAppSettings").get();
+      if (!snap.exists) return true;
+      return (snap.data() || {}).autoOpenRequestsOnSessionStart !== false;
+    } catch (error) {
+      console.warn("Could not load the auto-open requests setting; using the safe default.", error);
+      return true;
+    }
+  }
+
   async function performStartSession() {
     const publicList = window.LS26PublicList?.selectionForStart();
     if (!publicList) {
@@ -350,6 +361,11 @@
     const preRunChoice=await getPreSessionRunOrderChoice();
     if(!preRunChoice){setSessionStatus("Session start cancelled.");return;}
 
+    const gateRef=LK.db.collection("karaoke").doc("state");
+    const gateSnap=await gateRef.get();
+    const gateState=gateSnap.exists?(gateSnap.data()||{}):{};
+    const pendingSessionId=String(gateState.preSessionRequestSessionId||"").trim();
+    const autoOpenRequests=await autoOpenRequestsOnSessionStart();
     const localStartedAt = nowTimestamp();
 
     const eventSnapshot = {
@@ -413,7 +429,9 @@
     if (scheduledStartAt) sessionPayload.scheduledStartAt = scheduledStartAt;
     if (scheduledEndAt) sessionPayload.scheduledEndAt = scheduledEndAt;
 
-    const ref = LK.db.collection("performanceSessions").doc();
+    const ref = pendingSessionId
+      ? LK.db.collection("performanceSessions").doc(pendingSessionId)
+      : LK.db.collection("performanceSessions").doc();
     const savedRunSetlistRef=preRunChoice.mode==="save"?LK.db.collection("lyricsSetlists").doc():null;
 
     const controlPayload = {
@@ -443,13 +461,20 @@
       const listDoc = await transaction.get(LK.db.collection("lyricsSetlists").doc(publicList.id));
       const runRef=LK.db.collection("karaokeControl").doc("runOrder");
       const runDoc=await transaction.get(runRef);
+      const liveGateDoc=await transaction.get(gateRef);
       if (!listDoc.exists) throw new Error("The selected public song list is no longer available. Choose another list.");
       const listData = listDoc.data() || {};
       const runData=runDoc.exists?(runDoc.data()||{}):{};
+      const liveGate=liveGateDoc.exists?(liveGateDoc.data()||{}):{};
+      const latestPendingId=String(liveGate.preSessionRequestSessionId||"").trim();
+      if (pendingSessionId && latestPendingId && latestPendingId!==pendingSessionId) {
+        throw new Error("Pre-session request state changed. Refresh the dashboard and start again.");
+      }
       const currentPreRun=!runData.sessionId&&Array.isArray(runData.items)?runData.items:[];
       const sessionRunItems=preRunChoice.mode==="keep"
         ? currentPreRun.map(item=>({...item,status:"queued",playingAtMs:null,playedAtMs:null}))
         : [];
+      const requestsEnabled=autoOpenRequests || liveGate.songsEnabled===true;
       transaction.set(ref, {...sessionPayload, publicSetlistName:listData.name || publicList.name});
       transaction.set(controlRef, controlPayload, {merge:true});
       transaction.set(LK.db.collection("karaokeControl").doc("publicSongList"), {
@@ -457,9 +482,15 @@
         songCount:Array.isArray(listData.songIds) ? listData.songIds.length : 0,
         source:"lyricsSetlists", updatedAt:serverNow()
       }, {merge:true});
-      transaction.set(LK.db.collection("karaoke").doc("state"), {
-        isLive:true, manualOverride:true, publicSongListSetlistId:publicList.id,
-        publicSongListSetlistName:listData.name || publicList.name, updatedAt:serverNow()
+      transaction.set(gateRef, {
+        isLive:true,
+        manualOverride:true,
+        songsOverride:true,
+        songsEnabled:requestsEnabled,
+        preSessionRequestSessionId:firebase.firestore.FieldValue.delete(),
+        publicSongListSetlistId:publicList.id,
+        publicSongListSetlistName:listData.name || publicList.name,
+        updatedAt:serverNow()
       }, {merge:true});
       transaction.set(runRef,{
         sessionId:ref.id,
@@ -489,7 +520,8 @@
       : preRunChoice.mode==="save"
         ? ` · previous Run Order saved as ${preRunChoice.name}`
         : "";
-    setSessionStatus(`Session started: ${title}${runStatus}`);
+    const requestStatus=autoOpenRequests ? " · requests opened" : (gateState.songsEnabled===true ? " · pre-session requests remain open" : " · requests remain closed");
+    setSessionStatus(`Session started: ${title}${runStatus}${requestStatus}`);
   }
 
   async function endPerformance() {
@@ -527,6 +559,9 @@
   await LK.db.collection("karaoke").doc("state").set({
     isLive: false,
     manualOverride: true,
+    songsOverride: true,
+    songsEnabled: false,
+    preSessionRequestSessionId: firebase.firestore.FieldValue.delete(),
     updatedAt: serverNow()
   }, { merge:true });
 
