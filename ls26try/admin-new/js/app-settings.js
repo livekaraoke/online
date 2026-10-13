@@ -22,6 +22,24 @@
     "metronomeShowBeatNumber","metronomeNumberSize","metronomeNumberOpacity","metronomeNumberVerticalPosition",
     "libraryRowHeight","appVersion","reduceGlow"
   ];
+
+  function setupAccordions(){
+    document.querySelectorAll('.settings-card').forEach(card=>{
+      const button=card.querySelector(':scope>h2 .settings-card-toggle');
+      if(!button||button.dataset.bound==='1')return;
+      button.dataset.bound='1';
+      card.classList.remove('is-open');
+      card.classList.add('is-collapsed');
+      button.setAttribute('aria-expanded','false');
+      button.addEventListener('click',()=>{
+        const open=!card.classList.contains('is-open');
+        card.classList.toggle('is-open',open);
+        card.classList.toggle('is-collapsed',!open);
+        button.setAttribute('aria-expanded',String(open));
+      });
+    });
+  }
+
   function put(settings){
     fields.forEach(id=>{
       const el=$(id); if(!el)return;
@@ -68,14 +86,13 @@
 
   document.addEventListener("DOMContentLoaded",async()=>{
     window.LK?.sidebar?.loadSidebar?.();
+    setupAccordions();
     put(LS26Settings.get());
     try{put(await LS26Settings.syncRemoteOncePerSession(true));}catch(_){}
     document.querySelectorAll("[data-setting]").forEach(el=>el.addEventListener("input",()=>{
-      if(el.id==="appVersion"){
-        if(!validVersion(false)){
-          setStatus("App version must use 0.0.00 format","error");
-          return;
-        }
+      if(el.id==="appVersion"&&!validVersion(false)){
+        setStatus("App version must use 0.0.00 format","error");
+        return;
       }
       preview();
     }));
