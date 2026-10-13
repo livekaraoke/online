@@ -54,12 +54,12 @@
       </header>
 
       <p id="liveKaraokeReviewsStatus" class="billy-site-status" role="status">Loading reviews…</p>
-      <p class="lk-review-note">Private reviews are visible here for your records but cannot be published. Approving a public review publishes only the reviewer name, country, rating and review text — no email or device information is exposed.</p>
+      <p class="lk-review-note">Approved reviews publish only Name, Country, Review Rating and Review. If the reviewer chose to keep their name private, the review can still be published but the Name field is hidden.</p>
 
       <section class="lk-reviews-summary" aria-label="Review summary">
         <article><span>Pending</span><strong id="lkReviewPendingCount">0</strong></article>
         <article><span>Published</span><strong id="lkReviewApprovedCount">0</strong></article>
-        <article><span>Private</span><strong id="lkReviewPrivateCount">0</strong></article>
+        <article><span>Anonymous</span><strong id="lkReviewPrivateCount">0</strong></article>
         <article><span>Total</span><strong id="lkReviewTotalCount">0</strong></article>
       </section>
 
@@ -67,7 +67,7 @@
         <button class="lk-review-filter active" data-review-filter="all" type="button">All <span id="lkFilterAllCount">0</span></button>
         <button class="lk-review-filter" data-review-filter="pending" type="button">Pending <span id="lkFilterPendingCount">0</span></button>
         <button class="lk-review-filter" data-review-filter="approved" type="button">Published <span id="lkFilterApprovedCount">0</span></button>
-        <button class="lk-review-filter" data-review-filter="private" type="button">Private <span id="lkFilterPrivateCount">0</span></button>
+        <button class="lk-review-filter" data-review-filter="private" type="button">Anonymous <span id="lkFilterPrivateCount">0</span></button>
         <button class="lk-review-filter" data-review-filter="rejected" type="button">Rejected <span id="lkFilterRejectedCount">0</span></button>
       </div>
 
@@ -90,6 +90,6 @@
       window.LK?.sidebar?.loadSidebar?.();
     }, { once:true });
   </script>
-  <script src="js/live-karaoke-reviews.js?v=20261006-reviews-v1"></script>
+  <script src="js/live-karaoke-reviews.js?v=20261013-anonymous-reviews-v1"></script>
 </body>
 </html>
