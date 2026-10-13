@@ -26,15 +26,6 @@ window.BILLY_LEE_YOUTUBE_VIDEOS = [];
     html.live-karaoke-request-embed dialog::backdrop{
       background:transparent!important;
     }
-    #requestDialog .song-action[data-live-karaoke-browse-only="1"]{
-      min-width:118px!important;
-      color:#aaa!important;
-      border-color:rgba(255,43,43,.28)!important;
-      background:#0b0b0b!important;
-      cursor:not-allowed!important;
-      font-size:10px!important;
-      letter-spacing:.04em!important;
-    }
   `;
   document.head.appendChild(style);
 
@@ -125,12 +116,9 @@ window.BILLY_LEE_YOUTUBE_VIDEOS = [];
       };
     }
 
-    // The copied Billy request app normally refuses to open its request dialog
-    // without an active performance session. Live Karaoke intentionally allows
-    // the songbook to be browsed at any time, so expose a request-app-only test
-    // session while offline. Real request availability is still determined by
-    // resolveLiveKaraokeSessionActive() below and offline song actions remain
-    // disabled, so this only unlocks the browser UI; it does not open requests.
+    // The copied Billy request app normally requires a session before opening.
+    // Live Karaoke keeps an offline browse-only preview available; the shared
+    // lifecycle bridge below separately enforces the real request gate.
     function virtualWebsiteSettingsSnapshot(original) {
       const originalData = original?.exists ? (original.data() || {}) : {};
       return {
@@ -162,9 +150,7 @@ window.BILLY_LEE_YOUTUBE_VIDEOS = [];
           };
         }
         if (collectionName === "karaokeControl" && documentId === "liveKaraokeWebsiteSettings") {
-          if (prop === "get") {
-            return async () => virtualWebsiteSettingsSnapshot(await target.get());
-          }
+          if (prop === "get") return async () => virtualWebsiteSettingsSnapshot(await target.get());
           if (prop === "onSnapshot") {
             return (next, error, complete) => target.onSnapshot(
               snapshot => {
@@ -219,74 +205,11 @@ window.BILLY_LEE_YOUTUBE_VIDEOS = [];
       }
     });
 
-    function setBrowseNotice() {
-      const notice = document.getElementById("requestNotice");
-      if (notice) notice.textContent = "Browsing only — song requests open when Live Karaoke is live.";
-    }
-
-    function applyRequestAvailability() {
-      const live = liveKaraokeSessionActive === true;
-      document.querySelectorAll("#requestDialog .song-action[data-song-id]").forEach(button => {
-        if (!live) {
-          if (button.dataset.liveKaraokeBrowseOnly === "1") return;
-          if (button.disabled) return; // Preserve NOW PLAYING / ALREADY REQUESTED / ALREADY PLAYED states.
-          button.dataset.liveKaraokeBrowseOnly = "1";
-          button.dataset.liveKaraokeOriginalText = button.textContent || "＋";
-          button.disabled = true;
-          button.textContent = "REQUESTS CLOSED";
-        } else if (button.dataset.liveKaraokeBrowseOnly === "1") {
-          button.disabled = false;
-          button.textContent = button.dataset.liveKaraokeOriginalText || "＋";
-          delete button.dataset.liveKaraokeBrowseOnly;
-          delete button.dataset.liveKaraokeOriginalText;
-        }
-      });
-    }
-
-    document.addEventListener("click", event => {
-      const action = event.target.closest?.("#requestDialog .song-action[data-song-id]");
-      if (!action || liveKaraokeSessionActive) return;
-      event.preventDefault();
-      event.stopPropagation();
-      event.stopImmediatePropagation();
-      setBrowseNotice();
-    }, true);
-
-    // Belt-and-braces protection for the synthetic browse-preview session:
-    // never allow SEND REQUEST outside a real Live Karaoke session.
-    document.addEventListener("click", event => {
-      const send = event.target.closest?.("#sendRequestBtn");
-      if (!send || liveKaraokeSessionActive) return;
-      event.preventDefault();
-      event.stopPropagation();
-      event.stopImmediatePropagation();
-      setBrowseNotice();
-    }, true);
-
-    const requestObserver = new MutationObserver(() => applyRequestAvailability());
-    window.addEventListener("DOMContentLoaded", () => {
-      requestObserver.observe(document.documentElement, {subtree:true,childList:true});
-      void resolveLiveKaraokeSessionActive(true).then(() => {
-        applyRequestAvailability();
-        if (!liveKaraokeSessionActive) setBrowseNotice();
-      });
-    });
-
+    // Only invalidate the offline-songbook cache here. Request availability is
+    // handled by /js/public-request-lifecycle.js with no MutationObserver.
     realDb.collection("karaokeControl").doc("currentSession").onSnapshot(() => {
       liveStateResolved = false;
-      void resolveLiveKaraokeSessionActive(true).then(() => applyRequestAvailability());
-    }, () => {});
-
-    realDb.collection("karaoke").doc("state").onSnapshot(snapshot => {
-      const state = snapshot.exists ? (snapshot.data() || {}) : {};
-      if (!(state.songsOverride && state.songsEnabled !== true)) return;
-      void resolveLiveKaraokeSessionActive().then(live => {
-        // Offline browsing remains available even when the live-session request switch is closed.
-        if (!live) return;
-        const dialog = document.getElementById("requestDialog");
-        if (dialog?.open) dialog.close();
-        else window.parent?.postMessage({ type: "live-karaoke-request-close" }, location.origin);
-      });
+      void resolveLiveKaraokeSessionActive(true);
     }, () => {});
   }
 
@@ -310,14 +233,15 @@ window.BILLY_LEE_YOUTUBE_VIDEOS = [];
         return;
       }
 
-      if (trigger && trigger.disabled !== true && trigger.getAttribute("aria-disabled") !== "true") {
-        trigger.click();
-      }
-
+      if (trigger && trigger.disabled !== true && trigger.getAttribute("aria-disabled") !== "true") trigger.click();
       if (attempts >= 120) clearInterval(timer);
     }, 100);
   });
 })();
+
+// Must load before app.js so pre-session request IDs and the real open/closed
+// request gate are visible to the copied request application from first render.
+document.write('<script src="../js/public-request-lifecycle.js?v=20261013-request-lifecycle-v2"><\/script>');
 
 (() => {
   const script = document.createElement("script");
