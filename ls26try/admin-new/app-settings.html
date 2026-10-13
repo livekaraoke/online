@@ -26,6 +26,10 @@
       <div class="setting-row"><div class="setting-copy"><strong>Metric label font size</strong><small>STARTED, ELAPSED, REMAINING, REQUESTS labels.</small></div><div class="setting-control"><input id="statusLabelFontSize" data-setting type="range" min="8" max="18"><output data-output="statusLabelFontSize"></output></div></div>
     </section>
 
+    <section class="settings-card is-collapsed"><h2><button class="settings-card-toggle" type="button" aria-expanded="false"><span>Requests &amp; Session Start</span><span class="settings-card-chevron">⌄</span></button></h2><p>Control the request gate when a performance session starts.</p>
+      <div class="setting-row"><div class="setting-copy"><strong>Automatically open requests on session start</strong><small>When enabled, START SESSION opens public requests immediately. If you manually opened requests before the session, they remain open regardless of this setting.</small></div><div class="setting-control"><label class="setting-toggle"><input id="autoOpenRequestsOnSessionStart" type="checkbox"> Open requests automatically</label></div></div>
+    </section>
+
     <section class="settings-card is-collapsed"><h2><button class="settings-card-toggle" type="button" aria-expanded="false"><span>LyricView Text &amp; Sections</span><span class="settings-card-chevron">⌄</span></button></h2><p>Text sizing, section layout and spacing for the performance view.</p>
       <div class="setting-row"><div class="setting-copy"><strong>Song value font size</strong><small>User BPM, BPM, Key and Capo values in the LyricView song header.</small></div><div class="setting-control"><input id="lyricSongValueFontSize" data-setting type="range" min="16" max="32" step="1"><output data-output="lyricSongValueFontSize"></output></div></div>
       <div class="setting-row"><div class="setting-copy"><strong>Section heading size</strong><small>Scales section title text, header height and coloured strip.</small></div><div class="setting-control"><select id="lyricSectionHeaderSize" data-setting aria-label="LyricView section heading size"><option value="1">1 · Extra small</option><option value="2">2 · Small</option><option value="3">3 · Medium</option><option value="4">4 · Large</option><option value="5">5 · Extra large</option></select></div></div>
@@ -115,5 +119,5 @@
 <script src="js/auth.js?v=20260910-stage4"></script>
 <script data-ls26-settings="1" src="../shared/app-settings.js?v=20261013-settings-accordion-v1"></script>
 <script src="../shared/shell.js?v=20260929-topbar-force-v7"></script>
-<script src="js/app-settings.js?v=20261013-settings-accordion-v1"></script>
+<script src="js/app-settings.js?v=20261013-request-lifecycle-v1"></script>
 </body></html>
