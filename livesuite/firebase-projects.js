@@ -86,20 +86,16 @@
       document.querySelectorAll?.("#heroRequestBtn,#songListBtn").forEach(turnIntoButton);
     }
 
-    function isBlocked(button) {
-      if (button?.id === "songListBtn") return false;
-      return button?.getAttribute("aria-disabled") === "true" || button?.classList.contains("disabled-button");
-    }
-
+    // Both public controls always open the browse/request popup. The popup's
+    // request gate decides whether a request can actually be submitted.
     document.addEventListener("pointerdown", event => {
       const button = event.target.closest?.("#heroRequestBtn,#songListBtn");
-      if (!button) return;
-      if (!isBlocked(button)) event.preventDefault();
+      if (button) event.preventDefault();
     }, true);
 
     document.addEventListener("click", event => {
       const button = event.target.closest?.("#heroRequestBtn,#songListBtn");
-      if (!button || isBlocked(button)) return;
+      if (!button) return;
       event.preventDefault();
       event.stopPropagation();
       event.stopImmediatePropagation();
@@ -109,8 +105,6 @@
     }, true);
 
     document.addEventListener("DOMContentLoaded", hardenRequestControls, { once:true });
-    const observer = new MutationObserver(hardenRequestControls);
-    observer.observe(document.documentElement, {subtree:true,childList:true,attributes:true,attributeFilter:["href","target","rel","class","aria-disabled"]});
 
     const base = document.currentScript?.src || location.href;
     const refreshCss = document.createElement("link");
@@ -134,8 +128,13 @@
     document.head.appendChild(script);
 
     const freshRequestScript = document.createElement("script");
-    freshRequestScript.src = new URL("../js/live-karaoke-request-fresh.js?v=20261006-offline-browse-v2", base).href;
+    freshRequestScript.src = new URL("../js/live-karaoke-request-fresh.js?v=20261013-gate-native-v1", base).href;
     freshRequestScript.async = false;
     document.head.appendChild(freshRequestScript);
+
+    const lifecycleScript = document.createElement("script");
+    lifecycleScript.src = new URL("../js/live-karaoke-public-request-lifecycle.js?v=20261013-request-lifecycle-v1", base).href;
+    lifecycleScript.async = false;
+    document.head.appendChild(lifecycleScript);
   }
 })();
