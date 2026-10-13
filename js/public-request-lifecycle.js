@@ -6,7 +6,8 @@
   if (!baseDb || window.__publicRequestLifecycleInstalled) return;
   window.__publicRequestLifecycleInstalled = true;
 
-  const isLiveKaraoke = document.documentElement.classList.contains("live-karaoke-request-standalone");
+  const params = new URLSearchParams(location.search);
+  const isLiveKaraoke = document.documentElement.classList.contains("live-karaoke-request-standalone") || params.get("liveKaraokeMode") === "1";
   const $ = id => document.getElementById(id);
   const terminalStatuses = new Set(["played","completed","finished","abandoned","left","deleted","deletedbyhost","declined","cancelled","rejected"]);
   const playedStatuses = new Set(["played","completed","finished"]);
@@ -91,6 +92,7 @@
   function transformReviewWrite(data) {
     const payload = { ...(data || {}) };
     if (payload.displayOptIn === false && (payload.review || payload.rating)) {
+      // "Private" means anonymous on the public website, not unpublished.
       payload.displayOptIn = true;
       payload.name = "";
     }
@@ -131,18 +133,14 @@
     const ref = baseDb.collection(name);
     return new Proxy(ref, {
       get(target, prop) {
-        if (prop === "doc") {
-          return id => wrapDocument(target.doc(id), name, id);
-        }
+        if (prop === "doc") return id => wrapDocument(target.doc(id), name, id);
         if (prop === "add" && name === "publicSongRequests") {
           return data => {
             const transformed = transformRequestWrite(data);
             return transformed instanceof Promise ? transformed : target.add(transformed);
           };
         }
-        if (prop === "add" && name === "websiteReviews") {
-          return data => target.add(transformReviewWrite(data));
-        }
+        if (prop === "add" && name === "websiteReviews") return data => target.add(transformReviewWrite(data));
         return bind(target, prop);
       }
     });
@@ -154,6 +152,64 @@
       return bind(target, prop);
     }
   });
+
+  function installRequestUiScaffold() {
+    if (!$("requestDialog")) return;
+
+    if (!$("requestGateStatus")) {
+      const header = document.querySelector("#requestDialog .request-header");
+      if (header) {
+        const status = document.createElement("div");
+        status.id = "requestGateStatus";
+        status.className = "request-gate-status";
+        status.setAttribute("role", "status");
+        status.setAttribute("aria-live", "polite");
+        header.appendChild(status);
+      }
+    }
+
+    const privateLabel = document.querySelector("#requestDialog .request-review-private");
+    const privateStrong = privateLabel?.querySelector("strong");
+    const privateSmall = privateLabel?.querySelector("small");
+    if (privateStrong) privateStrong.textContent = "Keep my name private";
+    if (privateSmall) privateSmall.textContent = "Only Name, Country, Review Rating and Review can be shown publicly. Tick this to hide your name and publish the review anonymously.";
+
+    const myRequestsIntro = document.querySelector("#requestMyRequestsPanel .request-panel-heading p");
+    if (myRequestsIntro) {
+      myRequestsIntro.textContent = isLiveKaraoke
+        ? "Accepted requests are added to the next singer rotation."
+        : "Accepted requests are added to Billy's performance list for him to perform for you.";
+    }
+
+    if (isLiveKaraoke && !$("requestPublicQueue")) {
+      const ownRequests = $("myRequests");
+      if (ownRequests) {
+        const section = document.createElement("section");
+        section.id = "requestPublicQueue";
+        section.className = "request-public-queue";
+        section.innerHTML = '<div class="request-public-queue-head"><strong>QUEUE</strong><span>NEXT 5 SONGS</span></div><div id="requestPublicQueueList" class="request-public-queue-list"></div>';
+        ownRequests.insertAdjacentElement("afterend", section);
+      }
+    }
+
+    if (!$("publicRequestLifecycleStyles")) {
+      const style = document.createElement("style");
+      style.id = "publicRequestLifecycleStyles";
+      style.textContent = `
+        .request-starting-title{color:#55e68a!important;text-shadow:0 0 8px rgba(85,230,138,.22)!important}
+        .request-starting-soon-label{color:#73f0a2!important;border-color:rgba(85,230,138,.42)!important;background:rgba(20,82,48,.38)!important}
+        .request-gate-status{margin:7px 0 0;display:inline-flex;align-items:center;min-height:24px;padding:3px 9px;border:1px solid;border-radius:999px;font-size:11px;font-weight:900;letter-spacing:.07em}
+        .request-gate-status.is-open{color:#77f0a4;border-color:rgba(85,230,138,.48);background:rgba(16,77,42,.38)}
+        .request-gate-status.is-closed{color:#ffb4b4;border-color:rgba(255,92,92,.42);background:rgba(85,22,22,.38)}
+        #requestDialog .song-action[data-request-gate-disabled="1"]{opacity:.38!important;cursor:not-allowed!important;filter:saturate(.45)}
+        .request-public-queue{margin:18px 0 8px;padding-top:14px;border-top:1px solid rgba(127,168,184,.18)}
+        .request-public-queue-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:0 0 9px}.request-public-queue-head strong{color:#fff;font-size:.88rem;letter-spacing:.08em}.request-public-queue-head span{color:#849aa5;font-size:.68rem;font-weight:850;letter-spacing:.08em}
+        .request-public-queue-list{display:grid;gap:7px}.request-public-queue-row{display:grid;grid-template-columns:28px minmax(0,1fr) auto;align-items:center;gap:9px;padding:9px 10px;border:1px solid rgba(116,153,170,.18);border-radius:8px;background:rgba(5,16,22,.72)}
+        .request-public-queue-row.is-own-request{border-color:rgba(85,230,138,.48);background:rgba(15,63,37,.32)}.request-public-queue-position{color:#7f9aa7;font-weight:900;text-align:center}.request-public-queue-song{min-width:0}.request-public-queue-song strong,.request-public-queue-song small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.request-public-queue-song strong{color:#f4f8fa;font-size:.84rem}.request-public-queue-song small{margin-top:2px;color:#8ca2ad;font-size:.7rem}.request-public-queue-row em{color:#75f0a3;font-size:.64rem;font-style:normal;font-weight:900;letter-spacing:.06em}.request-public-queue-empty{margin:0;color:#7e949f;font-size:.78rem}
+      `;
+      document.head.appendChild(style);
+    }
+  }
 
   function hasPlayedSong() {
     return runOrder.some(item => playedStatuses.has(String(item?.status || "").toLowerCase()));
@@ -243,9 +299,7 @@
       }
     });
 
-    if (!isLiveKaraoke && !canSubmit() && $("requestDialog")?.open) {
-      $("requestDialog").close();
-    }
+    if (!isLiveKaraoke && !canSubmit() && $("requestDialog")?.open) $("requestDialog").close();
   }
 
   function trackedRequestIds() {
@@ -285,12 +339,11 @@
   function correctReviewStatusCopy() {
     if (!$("requestReviewPrivate")?.checked) return;
     const status = $("requestProfileStatus");
-    if (status && /private review saved/i.test(status.textContent || "")) {
-      status.textContent = "Profile and anonymous review saved.";
-    }
+    if (status && /private review saved/i.test(status.textContent || "")) status.textContent = "Profile and anonymous review saved.";
   }
 
   function syncUi() {
+    installRequestUiScaffold();
     setConfiguredButtonText();
     setGateStatus();
     setPlayerStartingState();
@@ -345,13 +398,8 @@
       return;
     }
 
-    if (event.target.closest?.("#continueRequestBtn")) {
-      setTimeout(correctReviewStatusCopy, 700);
-    }
-
-    if (event.target.closest?.("#requestDialog [data-request-tab], #requestDialog [data-song-category], #requestDialog [data-alpha-jump], #clearSongCategoryBtn")) {
-      queueUiSync();
-    }
+    if (event.target.closest?.("#continueRequestBtn")) setTimeout(correctReviewStatusCopy, 700);
+    if (event.target.closest?.("#requestDialog [data-request-tab], #requestDialog [data-song-category], #requestDialog [data-alpha-jump], #clearSongCategoryBtn")) queueUiSync();
   }, true);
 
   document.addEventListener("input", event => {
@@ -364,9 +412,6 @@
     runUnsub?.();
   }, { once:true });
 
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", queueUiSync, { once:true });
-  } else {
-    queueUiSync();
-  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", queueUiSync, { once:true });
+  else queueUiSync();
 })();
