@@ -1,0 +1,41 @@
+# Public GitHub Pages publishing rules.
+# Keep internal development/admin tools in the repository but do not publish
+# them under livekaraoke.eu. Public runtime assets are intentionally omitted
+# from this exclusion list.
+
+exclude:
+  # Internal/admin applications
+  - adm
+  - admin-new
+  - admn
+  - admn2
+  - host
+  - oldadmin
+  - notekeeper
+
+  # Development / unrelated applications
+  - billylee26
+  - bly
+  - custom
+  - ls26try
+  - oh
+  - roxanna
+  - roxanna26
+
+  # Internal documentation and verification
+  - docs
+  - verification
+  - VERIFICATION.md
+  - "New Text Document.txt"
+
+  # LiveSuite is mostly internal. The public root site still requires
+  # livesuite/firebase-projects.js, so exclude only its non-public entries.
+  - livesuite/admin-new
+  - livesuite/host
+  - livesuite/img
+  - livesuite/index.html
+  - livesuite/list
+  - livesuite/oldadmin
+
+  # Legacy admin JavaScript is not required by the public site.
+  - js/admin.js
