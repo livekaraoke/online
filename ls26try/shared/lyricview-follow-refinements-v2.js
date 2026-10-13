@@ -1,5 +1,5 @@
 /* LyricView follow refinements: compact beat pulse, navigation preference,
- * completion banner and inline marker presentation.
+ * completion banner, fast play-start positioning and inline marker presentation.
  * Meter/timeline ownership intentionally lives in lyricview-improv-timeline-sync-v2.js.
  */
 (() => {
@@ -9,15 +9,17 @@
   const $ = id => document.getElementById(id);
   const NAV_KEY = 'ls26:showLyricNavigation';
   let beatTimer = null;
+  let startScrollFrame = null;
 
   const style = document.createElement('style');
   style.id = 'ls26FollowRefinementsV2Style';
   style.textContent = `
     #chordFollowFloatCard .ls26-follow-status-wrap{grid-template-columns:minmax(0,1fr) 24px!important;gap:6px!important;align-items:center!important}
     #chordFollowFloatCard .ls26-follow-status-summary{text-align:center!important}
+    #chordFollowFloatCard .ls26-follow-status-summary[data-state="countin"]{color:var(--ls26-improv-countdown-color,#ff8a24)!important}
     #chordFollowFloatCard .ls26-follow-beat{width:24px!important;height:24px!important;font-size:11px!important;transition:background-color 55ms linear,color 55ms linear,border-color 55ms linear,box-shadow 55ms linear!important}
     #chordFollowFloatCard .ls26-follow-beat.is-flashing{background:var(--ls-accent)!important;border-color:var(--ls-accent)!important;color:var(--ls-bg)!important;box-shadow:0 0 14px color-mix(in srgb,var(--ls-accent) 55%,transparent)!important}
-    #chordFollowFloatCard .ls26-follow-beat.is-orange.is-flashing{background:var(--ls26-improv-countdown-color,#ff8a24)!important;border-color:var(--ls26-improv-countdown-color,#ff8a24)!important;color:var(--ls-bg)!important;box-shadow:0 0 14px color-mix(in srgb,var(--ls26-improv-countdown-color,#ff8a24) 55%,transparent)!important}
+    #chordFollowFloatCard .ls26-follow-beat.is-countin.is-flashing,#chordFollowFloatCard .ls26-follow-beat.is-orange.is-flashing{background:var(--ls26-improv-countdown-color,#ff8a24)!important;border-color:var(--ls26-improv-countdown-color,#ff8a24)!important;color:var(--ls-bg)!important;box-shadow:0 0 14px color-mix(in srgb,var(--ls26-improv-countdown-color,#ff8a24) 55%,transparent)!important}
     #chordFollowFloatCard .ls26-song-complete-banner{margin:6px 0 2px!important;text-align:center!important;color:#41e37a!important;font-size:13px!important;font-weight:950!important;letter-spacing:.035em!important;line-height:1!important}
     #chordFollowFloatCard .ls26-song-complete-banner[hidden]{display:none!important}
     .song-info-card.lv-metronome .ls26-nav-buttons-toggle{display:flex!important;align-items:center!important;gap:9px!important;margin:0!important;padding:8px 0!important;color:var(--ls-text)!important;font-size:13px!important;font-weight:700!important}
@@ -35,17 +37,33 @@
     return String($('chordFollowStatus')?.textContent || '').trim();
   }
 
+  function countInColour() {
+    return window.LS26Settings?.get?.().improvCountdownColor || '#ff8a24';
+  }
+
+  function applyCountInVisual(event) {
+    const detail = event?.detail || {};
+    const beat = document.querySelector('#chordFollowFloatCard .ls26-follow-beat');
+    if (beat) beat.classList.toggle('is-countin', detail.countIn === true);
+    if (detail.countIn !== true) return;
+    const layer = $('lvMetroScreenBeat');
+    if (layer) layer.style.color = countInColour();
+  }
+
   function installBeatPulse() {
     const beat = document.querySelector('#chordFollowFloatCard .ls26-follow-beat');
     if (!beat || beat.dataset.ls26PulseV2 === '1') return false;
     beat.dataset.ls26PulseV2 = '1';
-    window.addEventListener('ls26:metronome-beat', () => {
+    window.addEventListener('ls26:metronome-beat', event => {
+      applyCountInVisual(event);
       beat.classList.add('is-flashing');
       clearTimeout(beatTimer);
       beatTimer = setTimeout(() => beat.classList.remove('is-flashing'), 90);
     });
     window.addEventListener('ls26:transport-state', event => {
-      if (event.detail?.state !== 'playing') beat.classList.remove('is-flashing');
+      if (event.detail?.state !== 'playing') {
+        beat.classList.remove('is-flashing', 'is-countin');
+      }
     });
     return true;
   }
@@ -121,6 +139,43 @@
     return true;
   }
 
+  function fastScrollToFirstSection() {
+    const first = document.querySelector('#lyricsContent .host-section[data-section-index="0"],#lyricsContent .host-section,.host-section[data-section-index="0"],.host-section');
+    if (!first) return;
+    if (startScrollFrame !== null) cancelAnimationFrame(startScrollFrame);
+    const sticky = $('hostStickyStack') || $('ls26StickyHeader');
+    const stickyBottom = sticky ? sticky.getBoundingClientRect().bottom : 0;
+    const from = Number(window.scrollY || window.pageYOffset || 0);
+    const to = Math.max(0, from + first.getBoundingClientRect().top - stickyBottom - 10);
+    const distance = to - from;
+    if (Math.abs(distance) < 4) return;
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+      window.scrollTo(0, to);
+      return;
+    }
+    const duration = Math.max(180, Math.min(360, Math.abs(distance) * .18));
+    const started = performance.now();
+    const step = now => {
+      const t = Math.min(1, (now - started) / duration);
+      const eased = 1 - Math.pow(1 - t, 3);
+      window.scrollTo(0, from + distance * eased);
+      if (t < 1) startScrollFrame = requestAnimationFrame(step);
+      else startScrollFrame = null;
+    };
+    startScrollFrame = requestAnimationFrame(step);
+  }
+
+  function installFastPlayStart() {
+    const play = $('autoScrollBtn');
+    if (!play || play.dataset.ls26FastFirstSection === '1') return false;
+    play.dataset.ls26FastFirstSection = '1';
+    play.addEventListener('click', () => {
+      const starting = !window.LS26Performance?.isScrolling?.();
+      if (starting) fastScrollToFirstSection();
+    }, true);
+    return true;
+  }
+
   window.addEventListener('ls26:song-ready', () => setTimeout(installAll, 0));
   window.addEventListener('resize', () => {
     if (document.documentElement.classList.contains('ls26-hide-lyric-navigation')) applyNavVisibility(false, false);
@@ -130,6 +185,7 @@
     installBeatPulse();
     installCompletionBanner();
     installNavigationToggle();
+    installFastPlayStart();
   }
 
   const start = () => {
