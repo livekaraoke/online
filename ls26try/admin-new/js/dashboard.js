@@ -134,7 +134,7 @@
     if (songsBtn) {
       songsBtn.className = songs ? "circle-status-btn stop" : "circle-status-btn go";
       songsBtn.innerHTML = statusCircleIcon(songs ? "lock" : "unlock");
-      songsBtn.title = songs ? "Lock public song list" : "Unlock public song list";
+      songsBtn.title = songs ? "Close song requests" : (live ? "Open song requests" : "Open requests before the session");
     }
   }
 
@@ -151,12 +151,12 @@
 
     if (liveLabel) {
       liveLabel.className = live ? "live-now-status" : "offline-status";
-      liveLabel.innerText = live ? "LIVE NOW!" : "● Offline";
+      liveLabel.innerText = live ? "LIVE NOW!" : (songs ? "● Starting Soon" : "● Offline");
     }
 
     if (songsLabel) {
       songsLabel.className = songs ? "songs-unlocked" : "songs-locked";
-      songsLabel.innerText = songs ? "UNLOCKED" : "LOCKED";
+      songsLabel.innerText = songs ? "REQUESTS OPEN" : "REQUESTS CLOSED";
     }
 
     // Upcoming-event venue/date/type/countdown are owned by
@@ -178,16 +178,30 @@
     logAdmin(!live ? "GO LIVE activated" : "LIVE ended manually");
   }
 
-  function toggleSongsAuto() {
-    const live = getIsLive(LK.state.currentState);
-    if (!live) {
-      LK.db.collection("karaoke").doc("state").set({ songsOverride: true, songsEnabled: false }, { merge: true });
-      logAdmin("Cannot unlock songs: event is not live");
-      return;
+  async function toggleSongsAuto() {
+    const state = LK.state.currentState || {};
+    const live = getIsLive(state);
+    const songs = getSongsAvailable(state, live);
+    const nextEnabled = !songs;
+    const patch = {
+      songsOverride: true,
+      songsEnabled: nextEnabled,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+
+    // Opening requests before a performance creates only an ID reservation.
+    // Public requests can use it immediately, and the real performance session
+    // adopts this same ID when START SESSION is pressed.
+    if (nextEnabled && !live && !String(state.preSessionRequestSessionId || "").trim()) {
+      patch.preSessionRequestSessionId = LK.db.collection("performanceSessions").doc().id;
     }
-    const songs = getSongsAvailable(LK.state.currentState, live);
-    LK.db.collection("karaoke").doc("state").set({ songsOverride: !songs, songsEnabled: !songs }, { merge: true });
-    logAdmin(songs ? "Public Song List LOCKED" : "Public Song List UNLOCKED");
+
+    await LK.db.collection("karaoke").doc("state").set(patch, { merge: true });
+    if (nextEnabled) {
+      logAdmin(live ? "Song requests OPENED" : "Pre-session song requests OPENED");
+    } else {
+      logAdmin("Song requests CLOSED");
+    }
   }
 
   function showConfirm(title, message) {
