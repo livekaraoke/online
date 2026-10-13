@@ -124,18 +124,6 @@ window.BILLY_LEE_YOUTUBE_VIDEOS = [
         return bindValue(target, prop);
       }
     });
-
-    // The main Live Karaoke page can explicitly lock the public list. If that
-    // happens while the embedded request UI is open, close it immediately so
-    // the reused Billy request code cannot bypass the host's lock.
-    realDb.collection("karaoke").doc("state").onSnapshot(snapshot => {
-      const state = snapshot.exists ? (snapshot.data() || {}) : {};
-      if (state.songsOverride && state.songsEnabled !== true) {
-        const dialog = document.getElementById("requestDialog");
-        if (dialog?.open) dialog.close();
-        else window.parent?.postMessage({ type: "live-karaoke-request-close" }, location.origin);
-      }
-    }, () => {});
   }
 
   window.addEventListener("DOMContentLoaded", () => {
@@ -157,14 +145,15 @@ window.BILLY_LEE_YOUTUBE_VIDEOS = [
         return;
       }
 
-      if (trigger && trigger.disabled !== true && trigger.getAttribute("aria-disabled") !== "true") {
-        trigger.click();
-      }
-
+      if (trigger && trigger.disabled !== true && trigger.getAttribute("aria-disabled") !== "true") trigger.click();
       if (attempts >= 120) clearInterval(timer);
     }, 100);
   });
 })();
+
+// This parser-blocking load must run before app.js so the existing request app
+// receives the pre-session request ID and gate-aware Firestore wrapper.
+document.write('<script src="../js/public-request-lifecycle.js?v=20261013-request-lifecycle-v2"><\\/script>');
 
 // Request popup enhancements are kept in a dedicated module and loaded here so
 // existing page markup stays unchanged.
