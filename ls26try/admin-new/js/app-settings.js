@@ -22,6 +22,7 @@
     "metronomeShowBeatNumber","metronomeNumberSize","metronomeNumberOpacity","metronomeNumberVerticalPosition",
     "libraryRowHeight","appVersion","reduceGlow"
   ];
+  const requestLifecycleRef=()=>window.LK?.db?.collection("noteSettings")?.doc("livesuiteAppSettings");
 
   function setupAccordions(){
     document.querySelectorAll('.settings-card').forEach(card=>{
@@ -66,6 +67,27 @@
     });
     return out;
   }
+  async function loadRequestLifecycleSetting(){
+    const el=$("autoOpenRequestsOnSessionStart");
+    if(!el)return;
+    el.checked=true;
+    try{
+      const ref=requestLifecycleRef();
+      if(!ref)return;
+      const snap=await ref.get();
+      if(snap.exists)el.checked=(snap.data()||{}).autoOpenRequestsOnSessionStart!==false;
+    }catch(error){
+      console.warn("Could not load request lifecycle settings",error);
+    }
+  }
+  async function saveRequestLifecycleSetting(value){
+    const ref=requestLifecycleRef();
+    if(!ref)return;
+    await ref.set({
+      autoOpenRequestsOnSessionStart:value!==false,
+      updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+    },{merge:true});
+  }
   const VERSION_RE=/^\d\.\d\.\d{2}$/;
   function validVersion(report=false){
     const el=$("appVersion");
@@ -89,6 +111,7 @@
     setupAccordions();
     put(LS26Settings.get());
     try{put(await LS26Settings.syncRemoteOncePerSession(true));}catch(_){}
+    await loadRequestLifecycleSetting();
     document.querySelectorAll("[data-setting]").forEach(el=>el.addEventListener("input",()=>{
       if(el.id==="appVersion"&&!validVersion(false)){
         setStatus("App version must use 0.0.00 format","error");
@@ -96,17 +119,24 @@
       }
       preview();
     }));
+    $("autoOpenRequestsOnSessionStart")?.addEventListener("input",()=>setStatus("Unsaved changes","unsaved"));
     $("saveSettingsBtn").onclick=async()=>{
       if(!validVersion(true)){setStatus("App version must use 0.0.00 format","error");return;}
       const b=$("saveSettingsBtn");b.disabled=true;setStatus("Saving…");
-      try{put(await LS26Settings.save(collect()));setStatus("Settings saved");}
+      try{
+        put(await LS26Settings.save(collect()));
+        await saveRequestLifecycleSetting($("autoOpenRequestsOnSessionStart")?.checked!==false);
+        setStatus("Settings saved");
+      }
       catch(error){setStatus(error.message||"Could not save settings","error");}
       finally{b.disabled=false;}
     };
     $("resetSettingsBtn").onclick=async()=>{
       if(!await LS26Dialogs.confirm("Reset LiveSuite App Settings to their defaults?"))return;
       put(LS26Settings.reset());
+      if($("autoOpenRequestsOnSessionStart"))$("autoOpenRequestsOnSessionStart").checked=true;
       await LS26Settings.save(LS26Settings.DEFAULTS);
+      await saveRequestLifecycleSetting(true);
       setStatus("Defaults restored");
     };
   });
