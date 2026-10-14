@@ -113,21 +113,21 @@
     const base = document.currentScript?.src || location.href;
     const refreshCss = document.createElement("link");
     refreshCss.rel = "stylesheet";
-    refreshCss.href = new URL("../css/live-karaoke-public-refresh.css?v=20261006-spacing-fix-v1", base).href;
+    refreshCss.href = new URL("../css/live-karaoke-public-refresh.css?v=20261014-custom-domain-v3", base).href;
     document.head.appendChild(refreshCss);
 
     const enquiryCss = document.createElement("link");
     enquiryCss.rel = "stylesheet";
-    enquiryCss.href = new URL("../css/live-karaoke-enquiry-green.css?v=20261006-enquiry-green-v1", base).href;
+    enquiryCss.href = new URL("../css/live-karaoke-enquiry-green.css?v=20261014-custom-domain-v3", base).href;
     document.head.appendChild(enquiryCss);
 
     const refreshScript = document.createElement("script");
-    refreshScript.src = new URL("../js/live-karaoke-public-refresh.js?v=20261014-custom-domain-v1", base).href;
+    refreshScript.src = new URL("../js/live-karaoke-public-refresh.js?v=20261014-custom-domain-v3", base).href;
     refreshScript.async = false;
     document.head.appendChild(refreshScript);
 
     const script = document.createElement("script");
-    script.src = new URL("../js/live-karaoke-request-popup.js?v=20261014-custom-domain-v1", base).href;
+    script.src = new URL("../js/live-karaoke-request-popup.js?v=20261014-custom-domain-v3", base).href;
     script.async = false;
     document.head.appendChild(script);
 
@@ -137,7 +137,7 @@
     document.head.appendChild(freshRequestScript);
 
     const lifecycleScript = document.createElement("script");
-    lifecycleScript.src = new URL("../js/live-karaoke-public-request-lifecycle.js?v=20261013-request-lifecycle-v1", base).href;
+    lifecycleScript.src = new URL("../js/live-karaoke-public-request-lifecycle.js?v=20261014-custom-domain-v3", base).href;
     lifecycleScript.async = false;
     document.head.appendChild(lifecycleScript);
   }
