@@ -132,7 +132,7 @@
     document.head.appendChild(script);
 
     const freshRequestScript = document.createElement("script");
-    freshRequestScript.src = new URL("../js/live-karaoke-request-fresh.js?v=20261014-public-browse-v6", base).href;
+    freshRequestScript.src = new URL("../js/live-karaoke-request-fresh.js?v=20261014-live-session-v7", base).href;
     freshRequestScript.async = false;
     document.head.appendChild(freshRequestScript);
 
