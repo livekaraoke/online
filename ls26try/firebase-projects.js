@@ -65,14 +65,16 @@
   window.LK_FIREBASE_CONFIG = getSelectedConfig();
   window.LK_FIREBASE_PROJECT = getSelectedKey();
 
-  if (/\/online\/ls26try\/admin-new\//i.test(location.pathname)) {
+  // Support both the GitHub Pages project path (/online/ls26try/...) and
+  // the private custom-domain path (/ls26try/...).
+  if (/(?:\/online)?\/ls26try\/admin-new\//i.test(location.pathname)) {
     const addon = document.createElement("script");
-    addon.src = new URL("admin-new/js/live-karaoke-sidebar-addon.js?v=20261007-sidebar-groups-v3", document.currentScript?.src || location.href).href;
+    addon.src = new URL("admin-new/js/live-karaoke-sidebar-addon.js?v=20261014-sidebar-groups-v4", document.currentScript?.src || location.href).href;
     addon.async = true;
     document.head.appendChild(addon);
 
     const caseFix = document.createElement("script");
-    caseFix.src = new URL("admin-new/js/sidebar-label-case-fix.js?v=20261007-sidebar-case-v1", document.currentScript?.src || location.href).href;
+    caseFix.src = new URL("admin-new/js/sidebar-label-case-fix.js?v=20261014-sidebar-case-v2", document.currentScript?.src || location.href).href;
     caseFix.async = true;
     document.head.appendChild(caseFix);
   }
