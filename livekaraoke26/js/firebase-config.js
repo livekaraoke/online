@@ -111,12 +111,23 @@
     }
   }
 
+  function idFromSongSource(source, fallbackId){
+    const direct = String(source?.lyricsId || source?.songId || source?.id || "").trim();
+    if (direct) return direct;
+    const url = String(source?.url || "");
+    const match = url.match(/[?&]id=([^&#]+)/i);
+    if (match?.[1]) {
+      try { return decodeURIComponent(match[1]).trim(); }
+      catch (_) { return match[1].trim(); }
+    }
+    return String(fallbackId || "").trim();
+  }
+
   function normalisePublicSong(data, fallbackId){
     const source = data || {};
-    const id = String(source.lyricsId || source.songId || source.id || fallbackId || "").trim();
     return {
       ...source,
-      id,
+      id:idFromSongSource(source, fallbackId),
       title:String(source.title || source.songTitle || "").trim(),
       artist:source.artist || source.songArtist || "",
       year:source.year || "",
@@ -137,13 +148,17 @@
     );
   }
 
+  function staticBrowseSongs(){
+    const source = Array.isArray(window.songs) ? window.songs : [];
+    return dedupePublicSongs(source.map((song,index) => normalisePublicSong(song, `static-${index + 1}`)));
+  }
+
   async function publicBrowseSongs(){
     if (publicBrowseSongsPromise) return publicBrowseSongsPromise;
 
     publicBrowseSongsPromise = (async () => {
-      // This is the visitor-facing catalogue already used by the public song-list
-      // page. Prefer it so off-session browsing does not depend on setlist IDs
-      // resolving back to lyrics documents.
+      // Primary source: the visitor-facing catalogue already used by the public
+      // song-list page. This avoids rebuilding the list through lyricsSetlists.
       try {
         const publicSnap = await rawDb.collection("songlistSongs")
           .where("listId", "==", PUBLIC_SONGLIST_ID)
@@ -156,12 +171,20 @@
         console.warn("Public song-list catalogue unavailable; trying lyrics fallback", error);
       }
 
-      // Backward-compatible fallback for databases where the denormalised public
-      // catalogue has not been populated.
-      const lyricsSnap = await rawDb.collection("lyrics").get();
-      return dedupePublicSongs(
-        lyricsSnap.docs.map(doc => normalisePublicSong({ id:doc.id, ...(doc.data() || {}) }, doc.id))
-      );
+      // Secondary source: public lyrics documents.
+      try {
+        const lyricsSnap = await rawDb.collection("lyrics").get();
+        const lyricRows = dedupePublicSongs(
+          lyricsSnap.docs.map(doc => normalisePublicSong({ id:doc.id, ...(doc.data() || {}) }, doc.id))
+        );
+        if (lyricRows.length) return lyricRows;
+      } catch (error) {
+        console.warn("Public lyrics catalogue unavailable; using shipped song fallback", error);
+      }
+
+      // Last-resort source: the shipped karaoke catalogue loaded by request.html.
+      // This keeps browsing usable even if public Firestore reads are unavailable.
+      return staticBrowseSongs();
     })().catch(error => {
       publicBrowseSongsPromise = null;
       throw error;
@@ -211,22 +234,28 @@
       get(target, prop){
         if (prop === "get") {
           return async () => {
-            const original = await target.get();
-            if (await liveKaraokeSessionActive()) return original;
+            // Active sessions keep the real configured LiveSuite public setlist.
+            if (await liveKaraokeSessionActive()) return target.get();
 
+            let original = null;
             try {
-              const publicSongs = await publicBrowseSongs();
-              if (!publicSongs.length) return original;
-              const originalData = original.exists ? (original.data() || {}) : {};
-              return syntheticSnapshot(original.id || "publicSongList", {
+              original = await target.get();
+            } catch (error) {
+              console.warn("Public song-list control unavailable; using browse catalogue directly", error);
+            }
+
+            const publicSongs = await publicBrowseSongs();
+            if (publicSongs.length) {
+              const originalData = original?.exists ? (original.data() || {}) : {};
+              return syntheticSnapshot(original?.id || "publicSongList", {
                 ...originalData,
                 setlistId:PUBLIC_BROWSE_SETLIST_ID,
                 setlistName:"Live Karaoke Public Song List"
-              }, original.ref);
-            } catch (error) {
-              console.warn("Could not prepare off-session Live Karaoke public song list", error);
-              return original;
+              }, original?.ref || target);
             }
+
+            if (original) return original;
+            return syntheticSnapshot("publicSongList", { setlistId:"", setlistName:"" }, target);
           };
         }
         return bind(target, prop);
@@ -240,16 +269,11 @@
       get(target, prop){
         if (prop === "get") {
           return async () => {
-            try {
-              const publicSongs = await publicBrowseSongs();
-              return syntheticSnapshot(PUBLIC_BROWSE_SETLIST_ID, {
-                name:"Live Karaoke Public Song List",
-                songIds:publicSongs.map(song => song.id)
-              }, target);
-            } catch (error) {
-              console.warn("Could not build synthetic Live Karaoke public setlist", error);
-              return { exists:false, id:PUBLIC_BROWSE_SETLIST_ID, ref:target, data:() => ({}) };
-            }
+            const publicSongs = await publicBrowseSongs();
+            return syntheticSnapshot(PUBLIC_BROWSE_SETLIST_ID, {
+              name:"Live Karaoke Public Song List",
+              songIds:publicSongs.map(song => song.id)
+            }, target);
           };
         }
         return bind(target, prop);
@@ -263,14 +287,15 @@
         if (prop === "get") {
           return async () => {
             if (await liveKaraokeSessionActive()) return target.get();
+
             try {
               const wanted = new Set((requestedIds || []).map(String));
               const rows = (await publicBrowseSongs()).filter(song => wanted.has(String(song.id || "")));
-              if (rows.length) return syntheticQuerySnapshot(rows);
+              return syntheticQuerySnapshot(rows);
             } catch (error) {
               console.warn("Could not satisfy public song lookup from browse catalogue", error);
+              return target.get();
             }
-            return target.get();
           };
         }
         return bind(target, prop);
