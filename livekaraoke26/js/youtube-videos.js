@@ -114,22 +114,86 @@ window.BILLY_LEE_YOUTUBE_VIDEOS = [];
       return liveStatePromise;
     }
 
-    function virtualPublicListSnapshot(original, settings) {
+    async function loadNonEmptySetlist(setlistId) {
+      const id = String(setlistId || "").trim();
+      if (!id) return null;
+      try {
+        const snap = await realDb.collection("lyricsSetlists").doc(id).get();
+        if (!snap.exists) return null;
+        const data = snap.data() || {};
+        const songIds = Array.isArray(data.songIds) ? data.songIds.filter(Boolean) : [];
+        if (!songIds.length) return null;
+        return {
+          id: snap.id,
+          name: String(data.name || "").trim(),
+          songIds
+        };
+      } catch (error) {
+        console.warn("Could not verify Live Karaoke browse setlist", id, error);
+        return null;
+      }
+    }
+
+    async function resolveBrowseSetlist(originalData, settings) {
+      const preferredIds = [
+        settings?.defaultBrowseSetlistId,
+        originalData?.setlistId
+      ].map(value => String(value || "").trim()).filter(Boolean);
+
+      for (const id of [...new Set(preferredIds)]) {
+        const setlist = await loadNonEmptySetlist(id);
+        if (setlist) return setlist;
+      }
+
+      try {
+        const snapshot = await realDb.collection("lyricsSetlists").get();
+        const candidates = snapshot.docs.map(doc => {
+          const data = doc.data() || {};
+          const songIds = Array.isArray(data.songIds) ? data.songIds.filter(Boolean) : [];
+          return {
+            id: doc.id,
+            name: String(data.name || "").trim(),
+            songIds
+          };
+        }).filter(item => item.songIds.length);
+
+        if (!candidates.length) return null;
+
+        const score = item => {
+          const name = item.name.toLowerCase();
+          let value = item.songIds.length;
+          if (name.includes("live karaoke")) value += 10000;
+          else if (name.includes("karaoke")) value += 5000;
+          if (name.includes("public")) value += 2500;
+          return value;
+        };
+
+        candidates.sort((a, b) => score(b) - score(a) || b.songIds.length - a.songIds.length || a.name.localeCompare(b.name));
+        return candidates[0] || null;
+      } catch (error) {
+        console.warn("Could not resolve a fallback Live Karaoke browse setlist", error);
+        return null;
+      }
+    }
+
+    async function virtualPublicListSnapshot(original, settings) {
       const originalData = original?.exists ? (original.data() || {}) : {};
-      const setlistId = String(settings?.defaultBrowseSetlistId || "").trim();
+      const selected = await resolveBrowseSetlist(originalData, settings || {});
+      const setlistId = selected?.id || "";
+      const setlistName = selected?.name || "";
+      if (setlistId) {
+        console.info("Live Karaoke browse repertoire:", setlistName || setlistId, selected.songIds.length, "songs");
+      } else {
+        console.warn("No non-empty Live Karaoke browse setlist was found; falling back to public lyrics.");
+      }
       return {
         exists:true,
         id:original?.id || "publicSongList",
         ref:original?.ref,
         data:() => ({
           ...originalData,
-          // Off-session browsing must never inherit a stale/empty session setlist.
-          // A dedicated browse setlist can still be configured later; otherwise
-          // app.js receives an empty setlistId and falls back to all public songs.
           setlistId,
-          setlistName:setlistId
-            ? String(settings?.defaultBrowseSetlistName || originalData.setlistName || "").trim()
-            : ""
+          setlistName
         })
       };
     }
@@ -161,10 +225,10 @@ window.BILLY_LEE_YOUTUBE_VIDEOS = [];
             try {
               const settingsSnap = await realDb.collection("karaokeControl").doc("liveKaraokeWebsiteSettings").get();
               const settings = settingsSnap.exists ? (settingsSnap.data() || {}) : {};
-              return virtualPublicListSnapshot(original, settings);
+              return await virtualPublicListSnapshot(original, settings);
             } catch (error) {
               console.warn("Default Live Karaoke songbook setting unavailable", error);
-              return virtualPublicListSnapshot(original, {});
+              return await virtualPublicListSnapshot(original, {});
             }
           };
         }
