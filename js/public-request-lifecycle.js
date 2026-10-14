@@ -29,7 +29,9 @@
   const preSessionId = () => String(gateState.preSessionRequestSessionId || "").trim();
   const preSessionOpen = () => !realSessionActive() && gateOpen() && !!preSessionId();
   const billyTestMode = () => !isLiveKaraoke && !realSessionActive() && rawWebsiteSettings.enableLiveRequestTestMode === true;
-  const canSubmit = () => gateOpen() || billyTestMode();
+  const canSubmit = () => isLiveKaraoke
+    ? gateOpen() && (realSessionActive() || preSessionOpen())
+    : gateOpen() || billyTestMode();
   const requestButtonText = () => String(rawWebsiteSettings.requestButtonText || (isLiveKaraoke ? "REQUEST / SIGN UP" : "REQUEST A SONG")).trim() || (isLiveKaraoke ? "REQUEST / SIGN UP" : "REQUEST A SONG");
 
   function syntheticSettingsSnapshot(snapshot) {
@@ -276,7 +278,7 @@
     const status = $("requestGateStatus");
     if (status) {
       const open = canSubmit();
-      status.textContent = open ? "REQUESTS OPEN" : (isLiveKaraoke ? "REQUESTS CLOSED · BROWSE THE SONG LIST" : "REQUESTS CLOSED");
+      status.textContent = open ? (isLiveKaraoke && preSessionOpen() ? "STARTING SOON · REQUESTS OPEN" : "REQUESTS OPEN") : (isLiveKaraoke ? "REQUESTS CLOSED · BROWSE THE SONG LIST" : "REQUESTS CLOSED");
       status.classList.toggle("is-open", open);
       status.classList.toggle("is-closed", !open);
     }
@@ -370,6 +372,7 @@
 
   const currentUnsub = baseDb.collection("karaokeControl").doc("currentSession").onSnapshot(snapshot => {
     currentSession = snapshot.exists ? (snapshot.data() || {}) : {};
+    gateSubscribers.forEach(callback => callback());
     queueUiSync();
   }, error => console.warn("Current public session unavailable", error));
 
@@ -401,6 +404,8 @@
     if (event.target.closest?.("#continueRequestBtn")) setTimeout(correctReviewStatusCopy, 700);
     if (event.target.closest?.("#requestDialog [data-request-tab], #requestDialog [data-song-category], #requestDialog [data-alpha-jump], #clearSongCategoryBtn")) queueUiSync();
   }, true);
+
+  document.addEventListener("public-request-rendered", queueUiSync);
 
   document.addEventListener("input", event => {
     if (event.target?.id === "songSearch") queueUiSync();

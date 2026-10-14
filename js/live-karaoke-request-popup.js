@@ -8,7 +8,7 @@
 
   // Request-only Live Karaoke document. This is not /billylee26/ and does not
   // contain the Billy Lee website shell.
-  const FRAME_URL = "livekaraoke26/request.html?v=20261006-red-theme-2#req";
+  const FRAME_URL = "livekaraoke26/request.html?v=20261014-catalogue-v8#req";
   let overlay = null;
   let frame = null;
   let previousBodyOverflow = "";

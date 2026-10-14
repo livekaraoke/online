@@ -9,21 +9,6 @@ window.BILLY_LEE_YOUTUBE_VIDEOS = [];
 (() => {
   document.title = "Live Karaoke Requests";
   document.documentElement.classList.add("live-karaoke-request-embed");
-  window.__liveKaraokeBrowseSettingsReady = false;
-
-  // The copied Billy request app still contains one native active-session alert.
-  // Live Karaoke is intentionally browseable while requests are closed, so never
-  // surface that legacy browser popup. The open timer below retries only after the
-  // synthetic browse settings have reached app.js.
-  if (!window.__liveKaraokeLegacyAlertGuardInstalled) {
-    window.__liveKaraokeLegacyAlertGuardInstalled = true;
-    const nativeAlert = typeof window.alert === "function" ? window.alert.bind(window) : null;
-    window.alert = message => {
-      if (String(message || "").trim() === "Song requests are only available during an active session.") return;
-      nativeAlert?.(message);
-    };
-  }
-
   const style = document.createElement("style");
   style.textContent = `
     html.live-karaoke-request-embed,
@@ -63,188 +48,13 @@ window.BILLY_LEE_YOUTUBE_VIDEOS = [];
   const realDb = window.BillyLeeDB;
   if (realDb && !window.__liveKaraokeDbMapped) {
     window.__liveKaraokeDbMapped = true;
-    let liveKaraokeSessionActive = false;
-    let liveStateResolved = false;
-    let liveStatePromise = null;
-
     const bindValue = (target, prop) => {
       const value = target[prop];
       return typeof value === "function" ? value.bind(target) : value;
     };
 
-    const sessionIdFrom = data => String(data?.sessionId || data?.activeSessionId || "").trim();
-    const sessionTypeFrom = data => String(
-      data?.sessionType || data?.type || data?.eventSnapshot?.type || ""
-    ).trim().toLowerCase();
-
-    async function resolveLiveKaraokeSessionActive(force=false) {
-      if (!force && liveStateResolved) return liveKaraokeSessionActive;
-      if (!force && liveStatePromise) return liveStatePromise;
-
-      liveStatePromise = (async () => {
-        try {
-          const controlSnap = await realDb.collection("karaokeControl").doc("currentSession").get();
-          const control = controlSnap.exists ? (controlSnap.data() || {}) : {};
-          const sessionId = sessionIdFrom(control);
-          if (control.active !== true || !sessionId) {
-            liveKaraokeSessionActive = false;
-            liveStateResolved = true;
-            return false;
-          }
-
-          let type = sessionTypeFrom(control);
-          if (!type) {
-            const sessionSnap = await realDb.collection("performanceSessions").doc(sessionId).get();
-            type = sessionSnap.exists ? sessionTypeFrom(sessionSnap.data() || {}) : "";
-          }
-
-          liveKaraokeSessionActive = type === "live karaoke";
-          liveStateResolved = true;
-          return liveKaraokeSessionActive;
-        } catch (error) {
-          console.warn("Could not verify Live Karaoke session state", error);
-          liveKaraokeSessionActive = false;
-          liveStateResolved = true;
-          return false;
-        } finally {
-          liveStatePromise = null;
-        }
-      })();
-
-      return liveStatePromise;
-    }
-
-    async function loadNonEmptySetlist(setlistId) {
-      const id = String(setlistId || "").trim();
-      if (!id) return null;
-      try {
-        const snap = await realDb.collection("lyricsSetlists").doc(id).get();
-        if (!snap.exists) return null;
-        const data = snap.data() || {};
-        const songIds = Array.isArray(data.songIds) ? data.songIds.filter(Boolean) : [];
-        if (!songIds.length) return null;
-        return {
-          id: snap.id,
-          name: String(data.name || "").trim(),
-          songIds
-        };
-      } catch (error) {
-        console.warn("Could not verify Live Karaoke browse setlist", id, error);
-        return null;
-      }
-    }
-
-    async function resolveBrowseSetlist(originalData, settings) {
-      const preferredIds = [
-        settings?.defaultBrowseSetlistId,
-        originalData?.setlistId
-      ].map(value => String(value || "").trim()).filter(Boolean);
-
-      for (const id of [...new Set(preferredIds)]) {
-        const setlist = await loadNonEmptySetlist(id);
-        if (setlist) return setlist;
-      }
-
-      try {
-        const snapshot = await realDb.collection("lyricsSetlists").get();
-        const candidates = snapshot.docs.map(doc => {
-          const data = doc.data() || {};
-          const songIds = Array.isArray(data.songIds) ? data.songIds.filter(Boolean) : [];
-          return {
-            id: doc.id,
-            name: String(data.name || "").trim(),
-            songIds
-          };
-        }).filter(item => item.songIds.length);
-
-        if (!candidates.length) return null;
-
-        const score = item => {
-          const name = item.name.toLowerCase();
-          let value = item.songIds.length;
-          if (name.includes("live karaoke")) value += 10000;
-          else if (name.includes("karaoke")) value += 5000;
-          if (name.includes("public")) value += 2500;
-          return value;
-        };
-
-        candidates.sort((a, b) => score(b) - score(a) || b.songIds.length - a.songIds.length || a.name.localeCompare(b.name));
-        return candidates[0] || null;
-      } catch (error) {
-        console.warn("Could not resolve a fallback Live Karaoke browse setlist", error);
-        return null;
-      }
-    }
-
-    async function virtualPublicListSnapshot(original, settings) {
-      const originalData = original?.exists ? (original.data() || {}) : {};
-      const selected = await resolveBrowseSetlist(originalData, settings || {});
-      const setlistId = selected?.id || "";
-      const setlistName = selected?.name || "";
-      if (setlistId) {
-        console.info("Live Karaoke browse repertoire:", setlistName || setlistId, selected.songIds.length, "songs");
-      } else {
-        console.warn("No non-empty Live Karaoke browse setlist was found; falling back to public lyrics.");
-      }
-      return {
-        exists:true,
-        id:original?.id || "publicSongList",
-        ref:original?.ref,
-        data:() => ({
-          ...originalData,
-          setlistId,
-          setlistName
-        })
-      };
-    }
-
-    // The copied Billy request app normally requires a session before opening.
-    // Live Karaoke keeps an offline browse-only preview available; the shared
-    // lifecycle bridge below separately enforces the real request gate.
-    function virtualWebsiteSettingsSnapshot(original) {
-      const originalData = original?.exists ? (original.data() || {}) : {};
-      window.__liveKaraokeBrowseSettingsReady = true;
-      return {
-        exists:true,
-        id:original?.id || "liveKaraokeWebsiteSettings",
-        ref:original?.ref,
-        data:() => ({
-          ...originalData,
-          enableLiveRequestTestMode:true,
-          requestTestSessionId:String(originalData.requestTestSessionId || "live-karaoke-browse-preview")
-        })
-      };
-    }
-
     const wrapDocument = (ref, collectionName, documentId) => new Proxy(ref, {
       get(target, prop) {
-        if (prop === "get" && collectionName === "karaokeControl" && documentId === "publicSongList") {
-          return async () => {
-            const original = await target.get();
-            if (await resolveLiveKaraokeSessionActive()) return original;
-            try {
-              const settingsSnap = await realDb.collection("karaokeControl").doc("liveKaraokeWebsiteSettings").get();
-              const settings = settingsSnap.exists ? (settingsSnap.data() || {}) : {};
-              return await virtualPublicListSnapshot(original, settings);
-            } catch (error) {
-              console.warn("Default Live Karaoke songbook setting unavailable", error);
-              return await virtualPublicListSnapshot(original, {});
-            }
-          };
-        }
-        if (collectionName === "karaokeControl" && documentId === "liveKaraokeWebsiteSettings") {
-          if (prop === "get") return async () => virtualWebsiteSettingsSnapshot(await target.get());
-          if (prop === "onSnapshot") {
-            return (next, error, complete) => target.onSnapshot(
-              snapshot => {
-                if (typeof next === "function") next(virtualWebsiteSettingsSnapshot(snapshot));
-                else if (next?.next) next.next(virtualWebsiteSettingsSnapshot(snapshot));
-              },
-              typeof next === "function" ? error : next?.error,
-              typeof next === "function" ? complete : next?.complete
-            );
-          }
-        }
         if (prop === "set" && collectionName === "publicSignupSessions") {
           return (data, options) => target.set({
             ...(data || {}),
@@ -288,54 +98,14 @@ window.BILLY_LEE_YOUTUBE_VIDEOS = [];
       }
     });
 
-    // Only invalidate the offline-songbook cache here. Request availability is
-    // handled by /js/public-request-lifecycle.js with no MutationObserver.
-    realDb.collection("karaokeControl").doc("currentSession").onSnapshot(() => {
-      liveStateResolved = false;
-      void resolveLiveKaraokeSessionActive(true);
-    }, () => {});
   }
 
   window.addEventListener("DOMContentLoaded", () => {
-    let attempts = 0;
-    const timer = setInterval(() => {
-      attempts += 1;
-      const dialog = document.getElementById("requestDialog");
-      const trigger = document.getElementById("requestSongBtn");
-
-      if (dialog && !dialog.dataset.liveKaraokeCloseBound) {
-        dialog.dataset.liveKaraokeCloseBound = "1";
-        dialog.addEventListener("close", () => {
-          window.parent?.postMessage({ type: "live-karaoke-request-close" }, location.origin);
-        });
-      }
-
-      if (dialog?.open) {
-        window.parent?.postMessage({ type: "live-karaoke-request-ready" }, location.origin);
-        clearInterval(timer);
-        return;
-      }
-
-      if (
-        window.__liveKaraokeBrowseSettingsReady === true &&
-        trigger &&
-        trigger.disabled !== true &&
-        trigger.getAttribute("aria-disabled") !== "true"
-      ) {
-        trigger.click();
-      }
-      if (attempts >= 120) clearInterval(timer);
-    }, 100);
-  });
-})();
-
-// Must load before app.js so pre-session request IDs and the real open/closed
-// request gate are visible to the copied request application from first render.
-document.write('<script src="../js/public-request-lifecycle.js?v=20261013-request-lifecycle-v2"><\/script>');
-
-(() => {
-  const script = document.createElement("script");
-  script.src = "js/request-ui-extras.js?v=20261006-favs-card-width";
-  script.async = false;
-  document.head.appendChild(script);
+    const dialog = document.getElementById("requestDialog");
+    dialog?.addEventListener("close", () => {
+      window.parent?.postMessage({ type:"live-karaoke-request-close" }, location.origin);
+    });
+    document.getElementById("requestSongBtn")?.click();
+    window.parent?.postMessage({ type:"live-karaoke-request-ready" }, location.origin);
+  }, { once:true });
 })();

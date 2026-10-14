@@ -9,6 +9,10 @@
   let runOrder = [];
   let sessionUnsub = null;
   let songs = [];
+  let catalogueLoading = false;
+  let catalogueError = false;
+  let cataloguePromise = null;
+  const debugCatalogue = new URLSearchParams(location.search).has("debugCatalogue");
   let publicSetlist = null;
   let requestListeners = [];
   let sessionRequests = [];
@@ -419,25 +423,30 @@
   }
 
   async function loadPublicSongs(){
-    const cfgSnap=await db.collection("karaokeControl").doc("publicSongList").get();
-    const cfg=cfgSnap.exists?(cfgSnap.data()||{}):{};
-    if(cfg.setlistId){
-      const setSnap=await db.collection("lyricsSetlists").doc(cfg.setlistId).get();
-      if(setSnap.exists){
-        const set={id:setSnap.id,...setSnap.data()};
-        publicSetlist=set;
-        const ids=Array.isArray(set.songIds)?set.songIds:[];
-        const chunks=[]; for(let i=0;i<ids.length;i+=10) chunks.push(ids.slice(i,i+10));
-        const groups=await Promise.all(chunks.map(chunk=>db.collection("lyrics").where(firebase.firestore.FieldPath.documentId(),"in",chunk).get()));
-        const map=new Map();
-        groups.forEach(group=>group.docs.forEach(doc=>map.set(doc.id,{id:doc.id,...doc.data()})));
-        songs=ids.map(id=>map.get(id)).filter(Boolean);
-        return;
+    if(cataloguePromise)return cataloguePromise;
+    catalogueLoading=true;
+    catalogueError=false;
+    cataloguePromise=(async()=>{
+      try{
+        const result=await window.LiveKaraokeCatalogue.load(db);
+        songs=result.songs;
+        publicSetlist=result.setlist;
+        if(debugCatalogue)console.info("Live Karaoke catalogue loaded", JSON.stringify({
+          ...result.diagnostics,
+          firebaseApps:firebase.apps.map(app=>({name:app.name,projectId:app.options.projectId})),
+          dbWrapperReceived:!!db,
+          artistHelperLoaded:typeof ArtistNames!=="undefined",
+          firstSongs:songs.slice(0,3).map(({id,title,artist})=>({id,title,artist}))
+        }));
+      }catch(error){
+        catalogueError=true;
+        throw error;
+      }finally{
+        catalogueLoading=false;
+        cataloguePromise=null;
       }
-    }
-    const all=await db.collection("lyrics").get();
-    songs=all.docs.map(d=>({id:d.id,...d.data()})).filter(song=>song.title && song.publicSongListVisible!==false);
-    publicSetlist=null;
+    })();
+    return cataloguePromise;
   }
 
   function normaliseSongIdentity(value){return String(value||"").toLowerCase().replace(/[^a-z0-9]+/g,"").trim();}
@@ -1032,10 +1041,15 @@
   }
 
   function renderSongResults(){
+    if(catalogueLoading||catalogueError){
+      $("songResults").innerHTML=`<div class="empty-box" role="status">${catalogueLoading?"Loading songs…":"Could not load the song list. Please reopen it to retry."}</div>`;
+      return;
+    }
     const q=String($("songSearch")?.value||"").trim().toLowerCase();
     const list=songs.filter(song=>
       songMatchesCategory(song,requestCategory)&&(!q||ArtistNames.matchesSong(song,q))
     );
+    if(debugCatalogue)console.info("Live Karaoke catalogue render", JSON.stringify({songs:songs.length,requestCategory,search:q,matches:list.length}));
     const artistMode=requestCategory===ARTIST_BROWSE_CATEGORY;
     renderAlphabetJump("requestAlphabetRow",list,{
       artistMode,
@@ -1046,12 +1060,14 @@
     if(artistMode){
       $("songResults").classList.add("artist-browse-results");
       $("songResults").innerHTML=renderArtistGroupedResults(list)||`<div class="empty-box">No matching artists or songs.</div>`;
+      document.dispatchEvent(new Event("public-request-rendered"));
       return;
     }
 
     $("songResults").classList.remove("artist-browse-results");
     const sorted=list.slice().sort((a,b)=>String(a.title||"").localeCompare(String(b.title||""),undefined,{sensitivity:"base"}));
     $("songResults").innerHTML=sorted.map(song=>renderSongResultRow(song)).join("")||`<div class="empty-box">No songs found in this category.</div>`;
+    document.dispatchEvent(new Event("public-request-rendered"));
   }
 
   function showRequestBrowser(){
@@ -1122,11 +1138,6 @@
   }
 
   async function openRequestDialog(){
-    if(!requestSessionId()){
-      alert("Song requests are only available during an active session.");
-      return;
-    }
-
     selectedRequestSongId="";
     requestCategory="all";
     $("requestDialog").showModal();
@@ -1141,11 +1152,7 @@
 
     renderRequestCategoryCards();
     renderRequestInfo();
-    if(requestProfile().name){
-      switchRequestTab("songs");
-    }else{
-      showRequestNameGate();
-    }
+    switchRequestTab("songs");
   }
 
   async function continueToSongs(){
