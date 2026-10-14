@@ -87,18 +87,24 @@
     }
 
     function hardenRequestControls() {
-      document.querySelectorAll?.("#heroRequestBtn,#songListBtn").forEach(turnIntoButton);
+      // The hero should contain only the GET STARTED CTA. Request / song-list
+      // access remains available through the dedicated controls elsewhere.
+      document.getElementById("heroRequestBtn")?.remove();
+      document.querySelectorAll?.("#songListBtn").forEach(turnIntoButton);
     }
 
-    // Both public controls always open the browse/request popup. The popup's
-    // request gate decides whether a request can actually be submitted.
+    // Remove the legacy hero request control as soon as this blocking loader runs.
+    hardenRequestControls();
+
+    // The remaining public song-list control opens the browse/request popup. The
+    // popup's request gate decides whether a request can actually be submitted.
     document.addEventListener("pointerdown", event => {
-      const button = event.target.closest?.("#heroRequestBtn,#songListBtn");
+      const button = event.target.closest?.("#songListBtn");
       if (button) event.preventDefault();
     }, true);
 
     document.addEventListener("click", event => {
-      const button = event.target.closest?.("#heroRequestBtn,#songListBtn");
+      const button = event.target.closest?.("#songListBtn");
       if (!button) return;
       event.preventDefault();
       event.stopPropagation();
