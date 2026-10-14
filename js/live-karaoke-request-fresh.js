@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const FRESH_FRAME_URL = "livekaraoke26/request.html?v=20261014-song-fallback-v3#req";
+  const FRESH_FRAME_URL = "livekaraoke26/request.html?v=20261014-setlist-resolution-v4#req";
 
   function install() {
     const original = window.openLiveKaraokeRequestPopup;
