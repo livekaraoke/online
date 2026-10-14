@@ -127,7 +127,7 @@
     document.head.appendChild(refreshScript);
 
     const script = document.createElement("script");
-    script.src = new URL("../js/live-karaoke-request-popup.js?v=20261014-catalogue-v8", base).href;
+    script.src = new URL("../js/live-karaoke-request-popup.js?v=20261014-catalogue-v9", base).href;
     script.async = false;
     document.head.appendChild(script);
 
