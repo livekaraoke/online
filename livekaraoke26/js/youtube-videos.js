@@ -115,17 +115,21 @@ window.BILLY_LEE_YOUTUBE_VIDEOS = [];
     }
 
     function virtualPublicListSnapshot(original, settings) {
-      const setlistId = String(settings?.defaultBrowseSetlistId || "").trim();
-      if (!setlistId) return original;
       const originalData = original?.exists ? (original.data() || {}) : {};
+      const setlistId = String(settings?.defaultBrowseSetlistId || "").trim();
       return {
         exists:true,
         id:original?.id || "publicSongList",
         ref:original?.ref,
         data:() => ({
           ...originalData,
+          // Off-session browsing must never inherit a stale/empty session setlist.
+          // A dedicated browse setlist can still be configured later; otherwise
+          // app.js receives an empty setlistId and falls back to all public songs.
           setlistId,
-          setlistName:String(settings?.defaultBrowseSetlistName || originalData.setlistName || "").trim()
+          setlistName:setlistId
+            ? String(settings?.defaultBrowseSetlistName || originalData.setlistName || "").trim()
+            : ""
         })
       };
     }
@@ -160,7 +164,7 @@ window.BILLY_LEE_YOUTUBE_VIDEOS = [];
               return virtualPublicListSnapshot(original, settings);
             } catch (error) {
               console.warn("Default Live Karaoke songbook setting unavailable", error);
-              return original;
+              return virtualPublicListSnapshot(original, {});
             }
           };
         }
