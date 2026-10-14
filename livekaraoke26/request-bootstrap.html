@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Live Karaoke Requests</title>
+</head>
+<body>
+<script>
+(async () => {
+  try {
+    const sourceUrl = new URL("request.html", location.href);
+    sourceUrl.searchParams.set("bootstrap", String(Date.now()));
+    const response = await fetch(sourceUrl.href, { cache:"no-store" });
+    if (!response.ok) throw new Error(`Request page returned ${response.status}`);
+    let html = await response.text();
+    html = html.replace(
+      /js\/firebase-config\.js\?v=[^\"']+/,
+      "js/firebase-config.js?v=20261014-live-session-v7"
+    );
+    document.open();
+    document.write(html);
+    document.close();
+  } catch (error) {
+    console.error("Could not bootstrap Live Karaoke request page", error);
+    document.body.innerHTML = '<p style="font-family:sans-serif;padding:24px">Could not load the Live Karaoke song browser. Please refresh.</p>';
+  }
+})();
+</script>
+</body>
+</html>
