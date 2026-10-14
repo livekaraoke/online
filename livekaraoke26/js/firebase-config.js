@@ -22,6 +22,7 @@
   const storage = window.localStorage;
   const prefix = "ls26.publicRequestCapability.";
   const PUBLIC_BROWSE_SETLIST_ID = "__live-karaoke-public-browse__";
+  const PUBLIC_SONGLIST_ID = "venue-main-public-song-list";
   let publicBrowseSongsPromise = null;
 
   function tokenKey(requestId){
@@ -110,17 +111,62 @@
     }
   }
 
+  function normalisePublicSong(data, fallbackId){
+    const source = data || {};
+    const id = String(source.lyricsId || source.songId || source.id || fallbackId || "").trim();
+    return {
+      ...source,
+      id,
+      title:String(source.title || source.songTitle || "").trim(),
+      artist:source.artist || source.songArtist || "",
+      year:source.year || "",
+      publicSongListVisible:source.publicSongListVisible !== false,
+      visible:source.visible !== false
+    };
+  }
+
+  function dedupePublicSongs(rows){
+    const map = new Map();
+    rows.forEach(song => {
+      const id = String(song?.id || "").trim();
+      if (!id || !song?.title || song.visible === false || song.publicSongListVisible === false) return;
+      if (!map.has(id)) map.set(id, song);
+    });
+    return [...map.values()].sort((a,b) =>
+      String(a.title || "").localeCompare(String(b.title || ""), undefined, { sensitivity:"base" })
+    );
+  }
+
   async function publicBrowseSongs(){
     if (publicBrowseSongsPromise) return publicBrowseSongsPromise;
-    publicBrowseSongsPromise = rawDb.collection("lyrics").get().then(snapshot =>
-      snapshot.docs
-        .map(doc => ({ id:doc.id, ...(doc.data() || {}) }))
-        .filter(song => song.title && song.publicSongListVisible !== false)
-        .sort((a,b) => String(a.title || "").localeCompare(String(b.title || ""), undefined, { sensitivity:"base" }))
-    ).catch(error => {
+
+    publicBrowseSongsPromise = (async () => {
+      // This is the visitor-facing catalogue already used by the public song-list
+      // page. Prefer it so off-session browsing does not depend on setlist IDs
+      // resolving back to lyrics documents.
+      try {
+        const publicSnap = await rawDb.collection("songlistSongs")
+          .where("listId", "==", PUBLIC_SONGLIST_ID)
+          .get();
+        const publicRows = dedupePublicSongs(
+          publicSnap.docs.map(doc => normalisePublicSong({ id:doc.id, ...(doc.data() || {}) }, doc.id))
+        );
+        if (publicRows.length) return publicRows;
+      } catch (error) {
+        console.warn("Public song-list catalogue unavailable; trying lyrics fallback", error);
+      }
+
+      // Backward-compatible fallback for databases where the denormalised public
+      // catalogue has not been populated.
+      const lyricsSnap = await rawDb.collection("lyrics").get();
+      return dedupePublicSongs(
+        lyricsSnap.docs.map(doc => normalisePublicSong({ id:doc.id, ...(doc.data() || {}) }, doc.id))
+      );
+    })().catch(error => {
       publicBrowseSongsPromise = null;
       throw error;
     });
+
     return publicBrowseSongsPromise;
   }
 
@@ -130,6 +176,20 @@
       id,
       ref:originalRef,
       data:() => ({ ...(data || {}) })
+    };
+  }
+
+  function syntheticQuerySnapshot(rows){
+    const docs = rows.map(song => syntheticSnapshot(
+      String(song.id || ""),
+      song,
+      rawDb.collection("lyrics").doc(String(song.id || ""))
+    ));
+    return {
+      docs,
+      empty:docs.length === 0,
+      size:docs.length,
+      forEach(callback){ docs.forEach(callback); }
     };
   }
 
@@ -197,7 +257,45 @@
     });
   }
 
+  function wrapLyricsQuery(query, requestedIds){
+    return new Proxy(query, {
+      get(target, prop){
+        if (prop === "get") {
+          return async () => {
+            if (await liveKaraokeSessionActive()) return target.get();
+            try {
+              const wanted = new Set((requestedIds || []).map(String));
+              const rows = (await publicBrowseSongs()).filter(song => wanted.has(String(song.id || "")));
+              if (rows.length) return syntheticQuerySnapshot(rows);
+            } catch (error) {
+              console.warn("Could not satisfy public song lookup from browse catalogue", error);
+            }
+            return target.get();
+          };
+        }
+        return bind(target, prop);
+      }
+    });
+  }
+
+  function wrapLyricsCollection(ref){
+    return new Proxy(ref, {
+      get(target, prop){
+        if (prop === "where") {
+          return (fieldPath, operator, value) => {
+            const query = target.where(fieldPath, operator, value);
+            if (operator === "in" && Array.isArray(value)) return wrapLyricsQuery(query, value);
+            return query;
+          };
+        }
+        return bind(target, prop);
+      }
+    });
+  }
+
   function wrapCollection(ref, name){
+    if (name === "lyrics") return wrapLyricsCollection(ref);
+
     return new Proxy(ref, {
       get(target, prop){
         if (prop === "add" && name === "publicSongRequests") return data => secureCreate(data);
