@@ -105,7 +105,5 @@ window.BILLY_LEE_YOUTUBE_VIDEOS = [];
     dialog?.addEventListener("close", () => {
       window.parent?.postMessage({ type:"live-karaoke-request-close" }, location.origin);
     });
-    document.getElementById("requestSongBtn")?.click();
-    window.parent?.postMessage({ type:"live-karaoke-request-ready" }, location.origin);
   }, { once:true });
 })();

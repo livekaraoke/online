@@ -46,6 +46,8 @@ function gate({live=true,active=false,open=false,reserved='',test=false}={}) {
 
 (async()=>{
   // Every script needed by the public entry point must survive Pages exclusions.
+  assert.match(app,/addEventListener\("DOMContentLoaded",openRequestDialog/);
+  assert.doesNotMatch(read("livekaraoke26/js/youtube-videos.js"),/requestSongBtn.*click/);
   const html=read('livekaraoke26/request.html');
   const scripts=[...html.matchAll(/<script src="([^"?]+)(?:\?[^\"]*)?"/g)].map(m=>m[1]).filter(s=>!s.startsWith('https:'));
   for(const src of scripts){

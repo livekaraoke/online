@@ -1141,6 +1141,7 @@
     selectedRequestSongId="";
     requestCategory="all";
     $("requestDialog").showModal();
+    window.parent?.postMessage({type:"live-karaoke-request-ready"},location.origin);
     populateProfileForm();
 
     try{
@@ -2082,4 +2083,5 @@
 
   window.addEventListener("pagehide",()=>{try{sessionRequestsUnsub?.();}catch{}});
   listenEventTypes(); listenEvents(); listenLiveState(); listenWebsiteRequestSettings(); renderRequestCategoryCards(); renderRequestInfo(); renderLive();
+  window.addEventListener("DOMContentLoaded",openRequestDialog,{once:true});
 })();
