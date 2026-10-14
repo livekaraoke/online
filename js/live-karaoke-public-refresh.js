@@ -1,6 +1,9 @@
 (() => {
   "use strict";
-  if (!/\/online\/(?:index\.html)?$/i.test(location.pathname)) return;
+  const isPublicLiveKaraokeSite =
+    /\/online\/(?:index\.html)?$/i.test(location.pathname) ||
+    (/^(?:www\.)?livekaraoke\.eu$/i.test(location.hostname) && /^\/(?:index\.html)?$/i.test(location.pathname));
+  if (!isPublicLiveKaraokeSite) return;
 
   const esc=v=>String(v??"").replace(/[&<>\"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
   const reduced=()=>matchMedia?.("(prefers-reduced-motion: reduce)")?.matches===true;

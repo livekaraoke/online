@@ -122,12 +122,12 @@
     document.head.appendChild(enquiryCss);
 
     const refreshScript = document.createElement("script");
-    refreshScript.src = new URL("../js/live-karaoke-public-refresh.js?v=20261006-review-name-v1", base).href;
+    refreshScript.src = new URL("../js/live-karaoke-public-refresh.js?v=20261014-custom-domain-v1", base).href;
     refreshScript.async = false;
     document.head.appendChild(refreshScript);
 
     const script = document.createElement("script");
-    script.src = new URL("../js/live-karaoke-request-popup.js?v=20261006-red-theme-v7", base).href;
+    script.src = new URL("../js/live-karaoke-request-popup.js?v=20261014-custom-domain-v1", base).href;
     script.async = false;
     document.head.appendChild(script);
 

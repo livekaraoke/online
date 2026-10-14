@@ -1,7 +1,10 @@
 (() => {
   "use strict";
 
-  if (!/\/online\/(?:index\.html)?$/i.test(location.pathname)) return;
+  const isPublicLiveKaraokeSite =
+    /\/online\/(?:index\.html)?$/i.test(location.pathname) ||
+    (/^(?:www\.)?livekaraoke\.eu$/i.test(location.hostname) && /^\/(?:index\.html)?$/i.test(location.pathname));
+  if (!isPublicLiveKaraokeSite) return;
 
   // Request-only Live Karaoke document. This is not /billylee26/ and does not
   // contain the Billy Lee website shell.
