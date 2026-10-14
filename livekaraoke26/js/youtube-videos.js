@@ -9,6 +9,20 @@ window.BILLY_LEE_YOUTUBE_VIDEOS = [];
 (() => {
   document.title = "Live Karaoke Requests";
   document.documentElement.classList.add("live-karaoke-request-embed");
+  window.__liveKaraokeBrowseSettingsReady = false;
+
+  // The copied Billy request app still contains one native active-session alert.
+  // Live Karaoke is intentionally browseable while requests are closed, so never
+  // surface that legacy browser popup. The open timer below retries only after the
+  // synthetic browse settings have reached app.js.
+  if (!window.__liveKaraokeLegacyAlertGuardInstalled) {
+    window.__liveKaraokeLegacyAlertGuardInstalled = true;
+    const nativeAlert = typeof window.alert === "function" ? window.alert.bind(window) : null;
+    window.alert = message => {
+      if (String(message || "").trim() === "Song requests are only available during an active session.") return;
+      nativeAlert?.(message);
+    };
+  }
 
   const style = document.createElement("style");
   style.textContent = `
@@ -121,6 +135,7 @@ window.BILLY_LEE_YOUTUBE_VIDEOS = [];
     // lifecycle bridge below separately enforces the real request gate.
     function virtualWebsiteSettingsSnapshot(original) {
       const originalData = original?.exists ? (original.data() || {}) : {};
+      window.__liveKaraokeBrowseSettingsReady = true;
       return {
         exists:true,
         id:original?.id || "liveKaraokeWebsiteSettings",
@@ -233,7 +248,14 @@ window.BILLY_LEE_YOUTUBE_VIDEOS = [];
         return;
       }
 
-      if (trigger && trigger.disabled !== true && trigger.getAttribute("aria-disabled") !== "true") trigger.click();
+      if (
+        window.__liveKaraokeBrowseSettingsReady === true &&
+        trigger &&
+        trigger.disabled !== true &&
+        trigger.getAttribute("aria-disabled") !== "true"
+      ) {
+        trigger.click();
+      }
       if (attempts >= 120) clearInterval(timer);
     }, 100);
   });
