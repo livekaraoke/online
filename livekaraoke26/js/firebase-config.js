@@ -84,33 +84,6 @@
     return typeof value === "function" ? value.bind(target) : value;
   }
 
-  function sessionIdFrom(data){
-    return String(data?.sessionId || data?.activeSessionId || "").trim();
-  }
-
-  function sessionTypeFrom(data){
-    return String(data?.sessionType || data?.type || data?.eventSnapshot?.type || "").trim().toLowerCase();
-  }
-
-  async function liveKaraokeSessionActive(){
-    try {
-      const snap = await rawDb.collection("karaokeControl").doc("currentSession").get();
-      const data = snap.exists ? (snap.data() || {}) : {};
-      const sessionId = sessionIdFrom(data);
-      if (data.active !== true || !sessionId) return false;
-
-      let type = sessionTypeFrom(data);
-      if (!type) {
-        const sessionSnap = await rawDb.collection("performanceSessions").doc(sessionId).get();
-        type = sessionSnap.exists ? sessionTypeFrom(sessionSnap.data() || {}) : "";
-      }
-      return type === "live karaoke";
-    } catch (error) {
-      console.warn("Could not resolve Live Karaoke session state for public browsing", error);
-      return false;
-    }
-  }
-
   function idFromSongSource(source, fallbackId){
     const direct = String(source?.lyricsId || source?.songId || source?.id || "").trim();
     if (direct) return direct;
@@ -157,8 +130,6 @@
     if (publicBrowseSongsPromise) return publicBrowseSongsPromise;
 
     publicBrowseSongsPromise = (async () => {
-      // Primary source: the visitor-facing catalogue already used by the public
-      // song-list page. This avoids rebuilding the list through lyricsSetlists.
       try {
         const publicSnap = await rawDb.collection("songlistSongs")
           .where("listId", "==", PUBLIC_SONGLIST_ID)
@@ -171,7 +142,6 @@
         console.warn("Public song-list catalogue unavailable; trying lyrics fallback", error);
       }
 
-      // Secondary source: public lyrics documents.
       try {
         const lyricsSnap = await rawDb.collection("lyrics").get();
         const lyricRows = dedupePublicSongs(
@@ -182,8 +152,6 @@
         console.warn("Public lyrics catalogue unavailable; using shipped song fallback", error);
       }
 
-      // Last-resort source: the shipped karaoke catalogue loaded by request.html.
-      // This keeps browsing usable even if public Firestore reads are unavailable.
       return staticBrowseSongs();
     })().catch(error => {
       publicBrowseSongsPromise = null;
@@ -234,9 +202,6 @@
       get(target, prop){
         if (prop === "get") {
           return async () => {
-            // Active sessions keep the real configured LiveSuite public setlist.
-            if (await liveKaraokeSessionActive()) return target.get();
-
             let original = null;
             try {
               original = await target.get();
@@ -286,8 +251,6 @@
       get(target, prop){
         if (prop === "get") {
           return async () => {
-            if (await liveKaraokeSessionActive()) return target.get();
-
             try {
               const wanted = new Set((requestedIds || []).map(String));
               const rows = (await publicBrowseSongs()).filter(song => wanted.has(String(song.id || "")));
