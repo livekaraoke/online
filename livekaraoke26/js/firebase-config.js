@@ -21,6 +21,8 @@
   const cryptoApi = window.crypto || window.msCrypto;
   const storage = window.localStorage;
   const prefix = "ls26.publicRequestCapability.";
+  const PUBLIC_BROWSE_SETLIST_ID = "__live-karaoke-public-browse__";
+  let publicBrowseSongsPromise = null;
 
   function tokenKey(requestId){
     return prefix + String(requestId || "");
@@ -81,6 +83,56 @@
     return typeof value === "function" ? value.bind(target) : value;
   }
 
+  function sessionIdFrom(data){
+    return String(data?.sessionId || data?.activeSessionId || "").trim();
+  }
+
+  function sessionTypeFrom(data){
+    return String(data?.sessionType || data?.type || data?.eventSnapshot?.type || "").trim().toLowerCase();
+  }
+
+  async function liveKaraokeSessionActive(){
+    try {
+      const snap = await rawDb.collection("karaokeControl").doc("currentSession").get();
+      const data = snap.exists ? (snap.data() || {}) : {};
+      const sessionId = sessionIdFrom(data);
+      if (data.active !== true || !sessionId) return false;
+
+      let type = sessionTypeFrom(data);
+      if (!type) {
+        const sessionSnap = await rawDb.collection("performanceSessions").doc(sessionId).get();
+        type = sessionSnap.exists ? sessionTypeFrom(sessionSnap.data() || {}) : "";
+      }
+      return type === "live karaoke";
+    } catch (error) {
+      console.warn("Could not resolve Live Karaoke session state for public browsing", error);
+      return false;
+    }
+  }
+
+  async function publicBrowseSongs(){
+    if (publicBrowseSongsPromise) return publicBrowseSongsPromise;
+    publicBrowseSongsPromise = rawDb.collection("lyrics").get().then(snapshot =>
+      snapshot.docs
+        .map(doc => ({ id:doc.id, ...(doc.data() || {}) }))
+        .filter(song => song.title && song.publicSongListVisible !== false)
+        .sort((a,b) => String(a.title || "").localeCompare(String(b.title || ""), undefined, { sensitivity:"base" }))
+    ).catch(error => {
+      publicBrowseSongsPromise = null;
+      throw error;
+    });
+    return publicBrowseSongsPromise;
+  }
+
+  function syntheticSnapshot(id, data, originalRef){
+    return {
+      exists:true,
+      id,
+      ref:originalRef,
+      data:() => ({ ...(data || {}) })
+    };
+  }
+
   function wrapRequestDocument(ref){
     return new Proxy(ref, {
       get(target, prop){
@@ -93,12 +145,71 @@
     });
   }
 
-  function wrapCollection(ref, name){
-    if (name !== "publicSongRequests") return ref;
+  function wrapControlDocument(ref, id){
+    if (id !== "publicSongList") return ref;
     return new Proxy(ref, {
       get(target, prop){
-        if (prop === "add") return data => secureCreate(data);
-        if (prop === "doc") return id => wrapRequestDocument(id === undefined ? target.doc() : target.doc(id));
+        if (prop === "get") {
+          return async () => {
+            const original = await target.get();
+            if (await liveKaraokeSessionActive()) return original;
+
+            try {
+              const publicSongs = await publicBrowseSongs();
+              if (!publicSongs.length) return original;
+              const originalData = original.exists ? (original.data() || {}) : {};
+              return syntheticSnapshot(original.id || "publicSongList", {
+                ...originalData,
+                setlistId:PUBLIC_BROWSE_SETLIST_ID,
+                setlistName:"Live Karaoke Public Song List"
+              }, original.ref);
+            } catch (error) {
+              console.warn("Could not prepare off-session Live Karaoke public song list", error);
+              return original;
+            }
+          };
+        }
+        return bind(target, prop);
+      }
+    });
+  }
+
+  function wrapSetlistDocument(ref, id){
+    if (id !== PUBLIC_BROWSE_SETLIST_ID) return ref;
+    return new Proxy(ref, {
+      get(target, prop){
+        if (prop === "get") {
+          return async () => {
+            try {
+              const publicSongs = await publicBrowseSongs();
+              return syntheticSnapshot(PUBLIC_BROWSE_SETLIST_ID, {
+                name:"Live Karaoke Public Song List",
+                songIds:publicSongs.map(song => song.id)
+              }, target);
+            } catch (error) {
+              console.warn("Could not build synthetic Live Karaoke public setlist", error);
+              return { exists:false, id:PUBLIC_BROWSE_SETLIST_ID, ref:target, data:() => ({}) };
+            }
+          };
+        }
+        return bind(target, prop);
+      }
+    });
+  }
+
+  function wrapCollection(ref, name){
+    return new Proxy(ref, {
+      get(target, prop){
+        if (prop === "add" && name === "publicSongRequests") return data => secureCreate(data);
+        if (prop === "doc") {
+          return id => {
+            const docRef = id === undefined ? target.doc() : target.doc(id);
+            if (name === "publicSongRequests") return wrapRequestDocument(docRef);
+            if (name === "karaokeControl") return wrapControlDocument(docRef, String(id || ""));
+            if (name === "lyricsSetlists") return wrapSetlistDocument(docRef, String(id || ""));
+            return docRef;
+          };
+        }
         return bind(target, prop);
       }
     });
