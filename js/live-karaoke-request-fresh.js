@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const FRESH_FRAME_URL = "livekaraoke26/request.html?v=20261014-public-browse-v6#req";
+  const FRESH_FRAME_URL = "livekaraoke26/request-bootstrap.html?v=20261014-live-session-v7#req";
 
   function install() {
     const original = window.openLiveKaraokeRequestPopup;
