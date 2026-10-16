@@ -175,19 +175,6 @@
 
     const slaveToggle=document.getElementById('slaveLyricsToggle');
     if(slaveToggle?.checked)window.startSlaveLyrics();
-
-    // Keep the legacy viewer's original autoscroll/manual-scroll behavior.
-    // Only remove the expensive fixed backdrop blur to reduce paint cost.
-    const style=document.createElement('style');
-    style.id='ls26OldLyricsPerformanceFix';
-    style.textContent=`
-      .autoscroll-controls{
-        backdrop-filter:none!important;
-        -webkit-backdrop-filter:none!important;
-        will-change:auto!important;
-      }
-    `;
-    document.head.append(style);
   };
 
   if(document.readyState==='loading'){
