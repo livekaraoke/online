@@ -23,10 +23,17 @@ real-time typography control, and performance styling tools.
 ================================================================= -->
 
 <!-- HEADER ----------------------------------------------- -->
-<head><link rel="stylesheet" href="../../../shared/dialogs.css?v=20260923-polish"><script src="../../../shared/dialogs.js?v=20260923-polish"></script>
+<head><link rel="stylesheet" href="../../../shared/dialogs.css?v=20260923-polish"><script src="../../../shared/dialogs.js?v=20261016-oldlyrics-v3"></script>
   <meta charset="UTF-8">
   <title>Song Lyric Viewer</title>
-  <link rel="stylesheet" href="../../css/styleLyrics.css?v=20260910-stage4">
+  <link rel="stylesheet" href="../../css/styleLyrics.css?v=20261016-native-touch-v3">
+  <style>
+    html, body, #lyrics-container { touch-action: pan-y; }
+    .autoscroll-controls {
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+    }
+  </style>
 </head>
 <!-- ------------------------------------------------------- -->
 
@@ -353,31 +360,39 @@ window.userSpeed = window.userSpeed || 1;
 window.currentBPM = window.currentBPM || 120;
 let scrollMultiplier = 1;
 
+function updateAutoScrollButton() {
+  const btn = document.getElementById("scrollToggleBtn");
+  if (btn) btn.textContent = autoScrollActive ? "⏸" : "▶";
+}
+
 /* START / STOP */
 function toggleAutoScroll() {
-
-  autoScrollActive = !autoScrollActive;
-
-  const btn = document.getElementById("scrollToggleBtn");
-
   if (autoScrollActive) {
-    btn.textContent = "⏸";
-    startAutoScroll();
-  } else {
-    btn.textContent = "▶";
     stopAutoScroll();
+  } else {
+    autoScrollActive = true;
+    updateAutoScrollButton();
+    startAutoScroll();
   }
 }
 
 /* AUTO SCROLL LOOP */
 function startAutoScroll() {
 
+  if (autoScrollFrame !== null) {
+    cancelAnimationFrame(autoScrollFrame);
+    autoScrollFrame = null;
+  }
+
   lastTime = null;
   let scrollY = window.scrollY;
 
   function step(timestamp) {
 
-    if (!autoScrollActive) return;
+    if (!autoScrollActive) {
+      autoScrollFrame = null;
+      return;
+    }
 
     if (lastTime === null) lastTime = timestamp;
 
@@ -398,7 +413,26 @@ function startAutoScroll() {
 /* STOP */
 function stopAutoScroll() {
   autoScrollActive = false;
-  cancelAnimationFrame(autoScrollFrame);
+  lastTime = null;
+
+  if (autoScrollFrame !== null) {
+    cancelAnimationFrame(autoScrollFrame);
+    autoScrollFrame = null;
+  }
+
+  updateAutoScrollButton();
+}
+
+function isScrollControlTarget(target) {
+  return Boolean(target?.closest?.(
+    "#autoScrollControls,.top-bar,.side-panel,button,a,input,label,select,textarea"
+  ));
+}
+
+function stopAutoScrollForManualInput(event) {
+  if (!autoScrollActive) return;
+  if (isScrollControlTarget(event?.target)) return;
+  stopAutoScroll();
 }
 
 /* SPEED CONTROL */
@@ -412,12 +446,21 @@ function changeScrollSpeed(change) {
 }
 
 /* PAUSE ON MANUAL SCROLL */
-window.addEventListener("wheel", () => {
+window.addEventListener("wheel", stopAutoScrollForManualInput, { passive: true });
 
-  if (autoScrollActive) {
-    toggleAutoScroll();
-  }
+// Stop programmatic scrolling before a finger-drag can begin. This is handled
+// inside the real autoscroll system so requestAnimationFrame can no longer
+// fight Android's native page panning.
+document.addEventListener("touchstart", stopAutoScrollForManualInput, {
+  passive: true,
+  capture: true
 });
+
+document.addEventListener("pointerdown", event => {
+  if (event.pointerType === "touch" || event.pointerType === "pen") {
+    stopAutoScrollForManualInput(event);
+  }
+}, { passive: true, capture: true });
 
 /* KEYBOARD SHORTCUTS */
 document.addEventListener("keydown", (e) => {
@@ -862,7 +905,9 @@ function loadSong() {
   document.body.appendChild(script);
 
   setTimeout(() => {
-    window.scrollTo({ top: 196, behavior: "smooth" });
+    if (window.scrollY < 20 && !autoScrollActive) {
+      window.scrollTo(0, 196);
+    }
   }, 300);
 }
 
@@ -911,8 +956,6 @@ function renderLyrics(blocks) {
 // ------------------------------------------------------
 
 // LOAD THE SONG !!! ------------------------------------
-window.addEventListener("DOMContentLoaded", loadSong);
-
 window.addEventListener("DOMContentLoaded", () => {
   loadSong();
 
@@ -1017,6 +1060,5 @@ if (params.get("slave") === "1") {
 
 </body>
 </html>
-
 
 
