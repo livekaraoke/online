@@ -98,9 +98,10 @@
     $('kioskList').value=loaded?.setlistId||window.LK?.sessionTools?.getPublicList?.()?.setlistId||lists[0]?.id||'';
     $('kioskDisplayTitle').value=loaded?.displayTitle||'';
     $('kioskSession').textContent=loaded?.sessionId?`${loaded.venue||'Current venue'} · Session ${loaded.sessionId}`:'Derived from your active session when enabled.';
-    $('kioskUrl').textContent=loaded?.token?publicPage+'?k='+loaded.token:'Enable the kiosk to generate its private link.';
+    $('kioskUrl').textContent='OPEN SIGN-UP FORM';
     $('kioskUrl').href=loaded?.token?publicPage+'?k='+loaded.token:'#';
     $('kioskUrl').hidden=!loaded?.token;
+    if($('kioskTransfer'))$('kioskTransfer').hidden=!loaded?.token;
     $('kioskDisable').disabled=!loaded||!loaded.enabled||busy;
     $('kioskRotate').disabled=!loaded?.token||busy;
   }
@@ -113,6 +114,41 @@
     const button=document.getElementById('openSignupKiosk'),panel=document.getElementById('signupKioskPanel');
     if(!button||!panel)return;
     const $=id=>document.getElementById(id),status=message=>{$('kioskMessage').textContent=message;};
+    // Direct opening and device handoff use the existing private URL, without
+    // extra reads or exposing the token to a third-party QR/short-link service.
+    const transfer=document.createElement('div');
+    transfer.id='kioskTransfer';transfer.hidden=true;
+    const copy=document.createElement('button');copy.type='button';copy.textContent='COPY SIGN-UP LINK';
+    const share=document.createElement('button');share.type='button';share.textContent='SHARE TO IPAD';
+    const help=document.createElement('p');
+    help.textContent='Open the form here, or share the link to an email account you can open on the iPad. Bookmark it in Safari once; no typing the key. Publishing a new song list keeps this link unless you rotate it.';
+    transfer.append(copy,share,help);$('kioskUrl').after(transfer);
+    $('kioskUrl').style.cssText='display:inline-block;padding:14px 18px;border:1px solid currentColor;border-radius:6px;font-weight:bold;';
+    // Respect hidden even though the link has an inline display style.
+    const hideStyle=document.createElement('style');hideStyle.textContent='#kioskUrl[hidden]{display:none!important}';panel.append(hideStyle);
+    copy.onclick=async()=>{
+      if(!loaded?.token)return;
+      const url=$('kioskUrl').href;
+      try{
+        if(!navigator.clipboard?.writeText)throw Error('Clipboard unavailable');
+        await navigator.clipboard.writeText(url);status('Link copied. Paste it into an email or message you can open on the iPad.');
+      }catch(error){
+        const field=document.createElement('textarea');field.value=url;field.setAttribute('aria-label','Sign-up link to copy');transfer.append(field);field.select();
+        let copied=false;try{copied=document.execCommand('copy');}catch(ignore){}
+        if(copied){field.remove();status('Link copied. Paste it into an email or message you can open on the iPad.');}
+        else status('Select and copy the link in the text box, then send it to the iPad.');
+      }
+    };
+    share.onclick=async()=>{
+      if(!loaded?.token)return;
+      const url=$('kioskUrl').href;
+      if(navigator.share){
+        try{await navigator.share({title:'Live Karaoke sign-up',url});return;}
+        catch(error){if(error.name==='AbortError')return;}
+      }
+      // Opens an email draft only. The host chooses the recipient and sends it.
+      location.href='mailto:?subject='+encodeURIComponent('Live Karaoke sign-up for iPad')+'&body='+encodeURIComponent('Open this link in Safari on the iPad, then bookmark it:\n\n'+url);
+    };
     button.onclick=async()=>{
       panel.hidden=!panel.hidden;button.setAttribute('aria-expanded',String(!panel.hidden));if(panel.hidden)return;
       if(policy.rulesVerified!==true){status('SETUP REQUIRED: kiosk activation is locked until the narrow Firestore rules are deployed and verified. No public submissions are enabled.');panel.querySelector('fieldset').disabled=true;return;}
@@ -126,7 +162,7 @@
         if(action==='rotate'&&!await LS26Dialogs.confirm('Rotate the kiosk link? The old link will stop working. Reopen the new link on the iPad.'))return;
         if(action==='disable')loaded=await disable(loaded?.revision);
         else loaded=await publish({setlistId:$('kioskList').value,displayTitle:$('kioskDisplayTitle').value,rotate:action==='rotate',enabled:action==='rotate'?loaded?.enabled===true:true,expectedRevision:loaded?.revision});
-        status(action==='disable'?'Kiosk disabled. No further requests will be accepted.':'Kiosk published. Open the private link on the iPad.');renderConfig();
+        status(action==='disable'?'Kiosk disabled. No further requests will be accepted.':'Kiosk published. Press OPEN SIGN-UP FORM below, or SHARE TO IPAD to send the link to your other device.');renderConfig();
       }catch(error){status(error.message);}finally{busy=false;panel.querySelector('fieldset').disabled=false;renderButtons();}
     }
     function renderButtons(){ $('kioskDisable').disabled=!loaded?.enabled; $('kioskRotate').disabled=!loaded?.token; }
