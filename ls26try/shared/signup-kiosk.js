@@ -68,6 +68,8 @@
       const view={...result,songs};delete view.token;
       tx.set(ref('signupKioskAdmin/control'),result);
       tx.set(ref('signupKioskViews/'+kioskToken),view);
+      // Public discovery for the permanent kiosk address; owner-only write.
+      tx.set(ref('karaokeControl/signupKioskPublic'),{schemaVersion:1,enabled:result.enabled,token:kioskToken,updatedAt:stamp()});
       // Old views remain inaccessible after rotation; no destructive cleanup.
     });
     return result;
@@ -80,6 +82,7 @@
       if(config.revision!==expectedRevision)throw Error('Another host changed the kiosk. Reload configuration first.');
       const next={...config,enabled:false,revision:token(),updatedAt:stamp()};
       tx.set(ref('signupKioskAdmin/control'),next);
+      tx.set(ref('karaokeControl/signupKioskPublic'),{schemaVersion:1,enabled:false,updatedAt:stamp()});
       tx.set(ref('signupKioskViews/'+config.token),{enabled:false,revision:next.revision,updatedAt:stamp()},{merge:true});
       return next;
     });
@@ -102,7 +105,7 @@
     $('kioskDisplayTitle').value=loaded?.displayTitle||'';
     $('kioskSession').textContent=loaded?.sessionId?`${loaded.venue||'Current venue'} · Session ${loaded.sessionId}`:'Derived from your active session when enabled.';
     $('kioskUrl').textContent='OPEN SIGN-UP FORM';
-    $('kioskUrl').href=loaded?.token?publicPage+'?k='+loaded.token:'#';
+    $('kioskUrl').href=publicPage;
     $('kioskUrl').hidden=!loaded?.token;
     if($('kioskTransfer'))$('kioskTransfer').hidden=!loaded?.token;
     $('kioskDisable').disabled=!loaded||!loaded.enabled||busy;
@@ -124,7 +127,7 @@
     const copy=document.createElement('button');copy.type='button';copy.textContent='COPY SIGN-UP LINK';
     const share=document.createElement('button');share.type='button';share.textContent='SHARE TO IPAD';
     const help=document.createElement('p');
-    help.textContent='Open the form here, or share the link to an email account you can open on the iPad. Bookmark it in Safari once; no typing the key. Publishing a new song list keeps this link unless you rotate it.';
+    help.textContent='Permanent sign-up address: livekaraoke.eu/signup/ — open it directly on the iPad and bookmark it. No key or special link needed. Publish here after changing the session or song list.';
     transfer.append(copy,share,help);$('kioskUrl').after(transfer);
     $('kioskUrl').style.cssText='display:inline-block;padding:14px 18px;border:1px solid currentColor;border-radius:6px;font-weight:bold;';
     // Respect hidden even though the link has an inline display style.
@@ -162,7 +165,7 @@
       if(busy)return;busy=true;panel.querySelector('fieldset').disabled=true;
       try{
         if(action==='reload'){await loadConfig();status('Configuration reloaded.');return;}
-        if(action==='rotate'&&!await LS26Dialogs.confirm('Rotate the kiosk link? The old link will stop working. Reopen the new link on the iPad.'))return;
+        if(action==='rotate'&&!await LS26Dialogs.confirm('Refresh kiosk access? Old keyed links will stop working. The permanent sign-up address will keep working.'))return;
         if(action==='disable')loaded=await disable(loaded?.revision);
         else loaded=await publish({setlistId:$('kioskList').value,displayTitle:$('kioskDisplayTitle').value,rotate:action==='rotate',enabled:action==='rotate'?loaded?.enabled===true:true,expectedRevision:loaded?.revision});
         status(action==='disable'?'Kiosk disabled. No further requests will be accepted.':'Kiosk published. Press OPEN SIGN-UP FORM below, or SHARE TO IPAD to send the link to your other device.');renderConfig();
