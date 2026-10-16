@@ -101,68 +101,9 @@
     history.replaceState(null,'',url.href);
   }
 
-  let touchStartX=0;
-  let touchStartY=0;
-  let touchTracking=false;
-  let touchIgnored=false;
-  let touchStoppedAuto=false;
-
-  function stopAutoscrollForManualScroll(){
-    if(typeof autoScrollActive==='undefined'||!autoScrollActive)return;
-
-    if(typeof stopAutoScroll==='function'){
-      stopAutoScroll();
-    }else{
-      autoScrollActive=false;
-      if(typeof autoScrollFrame!=='undefined'&&autoScrollFrame){
-        cancelAnimationFrame(autoScrollFrame);
-      }
-    }
-
-    const button=document.getElementById('scrollToggleBtn');
-    if(button)button.textContent='▶';
-  }
-
-  function beginTouchGesture(event){
-    const touch=event.touches?.[0];
-    if(!touch)return;
-
-    touchStartX=touch.clientX;
-    touchStartY=touch.clientY;
-    touchTracking=true;
-    touchStoppedAuto=false;
-    touchIgnored=Boolean(
-      event.target?.closest?.('#autoScrollControls,.top-bar,.side-panel')
-    );
-  }
-
-  function continueTouchGesture(event){
-    if(!touchTracking||touchIgnored||touchStoppedAuto)return;
-    const touch=event.touches?.[0];
-    if(!touch)return;
-
-    const dx=Math.abs(touch.clientX-touchStartX);
-    const dy=Math.abs(touch.clientY-touchStartY);
-
-    // A tap must not change autoscroll. Only an actual vertical drag takes
-    // manual control and cancels the requestAnimationFrame autoscroll loop.
-    if(dy<6||dy<=dx)return;
-
-    touchStoppedAuto=true;
-    stopAutoscrollForManualScroll();
-  }
-
-  function endTouchGesture(){
-    touchTracking=false;
-    touchIgnored=false;
-    touchStoppedAuto=false;
-  }
-
   const start=()=>{
     const originalLoadSong=window.loadSong;
 
-    // The legacy page registers loadSong twice. Remove the direct listener and
-    // let the remaining bootstrap call this guarded compatibility wrapper once.
     if(typeof originalLoadSong==='function'){
       window.removeEventListener('DOMContentLoaded',originalLoadSong);
       let loading=false;
@@ -183,8 +124,6 @@
       };
     }
 
-    // Replace the old slave listener, which treated the modern Firestore song
-    // document ID as a legacy lyrics filename.
     try{window.stopSlaveLyrics?.();}catch(_){}
     let compatUnsubscribe=null;
     let resolutionToken=0;
@@ -232,26 +171,6 @@
 
     const slaveToggle=document.getElementById('slaveLyricsToggle');
     if(slaveToggle?.checked)window.startSlaveLyrics();
-
-    // Finger scrolling should take over from autoscroll only after real motion,
-    // not merely on touch-down. Passive listeners leave native scrolling fully
-    // in control while cancelling the stale autoscroll animation immediately.
-    document.addEventListener('touchstart',beginTouchGesture,{passive:true,capture:true});
-    document.addEventListener('touchmove',continueTouchGesture,{passive:true,capture:true});
-    document.addEventListener('touchend',endTouchGesture,{passive:true,capture:true});
-    document.addEventListener('touchcancel',endTouchGesture,{passive:true,capture:true});
-
-    // Fixed backdrop blur adds repaint cost on Android while the document moves.
-    // Removing only the blur improves scrolling without changing scroll logic.
-    const style=document.createElement('style');
-    style.id='ls26OldLyricsScrollPerformance';
-    style.textContent=`
-      .autoscroll-controls{
-        backdrop-filter:none!important;
-        -webkit-backdrop-filter:none!important;
-      }
-    `;
-    document.head.append(style);
   };
 
   if(document.readyState==='loading'){
