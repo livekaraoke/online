@@ -99,6 +99,7 @@
   root.LKSignup = api;
   if (!root.document || !document.getElementById('signupForm')) { return; }
   var policy = root.LKSignupPolicy || {}, token = param('k', location.search), view = null, songs = [], selected = null;
+  var discover = !tokenValid(token);
   var busy = false, loading = false, uncertain = false, limit = 30, timer = null, resetTimer = null, pending = null;
   var base = 'https://firestore.googleapis.com/v1/projects/' + policy.projectId + '/databases/(default)/documents';
   function el(id) { return document.getElementById(id); }
@@ -132,8 +133,24 @@
     if (busy || loading || !el('success').hidden) { return; }
     clearTimeout(timer);
     if (policy.rulesVerified !== true) { view = null; notice('HOST SETUP REQUIRED\nSecure kiosk access must be enabled by the host before sign-up opens.'); ready(); return; }
-    if (!tokenValid(token)) { view = null; notice('KIOSK LINK REQUIRED\nPlease ask the host to open the current sign-up link.'); ready(); return; }
     loading = true; ready();
+    if (discover) {
+      xhr('GET', base + '/karaokeControl/signupKioskPublic', null, function (error, data) {
+        var current;
+        if (error) {
+          loading = false; view = null; ready();
+          notice(error.status === 403 || error.status === 404 ? 'SIGN-UP NOT OPEN YET\nPlease ask the host to enable sign-up.' : 'NO CONNECTION\nPLEASE ASK THE HOST');
+          schedule(); return;
+        }
+        current = decode({mapValue: {fields: data.fields || {}}});
+        if (current.schemaVersion !== 1 || current.enabled !== true || !tokenValid(current.token)) {
+          loading = false; view = null; ready(); notice('SIGN-UP CLOSED\nPlease ask the host.'); schedule(); return;
+        }
+        token = current.token; loadView();
+      });
+    } else { loadView(); }
+  }
+  function loadView() {
     xhr('GET', base + '/signupKioskViews/' + token, null, function (error, data) {
       var next, match, i, changed;
       loading = false;
