@@ -135,3 +135,15 @@
   };
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
 })();
+
+/* Oldadmin lyric viewer compatibility. Keep this page-specific bridge outside
+ * the legacy monolith so modern LiveSuite IDs and tablet input can be fixed
+ * without changing the preserved old viewer's data format. */
+(() => {
+  'use strict';
+  if(!/\/ls26try\/oldadmin\/host\/lyrics\/song\.html$/i.test(location.pathname))return;
+  const script=document.createElement('script');
+  script.src='song-compat.js?v=20261016-legacy-sync-scroll-v1';
+  script.async=false;
+  document.head.append(script);
+})();
