@@ -66,9 +66,7 @@
     }
 
     const rawKey=normalize(raw);
-    const combined=entries.find(entry=>
-      normalize(entry.title+entry.artist)===rawKey
-    );
+    const combined=entries.find(entry=>normalize(entry.title+entry.artist)===rawKey);
     if(combined)return combined.id;
 
     const titleOnly=entries.filter(entry=>normalize(entry.title)===rawKey);
@@ -101,14 +99,6 @@
     const url=new URL(location.href);
     url.searchParams.set('id',id);
     history.replaceState(null,'',url.href);
-  }
-
-  function manualScrollStarted(event){
-    if(typeof autoScrollActive==='undefined'||!autoScrollActive)return;
-    if(event?.target?.closest?.('#autoScrollControls,.top-bar,.side-panel'))return;
-    if(typeof stopAutoScroll==='function')stopAutoScroll();
-    const button=document.getElementById('scrollToggleBtn');
-    if(button)button.textContent='▶';
   }
 
   const start=()=>{
@@ -186,18 +176,11 @@
     const slaveToggle=document.getElementById('slaveLyricsToggle');
     if(slaveToggle?.checked)window.startSlaveLyrics();
 
-    // Tablet manual scrolling must immediately take control from autoscroll.
-    document.addEventListener('touchstart',manualScrollStarted,{passive:true,capture:true});
-    document.addEventListener('pointerdown',event=>{
-      if(event.pointerType==='touch'||event.pointerType==='pen')manualScrollStarted(event);
-    },{passive:true,capture:true});
-
-    // Fixed backdrop blur is expensive while scrolling on Android tablets.
+    // Keep the legacy viewer's original autoscroll/manual-scroll behavior.
+    // Only remove the expensive fixed backdrop blur to reduce paint cost.
     const style=document.createElement('style');
     style.id='ls26OldLyricsPerformanceFix';
     style.textContent=`
-      html,body{scroll-behavior:auto!important}
-      #lyrics-container{touch-action:pan-y}
       .autoscroll-controls{
         backdrop-filter:none!important;
         -webkit-backdrop-filter:none!important;
