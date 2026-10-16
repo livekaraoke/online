@@ -142,8 +142,13 @@
 (() => {
   'use strict';
   if(!/\/ls26try\/oldadmin\/host\/lyrics\/song\.html$/i.test(location.pathname))return;
+  const src='song-compat.js?v=20261016-legacy-sync-scroll-v1';
+  if(document.readyState==='loading'){
+    document.write(`<script src="${src}"><\/script>`);
+    return;
+  }
   const script=document.createElement('script');
-  script.src='song-compat.js?v=20261016-legacy-sync-scroll-v1';
+  script.src=src;
   script.async=false;
   document.head.append(script);
 })();
