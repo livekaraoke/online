@@ -152,7 +152,7 @@
         el('selection').textContent = selected ? 'SELECTED: ' + selected.title + '\n' + selected.artist : 'Song list changed. Please choose a song.';
       }
       el('listTitle').textContent = view.displayTitle || view.venue || view.setlistName || "Tonight's song list";
-      if (!uncertain) { notice(view.enabled ? 'Choose your song. Requests go straight to Billy.' : 'SIGN-UP CLOSED\nPlease ask the host.', view.enabled); }
+      if (!uncertain) { notice(view.enabled ? 'Choose your song. Requests go straight to the host.' : 'SIGN-UP CLOSED\nPlease ask the host.', view.enabled); }
       el('refresh').textContent = 'REFRESH SONG LIST'; if (changed) { renderSongs(); } ready(); schedule();
     });
   }
@@ -185,7 +185,7 @@
   el('moreSongs').onclick = function () { limit += 30; renderSongs(); };
   el('refresh').onclick = function () {
     if (uncertain) {
-      if (!window.confirm('Please check with Billy whether the request arrived before starting again. Clear this form?')) { return; }
+      if (!window.confirm('Please check with the host whether the request arrived before starting again. Clear this form?')) { return; }
       resetForm();
     }
     load();
