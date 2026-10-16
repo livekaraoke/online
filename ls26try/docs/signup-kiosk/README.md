@@ -2,17 +2,11 @@
 
 ## Current rollout status
 
-The application code is implemented and tested against a **local Firestore emulator**.
-Production activation is deliberately locked by `signup/kiosk-policy.js`:
-`rulesVerified: false`. This prevents the guest page from making any database calls
-and prevents host configuration writes. It is a deployment switch, NOT an access
-control. Firestore rules are the security boundary.
-
-The repository has no complete deployed Firestore rules, Firebase deployment
-configuration or backend endpoint. Firebase Console was unavailable in the work
-browser (Google sign-in/network error). **Do not enable the switch until the actual
-combined production rules have been reviewed and tested.** Appending a restrictive
-match is not sufficient: Firestore ORs all matching allow statements.
+The repository kiosk switch was enabled on 7 October. For the current complete
+rules and the 16 October requester-proof security correction, see
+[SECURITY-HARDENING.md](SECURITY-HARDENING.md). Publish the complete tested rules
+through Firebase Console; a GitHub Pages deployment does not deploy Firestore
+rules. Earlier fragments must not be pasted over broad existing grants.
 
 ## Existing architecture reused
 

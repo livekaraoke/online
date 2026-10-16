@@ -84,7 +84,7 @@ test('non-permission create failure never falls back to an unprotected request',
   assert.equal(f.directSets.length,0);
 });
 
-test('requester edit refreshes proof with the stored capability',async()=>{
+test('requester edit creates a new private proof with the stored capability',async()=>{
   const f=fixture();
   const ref=await f.wrapped.collection('publicSongRequests').add({sessionId:'s1',source:'test'});
   f.writes.length=0;
@@ -93,9 +93,11 @@ test('requester edit refreshes proof with the stored capability',async()=>{
   assert.equal(f.writes[0].length,2);
   assert.equal(f.writes[0][0].options?.merge,true);
   assert.equal(f.writes[0][0].path,`publicSongRequests/${ref.id}`);
-  assert.equal(f.writes[0][1].path,`publicSongRequestOwners/${ref.id}`);
+  assert.equal(f.writes[0][1].path,`publicSongRequestProofs/auto-2`);
+  assert.equal(f.writes[0][0].data.requestProofId,"auto-2");
+  assert.equal(f.writes[0][1].data.requestId,ref.id);
   assert.equal(f.writes[0][1].data.token,f.storage.get(`ls26.publicRequestCapability.${ref.id}`));
-  assert.equal(f.writes[0][1].options?.merge,true);
+  assert.equal(f.writes[0][1].options,undefined);
 });
 
 test('pre-cutover request without a capability keeps direct server-rule fallback',async()=>{

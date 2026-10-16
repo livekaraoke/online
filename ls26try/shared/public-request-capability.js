@@ -89,14 +89,16 @@
           : originalSet.call(ref,data,options);
       }
 
-      const proofRef=db.collection('publicSongRequestOwners').doc(ref.id);
+      const proofRef=db.collection('publicSongRequestProofs').doc();
+      const patch=Object.assign({},data||{},{requestProofId:proofRef.id});
       const batch=db.batch();
-      if(options===undefined)batch.set(ref,data||{});
-      else batch.set(ref,data||{},options);
+      if(options===undefined)batch.set(ref,patch);
+      else batch.set(ref,patch,options);
       batch.set(proofRef,{
+        requestId:ref.id,
         token,
-        proofAt:firebase.firestore.FieldValue.serverTimestamp()
-      },{merge:true});
+        createdAt:firebase.firestore.FieldValue.serverTimestamp()
+      });
       return batch.commit();
     }
 

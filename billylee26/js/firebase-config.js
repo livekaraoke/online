@@ -52,8 +52,9 @@
     const batch = rawDb.batch();
     batch.set(requestRef, data || {});
     batch.set(proofRef, { token, createdAt: stamp, proofAt: stamp });
-    await batch.commit();
     rememberToken(requestRef.id, token);
+    if (readToken(requestRef.id) !== token) throw new Error("Allow browser storage before sending your request.");
+    await batch.commit();
     return requestRef;
   }
 
@@ -65,14 +66,18 @@
         : originalSet.call(ref, data, options);
     }
 
-    const proofRef = rawDb.collection("publicSongRequestOwners").doc(ref.id);
+    // A fresh, create-only proof must explicitly contain the secret. Updating
+    // proofAt on the owner document could inherit its token without knowing it.
+    const proofRef = rawDb.collection("publicSongRequestProofs").doc();
+    const patch = Object.assign({}, data || {}, { requestProofId: proofRef.id });
     const batch = rawDb.batch();
-    if (options === undefined) batch.set(ref, data || {});
-    else batch.set(ref, data || {}, options);
+    if (options === undefined) batch.set(ref, patch);
+    else batch.set(ref, patch, options);
     batch.set(proofRef, {
+      requestId: ref.id,
       token,
-      proofAt: firebase.firestore.FieldValue.serverTimestamp()
-    }, { merge:true });
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
     return batch.commit();
   }
 

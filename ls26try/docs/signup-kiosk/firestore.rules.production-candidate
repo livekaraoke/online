@@ -131,6 +131,35 @@ service cloud.firestore {
         || request.resource.data.get('source', '') == 'signup-kiosk';
     }
 
+    function normalRequestSession(d) {
+      let current = get(/databases/$(database)/documents/karaokeControl/currentSession).data;
+      return current.get('active', false) == true
+        && d.sessionId in [current.get('sessionId', ''), current.get('activeSessionId', '')]
+        && get(/databases/$(database)/documents/karaoke/state).data.songsEnabled == true
+        && d.get('isTestSession', false) == false
+        && d.get('requestTestMode', false) == false;
+    }
+
+    function normalRequestTestSession(d) {
+      let settingsId = d.source == 'billylee26' ? 'billyLeeWebsiteSettings' : 'liveKaraokeWebsiteSettings';
+      let settings = get(/databases/$(database)/documents/karaokeControl/$(settingsId)).data;
+      return d.source in ['billylee26','live-karaoke-website']
+        && settings.get('enableLiveRequestTestMode', false) == true
+        && d.sessionId == settings.get('requestTestSessionId', 'billylee-test-preview')
+        && d.get('isTestSession', false) == true
+        && d.get('requestTestMode', false) == true;
+    }
+
+    function normalRequestSong(d) {
+      let song = get(/databases/$(database)/documents/lyrics/$(d.songId)).data;
+      let listId = d.get('publicSetlistId', '');
+      return song.get('publicSongListVisible', true) != false
+        && d.songTitle == song.title
+        && (listId == '' || d.songId in get(
+          /databases/$(database)/documents/lyricsSetlists/$(listId)
+        ).data.songIds);
+    }
+
     function validNormalPublicRequestCreate(requestId) {
       let d = request.resource.data;
       let singer = d.get(
@@ -146,7 +175,17 @@ service cloud.firestore {
           'songId',
           'createdAt'
         ])
-        && d.keys().size() <= 40
+        && d.keys().hasOnly([
+          'source','sessionId','songId','createdAt','listId','publicSetlistId','publicSetlistName',
+          'isTestSession','requestTestMode','status','singerName','name','requesterName',
+          'requesterCountry','requesterAgeRange','requesterGender','requesterDeviceId',
+          'requesterEmailHash','requesterFavouriteSongIds','note','comment','songTitle',
+          'artist','songArtist','year','requestType','project','type','performerType',
+          'location','ageRange','rating','requestAnyway','alreadyPlayedToday'
+        ])
+        && d.source in ['live-karaoke-website','billylee26','public-songlist','roxanna26','roxanna-website']
+        && (normalRequestSession(d) || normalRequestTestSession(d))
+        && normalRequestSong(d)
         && publicNonBlankText(d.get('source', ''), 80)
         && publicNonBlankText(d.get('sessionId', ''), 180)
         && publicNonBlankText(d.get('songId', ''), 180)
@@ -190,10 +229,12 @@ service cloud.firestore {
     }
 
     function validPublicNoteEdit() {
-      return publicRequestChangedOnly([
+      return resource.data.get('status', '') in ['active','pending','waiting','accepted','queued']
+        && publicRequestChangedOnly([
           'note',
           'comment',
-          'updatedAt'
+          'updatedAt',
+          'requestProofId'
         ])
         && request.resource.data.get('status', '')
           == resource.data.get('status', '')
@@ -207,7 +248,8 @@ service cloud.firestore {
           'status',
           'reason',
           'cancelledAt',
-          'updatedAt'
+          'updatedAt',
+          'requestProofId'
         ])
         && resource.data.get('status', '') in [
           'active',
@@ -223,18 +265,17 @@ service cloud.firestore {
     }
 
     function hasFreshPublicRequestCapability(requestId) {
-      let before = get(
+      let proofId = request.resource.data.get('requestProofId', '');
+      let owner = get(
         /databases/$(database)/documents/publicSongRequestOwners/$(requestId)
       ).data;
-      let after = getAfter(
-        /databases/$(database)/documents/publicSongRequestOwners/$(requestId)
+      let proof = getAfter(
+        /databases/$(database)/documents/publicSongRequestProofs/$(proofId)
       ).data;
-
-      return before.token is string
-        && before.token.matches('^[a-f0-9]{64}$')
-        && after.token == before.token
-        && after.createdAt == before.createdAt
-        && after.proofAt == request.time;
+      return !exists(/databases/$(database)/documents/publicSongRequestProofs/$(proofId))
+        && proof.requestId == requestId
+        && proof.token == owner.token
+        && proof.createdAt == request.time;
     }
 
     function validRequesterUpdate(requestId) {
@@ -399,8 +440,8 @@ service cloud.firestore {
      * PRIVATE PUBLIC-REQUEST OWNERSHIP PROOF
      *
      * Never publicly readable. New BillyLee26/LiveKaraoke26 requests can create
-     * one in the same batch as the public request. Requester edits must refresh
-     * proofAt in the same atomic batch while keeping the secret unchanged.
+     * one in the same batch as the public request. Existing owner tokens remain
+     * valid. Each edit creates a new private publicSongRequestProofs document.
      */
     match /publicSongRequestOwners/{requestId} {
       allow read: if isOwner();
@@ -433,29 +474,32 @@ service cloud.firestore {
           ).data.get('source', '') != 'signup-kiosk'
         );
 
-      allow update: if isOwner()
-        || (
-          resource.data.token is string
-          && resource.data.token.matches('^[a-f0-9]{64}$')
-          && request.resource.data.keys().hasAll([
-            'token',
-            'createdAt',
-            'proofAt'
-          ])
-          && request.resource.data.keys().hasOnly([
-            'token',
-            'createdAt',
-            'proofAt'
-          ])
-          && request.resource.data.token == resource.data.token
-          && request.resource.data.createdAt == resource.data.createdAt
-          && request.resource.data.proofAt == request.time
-          && getAfter(
-            /databases/$(database)/documents/publicSongRequests/$(requestId)
-          ).data.updatedAt == request.time
-        );
+      // Never refresh an inherited secret with a partial update. Proofs below
+      // are separate create-only documents and must supply the token explicitly.
+      allow update: if isOwner();
 
       allow delete: if isOwner();
+    }
+
+    match /publicSongRequestProofs/{proofId} {
+      allow read, delete: if isOwner();
+      allow update: if false;
+      allow create: if request.resource.data.keys().hasAll(['requestId','token','createdAt'])
+        && request.resource.data.keys().hasOnly(['requestId','token','createdAt'])
+        && request.resource.data.requestId is string
+        && !request.resource.data.requestId.matches('^kiosk_.*')
+        && request.resource.data.token is string
+        && request.resource.data.token.matches('^[a-f0-9]{64}$')
+        && request.resource.data.token == get(
+          /databases/$(database)/documents/publicSongRequestOwners/$(request.resource.data.requestId)
+        ).data.token
+        && request.resource.data.createdAt == request.time
+        && getAfter(
+          /databases/$(database)/documents/publicSongRequests/$(request.resource.data.requestId)
+        ).data.requestProofId == proofId
+        && getAfter(
+          /databases/$(database)/documents/publicSongRequests/$(request.resource.data.requestId)
+        ).data.updatedAt == request.time;
     }
 
     /*
@@ -501,12 +545,12 @@ service cloud.firestore {
     }
 
     /*
-     * Legacy public signup sessions are retained unchanged in this focused pass.
-     * They are not host-control documents and need a separate schema/ownership
-     * migration before their anonymous permissions can safely be narrowed.
+     * Legacy session records are host-controlled. Current public clients use
+     * karaokeControl/currentSession; guests must never alter session state.
      */
     match /publicSignupSessions/{docId} {
-      allow read, write: if true;
+      allow read: if true;
+      allow write: if isOwner();
     }
 
     /*

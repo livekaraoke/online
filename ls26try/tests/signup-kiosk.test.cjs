@@ -6,8 +6,13 @@ test('ES5 syntax for every kiosk script and inline alias',()=>{
  const alias=fs.readFileSync(path.join(root,'signup/index.html'),'utf8');acorn.parse(alias.match(/<script>([\s\S]*?)<\/script>/)[1],{ecmaVersion:5});
  const html=fs.readFileSync(path.join(root,'signup/sign up.html'),'utf8');assert.doesNotMatch(html,/firebasejs|type="module"|framework|ls26try/);
 });
-test('rollout defaults closed until deployed security rules are verified',()=>{
- const context={window:{}};vm.runInNewContext(fs.readFileSync(path.join(root,'signup/kiosk-policy.js'),'utf8'),context);assert.equal(context.window.LKSignupPolicy.rulesVerified,false);
+test('disabled rollout blocks requests even with a valid kiosk token',()=>{
+ const nodes={},document={getElementById(id){return nodes[id]||(nodes[id]={value:'',hidden:true,disabled:false,textContent:''});},addEventListener(){}};
+ const window={document,LKSignupPolicy:{rulesVerified:false,projectId:'demo-ls26-kiosk'},location:{search:'?k='+'a'.repeat(64)},addEventListener(){}};
+ const context={window,document,location:window.location,clearTimeout(){},XMLHttpRequest(){throw Error('Disabled kiosk must not contact Firestore');}};
+ vm.runInNewContext(fs.readFileSync(path.join(root,'signup/signup.js'),'utf8'),context);
+ assert.equal(nodes.send.disabled,true);
+ assert.ok(Object.values(nodes).some(n=>/HOST SETUP REQUIRED/.test(n.textContent)));
 });
 test('token parsing does not depend on URLSearchParams',()=>{assert.equal(api.param('k','?k=abc%20def'),'abc def');assert.equal(api.param('k','?k=%xx'),'');assert.equal(api.param('k','?other=x'),'');assert.ok(api.tokenValid('a'.repeat(64)));assert.ok(!api.tokenValid('ABCD'));});
 const songs=[{id:'one',title:'Wonderwall',artist:'Oasis'},{id:'two',title:'Zombie',artist:'The Cranberries'}];

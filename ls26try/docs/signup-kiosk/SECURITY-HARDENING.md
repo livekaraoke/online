@@ -1,180 +1,85 @@
-# Shared Firestore security hardening for the sign-up kiosk
+# Complete Firestore rules — 16 October 2026
 
-## Why the kiosk is still locked
+The complete replacement is `firestore.rules.production-candidate`. Copy its
+**entire contents** into Firebase Console → livekaraokesuite → Firestore Database
+→ Rules. Save a copy of the currently deployed rules first, then Publish.
+Do not append it to the existing rules: overlapping allow statements are ORed.
 
-The kiosk implementation itself passed the isolated emulator checks, but testing
-against the current rules shape exposed pre-existing anonymous write permissions
-that can bypass a kiosk-only match. Firestore grants an operation when **any**
-matching `allow` expression is true; a restrictive match later in the file does
-not cancel an earlier broad `allow read, write: if true`.
+This file is based on the complete rules supplied in this conversation and the
+repository candidate. The Firebase Console's live rules cannot be inferred from
+GitHub. If you have since added other collection rules in Firebase, retain those
+only after reviewing their permissions; this file cannot include unseen changes.
 
-Known broad-write areas from the current rules/audit include:
+## Coordinated rollout
 
-- `publicSongRequests`
-- `lyrics`
-- `karaokeControl`
-- `performanceSessions`
-- `noteSettings`
+1. Deploy the accompanying public request client changes on GitHub Pages.
+2. Publish this full replacement rules file in Firebase Console.
+3. Reload Live Karaoke and BillyLee26 request pages, including open popups/tabs.
+4. Sign into LiveSuite Admin with the configured owner account before host edits.
+5. Open Requests → SIGN-UP KIOSK; choose the setlist and publish it. Open the
+   generated token-bearing kiosk URL on the iPad.
 
-The existing nested `lyrics/{songId}/musicalTiming/{timingId}` owner-write rule is
-already the desired model and should remain.
+The kiosk switch was already enabled in repository commit c6127912a4b6a412b6ebbd57814e2685f7a531c6;
+this change does not flip it again or claim that repository flags verify deployed
+Firebase rules. Old open public request tabs need reloading. Between the client
+and rules deployments, requester note edits/cancellations fail closed. Normal
+request creation is unchanged by the new proof protocol.
 
-The production switch in `signup/kiosk-policy.js` therefore remains
-`rulesVerified: false`. Do not change it merely because the Pages code exists.
+## Fixed security defect
 
-## Public request ownership migration
+The earlier private-owner proof rule compared the token in the *resulting*
+document with the stored token. Firestore merges partial updates before checking
+rules, so an attacker could update only `proofAt` and inherit the secret without
+knowing it. This was reproduced against the earlier COMPLETE candidate in the
+local Firestore emulator, using no production data.
 
-Anonymous requesters do not have Firebase Authentication identities. Request IDs
-are visible to public request/history clients, so knowing an ID cannot safely be
-treated as ownership.
+Owner records are now immutable to guests. Every requester edit/cancellation
+atomically writes:
 
-The staged migration uses a private per-request capability for new BillyLee26 and
-LiveKaraoke26 requests:
+- the existing `publicSongRequests/{id}` patch, including a fresh `requestProofId`;
+- a new `publicSongRequestProofs/{proofId}` with `requestId`, the private token,
+  and server `createdAt`.
 
-1. The browser generates a 256-bit random token with Web Crypto.
-2. One Firestore batch creates:
-   - `publicSongRequests/{requestId}` — unchanged public request payload.
-   - `publicSongRequestOwners/{requestId}` — private `{token, createdAt, proofAt}`.
-3. The token is stored only in that browser's localStorage under
-   `ls26.publicRequestCapability.<requestId>`.
-4. A requester note edit/cancellation atomically updates the request and refreshes
-   `proofAt` in the private companion document with the unchanged token.
-5. Firestore rules can then allow the narrowly permitted update only when the
-   private proof is valid and fresh.
+The proof must not exist before the batch, must contain the correct secret, must
+refer to that same request, and must be created at the same server request time.
+Proofs cannot be read, updated, or deleted by the public. Replays are rejected.
+No token is put in the public queue. Existing private owner tokens remain valid;
+no migration or rewrite of requests is needed. Cost remains two writes per
+requester edit/cancellation. Private proofs accumulate one small document per edit;
+no cleanup or production data deletion is performed.
 
-The token is never stored in `publicSongRequests`, so public queue/history reads do
-not disclose it. `publicSongRequestOwners` must never be anonymously readable.
+A new request still uses one atomic batch: public request + private owner record.
+Its browser key is retained before submission, so a lost response does not discard
+ownership. Requests made before ownership keys existed, on a different browser,
+or after browser storage was cleared can only be edited/cancelled by the host.
 
-Other existing public request clients that only create requests do not need the
-capability wrapper. Their creates remain compatible with the normal public-create
-validator in the merge fragment. They simply cannot anonymously edit a request
-unless they later adopt the ownership capability.
+## Other permissions
 
-## Repository-side work already staged
+- Songs, timing, setlists, host controls, sessions, notes/settings, events, venues
+  and host queue edits require the existing owner email authentication predicate.
+  Signed-in non-owner staff no longer inherit broad write permission.
+- Normal guest requests require a real visible song, valid selected setlist
+  membership where supplied, an active session and open request gate. Explicit
+  website test sessions require the owner-controlled test-mode setting.
+- New requests cannot inject arbitrary fields or host result/approval fields.
+- Public request reads are preserved for the existing queue/history interfaces.
+  This is not a privacy redesign of that existing public collection.
+- Existing review, booking, reminder, inbox and user-profile predicates are
+  preserved. Booking creation remains the user's existing public rule; a spam/
+  rate-limit redesign is outside this kiosk rules change.
+- Kiosk requests require the active private token, matching song snapshot,
+  session, enabled state and request gate. Queue request + private receipt are
+  created atomically. Guests cannot edit either after creation.
 
-- `ls26try/shared/public-request-capability.js` contains the reusable capability
-  wrapper, but is intentionally **not loaded by any production page yet**.
-- `ls26try/tests/public-request-capability.test.cjs` verifies atomic create,
-  capability-backed edit, pre-cutover fallback and unrelated-collection behavior.
-- `security-hardening.fragment` contains the merge-oriented rule shape for:
-  - normal public request create validation
-  - capability-backed requester update/cancel
-  - private owner companion documents
-  - kiosk request/receipt/view validation
-  - owner-write hardening for host-controlled collections
-- The existing `billylee26/js/firebase-config.js` and
-  `livekaraoke26/js/firebase-config.js` remain unchanged in production. This is
-  deliberate: enabling the wrapper before Firestore allows the companion proof
-  document would make the whole atomic request create fail.
+## Verification
 
-After the complete rules are deployed and verified, the public pages can load the
-wrapper and replace their existing raw `firebase.firestore()` database with:
+`ls26try/verification/full-kiosk-rules.cjs` tests the COMPLETE replacement rules
+in a local `demo-ls26-rules` Firestore emulator on 127.0.0.1:8188. It includes the
+actual two public client initializers using the Firebase SDK against the emulator,
+create/reload/edit/cancel, replay/forgery rejection, kiosk REST submissions,
+closed/ended sessions, token rotation, owner permissions and non-owner rejection.
+No test contacts production Firebase.
 
-```js
-window.BillyLeeDB = window.LS26PublicRequestCapability.wrap({
-  db: firebase.firestore(),
-  firebase,
-  storage: window.localStorage,
-  cryptoApi: window.crypto || window.msCrypto
-});
-```
-
-Do that cut-over only in the same controlled rollout as the rules activation.
-
-## Production merge requirements
-
-The repository still does **not** contain the complete deployed Firestore rules
-file, `firebase.json`, `.firebaserc`, or a rules deployment workflow. The complete
-production rules must therefore be copied/exported from Firebase Console before
-activation.
-
-When merging:
-
-1. Keep the existing `signedIn()` / `isOwner()` implementation. The current owner
-   predicate uses the signed-in token email and must remain the source of owner
-   authority.
-2. Replace broad anonymous write grants for host-controlled collections; do not
-   append a second restrictive match and assume it overrides them.
-3. Replace the broad `publicSongRequests` write rule with the branch in
-   `security-hardening.fragment`.
-4. Add `publicSongRequestOwners`, kiosk admin/view/receipt rules and the kiosk
-   validation helpers.
-5. Preserve unrelated validated public workflows such as website reviews,
-   booking enquiries, reminders and requester profiles. Do not replace those
-   predicates with a blanket owner-only rule unless their public flow has been
-   deliberately retired.
-6. Run the emulator against the **complete merged rules file**, not only an
-   isolated fragment.
-7. Verify both positive and negative cases before publishing rules.
-8. Publish the complete rules.
-9. Only after successful rules verification, enable the staged public-request
-   capability wrapper on BillyLee26/LiveKaraoke26 and run their request flows.
-10. Only after the deployed rules pass should `signup/kiosk-policy.js` be changed
-    to `rulesVerified: true`.
-
-## Required verification matrix
-
-### Normal public requests
-
-Allow:
-- create a well-formed request for a real song
-- create through the existing BillyLee26/LiveKaraoke26 request UI
-- owner queue updates
-- new requester note edit with the correct private capability
-- new requester cancellation with the correct private capability
-
-Deny:
-- malformed request creation
-- creating a request with host result/approval fields pre-populated
-- editing somebody else's request
-- changing song/session/requester identity during requester edit
-- anonymous request deletion
-- reading `publicSongRequestOwners`
-- capability replay against another request ID
-
-### Kiosk
-
-Allow:
-- current token GET of its single published view
-- valid paired kiosk request + receipt create while session/request gate is open
-- owner enable/disable/rotate/publish actions
-
-Deny:
-- wrong/expired token
-- list of kiosk views
-- receipt read/update/delete
-- kiosk request anonymous edit/delete
-- disabled kiosk
-- ended/changed session
-- closed song requests
-- song not present in published kiosk snapshot
-- malformed/extra kiosk fields
-
-### Host-controlled data
-
-Anonymous/public clients may retain the reads required by the public sites, but
-must not create/update/delete:
-
-- `lyrics` song documents
-- `lyricsSetlists`
-- `karaokeControl`
-- `karaoke`
-- `performanceSessions` or their host activity subcollections
-- `noteSettings`
-- `liveLyrics`
-
-Owner/Admin operation must continue to work.
-
-## Rollout order
-
-1. Obtain the exact current production Firestore rules.
-2. Merge the hardening fragment into that exact file.
-3. Emulator-test the complete rules.
-4. Publish rules.
-5. Confirm ordinary public request creation and owner LiveSuite still work.
-6. Enable the staged capability wrapper for BillyLee26/LiveKaraoke26 and verify
-   requester note edit/cancel with the deployed rules.
-7. Flip `signup/kiosk-policy.js` to `rulesVerified: true` and cache-bust the kiosk
-   policy references.
-8. Publish the kiosk setlist from LiveSuite Requests.
-9. Test one clearly identified kiosk request before using the iPad with guests.
+Results: 51 complete-rules emulator checks passed; 18 focused unit tests passed.
+Browser/tablet visual testing was not performed for this data/rules change.
+Firebase rules are supplied for manual publication, not deployed by these tests.
