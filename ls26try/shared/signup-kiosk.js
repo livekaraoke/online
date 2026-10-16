@@ -85,7 +85,10 @@
     });
   }
   // Stable base captured while this script executes, independent of async calls.
-  const publicPage=new URL('../../signup/sign%20up.html',document.currentScript.src).href;
+  const scriptUrl=new URL(document.currentScript.src);
+  const publicPage=scriptUrl.hostname==='livesuite.livekaraoke.eu'
+    ? 'https://livekaraoke.eu/signup/sign%20up.html'
+    : new URL('../../signup/sign%20up.html',scriptUrl).href;
   function renderAvailability(){
     const state=document.getElementById('kioskState');if(!state)return;
     const sessionId=window.LK?.sessionTools?.getSessionId?.(),open=window.LK?.topStatus?.getRequestsEnabled?.();
