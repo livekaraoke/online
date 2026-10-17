@@ -40,7 +40,7 @@
 if (typeof document !== 'undefined' && /\/host\/lyricview\.html$/i.test(String(location.pathname || ''))) {
   const load=(src,onload)=>{const script=document.createElement('script');script.src=src;script.async=false;if(onload)script.addEventListener('load',onload,{once:true});(document.head||document.documentElement).appendChild(script);};
   load('../shared/lyricview-follow-polish.js?v=20261006-follow-polish-v1',()=>{
-    load('../shared/lyricview-follow-refinements-v2.js?v=20261013-follow-refinements-v4',()=>{
+    load('../shared/lyricview-follow-refinements-v2.js?v=20261017-scroll-v1',()=>{
       load('../shared/lyricview-improv-timeline-sync-v2.js?v=20261006-improv-timeline-v3',()=>{
         load('../shared/lyricview-inline-markers-v1.js?v=20261006-inline-markers-v1',()=>{
           load('../shared/lyricview-note-styles-v1.js?v=20261006-note-styles-v1',()=>{

@@ -8,7 +8,7 @@
 #bestNextOpen strong,#bestNextOpen b,#bestNextOpen small{flex:none}
 #bestNextOpen .best-next-title{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;text-align:left}
 #bestNextOpen small{font-size:11px;color:#b5d9ce}
-#lyricBestNextStrip{padding:3px 12px;min-width:0}
+#lyricBestNextStrip{order:2;position:relative;padding:3px 12px;min-width:0}
 #lyricBestNextStrip #bestNextOpen{width:100%;height:44px}
 #libraryRecommendationTools{display:flex;align-items:center;gap:8px;margin:0 0 6px;min-width:0}
 #libraryRecommendationTools #bestNextOpen{width:330px;max-width:calc(100% - 180px)}

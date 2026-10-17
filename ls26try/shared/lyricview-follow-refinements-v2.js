@@ -143,7 +143,7 @@
     const first = document.querySelector('#lyricsContent .host-section[data-section-index="0"],#lyricsContent .host-section,.host-section[data-section-index="0"],.host-section');
     if (!first) return;
     if (startScrollFrame !== null) cancelAnimationFrame(startScrollFrame);
-    const sticky = $('hostStickyStack') || $('ls26StickyHeader');
+    const sticky = $('ls26StickyHeader') || $('hostStickyStack');
     const stickyBottom = sticky ? sticky.getBoundingClientRect().bottom : 0;
     const from = Number(window.scrollY || window.pageYOffset || 0);
     const to = Math.max(0, from + first.getBoundingClientRect().top - stickyBottom - 10);

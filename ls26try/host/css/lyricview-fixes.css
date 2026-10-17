@@ -1803,10 +1803,10 @@ body.host-lyric-view-page {
    STICKY GUITAR TUNING CARD — 2026-09-28
    ========================================================= */
 .host-guitar-tuning-card{
-  position:fixed!important;
-  top:calc(var(--ls-stack-h,var(--lv-stack-h)) + var(--ls26-karaoke-tools-h,0px) + 14px)!important;
-  left:50%!important;
-  z-index:1750!important;
+  position:relative!important;
+  top:auto!important;
+  left:auto!important;
+  z-index:auto!important;
   display:grid!important;
   justify-items:center!important;
   width:min(350px,calc(100% - 44px))!important;
@@ -1817,8 +1817,7 @@ body.host-lyric-view-page {
   border-radius:10px!important;
   background:linear-gradient(145deg,rgba(5,31,43,.97),rgba(3,18,27,.97))!important;
   box-shadow:0 8px 26px rgba(0,0,0,.34),0 0 18px rgba(0,202,250,.07)!important;
-  transform:translateX(-50%)!important;
-  transition:opacity .16s ease,transform .16s ease,visibility .16s ease!important;
+  transform:none!important;
 }
 .host-guitar-tuning-spacer{
   height:86px!important;
@@ -1846,12 +1845,6 @@ body.host-lyric-view-page {
   font-weight:850!important;
   letter-spacing:.045em!important;
   text-align:center!important;
-}
-.host-guitar-tuning-card.past-tuning-window{
-  opacity:0!important;
-  visibility:hidden!important;
-  pointer-events:none!important;
-  transform:translate(-50%,-8px)!important;
 }
 @media(max-width:700px){
   .host-guitar-tuning-card{
@@ -2428,9 +2421,9 @@ body.host-lyric-view-page {
 .host-lyric-view-page .performance-requester-status:empty{display:none!important}
 
 #performanceQuickInfo.performance-quick-info{
-  position:sticky!important;
-  top:var(--ls-stack-h,var(--lv-stack-h))!important;
-  z-index:1900!important;
+  position:relative!important;
+  top:auto!important;
+  z-index:1!important;
   overflow:visible!important;
 }
 .host-lyric-view-page .performance-quick-karaoke,
@@ -2464,13 +2457,6 @@ body.host-lyric-view-page {
 
 
 /* 2026-09-29 performance-window release + end-session state */
-#performanceQuickInfo.past-karaoke-tools-window{
-  opacity:0!important;
-  visibility:hidden!important;
-  pointer-events:none!important;
-  transform:translateY(-6px)!important;
-  transition:opacity .16s ease,transform .16s ease,visibility .16s ease!important;
-}
 .host-end-completion-panel .host-end-action:disabled{
   opacity:.28!important;
   filter:grayscale(.72)!important;
