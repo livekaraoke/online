@@ -80,6 +80,19 @@
     category.value = noteCategory;
   }
 
+  // BEST NEXT is a temporary ranked view, not a persisted sort preference.
+  function recommendationOrder() {
+    return $("rotationFilter")?.value === "best" || filters.sort.value === "recommended";
+  }
+  function changeRotation(value) {
+    if($("rotationFilter"))$("rotationFilter").value=value;
+    window.LS26BestNext?.filter(value);
+  }
+  function changeSort() {
+    if($("rotationFilter")?.value === "best")changeRotation("all");
+    if(filters.sort.value === "title")$("stickyFavToggle").checked=false;
+  }
+
   function compareTitles(a, b) {
     // Keep song ordering intact; sort numbered notes as 1.2, 1.3, 1.10.
     return personalNote(a) && personalNote(b)
@@ -104,6 +117,7 @@
       visibility: filters.visibility?.value || "",
       content: filters.content?.value || "",
       sort: filters.sort?.value || "title",
+      sortExplicit: true,
       setlist: filters.setlist?.value || "",
       stickyFavs: $("stickyFavToggle")?.checked || false,
       genre: filters.genre.value, decade: filters.decade.value, bpmMin: filters.bpmMin.value, bpmMax: filters.bpmMax.value, scope, selectedId,
@@ -131,7 +145,7 @@
     if (filters.search) filters.search.value = restoredState.search || "";
     if (filters.visibility) filters.visibility.value = restoredState.visibility || "";
     if (filters.content) filters.content.value = restoredState.content || "";
-    if (filters.sort) filters.sort.value = restoredState.sort || "title";
+    if (filters.sort) filters.sort.value = restoredState.sort === "recommended" && !restoredState.sortExplicit ? "title" : (restoredState.sort || "title");
     if ($("stickyFavToggle")) $("stickyFavToggle").checked = !!restoredState.stickyFavs;
   }
 
@@ -337,7 +351,7 @@
         matchesSetlist;
     });
 
-    if (filters.sort.value === "recommended") {
+    if (recommendationOrder()) {
       list.sort((a,b)=>(window.LS26BestNext?.compare(a,b)||0)||compareTitles(a,b));
     } else if ($("stickyFavToggle").checked) {
       list.sort((a, b) =>
@@ -406,7 +420,7 @@
       const group = groupFor(song.title);
       groups.add(group);
 
-      if (filters.sort.value !== "recommended" && group !== lastGroup) {
+      if (!recommendationOrder() && group !== lastGroup) {
         const header = document.createElement("div");
         header.className = "letter-row";
         header.id = `letter-${group === "#" ? "number" : group}`;
@@ -470,7 +484,7 @@
         '<div class="empty-state">No songs match the current filters.</div>';
     }
 
-    renderAlphabetNav(filters.sort.value === "recommended" ? new Set() : groups);
+    renderAlphabetNav(recommendationOrder() ? new Set() : groups);
     updateSelected();
     const session=window.LK?.sessionTools?.getSession?.()||{},pub=window.LK?.sessionTools?.getPublicList?.()||{};
     const sessionList=setlists.find(x=>x.id===(session.setlistId||session.publicSetlistId||pub.setlistId));
@@ -689,7 +703,7 @@
     finally{button.disabled=false;}
   }
   $("libraryScrollTop").onclick=()=>$("songRows").scrollTo({top:0,behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"instant":"smooth"});
-  document.querySelectorAll('[data-scope]').forEach(button=>button.onclick=()=>{scope=button.dataset.scope;filters.setlist.value='';render();saveViewState();});
+  document.querySelectorAll('[data-scope]').forEach(button=>button.onclick=()=>{scope=button.dataset.scope;if(scope==='all' && $('rotationFilter')?.value==='best')changeRotation('all');filters.setlist.value='';render();saveViewState();});
   filters.setlist.addEventListener('change',()=>{scope='all';render();saveViewState();});
   document.querySelectorAll('[data-bpm]').forEach(button=>button.onclick=()=>{const [id,delta]=button.dataset.bpm.split(':');const input=$(id);input.value=Math.max(0,Math.min(400,(Number(input.value)||100)+Number(delta)));input.dispatchEvent(new Event('input'));});
   $("songRows").addEventListener('scroll',saveViewState,{passive:true});
@@ -732,6 +746,7 @@
     element?.addEventListener(
       element.tagName === "INPUT" ? "input" : "change",
       () => {
+        if(element === filters.sort)changeSort();
         render();
         saveViewState();
       }
@@ -760,8 +775,7 @@
 
   window.addEventListener('ls26:rotation-updated',()=>{if(songs.length)render();});
   $('rotationFilter')?.addEventListener('change',event=>{
-    window.LS26BestNext?.filter(event.target.value);
-    if(event.target.value==='best'){filters.sort.value='recommended';$('stickyFavToggle').checked=false;}
+    changeRotation(event.target.value);
     render();saveViewState();
   });
   $("clearFiltersBtn").onclick = () => {

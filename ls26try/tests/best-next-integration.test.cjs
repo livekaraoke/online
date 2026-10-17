@@ -32,3 +32,9 @@ test('Library rotation filters intersect existing filter pipeline and Recommende
 });
 test('LyricView history and current-song change update without DB reads',async()=>{const f=await setup('host/lyricview.html');assert.ok(f.document.getElementById('bestNextSongHistory'));assert.equal(f.document.querySelector('#bestNextRows [data-use-next="a"]'),null);assert.match(f.document.getElementById('bestNextSongHistory').textContent,/Reflections/);f.window.dispatchEvent(new f.window.CustomEvent('ls26:current-song',{detail:{songId:'b'}}));assert.match(f.document.getElementById('bestNextSongHistory').textContent,/1 venue gig ago/);assert.equal(f.stats().reads,1);});
 test('Sign out detaches live listener and clears derived songs/history',async()=>{const f=await setup();await f.auth(null);assert.equal(f.stats().unsubscribes,1);assert.equal(f.window.LS26BestNext.get('a'),undefined);assert.match(f.document.getElementById('bestNextStatus').textContent,/Sign in/);});
+
+test('Recommendations do not occupy the approved LyricView header; library tools are separate',async()=>{
+ const f=await setup('host/lyricview.html');assert.equal(f.document.querySelector('.host-song-actions #bestNextOpen'),null);assert.ok(f.document.querySelector('#lyricBestNextStrip #bestNextOpen'));
+ assert.deepEqual([...f.document.querySelector('.host-song-actions').children].map(e=>e.id),['quickEditSongBtn','songInfoBtn','songActionsBtn','songActionsMenu']);
+ const l=await setup();assert.ok(l.document.querySelector('#libraryRecommendationTools #bestNextOpen'));assert.ok(l.document.querySelector('#libraryRecommendationTools #rotationFilter'));assert.equal(l.document.querySelector('.library-scope #rotationFilter'),null);
+});

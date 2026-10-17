@@ -2,7 +2,7 @@
  * metronome state; it creates no parallel playback or Firestore state. */
 (() => {
   'use strict';
-  if(!/\/host\/lyricview\.html$/i.test(String(location.pathname||''))||window.__ls26PerformanceControlCards)return;
+  if(!/\/host\/lyricview(?:\.html)?\/?$/i.test(String(location.pathname||''))||window.__ls26PerformanceControlCards)return;
   window.__ls26PerformanceControlCards=true;
   const SYNC_KEY='ls26:syncSingerScroll';
   try{if(localStorage.getItem(SYNC_KEY)===null)localStorage.setItem(SYNC_KEY,'true');}catch(_){}
