@@ -1,0 +1,35 @@
+name: Sync private LiveSuite deployment mirror
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: dispatch-livesuite-main
+  cancel-in-progress: false
+
+jobs:
+  dispatch:
+    if: github.repository == 'livekaraoke/online'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Request latest main snapshot sync
+        env:
+          GH_TOKEN: ${{ secrets.LIVESUITE_SYNC_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -z "$GH_TOKEN" ]]; then
+            echo "::error::Add LIVESUITE_SYNC_TOKEN to online Actions secrets: fine-grained token for LiveSuite only, Actions read/write."
+            exit 1
+          fi
+          # No source SHA input: the receiver always clones latest main, so
+          # delayed/retried dispatches cannot request an older snapshot.
+          gh api --method POST \
+            repos/livekaraoke/LiveSuite/actions/workflows/sync-online.yml/dispatches \
+            -f ref=main
+          echo "Private LiveSuite sync requested; check its Actions run for completion." >> "$GITHUB_STEP_SUMMARY"
