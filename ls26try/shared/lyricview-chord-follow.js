@@ -79,7 +79,7 @@ html.ls26-hide-active-chord .host-section-body .ls26-active-chord{outline:none!i
   const visualLabel=document.createElement('label'),beat1Label=document.createElement('label');visualLabel.className=beat1Label.className='chord-follow-card-check';
   visualLabel.append(visualCheck,document.createTextNode('Visual Beat Flash'));beat1Label.append(beat1OnlyCheck,document.createTextNode('Beat 1 Flash Only'));
   const optionsRow=document.createElement('div');optionsRow.className='chord-follow-card-options';optionsRow.append(visualLabel,beat1Label);
-  card.id='chordFollowFloatCard';card.className='performance-chord-follow';card.setAttribute('aria-label','Chord Follow controls');card.append(head,optionsRow,label);(document.getElementById('lyricControlRail')||document.body).prepend(card);
+  card.id='chordFollowFloatCard';card.className='performance-chord-follow';card.setAttribute('aria-label','Chord Follow controls');card.append(head,optionsRow,label);document.body.append(card);
 
   const startCard=document.createElement('div'),startLabel=document.createElement('span'),startConfirm=document.createElement('button'),startCancel=document.createElement('button');
   startCard.id='ls26StartHereCard';startCard.hidden=true;startCard.setAttribute('role','dialog');startCard.setAttribute('aria-label','Choose song start');
@@ -126,7 +126,7 @@ html.ls26-hide-active-chord .host-section-body .ls26-active-chord{outline:none!i
   async function load(){if(loaded)return result;if(pending)return pending;pending=store.load(songId,getSong()).then(value=>{loaded=true;result=value;return value;}).finally(()=>{pending=null;});return pending;}
   function clearActive(){for(const node of nodes.values())node.classList.remove('ls26-active-chord');}
   function clear(){clearActive();current=null;}
-  function placeCard(){if(card.hidden||card.parentElement?.id==='lyricControlRail')return;const nav=document.querySelector('.host-nav-pad'),rect=nav?.getBoundingClientRect?.();const right=rect?Math.max(12,window.innerWidth-rect.right):14;const bottom=rect?Math.max(100,window.innerHeight-rect.top+10):220;card.style.right=right+'px';card.style.bottom=bottom+'px';}
+  function placeCard(){if(card.hidden)return;const nav=document.querySelector('.host-nav-pad'),rect=nav?.getBoundingClientRect?.();const right=rect?Math.max(12,window.innerWidth-rect.right):14;const bottom=rect?Math.max(100,window.innerHeight-rect.top+10):220;card.style.right=right+'px';card.style.bottom=bottom+'px';}
   function setControlsVisible(value,{persist=true,broadcast=false}={}){controlsVisible=Boolean(value);card.hidden=!controlsVisible;if(persist)writeControlsPreference(controlsVisible);if(controlsVisible)window.requestAnimationFrame?.(placeCard);if(broadcast)window.dispatchEvent(new CustomEvent('ls26:chord-follow-controls-visibility',{detail:{visible:controlsVisible,source:'follow-card'}}));}
   function songPlaying(){return getAudio()?.snapshot?.().state==='playing'||Boolean(window.LS26Performance?.isScrolling?.());}
   function stateLabel(){button.setAttribute('aria-pressed',String(wanted));button.classList.toggle('active',wanted);button.textContent=wanted?'FOLLOW: ON':'FOLLOW: OFF';button.setAttribute('aria-label',wanted?'Chord Follow on':'Chord Follow off');rejoin.hidden=!on||!manual;reset.hidden=!on;if(controlsVisible)window.requestAnimationFrame?.(placeCard);}

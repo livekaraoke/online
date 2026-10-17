@@ -713,11 +713,26 @@
   }
 
   function updateGuitarTuningStickyState() {
-    // Tuning is a normal-flow member of the performance row.
-    $("guitarTuningCard")?.classList.remove("past-tuning-window");
+    const card = $("guitarTuningCard");
+    if (!card || card.hidden) return;
+    const firstSection = sectionEls[0] || null;
+    if (!firstSection) {
+      card.classList.remove("past-tuning-window");
+      return;
+    }
+
+    // Release exactly when the first visible section reaches the fixed tuning
+    // card, rather than using the much lower lyric activation line.
+    const cardBottom = card.getBoundingClientRect().bottom;
+    const firstTop = firstSection.getBoundingClientRect().top;
+    card.classList.toggle("past-tuning-window", firstTop <= cardBottom + 3);
   }
 
-  function guitarTuningStickyHeight() { return 0; }
+  function guitarTuningStickyHeight() {
+    const card = $("guitarTuningCard");
+    if (!card || card.hidden || card.classList.contains("past-tuning-window")) return 0;
+    return Math.ceil(card.getBoundingClientRect().height || 0) + 8;
+  }
 
   async function loadSectionTitleDefaultsForView() {
     try {
@@ -1048,6 +1063,7 @@
     const header=document.getElementById("ls26StickyHeader");
     const quick=document.getElementById("performanceQuickInfo");
     return (header?.getBoundingClientRect().height||0)
+      +(quick&&!quick.classList.contains("ls26-released")?quick.getBoundingClientRect().height:0)
       +guitarTuningStickyHeight()
       +sectionActivationOffset();
   }
@@ -1334,13 +1350,24 @@
   function setQuickToolsReleased(released = false) {
     const quick=$("performanceQuickInfo");
     if (!quick) return;
-    quick.classList.remove("past-karaoke-tools-window");
+    quick.classList.toggle("past-karaoke-tools-window", Boolean(released));
     syncQuickToolsHeight();
   }
 
   function updateQuickToolsStickyState() {
-    // Karaoke Tools scrolls with the complete performance reference block.
-    setQuickToolsReleased(false);
+    const quick=$("performanceQuickInfo");
+    const secondIndex=secondVisibleSectionIndex();
+    const secondSection=secondIndex >= 0 ? sectionEls[secondIndex] : null;
+    if (!quick || !secondSection) {
+      setQuickToolsReleased(false);
+      return;
+    }
+
+    // The Live Karaoke tools stay until the second visible section physically
+    // reaches the sticky tools card.
+    const quickBottom=quick.getBoundingClientRect().bottom;
+    const secondTop=secondSection.getBoundingClientRect().top;
+    setQuickToolsReleased(secondTop <= quickBottom + 3);
   }
 
   function beginCurrentSectionEndPause(index) {
@@ -1409,7 +1436,7 @@
     const quick=document.getElementById('performanceQuickInfo');
     setQuickToolsReleased(secondVisibleSectionIndex() >= 0 && currentSectionIndex >= secondVisibleSectionIndex());
     const header=document.getElementById('ls26StickyHeader');
-    const offset=(header?.getBoundingClientRect().height||0)+guitarTuningStickyHeight()+sectionActivationOffset();
+    const offset=(header?.getBoundingClientRect().height||0)+(currentSectionIndex===0&&!quick?.classList.contains('ls26-released')?(quick?.getBoundingClientRect().height||0):0)+guitarTuningStickyHeight()+sectionActivationOffset();
     sectionPauseStartsAt=0;
     sectionPauseUntil=0;
     clearSectionPauseCountdown();
@@ -3182,20 +3209,20 @@
 })();
 
 /************************************************************
- * CANONICAL HEADER MEASUREMENT
- * The in-flow sticky shell owns navigation, status, title and Best Next.
- * Legacy offset aliases all receive this same rendered height; no body spacer.
+ * FIXED TWO-ROW HEADER STACK SYNC
+ * Measures the wrapper containing BOTH the song-title bar and
+ * the loaded top-status bar. The page and drawer are offset by
+ * that exact height. Keep this block after the main lyric code.
  ************************************************************/
 (function initHostStickyStack(){
   function syncHostStickyStack(){
-    const stack = document.getElementById("ls26StickyHeader") || document.getElementById("hostStickyStack");
+    const stack = document.getElementById("hostStickyStack");
     if (!stack) return;
 
     const h = Math.ceil(stack.getBoundingClientRect().height || 0);
     const safeHeight = Math.max(h, 58);
     document.documentElement.style.setProperty("--host-sticky-stack-height", safeHeight + "px");
     document.documentElement.style.setProperty("--lv-stack-h", safeHeight + "px");
-    document.documentElement.style.setProperty("--ls-stack-h", safeHeight + "px");
   }
 
   window.syncHostStickyStack = syncHostStickyStack;

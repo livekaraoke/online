@@ -847,7 +847,25 @@
     $("tsRunOrderDetailsModal")?.classList.add("hidden");
   }
 
+  // The recommendation card belongs to this panel, outside the queue list so
+  // empty-state rendering and queue updates cannot remove it.
+  function renderBestNextRunOrder() {
+    const list = $("tsRunOrderList");
+    if (!list || !window.LS26BestNext) return;
+    let card = $("tsRunOrderBestNext");
+    if (!card) {
+      card = document.createElement("section");
+      card.id = "tsRunOrderBestNext";
+      card.className = "ts-best-next";
+      card.setAttribute("aria-label", "Best Next song");
+      list.before(card);
+    }
+    window.LS26BestNext.renderRunOrder(card);
+  }
+  window.addEventListener("ls26:rotation-updated", renderBestNextRunOrder);
+
   function renderRunOrder() {
+    renderBestNextRunOrder();
     const list = $("tsRunOrderList");
     if (!list) return;
 

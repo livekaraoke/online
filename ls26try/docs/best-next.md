@@ -1,7 +1,7 @@
 # Best Next / venue rotation — 17 October 2026
 
 Implementation is committed for the existing app, not a new application or queue.
-Live acceptance remains pending Cloudflare Access authorization. Public-site
+Live/tablet acceptance remains with the owner; browser verification is not claimed. Public-site
 `_config.yml` exclusions are deliberately unchanged. Correct host supplied by the
 owner: https://livesuite.livekaraoke.eu/ls26try/ .
 
@@ -35,14 +35,17 @@ owner: https://livesuite.livekaraoke.eu/ls26try/ .
    venue session normally. Its venue automatically controls recommendations.
 2. In Library, the rotation dropdown offers ALL, BEST NEXT, FRESH HERE,
    RECENT HERE (includes TOO SOON), and NEVER PLAYED HERE. These intersect all
-   existing search/artist/key/genre/setlist filters. BEST NEXT also selects
-   Recommended sorting; it overrides Favourites first while active. Other
-   sorts/scopes remain available. Clear filters resets rotation to ALL.
+   existing search/artist/key/genre/setlist filters. BEST NEXT is explicitly ranked. Other rotation filters retain Title A–Z
+   unless Recommended is explicitly selected. Title A–Z exits the ranked view;
+   Clear filters resets rotation to ALL and sorting to Title A–Z.
 3. Open a song in LyricView and use existing Play/finish controls normally.
    Current-song and recorded/playing/played songs cannot recommend themselves.
-4. The BEST NEXT button shows the leading song, score and badge. Tap it to
-   open the non-modal top-five panel. The end-of-song preview also has USE NEXT
-   and SHOW 5. The panel scrolls internally and closes with X or Escape.
+4. Expand the session/status area and select RUN ORDER. BEST NEXT appears
+   directly below ADD SONG / ADD REQUEST and above the entries, including when
+   the queue is empty. The card shows title, score, badge and one reason. USE NEXT
+   queues the suggestion; SHOW 5 opens the existing recommendation panel. Library
+   retains its BEST NEXT button. The panel closes with X or Escape. No separate
+   BEST NEXT strip or end preview is added to LyricView.
 5. USE NEXT promotes an existing queued song (preserving its requester) or
    inserts a new entry before the first queued item. Playing/completed entries
    remain in place. It uses the existing Run Order transaction; it does not
@@ -153,3 +156,17 @@ archive corrected by another device; use Refresh History then.
 
 Run focused tests with Node and Linkedom available via LS26_TEST_NODE_MODULES:
 `node --test ls26try/tests/song-rotation.test.cjs ls26try/tests/best-next-integration.test.cjs ls26try/tests/performance-timing.test.cjs ls26try/tests/timing-persistence.test.cjs`
+
+## LyricView restoration / Run Order relocation
+
+Compared against e9ac3893638d3184494f5774a6bbaac461522c31. Reversed only
+the subsequent layout hunks: title/stack relocation, tuning/tools flow changes,
+new offset calculation, and the control rail/gutter. Removed lyricview-layout.css.
+Restored baseline window scrolling, tuning/tools release thresholds and floating
+controls. Retained the extensionless performance-controls route guard and the
+current-song event. Engine, Library ordering, session writes and pipeline unchanged.
+
+Run Order tooling owns tsRunOrderBestNext immediately before tsRunOrderList.
+It refreshes from the existing rotation-updated event without additional reads.
+58 focused engine/adapter/route/timing/baseline-restoration tests pass. These are
+in-memory DOM and source checks, not live browser or tablet scroll verification.

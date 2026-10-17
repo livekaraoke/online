@@ -249,4 +249,5 @@ lyricsviewer.js: additive rotation filter, badges and Recommended sort.
 top-statusbar-session-tools.js enqueueSong(song, {next:true}): transactionally
 promotes/reuses a queued entry; default append callers remain unchanged.
 lyricview.js: publishes resolved current song ID; playback logic unchanged.
+Run Order owns the inline BEST NEXT card below ADD SONG / ADD REQUEST; no LyricView strip.
 See docs/best-next.md for scoring, limits, tests and pending live acceptance.

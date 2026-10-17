@@ -1,23 +1,14 @@
-/* Structural and simulated-geometry tests, not browser rendering tests. */
-const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('fs'),vm=require('vm');
-const {parseHTML}=require(require.resolve('linkedom',{paths:[process.env.LS26_TEST_NODE_MODULES]}));
-const read=p=>fs.readFileSync(__dirname+'/../'+p,'utf8');
-test('Performance setup retains title and Best Next together inside the canonical shell',()=>{
- const {document}=parseHTML(read('host/lyricview.html'));
- const header=document.createElement('div');header.id='ls26StickyHeader';document.body.prepend(header);header.append(document.getElementById('topStatusContainer'));
- const strip=document.createElement('div');strip.id='lyricBestNextStrip';document.getElementById('hostStickyStack').append(strip);
- let script=read('shared/performance.js');script=script.slice(0,script.indexOf("    const drawer=$('songInfoDrawer');"))+'}\nsetup();})();';vm.runInNewContext(script,{document});
- assert.equal(strip.parentElement.id,'hostStickyStack');assert.equal(strip.parentElement.parentElement.id,'ls26StickyHeader');assert.ok(header.querySelector('.host-view-topbar'));assert.ok(document.querySelector('#lyricControlRail .host-nav-pad'));
+/* Baseline restoration assertions; these do not claim browser rendering coverage. */
+const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('fs'),cp=require('node:child_process');
+const root=__dirname+'/../..',read=p=>fs.readFileSync(root+'/ls26try/'+p,'utf8');
+const baseline=p=>cp.execFileSync('git',['show','e9ac3893638d3184494f5774a6bbaac461522c31:ls26try/'+p],{cwd:root,encoding:'utf8'});
+test('Baseline positioning and playback integrations restored exactly',()=>{
+ for(const p of ['host/css/lyricview-fixes.css','shared/performance.js','shared/lyricview-chord-follow.js','shared/lyricview-follow-refinements-v2.js','shared/performance-tempo.js'])assert.equal(read(p),baseline(p),p);
+ const view=read('host/js/lyricview.js').replace('      window.dispatchEvent(new CustomEvent("ls26:current-song",{detail:{songId:doc.id}}));\n','');assert.equal(view,baseline('host/js/lyricview.js'));
 });
-test('Every legacy offset alias measures the full shell at top/mid/end and resize',()=>{
- const {document}=parseHTML('<html><body><div id="ls26StickyHeader"></div><div id="hostStickyStack"></div></body></html>');
- let height=290;document.getElementById('ls26StickyHeader').getBoundingClientRect=()=>({height,bottom:height});document.getElementById('hostStickyStack').getBoundingClientRect=()=>({height:130});
- const source=read('host/js/lyricview.js');const start=source.indexOf('  function syncHostStickyStack(){');const end=source.indexOf('  function bindObservers(){',start);const window={};vm.runInNewContext(source.slice(start,end),{document,window});
- for(const scrollY of [0,250,900,1800,4000,900,0]){window.scrollY=scrollY;window.syncHostStickyStack();for(const key of ['--lv-stack-h','--ls-stack-h','--host-sticky-stack-height'])assert.equal(document.documentElement.style.getPropertyValue(key),'290px');}
- height=350;window.syncHostStickyStack();assert.equal(document.documentElement.style.getPropertyValue('--ls-stack-h'),'350px');
-});
-test('Non-sticky reference controls contribute no fixed activation height',()=>{
- const {document}=parseHTML('<html><body><div id="guitarTuningCard"></div></body></html>');const source=read('host/js/lyricview.js'),start=source.indexOf('  function updateGuitarTuningStickyState()'),end=source.indexOf('  async function loadSectionTitleDefaultsForView()',start);
- const ctx={document,$:id=>document.getElementById(id)};vm.createContext(ctx);vm.runInContext(source.slice(start,end)+'\nresult=guitarTuningStickyHeight();',ctx);assert.equal(ctx.result,0);
- const styles=read('host/css/lyricview-fixes.css');assert.match(styles,/\.host-guitar-tuning-card\{\s*position:relative/);assert.match(styles,/#performanceQuickInfo\.performance-quick-info\{\s*position:relative/);
+test('Original LyricView markup preserved apart from resource versions and Best Next resources',()=>{
+ const clean=s=>s.replace(/<(?:script|link)\b[^>]*(?:best-next|song-rotation)[^>]*>(?:<\/script>)?/g,'').replace(/\?v=[^"\s]+/g,'');
+ assert.equal(clean(read('host/lyricview.html')),clean(baseline('host/lyricview.html')));
+ assert.equal(fs.existsSync(root+'/ls26try/host/css/lyricview-layout.css'),false);
+ assert.doesNotMatch(read('shared/best-next.js'),/hostStickyStack|host-song-actions|lyricBestNextStrip|bestNextPreview/);
 });

@@ -12,8 +12,7 @@
     const infoAction=$('songInfoBtn');
     title.querySelector('.ls26-actions')?.remove();
     if(infoAction)infoAction.hidden=false;
-    // One sticky owner: preserve the title/Best Next wrapper and its selectors.
-    header.append(stack);
+    header.append(title);
     const drawer=$('songInfoDrawer');
     const karaoke=$('performanceQuickInfo');
     const karaokeCard=$('sendToKaraokeBtn')?.closest('.song-info-card');
@@ -116,7 +115,7 @@
     $('ls26BpmMinus').onclick=()=>{window.LS26Performance?.setBpm(Number($('ls26CurrentBpm').value)-1);sync();};$('ls26BpmPlus').onclick=()=>{window.LS26Performance?.setBpm(Number($('ls26CurrentBpm').value)+1);sync();};
     $('ls26ResetBpm').onclick=()=>{const song=window.LS26Performance?.song();if(Number(song?.originalBpm)>0)LS26Performance.setBpm(song.originalBpm);sync();};
 
-    function measure(){window.syncHostStickyStack?.();const h=header?.getBoundingClientRect().height||0;document.documentElement.style.setProperty('--ls-drawer-top',(h+6)+'px');const dock=document.querySelector('.host-bottom-dock'),height=dock?.getBoundingClientRect().height||100;document.documentElement.style.setProperty('--ls-dock-h',height+'px');document.documentElement.style.setProperty('--ls-drawer-bottom',Math.max(12,innerHeight-(dock?.getBoundingClientRect().top||innerHeight)+12)+'px');}
+    function measure(){const h=header?.getBoundingClientRect().height||0;document.documentElement.style.setProperty('--ls-stack-h',h+'px');document.documentElement.style.setProperty('--ls-drawer-top',(h+6)+'px');const dock=document.querySelector('.host-bottom-dock'),height=dock?.getBoundingClientRect().height||100;document.documentElement.style.setProperty('--ls-dock-h',height+'px');document.documentElement.style.setProperty('--ls-drawer-bottom',Math.max(12,innerHeight-(dock?.getBoundingClientRect().top||innerHeight)+12)+'px');}
     new MutationObserver(()=>{infoAction?.setAttribute('aria-expanded',String(drawer.classList.contains('open')));measure();}).observe(drawer,{attributes:true,attributeFilter:['class']});
     const observer=new ResizeObserver(measure);observer.observe(stack);if(header)observer.observe(header);const dock=document.querySelector(".host-bottom-dock");if(dock)observer.observe(dock);window.addEventListener("resize",measure);measure();
     window.addEventListener('ls26:song-ready',()=>{applyStartup();sticky();});
