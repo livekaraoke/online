@@ -240,3 +240,13 @@ ADDED admin-new/js/dashboard26.js: moves existing live badge into profile area a
 UPDATED admin-new/admin.html: LIVE SESSION heading, Public Song List moved into session, dashboard title and theme references.
 PRESERVED all existing application IDs, controls, inline handlers, script dependencies, authentication gate, sidebar destinations, request/session/profile/member operations. No backend function removed.
 VALIDATED static preservation of 112 application IDs, 77 controls, 44 inline handlers, 24 original script references; JavaScript syntax checked. Live authenticated/Firebase behavior not tested.
+
+2026-10-17 VENUE ROTATION / BEST NEXT
+shared/song-rotation.js: pure indexed archive history and deterministic scoring.
+shared/best-next.js/css: scoped history cache, current performedSongs listener,
+non-modal recommendations, venue history and local threshold/tempo preferences.
+lyricsviewer.js: additive rotation filter, badges and Recommended sort.
+top-statusbar-session-tools.js enqueueSong(song, {next:true}): transactionally
+promotes/reuses a queued entry; default append callers remain unchanged.
+lyricview.js: publishes resolved current song ID; playback logic unchanged.
+See docs/best-next.md for scoring, limits, tests and pending live acceptance.

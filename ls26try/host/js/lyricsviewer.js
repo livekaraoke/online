@@ -204,6 +204,7 @@
         };
       });
 
+      window.LS26BestNext?.setSongs(songs);
       populateExtraFilters();
       populateFilters();
       populateSetlists();
@@ -328,7 +329,7 @@
         (!filters.decade.value||Math.floor(Number(song.year)/10)*10===Number(filters.decade.value)) &&
         (!filters.bpmMin.value||bpm>=Number(filters.bpmMin.value)) && (!filters.bpmMax.value||(bpm>0&&bpm<=Number(filters.bpmMax.value))) &&
         (scope!=='favourites'||favourites.has(song.firebaseId));
-      return extra && matchesSearch &&
+      return (window.LS26BestNext?.matches(song) ?? true) && extra && matchesSearch &&
         matchesArtist &&
         matchesKey &&
         matchesVisibility &&
@@ -336,7 +337,9 @@
         matchesSetlist;
     });
 
-    if ($("stickyFavToggle").checked) {
+    if (filters.sort.value === "recommended") {
+      list.sort((a,b)=>(window.LS26BestNext?.compare(a,b)||0)||compareTitles(a,b));
+    } else if ($("stickyFavToggle").checked) {
       list.sort((a, b) =>
         Number(favourites.has(b.firebaseId)) -
           Number(favourites.has(a.firebaseId)) ||
@@ -403,7 +406,7 @@
       const group = groupFor(song.title);
       groups.add(group);
 
-      if (group !== lastGroup) {
+      if (filters.sort.value !== "recommended" && group !== lastGroup) {
         const header = document.createElement("div");
         header.className = "letter-row";
         header.id = `letter-${group === "#" ? "number" : group}`;
@@ -432,7 +435,7 @@
           class="song-title-cell"
           data-select="${song.firebaseId}"
           type="button">
-          <strong>${LyricsCommon.escapeHTML(song.title)}</strong>
+          <strong>${LyricsCommon.escapeHTML(song.title)}</strong>${note?"":(window.LS26BestNext?.badge(song)||"")}
           <small>${LyricsCommon.escapeHTML(ArtistNames.display(song.artist))}${song.year ? " · "+LyricsCommon.escapeHTML(song.year) : ""}${note ? ` <span class="personal-note-badge" title="${LyricsCommon.escapeHTML(note.label)}">Note · ${LyricsCommon.escapeHTML(note.label)}</span>` : ""}</small>
         </button>
 
@@ -467,7 +470,7 @@
         '<div class="empty-state">No songs match the current filters.</div>';
     }
 
-    renderAlphabetNav(groups);
+    renderAlphabetNav(filters.sort.value === "recommended" ? new Set() : groups);
     updateSelected();
     const session=window.LK?.sessionTools?.getSession?.()||{},pub=window.LK?.sessionTools?.getPublicList?.()||{};
     const sessionList=setlists.find(x=>x.id===(session.setlistId||session.publicSetlistId||pub.setlistId));
@@ -755,7 +758,15 @@
     saveViewState();
   });
 
+  window.addEventListener('ls26:rotation-updated',()=>{if(songs.length)render();});
+  $('rotationFilter')?.addEventListener('change',event=>{
+    window.LS26BestNext?.filter(event.target.value);
+    if(event.target.value==='best'){filters.sort.value='recommended';$('stickyFavToggle').checked=false;}
+    render();saveViewState();
+  });
   $("clearFiltersBtn").onclick = () => {
+    if($('rotationFilter'))$('rotationFilter').value='all';
+    window.LS26BestNext?.filter('all');
     filters.search.value = "";
     filters.artist.value = "";
     filters.key.value = "";

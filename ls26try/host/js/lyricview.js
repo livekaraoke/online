@@ -3155,6 +3155,7 @@
       }
 
       currentSong = { ...(doc.data() || {}), id:doc.id };
+      window.dispatchEvent(new CustomEvent("ls26:current-song",{detail:{songId:doc.id}}));
 
       performanceTempo=LS26PerformanceTempo.create({
         song:currentSong,storage:sessionStorage,key:`ls26:currentBpm:${firebase.app().options.projectId}:${currentSongId}`,

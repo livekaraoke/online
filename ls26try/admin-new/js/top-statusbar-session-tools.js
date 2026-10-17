@@ -1651,7 +1651,7 @@
   }
 
   // Shared Library enqueue command: one transaction, no extra subscriptions.
-  LK.sessionTools.enqueueSong = async song => {
+  LK.sessionTools.enqueueSong = async (song, options = {}) => {
     const sessionId=state.sessionId||"";
     const ref=state.db.collection('karaokeControl').doc('runOrder');
     const item={id:'manual_'+Date.now()+'_'+Math.random().toString(36).slice(2,8),songId:song.firebaseId||song.id,songTitle:song.title||'',artist:song.artist||'',singerName:'',requestId:'',source:'manual',status:'queued',addedAtMs:Date.now()};
@@ -1660,7 +1660,17 @@
       if((state.sessionId||"")!==sessionId)throw new Error('Session changed. Please try again.');
       if(sessionId && data.sessionId && data.sessionId!==sessionId)throw new Error('Run Order belongs to another session.');
       const baseItems=!sessionId&&data.sessionId?[]:(Array.isArray(data.items)?data.items:[]);
-      const items=[...baseItems,item];
+      let items=[...baseItems,item];
+      if(options.next){
+        const terminal=new Set(['playing','played','completed','abandoned','left','declined','deleted','deletedbyhost','cancelled']);
+        if(baseItems.some(entry=>entry.songId===item.songId && (['playing','played','completed'].includes(String(entry.status||'').toLowerCase())||entry.playingAtMs||entry.playedAtMs)))throw Error('This song has already started or played tonight.');
+        // Reuse an existing queued entry, including its requester association.
+        const queued=baseItems.find(entry=>entry.songId===item.songId&&!terminal.has(String(entry.status||'').toLowerCase()));
+        const selected=queued||item;
+        items=baseItems.filter(entry=>entry!==queued);
+        const first=items.findIndex(entry=>!terminal.has(String(entry.status||'').toLowerCase()));
+        items.splice(first<0?items.length:first,0,selected);
+      }
       tx.set(ref,{sessionId,items,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
       return {sessionId,items,item};
     });
