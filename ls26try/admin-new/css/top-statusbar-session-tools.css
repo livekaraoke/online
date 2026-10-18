@@ -3310,3 +3310,43 @@
 .ts-sequence-label{display:block;font-size:11px;letter-spacing:.07em;color:#70d6cf}
 
 .smart-flow{max-height:260px;overflow:auto;overscroll-behavior:contain}
+
+/* Run Order list participates in the existing expanded session scroller.
+   The legacy fixed-height card clipped songs after recommendation tools appeared. */
+#ls26StickyHeader #topStatusBar .host-workflow-tabs-card:has(#tsRunOrderPane:not([hidden])),
+#ls26StickyHeader #topStatusBar #tsRunOrderPane:not([hidden]){
+  height:auto!important;min-height:0!important;max-height:none!important;overflow:visible!important;
+}
+#ls26StickyHeader #topStatusBar #tsRunOrderList{
+  height:auto!important;min-height:0!important;max-height:none!important;overflow:visible!important;
+}
+#topStatusBar .ts-run-order-quickrow{
+  display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:8px;align-items:stretch;min-width:0;margin:7px 0 5px;
+}
+#topStatusBar .ts-run-order-quickrow .ts-best-next,
+#topStatusBar .ts-run-order-quickrow .smart-finish-tools{
+  min-width:0;margin:0!important;padding:8px 10px!important;border:1px solid #285664;border-radius:8px;background:#092b35;
+}
+#topStatusBar .ts-run-order-quickrow .ts-best-next-heading{
+  display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin:0;font-size:15px;
+}
+#topStatusBar .ts-run-order-quickrow .ts-best-next-heading>strong{
+  min-width:0;flex:1 1 130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+#topStatusBar .ts-run-order-quickrow .ts-best-next p{margin:3px 0;font-size:12px;line-height:1.25;overflow-wrap:anywhere}
+#topStatusBar .ts-run-order-quickrow .ts-best-next-actions{display:flex;gap:6px;margin-top:5px}
+#topStatusBar .ts-run-order-quickrow button{min-height:44px}
+#topStatusBar .ts-run-order-quickrow .smart-finish{
+  display:grid;grid-template-columns:minmax(0,1fr) minmax(112px,.85fr);gap:6px;align-content:start;align-items:center;
+}
+#topStatusBar .ts-run-order-quickrow .smart-finish>span{grid-column:1/-1;font-size:12px;line-height:1.3;color:#a6c3cb}
+#topStatusBar .ts-run-order-quickrow .smart-finish button,
+#topStatusBar .ts-run-order-quickrow .smart-finish select{
+  min-width:0;width:100%;min-height:44px;white-space:nowrap;font-size:13px;
+}
+#topStatusBar .ts-run-order-quickrow #smartRunError:empty{display:none}
+#topStatusBar .ts-run-order-quickrow #smartRunError{margin:5px 0 0;font-size:12px}
+#topStatusBar .smart-flow-tools{margin:0 0 6px;padding:2px 9px}
+#topStatusBar .smart-flow-tools summary{min-height:36px;font-size:12px}
+#topStatusBar .smart-flow-tools:not(:has(details[open])){padding-block:0}
+@media(max-width:700px){#topStatusBar .ts-run-order-quickrow{grid-template-columns:1fr}}

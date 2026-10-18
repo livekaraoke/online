@@ -843,14 +843,12 @@
   function renderBestNextRunOrder() {
     const list = $("tsRunOrderList");
     if (!list || !window.LS26BestNext) return;
+    let row = $("tsRunOrderQuickRow");
+    if (!row) { row=document.createElement("div"); row.id="tsRunOrderQuickRow"; row.className="ts-run-order-quickrow"; list.before(row); }
     let card = $("tsRunOrderBestNext");
-    if (!card) {
-      card = document.createElement("section");
-      card.id = "tsRunOrderBestNext";
-      card.className = "ts-best-next";
-      card.setAttribute("aria-label", "Best Next song");
-      list.parentElement.insertBefore(card,$("smartRunTools")||list);
-    }
+    if (!card) { card=document.createElement("section"); card.id="tsRunOrderBestNext"; card.className="ts-best-next"; card.setAttribute("aria-label","Best Next song"); }
+    if (card.parentElement!==row) row.prepend(card);
+    const finish=$("smartRunTools"); if (finish&&finish.parentElement!==row) row.append(finish);
     window.LS26BestNext.renderRunOrder(card);
   }
   window.addEventListener("ls26:rotation-updated", renderBestNextRunOrder);

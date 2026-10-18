@@ -139,6 +139,14 @@
         background:#092218;
         font-weight:900;
       }
+      .ls26-manual-request-dialog .ls26-manual-new-form{display:grid;gap:10px;padding:14px;margin:10px 0;border:1px solid #28677b;border-radius:9px;background:#061e29}
+      .ls26-manual-request-dialog .ls26-manual-new-form[hidden],
+      .ls26-manual-request-dialog .ls26-manual-requester-list[hidden]{display:none!important}
+      .ls26-manual-request-dialog .ls26-manual-new-form label{margin:0;color:#d8eef5;font-weight:800;font-size:16px}
+      .ls26-manual-request-dialog .ls26-manual-new-form input{width:100%;min-height:48px;font-size:18px;border:1px solid #3c8398;border-radius:7px}
+      .ls26-manual-request-dialog .ls26-manual-new-actions{display:flex;gap:8px}
+      .ls26-manual-request-dialog .ls26-manual-new-actions button{flex:1;min-height:46px;font-size:16px}
+      .ls26-manual-request-dialog .ls26-manual-new-actions button[type="submit"]{color:#b3ffd2;border-color:#31945e;background:#103522}
       .ls26-manual-request-dialog .ls26-manual-selected-song{
         margin:0 0 12px;
         padding:10px 12px;
@@ -307,13 +315,6 @@
     return requestRef.id;
   }
 
-  async function promptNewRequester() {
-    if (window.LS26Dialogs?.prompt) {
-      return LS26Dialogs.prompt('Enter the new requester name:','');
-    }
-    return window.prompt('Enter the new requester name:','');
-  }
-
   async function openManualRequestDialog() {
     const sessionId = String(tools()?.getSessionId?.() || '').trim();
     if (!sessionId) {
@@ -341,6 +342,14 @@
         <h3>REQUESTER</h3>
         <p class="ls26-muted">Choose someone who already requested a song in this session, or add a new name.</p>
         <div class="ls26-manual-requester-list" data-manual-requester-list></div>
+        <form class="ls26-manual-new-form" data-manual-new-form hidden>
+          <label for="ls26ManualRequesterName">NEW REQUESTER NAME</label>
+          <input id="ls26ManualRequesterName" type="text" autocomplete="off" maxlength="140" placeholder="Enter name" required>
+          <div class="ls26-manual-new-actions">
+            <button type="button" data-manual-cancel-new>CANCEL</button>
+            <button type="submit">SAVE REQUEST</button>
+          </div>
+        </form>
       </section>
       <p class="ls26-manual-request-status" role="status" data-manual-status></p>
     `;
@@ -350,6 +359,8 @@
     const requesterStep = dialog.querySelector('[data-manual-requester-step]');
     const songList = dialog.querySelector('[data-manual-song-list]');
     const requesterList = dialog.querySelector('[data-manual-requester-list]');
+    const newForm = dialog.querySelector('[data-manual-new-form]');
+    const newName = dialog.querySelector('#ls26ManualRequesterName');
     const search = dialog.querySelector('.ls26-picker-search');
     const listName = dialog.querySelector('[data-manual-list-name]');
     const selectedSongBox = dialog.querySelector('[data-manual-selected-song]');
@@ -381,6 +392,9 @@
       selectedSong = song;
       songStep.hidden = true;
       requesterStep.hidden = false;
+      newForm.hidden = true;
+      requesterList.hidden = false;
+      newName.value = '';
       selectedSongBox.innerHTML = `<small>SELECTED SONG</small><strong>${esc(song.title || song.id)}${song.artist ? ` — ${esc(window.ArtistNames?.display?.(song.artist) || song.artist)}` : ''}</strong>`;
       const names = currentRequesterNames();
       requesterList.innerHTML = `
@@ -406,6 +420,12 @@
     }
 
     search.addEventListener('input', renderSongs);
+    newForm.addEventListener('submit', async event => {
+      event.preventDefault();
+      const name = newName.value.trim();
+      if (!name) { status.textContent = 'Enter a requester name.'; newName.focus(); return; }
+      await saveForRequester(name, newForm.querySelector('[type="submit"]'));
+    });
     dialog.addEventListener('click', async event => {
       const songButton = event.target.closest('[data-manual-song]');
       if (songButton) {
@@ -429,12 +449,18 @@
         return;
       }
 
-      const newButton = event.target.closest('[data-manual-new-requester]');
-      if (newButton) {
-        const name = await promptNewRequester();
-        if (name !== null && String(name).trim()) {
-          await saveForRequester(String(name).trim(), newButton);
-        }
+      if (event.target.closest('[data-manual-cancel-new]')) {
+        newForm.hidden = true;
+        requesterList.hidden = false;
+        status.textContent = '';
+        requesterList.querySelector('[data-manual-new-requester]')?.focus();
+        return;
+      }
+      if (event.target.closest('[data-manual-new-requester]')) {
+        requesterList.hidden = true;
+        newForm.hidden = false;
+        status.textContent = '';
+        newName.focus();
       }
     });
 
