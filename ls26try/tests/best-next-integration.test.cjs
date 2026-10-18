@@ -76,3 +76,20 @@ test('Expanded tools render without performance-area insertion; Finish & Next is
  const finish=d.querySelector('[data-smart-finish]');finish.click();finish.click();await tick();assert.equal(finishes,1);resolve({completed:true,next:{id:'next'}});await tick();assert.equal(opened,1);assert.equal(stopped,1);
  f.setSession({id:'s1',venue:'Reflections',sessionType:'Solo'});assert.equal(d.getElementById('smartSingerRotation'),null);
 });
+
+test('Smart performance scripts resolve to existing shared modules on clean and HTML entry routes',()=>{
+ for(const page of ['library.html','requests.html','host/lyricview.html','host/lyricsviewer.html','host/lyricscreator.html','admin-new/admin.html','admin-new/performance-sessions.html']){
+  const {document}=parseHTML(read(page));
+  for(const route of [page,page.replace(/\.html$/,'')]){
+   const url=new URL('/ls26try/'+route,'https://livesuite.livekaraoke.eu');
+   const base=new URL(document.querySelector('base')?.getAttribute('href')||url.href,url);
+   const scripts=[...document.querySelectorAll('script[src]')].filter(s=>/\/(performance-intelligence|performance-lifecycle|performance-tools-ui|gig-summary)\.js/.test('/'+s.getAttribute('src')));
+   assert.ok(scripts.length>=2,page);
+   for(const script of scripts){
+    const resolved=new URL(script.getAttribute('src'),base);
+    assert.match(resolved.pathname,/^\/ls26try\/shared\//,route+': '+resolved.pathname);
+    assert.ok(fs.existsSync(path.join(root,resolved.pathname.slice('/ls26try/'.length))),resolved.pathname);
+   }
+  }
+ }
+});
