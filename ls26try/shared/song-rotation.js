@@ -21,9 +21,9 @@ function buildIndex(songs,sessions,sessionId='',context={}){
 
  if(context.venueKey?.startsWith('id:')&&context.venue){const n=norm(context.venue);if(!nameIds.has(n))nameIds.set(n,new Set());nameIds.get(n).add(context.venueKey);}
  for(const s of history){
-  let name=venueKey(s);if(!name)continue;const aliases=nameIds.get(name);if(!name.startsWith('id:')&&aliases?.size===1)name=[...aliases][0];
+  let name=venueKey(s)||'__unknownVenue';const aliases=nameIds.get(name);if(!name.startsWith('id:')&&aliases?.size===1)name=[...aliases][0];
   const inAct=!context.act||context.act==='all'||act(s)===norm(context.act);
-  if(!venues.has(name))venues.set(name,{key:name,name:s.venue||s.eventSnapshot?.venue||name,gigs:[],songs:new Map(),incomplete:0});
+  if(!venues.has(name))venues.set(name,{key:name,name:s.venue||s.eventSnapshot?.venue||'Unknown venue',gigs:[],songs:new Map(),incomplete:0});
   const venue=venues.get(name),gig=venue.gigs.length+1;if(inAct)venue.gigs.push(s.id);
   const records=[],seen=new Set();
   for(const r of [...array(s.playedSongsSnapshot),...array(s.performanceLogSnapshot)]){const sid=resolve(r);if(!sid)continue;const k=[sid,r.requestId||'',played(r)].join('|');if(seen.has(k))continue;seen.add(k);records.push({...r,songId:sid});}
@@ -55,7 +55,7 @@ function rank(songs,index,context={},options={}){
   components.requests=stat.requests?Math.min(1,.5+Math.min(stat.requests,5)*.05+Math.min(stat.completedRequests,5)*.05-Math.min(stat.abandonedRequests,3)*.1):.5;
   if(stat.completedRequests)reasons.push(`${stat.completedRequests} completed request${stat.completedRequests===1?'':'s'} here`);
   const artist=norm(song.artist),prevArtist=norm(previous?.artist),sameArtist=!!artist&&artist!=='unknown artist'&&artist===prevArtist,bpm=Number(song.userBpm||song.originalBpm||song.bpm)||0;
-  let flow=.5;if(previous){flow=sameArtist?.2:.8;if(artist&&prevArtist&&!sameArtist)reasons.push('Different artist');}
+  let flow=.5;const knownArtists=artist&&prevArtist&&artist!=='unknown artist'&&prevArtist!=='unknown artist';if(previous&&knownArtists){flow=sameArtist?.2:.8;if(!sameArtist)reasons.push('Different artist');}
   if(bpm&&previousBpm){const delta=bpm-previousBpm;let tempo=Math.abs(delta)<=20?1:.4;if(context.intent==='tempo-up')tempo=delta>0&&delta<=30?1:delta>30?.6:0;if(context.intent==='tempo-down')tempo=delta<0&&delta>=-30?1:delta< -30?.6:0;if(context.intent==='tempo-keep')tempo=Math.max(0,1-Math.abs(delta)/25);flow=(flow+tempo)/2;reasons.push(delta>5?'Tempo ↑':delta< -5?'Tempo ↓':'Similar tempo');}
   components.flow=flow;components.global=global.lastDate?Math.min(1,Math.max(0,(now-global.lastDate)/(90*86400000))):.5;
   const e=energy(song),prevEnergy=energy(previous);components.energy=.5;

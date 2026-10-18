@@ -153,7 +153,7 @@ BPM race. Existing chord test fixture was corrected to use DOM Event rather than
 Node Event; older scroll/dock expectations still need fixture maintenance. Live
 browser/physical tablet scroll acceptance is not claimed.
 
-Final verification: 93 focused tests passed, plus Library filter/order, queue, tempo
+Final verification: 94 focused tests passed, plus Library filter/order, queue, tempo
 persistence and metronome checks. Creator save/timing tests: 8 passed; its unrelated
 dialog fixture still lacks location. Chord suite after DOM Event fixture correction:
 9 passed; 9 older scroll/dock fixture expectations fail against unchanged playback
