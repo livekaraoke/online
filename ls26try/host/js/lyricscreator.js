@@ -1554,6 +1554,7 @@
     const empty = !editor.textContent.trim() && !editor.querySelector("img,svg,video,audio,iframe,table,.tab-block");
     editor.classList.toggle("is-empty", empty);
   }
+  document.addEventListener("change",e=>{if(e.target.closest("#performanceMetadata"))markDirty();});
   document.addEventListener("input", event => {
     const editor = event.target.closest?.(".creator-rich-editor[data-placeholder]");
     if (editor) updateEmptyEditor(editor);
@@ -1782,6 +1783,14 @@
     }
 
     loadedSong = doc.data() || {};
+    for(const [field,id]of Object.entries({genre:'perfGenre',energy:'perfEnergy',reliability:'perfReliability',performanceMode:'perfMode',setPosition:'perfPosition',durationSeconds:'perfDuration',venueFit:'perfVenueFit'}))if($(id))$(id).value=Array.isArray(loadedSong[field])?loadedSong[field].join(', '):loadedSong[field]||'';
+    for(const [field,id]of [['energy','perfEnergy'],['reliability','perfReliability']]){const node=$(id),value=loadedSong[field];if(node&&value&&![...node.options].some(o=>o.value===value)){const option=document.createElement('option');option.value=value;option.textContent=value+' (existing tag)';node.append(option);node.value=value;}}
+    if($('perfVenueFit')&&loadedSong.venueFit&&typeof loadedSong.venueFit==='object'){$('perfVenueFit').disabled=true;$('perfVenueFit').value='Structured venue fit retained';}
+    for(const [field,id]of Object.entries({chordsRequired:'perfChordsRequired',timingRequired:'perfTimingRequired',timingVerified:'perfTimingVerified'}))if($(id))$(id).checked=loadedSong[field]===true;
+    if($('perfLyricsNA'))$('perfLyricsNA').checked=loadedSong.lyricsApplicable===false;
+    document.querySelectorAll('[data-crowd-tag]').forEach(node=>node.checked=LS26Intelligence.values(loadedSong.crowdFunction).includes(node.dataset.crowdTag));
+    if(new URLSearchParams(location.search).has('missing')){$('performanceMetadata').open=true;}
+
     let migrationNeedsManualSave = false;
     legacyMarkerWasRemoved = false;
     sections = Array.isArray(loadedSong.sections)
@@ -1861,6 +1870,12 @@
 
     const id = firebaseId || `${title}${artist}`.toLowerCase().replace(/[^a-z0-9]/g, "");
     const data = {
+      // Preserve metadata not owned by this editor, including legacy tag formats.
+      ...Object.fromEntries(['vibe','genres','reliabilityScore','energyPeak','setFrequency'].filter(k=>loadedSong?.[k]!==undefined).map(k=>[k,loadedSong[k]])),
+      genre:$('perfGenre')?.value||'',energy:$('perfEnergy')?.value||'',reliability:$('perfReliability')?.value||'',
+      performanceMode:LS26Intelligence.values($('perfMode')?.value),setPosition:LS26Intelligence.values($('perfPosition')?.value),venueFit:$('perfVenueFit')?.disabled?loadedSong.venueFit:$('perfVenueFit')?.value||'',durationSeconds:Number($('perfDuration')?.value)||null,
+      lyricsApplicable:!$('perfLyricsNA')?.checked,chordsRequired:!!$('perfChordsRequired')?.checked,timingRequired:!!$('perfTimingRequired')?.checked,timingVerified:!!$('perfTimingVerified')?.checked,
+      crowdFunction:[...new Set([...LS26Intelligence.values(loadedSong?.crowdFunction).filter(t=>![...document.querySelectorAll('[data-crowd-tag]')].some(n=>n.dataset.crowdTag===t)),...[...document.querySelectorAll('[data-crowd-tag]:checked')].map(n=>n.dataset.crowdTag)])],
       title,
       artist,
       userBpm: $("userBpmInput").value,

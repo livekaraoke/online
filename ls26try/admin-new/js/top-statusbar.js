@@ -603,61 +603,9 @@
     const message = $("tsBreakActionMessage");
 
     try {
-      const breaks = Array.isArray(currentSession.breaks)
-        ? currentSession.breaks.map(item => ({ ...item }))
-        : [];
-
-      const lastBreak = breaks[breaks.length - 1];
-      const breakIsActive = !!(
-        lastBreak &&
-        lastBreak.start &&
-        !lastBreak.end
-      );
-
-      if (breakIsActive) {
-        lastBreak.end = nowTimestamp();
-
-        await dbRef
-          .collection("performanceSessions")
-          .doc(currentSession.id)
-          .set(
-            {
-              breaks,
-              breakOpen: false,
-              updatedAt: serverTimestamp()
-            },
-            { merge: true }
-          );
-
-        if (message) {
-          message.innerText = "Break ended.";
-        }
-
-        addNotification("Performance break ended.");
-      } else {
-        breaks.push({
-          start: nowTimestamp(),
-          end: null
-        });
-
-        await dbRef
-          .collection("performanceSessions")
-          .doc(currentSession.id)
-          .set(
-            {
-              breaks,
-              breakOpen: true,
-              updatedAt: serverTimestamp()
-            },
-            { merge: true }
-          );
-
-        if (message) {
-          message.innerText = "Break started.";
-        }
-
-        addNotification("Performance break started.");
-      }
+      await LS26Lifecycle.create(dbRef,ms=>firebase.firestore.Timestamp.fromMillis(ms)).setBreak(currentSession.id,!resuming);
+      if(message)message.innerText=resuming?'Break ended.':'Break started.';
+      addNotification(resuming?'Performance break ended.':'Performance break started.');
     } catch (error) {
       console.error("Could not update break:", error);
 
@@ -1054,7 +1002,7 @@
       currentSession.venue || "-"
     );
   
-    const started = toDate(currentSession.startedAt);
+    const started = toDate(currentSession.actualStartedAt || (currentSession.timingVersion===2 ? null : currentSession.startedAt));
     const breakInfo = getBreakInformation(currentSession);
   
     const elapsedIncludingBreaks = started

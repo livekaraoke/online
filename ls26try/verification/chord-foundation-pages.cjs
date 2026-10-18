@@ -39,7 +39,8 @@ function setup(page,ref){
  window.__fixture.data['karaokeControl/currentSession']={active:false};window.__fixture.data['karaokeControl/runOrder']={items:[]};
  window.songs=[{title:'Fixture',artist:'Fixture',hasLyrics:true,url:'lyrics/song.html?id=fixture'}];
  window.LK={db:ctx.db,sessionTools:{getSessionId:()=>'',getRunOrder:()=>[]}};ctx.LK=window.LK;
- function run(file){let code=read(file,ref);if(file==='host/js/lyricview.js')code=code.replace('  function captureOriginalTabCells()', '  window.__testTranspose=shift=>{chordShift=shift;applyChordTranspose();};\n  function captureOriginalTabCells()');vm.runInContext(code,ctx,{filename:file});for(const key of ['ArtistNames','LyricsCommon','LS26SectionContent','LS26PerformanceTempo'])if(window[key])ctx[key]=window[key];}
+ function run(file){let code=read(file,ref);if(file==='host/js/lyricview.js')code=code.replace('  function captureOriginalTabCells()', '  window.__testTranspose=shift=>{chordShift=shift;applyChordTranspose();};\n  function captureOriginalTabCells()');vm.runInContext(code,ctx,{filename:file});for(const key of ['ArtistNames','LyricsCommon','LS26SectionContent','LS26PerformanceTempo','LS26Intelligence','LS26Lifecycle'])if(window[key])ctx[key]=window[key];}
+ if(document.querySelector('script[src*="performance-intelligence.js"]')){run('shared/performance-intelligence.js');run('shared/performance-lifecycle.js');}
  run('shared/artist-names.js');run('shared/section-content.js');
  if(document.querySelector('script[src*="chord-foundation.js"]')){run('shared/chord-foundation.js');run('shared/musical-transport.js');}
  if(document.querySelector('script[src*="timing-model.js"]')){run('shared/timing-model.js');run('shared/timing-store.js');}

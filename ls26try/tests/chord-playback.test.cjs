@@ -14,6 +14,8 @@ async function fixture({untimed=false,partial=false,review=false,collapsed=false
   if(this.id==='ls26StickyHeader')return {top:0,bottom:100,height:100};if(this.classList.contains('host-bottom-dock'))return {top:720,bottom:800,height:80};
   const index=[...document.querySelectorAll('.ls26-timed-chord')].indexOf(this),absolute=index<3?200:900+(index-3)*80;return {top:absolute-window.scrollY,bottom:absolute-window.scrollY+25,height:25,left:10,right:100};
  };
+ // Use the DOM event implementation; Node's native Event has read-only eventPhase.
+ global.Event=window.Event;global.CustomEvent=window.CustomEvent;
  const api=follow.mount({document,window,songId:'fixture',getSong:()=>song,store:{async load(){reads++;return untimed?{status:'UNTIMED',timing:null}:{status:model.status(timing),timing};}},getAudio:()=>clock,onSection:i=>sections.push(i),onFinish:()=>finished++});
  return {window,document,api,clock,timing,song,bodies,sections,scrolls,frames,time:t=>now=t,get reads(){return reads;},get finished(){return finished;}};
 }

@@ -1,3 +1,5 @@
+> Superseded for current behaviour/scoring by [Smart Performance](smart-performance.md). The original implementation notes below are retained as history.
+
 # Best Next / venue rotation — 17 October 2026
 
 Implementation is committed for the existing app, not a new application or queue.

@@ -111,11 +111,11 @@
     // startedAt is written atomically when Start Session is pressed.
     // actualStartedAt existed as an event-link metadata field and older code
     // could overwrite it during a later repair, so it is only a fallback.
-    return tsDate(session.startedAt || session.actualStartedAt);
+    return tsDate(session.actualStartedAt || (session.timingVersion===2 ? null : session.startedAt));
   }
 
   function actualEnd(session) {
-    return tsDate(session.actualEndedAt || session.endedAt);
+    return tsDate(session.actualEndedAt || (session.timingVersion===2 ? null : session.endedAt));
   }
 
   function scheduledStart(session) {
@@ -431,7 +431,7 @@
       runOrder:Array.isArray(session.runOrderSnapshot) ? session.runOrderSnapshot : []
     };
 
-    if (result.requests.length && result.played.length) {
+    if (Array.isArray(session.requestSnapshot) && Array.isArray(session.playedSongsSnapshot)) {
       result.requests = chronological(result.requests, requestOrderMs);
       result.played = chronological(result.played, playedOrderMs);
       return result;
@@ -560,7 +560,7 @@
         </div>`
       : "";
 
-    $("sessionModalContent").innerHTML = `
+    $("sessionModalContent").innerHTML = `${window.LS26GigSummary?.html({...session,playedSongsSnapshot:detail.played,requestSnapshot:detail.requests})||""}
       <div class="session-detail-header">
         <h2>${esc(session.title || "Untitled Session")}</h2>
         <p>${esc(session.sessionType || session.type || "")}${session.venue ? ` • ${esc(session.venue)}` : ""}</p>

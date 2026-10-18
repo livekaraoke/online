@@ -315,7 +315,7 @@
   async function startPerformance() {
     if (startingPerformance) return;
     startingPerformance = true;
-    try { await performStartSession(); }
+    try { await performStartSession(nowTimestamp()); }
     catch (error) { setSessionStatus(error.message || "Could not start the session. Please try again."); }
     finally { startingPerformance = false; }
   }
@@ -331,7 +331,7 @@
     }
   }
 
-  async function performStartSession() {
+  async function performStartSession(preparedAt) {
     const publicList = window.LS26PublicList?.selectionForStart();
     if (!publicList) {
       setSessionStatus("Choose a public song list before starting the Session.");
@@ -366,7 +366,7 @@
     const gateState=gateSnap.exists?(gateSnap.data()||{}):{};
     const pendingSessionId=String(gateState.preSessionRequestSessionId||"").trim();
     const autoOpenRequests=await autoOpenRequestsOnSessionStart();
-    const localStartedAt = nowTimestamp();
+    const localStartedAt = preparedAt || nowTimestamp();
 
     const eventSnapshot = {
       id: event.id || "",
@@ -374,6 +374,7 @@
       title,
       type: sessionType,
       venue,
+      venueId: event.venueId || "",
       address: event.address || "",
       date: event.date || "",
       startTime: event.startTime || "",
@@ -415,7 +416,12 @@
       sessionType,
       eventId: event.id,
       eventSnapshot,
-      notes,
+      notes: notes + (notes ? "\n" : "") + `Session started/prepared at ${localStartedAt.toDate().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}.`,
+      timingVersion: 2,
+      openedAt: localStartedAt,
+      actualStartedAt: null,
+      preparationNoteRecorded: true,
+      venueId: event.venueId || "",
       status: "active",
       isActive: true,
       breakOpen: false,
@@ -436,6 +442,10 @@
 
     const controlPayload = {
       active: true,
+      timingVersion: 2,
+      openedAt: localStartedAt,
+      actualStartedAt: null,
+      venueId: event.venueId || "",
       sessionId: ref.id,
       activeSessionId: ref.id,
       eventId: event.id,
@@ -475,7 +485,7 @@
         ? currentPreRun.map(item=>({...item,status:"queued",playingAtMs:null,playedAtMs:null}))
         : [];
       const requestsEnabled=autoOpenRequests || liveGate.songsEnabled===true;
-      transaction.set(ref, {...sessionPayload, publicSetlistName:listData.name || publicList.name});
+      transaction.set(ref, {...sessionPayload, setlistId:publicList.id, setlistSongIds:listData.songIds||[], publicSetlistName:listData.name || publicList.name});
       transaction.set(controlRef, controlPayload, {merge:true});
       transaction.set(LK.db.collection("karaokeControl").doc("publicSongList"), {
         setlistId:publicList.id, setlistName:listData.name || publicList.name,
@@ -525,6 +535,7 @@
   }
 
   async function endPerformance() {
+  const endPressedAt=nowTimestamp();
   console.log("END session clicked", {
     LK,
     db: LK?.db,
@@ -536,34 +547,19 @@
     return;
   }
 
-  await LK.db.collection("performanceSessions").doc(LK.state.currentSessionId).set({
-    status: "ended",
-    isActive: false,
-    breakOpen: false,
-    endedAt: serverNow(),
-    updatedAt: serverNow()
-  }, { merge: true });
-
-  await LK.db.collection("karaokeControl").doc("currentSession").set({
-    active: false,
-    sessionId: null,
-    activeSessionId: null,
-    eventId: null,
-    title: "",
-    venue: "",
-    type: "",
-    sessionType: "",
-    updatedAt: serverNow()
-  }, { merge: true });
-
-  await LK.db.collection("karaoke").doc("state").set({
-    isLive: false,
-    manualOverride: true,
-    songsOverride: true,
-    songsEnabled: false,
-    preSessionRequestSessionId: firebase.firestore.FieldValue.delete(),
-    updatedAt: serverNow()
-  }, { merge:true });
+  const endingId=LK.state.currentSessionId;
+  const api=LS26Lifecycle.create(LK.db,ms=>firebase.firestore.Timestamp.fromMillis(ms));
+  const run=(await LK.db.collection('karaokeControl').doc('runOrder').get()).data()||{};
+  if(run.sessionId===endingId){const playing=(run.items||[]).find(r=>r.status==='playing');if(playing)await api.finish({sessionId:endingId,itemId:playing.id,now:endPressedAt.toMillis()});}
+  const ended=endPressedAt;
+  await LK.db.runTransaction(async tx=>{
+    const sr=LK.db.collection('performanceSessions').doc(endingId),cr=LK.db.collection('karaokeControl').doc('currentSession'),ss=await tx.get(sr),cs=await tx.get(cr),saved=ss.data()||{},control=cs.data()||{};
+    if(saved.status==='ended')return;
+    if((control.sessionId||control.activeSessionId)!==endingId)throw Error('Session changed. No session was ended.');
+    tx.set(sr,{status:'ended',isActive:false,breakOpen:false,closedAt:ended,endedAt:ended,actualEndedAt:saved.lastPerformanceEndedAt||(saved.timingVersion===2?null:saved.actualEndedAt||null),breaks:(saved.breaks||[]).map(b=>(b.start||b.startedAt)&&!(b.end||b.endedAt)?{...b,end:ended}:b),updatedAt:serverNow()},{merge:true});
+    tx.set(cr,{active:false,sessionId:null,activeSessionId:null,eventId:null,title:'',venue:'',type:'',sessionType:'',updatedAt:serverNow()},{merge:true});
+    tx.set(LK.db.collection('karaoke').doc('state'),{isLive:false,manualOverride:true,songsOverride:true,songsEnabled:false,preSessionRequestSessionId:firebase.firestore.FieldValue.delete(),updatedAt:serverNow()},{merge:true});
+  },{maxAttempts:3});
 
   LK.state.currentSessionId = null;
   LK.state.currentSessionData = null;
@@ -574,31 +570,14 @@
 }
 
   async function startBreak() {
-console.log("START break clicked", {
-  LK,
-  db: LK?.db,
-});
-    const session = LK.state.currentSessionData;
-    if (!LK.state.currentSessionId || !session) return;
-    const breaks = [...(session.breaks || [])];
-    if (breaks.length && !breaks[breaks.length - 1].end) return;
-    breaks.push({ start: nowTimestamp(), end: null });
-    await LK.db.collection("performanceSessions").doc(LK.state.currentSessionId).set({ breaks, breakOpen: true, updatedAt: serverNow() }, { merge: true });
-    setSessionStatus("Break started.");
+    if(!LK.state.currentSessionId)return;
+    await LS26Lifecycle.create(LK.db,ms=>firebase.firestore.Timestamp.fromMillis(ms)).setBreak(LK.state.currentSessionId,true);
+    setSessionStatus('Break started.');
   }
-
   async function endBreak() {
-console.log("END break clicked", {
-  LK,
-  db: LK?.db,
-});
-    const session = LK.state.currentSessionData;
-    if (!LK.state.currentSessionId || !session) return;
-    const breaks = [...(session.breaks || [])];
-    if (!breaks.length || breaks[breaks.length - 1].end) return;
-    breaks[breaks.length - 1].end = nowTimestamp();
-    await LK.db.collection("performanceSessions").doc(LK.state.currentSessionId).set({ breaks, breakOpen: false, updatedAt: serverNow() }, { merge: true });
-    setSessionStatus("Break ended.");
+    if(!LK.state.currentSessionId)return;
+    await LS26Lifecycle.create(LK.db,ms=>firebase.firestore.Timestamp.fromMillis(ms)).setBreak(LK.state.currentSessionId,false);
+    setSessionStatus('Break ended.');
   }
 
   function saveSessionNotesLive() {

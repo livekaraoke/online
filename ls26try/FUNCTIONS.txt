@@ -251,3 +251,10 @@ promotes/reuses a queued entry; default append callers remain unchanged.
 lyricview.js: publishes resolved current song ID; playback logic unchanged.
 Run Order owns the inline BEST NEXT card below ADD SONG / ADD REQUEST; no LyricView strip.
 See docs/best-next.md for scoring, limits, tests and pending live acceptance.
+
+2026-10-18 SMART PERFORMANCE
+performance-intelligence.js: pure timing, duration, metadata, energy, fairness and summary calculations.
+performance-lifecycle.js: shared atomic start/finish/break updates to existing records.
+performance-tools-ui.js: expanded Run Order/Session/Requests tools; no LyricView layout ownership.
+gig-summary.js: derived archive summary after end and in Session History.
+See docs/smart-performance.md for context, scoring, compatibility, I/O and acceptance limits.

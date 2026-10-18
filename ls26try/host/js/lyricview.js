@@ -48,9 +48,6 @@
   let quickToolsResizeObserver = null;
   let performanceRecordCreated = false;
   let performanceRecordPromise = null;
-  let ensurePlayingPromise = null;
-  let ensurePlayingDone = false;
-  let ensurePlayingRetryAfter = 0;
   let autoScrollEndHandled = false;
   let karaokeSendInFlightSongId = "";
   let autoKaraokeSentSongId = "";
@@ -2190,251 +2187,38 @@
     return null;
   }
 
-  async function setCurrentRunOrderStatus(status) {
-    const { sessionId } = await getActiveSessionContext();
-    if (!sessionId) return null;
-
-    const runRef = db.collection("karaokeControl").doc("runOrder");
-    const runSnap = await runRef.get();
-    const runData = runSnap.exists ? (runSnap.data() || {}) : {};
-
-    if (runData.sessionId !== sessionId || !Array.isArray(runData.items)) {
-      return null;
-    }
-
-    const matched = await findCurrentRunOrderItem(runData.items);
-    if (!matched) return null;
-
-    const items = runData.items.map(item =>
-      item.id === matched.id
-        ? {
-            ...item,
-            // Self-heal the legacy wrong Run Order ID as soon as this song
-            // starts/finishes from lyricview.
-            songId:currentSongId || item.songId,
-            songTitle:item.songTitle || currentSong?.title || "",
-            artist:item.artist || currentSong?.artist || "",
-            status,
-            ...(status === "playing"
-              ? { playingAtMs: Date.now() }
-              : {}),
-            ...(status === "played"
-              ? { playedAtMs: Date.now() }
-              : {})
-          }
-        : item
-    );
-
-    await runRef.set({
-      sessionId,
-      items,
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    }, { merge:true });
-
-    return matched;
-  }
-
-  async function ensureCurrentSongPlaying() {
-    if (!currentSongId || !currentSong) return 0;
-
-    // This function may be reached from more than one PLAY/NEXT path. Never let
-    // those paths create concurrent Firestore transactions/reads for the same song.
-    if (ensurePlayingDone) return Number(window.__lyricviewPlayingStartedMs || 0);
-    if (ensurePlayingPromise) return ensurePlayingPromise;
-    if (Date.now() < ensurePlayingRetryAfter) return 0;
-
-    ensurePlayingPromise = (async () => {
-      const { sessionId } = await getActiveSessionContext();
-      if (!sessionId) return 0;
-
-      const runRef = db.collection("karaokeControl").doc("runOrder");
-
-      try {
-        // A normal read + conditional write is deliberate here. The previous
-        // transaction was automatically retried by Firestore when quota was
-        // exhausted, multiplying BatchGet requests. Lyricview only needs one
-        // idempotent update when PLAY begins.
-        const snap = await runRef.get();
-        const data = snap.exists ? (snap.data() || {}) : {};
-        let items = data.sessionId === sessionId && Array.isArray(data.items) ? [...data.items] : [];
-
-        let index = -1;
-        if (requestId) index = items.findIndex(item => item.requestId === requestId);
-        if (index < 0) index = items.findIndex(item =>
-          item.songId === currentSongId &&
-          !["played","completed"].includes(String(item.status || "").toLowerCase())
-        );
-        if (index < 0) index = items.findIndex(item =>
-          sameSongByMetadata(item, currentSong) &&
-          !["played","completed"].includes(String(item.status || "").toLowerCase())
-        );
-
-        const existing = index >= 0 ? items[index] : null;
-        const existingStarted = existing && String(existing.status || "").toLowerCase() === "playing"
-          ? (Number(existing.playingAtMs) || (existing.playingAt?.toMillis ? existing.playingAt.toMillis() : 0))
-          : 0;
-        const startedMs = existingStarted || Date.now();
-
-        let changed = false;
-        items = items.map((item,i) => {
-          if (i !== index && String(item.status || "").toLowerCase() === "playing") {
-            changed = true;
-            return { ...item, status:"played", playedAtMs:startedMs };
-          }
-          return item;
-        });
-
-        if (index >= 0) {
-          const old = items[index];
-          const alreadyCorrect =
-            String(old.status || "").toLowerCase() === "playing" &&
-            old.songId === currentSongId &&
-            Number(old.playingAtMs || 0) === Number(startedMs);
-
-          if (!alreadyCorrect) {
-            changed = true;
-            items[index] = {
-              ...old,
-              songId:currentSongId,
-              songTitle:currentSong.title || old.songTitle || "",
-              title:currentSong.title || old.title || "",
-              artist:currentSong.artist || old.artist || "",
-              songArtist:currentSong.artist || old.songArtist || "",
-              status:"playing",
-              playingAtMs:startedMs,
-              playingAt:firebase.firestore.Timestamp.fromMillis(startedMs)
-            };
-          }
-        } else {
-          changed = true;
-          items.push({
-            id:`lyricview_${currentSongId}_${startedMs}`,
-            songId:currentSongId,
-            songTitle:currentSong.title || "",
-            title:currentSong.title || "",
-            artist:currentSong.artist || "",
-            songArtist:currentSong.artist || "",
-            requestId:requestId || "",
-            singerName:"",
-            source:"lyricview",
-            status:"playing",
-            playingAtMs:startedMs,
-            playingAt:firebase.firestore.Timestamp.fromMillis(startedMs),
-            addedAtMs:startedMs
-          });
-        }
-
-        if (changed) {
-          await runRef.set({
-            sessionId,
-            items,
-            updatedAt:firebase.firestore.FieldValue.serverTimestamp()
-          },{merge:true});
-        }
-
-        if (requestId) {
-          // One request-status write per lyric page/play, not on every call.
-          await db.collection("publicSongRequests").doc(requestId).set({
-            status:"playing",
-            playingAtMs:startedMs,
-            playingAt:firebase.firestore.Timestamp.fromMillis(startedMs),
-            updatedAt:firebase.firestore.FieldValue.serverTimestamp()
-          },{merge:true});
-        }
-
-        window.__lyricviewPlayingStartedMs = startedMs;
-        ensurePlayingDone = true;
-        return startedMs;
-      } catch (error) {
-        // Do not hammer Firestore after a quota/network failure. A later manual
-        // PLAY can retry after the cooldown instead of triggering SDK retry storms.
-        ensurePlayingRetryAfter = Date.now() + 60000;
-        console.error("Could not put current lyric-view song in Run Order:", error);
-        return 0;
-      }
-    })();
-
-    try {
-      return await ensurePlayingPromise;
-    } finally {
-      ensurePlayingPromise = null;
-    }
-  }
-
+  function performanceLifecycle(){return LS26Lifecycle.create(db,ms=>firebase.firestore.Timestamp.fromMillis(ms));}
   async function recordCurrentSongPlayed() {
     if (!currentSong || !currentSongId) return;
-
-    // Claim this recording immediately, before any await. This prevents rapid
-    // PLAY toggles / NEXT from racing and creating duplicate history/log writes.
     if (performanceRecordCreated) return performanceRecordPromise;
-    performanceRecordCreated = true;
-
-    const startingBpm=performanceTempo.get();
-    performanceRecordPromise = (async () => {
-      const { sessionId } = await getActiveSessionContext();
-      if (!sessionId) {performanceRecordCreated=false;return;}
-
-      const startedMs = await ensureCurrentSongPlaying();
-      const actualStartedMs = startedMs || Date.now();
-      const startedAt = firebase.firestore.Timestamp.fromMillis(actualStartedMs);
-      const performedId = `${currentSongId}_${actualStartedMs}`;
-
-      const performanceBpm = performanceTempo.get();
-
-      const record = {
-        songId: currentSongId,
-        songTitle: currentSong.title || "",
-        songArtist: currentSong.artist || "",
-        artist: currentSong.artist || "",
-        requestId: requestId || "",
-        source: "lyricview-autoscroll",
-        userBpm: toNumber(currentSong.userBpm) || null,
-        startingBpm,
-        performanceBpm: performanceBpm || null,
-        originalBpm: toNumber(currentSong.originalBpm) || null,
-        startedAt,
-        playingAtMs: actualStartedMs,
-        playedAt: startedAt,
-        createdAt: startedAt
-      };
-
+    performanceRecordCreated=true;
+    performanceRecordPromise=(async()=>{
+      const {sessionId}=await getActiveSessionContext();
+      if(!sessionId){performanceRecordCreated=false;return;}
       try {
-        // Keep the per-session performed-song record used by Session History.
-        // Use a deterministic id so the same play cannot be duplicated by a race.
-        const recordRef=db.collection("performanceSessions").doc(sessionId).collection("performedSongs").doc(performedId);
-        await recordRef.set(record, { merge:true });
-        await performanceTempo.attach(recordRef,performanceBpm);
-
-        // Intentionally DO NOT also add to performanceLogs. That second global
-        // log duplicated every play and is unnecessary for lyricview operation.
-      } catch (error) {
+        const result=await performanceLifecycle().start({sessionId,song:{...currentSong,id:currentSongId},requestId,bpm:performanceTempo.get()});
+        window.__lyricviewPlayingStartedMs=result.startedMs;
+        await performanceTempo.attach(result.ref,result.record.performanceBpm);
+      } catch(error) {
         performanceRecordCreated=false;
-        console.error("Could not create performance record:", error);
-        window.LS26?.toast("Could not save this performance. Press Play again to retry.");
+        if(autoScrollOn)startAutoScroll();
+        window.LS26?.toast('Performance not saved: '+error.message);
+        throw error;
       }
     })();
-
     return performanceRecordPromise;
   }
-
   async function finalizeCurrentSongPlayed() {
+    await performanceRecordPromise;
     await flushPerformanceTempo();
-    try {
-      const matched = await setCurrentRunOrderStatus("played");
-      const linkedRequestId = requestId || matched?.requestId || "";
-
-      if (linkedRequestId) {
-        const now = firebase.firestore.Timestamp.now();
-
-        await db.collection("publicSongRequests").doc(linkedRequestId).set({
-          status: "completed",
-          playedAt: now,
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        }, { merge:true });
-      }
-    } catch (error) {
-      console.error("Could not finalize played song:", error);
-    }
+    const {sessionId}=await getActiveSessionContext();
+    if(!sessionId)return;
+    const snap=await db.collection('karaokeControl').doc('runOrder').get(),run=snap.data()||{};
+    if(run.sessionId!==sessionId)throw Error('Session changed.');
+    const item=(run.items||[]).find(r=>r.status==='playing'&&r.songId===currentSongId&&(!requestId||r.requestId===requestId));
+    if(!item)return;
+    try {return await performanceLifecycle().finish({sessionId,itemId:item.id});}
+    catch(error){window.LS26?.toast('Could not finish song: '+error.message);throw error;}
   }
 
   function showEndCompletionPanel(show) {
@@ -2790,7 +2574,7 @@
 
       // PLAY marks the matching Run Order item as "playing", keeping it
       // visible and highlighted in the Top Status Bar.
-      recordCurrentSongPlayed();
+      recordCurrentSongPlayed().catch(()=>{});
       window.dispatchEvent(new Event("ls26:song-started"));
 
       // Per-section pauses are end-of-section holds. They begin only just
@@ -3175,6 +2959,7 @@
         getBpm:()=>performanceTempo.get(),
         setBpm:value=>performanceTempo.set(value),
         flushTempo:flushPerformanceTempo,
+        stop:()=>{if(autoScrollOn)startAutoScroll();window.dispatchEvent(new Event("ls26:song-finished"));},
         nextDetails:renderEndNextSongDetails
       };
       if(window.LS26ChordFollow){

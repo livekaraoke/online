@@ -125,9 +125,7 @@
     // performanceSessions.startedAt is the authoritative start used by Admin.
     // Prefer it over addon/legacy fields so ELAPSED cannot jump to a stale time.
     return tsDate(
-      state.session?.startedAt ||
-      state.currentControl?.startedAt ||
-      state.session?.actualStartedAt
+      state.session?.actualStartedAt || (state.session?.timingVersion===2 ? null : state.session?.startedAt || state.currentControl?.startedAt)
     );
   }
 
@@ -223,15 +221,8 @@
       duration = schedule.end - schedule.start;
     }
 
-    // REMAINING is based on the actual performance start plus the booked
-    // duration. This keeps the compact and expanded values consistent.
-    // If no booked duration is available, fall back to the explicit end time.
-    let target = null;
-    if (actualStart && Number.isFinite(duration) && duration > 0) {
-      target = new Date(actualStart.getTime() + duration);
-    } else if (schedule.end) {
-      target = schedule.end;
-    }
+    // Scheduled commitment stays fixed unless the host explicitly edits the target.
+    const target=tsDate(state.session?.projectedEndAt)||schedule.end;
 
     const remainingMs = target ? target.getTime() - Date.now() : NaN;
     setValueState(compactRemaining, remainingMs);
@@ -260,8 +251,8 @@
         adjustedHint.textContent = "Scheduled duration unavailable";
       } else if (schedule.start && actualStart) {
         const delay = Math.round((actualStart - schedule.start) / 60000);
-        if (delay > 0) adjustedHint.textContent = `Started ${delay} min${delay === 1 ? "" : "s"} late • finish shifted by ${delay} min${delay === 1 ? "" : "s"}`;
-        else if (delay < 0) adjustedHint.textContent = `Started ${Math.abs(delay)} min${Math.abs(delay) === 1 ? "" : "s"} early • finish shifted earlier`;
+        if (delay > 0) adjustedHint.textContent = `Started ${delay} min${delay === 1 ? "" : "s"} late • scheduled finish unchanged`;
+        else if (delay < 0) adjustedHint.textContent = `Started ${Math.abs(delay)} min${Math.abs(delay) === 1 ? "" : "s"} early • scheduled finish unchanged`;
         else adjustedHint.textContent = "Started on schedule";
       } else {
         adjustedHint.textContent = "Remaining from active session schedule";
@@ -594,7 +585,7 @@
     const actual=actualStartDate(),schedule=resolvedSchedule();
     compactText('tsCompactVenue',session.venue||control.venue||session.eventSnapshot?.venue||'Venue TBC');
     compactText('tsCompactType',schedule.start&&schedule.end?formatClock(schedule.start)+' – '+formatClock(schedule.end):'Time not set');
-    compactText('tsCompactStarted',actual?formatClock(actual):'--:--');
+    compactText('tsCompactStarted',actual?formatClock(actual):'WAITING');
     compactText('tsCompactElapsed',actual?shortDuration(Math.max(0,Date.now()-actual.getTime())):'0m');
     compactText('tsCompactRequests',state.requests.filter(isPendingDisplayRequest).length);
     compactText('tsCompactAlerts',Math.max(state.requests.filter(isPendingDisplayRequest).length,state.notifications.length));
@@ -858,7 +849,7 @@
       card.id = "tsRunOrderBestNext";
       card.className = "ts-best-next";
       card.setAttribute("aria-label", "Best Next song");
-      list.before(card);
+      list.parentElement.insertBefore(card,$("smartRunTools")||list);
     }
     window.LS26BestNext.renderRunOrder(card);
   }
@@ -945,7 +936,7 @@
             <div class="ts-run-index">${index + 1}</div>
 
             <div class="ts-run-main">
-              <strong>${esc(item.songTitle || item.title || item.songId || "Untitled Song")}</strong>
+              <small class="ts-sequence-label">${isPlaying?"CURRENT / PLAYING":movable.indexOf(item)===0?"NEXT":"FOLLOWING"}</small><strong>${esc(item.songTitle || item.title || item.songId || "Untitled Song")}</strong>
               <small>
                 ${esc(ArtistNames.display(item.artist || ""))} · ${esc(item.singerName || "Host choice")} · ${esc(requestForRunItem(item)?.location || "")}
                 ${isPlaying ? `<em class="ts-playing-label">${status === "played" ? "FINISHED" : "PLAYING"}</em>` : ""}
@@ -1696,6 +1687,16 @@
     renderRunOrder();
     window.dispatchEvent(new CustomEvent("lk:runorder-updated",{detail:{sessionId:result.sessionId,items:result.items.map(entry=>({...entry}))}}));
     return result;
+  };
+  let finishPending=null;
+  LK.sessionTools.finishCurrent=(itemId,outcome='')=>{
+    if(finishPending)return finishPending;
+    const sessionId=state.sessionId;
+    finishPending=LS26Lifecycle.create(state.db,ms=>firebase.firestore.Timestamp.fromMillis(ms)).finish({sessionId,itemId,outcome}).then(result=>{
+      if(result.items){state.runOrder={...(state.runOrder||{}),sessionId,items:result.items};renderRunOrder();window.dispatchEvent(new CustomEvent('lk:runorder-updated',{detail:{sessionId,items:result.items}}));}
+      return result;
+    }).finally(()=>{finishPending=null;});
+    return finishPending;
   };
   LK.sessionTools.getControl = () => state.currentControl;
   LK.sessionTools.getRunOrderSnapshot = () => state.runOrderSnapshotReady ? state.runOrder : null;

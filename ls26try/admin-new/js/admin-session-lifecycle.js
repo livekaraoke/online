@@ -280,9 +280,7 @@
     const existingSessionSnap = await sessionRef.get();
     const existingSession = existingSessionSnap.exists ? (existingSessionSnap.data() || {}) : {};
     const canonicalActualStart =
-      existingSession.startedAt ||
-      existingSession.actualStartedAt ||
-      firebase.firestore.FieldValue.serverTimestamp();
+      existingSession.actualStartedAt || (existingSession.timingVersion===2 ? null : existingSession.startedAt || null);
 
     let event = null;
     let scheduledStartAt = null;
@@ -321,7 +319,7 @@
           sessionStatus: "active",
           // Preserve a previously-recorded event start; otherwise mirror the
           // canonical session start instead of stamping the repair time.
-          actualStartedAt: event.actualStartedAt || canonicalActualStart,
+          ...(canonicalActualStart ? {actualStartedAt: event.actualStartedAt || canonicalActualStart} : {}),
           updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         }, { merge:true });
       }
@@ -333,7 +331,8 @@
       scheduledStartAt: scheduledStartAt || null,
       scheduledEndAt: scheduledEndAt || null,
       scheduledDurationMs: Number.isFinite(scheduledDurationMs) ? scheduledDurationMs : null,
-      actualStartedAt: canonicalActualStart,
+      ...(canonicalActualStart ? {actualStartedAt: canonicalActualStart} : {}),
+      venueId: existingSession.venueId || event?.venueId || "",
       sessionType:
         $("sessionTypeInput")?.value ||
         event?.type ||
@@ -358,12 +357,7 @@
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     }, { merge:true });
 
-    // Start a fresh Run Order for this session.
-    await db.collection("karaokeControl").doc("runOrder").set({
-      sessionId,
-      items: [],
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
+    // The session-start transaction owns the Run Order; linking must not clear it.
   }
 
   async function getCurrentSessionControl() {
@@ -397,31 +391,6 @@
       id: doc.id,
       ...(doc.data() || {})
     })), playedOrderMs);
-
-    const missingBpmIds = [...new Set(performedSongs
-      .filter(item => {
-        const bpm = Number(item.performanceBpm ?? item.userBpm ?? item.songUserBpm ?? item.bpm ?? item.originalBpm);
-        return !(Number.isFinite(bpm) && bpm > 0) && item.songId;
-      })
-      .map(item => item.songId))];
-
-    const bpmBySongId = new Map();
-    await Promise.all(missingBpmIds.map(async songId => {
-      try {
-        const songSnap = await db.collection("lyrics").doc(songId).get();
-        const song = songSnap.exists ? (songSnap.data() || {}) : {};
-        const bpm = Number(song.userBpm ?? song.originalBpm ?? song.bpm);
-        bpmBySongId.set(songId, Number.isFinite(bpm) && bpm > 0 ? bpm : 0);
-      } catch (_) {
-        bpmBySongId.set(songId, 0);
-      }
-    }));
-
-    performedSongs = performedSongs.map(item => {
-      const direct = Number(item.performanceBpm ?? item.userBpm ?? item.songUserBpm ?? item.bpm ?? item.originalBpm);
-      const bpm = Number.isFinite(direct) && direct > 0 ? direct : Number(bpmBySongId.get(item.songId) || 0);
-      return bpm ? { ...item, performanceBpm:bpm } : item;
-    });
 
     const archivedBpms = performedSongs
       .map(item => Number(item.performanceBpm ?? item.userBpm ?? item.bpm))
@@ -478,10 +447,11 @@
   async function finishAssociatedEvent(sessionId, eventId) {
     if (!eventId) return;
 
+    const endedSession=(await db.collection('performanceSessions').doc(sessionId).get()).data()||{};
     await db.collection("upcomingEvents").doc(eventId).set({
       linkedSessionId: sessionId,
       sessionStatus: "ended",
-      actualEndedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      actualEndedAt: endedSession.actualEndedAt || null,
       completedAt: firebase.firestore.FieldValue.serverTimestamp(),
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     }, { merge:true });
@@ -494,11 +464,12 @@
     await snapshotSessionData(sessionId);
 
     await db.collection("performanceSessions").doc(sessionId).set({
-      actualEndedAt: firebase.firestore.FieldValue.serverTimestamp(),
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     }, { merge:true });
 
     await finishAssociatedEvent(sessionId, eventId);
+    const archived=await db.collection('performanceSessions').doc(sessionId).get();
+    if(archived.exists)window.LS26GigSummary?.show({...archived.data(),id:sessionId});
   }
 
   function clearLiveSync() {
@@ -610,6 +581,8 @@
         clearLiveSync();
       } catch (error) {
         console.error("Session ended but session/event archive update failed:", error);
+        window.LS26?.toast('Session closed, but archive failed. Use Retry archive before leaving.');
+        let retry=document.getElementById('retrySessionArchive');if(!retry){retry=document.createElement('button');retry.id='retrySessionArchive';document.body.append(retry);}retry.textContent='RETRY SESSION ARCHIVE';retry.onclick=async()=>{retry.disabled=true;try{await finalizeSession(sessionId,eventId);retry.remove();}catch(e){retry.disabled=false;window.LS26?.toast(e.message);}};
       }
 
       return result;

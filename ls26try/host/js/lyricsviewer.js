@@ -310,6 +310,8 @@
       allowedIds=new Set(session?.setlistSongIds||selected?.songIds||[]);
     }
     let list = songs.filter(song => {
+      const missingFilter=$('missingDataFilter')?.value;
+      if(missingFilter){const missing=window.LS26Intelligence?.missing(song)||[];if(missingFilter==='any'?!missing.length:!missing.includes(missingFilter))return false;}
       const note = personalNote(song);
       if (!notesVisible && note) return false;
       if (notesVisible && noteCategory && (!note || (noteCategory !== "notes" && note.category !== noteCategory))) return false;
@@ -709,7 +711,7 @@
   $("songRows").addEventListener('scroll',saveViewState,{passive:true});
 
   document.addEventListener("click", event => {
-    const edit=event.target.closest('[data-edit]');if(edit){location.href=LS26.url('host/lyricscreator.html?firebaseId='+encodeURIComponent(edit.dataset.edit));return;}
+    const edit=event.target.closest('[data-edit]');if(edit){location.href=LS26.url('host/lyricscreator.html?firebaseId='+encodeURIComponent(edit.dataset.edit)+($('missingDataFilter')?.value?'&missing='+encodeURIComponent($('missingDataFilter').value):''));return;}
     const queue=event.target.closest('[data-queue]');if(queue){queueSong(queue.dataset.queue,queue);return;}
     const select=event.target.closest('[data-select]');if(select){selectedId=select.dataset.select;updateSelected();saveViewState();return;}
     const open = event.target.closest("[data-open]");
@@ -774,6 +776,8 @@
   });
 
   window.addEventListener('ls26:rotation-updated',()=>{if(songs.length)render();});
+  $('missingDataFilter')?.addEventListener('change',render);
+  $('setlistFilter')?.addEventListener('change',()=>window.dispatchEvent(new Event('ls26:working-setlist')));
   $('rotationFilter')?.addEventListener('change',event=>{
     changeRotation(event.target.value);
     render();saveViewState();
@@ -790,6 +794,7 @@
     filters.sort.value = "title";
     noteCategory = "";
     saveNotesState(); // Clear category/search without revealing hidden notes.
+    if($("missingDataFilter"))$("missingDataFilter").value="";
     filters.genre.value="";filters.decade.value="";filters.bpmMin.value="";filters.bpmMax.value="";scope="all";$("stickyFavToggle").checked=false;
     render();
     saveViewState();

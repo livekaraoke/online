@@ -35,7 +35,7 @@
     const session=tools().getSession(),publicList=tools().getPublicList?.()||{};
     let grid=$('ls26SessionGrid');if(!grid){grid=document.createElement('div');grid.id='ls26SessionGrid';grid.className='ls26-session-grid';pane.prepend(grid);}
     if(!session){grid.innerHTML=`<p>No active session. <a href="${LS26.url('admin-new/admin.html')}">Start a session in Admin</a></p>`;return;}
-    const start=date(session.scheduledStartAt),end=date(session.scheduledEndAt),duration=start&&end?Math.round((end-start)/60000):0;
+    const start=date(session.scheduledStartAt),end=date(session.projectedEndAt||session.scheduledEndAt),duration=start&&end?Math.round((end-start)/60000):0;
     const requestsOpen=LK.topStatus?.getRequestsEnabled?.();
     const breaks=session.breaks||[],open=session.breakOpen||breaks.some(x=>(x.start||x.startedAt)&&!(x.end||x.endedAt));
     const total=breaks.reduce((sum,b)=>sum+Math.max(0,((date(b.end||b.endedAt)||new Date())-date(b.start||b.startedAt))/60000),0);
@@ -45,8 +45,8 @@
   }
   function editTimes(session){
     const local=x=>{const d=date(x);return d?new Date(d-d.getTimezoneOffset()*60000).toISOString().slice(0,16):'';};
-    const d=dialog('Edit projected end',`<form><p>Scheduled start: ${clock(session.scheduledStartAt)}</p><label>Projected end<input type="datetime-local" name="end" required value="${local(session.scheduledEndAt)}"></label><button class="primary">Save end time</button><p role="status"></p></form>`);
-    d.querySelector('form').onsubmit=async e=>{e.preventDefault();const form=e.currentTarget,start=date(session.scheduledStartAt),end=new Date(form.elements.end.value);if(!start||!Number.isFinite(end.getTime())||end<=start){form.querySelector('[role=status]').textContent='End must be after start.';return;}try{if(tools().getSessionId()!==session.id)throw Error('The active session changed. Reopen the end-time editor.');const batch=db().batch(),fields={scheduledEndAt:firebase.firestore.Timestamp.fromDate(end),scheduledDurationMs:end-start,updatedAt:stamp()};batch.set(db().collection('performanceSessions').doc(session.id),fields,{merge:true});batch.set(db().collection('karaokeControl').doc('currentSession'),fields,{merge:true});await batch.commit();d.close();}catch(err){form.querySelector('[role=status]').textContent=err.message;}};
+    const d=dialog('Edit projected end',`<form><p>Scheduled start: ${clock(session.scheduledStartAt)}</p><label>Projected end<input type="datetime-local" name="end" required value="${local(session.projectedEndAt||session.scheduledEndAt)}"></label><button class="primary">Save end time</button><p role="status"></p></form>`);
+    d.querySelector('form').onsubmit=async e=>{e.preventDefault();const form=e.currentTarget,start=date(session.scheduledStartAt),end=new Date(form.elements.end.value);if(!start||!Number.isFinite(end.getTime())||end<=start){form.querySelector('[role=status]').textContent='End must be after start.';return;}try{if(tools().getSessionId()!==session.id)throw Error('The active session changed. Reopen the end-time editor.');const batch=db().batch(),fields={projectedEndAt:firebase.firestore.Timestamp.fromDate(end),updatedAt:stamp()};batch.set(db().collection('performanceSessions').doc(session.id),fields,{merge:true});batch.set(db().collection('karaokeControl').doc('currentSession'),fields,{merge:true});await batch.commit();d.close();}catch(err){form.querySelector('[role=status]').textContent=err.message;}};
   }
   async function chooseList(session){
     const snap=await LS26Data.collection('lyricsSetlists'),rows=snap.docs.map(x=>({id:x.id,...x.data()}));
@@ -78,6 +78,8 @@
       if(!reason)return;
       d.querySelectorAll('button:not(.ls26-modal-x)').forEach(b=>b.disabled=true);
       try{
+        const playing=tools()?.getRunOrder().find(x=>x.id===itemId&&x.status==='playing');
+        if(playing&&mode==='abandoned')await LS26Lifecycle.create(db(),ms=>firebase.firestore.Timestamp.fromMillis(ms)).finish({sessionId:tools().getSessionId(),itemId,status:'abandoned'});
         await db().runTransaction(async tx=>{
           const runRef=db().collection('karaokeControl').doc('runOrder');
           let run;

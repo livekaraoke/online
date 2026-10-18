@@ -10,11 +10,11 @@ async function setup(page='library.html',cache=new Map()){
  const include=document.createElement('div');include.innerHTML=read('admin-new/includes/top-statusbar.html');document.body.append(include);
  const storage={getItem:k=>cache.get(k)||null,setItem:(k,v)=>cache.set(k,v),removeItem:k=>cache.delete(k)};
  const songs=[{id:'a',firebaseId:'a',title:'Dakota',artist:'Stereophonics',userBpm:120,sections:[]},{id:'b',firebaseId:'b',title:'Wonderwall',artist:'Oasis',userBpm:88,sections:[]},{id:'c',firebaseId:'c',title:'Valerie',artist:'Amy Winehouse',userBpm:105,sections:[]}];
- let session={id:'s1',venue:'Reflections'},run=[],performedCallback,authCallback,reads=0,subscribes=0,unsubscribes=0,writes=[];
+ let session={id:'s1',venue:'Reflections',setlistSongIds:['a','b','c']},run=[],performedCallback,authCallback,reads=0,subscribes=0,unsubscribes=0,writes=[];
  const history=[{id:'g1',venue:'Reflections',status:'ended',startedAt:Date.UTC(2026,9,16),playedSongsSnapshot:[{songId:'b',playedAt:Date.UTC(2026,9,16)}],performanceLogSnapshot:[],requestSnapshot:[]}];
- const ref={get:async()=>{reads++;return {docs:history.map(s=>({id:s.id,data:()=>s}))};},doc:()=>ref,collection:()=>ref,onSnapshot:fn=>{subscribes++;performedCallback=fn;queueMicrotask(()=>fn({docs:[]}));return()=>unsubscribes++;}};
+ const ref={orderBy:(field,order)=>{assert.equal(field,'startedAt');assert.equal(order,'desc');return ref;},limit:n=>{assert.equal(n,101);return ref;},get:async()=>{reads++;return {docs:history.map(s=>({id:s.id,data:()=>s}))};},doc:()=>ref,collection:()=>ref,onSnapshot:fn=>{subscribes++;performedCallback=fn;queueMicrotask(()=>fn({docs:[]}));return()=>unsubscribes++;}};
  const tools={getSession:()=>session,getSessionId:()=>session?.id||'',getControl:()=>({venue:session?.venue||''}),getRunOrder:()=>run,ensureSongs:async()=>songs,enqueueSong:async(s,o)=>writes.push([s,o])};
- const ctx={console,document,window,URLSearchParams,location:{search:page.includes('host/lyricview')?'?id=a':''},sessionStorage:storage,localStorage:storage,Event:window.Event,CustomEvent:window.CustomEvent,Date,Map,Set,Promise,setTimeout,clearTimeout,firebase:{app:()=>({options:{projectId:'fixture'}}),auth:()=>({onAuthStateChanged:fn=>{authCallback=fn;queueMicrotask(()=>fn({uid:'host'}));}})},LK:{sessionTools:tools},db:{collection:()=>ref}};window.LK=ctx.LK;window.db=ctx.db;window.LS26={toast(){}};vm.createContext(ctx);vm.runInContext(read('shared/song-rotation.js'),ctx);vm.runInContext(read('shared/best-next.js'),ctx);const sessionSource=read('admin-new/js/top-statusbar-session-tools.js');vm.runInContext(`const $=id=>document.getElementById(id);`+sessionSource.slice(sessionSource.indexOf('  function renderBestNextRunOrder()'),sessionSource.indexOf('  function renderRunOrder()')),ctx);await tick();await tick();
+ const ctx={console,document,window,URLSearchParams,location:{search:page.includes('host/lyricview')?'?id=a':''},sessionStorage:storage,localStorage:storage,Event:window.Event,CustomEvent:window.CustomEvent,Date,Map,Set,Promise,setTimeout,clearTimeout,firebase:{app:()=>({options:{projectId:'fixture'}}),auth:()=>({onAuthStateChanged:fn=>{authCallback=fn;queueMicrotask(()=>fn({uid:'host'}));}})},LK:{sessionTools:tools},db:{collection:()=>ref}};window.LK=ctx.LK;window.db=ctx.db;window.LS26={toast(){}};window.LS26Data={collection:async()=>({docs:[{id:'alternate',data:()=>({name:'Alternate',songIds:['b']})}]})};vm.createContext(ctx);vm.runInContext(read('shared/song-rotation.js'),ctx);vm.runInContext(read('shared/best-next.js'),ctx);const sessionSource=read('admin-new/js/top-statusbar-session-tools.js');vm.runInContext(`const $=id=>document.getElementById(id);`+sessionSource.slice(sessionSource.indexOf('  function renderBestNextRunOrder()'),sessionSource.indexOf('  function renderRunOrder()')),ctx);await tick();await tick();
  return {window,document,ctx,songs,cache,tools,setSession:s=>{session=s;window.dispatchEvent(new window.Event('lk:session-updated'));},setRun:r=>{run=r;window.dispatchEvent(new window.Event('lk:runorder-updated'));},performed:r=>performedCallback({docs:r.map(data=>({data:()=>data}))}),auth:authCallback,stats:()=>({reads,subscribes,unsubscribes,writes}),emit:n=>window.dispatchEvent(new window.Event(n))};
 }
 test('Adapter loads once, renders top five, uses existing next action and does not read on open/venue updates',async()=>{
@@ -51,4 +51,28 @@ for(const route of ['host/lyricview','host/lyricview.html'])test('Run Order owns
  f.performed([{songId:selected}]);assert.equal(card.querySelector(`[data-use-next="${selected}"]`),null);
  f.window.dispatchEvent(new f.window.CustomEvent('ls26:current-song',{detail:{songId:'b'}}));assert.equal(card.querySelector('[data-use-next="b"]'),null);
  f.setSession({id:'s1',venue:'Other'});assert.equal(d.querySelectorAll('#tsRunOrderBestNext').length,1);assert.equal(f.stats().reads,1);
+});
+
+test('Session context, deliberate override, source selection and act scope stay independent',async()=>{
+ const f=await setup(),api=f.window.LS26BestNext,d=f.document;
+ assert.equal(api.snapshot().context.venue,'Reflections');assert.equal(api.snapshot().context.poolIds.size,3);
+ const venue=d.getElementById('bestNextVenueSelect');venue.value='planning venue';venue.onchange({target:venue});assert.equal(api.snapshot().context.venueKey,'planning venue');assert.equal(f.tools.getSession().venue,'Reflections');assert.match(d.getElementById('bestNextVenue').textContent,/OVERRIDE/);
+ d.getElementById('bestNextSessionVenue').click();assert.equal(api.snapshot().context.venue,'Reflections');
+ const source=d.getElementById('bestNextSource');source.value='alternate';source.onchange({target:source});assert.equal(api.snapshot().context.poolIds.size,1);assert.equal(api.get('a').eligible,false);assert.equal(api.get('b').eligible,true);
+ source.value='all';source.onchange({target:source});assert.equal(api.snapshot().context.poolIds,null);assert.equal(api.get('a').eligible,true);
+ f.setSession({id:'s2',venue:'Band Venue',venueId:'v2',sessionType:'Roxanna',setlistSongIds:['c']});await tick();assert.equal(api.snapshot().context.venueKey,'id:v2');assert.equal(api.snapshot().context.act,'roxanna');assert.equal(api.get('a').eligible,false);assert.equal(api.get('c').eligible,true);
+ const act=d.getElementById('bestNextAct');act.value='all';act.onchange({target:act});assert.equal(api.snapshot().context.act,'all');assert.equal(f.tools.getSession().sessionType,'Roxanna');
+});
+
+test('Expanded tools render without performance-area insertion; Finish & Next is guarded and does not play transport',async()=>{
+ const f=await setup('host/lyricview.html'),d=f.document;f.ctx.setInterval=()=>0;
+ vm.runInContext(read('shared/performance-intelligence.js'),f.ctx);f.tools.getSongs=()=>f.songs;f.tools.getRequests=()=>[{id:'r',requesterId:'person',singerName:'Sarah',songId:'a',status:'pending',createdAt:Date.now()-120000}];
+ let finishes=0,opened=0,stopped=0,resolve;f.tools.actions={openRunOrderSong:async()=>opened++,openRunOrderDetails(){},acceptRequest:async()=>{}};
+ f.tools.finishCurrent=()=>{finishes++;return new Promise(r=>resolve=r);};f.window.LS26Performance={flushTempo:async()=>{},stop:()=>stopped++};
+ vm.runInContext(read('shared/performance-tools-ui.js'),f.ctx);
+ f.setSession({id:'s1',venue:'Reflections',sessionType:'Live Karaoke',setlistSongIds:['a','b','c']});
+ f.setRun([{id:'p',songId:'b',songTitle:'Wonderwall',status:'playing'},{id:'next',songId:'c',songTitle:'Valerie',status:'queued'}]);
+ assert.ok(d.getElementById('smartSingerRotation'));assert.ok(d.getElementById('smartSessionTiming'));assert.ok(d.querySelector('#smartVenueIntelligence summary'));assert.equal(d.querySelector('#hostStickyStack #smartRunTools'),null);
+ const finish=d.querySelector('[data-smart-finish]');finish.click();finish.click();await tick();assert.equal(finishes,1);resolve({completed:true,next:{id:'next'}});await tick();assert.equal(opened,1);assert.equal(stopped,1);
+ f.setSession({id:'s1',venue:'Reflections',sessionType:'Solo'});assert.equal(d.getElementById('smartSingerRotation'),null);
 });

@@ -3297,3 +3297,16 @@
 .ts-best-next-actions{display:flex;gap:8px}
 .ts-best-next button{min-height:44px;padding:7px 13px;border:1px solid #386575;border-radius:7px;background:#103640;color:#e2f3f5;font:inherit;font-size:13px;font-weight:700}
 .ts-best-next button:disabled{opacity:.5}
+/* Expanded tools only: no fixed/sticky positioning or LyricView offsets. */
+.ts-best-next{padding:7px 10px;margin:8px 0}
+.ts-best-next-heading{align-items:center;font-size:16px;margin:0;flex-wrap:wrap;gap:8px}
+.ts-best-next-heading>strong{flex:1;min-width:150px}.ts-best-next-heading>small{font-size:11px;color:#6dc8c4}
+.ts-best-next .rotation-badge{margin:0}.ts-best-next p{margin:3px 0;font-size:12px}
+.ts-best-next-actions{display:inline-flex}.ts-best-next button{padding:5px 11px}
+.smart-performance-tools{margin:8px 0;padding:8px 10px;border:1px solid #285664;border-radius:8px;color:#d9eef1;background:#092b35;font-size:14px}
+.smart-performance-tools p{margin:6px 0}.smart-performance-tools summary{min-height:44px;display:flex;align-items:center;cursor:pointer}
+.smart-performance-tools button,.smart-performance-tools select,.smart-performance-tools input{min-height:44px;background:#123640;color:#efffff;border:1px solid #386575;border-radius:7px;padding:6px 10px;font-size:14px;max-width:100%;box-sizing:border-box}
+.smart-finish,.smart-flow,.smart-settings{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.smart-settings label{display:grid;gap:4px}.smart-flow button{max-width:250px}.smart-performance-tools button:disabled{opacity:.45}.smart-performance-tools [role=status]{color:#ffc994}
+.ts-sequence-label{display:block;font-size:11px;letter-spacing:.07em;color:#70d6cf}
+
+.smart-flow{max-height:260px;overflow:auto;overscroll-behavior:contain}
