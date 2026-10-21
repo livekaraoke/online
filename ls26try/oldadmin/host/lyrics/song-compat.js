@@ -1,6 +1,6 @@
 (() => {
   'use strict';
-  if(!/\/ls26try\/oldadmin\/host\/lyrics\/song\.html$/i.test(location.pathname))return;
+  if(!/\/ls26try\/oldadmin\/host\/lyrics\/song(?:\.html)?\/?$/i.test(location.pathname))return;
 
   const normalize=value=>String(value||'')
     .toLowerCase()
@@ -105,7 +105,6 @@
     const originalLoadSong=window.loadSong;
 
     if(typeof originalLoadSong==='function'){
-      window.removeEventListener('DOMContentLoaded',originalLoadSong);
       let loading=false;
       window.loadSong=async function(){
         if(loading)return;
@@ -113,7 +112,7 @@
         try{
           const rawId=new URLSearchParams(location.search).get('id')||'';
           const resolved=await resolveLegacyId(rawId);
-          if(resolved&&normalize(resolved)!==normalize(rawId)){
+          if(resolved&&resolved!==rawId){
             console.info('Mapped LiveSuite song ID to legacy lyrics ID:',rawId,'→',resolved);
             replaceCurrentId(resolved);
           }
@@ -147,8 +146,9 @@
           if(!snap.exists)return;
           const data=snap.data()||{};
           const remoteId=String(
-            data.currentLyricsSongId||
+            // Manual SEND LYRICS can update currentSongId while the modern field is stale.
             data.currentSongId||
+            data.currentLyricsSongId||
             data.songId||
             ''
           ).trim();
@@ -173,7 +173,10 @@
     if(slaveToggle?.checked)window.startSlaveLyrics();
   };
 
-  if(document.readyState==='loading'){
+  // Initialize before the original DOMContentLoaded handler loads a file.
+  if(document.getElementById('slaveLyricsToggle')&&typeof window.loadSong==='function'){
+    start();
+  }else if(document.readyState==='loading'){
     document.addEventListener('DOMContentLoaded',start,{once:true});
   }else{
     start();
