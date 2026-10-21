@@ -804,6 +804,10 @@ function recalcSpeed() {
 // ------------------------------------------------------
 
 // LOAD SONG & LYRICS -----------------------------------
+// Only the newest selection may update the view; older script callbacks are stale.
+let lyricsLoadVersion = 0;
+let activeLyricsScript = null;
+let lastRenderedLyricsId = "";
 
 function loadSong() {
   setDebug("loadSong started", "INFO");
@@ -867,8 +871,15 @@ function loadSong() {
   recalcSpeed();
 
   // ---------------- LYRICS ----------------
+  const version = ++lyricsLoadVersion;
+  if (activeLyricsScript) {
+    activeLyricsScript.onload = null;
+    activeLyricsScript.onerror = null;
+    activeLyricsScript.remove();
+  }
   const script = document.createElement("script");
-  const path = `lyrics-data/${id}.js`;
+  activeLyricsScript = script;
+  const path = `lyrics-data/${encodeURIComponent(id)}.js`;
 
   setDebug("Loading lyrics: " + path, "INFO");
 
@@ -877,6 +888,9 @@ function loadSong() {
   setDebug("Reached lyrics loader", "INFO");
 
   script.onload = () => {
+    if (version !== lyricsLoadVersion) return;
+    activeLyricsScript = null;
+    script.remove();
     setDebug("Lyrics script loaded: " + path, "INFO");
     const data = window.songData;
 
@@ -894,21 +908,24 @@ function loadSong() {
     }
 
     renderLyrics(data.lyrics);
+    // Do not reset position for repeated updates to the same song.
+    if (lastRenderedLyricsId && lastRenderedLyricsId !== id) {
+      stopAutoScroll();
+      window.scrollTo(0, 0);
+    }
+    lastRenderedLyricsId = id;
     setDebug("Lyrics loaded successfully", "INFO");
   };
 
   script.onerror = () => {
+    if (version !== lyricsLoadVersion) return;
+    activeLyricsScript = null;
+    script.remove();
     showError("FAILED to load lyrics file");
     renderFallback();
   };
 
   document.body.appendChild(script);
-
-  setTimeout(() => {
-    if (window.scrollY < 20 && !autoScrollActive) {
-      window.scrollTo(0, 196);
-    }
-  }, 300);
 }
 
 // ------------------------------------------------------
@@ -971,53 +988,20 @@ window.addEventListener("DOMContentLoaded", () => {
 // ------------------------------------------------------
 
 
-  /** SLAVE LYRICS **/
-const params = new URLSearchParams(window.location.search);
-/*const currentSongId = params.get("id");*/
-  const currentSongId = new URLSearchParams(window.location.search).get("id");
-
-let slaveLyricsUnsubscribe = null;
-
-function startSlaveLyrics() {
-  if (slaveLyricsUnsubscribe) return;
-
-  slaveLyricsUnsubscribe = db.collection("karaokeControl").doc("liveLyrics")
-    .onSnapshot(doc => {
-      if (!doc.exists) return;
-
-      const data = doc.data();
-      const newSongId = data.currentSongId;
-
-      if (!newSongId || newSongId === currentSongId) return;
-
-      window.location.href =
-        `song.html?id=${encodeURIComponent(newSongId)}&slave=1`;
-    });
+  /** SLAVE LYRICS: one listener in song-compat.js.
+      The old implementation navigated to song.html for every song change. **/
+const slaveLyricsToggle = document.getElementById("slaveLyricsToggle");
+if (new URLSearchParams(window.location.search).get("slave") === "1") {
+  slaveLyricsToggle.checked = true;
 }
-
-function stopSlaveLyrics() {
-  if (slaveLyricsUnsubscribe) {
-    slaveLyricsUnsubscribe();
-    slaveLyricsUnsubscribe = null;
-  }
-}
-
-document.getElementById("slaveLyricsToggle").addEventListener("change", function () {
-  if (this.checked) {
-    startSlaveLyrics();
-  } else {
-    stopSlaveLyrics();
-  }
+slaveLyricsToggle.addEventListener("change", function() {
+  if (this.checked) window.startSlaveLyrics?.();
+  else window.stopSlaveLyrics?.();
 });
-
-if (params.get("slave") === "1") {
-  document.getElementById("slaveLyricsToggle").checked = true;
-  startSlaveLyrics();
-}
 
 </script>
 <!-- Resolve modern song IDs to legacy file slugs before initial load and Slave updates. -->
-<script src="song-compat.js?v=20261022-slave-id-v1"></script>
+<script src="song-compat.js?v=20261022-inplace-v2"></script>
 <!-- ********************************************************* -->
 <!-- ==================== END OF JS CODE ===================== -->
 

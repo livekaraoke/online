@@ -1,184 +1,143 @@
 (() => {
   'use strict';
-  if(!/\/ls26try\/oldadmin\/host\/lyrics\/song(?:\.html)?\/?$/i.test(location.pathname))return;
+  if (!/\/ls26try\/oldadmin\/host\/lyrics\/song(?:\.html)?\/?$/i.test(location.pathname)) return;
 
-  const normalize=value=>String(value||'')
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g,'')
-    .replace(/[^a-z0-9]/g,'');
+  const normalize = value => String(value || '')
+    .toLowerCase().normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '');
 
-  function legacyEntries(){
-    return (Array.isArray(window.songs)?window.songs:[])
-      .map(song=>{
-        const url=String(song?.url||'');
-        const match=url.match(/[?&]id=([^&#]+)/i);
-        let urlId='';
-        if(match){
-          try{urlId=decodeURIComponent(match[1]);}catch(_){urlId=match[1];}
-        }
-        const id=String(urlId||song?.id||'').trim();
+  function entries() {
+    return (Array.isArray(window.songs) ? window.songs : [])
+      .map(song => {
+        const found = String(song?.url || '').match(/[?&]id=([^&#]+)/i);
+        let id = '';
+        if (found) { try { id = decodeURIComponent(found[1]); } catch (_) { id = found[1]; } }
         return {
-          id,
-          title:String(song?.title||'').trim(),
-          artist:String(song?.artist||'').trim(),
-          song
+          id: String(id || song?.id || '').trim(),
+          title: String(song?.title || '').trim(),
+          artist: String(song?.artist || '').trim()
         };
-      })
-      .filter(entry=>entry.id);
+      }).filter(item => item.id);
   }
 
-  function metadataValue(meta,...keys){
-    for(const key of keys){
-      const value=meta?.[key];
-      if(value!=null&&String(value).trim())return String(value).trim();
+  function value(meta, ...names) {
+    for (const name of names) {
+      const v = meta?.[name];
+      if (v != null && String(v).trim()) return String(v).trim();
     }
     return '';
   }
 
-  function resolveLegacySync(rawId,meta={}){
-    const raw=String(rawId||'').trim();
-    const entries=legacyEntries();
-    if(!raw||!entries.length)return '';
+  function resolveLocal(raw, meta = {}) {
+    raw = String(raw || '').trim();
+    if (!raw) return '';
+    const catalog = entries();
+    if (!catalog.length) return '';
+    const byId = catalog.find(item => normalize(item.id) === normalize(raw));
+    if (byId) return byId.id;
 
-    const savedId=metadataValue(meta,'karaokeLyrics','karaokeId','legacyId');
-    const candidates=[savedId,raw].filter(Boolean);
-    for(const candidate of candidates){
-      const wanted=normalize(candidate);
-      const exact=entries.find(entry=>normalize(entry.id)===wanted);
-      if(exact)return exact.id;
-    }
+    // Modern IDs often combine title+artist. Check this BEFORE saved legacy
+    // metadata, which might still describe the previous song.
+    const titleArtist = catalog.filter(item => normalize(item.title + item.artist) === normalize(raw));
+    if (titleArtist.length === 1) return titleArtist[0].id;
 
-    const title=metadataValue(meta,'songTitle','title') || metadataValue(meta?.song,'title');
-    const artist=metadataValue(meta,'songArtist','artist') || metadataValue(meta?.song,'artist');
+    const explicit = value(meta, 'lyricsFileId', 'karaokeLyrics', 'karaokeId', 'legacyId');
+    const byExplicitId = catalog.find(item => normalize(item.id) === normalize(explicit));
+    if (explicit && byExplicitId) return byExplicitId.id;
 
-    if(title){
-      const titleKey=normalize(title);
-      const artistKey=normalize(artist);
-      const metadataMatch=entries.find(entry=>
-        normalize(entry.title)===titleKey &&
-        (!artistKey||normalize(entry.artist)===artistKey)
-      );
-      if(metadataMatch)return metadataMatch.id;
-
-      const titleMatches=entries.filter(entry=>normalize(entry.title)===titleKey);
-      if(titleMatches.length===1)return titleMatches[0].id;
-    }
-
-    const rawKey=normalize(raw);
-    const combined=entries.find(entry=>normalize(entry.title+entry.artist)===rawKey);
-    if(combined)return combined.id;
-
-    const titleOnly=entries.filter(entry=>normalize(entry.title)===rawKey);
-    if(titleOnly.length===1)return titleOnly[0].id;
-
-    return '';
-  }
-
-  async function resolveLegacyId(rawId,meta={}){
-    const direct=resolveLegacySync(rawId,meta);
-    if(direct)return direct;
-
-    const raw=String(rawId||'').trim();
-    if(!raw||!window.firebase?.firestore)return raw;
-
-    try{
-      const snap=await firebase.firestore().collection('lyrics').doc(raw).get();
-      if(snap.exists){
-        const resolved=resolveLegacySync(raw,snap.data()||{});
-        if(resolved)return resolved;
+    const title = value(meta, 'songTitle', 'title') || value(meta.song, 'title');
+    const artist = value(meta, 'songArtist', 'artist') || value(meta.song, 'artist');
+    if (title) {
+      const matches = catalog.filter(item => normalize(item.title) === normalize(title));
+      if (artist) {
+        const exactArtist = matches.filter(item => normalize(item.artist) === normalize(artist));
+        if (exactArtist.length === 1) return exactArtist[0].id;
       }
-    }catch(error){
-      console.warn('Legacy lyrics ID lookup failed:',error);
+      if (matches.length === 1) return matches[0].id;
     }
+    const byTitle = catalog.filter(item => normalize(item.title) === normalize(raw));
+    return byTitle.length === 1 ? byTitle[0].id : '';
+  }
 
+  async function resolveId(raw, meta = {}) {
+    const direct = resolveLocal(raw, meta);
+    if (direct) return direct;
+    if (!raw || !window.firebase?.firestore) return raw;
+    try {
+      // Only reached for a genuinely new ID absent from the local catalog.
+      const snap = await firebase.firestore().collection('lyrics').doc(String(raw)).get();
+      if (snap.exists) return resolveLocal(raw, snap.data() || {}) || raw;
+    } catch (error) { console.warn('Legacy lyrics ID lookup failed:', error); }
     return raw;
   }
 
-  function replaceCurrentId(id){
-    const url=new URL(location.href);
-    url.searchParams.set('id',id);
-    history.replaceState(null,'',url.href);
+  const originalLoadSong = window.loadSong;
+  if (typeof originalLoadSong !== 'function') return;
+
+  let unsubscribe = null;
+  let version = 0;
+  let displayedId = '';
+  let lastHostKey = '';
+  let enabled = false;
+
+  function replaceUrlId(id) {
+    const url = new URL(location.href);
+    url.searchParams.set('id', id);
+    // URL is updated in-place: no page navigation, no lost scrolling state.
+    history.replaceState(null, '', url.href);
   }
 
-  const start=()=>{
-    const originalLoadSong=window.loadSong;
+  async function showSong(rawId, metadata = {}) {
+    const raw = String(rawId || '').trim();
+    if (!raw) return;
+    const token = ++version;
+    const id = await resolveId(raw, metadata);
+    if (token !== version || !id) return;
+    if (displayedId === id) return;
+    if (displayedId) window.stopAutoScroll?.();
+    replaceUrlId(id);
+    displayedId = id;
+    originalLoadSong();
+  }
 
-    if(typeof originalLoadSong==='function'){
-      let loading=false;
-      window.loadSong=async function(){
-        if(loading)return;
-        loading=true;
-        try{
-          const rawId=new URLSearchParams(location.search).get('id')||'';
-          const resolved=await resolveLegacyId(rawId);
-          if(resolved&&resolved!==rawId){
-            console.info('Mapped LiveSuite song ID to legacy lyrics ID:',rawId,'→',resolved);
-            replaceCurrentId(resolved);
-          }
-          originalLoadSong();
-        }finally{
-          loading=false;
-        }
-      };
-    }
-
-    try{window.stopSlaveLyrics?.();}catch(_){}
-    let compatUnsubscribe=null;
-    let resolutionToken=0;
-    const originalStopSlave=window.stopSlaveLyrics;
-
-    window.stopSlaveLyrics=function(){
-      resolutionToken++;
-      if(compatUnsubscribe){
-        compatUnsubscribe();
-        compatUnsubscribe=null;
-      }
-      try{originalStopSlave?.();}catch(_){}
-    };
-
-    window.startSlaveLyrics=function(){
-      if(compatUnsubscribe||!window.firebase?.firestore)return;
-      compatUnsubscribe=firebase.firestore()
-        .collection('karaokeControl')
-        .doc('liveLyrics')
-        .onSnapshot(async snap=>{
-          if(!snap.exists)return;
-          const data=snap.data()||{};
-          const remoteId=String(
-            // Manual SEND LYRICS can update currentSongId while the modern field is stale.
-            data.currentSongId||
-            data.currentLyricsSongId||
-            data.songId||
-            ''
-          ).trim();
-          if(!remoteId)return;
-
-          const token=++resolutionToken;
-          const resolved=await resolveLegacyId(remoteId,data.song||data);
-          if(token!==resolutionToken||!resolved)return;
-
-          const currentRaw=new URLSearchParams(location.search).get('id')||'';
-          const currentResolved=resolveLegacySync(currentRaw)||currentRaw;
-          if(normalize(resolved)===normalize(currentResolved))return;
-
-          const url=new URL(location.href);
-          url.searchParams.set('id',resolved);
-          url.searchParams.set('slave','1');
-          location.href=url.href;
-        },error=>console.warn('Slave Lyrics sync failed:',error));
-    };
-
-    const slaveToggle=document.getElementById('slaveLyricsToggle');
-    if(slaveToggle?.checked)window.startSlaveLyrics();
+  // The original DOMContentLoaded callback will call this wrapper once.
+  window.loadSong = function () {
+    const id = new URLSearchParams(location.search).get('id') || '';
+    if (displayedId === id) return;
+    return showSong(id);
   };
 
-  // Initialize before the original DOMContentLoaded handler loads a file.
-  if(document.getElementById('slaveLyricsToggle')&&typeof window.loadSong==='function'){
-    start();
-  }else if(document.readyState==='loading'){
-    document.addEventListener('DOMContentLoaded',start,{once:true});
-  }else{
-    start();
-  }
+  window.stopSlaveLyrics = function () {
+    enabled = false;
+    ++version;
+    lastHostKey = '';
+    if (unsubscribe) { unsubscribe(); unsubscribe = null; }
+  };
+
+  window.startSlaveLyrics = function () {
+    if (unsubscribe || !window.firebase?.firestore) return;
+    enabled = true;
+    unsubscribe = firebase.firestore()
+      .collection('karaokeControl').doc('liveLyrics')
+      .onSnapshot(snap => {
+        if (!enabled || !snap.exists) return;
+        const data = snap.data() || {};
+        // Manual SEND LYRICS may update currentSongId while the modern
+        // singer-display ID remains stale.
+        const raw = String(data.currentSongId || data.currentLyricsSongId || data.songId || '').trim();
+        if (!raw) return;
+        const meta = data.song || data;
+        const signature = [
+          raw,
+          value(data, 'lyricsFileId', 'lyricsFileName'),
+          value(meta, 'karaokeLyrics', 'songTitle', 'title'),
+          value(meta, 'songArtist', 'artist')
+        ].join('|');
+        if (signature === lastHostKey) return;
+        lastHostKey = signature;
+        void showSong(raw, meta);
+      }, error => console.warn('Slave Lyrics sync failed:', error));
+  };
+
+  if (document.getElementById('slaveLyricsToggle')?.checked) window.startSlaveLyrics();
 })();
