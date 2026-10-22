@@ -116,3 +116,51 @@ the authorized GitHub connector; this does not fix future automatic dispatches.
 No token was created or copied. Cloudflare Access currently blocks verification
 of the private host in this browser. The /list application still targets the
 separate livekaraokemt project; no rules there were changed.
+
+## Continuation after the sign-in step was skipped
+
+The owner asked to skip the failing Cloudflare sign-in handoff. No Access policy
+was weakened and no credentials were copied between browsers.
+
+`public-live-projection.js` and `public-live-publisher.js` now derive explicit
+public live, event and website-settings views for all three acts. They do not
+copy requester identities, notes, email hashes, device IDs, venue access codes,
+private music data or performance timing. Run Order song/request IDs survive;
+cancelled requests are excluded even if an old queued Run Order row remains.
+Public song availability is reduced to song IDs and status.
+
+Catalogue and live publishing share owner source listeners and the existing
+browser leader lock. Cache-only/pending-write snapshots cannot renew a live
+view. Reconnection restores publishing. Stable map comparison avoids repeat
+writes caused by Firestore key ordering. Unchanged views cause no transaction
+reads. During an active public session, the live lease is renewed as needed by
+a 60-second heartbeat and expires after three minutes without a fresh host
+publication; it is not full-collection polling. Host tabs must remain open.
+
+The new public store reads three view documents and shares them with the popup.
+Expired/missing/denied views close the request UI and clear live content; there
+is no fallback to private source records in this mode. The exact venue code is
+validated by the existing request-create rules using the private atomic proof.
+
+`LK_PUBLIC_LIVE_V1` and `LK_PUBLIC_CATALOGUE_V1` remain false for all acts.
+`firestore.production-views.rules` is a separately generated, emulator-tested
+additive candidate, not a record of deployed rules. It restricts live-view reads
+using the current authoritative act/session/event and lease. It does not revoke
+the original public grants. Generate it with `node scripts/build-public-views-rules.cjs`.
+
+Before activation:
+1. Verify the owner publisher in an authenticated host and set each act's existing
+   repertoire selection. Roxanna always retains its own configured repertoire.
+2. Publish the additive views rules against a fresh production export; seed and
+   inspect the views, then enable and verify the corresponding public readers.
+3. Complete request-history ownership, Singer Screen/lyrics permissions and all
+   legacy list/QR/venue consumers; test unauthenticated, singer and owner access.
+4. Only then replace the original broad read grants, with emulator coverage and
+   live smoke checks. Neither this code nor a successful Pages build completes
+   that last security boundary.
+
+GitHub's `Public website regression checks` workflow now runs the policy,
+projection, publisher, full-rules emulator and eight browser viewport/mode
+combinations in isolation. It uses a standard runner in the public repository,
+no production credentials, and no production writes. Browser fixture time is
+fixed so future calendar dates do not make the tests decay.

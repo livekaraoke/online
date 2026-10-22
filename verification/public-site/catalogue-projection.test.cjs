@@ -1,6 +1,10 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const P=require('../../js/public-catalogue-projection.js');
 const privateSong={id:'original-id',title:'Song',artist:'Artist',year:'1995',genre:'Rock',tags:['90s'],lyrics:'PRIVATE',chords:'PRIVATE',sections:[{html:'PRIVATE'}],hostNote:'PRIVATE',transposition:4,timing:{private:true},resourceUrl:'PRIVATE'};
+test('Firestore map key ordering does not cause repeat publication',()=>{
+ assert.equal(P.equal({songs:[{title:'A',id:'1'}],act:'live-karaoke'},{act:'live-karaoke',songs:[{id:'1',title:'A'}]}),true);
+ assert.equal(P.equal({songs:['1','2']},{songs:['2','1']}),false,'song order remains significant');
+});
 test('only explicit public metadata crosses the projection boundary; IDs and order survive',()=>{
  const d=P.catalogue('live-karaoke',{id:'original-list',name:'Public',songIds:['original-id','original-id'],hostNote:'PRIVATE'},[privateSong]);
  assert.deepEqual(d.setlist,{id:'original-list',name:'Public',songIds:['original-id']});assert.equal(d.songs[0].id,'original-id');assert.equal(d.songs[0].year,1995);assert.equal(JSON.stringify(d).includes('PRIVATE'),false);

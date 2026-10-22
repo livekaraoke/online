@@ -1,6 +1,19 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),http=require('node:http');
 const {chromium}=require('playwright');
-const root=path.resolve(__dirname,'../..'),fixture=fs.readFileSync(path.join(__dirname,'firebase-fixture.js'),'utf8');
+const projected=process.env.LK_TEST_PROJECTED==='1';
+const root=path.resolve(__dirname,'../..');
+let fixture=fs.readFileSync(path.join(__dirname,'firebase-fixture.js'),'utf8');
+if(projected){
+ fixture+=['js/public-event-time.js','js/public-visibility.js','js/public-live-projection.js','js/public-catalogue-projection.js'].map(file=>fs.readFileSync(path.join(root,file),'utf8')).join('\n');
+ fixture+=`
+if(window.parent===window){window.__publishFixture=()=>{const f=__firebaseFixture,d=f.docs,c=d['karaokeControl/currentSession'],k=d['karaoke/state'],sid=c.active?c.sessionId:'',eid=c.active?c.eventId:k.preSessionRequestEventId;
+ const input={control:c,karaoke:k,session:sid?{...d['performanceSessions/'+sid],id:sid}:{},event:eid?{...d['upcomingEvents/'+eid],id:eid}:{},run:d['karaokeControl/runOrder'],requests:Object.entries(d).filter(([p])=>p.startsWith('publicSongRequests/')).map(([p,v])=>({...v,id:p.split('/')[1]}))};
+ const v=LKLiveProjection.live(input,'live-karaoke');v.expiresAt=v.sessionId?{seconds:(Date.now()+180000)/1000}:null;f.update('publicSites/live-karaoke/views/live',v);
+ f.update('publicSites/live-karaoke/views/events',LKLiveProjection.events(Object.entries(d).filter(([p])=>p.startsWith('upcomingEvents/')).map(([p,v])=>({...v,id:p.split('/')[1]})),'live-karaoke'));
+ f.update('publicSites/live-karaoke/views/settings',LKLiveProjection.settings(d['karaokeControl/liveKaraokeWebsiteSettings'],'live-karaoke'));
+ f.update('publicSites/live-karaoke/views/catalogue',LKCatalogueProjection.catalogue('live-karaoke',{...d['lyricsSetlists/public'],id:'public'},Object.entries(d).filter(([p])=>p.startsWith('lyrics/')).map(([p,v])=>({...v,id:p.split('/')[1]}))));};__publishFixture();}
+`;
+}
 (async()=>{
  const server=http.createServer((req,res)=>{const p=decodeURIComponent(req.url.split('?')[0]).replace(/^\/online\/?/,'');const file=path.resolve(root,p||'index.html');if(!file.startsWith(root+path.sep)){res.writeHead(403);return res.end();}fs.readFile(file,(e,b)=>{res.writeHead(e?404:200,{'Content-Type':({'.js':'text/javascript','.css':'text/css','.html':'text/html','.avif':'image/avif','.webp':'image/webp','.png':'image/png'})[path.extname(file)]||'text/plain'});res.end(e?'missing':b)})});
  await new Promise(r=>server.listen(8180,'127.0.0.1',r));
@@ -9,8 +22,9 @@ const root=path.resolve(__dirname,'../..'),fixture=fs.readFileSync(path.join(__d
  try{
   for(const [width,height] of [[1440,900],[1280,800],[390,844],[360,800]]){
    const context=await browser.newContext({viewport:{width,height},isMobile:width<500,hasTouch:true,timezoneId:'Europe/Malta'}),page=await context.newPage();const errors=[];
+   await page.clock.setFixedTime(new Date('2026-10-22T04:00:00Z'));
    page.on('pageerror',e=>errors.push(e.message));
-   await context.route('**/*',route=>{const url=route.request().url();if(url.startsWith('http://127.0.0.1:8180/'))return route.continue();if(url.includes('firebase-app-compat.js'))return route.fulfill({contentType:'text/javascript',body:fixture});if(url.includes('www.gstatic.com/firebasejs/'))return route.fulfill({contentType:'text/javascript',body:''});return route.abort();});
+   await context.route('**/*',route=>{const url=route.request().url();if(projected&&url.includes('/js/public-data-config.js'))return route.fulfill({contentType:'text/javascript',body:fs.readFileSync(path.join(root,'js/public-data-config.js'),'utf8')+"\nwindow.LK_PUBLIC_LIVE_V1={'live-karaoke':true};window.LK_PUBLIC_CATALOGUE_V1={'live-karaoke':true};"});if(url.startsWith('http://127.0.0.1:8180/'))return route.continue();if(url.includes('firebase-app-compat.js'))return route.fulfill({contentType:'text/javascript',body:fixture});if(url.includes('www.gstatic.com/firebasejs/'))return route.fulfill({contentType:'text/javascript',body:''});return route.abort();});
    await page.goto('http://127.0.0.1:8180/online/',{waitUntil:'networkidle'});
    assert.equal(await page.locator('#heroLiveNow').isVisible(),false,'test session hidden');
    assert.equal(await page.locator('.live-karaoke-event-card').count(),1,'only one published future karaoke event');
@@ -24,7 +38,7 @@ const root=path.resolve(__dirname,'../..'),fixture=fs.readFileSync(path.join(__d
    if(process.env.LK_SCREENSHOT_DIR){fs.mkdirSync(process.env.LK_SCREENSHOT_DIR,{recursive:true});await page.locator('#heroLiveNow').screenshot({path:path.join(process.env.LK_SCREENSHOT_DIR,`live-panel-${width}.png`)});}
    await page.locator('#liveNowRequestBtn').tap();const frame=page.frameLocator('#liveKaraokeRequestFrame');await frame.locator('.song-row').first().waitFor();
    assert.equal(await frame.locator('.song-row').count(),3);await frame.locator('#songSearch').fill('cranberries');assert.match(await frame.locator('#songResults').innerText(),/Zombie/);await frame.locator('#songSearch').fill('');
-   const counts=await page.evaluate(()=>__firebaseFixture.counts);for(const p of ['karaokeControl/currentSession','karaoke/state','karaokeControl/runOrder','karaokeControl/liveKaraokeWebsiteSettings'])assert.equal(counts[p],1,`one shared listener ${p}`);
+   const counts=await page.evaluate(()=>__firebaseFixture.counts);for(const p of (projected?['publicSites/live-karaoke/views/live','publicSites/live-karaoke/views/events','publicSites/live-karaoke/views/settings']:['karaokeControl/currentSession','karaoke/state','karaokeControl/runOrder','karaokeControl/liveKaraokeWebsiteSettings']))assert.equal(counts[p],1,`one shared listener ${p}`);
    await page.evaluate(()=>__firebaseFixture.update('karaoke/state',{songsEnabled:false}));await frame.getByText('REQUESTS CLOSED · BROWSE THE SONG LIST',{exact:true}).waitFor();assert.equal(await frame.locator('.song-action:not(:disabled)').count(),0);
    await page.evaluate(()=>__firebaseFixture.update('karaoke/state',{songsEnabled:true}));await frame.getByText('REQUESTS OPEN',{exact:true}).waitFor();
    await frame.locator('#songSearch').fill('zombie');await frame.locator('#songResults [data-toggle-favourite]').click();assert.equal(await frame.locator('#songResults [data-toggle-favourite]').getAttribute('aria-label'),'Remove from favourites');
@@ -36,7 +50,7 @@ const root=path.resolve(__dirname,'../..'),fixture=fs.readFileSync(path.join(__d
    await page.evaluate(()=>__firebaseFixture.update('karaokeControl/currentSession',{active:false}));assert.equal(await page.locator('#heroLiveNow').isVisible(),false);assert.equal(await page.locator('#heroCurrentSong').innerText(),'');
    await page.locator('#liveKaraokeEnquiryOpen').click();await page.locator('#lkEnquiryName').fill('Fixture Visitor');await page.locator('#lkEnquiryEmail').fill('fixture@example.com');await page.locator('#lkEnquiryEventType').selectOption('Corporate Event');await page.locator('#lkEnquiryMessage').fill('Isolated fixture enquiry.');await page.locator('#lkEnquirySubmit').evaluate(el=>{el.click();el.click();});await page.locator('#liveKaraokeEnquirySuccess').waitFor({state:'visible'});
    const bookings=await page.evaluate(()=>__firebaseFixture.writes.filter(x=>x.path.startsWith('bookingEnquiries/')));assert.equal(bookings.length,1);assert.equal(bookings[0].data.pageUrl,'https://livekaraoke.eu/');assert.equal(bookings[0].data.sourceKey,'live-karaoke');assert.equal(await page.evaluate(()=>__firebaseFixture.writes.filter(x=>x.path==='publicBookingLimits/fixture@example.com').length),1,'atomic booking limit');
-   assert.deepEqual(errors,[]);console.log(`PASS ${width}x${height}: layout, test exclusion, search, favourites, profile, request, duplicate prevention, closed gate, break/end, enquiry, shared listeners`);await context.close();
+   assert.deepEqual(errors,[]);console.log(`PASS ${projected?'projected':'compatibility'} ${width}x${height}: layout, test exclusion, search, favourites, profile, request, duplicate prevention, closed gate, break/end, enquiry, shared listeners`);await context.close();
   }
  }finally{await browser.close();await new Promise(r=>server.close(r));}
 })().catch(e=>{console.error(e);process.exit(1)});

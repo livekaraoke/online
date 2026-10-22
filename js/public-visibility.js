@@ -34,7 +34,10 @@
     const reserved=String(karaoke.preSessionRequestSessionId||'');
     const pre=!control.active&&!!reserved&&eventVisible(event)&&event.id===karaoke.preSessionRequestEventId;
     const id=active?String(control.sessionId||control.activeSessionId):pre?reserved:'';
-    const access=!karaoke.venueAccessCode||String(params.vac||'')===String(karaoke.venueAccessCode);
+    // Projected views never publish the venue code. Presence enables an attempt;
+    // Firestore checks the exact private code atomically with request creation.
+    const access=karaoke.venueCodeRequired===true?!!String(params.vac||''):
+      !karaoke.venueAccessCode||String(params.vac||'')===String(karaoke.venueAccessCode);
     const matching=!params.sessionId||params.sessionId===id;
     const open=!!id&&access&&matching&&karaoke.songsEnabled===true;
     const phase=active?(session.breakOpen?'break':(session.actualStartedAt||control.actualStartedAt?'live':'preparing')):pre?'starting-soon':'inactive';

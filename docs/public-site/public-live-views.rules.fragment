@@ -1,0 +1,16 @@
+// Additive view permissions. Original collection read migration is separate.
+function publicLiveViewCurrent(d,act) {
+  let control = get(/databases/$(database)/documents/karaokeControl/currentSession).data;
+  let state = get(/databases/$(database)/documents/karaoke/state).data;
+  let expected = act == 'live-karaoke' ? 'live karaoke' : act == 'billy-lee' ? 'solo' : 'roxanna';
+  return d.expiresAt is timestamp && d.expiresAt > request.time &&
+      (control.get('active',false) == true ? publishedLiveRequest(d,control,expected) :
+        publishedPreSessionRequest(d,control,state,expected));
+}
+match /publicSites/{act}/views/{view} {
+  allow get: if isOwner() ||
+    (act in ['live-karaoke','billy-lee','roxanna'] &&
+      (view in ['catalogue','events','settings'] ||
+        (view == 'live' && (resource.data.sessionId == '' || publicLiveViewCurrent(resource.data,act)))));
+  allow list, create, update, delete: if isOwner();
+}

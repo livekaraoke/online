@@ -277,6 +277,7 @@
   function requestSessionId(){ return window.LKRequestGate?.sessionId() || ''; }
 
   function syncSessionRequestsWatcher(){
+    if(window.LK_PUBLIC_LIVE_V1?.['live-karaoke']===true)return;
     const next=requestSessionId();
     if(next===watchedRequestSessionId)return;
     watchedRequestSessionId=next;
@@ -405,6 +406,7 @@
       const changed=next!==activeSessionId;
       activeSessionId=next;activeSession=visible?state.session:null;
       runOrder=LKPublicVisibility.runItems(state.run,next);
+      if(state.projected)sessionRequests=Array.isArray(state.availability)?state.availability:[];
       applyWebsiteRequestSettings(state.settings);
       syncSessionRequestsWatcher();renderLive();
       if($("requestDialog")?.open){
@@ -1727,7 +1729,7 @@
     }catch(error){
       console.error(error);
       const notice=$("requestNotice");
-      if(notice)notice.textContent=error.message==='Requests are closed.'?'Requests have closed. You can still browse songs.':'Could not send your request. Check your connection and try again.';
+      if(notice)notice.textContent=error.message==='Requests are closed.'?'Requests have closed. You can still browse songs.':error.code==='permission-denied'?'This request is no longer eligible. Check that requests are open and use the current venue QR code.':'Could not send your request. Check your connection and try again.';
       switchRequestTab('songs');
     }finally{
       requestSubmitting=false;

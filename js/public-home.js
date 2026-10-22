@@ -91,15 +91,7 @@
 
         const diff = date.getTime() - Date.now();
 
-        if (diff <= 0) {
-          const totalLate = Math.max(1, Math.floor(Math.abs(diff) / 60000));
-          const hours = Math.floor(totalLate / 60);
-          const mins = totalLate % 60;
-
-          return hours
-            ? `Starting now · ${hours}h${mins ? ` ${mins}m` : ""} late`
-            : `Starting now · ${totalLate}m late`;
-        }
+        if (diff <= 0) return "Starting now";
 
         const totalMins = Math.floor(diff / 60000);
         const days = Math.floor(totalMins / 1440);

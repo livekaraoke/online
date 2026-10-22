@@ -6,6 +6,12 @@
   'use strict';
   const text=(v,n=220)=>typeof v==='string'?v.slice(0,n):'';
   const tags=v=>(Array.isArray(v)?v:[]).filter(x=>typeof x==='string').slice(0,24).map(x=>text(x,80));
+  // Firestore returns map keys in its own order. Compare values, not insertion
+  // order, so unchanged snapshots and additional host devices cause no writes.
+  function equal(a,b){
+    const sorted=v=>Array.isArray(v)?v.map(sorted):v&&typeof v==='object'?Object.fromEntries(Object.keys(v).sort().map(k=>[k,sorted(v[k])])):v;
+    return JSON.stringify(sorted(a))===JSON.stringify(sorted(b));
+  }
   function song(id,d={}){
     const year=Number(d.year);
     return {id,title:text(d.title),artist:text(d.artist||d.songArtist),
@@ -23,5 +29,5 @@
     return {schemaVersion:1,act,setlist:{id:setlist.id,name:text(setlist.name),songIds:ids},
       songs:ids.map(id=>song(id,byId.get(id)))};
   }
-  return Object.freeze({song,catalogue});
+  return Object.freeze({song,catalogue,equal});
 });

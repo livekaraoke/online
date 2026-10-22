@@ -5,3 +5,5 @@ window.LK_PUBLIC_CATALOGUE_V1 = Object.freeze({
   'billy-lee':false,
   'roxanna':false
 });
+// Activate separately only after owner publication and all consumer checks.
+window.LK_PUBLIC_LIVE_V1 = Object.freeze({'live-karaoke':false,'billy-lee':false,'roxanna':false});

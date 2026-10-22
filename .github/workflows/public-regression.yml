@@ -1,0 +1,61 @@
+name: Public website regression checks
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - index.html
+      - css/**
+      - js/**
+      - livekaraoke26/**
+      - ls26try/shared/public-*.js
+      - docs/public-site/*.rules*
+      - verification/public-site/**
+      - scripts/build-public-*.cjs
+      - .github/workflows/public-regression.yml
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: public-regression-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  isolated-tests:
+    # Standard hosted runners are free for this public repository. No secrets,
+    # Firebase login, production database writes or deployment steps are used.
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Install pinned test tools outside the website
+        run: |
+          npm install --prefix "$RUNNER_TEMP/lk-test-tools" --no-audit --no-fund firebase@10.14.1 firebase-tools@13.35.1 @firebase/rules-unit-testing@3.0.4 playwright@1.62.1
+          echo "NODE_PATH=$RUNNER_TEMP/lk-test-tools/node_modules" >> "$GITHUB_ENV"
+          echo "LS26_KIOSK_TEST_MODULES=$RUNNER_TEMP/lk-test-tools" >> "$GITHUB_ENV"
+          "$RUNNER_TEMP/lk-test-tools/node_modules/.bin/playwright" install --with-deps chromium
+      - name: Publication, repertoire and Malta-time tests
+        run: |
+          node --test verification/public-site/public-policy.test.cjs verification/public-site/event-time.test.cjs verification/public-site/catalogue-projection.test.cjs verification/public-site/catalogue-publisher.test.cjs verification/public-site/live-projection.test.cjs
+          node verification/public-site/live-karaoke-catalogue.test.cjs
+      - name: Full Firestore rules in the demo emulator
+        env:
+          LK_FULL_RULES: docs/public-site/firestore.production-views.rules
+        run: |
+          node scripts/build-public-views-rules.cjs
+          "$RUNNER_TEMP/lk-test-tools/node_modules/.bin/firebase" emulators:exec --config firebase.emulators.json --project demo-lk-public --only firestore 'node verification/public-site/live-views-rules.test.cjs && node verification/public-site/request-gate-rules.test.cjs && node verification/public-site/ownership-kiosk-rules.test.cjs && node verification/public-site/rules.test.cjs && node verification/public-site/catalogue-rules.test.cjs'
+      - name: Desktop, tablet and phone workflows
+        run: |
+          node verification/public-site/repair-browser.test.cjs
+          LK_TEST_PROJECTED=1 node verification/public-site/repair-browser.test.cjs
