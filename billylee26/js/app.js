@@ -419,6 +419,7 @@
   }
 
   async function loadPublicSongs(){
+    if(window.LK_PUBLIC_CATALOGUE_V1?.['billy-lee']){const result=await LKPublicCatalogue.load(db,'billy-lee');songs=result.songs;publicSetlist=result.setlist;return;}
     const cfgSnap=await db.collection("karaokeControl").doc("publicSongList").get();
     const cfg=cfgSnap.exists?(cfgSnap.data()||{}):{};
     if(cfg.setlistId){

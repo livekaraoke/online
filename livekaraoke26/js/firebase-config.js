@@ -51,7 +51,7 @@
     const stamp = firebase.firestore.FieldValue.serverTimestamp();
     const batch = rawDb.batch();
     batch.set(requestRef, data || {});
-    batch.set(proofRef, { token, createdAt: stamp, proofAt: stamp });
+    batch.set(proofRef, { token, createdAt: stamp, proofAt: stamp, accessCode:new URLSearchParams(location.search).get("vac")||"" });
     rememberToken(requestRef.id, token);
     if (readToken(requestRef.id) !== token) throw new Error("Allow browser storage before sending your request.");
     await batch.commit();

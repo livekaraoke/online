@@ -21,6 +21,7 @@
   function loadSharedHelper(src,id){if(document.getElementById(id))return;const script=document.createElement('script');script.id=id;script.src=new URL(src,dataScriptUrl).href;script.async=false;document.body.appendChild(script);}
   function loadFocusedHelpers(){
     const path=String(location.pathname||'');
+    if(window.firebase?.auth&&firebase.apps?.length)loadSharedHelper('public-catalogue-publisher.js?v=20261022','ls26PublicCataloguePublisherLoader');
     if(document.getElementById('topStatusContainer')){loadSharedHelper('manual-request.js?v=20261006-manual-request-v2','ls26ManualRequestLoader');loadSharedHelper('manual-request-button-layout.js?v=20261006-manual-request-layout-v1','ls26ManualRequestLayoutLoader');}
     if(/\/admin-new\/performance-sessions\.html$/i.test(path))loadSharedHelper('session-history-fixes.js?v=20261006-request-history-fix-v1','ls26SessionHistoryFixLoader');
     // LyricView receives the helper here; Singer Screen loads it directly so it

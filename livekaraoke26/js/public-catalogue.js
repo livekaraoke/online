@@ -3,6 +3,7 @@
   "use strict";
 
   async function load(db) {
+    if(window.LK_PUBLIC_CATALOGUE_V1?.["live-karaoke"])return LKPublicCatalogue.load(db,"live-karaoke");
     const control = db.collection("karaokeControl");
     const [listSnap, settingsSnap, sessionSnap] = await Promise.all([
       control.doc("publicSongList").get(),

@@ -1,0 +1,22 @@
+/* Exact merge against the Console-exported restore source; never a guessed ruleset. */
+const fs=require('node:fs'),path=require('node:path');
+const root=path.resolve(__dirname,'..'),read=f=>fs.readFileSync(path.join(root,f),'utf8');
+let rules=read('docs/public-site/firestore.production-before-20261022.rules');
+const booking=read('docs/public-site/booking-enquiries.rules.fragment').replace('validPublicBookingEnquiry() && validBookingCooldown(enquiryId)',"validPublicBookingEnquiry() && (request.resource.data.sourceKey != 'live-karaoke' || validBookingCooldown(enquiryId))");
+const bookingMatch=/match \/bookingEnquiries\/\{enquiryId\} \{[\s\S]*?\n    \}/;
+if(!bookingMatch.test(rules))throw Error('Unexpected booking baseline.');
+rules=rules.replace(bookingMatch,()=>booking);
+const a=rules.indexOf('match /publicSongRequestOwners/'),b=rules.indexOf('match /publicSongRequestProofs/');
+let owner=rules.slice(a,b),changed=owner.replace(/hasOnly\(\[\s*'token',\s*'createdAt',\s*'proofAt'\s*\]\)/,"hasOnly(['token','createdAt','proofAt','accessCode'])\n          && request.resource.data.get('accessCode','') is string\n          && request.resource.data.get('accessCode','').size() <= 128");
+if(owner===changed)throw Error('Unexpected request ownership baseline.');
+rules=rules.slice(0,a)+changed+rules.slice(b);
+const fallback='    match /{document=**} {';
+if(!rules.includes(fallback))throw Error('Default deny not found.');
+rules=rules.replace(fallback,()=>read('docs/public-site/public-catalogue.rules.fragment')+'\n'+fallback);
+fs.writeFileSync(path.join(root,'docs/public-site/firestore.production-preparation.rules'),rules);
+const start=rules.indexOf('function validNormalPublicRequestCreate'),end=rules.indexOf('function publicRequestChangedOnly',start);
+const section=rules.slice(start,end),needle='&& d.createdAt == request.time';
+if(!section.includes(needle))throw Error('Unexpected public create baseline.');
+rules=rules.slice(0,start)+read('docs/public-site/public-request-gate.rules.fragment')+'\n'+section.replace(needle,needle+'\n        && validPublicRequestGate(d,requestId)')+rules.slice(end);
+fs.writeFileSync(path.join(root,'docs/public-site/firestore.production-gate.rules'),rules);
+console.log('Generated preparation and request-gate rules. Private-read cutover is intentionally absent.');

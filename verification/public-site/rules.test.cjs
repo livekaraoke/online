@@ -4,7 +4,7 @@ const {doc,setDoc,getDoc,getDocs,collection,updateDoc,deleteDoc,serverTimestamp,
 const fs=require('node:fs');
 (async()=>{
  const fragment=fs.readFileSync(require('node:path').join(__dirname,'../../docs/public-site/booking-enquiries.rules.fragment'),'utf8');
- const env=await initializeTestEnvironment({projectId:'demo-lk-public',firestore:{host:'127.0.0.1',port:8088,rules:`rules_version = '2';service cloud.firestore {match /databases/{database}/documents {function isOwner(){ return request.auth != null && request.auth.token.email == "leeborg23@gmail.com"; }${fragment}}}`}});
+ const env=await initializeTestEnvironment({projectId:'demo-lk-public',firestore:{host:'127.0.0.1',port:8088,rules:process.env.LK_FULL_RULES?fs.readFileSync(process.env.LK_FULL_RULES,'utf8'):`rules_version = '2';service cloud.firestore {match /databases/{database}/documents {function isOwner(){ return request.auth != null && request.auth.token.email == "leeborg23@gmail.com"; }${fragment}}}`}});
  const db=env.unauthenticatedContext().firestore();
  const valid=()=>({status:'pending',source:'Live Karaoke Website',sourceKey:'live-karaoke',type:'Live Karaoke',performerType:'Live Karaoke',name:'Test visitor',email:'visitor@example.com',phone:'',eventType:'Corporate Event',preferredDate:'',venueOrLocality:'',company:'',estimatedGuests:null,message:'Test enquiry\nwith a newline.',pageUrl:'https://livekaraoke.eu/',createdAt:serverTimestamp(),updatedAt:serverTimestamp()});
  async function send(id,data){const batch=writeBatch(db);batch.set(doc(db,'bookingEnquiries',id),data);batch.set(doc(db,'publicBookingLimits',data.email.toLowerCase()),{enquiryId:id,submittedAt:serverTimestamp()});return batch.commit();}

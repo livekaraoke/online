@@ -1,0 +1,59 @@
+// Merge functions into /databases/{database}/documents and add
+// && validPublicRequestGate(d,requestId) to validNormalPublicRequestCreate.
+// Keep the existing owner bypass and independently validated kiosk branch.
+function requestAct(d) {
+  return d.source == 'live-karaoke-website' ? 'live karaoke' :
+    d.source == 'billylee26' ? 'solo' :
+    d.source in ['roxanna26','roxanna-website'] ? 'roxanna' : '';
+}
+function publicMetadata(d) {
+  return !(true in [d.get('isTest',false),d.get('isTestSession',false),
+    d.get('testMode',false),d.get('requestTestMode',false),d.get('private',false),d.get('isPrivate',false)]) &&
+    !(false in [d.get('published',true),d.get('publicVisible',true),d.get('publishToWebsite',true)]) &&
+    !(d.get('publicVisibility',d.get('visibility','')).lower() in ['private','test','internal','hidden','draft','unpublished']) &&
+    !((d.get('name','')+' '+d.get('title','')+' '+d.get('venue','')+' '+d.get('venueName','')).lower()
+      .matches('(^|.*[\\s_-])(test|testing|rehearsal|demo)([\\s_-].*|$)'));
+}
+function publicEvent(d, expected) {
+  let status = d.get('status','').lower();
+  return publicMetadata(d) && d.get('type','').lower() == expected &&
+    !(status in ['ended','completed','finished','cancelled','canceled','done','closed']) &&
+    d.get('completedAt',null) == null &&
+    (d.get('publicVisibility',d.get('visibility','')).lower() == 'public' ||
+      d.get('published',false) == true || d.get('publicVisible',false) == true || status == 'confirmed') &&
+    (!(status in ['tentative','pending','unconfirmed','provisional']) || d.get('publishUnconfirmed',false) == true);
+}
+function publishedLiveRequest(d, control, expected) {
+  let session = get(/databases/$(database)/documents/performanceSessions/$(d.sessionId)).data;
+  let event = get(/databases/$(database)/documents/upcomingEvents/$(control.eventId)).data;
+  return control.sessionId == d.sessionId &&
+    control.get('sessionType',control.get('type','')).lower() == expected &&
+    publicMetadata(control) && publicMetadata(session) &&
+    session.get('isActive',true) != false && session.get('endedAt',null) == null && session.get('closedAt',null) == null &&
+    !(session.get('status','').lower() in ['ended','completed','finished','cancelled','canceled','done','closed']) &&
+    publicEvent(event,expected);
+}
+function publishedPreSessionRequest(d, control, state, expected) {
+  return control.get('active',false) != true &&
+    state.get('preSessionRequestSessionId','') == d.sessionId &&
+    publicEvent(get(/databases/$(database)/documents/upcomingEvents/$(state.preSessionRequestEventId)).data,expected);
+}
+function validPublicRequestGate(d,requestId) {
+  let control = get(/databases/$(database)/documents/karaokeControl/currentSession).data;
+  let state = get(/databases/$(database)/documents/karaoke/state).data;
+  let list = get(/databases/$(database)/documents/karaokeControl/publicSongList).data;
+  let expected = d.source == 'public-songlist' ? control.get('sessionType',control.get('type','')).lower() : requestAct(d);
+  let settingsId = expected == 'live karaoke' ? 'liveKaraokeWebsiteSettings' : expected == 'solo' ? 'billyLeeWebsiteSettings' : 'roxannaWebsiteSettings';
+  let selectedId = expected == 'roxanna' ? d.publicSetlistId : control.get('active',false) == true ? list.setlistId : get(/databases/$(database)/documents/karaokeControl/$(settingsId)).data.get('defaultBrowseSetlistId',list.setlistId);
+  let sourceList = get(/databases/$(database)/documents/lyricsSetlists/$(selectedId)).data;
+  return d.source in ['live-karaoke-website','billylee26','roxanna26','roxanna-website','public-songlist'] &&
+    expected in ['live karaoke','solo','roxanna'] && state.songsEnabled == true &&
+    d.get('isTestSession',false) != true && d.get('requestTestMode',false) != true &&
+    d.songId in sourceList.songIds &&
+    (expected != 'roxanna' || sourceList.get('name','').lower() == 'roxanna') &&
+    (d.get('publicSetlistId','') == '' || d.publicSetlistId == selectedId) &&
+    (state.get('venueAccessCode','') == '' ||
+      getAfter(/databases/$(database)/documents/publicSongRequestOwners/$(requestId)).data.get('accessCode','') == state.venueAccessCode) &&
+    (control.get('active',false) == true ? publishedLiveRequest(d,control,expected) :
+      publishedPreSessionRequest(d,control,state,expected));
+}

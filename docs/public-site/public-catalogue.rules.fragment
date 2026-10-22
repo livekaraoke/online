@@ -1,0 +1,12 @@
+// Additive preparation only: this does NOT revoke any existing private read.
+// Merge inside /databases/{database}/documents with the actual isOwner predicate.
+match /publicPublication/{id} {
+  allow read, write: if isOwner();
+}
+match /publicSites/{act}/views/{view} {
+  allow get: if isOwner() || (act in ['live-karaoke','billy-lee','roxanna'] && view == 'catalogue');
+  allow list, create, update, delete: if isOwner();
+}
+// After all consumers (including Singer Screen) have migrated and been tested,
+// REPLACE the existing public read grants on lyrics and lyricsSetlists with
+// owner-only access. Adding a restrictive match cannot override an allow true.

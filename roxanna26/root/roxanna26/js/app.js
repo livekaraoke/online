@@ -180,10 +180,11 @@
       if(next!==activeSessionId){activeSessionId=next;attachSessionDoc(next);}else syncLive();
     },()=>{controlData={};activeSessionId='';attachSessionDoc('');}));
     unsubs.push(db.collection('karaoke').doc('state').onSnapshot(doc=>{
-      gateOpen=doc.exists&&doc.data().songsEnabled===true;renderLive();if($('requestDialog').open)renderSongResults();
+      gateOpen=doc.exists&&doc.data().songsEnabled===true&&(!doc.data().venueAccessCode||doc.data().venueAccessCode===(new URLSearchParams(location.search).get('vac')||''));renderLive();if($('requestDialog').open)renderSongResults();
     },()=>{gateOpen=false;renderLive();if($('requestDialog').open)renderSongResults();}));
   }
   async function loadPublicSongs(){
+    if(window.LK_PUBLIC_CATALOGUE_V1?.['roxanna']){const result=await LKPublicCatalogue.load(db,'roxanna');songs=result.songs;publicSetlist=result.setlist;return;}
     if(songsLoaded)return;if(songsPromise)return songsPromise;
     songsPromise=(async()=>{
       let set;
@@ -364,14 +365,18 @@
     try{
       const note=$("requestNote").value.trim();
       const ref=db.collection('publicSongRequests').doc();
+      const bytes=new Uint8Array(32);crypto.getRandomValues(bytes);
+      const token=Array.from(bytes,b=>b.toString(16).padStart(2,'0')).join('');
+      const accessCode=new URLSearchParams(location.search).get('vac')||'';
       await db.runTransaction(async tx=>{
         const c=await tx.get(db.collection('karaokeControl').doc('currentSession'));
         const session=await tx.get(db.collection('performanceSessions').doc(submittedSession));
         const gate=await tx.get(db.collection('karaoke').doc('state'));
         const queue=await tx.get(db.collection('karaokeControl').doc('runOrder'));
-        if(!policy.live(c.data(),session.data(),submittedSession)||gate.data()?.songsEnabled!==true)throw Error('Requests closed or the live session changed.');
+        if(!policy.live(c.data(),session.data(),submittedSession)||gate.data()?.songsEnabled!==true||(gate.data()?.venueAccessCode&&gate.data().venueAccessCode!==accessCode))throw Error('Requests closed or the live session changed.');
         const items=policy.queue(c.data(),session.data(),submittedSession,queue.data());
         if(items.some(x=>sameSong(x,song)&&['playing','played','completed'].includes(policy.norm(x.status))))throw Error('This song is already playing or has been played.');
+        tx.set(db.collection('publicSongRequestOwners').doc(ref.id),{token,accessCode,createdAt:firebase.firestore.FieldValue.serverTimestamp(),proofAt:firebase.firestore.FieldValue.serverTimestamp()});
         tx.set(ref,{
         listId:publicSetlist.id,
         publicSetlistId:publicSetlist?.id||"",
