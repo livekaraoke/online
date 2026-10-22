@@ -38,6 +38,7 @@
     });
     window.applyTextSizes?.();
     scheduleWideLyricsLayout();
+    scheduleHeaderOpacity();
   }
   window.applySavedPrompterStyles = applyStyles;
 
@@ -270,6 +271,7 @@
     updateDevConsole();
     updateWidthButton();
     scheduleWideLyricsLayout();
+    scheduleHeaderOpacity();
     // Explicit ?slave=1 overrides a locally stored off setting on initial entry.
     const enableSlave = new URLSearchParams(location.search).get('slave') === '1' ||
       prefs.slaveLyrics === true;
@@ -282,6 +284,7 @@
     const button = byId(id);
     if (!button) return;
     let pointerId = null, timer = null, frame = null, lastTime = null, held = false;
+    let startX = 0, startY = 0, moved = false;
 
     function pulse() {
       // Restart the CSS animation on every press, including successive quick taps.
@@ -327,6 +330,9 @@
       pulse();
       pointerId = event.pointerId;
       held = false;
+      moved = false;
+      startX = event.clientX || 0;
+      startY = event.clientY || 0;
       try { button.setPointerCapture(event.pointerId); } catch (_) {}
       timer = setTimeout(() => {
         timer = null;
@@ -336,10 +342,18 @@
       }, 220);
     });
 
+    button.addEventListener('pointermove', event => {
+      if (pointerId !== event.pointerId || moved) return;
+      if (Math.hypot((event.clientX || 0) - startX,
+            (event.clientY || 0) - startY) > 18) {
+        moved = true;
+        stop(); // swiping the right zone must neither pan nor accidentally tap
+      }
+    });
     button.addEventListener('pointerup', event => {
       if (pointerId !== event.pointerId) return;
       const wasHeld = stop();
-      if (!wasHeld) step();
+      if (!wasHeld && !moved) step();
     });
     button.addEventListener('pointercancel', () => { stop(); });
     button.addEventListener('lostpointercapture', () => {
@@ -352,10 +366,65 @@
     window.addEventListener('blur', () => { stop(); });
   }
 
+  // Native gestures may scroll the document only if they started in the
+  // deliberately narrow left-hand strip. Programmatic arrows and Auto Scroll
+  // use window.scrollBy/scrollTo and remain unaffected.
+  let manualTouchStartedInStrip = false;
+  const manualStripWidth = () =>
+    (document.documentElement.clientWidth || window.innerWidth || 0) * .26;
+  const inAllowedManualArea = (x, y) => {
+    const bar = document.querySelector('.top-bar');
+    const lowerBound = bar?.getBoundingClientRect?.().bottom || 116;
+    return x >= 0 && x <= manualStripWidth() && y >= lowerBound;
+  };
+  const inSidebar = target => Boolean(target?.closest?.('#controlPanel'));
+
+  function installRestrictedManualScrolling() {
+    document.addEventListener('touchstart', event => {
+      const touch = event.touches?.[0];
+      manualTouchStartedInStrip = Boolean(touch &&
+        (inSidebar(event.target) || inAllowedManualArea(touch.clientX, touch.clientY)));
+    }, { capture: true, passive: true });
+    document.addEventListener('touchmove', event => {
+      if (event.touches?.length > 1) return; // preserve pinch zoom
+      if (!manualTouchStartedInStrip && event.cancelable) event.preventDefault();
+    }, { capture: true, passive: false });
+    document.addEventListener('touchend', event => {
+      if (!event.touches?.length) manualTouchStartedInStrip = false;
+    }, { capture: true, passive: true });
+    document.addEventListener('touchcancel', () => {
+      manualTouchStartedInStrip = false;
+    }, { capture: true, passive: true });
+    document.addEventListener('wheel', event => {
+      if (inSidebar(event.target) ||
+          inAllowedManualArea(event.clientX, event.clientY)) return;
+      if (event.cancelable) event.preventDefault();
+    }, { capture: true, passive: false });
+  }
+
+  // Fade only the header background; keep the buttons readable on stage.
+  let headerFrame = null;
+  function updateHeaderOpacity() {
+    headerFrame = null;
+    const bar = document.querySelector('.top-bar');
+    const lyrics = byId('lyrics-container');
+    const first = lyrics?.querySelector?.('.section,.verse,.chorus,.chorusrepeat,.bridge');
+    if (!bar || !first) return;
+    bar.classList.toggle('prompter-over-lyrics',
+      first.getBoundingClientRect().top <= bar.getBoundingClientRect().bottom);
+  }
+  function scheduleHeaderOpacity() {
+    if (headerFrame !== null) return;
+    headerFrame = requestAnimationFrame(updateHeaderOpacity);
+  }
+
   function initialize() {
+    installRestrictedManualScrolling();
+    window.addEventListener('scroll', scheduleHeaderOpacity, { passive: true });
     byId('prompterFitWidthToggle')?.addEventListener('click', toggleWideLyrics);
     window.addEventListener('resize', () => {
       updateArrowAppearance();
+      scheduleHeaderOpacity();
       if (prefs.wideLyrics === true) scheduleWideLyricsLayout();
     });
     byId('prompterScrollZonesToggle')?.addEventListener('change', event => {
