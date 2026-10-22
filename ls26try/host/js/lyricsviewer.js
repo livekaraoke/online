@@ -705,7 +705,7 @@
     finally{button.disabled=false;}
   }
   $("libraryScrollTop").onclick=()=>$("songRows").scrollTo({top:0,behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"instant":"smooth"});
-  document.querySelectorAll('[data-scope]').forEach(button=>button.onclick=()=>{scope=button.dataset.scope;if(scope==='all' && $('rotationFilter')?.value==='best')changeRotation('all');filters.setlist.value='';render();saveViewState();});
+  document.querySelectorAll('[data-scope]').forEach(button=>button.onclick=()=>{scope=button.dataset.scope;if(scope==='all' && $('rotationFilter')?.value==='best')changeRotation('all');filters.setlist.value='';window.dispatchEvent(new Event('ls26:working-setlist'));render();saveViewState();});
   filters.setlist.addEventListener('change',()=>{scope='all';render();saveViewState();});
   document.querySelectorAll('[data-bpm]').forEach(button=>button.onclick=()=>{const [id,delta]=button.dataset.bpm.split(':');const input=$(id);input.value=Math.max(0,Math.min(400,(Number(input.value)||100)+Number(delta)));input.dispatchEvent(new Event('input'));});
   $("songRows").addEventListener('scroll',saveViewState,{passive:true});
@@ -796,6 +796,7 @@
     saveNotesState(); // Clear category/search without revealing hidden notes.
     if($("missingDataFilter"))$("missingDataFilter").value="";
     filters.genre.value="";filters.decade.value="";filters.bpmMin.value="";filters.bpmMax.value="";scope="all";$("stickyFavToggle").checked=false;
+    window.dispatchEvent(new Event('ls26:working-setlist'));
     render();
     saveViewState();
   };

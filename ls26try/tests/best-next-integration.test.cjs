@@ -93,3 +93,22 @@ test('Smart performance scripts resolve to existing shared modules on clean and 
   }
  }
 });
+
+test('Library toolbar keeps scope, selected setlist, BEST NEXT and rotation together; queued songs disappear from preview',async()=>{
+ const f=await setup('library.html'),d=f.document,bar=d.querySelector('.library-browse-row');
+ assert.ok(bar);assert.ok(bar.querySelector('.library-scope #setlistFilter'));
+ assert.ok(bar.querySelector('#libraryRecommendationTools #bestNextOpen'));
+ assert.ok(bar.querySelector('#libraryRecommendationTools #rotationFilter'));
+ assert.match(d.getElementById('bestNextOpen').textContent,/Dakota/);
+ f.setRun([{songId:'a',status:'queued'}]);
+ assert.equal(f.window.LS26BestNext.get('a').eligible,false);
+ assert.doesNotMatch(d.getElementById('bestNextOpen').textContent,/Dakota/);
+ assert.equal(d.querySelector('#bestNextRows [data-use-next="a"]'),null);
+ f.setRun([{songId:'a',status:'deleted'}]);
+ assert.equal(f.window.LS26BestNext.get('a').eligible,true);
+ assert.match(d.getElementById('bestNextOpen').textContent,/Dakota/);
+ const selected=d.getElementById('setlistFilter');selected.innerHTML='<option value="alternate">Alternate</option>';selected.value='alternate';f.emit('ls26:working-setlist');
+ assert.equal(f.window.LS26BestNext.snapshot().context.sourceName,'Alternate');
+ assert.equal(f.window.LS26BestNext.get('a').eligible,false);
+ assert.equal(f.window.LS26BestNext.get('b').eligible,true);
+});

@@ -69,10 +69,10 @@ function rank(songs,index,context={},options={}){
   components.variety=repeated?.15:.5;if(repeated)reasons.push('Repeated genre/style');
   components.outcomes=stat.ratings?(stat.positive+1)/(stat.ratings+2):.5;if(stat.ratings)reasons.push(`${stat.positive}/${stat.ratings} positive host ratings here`);
   if(stat.lastDate)reasons.push(`${Math.floor((now-stat.lastDate)/86400000)} days since venue play`);
-  const queued=order.some(r=>index.resolve(r)===sid&&!['played','completed','abandoned','left','declined','cancelled','deleted'].includes(norm(r.status)));if(queued)reasons.push('Already committed in Run Order');
+  const queued=order.some(r=>index.resolve(r)===sid&&!['played','completed','abandoned','left','declined','cancelled','canceled','deleted','deletedbyhost','rejected'].includes(norm(r.status)));if(queued)reasons.push('Already committed in Run Order');
   if(context.sourceName)reasons.push('Source: '+context.sourceName);
   let sum=0,weight=0;for(const [key,value]of Object.entries(components)){sum+=value*cfg.weights[key];weight+=cfg.weights[key];}let score=weight?100*sum/weight:50;if(sameArtist){score-=cfg.sameArtistPenalty;reasons.push('Same artist penalty');}if(stat.gigsAgo===1)score-=cfg.lastGigPenalty;if(!known)score=Math.min(score,60);else if(partial)score=Math.min(score,75);else if(!venue?.gigs.length)score=Math.min(score,65);
-  const isNote=!/^\p{L}/u.test(String(song.title||'').trim()),eligible=!isTonight&&sid!==context.currentSongId&&!isNote&&!!sid&&!unsuitable&&(!context.poolIds||context.poolIds.has(sid));
+  const isNote=!/^\p{L}/u.test(String(song.title||'').trim()),eligible=!queued&&!isTonight&&sid!==context.currentSongId&&!isNote&&!!sid&&!unsuitable&&(!context.poolIds||context.poolIds.has(sid));
   return {song,id:sid,score:eligible?Math.max(0,Math.min(100,Math.round(score))):0,badge,reasons,eligible,isNote,unseen,stat,global,components,partial};
  }).sort((a,b)=>b.score-a.score||String(a.song.title).localeCompare(String(b.song.title))||a.id.localeCompare(b.id));
 }

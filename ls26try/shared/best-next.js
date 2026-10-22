@@ -20,9 +20,11 @@ function context(){
  const automatic=session||control,autoKey=R.venueKey(automatic),key=state.venueOverride?state.venue:autoKey||state.venue;
  const known=state.history.find(s=>R.venueKey(s)===key),venue=state.venueOverride?(known?.venue||state.index?.venues.get(key)?.name||key):automatic.venue||known?.venue||'';
  const active=!!tools()?.getSessionId?.(),sessionList=session?.setlistId||session?.publicSetlistId||tools()?.getPublicList?.()?.setlistId;
- let working=document.getElementById('setlistFilter')?.value;try{working=working||JSON.parse(localStorage.getItem('lyricsViewerUiStateV2')||'{}').setlist;}catch(_){}
- const selected=state.source==='auto'?(active?sessionList:working):state.source==='all'?'':state.source;
- const list=state.lists.find(l=>l.id===selected),ids=state.source==='auto'&&active?(session?.setlistSongIds||list?.songIds||[]):list?.songIds;
+ let working=document.getElementById('setlistFilter')?.value||'';
+ if(!working&&!active)try{working=JSON.parse(localStorage.getItem('lyricsViewerUiStateV2')||'{}').setlist||'';}catch(_){}
+ // A setlist explicitly selected in the Library takes precedence over the active session pool.
+ const selected=state.source==='auto'?(working||(active?sessionList:'')):state.source==='all'?'':state.source;
+ const list=state.lists.find(l=>l.id===selected),ids=state.source==='auto'&&active&&!working?(session?.setlistSongIds||list?.songIds||[]):list?.songIds;
  return {venue,venueKey:key,act:state.actScope==='all'?'all':state.actScope==='session'?R.act(automatic):state.actScope,currentSongId,runOrder:tools()?.getRunOrder?.()||[],performed:state.performed,historyReady:state.ready,historyTruncated:state.historyTruncated,intent:state.intent,poolIds:state.source==='all'?null:ids?new Set(ids):state.source!=='auto'||active?new Set():null,sourceName:list?.name||(state.source!=='auto'&&state.source!=='all'?'Selected setlist unavailable':active&&state.source==='auto'?'Session setlist (not assigned)':'All songs')};
 }
 function recalculate(){

@@ -13,3 +13,12 @@
 #libraryRecommendationTools .library-rotation-filter{height:44px;min-height:44px;width:172px;min-width:0;max-width:172px;padding:6px 8px;font-size:13px}
 .library-page .rotation-badge{font-size:10px;padding:0 5px;margin:2px 4px 0 0;border-color:#38545e;background:transparent;line-height:1.4}
 @media(max-width:520px){#bestNextOpen .best-next-title{display:none}#libraryRecommendationTools #bestNextOpen{flex:1;width:auto}#bestNextOpen{gap:5px;font-size:12px}#bestNextOpen small{font-size:10px}}
+
+/* The recommendation preview follows the selected setlist, on the same browse row. */
+.library-page #libraryRecommendationTools{display:flex;align-items:stretch;min-width:0;gap:6px;margin:0}
+.library-page #libraryRecommendationTools #bestNextOpen{flex:1 1 0;width:auto;max-width:none;min-width:0;height:46px;min-height:46px;justify-content:flex-start;padding:6px 8px;gap:6px}
+.library-page #libraryRecommendationTools #bestNextOpen .best-next-title{min-width:0;overflow:hidden;text-overflow:ellipsis}
+.library-page #libraryRecommendationTools #bestNextOpen small{overflow:hidden;text-overflow:ellipsis;max-width:105px}
+.library-page #libraryRecommendationTools .library-rotation-filter{flex:0 0 158px;width:158px;max-width:158px;height:46px;min-height:46px;font-size:12px}
+@media(min-width:851px) and (max-width:1100px){.library-page #libraryRecommendationTools .library-rotation-filter{flex-basis:138px;width:138px;max-width:138px}.library-page #libraryRecommendationTools #bestNextOpen small{max-width:68px}}
+@media(max-width:550px){.library-page #libraryRecommendationTools #bestNextOpen .best-next-title{display:block}.library-page #libraryRecommendationTools #bestNextOpen small{display:none}.library-page #libraryRecommendationTools .library-rotation-filter{flex-basis:138px;width:138px;max-width:138px}}
