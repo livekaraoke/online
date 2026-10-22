@@ -96,6 +96,11 @@ test('Smart performance scripts resolve to existing shared modules on clean and 
 
 test('Library toolbar keeps scope, selected setlist, BEST NEXT and rotation together; queued songs disappear from preview',async()=>{
  const f=await setup('library.html'),d=f.document,bar=d.querySelector('.library-browse-row');
+ const header=d.querySelector('.library-heading');
+ assert.ok(header.querySelector('.library-heading-copy'));assert.ok(header.querySelector('.library-controls .library-search #searchInput'));
+ assert.ok(header.querySelector('.library-controls #sidebarToggleBtn'));
+ assert.equal(header.querySelector('.library-heading-actions .library-button').textContent.trim(),'＋ ADD');
+ assert.equal(header.querySelector('#exportBtn').textContent.trim(),'⇩ EXPORT');
  assert.ok(bar);assert.ok(bar.querySelector('.library-scope #setlistFilter'));
  assert.ok(bar.querySelector('#libraryRecommendationTools #bestNextOpen'));
  assert.ok(bar.querySelector('#libraryRecommendationTools #rotationFilter'));

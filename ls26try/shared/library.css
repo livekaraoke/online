@@ -171,22 +171,38 @@ body.library-page{height:100dvh;overflow:hidden;display:flex;flex-direction:colu
   filter:none!important;
 }
 
-/* Library performance toolbar: title/actions, full-width search, one compact browse row. */
-.library-page .library-heading{align-items:center!important;flex-wrap:nowrap!important;gap:10px!important;padding:5px 0 7px!important}
-.library-page .library-heading-copy{min-width:0;flex:1 1 auto}
-.library-page .library-heading-copy h1{font-size:clamp(22px,2.6vw,29px)!important;white-space:nowrap;letter-spacing:-.5px}
-.library-page .library-heading-subline{gap:12px;min-height:18px;margin-top:4px;font-size:13px;color:var(--ls-muted)}
+/* Library tablet toolbar: search/filter share the title row; setlist/recommendation share the browse row. */
+.library-page .library-heading{
+  display:grid!important;
+  grid-template-columns:minmax(180px,230px) minmax(0,1fr) auto;
+  align-items:center!important;
+  gap:10px!important;
+  flex-wrap:nowrap!important;
+  padding:5px 0 7px!important;
+}
+.library-page .library-heading-copy{min-width:0;flex:none!important}
+.library-page .library-heading-copy h1{margin:0!important;line-height:1.05;font-size:clamp(22px,2.6vw,29px)!important;white-space:nowrap;letter-spacing:-.5px}
+.library-page .library-heading-subline{display:flex;align-items:center;gap:10px;min-height:18px;margin-top:4px;font-size:13px;color:var(--ls-muted)}
 .library-page .library-heading-subline #libraryShowingCount{font-size:13px!important}
-.library-page #ls26SessionSetlistName{display:none!important} /* setlist identity is already shown by the dropdown */
-.library-page .library-heading-actions{width:auto!important;flex:0 0 auto;flex-wrap:nowrap!important;gap:8px}
-.library-page .library-heading-actions .library-button,.library-page .library-heading-actions button{height:46px;min-height:46px;padding:6px 11px;font-size:13px}
-.library-page .library-controls{display:block;margin-bottom:6px;min-width:0}
-.library-page .library-controls .library-search{display:grid;grid-template-columns:minmax(0,1fr) auto;width:100%;margin:0;gap:8px;min-width:0}
-.library-page .library-controls .library-search input{width:100%;min-width:0;height:46px;min-height:46px;font-size:16px}
-.library-page .library-controls #sidebarToggleBtn{height:46px;min-height:46px;white-space:nowrap;font-size:13px;padding:6px 12px}
-.library-page .library-browse-row{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:8px;align-items:stretch;margin-bottom:6px;min-width:0}
-.library-page .library-browse-row .library-scope{display:grid;grid-template-columns:auto auto auto minmax(130px,1fr);align-items:stretch;gap:6px;margin:0;min-width:0}
+.library-page #ls26SessionSetlistName{display:none!important} /* selected setlist is displayed in the dropdown */
+.library-page .library-controls{display:block;min-width:0;width:100%;margin:0!important;flex:none!important}
+.library-page .library-controls .library-search{display:grid;grid-template-columns:minmax(0,1fr) auto;width:100%;min-width:0;margin:0;gap:8px}
+.library-page .library-controls .library-search input{box-sizing:border-box;width:100%;min-width:0;height:46px;min-height:46px;font-size:16px}
+.library-page .library-controls #sidebarToggleBtn{height:46px;min-height:46px;padding:6px 12px;font-size:13px;white-space:nowrap}
+.library-page .library-heading-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;width:auto!important;min-width:0;flex:none!important;flex-wrap:nowrap!important}
+.library-page .library-heading-actions .library-button,.library-page .library-heading-actions button{display:flex;align-items:center;justify-content:center;height:46px;min-height:46px;padding:6px 11px;font-size:13px;white-space:nowrap}
+.library-page .library-browse-row{display:grid;grid-template-columns:minmax(0,54%) minmax(0,1fr);gap:8px;align-items:stretch;margin-bottom:6px;min-width:0}
+.library-page .library-browse-row .library-scope{display:grid;grid-template-columns:auto auto auto minmax(0,1fr);align-items:stretch;gap:6px;margin:0;min-width:0}
 .library-page .library-browse-row .library-scope button,.library-page .library-browse-row .library-scope select{min-width:0;height:46px;min-height:46px;padding:6px 8px;font-size:13px;white-space:nowrap}
-.library-page .library-browse-row #setlistFilter{width:100%;text-overflow:ellipsis}
-@media(max-width:850px){.library-page .library-browse-row{grid-template-columns:1fr}.library-page .library-browse-row .library-scope{grid-template-columns:auto auto auto minmax(150px,1fr)}}
-@media(max-width:550px){.library-page .library-heading{flex-wrap:wrap!important}.library-page .library-heading-copy{flex-basis:100%}.library-page .library-heading-actions{justify-content:flex-start}.library-page .library-browse-row .library-scope{grid-template-columns:repeat(3,minmax(0,1fr))}.library-page .library-browse-row #setlistFilter{grid-column:1/-1}}
+.library-page .library-browse-row #setlistFilter{box-sizing:border-box;min-width:0;width:100%;text-overflow:ellipsis}
+@media(max-width:880px){
+  .library-page .library-heading{grid-template-columns:minmax(0,1fr) auto;gap:8px!important}
+  .library-page .library-heading .library-controls{grid-column:1/-1;grid-row:2}
+  .library-page .library-browse-row{grid-template-columns:1fr}
+}
+@media(max-width:550px){
+  .library-page .library-heading-copy h1{white-space:normal}
+  .library-page .library-heading-actions{justify-content:flex-end}
+  .library-page .library-browse-row .library-scope{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .library-page .library-browse-row #setlistFilter{grid-column:1/-1}
+}
