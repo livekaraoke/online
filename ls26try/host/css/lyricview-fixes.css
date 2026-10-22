@@ -2507,3 +2507,61 @@ body.host-lyric-view-page {
   color:#ffc7c7!important; border-color:#ff7373!important;
   background:rgba(119,29,38,.3)!important;
 }
+
+/* Compact native disclosures for optional song reference information. */
+.host-lyric-view-page .performance-collapsible-card{
+  box-sizing:border-box!important;min-width:0!important;min-height:0!important;
+  height:auto!important;padding:0!important;overflow:hidden!important;
+}
+.host-lyric-view-page .performance-song-details-card.performance-collapsible-card{
+  min-height:0!important;height:auto!important;padding:0!important;
+}
+.host-lyric-view-page .performance-collapsible-card>summary{
+  display:flex!important;align-items:center!important;justify-content:space-between!important;
+  gap:10px!important;box-sizing:border-box!important;min-height:46px!important;
+  margin:0!important;padding:11px 14px!important;cursor:pointer;list-style:none!important;
+  color:var(--ls-accent,#4ad5f2)!important;font-size:11px!important;
+  font-weight:950!important;letter-spacing:.08em!important;line-height:1.3!important;
+  touch-action:manipulation;
+}
+.host-lyric-view-page .performance-collapsible-card>summary::-webkit-details-marker{display:none!important}
+.host-lyric-view-page .performance-collapsible-card>summary::after{
+  content:"▾";flex:0 0 auto;font-size:16px;line-height:1;color:#86b7c8;
+  transition:transform .15s ease;
+}
+.host-lyric-view-page .performance-collapsible-card[open]>summary::after{transform:rotate(180deg)}
+.host-lyric-view-page .performance-collapsible-card>summary:focus-visible{
+  outline:2px solid #23bfe9!important;outline-offset:-3px!important;border-radius:8px;
+}
+.host-lyric-view-page .performance-collapsible-card:not([open])>div{display:none!important}
+.host-lyric-view-page .performance-collapsible-card[open]>div{margin:0 14px 14px!important}
+.host-lyric-view-page .performance-song-details-card.performance-collapsible-card[open]>div{
+  font-size:14px!important;line-height:1.5!important;
+}
+.host-lyric-view-page .performance-more-details-card{grid-column:1/-1!important}
+.host-lyric-view-page .performance-more-details-card .performance-more-details-content{
+  white-space:normal!important;display:flex!important;align-items:flex-start!important;
+  flex-wrap:wrap!important;gap:10px!important;
+}
+.host-lyric-view-page .performance-more-details-card #performanceLoopingCard{
+  flex:0 1 210px!important;width:min(210px,100%)!important;min-height:68px!important;
+}
+.host-lyric-view-page .performance-more-details-card #performanceLoopingCard>small{
+  display:block!important;margin-bottom:3px!important;
+}
+.host-lyric-view-page .performance-more-details-card #performanceLoopingCard>strong{
+  display:block!important;font-size:25px!important;text-align:center!important;
+}
+.host-lyric-view-page .performance-requester-card .performance-requester-value{
+  white-space:pre-wrap!important;overflow-wrap:anywhere!important;
+  border:0!important;background:transparent!important;padding:4px 0!important;
+  margin:0!important;min-height:24px!important;color:#eef9ff!important;
+  font-size:15px!important;font-weight:800!important;line-height:1.4!important;user-select:text;
+}
+.host-lyric-view-page .performance-requester-card .performance-requester-note{
+  color:#cddfe8!important;font-weight:600!important;
+}
+@media(max-width:760px){
+  .host-lyric-view-page .performance-more-details-card{grid-column:1!important}
+  .host-lyric-view-page .performance-loop-stack{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}

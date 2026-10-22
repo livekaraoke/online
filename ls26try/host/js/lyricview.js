@@ -71,7 +71,6 @@
   };
   let capoDisplayShift = 0;
   let notesSaveTimer = null;
-  let requesterSaveTimer = null;
   let requesterContext = {
     sessionId:"",
     requestId:"",
@@ -283,7 +282,18 @@
     });
   }
 
+  let expandedReferenceSongId = "";
   function renderPerformanceSongReference(song) {
+    // A different song starts collapsed; same-song rerenders preserve open panels.
+    const referenceId = String(currentSongId || songId || "");
+    if (referenceId !== expandedReferenceSongId) {
+      ["performanceYoutubeCard", "performanceSongDetailsCard",
+        "performanceSongNoteCard", "performanceMoreDetailsCard"].forEach(id => {
+        const panel = $(id);
+        if (panel) panel.open = false;
+      });
+      expandedReferenceSongId = referenceId;
+    }
     const root=$("performanceSongReference");
     if(!root)return;
     const note=String(song?.note||song?.songNote||"").trim();
@@ -330,10 +340,11 @@
   }
 
   function setRequesterCards(name,note,status="") {
-    const nameInput=$("performanceRequesterName");
-    const noteInput=$("performanceRequesterNote");
-    if(nameInput && document.activeElement!==nameInput) nameInput.value=String(name||"Host");
-    if(noteInput && document.activeElement!==noteInput) noteInput.value=String(note||"");
+    // Requester details are display-only. Edit them in Request/Run Order tools.
+    const nameLabel=$("performanceRequesterName");
+    const noteLabel=$("performanceRequesterNote");
+    if(nameLabel) nameLabel.textContent=String(name||"Host");
+    if(noteLabel) noteLabel.textContent=String(note||"No requester note");
     if($("performanceRequesterStatus")) $("performanceRequesterStatus").textContent=status;
   }
 
@@ -420,107 +431,6 @@
         "Requester details could not be loaded."
       );
     }
-  }
-
-  async function saveRequesterCards() {
-    clearTimeout(requesterSaveTimer);
-    requesterSaveTimer=null;
-
-    const nameInput=$("performanceRequesterName");
-    const noteInput=$("performanceRequesterNote");
-    if(!nameInput||!noteInput)return;
-
-    const name=String(nameInput.value||"").trim()||"Host";
-    const note=String(noteInput.value||"").trim();
-    requesterContext.name=name;
-    requesterContext.note=note;
-
-    try{
-      sessionStorage.setItem(
-        requesterLocalStorageKey(),
-        JSON.stringify({name,note})
-      );
-    }catch(_){}
-
-    const status=$("performanceRequesterStatus");
-    if(status)status.textContent="Saving…";
-
-    try{
-      const updates=[];
-
-      if(requesterContext.requestId){
-        updates.push(
-          db.collection("publicSongRequests").doc(requesterContext.requestId).set({
-            singerName:name,
-            note,
-            updatedAt:firebase.firestore.FieldValue.serverTimestamp()
-          },{merge:true})
-        );
-      }
-
-      const runRef=db.collection("karaokeControl").doc("runOrder");
-      try{
-        const runSnap=await runRef.get();
-        const runData=runSnap.exists?(runSnap.data()||{}):{};
-        const sameSession=
-          !requesterContext.sessionId ||
-          !runData.sessionId ||
-          runData.sessionId===requesterContext.sessionId;
-        const items=sameSession&&Array.isArray(runData.items)
-          ? runData.items.map(item=>({...item}))
-          : [];
-        let index=-1;
-
-        if(requesterContext.runOrderItemId){
-          index=items.findIndex(item=>item.id===requesterContext.runOrderItemId);
-        }
-        if(index<0&&requesterContext.requestId){
-          index=items.findIndex(item=>item.requestId===requesterContext.requestId);
-        }
-        if(index<0){
-          index=items.findIndex(item=>
-            item.songId===currentSongId ||
-            sameSongByMetadata(item,currentSong)
-          );
-        }
-
-        if(index>=0){
-          requesterContext.runOrderItemId=items[index].id||requesterContext.runOrderItemId;
-          items[index]={
-            ...items[index],
-            ...(requesterContext.requestId ? {singerName:name} : {requesterName:name}),
-            requesterNote:note
-          };
-          updates.push(
-            runRef.set({
-              items,
-              updatedAt:firebase.firestore.FieldValue.serverTimestamp()
-            },{merge:true})
-          );
-        }
-      }catch(error){
-        console.warn("Could not save requester details to Run Order:",error);
-      }
-
-      if(updates.length)await Promise.all(updates);
-      if(status){
-        status.textContent="Saved";
-        setTimeout(()=>{
-          if(status.textContent==="Saved")status.textContent="";
-        },1100);
-      }
-    }catch(error){
-      console.error("Could not save requester details:",error);
-      if(status)status.textContent="Save failed";
-      window.LS26?.toast?.("Requester details could not be saved.");
-    }
-  }
-
-  function queueRequesterCardsSave() {
-    const status=$("performanceRequesterStatus");
-    if(status)status.textContent="Unsaved";
-    clearTimeout(requesterSaveTimer);
-    requesterSaveTimer=setTimeout(saveRequesterCards,800);
   }
 
   function openSongNoteModal() {
@@ -2723,15 +2633,6 @@
       menu.classList.toggle("hidden",!opening);
       $("songActionsBtn").setAttribute("aria-expanded",opening?"true":"false");
     };
-    const requesterNameInput=$("performanceRequesterName");
-    const requesterNoteInput=$("performanceRequesterNote");
-    [requesterNameInput,requesterNoteInput].filter(Boolean).forEach(input=>{
-      input.addEventListener("input",queueRequesterCardsSave);
-      input.addEventListener("blur",()=>{
-        if(requesterSaveTimer)void saveRequesterCards();
-      });
-    });
-
     $("songNoteActionBtn").onclick=openSongNoteModal;
     $("songNoteCancelBtn").onclick=closeSongNoteModal;
     $("songNoteSaveBtn").onclick=saveSongNoteFromPerformance;
