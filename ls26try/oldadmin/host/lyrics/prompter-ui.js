@@ -6,7 +6,8 @@
   const STORE = 'ls26_legacy_prompter_prefs_v1';
   const defaults = {
     theme: 'default', font: 'verdana', lineSpacing: '1.5',
-    charSpacing: '0px', fontSizeOffset: 0, scrollZones: true, slaveLyrics: false
+    charSpacing: '0px', fontSizeOffset: 0, scrollZones: true, slaveLyrics: false,
+    wideLyrics: false
   };
   function readSaved() {
     try {
@@ -36,6 +37,7 @@
       el.style.letterSpacing = prefs.charSpacing;
     });
     window.applyTextSizes?.();
+    scheduleWideLyricsLayout();
   }
   window.applySavedPrompterStyles = applyStyles;
 
@@ -62,6 +64,7 @@
       prefs.fontSizeOffset = Math.max(-10, Math.min(10,
         (Number(prefs.fontSizeOffset) || 0) + (change > 0 ? 2 : -2)));
       save();
+      scheduleWideLyricsLayout();
       return result;
     };
   }
@@ -85,6 +88,98 @@
       toggle.textContent = hidden ? 'AUTO-SCROLL: OFF' : 'AUTO-SCROLL: ON';
       toggle.classList.toggle('active', !hidden);
     }
+  }
+
+  // The legacy Prompter uses explicit <br> lyric lines and automatic wrapping.
+  // A visual transform preserves those line breaks and the original chord spacing.
+  // Reserve the scaled height in document flow so the final lines remain scrollable.
+  let wideFrame = null;
+  let wideApplied = false;
+
+  function updateWidthButton() {
+    const button = byId('prompterFitWidthToggle');
+    if (!button) return;
+    const active = prefs.wideLyrics === true;
+    button.classList.toggle('is-active', active);
+    button.setAttribute('aria-pressed', String(active));
+    button.setAttribute('aria-label', active ? 'Restore normal lyric width' : 'Fit lyrics to screen width');
+    button.title = active ? 'Restore original lyrics layout' : 'Fit lyrics to the screen without adding line breaks';
+    const caption = button.querySelector('.prompter-width-caption');
+    if (caption) caption.textContent = active ? 'RESET' : 'FIT';
+  }
+
+  function resetWideLyricsLayout() {
+    const lyrics = byId('lyrics-container');
+    if (!lyrics) return;
+    lyrics.style.transform = '';
+    lyrics.style.transformOrigin = '';
+    lyrics.style.marginLeft = '';
+    lyrics.style.marginBottom = '';
+    lyrics.style.width = '';
+    wideApplied = false;
+    document.body.classList.remove('prompter-wide-lyrics');
+  }
+
+  function measureWidestLyricLine(lyrics) {
+    // Read unwrapped intrinsic widths without editing lyric text or changing
+    // permanent white-space rules. <br> boundaries remain meaningful.
+    let longest = 0;
+    const blocks = lyrics.querySelectorAll('.verse,.chorus,.chorusrepeat,.bridge,.note,.action,.section');
+    blocks.forEach(block => {
+      const originalWidth = block.style.width;
+      const originalSpace = block.style.whiteSpace;
+      try {
+        block.style.width = 'max-content';
+        block.style.whiteSpace = 'nowrap';
+        longest = Math.max(longest, block.getBoundingClientRect().width);
+      } finally {
+        block.style.width = originalWidth;
+        block.style.whiteSpace = originalSpace;
+      }
+    });
+    return longest;
+  }
+
+  function layoutWideLyrics() {
+    wideFrame = null;
+    const lyrics = byId('lyrics-container');
+    if (!lyrics) return;
+    if (prefs.wideLyrics !== true) {
+      if (wideApplied) resetWideLyricsLayout();
+      return;
+    }
+    // Measure the original layout (not the already transformed dimensions).
+    lyrics.style.transform = '';
+    lyrics.style.marginLeft = '';
+    lyrics.style.marginBottom = '';
+    lyrics.style.width = '';
+    const originalBox = lyrics.getBoundingClientRect();
+    const availableWidth = Math.max(1, document.documentElement.clientWidth - 20);
+    const longest = Math.max(1, measureWidestLyricLine(lyrics));
+    const safeWidth = Math.max(1, longest);
+    // Enlarge only to the space available. Never reduce below normal size.
+    const scale = Math.max(1, Math.min(1.22, availableWidth / safeWidth));
+    const leftShift = Math.max(0, originalBox.left - 10);
+    lyrics.style.width = originalBox.width + 'px';
+    lyrics.style.marginLeft = -leftShift + 'px';
+    lyrics.style.transformOrigin = 'top left';
+    lyrics.style.transform = 'scale(' + scale + ')';
+    // CSS transforms do not change layout height; compensate at the bottom.
+    lyrics.style.marginBottom = Math.ceil(lyrics.offsetHeight * (scale - 1)) + 'px';
+    document.body.classList.add('prompter-wide-lyrics');
+    wideApplied = true;
+  }
+
+  function scheduleWideLyricsLayout() {
+    if (wideFrame !== null) cancelAnimationFrame(wideFrame);
+    wideFrame = requestAnimationFrame(layoutWideLyrics);
+  }
+
+  function toggleWideLyrics() {
+    prefs.wideLyrics = prefs.wideLyrics !== true;
+    save();
+    updateWidthButton();
+    scheduleWideLyricsLayout();
   }
 
   function updateScrollZones() {
@@ -129,6 +224,8 @@
     applyStyles();
     syncAutoScrollVisibility();
     updateScrollZones();
+    updateWidthButton();
+    scheduleWideLyricsLayout();
     // Explicit ?slave=1 overrides a locally stored off setting on initial entry.
     const enableSlave = new URLSearchParams(location.search).get('slave') === '1' ||
       prefs.slaveLyrics === true;
@@ -212,6 +309,10 @@
   }
 
   function initialize() {
+    byId('prompterFitWidthToggle')?.addEventListener('click', toggleWideLyrics);
+    window.addEventListener('resize', () => {
+      if (prefs.wideLyrics === true) scheduleWideLyricsLayout();
+    });
     byId('prompterScrollZonesToggle')?.addEventListener('change', event => {
       prefs.scrollZones = Boolean(event.target.checked);
       save();
