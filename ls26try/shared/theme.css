@@ -983,3 +983,14 @@ body .ls26-footer .ls26-footer-icon image{filter:none!important;box-shadow:none!
 .ls26-release-preview-type.type-major{color:#ff8797!important;border-color:#d25a6d!important}
 .ls26-release-preview-type.type-minor{color:#ffd36c!important;border-color:#b88c34!important}
 .ls26-release-preview-type.type-patch{color:#77dcff!important;border-color:#267ca0!important}
+
+/* Current primary page in LiveSuite's shared nav; applies to clean and .html routes. */
+html body .ls26-nav > a.active[aria-current="page"]{
+  border:1px solid var(--ls-accent)!important;
+  border-radius:7px!important;
+  background:#07364a!important;
+  color:var(--ls-text)!important;
+  font-weight:800!important;
+  box-shadow:inset 0 -3px 0 var(--ls-accent),inset 0 0 0 1px #00cafa24!important;
+}
+html body .ls26-nav > a.active[aria-current="page"] .ls26-nav-icon{color:var(--ls-accent)!important}

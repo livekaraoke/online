@@ -14,7 +14,7 @@ body.setlist-page {
   top:auto;
   z-index:2;
   display:grid;
-  grid-template-columns:minmax(135px,185px) minmax(0,1fr) auto auto;
+  grid-template-columns:minmax(0,1fr) auto auto;
   align-items:center;
   gap:12px;
   width:min(100%,1600px);
@@ -361,7 +361,7 @@ body.setlist-page {
   .setlist-page #availableSongs .setlist-song-row{grid-template-columns:minmax(0,1fr) 40px;gap:5px}
   .setlist-page #availableSongs .setlist-song-row button{width:40px}
   .setlist-page .setlist-header-actions .btn{padding:8px 9px;font-size:11px}
-  .setlist-page .app-topbar{grid-template-columns:minmax(115px,155px) minmax(0,1fr) auto auto;gap:8px;padding:11px 10px}
+  .setlist-page .app-topbar{grid-template-columns:minmax(0,1fr) auto auto;gap:8px;padding:11px 10px}
   .setlist-page .setlist-auth-state{max-width:170px}
   .setlist-page .brand-block strong{font-size:19px}
 }
@@ -372,10 +372,9 @@ body.setlist-page {
   .setlist-page .setlist-list-item{flex:0 0 160px;width:160px;min-height:58px}
   .setlist-page .setlist-columns{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
   .setlist-page .app-topbar{grid-template-columns:minmax(0,1fr) auto}
-  .setlist-page .brand-block{grid-column:1}
-  .setlist-page .app-topbar>a{grid-column:1;grid-row:2;justify-self:start}
+  .setlist-page .brand-block{grid-column:1;grid-row:1}
   .setlist-page #newSetlistBtn{grid-column:2;grid-row:1/3;min-width:115px}
-  .setlist-page .setlist-auth-state{grid-column:1;grid-row:3;max-width:100%}
+  .setlist-page .setlist-auth-state{grid-column:1;grid-row:2;max-width:100%}
 }
 @media(max-width:600px){
   .setlist-page .setlist-columns{grid-template-columns:1fr}
