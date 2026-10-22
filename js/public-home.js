@@ -75,6 +75,9 @@
         return upcomingEvents
           .filter(event => isLiveKaraokeType(event.type))
           .filter(eventStillUpcoming)
+          // Once a public performance is active, move on to future dates even if
+          // today's event has no explicit session link or finishing time.
+          .filter(event => !activeLiveKaraoke() || eventDate(event).getTime() > Date.now())
           .sort(LKEventTime.compare)[0] || null;
       }
 
@@ -91,15 +94,9 @@
 
         const diff = date.getTime() - Date.now();
 
-        if (diff <= 0) {
-          const totalLate = Math.max(1, Math.floor(Math.abs(diff) / 60000));
-          const hours = Math.floor(totalLate / 60);
-          const mins = totalLate % 60;
-
-          return hours
-            ? `Starting now · ${hours}h${mins ? ` ${mins}m` : ""} late`
-            : `Starting now · ${totalLate}m late`;
-        }
+        // Never advertise how late a public event is. Until the host starts the
+        // session, a scheduled event that has reached its start remains "Starting now".
+        if (diff <= 0) return "Starting now";
 
         const totalMins = Math.floor(diff / 60000);
         const days = Math.floor(totalMins / 1440);
@@ -277,47 +274,28 @@
         const container = document.getElementById("liveStatus");
         if (!container) return;
 
-        if (activeLiveKaraoke()) {
-          container.innerHTML = `
-            <div class="live-box public-live-box">
-              <span class="public-live-dot"></span>
-              <div>
-                <strong>LIVE KARAOKE · ${isOnBreak()?"ON BREAK":(currentPerformanceSession.actualStartedAt||currentSessionControl.actualStartedAt)?"LIVE NOW":"STARTING"}</strong>
-                <span>${esc(
-                  currentSessionControl.venue ||
-                  currentPerformanceSession.venue ||
-                  "Live Karaoke"
-                )}</span>
-              </div>
-              ${
-                isOnBreak()
-                  ? `<b class="public-break-chip">☕ CURRENTLY ON BREAK</b>`
-                  : ""
-              }
+        // The main hero is the LIVE NOW player. This lower card remains the
+        // NEXT EVENT card both before and during the current performance.
+        const event = nextLiveKaraokeEvent();
+        container.innerHTML = event
+          ? `
+            <div class="live-box next-live-karaoke-box">
+              <span class="next-live-label">NEXT LIVE KARAOKE EVENT</span>
+              <strong>${esc(event.venue || event.name || "Venue TBC")}</strong>
+              <span>${esc(formatEvent(event))}</span>
+              <b>${esc(countdown(event))}</b>
+            </div>
+          `
+          : `
+            <div class="live-box countdown-line">
+              NEXT LIVE KARAOKE EVENT:
+              <span>To be announced</span>
             </div>
           `;
-        } else {
-          const event = nextLiveKaraokeEvent();
 
-          container.innerHTML = event
-            ? `
-              <div class="live-box next-live-karaoke-box">
-                <span class="next-live-label">NEXT LIVE KARAOKE EVENT</span>
-                <strong>${esc(event.venue || event.name || "Venue TBC")}</strong>
-                <span>${esc(formatEvent(event))}</span>
-                <b>${esc(countdown(event))}</b>
-              </div>
-            `
-            : `
-              <div class="live-box countdown-line">
-                NEXT LIVE KARAOKE EVENT:
-                <span>To be announced</span>
-              </div>
-            `;
-        }
-
+        // Keeps the existing live request/player panel above the next-event
+        // card when a published session is started; hides it when not live.
         renderLivePanel();
-
       }
 
       LKPublicStore.subscribe(state=>{
