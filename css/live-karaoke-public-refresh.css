@@ -444,3 +444,13 @@
     animation:none!important;
   }
 }
+
+/* Live panel action: keep the existing artwork and songs; use the spare right column. */
+.hero-coming-region{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(180px,1fr);gap:24px;align-items:center}
+.hero-coming-region .hero-coming-up{min-width:0}
+.hero-live-action{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;padding:10px}
+.live-now-request-button{width:100%;max-width:270px;min-height:54px;padding:15px 20px;border:1px solid #49cf7e;border-radius:9px;background:linear-gradient(#14763d,#095d2b);color:#fff;font:800 15px/1.25 Bahnschrift,Arial,sans-serif;letter-spacing:.06em;box-shadow:0 0 16px #31d47725;cursor:pointer;touch-action:manipulation;transition:background .15s,transform .15s}
+.live-now-request-button:hover{background:#168447}.live-now-request-button:focus-visible{outline:3px solid #c1ffda;outline-offset:4px}.live-now-request-button:active{transform:scale(.97);background:#074d23}
+.hero-live-action small{color:#b7ddc4;font-size:12px;line-height:1.45;text-align:center;max-width:270px}
+@media(max-width:600px){.hero-coming-region{grid-template-columns:minmax(0,1fr);gap:12px}.hero-live-action{padding:0 0 3px}.live-now-request-button{max-width:none}}
+@media(prefers-reduced-motion:reduce){.live-now-request-button{transition:none}}

@@ -496,7 +496,9 @@
     $("allGigsDialog").showModal();
   }
 
+  let enquirySubmitting=false;
   async function submitBookingEnquiry(event){
+    if(enquirySubmitting){event.preventDefault();return;}
     event.preventDefault();
     const form=$("bookingForm");
     const status=$("bookingStatus");
@@ -511,11 +513,12 @@
     const company=$("enquiryCompany").value.trim();
     const guestsRaw=$("enquiryGuests").value;
     const message=$("enquiryMessage").value.trim();
+    enquirySubmitting=true;
     button.disabled=true;
     status.className="booking-status";
     status.textContent="Sending enquiry…";
     try{
-      await db.collection("bookingEnquiries").add({
+      await LKBooking.submit(db, {
         status:"pending",
         source:"Roxanna Website",
         sourceKey:"roxanna26",
@@ -530,7 +533,7 @@
         company,
         estimatedGuests:guestsRaw?Number(guestsRaw):null,
         message,
-        pageUrl:location.href,
+        pageUrl:location.origin+location.pathname,
         createdAt:firebase.firestore.FieldValue.serverTimestamp(),
         updatedAt:firebase.firestore.FieldValue.serverTimestamp()
       });
@@ -545,6 +548,7 @@
       status.className="booking-status error";
       status.textContent="Could not send the enquiry. Please try again.";
     }finally{
+      enquirySubmitting=false;
       button.disabled=false;
     }
   }

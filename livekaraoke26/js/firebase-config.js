@@ -1,7 +1,7 @@
 (function(){
   "use strict";
 
-  const firebaseConfig = window.SITE_FIREBASE_CONFIG;
+  const firebaseConfig = (()=>{try{return window.parent!==window&&window.parent.firebase?.apps?.length?window.parent.firebase.app().options:window.SITE_FIREBASE_CONFIG;}catch(_){return window.SITE_FIREBASE_CONFIG;}})();
 
   if (!firebaseConfig) {
     console.error("Billy Lee Firebase configuration is unavailable. Check db/currentdb.js.");

@@ -39,3 +39,6 @@ exclude:
 
   # Legacy admin JavaScript is not required by the public site.
   - js/admin.js
+  - firebase.emulators.json
+  - firestore-debug.log
+  - firebase-debug.log

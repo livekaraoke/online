@@ -12,6 +12,7 @@
   const terminalStatuses = new Set(["played","completed","finished","abandoned","left","deleted","deletedbyhost","declined","cancelled","rejected"]);
   const playedStatuses = new Set(["played","completed","finished"]);
 
+  let publicState = {};
   let gateState = {};
   let currentSession = {};
   let runOrder = [];
@@ -24,13 +25,13 @@
   };
 
   const gateHasExplicitValue = () => Object.prototype.hasOwnProperty.call(gateState, "songsEnabled");
-  const realSessionActive = () => currentSession?.active === true && !!String(currentSession.sessionId || currentSession.activeSessionId || "").trim();
+  const realSessionActive = () => isLiveKaraoke ? !!window.LKPublicVisibility?.gate(publicState,Object.fromEntries(params)).active : currentSession?.active === true && !!String(currentSession.sessionId || currentSession.activeSessionId || "").trim();
   const gateOpen = () => gateHasExplicitValue() ? gateState.songsEnabled === true : realSessionActive();
   const preSessionId = () => String(gateState.preSessionRequestSessionId || "").trim();
-  const preSessionOpen = () => !realSessionActive() && gateOpen() && !!preSessionId();
+  const preSessionOpen = () => isLiveKaraoke ? window.LKPublicVisibility?.gate(publicState,Object.fromEntries(params)).phase === "starting-soon" : !realSessionActive() && gateOpen() && !!preSessionId();
   const billyTestMode = () => !isLiveKaraoke && !realSessionActive() && rawWebsiteSettings.enableLiveRequestTestMode === true;
   const canSubmit = () => isLiveKaraoke
-    ? gateOpen() && (realSessionActive() || preSessionOpen())
+    ? !!window.LKPublicVisibility?.gate(publicState,Object.fromEntries(params)).open
     : gateOpen() || billyTestMode();
   const requestButtonText = () => String(rawWebsiteSettings.requestButtonText || (isLiveKaraoke ? "REQUEST / SIGN UP" : "REQUEST A SONG")).trim() || (isLiveKaraoke ? "REQUEST / SIGN UP" : "REQUEST A SONG");
 
@@ -113,6 +114,7 @@
       payload.isTestSession = false;
       payload.requestTestMode = false;
     }
+    if(isLiveKaraoke)payload.source="live-karaoke-website";
     return payload;
   }
 
@@ -364,23 +366,36 @@
     }, 0);
   }
 
-  const gateUnsub = baseDb.collection("karaoke").doc("state").onSnapshot(snapshot => {
+  let gateUnsub=()=>{},currentUnsub=()=>{},runUnsub=()=>{};
+  if(isLiveKaraoke&&window.LKPublicStore){
+    gateUnsub=LKPublicStore.subscribe(state=>{
+      publicState=state;gateState=state.karaoke;currentSession=state.control;
+      runOrder=LKPublicVisibility.runItems(state.run,LKPublicVisibility.gate(state,Object.fromEntries(params)).sessionId);
+      rawWebsiteSettings=state.settings;
+      gateSubscribers.forEach(callback=>callback());queueUiSync();
+    });
+    LKPublicStore.start(baseDb);
+    window.LKRequestGate={canSubmit,preSessionOpen,sessionId:()=>LKPublicVisibility.gate(publicState,Object.fromEntries(params)).sessionId};
+  }else{
+  gateUnsub = baseDb.collection("karaoke").doc("state").onSnapshot(snapshot => {
     gateState = snapshot.exists ? (snapshot.data() || {}) : {};
     gateSubscribers.forEach(callback => callback());
     queueUiSync();
   }, error => console.warn("Public request gate unavailable", error));
 
-  const currentUnsub = baseDb.collection("karaokeControl").doc("currentSession").onSnapshot(snapshot => {
+  currentUnsub = baseDb.collection("karaokeControl").doc("currentSession").onSnapshot(snapshot => {
     currentSession = snapshot.exists ? (snapshot.data() || {}) : {};
     gateSubscribers.forEach(callback => callback());
     queueUiSync();
   }, error => console.warn("Current public session unavailable", error));
 
-  const runUnsub = baseDb.collection("karaokeControl").doc("runOrder").onSnapshot(snapshot => {
+  runUnsub = baseDb.collection("karaokeControl").doc("runOrder").onSnapshot(snapshot => {
     const data = snapshot.exists ? (snapshot.data() || {}) : {};
     runOrder = Array.isArray(data.items) ? data.items : [];
     queueUiSync();
   }, error => console.warn("Public run order unavailable", error));
+
+  }
 
   document.addEventListener("click", event => {
     const requestAction = event.target.closest?.("#requestDialog .song-action[data-song-id], #sendRequestBtn");

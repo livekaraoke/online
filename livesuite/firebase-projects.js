@@ -66,80 +66,27 @@
     (/^(?:www\.)?livekaraoke\.eu$/i.test(location.hostname) && /^\/(?:index\.html)?$/i.test(location.pathname));
 
   if (isPublicLiveKaraokeSite) {
-    function turnIntoButton(node) {
-      if (!node) return node;
-      if (node.tagName === "A") {
-        const button = document.createElement("button");
-        for (const attr of [...node.attributes]) {
-          if (["href", "target", "rel"].includes(attr.name)) continue;
-          button.setAttribute(attr.name, attr.value);
-        }
-        button.type = "button";
-        button.innerHTML = node.innerHTML;
-        node.replaceWith(button);
-        return button;
-      }
-      node.removeAttribute("href");
-      node.removeAttribute("target");
-      node.removeAttribute("rel");
-      if (node.tagName === "BUTTON") node.type = "button";
-      return node;
-    }
-
-    function hardenRequestControls() {
-      // The hero should contain only the GET STARTED CTA. Request / song-list
-      // access remains available through the dedicated controls elsewhere.
-      document.getElementById("heroRequestBtn")?.remove();
-      document.querySelectorAll?.("#songListBtn").forEach(turnIntoButton);
-    }
-
-    // Remove the legacy hero request control as soon as this blocking loader runs.
-    hardenRequestControls();
-
-    // The remaining public song-list control opens the browse/request popup. The
-    // popup's request gate decides whether a request can actually be submitted.
-    document.addEventListener("pointerdown", event => {
-      const button = event.target.closest?.("#songListBtn");
-      if (button) event.preventDefault();
-    }, true);
-
-    document.addEventListener("click", event => {
-      const button = event.target.closest?.("#songListBtn");
-      if (!button) return;
-      event.preventDefault();
-      event.stopPropagation();
-      event.stopImmediatePropagation();
-      hardenRequestControls();
-      if (typeof window.openLiveKaraokeRequestPopup === "function") window.openLiveKaraokeRequestPopup();
-      else window.__liveKaraokeRequestOpenPending = true;
-    }, true);
-
-    document.addEventListener("DOMContentLoaded", hardenRequestControls, { once:true });
-
     const base = document.currentScript?.src || location.href;
     const refreshCss = document.createElement("link");
     refreshCss.rel = "stylesheet";
-    refreshCss.href = new URL("../css/live-karaoke-public-refresh.css?v=20261014-custom-domain-v3", base).href;
+    refreshCss.href = new URL("../css/live-karaoke-public-refresh.css?v=20261022-public", base).href;
     document.head.appendChild(refreshCss);
 
     const enquiryCss = document.createElement("link");
     enquiryCss.rel = "stylesheet";
-    enquiryCss.href = new URL("../css/live-karaoke-enquiry-green.css?v=20261014-custom-domain-v3", base).href;
+    enquiryCss.href = new URL("../css/live-karaoke-enquiry-green.css?v=20261022-public", base).href;
     document.head.appendChild(enquiryCss);
 
     const refreshScript = document.createElement("script");
-    refreshScript.src = new URL("../js/live-karaoke-public-refresh.js?v=20261014-custom-domain-v3", base).href;
+    refreshScript.src = new URL("../js/live-karaoke-public-refresh.js?v=20261022-public", base).href;
     refreshScript.async = false;
     document.head.appendChild(refreshScript);
 
     const script = document.createElement("script");
-    script.src = new URL("../js/live-karaoke-request-popup.js?v=20261014-catalogue-v9", base).href;
+    script.src = new URL("../js/live-karaoke-request-popup.js?v=20261022-public", base).href;
     script.async = false;
     document.head.appendChild(script);
 
-    const lifecycleScript = document.createElement("script");
-    lifecycleScript.src = new URL("../js/live-karaoke-public-request-lifecycle.js?v=20261014-custom-domain-v3", base).href;
-    lifecycleScript.async = false;
-    document.head.appendChild(lifecycleScript);
+
   }
 })();

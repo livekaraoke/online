@@ -9,6 +9,7 @@
   let runOrder = [];
   let sessionUnsub = null;
   let songs = [];
+  let requestSubmitting = false;
   let catalogueLoading = false;
   let catalogueError = false;
   let cataloguePromise = null;
@@ -266,18 +267,14 @@
   }
 
   function hasRealLiveSession(){
-    return controlData.active===true && !!activeSessionId;
+    return controlData.active===true && !!activeSessionId && !!window.LKRequestGate?.sessionId();
   }
 
   function liveRequestTestMode(){
-    return websiteRequestSettings.enableLiveRequestTestMode===true && !hasRealLiveSession();
+    return false; // Internal tests stay in authenticated LiveSuite; never open public requests.
   }
 
-  function requestSessionId(){
-    if(hasRealLiveSession())return activeSessionId;
-    if(!liveRequestTestMode())return "";
-    return String(websiteRequestSettings.requestTestSessionId||"billylee-test-preview");
-  }
+  function requestSessionId(){ return window.LKRequestGate?.sessionId() || ''; }
 
   function syncSessionRequestsWatcher(){
     const next=requestSessionId();
@@ -389,6 +386,7 @@
     }
     sessionRequestsUnsub=db.collection("publicSongRequests")
       .where("sessionId","==",id)
+      .limit(500)
       .onSnapshot(snapshot=>{
         sessionRequests=snapshot.docs.map(doc=>({id:doc.id,...(doc.data()||{})}));
         renderLive();
@@ -400,26 +398,22 @@
   }
 
   function listenLiveState(){
-    db.collection("karaokeControl").doc("currentSession").onSnapshot(doc=>{
-      const d=doc.exists?(doc.data()||{}):{}; controlData=d; const next=d.active===true?String(d.sessionId||d.activeSessionId||""):"";
-      if(next!==activeSessionId){
-        activeSessionId=next;
-        attachSessionDoc(next);
-        syncSessionRequestsWatcher();
-        if($("requestDialog")?.open) renderMyRequests();
+    const unsubscribe=LKPublicStore.subscribe(state=>{
+      const visible=LKPublicVisibility.sessionVisible(state.control,state.session,state.event)&&!state.error;
+      controlData=visible?state.control:{active:false};
+      const next=visible?String(state.control.sessionId||state.control.activeSessionId):'';
+      const changed=next!==activeSessionId;
+      activeSessionId=next;activeSession=visible?state.session:null;
+      runOrder=LKPublicVisibility.runItems(state.run,next);
+      applyWebsiteRequestSettings(state.settings);
+      syncSessionRequestsWatcher();renderLive();
+      if($("requestDialog")?.open){
+        if(!$("requestBrowser")?.hidden)renderSongResults();
+        if(changed)renderMyRequests();
       }
-      syncSessionRequestsWatcher();
-      renderLive();
-    },err=>console.error("Current session listener failed",err));
-    db.collection("karaokeControl").doc("runOrder").onSnapshot(doc=>{
-      const d=doc.exists?(doc.data()||{}):{};
-      runOrder=(activeSessionId && d.sessionId && d.sessionId!==activeSessionId)?[]:(Array.isArray(d.items)?d.items:[]);
-      renderLive();
-      if($("requestDialog")?.open && !$("requestSongStep").hidden){
-        if(!$("requestBrowser").hidden) renderSongResults();
-        renderMyRequests();
-      }
-    },err=>console.error("Run order listener failed",err));
+    });
+    addEventListener('pagehide',unsubscribe,{once:true});
+    LKPublicStore.start(db);
   }
 
   async function loadPublicSongs(){
@@ -549,7 +543,7 @@
     const emailHash=await requestEmailHash(profile.email);
     if(!emailHash)return false;
     const data={
-      source:"billylee26",
+      source:"live-karaoke-website",
       name:profile.name||"",
       country:profile.country||"",
       ageRange:profile.ageRange||"",
@@ -774,7 +768,7 @@
     if(profile.rating || profile.review){
       try{
         const data={
-          source:"billylee26",
+          source:"live-karaoke-website",
           name:profile.name,
           requesterEmailHash:profile.email?await requestEmailHash(profile.email):"",
           country:profile.country,
@@ -1599,28 +1593,7 @@
         updatedAt:firebase.firestore.FieldValue.serverTimestamp()
       },{merge:true});
 
-      // If public rules allow it, update the Run Order immediately. Host pages
-      // also reconcile cancelled request records, so cancellation remains safe
-      // when direct queue writes are intentionally blocked.
-      try{
-        const runRef=db.collection("karaokeControl").doc("runOrder");
-        await db.runTransaction(async tx=>{
-          const snap=await tx.get(runRef);
-          if(!snap.exists)return;
-          const data=snap.data()||{};
-          if(String(data.sessionId||"")!==String(activeSessionId||""))return;
-          const items=Array.isArray(data.items)?data.items:[];
-          if(!items.some(item=>item.requestId===requestId))return;
-          tx.set(runRef,{
-            items:items.map(item=>item.requestId===requestId
-              ? {...item,status:"cancelled",reason:"Cancelled by requester"}
-              : item),
-            updatedAt:firebase.firestore.FieldValue.serverTimestamp()
-          },{merge:true});
-        });
-      }catch(error){
-        console.info("Run Order cancellation will be reconciled by the host.",error?.code||error);
-      }
+
     }catch(error){
       console.error("Could not cancel request:",error);
       alert("Could not cancel this request. Please try again.");
@@ -1693,6 +1666,7 @@
   }
 
   async function sendSelectedRequest(){
+    if(requestSubmitting || !window.LKRequestGate?.canSubmit())return;
     const profile=requestProfile();
     const name=profile.name;
     const song=songs.find(item=>item.id===selectedRequestSongId);
@@ -1708,7 +1682,8 @@
     }
 
     const button=$("sendRequestBtn");
-    if(button)button.disabled=true;
+    requestSubmitting=true;
+    if(button){button.disabled=true;button.textContent="SENDING…";}
 
     try{
       const note=String($("requestNote")?.value||"").trim();
@@ -1731,7 +1706,7 @@
         requesterFavouriteSongIds:favouriteSongIds(),
         note,
         comment:note,
-        source:"billylee26",
+        source:"live-karaoke-website",
         songId:song.id,
         songTitle:song.title||"",
         artist:song.artist||"",
@@ -1751,9 +1726,12 @@
       await renderMyRequests();
     }catch(error){
       console.error(error);
-      alert("Could not send request. Please try again.");
+      const notice=$("requestNotice");
+      if(notice)notice.textContent=error.message==='Requests are closed.'?'Requests have closed. You can still browse songs.':'Could not send your request. Check your connection and try again.';
+      switchRequestTab('songs');
     }finally{
-      if(button)button.disabled=false;
+      requestSubmitting=false;
+      if(button){button.disabled=!window.LKRequestGate?.canSubmit();button.textContent="SEND REQUEST";}
     }
   }
 
@@ -1838,7 +1816,9 @@
     $("allGigsDialog").showModal();
   }
 
+  let enquirySubmitting=false;
   async function submitBookingEnquiry(event){
+    if(enquirySubmitting){event.preventDefault();return;}
     event.preventDefault();
     const form=$("bookingForm");
     const status=$("bookingStatus");
@@ -1853,16 +1833,17 @@
     const company=$("enquiryCompany").value.trim();
     const guestsRaw=$("enquiryGuests").value;
     const message=$("enquiryMessage").value.trim();
+    enquirySubmitting=true;
     button.disabled=true;
     status.className="booking-status";
     status.textContent="Sending enquiry…";
     try{
-      await db.collection("bookingEnquiries").add({
+      await LKBooking.submit(db, {
         status:"pending",
-        source:"Billy Lee Website",
-        sourceKey:"billylee26",
-        type:"Solo",
-        performerType:"Solo",
+        source:"Live Karaoke Website",
+        sourceKey:"live-karaoke",
+        type:"Live Karaoke",
+        performerType:"Live Karaoke",
         name,
         email,
         phone,
@@ -1872,7 +1853,7 @@
         company,
         estimatedGuests:guestsRaw?Number(guestsRaw):null,
         message,
-        pageUrl:location.href,
+        pageUrl:"https://livekaraoke.eu/",
         createdAt:firebase.firestore.FieldValue.serverTimestamp(),
         updatedAt:firebase.firestore.FieldValue.serverTimestamp()
       });
@@ -1887,6 +1868,7 @@
       status.className="booking-status error";
       status.textContent="Could not send the enquiry. Please try again.";
     }finally{
+      enquirySubmitting=false;
       button.disabled=false;
     }
   }
@@ -2082,6 +2064,6 @@
   $("shareBtn").addEventListener("click",async()=>{try{if(navigator.share)await navigator.share({title:document.title,url:location.href});else{await navigator.clipboard.writeText(location.href);alert("Link copied.");}}catch{}});
 
   window.addEventListener("pagehide",()=>{try{sessionRequestsUnsub?.();}catch{}});
-  listenEventTypes(); listenEvents(); listenLiveState(); listenWebsiteRequestSettings(); renderRequestCategoryCards(); renderRequestInfo(); renderLive();
+  listenLiveState(); renderRequestCategoryCards(); renderRequestInfo(); renderLive();
   window.addEventListener("DOMContentLoaded",openRequestDialog,{once:true});
 })();

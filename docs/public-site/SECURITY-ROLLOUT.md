@@ -1,94 +1,66 @@
-# Public enquiry security rollout
+# Free-plan public-site rollout
 
-The public root is a static GitHub Pages site at https://livekaraoke.github.io/online/.
-The repo contains no firebase.json, deployed Firestore rules, Functions package,
-service account or Firebase CLI deployment identity. The shared Firebase project
-selector defaults to livekaraokesuite, with livekaraokemt also selectable.
+Production is https://livekaraoke.eu/ (GitHub Pages, online/main). The private
+LiveSuite mirror is a separate workflow and deployment. Firebase remains Spark.
+No Cloud Functions, Blaze upgrade, payment method or paid backend is required by
+this change. The project selector defaults to livekaraokesuite; /list/ still uses
+the separate livekaraokemt project.
 
-## Implemented fallback
+## Booking validation and cooldown
 
-The form preserves bookingEnquiries and its existing admin-compatible document
-shape. It validates required values, types, lengths, email, event types and guest
-counts. It rejects markup/control characters, trims strings, uses a fixed canonical
-pageUrl (no URL query data), and writes server timestamps. Its honeypot and in-page
-60-second success cooldown are UX/spam deterrents, not server security boundaries.
-No private submissions or tokens are logged. There is no per-IP rate limiting.
+`booking-enquiries.rules.fragment` is merged into the CURRENT deployed rules,
+not used as a replacement for the full ruleset. It validates the existing
+bookingEnquiries schema and the three exact act/source combinations. Owner-only
+management is preserved. Public reads/updates/deletes remain denied.
 
-## Rules: manual merge required
+`js/public-booking.js` commits the enquiry and a private publicBookingLimits
+receipt atomically. Rules enforce 60 seconds between submissions with the same
+case-insensitive email address. This is a per-email deterrent, not per-IP
+throttling and not proof that an email belongs to the submitter. No mail or
+server credentials are embedded in the website. Duplicate clicks share the
+in-flight promise and all forms preserve success/error feedback.
 
-1. Export the CURRENT rules from Firebase Console before editing. They were not
-   available in this repo and have NOT been changed remotely by this pass.
-2. Merge booking-enquiries.rules.fragment into the documents scope. Replace the
-   old anonymous bookingEnquiries creation grant with validLiveKaraokeEnquiry().
-   Keep the actual existing staff-only permissions and independently validated
-   other public form sources. Do not overwrite unrelated collection rules.
-3. Remove any broader grant that lets anonymous users read/update/delete private
-   enquiries or create arbitrary enquiry documents. Overlapping `allow` rules are
-   ORed: a restrictive match cannot override a permissive wildcard or another
-   matching allow. Check EVERY matching rule, including global recursive matches.
-4. If other public forms share bookingEnquiries, retain their separately validated
-   create predicates in the existing match. This fragment alone only accepts
-   Live Karaoke submissions; it must not replace their validated predicates.
-5. Emulator-test with the actual merged rules: valid Live Karaoke create succeeds;
-   unexpected fields/oversized data/wrong source/status/timestamps/bad types fail;
-   anonymous get/list/update/delete fail; verified staff still work; unrelated app
-   paths and other public enquiry sources retain their existing access.
-6. Publish merged rules in the correct Firebase project(s). This is necessary for
-   server-enforced validation; client validation alone cannot restrict direct API
-   calls. Firestore rules do not provide per-IP rate limiting or total spam quotas.
+Safe rollout order:
+1. Publish the validator and publicBookingLimits permissions, temporarily leaving
+   booking create as `validPublicBookingEnquiry()` for existing cached forms.
+2. Deploy all three forms, including the exported Roxanna package.
+3. Verify both public Pages and private LiveSuite files; allow cached HTML to
+   expire. Then add `&& validBookingCooldown(enquiryId)` to booking create.
+4. Verify the published Console version. A Git commit does not deploy rules.
 
-## App Check: manual configuration required
+The isolated emulator test covers valid submissions for all three acts,
+malformed/oversized data, source mismatches, missing/duplicate cooldown receipts,
+owner management and unauthorised reads/writes. Do not create test bookings in
+production. Keep the prior Console rules version as a rollback point.
 
-1. Create a score-based reCAPTCHA Enterprise web SITE key for the production domain
-   livekaraoke.github.io (and any other real production domains). No localhost in
-   the production key. Register each Firebase web app with the Enterprise provider.
-2. Put each PUBLIC SITE key in js/public-enquiry-config.js under its project ID.
-   Never commit a private reCAPTCHA secret, service account, or debug token.
-3. Deploy that config. SDK initialization occurs before the root Firestore use;
-   automatic token refresh is enabled. A configured form waits for a valid token.
-4. Monitor Firebase App Check metrics before enabling Firestore enforcement.
-   Enforcement applies to the project/service, NOT just this form or collection.
-   First register/integrate every legitimate client of that service, including
-   existing LiveSuite, request screens and other sites. Those clients were outside
-   this task and were not modified. Do not enforce until they are ready.
-5. Enable Cloud Firestore App Check enforcement and confirm real browser traffic.
+## Public/private boundary
 
-Blank keys deliberately leave the existing form operational. App Check is NOT
-active until a real key is configured; attestation is NOT enforced until the
-console switch is enabled. Rules and App Check are complementary.
+The rules inspected in Firebase Console on 22 October 2026 were published on
+16 October and still permitted anonymous reads of full lyrics, timing, setlists,
+requests, performance sessions and controls. A public JavaScript field filter
+cannot secure those records. The booking rollout does NOT close those reads.
 
-## Backend follow-up
+A free-plan migration must publish allowlisted public views from authenticated
+host code, migrate all public consumers, initialise the views, and only then
+restrict the original collections. Existing lyrics IDs and selected setlist IDs
+remain authoritative. Private Singer Screen and kiosk access must be validated
+before cutover. Never close reads first or enable a public fallback to full
+private records after cutover.
 
-True per-IP throttling requires a backend endpoint. There is no Functions
-infrastructure/deployment authorization identity in this checkout, so the fallback
-was used instead of redirecting the live form to an undeployed endpoint. A future
-callable Function should enforce App Check, reject unknown fields/request sizes,
-validate on the server, apply shared transactional rate limits, and write with the
-Admin SDK. Close anonymous direct enquiry creates after every relevant form source
-has migrated. Do not enable an undeployed endpoint in the production client.
+## App Check and notifications
 
-## Deployment
+App Check keys are currently blank. No service-wide enforcement has been enabled.
+Do not enable Firestore enforcement until every legitimate host, singer, kiosk
+and all three acts' clients are registered and verified. App Check does not
+replace rules. The existing enquiries dashboard is retained; a successful
+Firestore write is not evidence of an email notification.
 
-Commit/push these root changes to the GitHub Pages publishing branch (main).
-Rules/App Check console changes are separate; pushing HTML does not deploy rules.
-No unrelated Firebase collection, admin interface or data model was changed.
+## Validation commands
 
-## Event compatibility
+- `node --test verification/public-site/public-policy.test.cjs verification/public-site/event-time.test.cjs`
+- `node verification/public-site/live-karaoke-catalogue.test.cjs`
+- `node verification/public-site/repair-browser.test.cjs` (Playwright/Chromium)
+- `firebase emulators:exec --config firebase.emulators.json --project demo-lk-public --only firestore 'node verification/public-site/rules.test.cjs'`
 
-public-event-time.js prioritizes Date/Firestore Timestamp or offset-qualified ISO
-instants in startAt/startTimestamp/start and endAt/endTimestamp/end. Legacy date,
-startTime, endDate and endTime are interpreted in Europe/Malta via Intl timezone
-data. No UTC or permanent +02 offset is assumed. Missing endTime stays unspecified;
-an earlier endTime without endDate rolls into the next Malta calendar day. A DST
-gap yields no instant; a repeated autumn local time uses the earlier occurrence.
-Use an explicit Timestamp to select the later occurrence. No stored events were
-rewritten. Live Now remains controlled by the existing live-session documents,
-not inferred from a scheduled clock time. Past ended dates are removed from the
-upcoming list; same-day events without an end retain the existing "starting now"
-behaviour. JSON-LD uses UTC ISO instants, displayed times explicitly use Malta.
-
-## Official references
-
-- https://firebase.google.com/docs/app-check/web/recaptcha-enterprise-provider
-- https://firebase.google.com/docs/firestore/security/rules-structure
-- https://firebase.google.com/docs/firestore/security/rules-fields
+Browser tests use isolated fixtures and block all external writes. The emulator
+uses a demo project. Malta event timestamps/DST are tested independently.

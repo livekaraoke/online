@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /livekaraoke26/request.html
+Disallow: /signup/
+Disallow: /ls26try/
+Disallow: /livesuite/
+Disallow: /admin-new/
+Disallow: /host/
+Sitemap: https://livekaraoke.eu/sitemap.xml

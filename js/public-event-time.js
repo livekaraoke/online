@@ -41,17 +41,17 @@
     return date && Number.isFinite(date.getTime()) ? date : null;
   }
   function start(event) {
-    for (const key of ['startAt','startTimestamp','start']) {
+    for (const key of ['scheduledStartAt','startAt','startTimestamp','start']) {
       const date = instant(event?.[key]);
       if (date) return date;
     }
     return localInstant(event?.date,event?.startTime || '00:00');
   }
   function hasStartTime(event) {
-    return !!event?.startTime || ['startAt','startTimestamp','start'].some(key => !!instant(event?.[key]));
+    return !!event?.startTime || ['scheduledStartAt','startAt','startTimestamp','start'].some(key => !!instant(event?.[key]));
   }
   function end(event) {
-    for (const key of ['endAt','endTimestamp','end']) {
+    for (const key of ['scheduledEndAt','endAt','endTimestamp','end']) {
       const date = instant(event?.[key]);
       if (date) return date;
     }

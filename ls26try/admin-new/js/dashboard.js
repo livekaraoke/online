@@ -192,8 +192,14 @@
     // Opening requests before a performance creates only an ID reservation.
     // Public requests can use it immediately, and the real performance session
     // adopts this same ID when START SESSION is pressed.
-    if (nextEnabled && !live && !String(state.preSessionRequestSessionId || "").trim()) {
-      patch.preSessionRequestSessionId = LK.db.collection("performanceSessions").doc().id;
+    if (nextEnabled && !live) {
+      const eventId=String($("sessionEventSelect")?.value||"").trim();
+      if(!eventId){alert("Choose the upcoming event before opening pre-session requests.");return;}
+      const eventSnap=await LK.db.collection("upcomingEvents").doc(eventId).get();
+      if(!eventSnap.exists){alert("That event is unavailable. Choose another event.");return;}
+      if(state.preSessionRequestSessionId && state.preSessionRequestEventId!==eventId){alert("The reserved requests belong to a different event. Start or resolve that event before reserving another.");return;}
+      patch.preSessionRequestEventId=eventId;
+      patch.preSessionRequestSessionId = state.preSessionRequestSessionId || LK.db.collection("performanceSessions").doc().id;
     }
 
     await LK.db.collection("karaoke").doc("state").set(patch, { merge: true });

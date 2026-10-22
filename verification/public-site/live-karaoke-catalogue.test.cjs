@@ -39,7 +39,12 @@ function fixture({active=false, selected='public', browse='browse', fail=false}=
 function gate({live=true,active=false,open=false,reserved='',test=false}={}) {
   const start=lifecycle.indexOf('  const gateHasExplicitValue');
   const end=lifecycle.indexOf('  function normaliseObserver');
-  const context={isLiveKaraoke:live,gateState:{songsEnabled:open,preSessionRequestSessionId:reserved},currentSession:{active,sessionId:active?'real-session':''},rawWebsiteSettings:{enableLiveRequestTestMode:test},result:null};
+  const policy=require('../../js/public-visibility.js');
+  const control={active,sessionId:active?'real-session':'',eventId:'event',type:'Live Karaoke',publicVisibility:'public'};
+  const event={id:'event',type:'Live Karaoke',status:'Confirmed'};
+  const session={id:'real-session',status:'active',publicVisibility:'public'};
+  const gateState={songsEnabled:open,preSessionRequestSessionId:reserved,preSessionRequestEventId:'event'};
+  const context={isLiveKaraoke:live,gateState,currentSession:control,publicState:{control,session,event,karaoke:gateState,loaded:true},params:new URLSearchParams(),window:{LKPublicVisibility:policy},rawWebsiteSettings:{enableLiveRequestTestMode:test},result:null};
   vm.runInNewContext(lifecycle.slice(start,end)+';result={canSubmit:canSubmit(),settings:syntheticSettingsSnapshot({exists:true,data:()=>({enableLiveRequestTestMode:false})}).data()};',context);
   return context.result;
 }

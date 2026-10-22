@@ -26,7 +26,7 @@
     showFooter:true,
     aboutTitle:"WHAT IS LIVE KARAOKE?",
     aboutLead:"A live music experience where YOU become the singer.",
-    aboutBody1:"Choose from 150+ rock, pop, indie, classics and party anthems, grab the mic and perform with live guitar and looping — no backing tracks.",
+    aboutBody1:"Choose from rock, pop, indie, classics and party anthems, grab the mic and perform with live guitar and looping — no backing tracks.",
     aboutBody2:"We provide the lyrics, up to two microphones and the live accompaniment. Whether you're a first-timer or a confident performer, it's spontaneous, social and designed to get the whole room involved.",
     aboutHighlight:"More than karaoke. A real live performance experience.",
     aboutBooking:"Perfect for bars, venues, private parties and events.",
@@ -42,7 +42,7 @@
     reviewsTitle:"REVIEWS",
     reviewsSubtitle:"What singers and guests say about Live Karaoke.",
     songListTitle:"SONG LIST ACCESS",
-    songListDescription:"Browse 150+ songs anytime. When Live Karaoke is live, request your song and join the next singer rotation.",
+    songListDescription:"Browse the song list anytime. When Live Karaoke is live, request your song and join the next singer rotation.",
     songListButtonText:"BROWSE SONGS",
     bookingTitle:"BOOK / ENQUIRE",
     bookingIntro:"Bring Live Karaoke to your venue, wedding, private party, corporate event or festival — an interactive live-music experience that turns your guests into the singers.",
@@ -87,6 +87,7 @@
     out.bookingCards=DEFAULTS.bookingCards.map((f,i)=>({title:String(cards[i]?.title||f.title),text:String(cards[i]?.text||f.text)}));
     out.reviewsTitle=String(s.reviewsTitle||DEFAULTS.reviewsTitle).slice(0,100);
     out.reviewsSubtitle=String(s.reviewsSubtitle||DEFAULTS.reviewsSubtitle).slice(0,400);
+    for(const key of ["aboutBody1","songListDescription"])out[key]=String(out[key]||"").replace(/150\+ songs/g,"the song list").replace(/150\+ /g,"");
     return out;
   }
   function normaliseFaqs(raw){return Array.isArray(raw)&&raw.length?raw.slice(0,30).map((x,i)=>({id:String(x?.id||`faq-${i+1}`),question:String(x?.question||"").trim(),answer:String(x?.answer||"").trim()})).filter(x=>x.question&&x.answer):DEFAULT_FAQS;}
@@ -136,12 +137,11 @@
   function openBooking(){const b=document.getElementById("liveKaraokeEnquiryOpen");if(b)b.click();}
   function scrollToBooking(){document.getElementById("enquire")?.scrollIntoView({behavior:reduced()?"auto":"smooth",block:"start"});}
   function apply(){favicons();hero();about();how();events();reviews();songList();booking();community();cleanup();visibility();}
-  function remote(n=0){if(requested)return;if(!window.firebase?.firestore||!firebase.apps?.length){if(n<80)setTimeout(()=>remote(n+1),100);return;}requested=true;firebase.firestore().collection("karaokeControl").doc("liveKaraokeWebsiteSettings").get().then(doc=>{const d=doc.exists?(doc.data()||{}):{};page=normalise(d.publicPage||{});faqs=normaliseFaqs(d.bookingFaqs);publicReviews=normaliseReviews(d.publicReviews);apply();}).catch(e=>console.warn("Live Karaoke website settings unavailable",e));}
+  function remote(n=0){if(requested)return;if(!window.LKPublicStore){if(n<80)setTimeout(()=>remote(n+1),100);return;}requested=true;let signature="";LKPublicStore.subscribe(state=>{const d=state.settings||{};const next=JSON.stringify(d);if(next===signature)return;signature=next;page=normalise(d.publicPage||{});faqs=normaliseFaqs(d.bookingFaqs);publicReviews=normaliseReviews(d.publicReviews);apply();});}
 
-  document.addEventListener("pointerdown",e=>{if(e.target.closest?.("#songListBtn"))e.preventDefault();},true);
-  document.addEventListener("click",e=>{const bookingCta=e.target.closest?.("[data-live-karaoke-booking-cta]");if(bookingCta){e.preventDefault();bookingCta.dataset.liveKaraokeBookingCta==="about"?scrollToBooking():openBooking();return;}if(!e.target.closest?.("#songListBtn"))return;e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();typeof openLiveKaraokeRequestPopup==="function"?openLiveKaraokeRequestPopup():window.__liveKaraokeRequestOpenPending=true;},true);
+  document.addEventListener("click",e=>{const c=e.target.closest?.("[data-live-karaoke-booking-cta]");if(c){e.preventDefault();c.dataset.liveKaraokeBookingCta==='about'?scrollToBooking():openBooking();}});
   addEventListener("message",e=>{if(e.origin===location.origin&&e.data?.type==="live-karaoke-request-ready"){popupTheme();requestAnimationFrame(popupTheme);}});
   const schedule=()=>{if(scheduled)return;scheduled=true;requestAnimationFrame(()=>{scheduled=false;apply();});};
   if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",()=>{apply();remote();},{once:true});else{apply();remote();}
-  new MutationObserver(schedule).observe(document.documentElement,{subtree:true,childList:true,attributes:true,attributeFilter:["class","aria-disabled","href"]});
+
 })();

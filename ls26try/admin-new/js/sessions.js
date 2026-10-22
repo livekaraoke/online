@@ -365,11 +365,14 @@
     const gateSnap=await gateRef.get();
     const gateState=gateSnap.exists?(gateSnap.data()||{}):{};
     const pendingSessionId=String(gateState.preSessionRequestSessionId||"").trim();
+    if(pendingSessionId && gateState.preSessionRequestEventId && gateState.preSessionRequestEventId!==event.id){setSessionStatus("Pre-session requests belong to another event. Select that event before starting.");return;}
     const autoOpenRequests=await autoOpenRequestsOnSessionStart();
     const localStartedAt = preparedAt || nowTimestamp();
 
     const eventSnapshot = {
       id: event.id || "",
+      publicVisibility: event.publicVisibility || (event.isTest?"test":event.isPrivate?"private":"public"),
+      status: event.status || "",
       name: event.name || "",
       title,
       type: sessionType,
@@ -416,6 +419,7 @@
       sessionType,
       eventId: event.id,
       eventSnapshot,
+      publicVisibility: eventSnapshot.publicVisibility,
       notes: notes + (notes ? "\n" : "") + `Session started/prepared at ${localStartedAt.toDate().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}.`,
       timingVersion: 2,
       openedAt: localStartedAt,
@@ -454,6 +458,7 @@
       type: sessionType,
       sessionType,
       eventSnapshot,
+      publicVisibility: eventSnapshot.publicVisibility,
       startedAt: serverNow(),
       updatedAt: serverNow()
     };
@@ -497,7 +502,7 @@
         manualOverride:true,
         songsOverride:true,
         songsEnabled:requestsEnabled,
-        preSessionRequestSessionId:firebase.firestore.FieldValue.delete(),
+        preSessionRequestSessionId:firebase.firestore.FieldValue.delete(),preSessionRequestEventId:firebase.firestore.FieldValue.delete(),
         publicSongListSetlistId:publicList.id,
         publicSongListSetlistName:listData.name || publicList.name,
         updatedAt:serverNow()
@@ -558,7 +563,7 @@
     if((control.sessionId||control.activeSessionId)!==endingId)throw Error('Session changed. No session was ended.');
     tx.set(sr,{status:'ended',isActive:false,breakOpen:false,closedAt:ended,endedAt:ended,actualEndedAt:saved.lastPerformanceEndedAt||(saved.timingVersion===2?null:saved.actualEndedAt||null),breaks:(saved.breaks||[]).map(b=>(b.start||b.startedAt)&&!(b.end||b.endedAt)?{...b,end:ended}:b),updatedAt:serverNow()},{merge:true});
     tx.set(cr,{active:false,sessionId:null,activeSessionId:null,eventId:null,title:'',venue:'',type:'',sessionType:'',updatedAt:serverNow()},{merge:true});
-    tx.set(LK.db.collection('karaoke').doc('state'),{isLive:false,manualOverride:true,songsOverride:true,songsEnabled:false,preSessionRequestSessionId:firebase.firestore.FieldValue.delete(),updatedAt:serverNow()},{merge:true});
+    tx.set(LK.db.collection('karaoke').doc('state'),{isLive:false,manualOverride:true,songsOverride:true,songsEnabled:false,preSessionRequestSessionId:firebase.firestore.FieldValue.delete(),preSessionRequestEventId:firebase.firestore.FieldValue.delete(),updatedAt:serverNow()},{merge:true});
   },{maxAttempts:3});
 
   LK.state.currentSessionId = null;

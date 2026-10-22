@@ -866,6 +866,7 @@
     $("eventVenueInput").value = "";
     populateTypeControls("Live Karaoke");
     $("eventStatusInput").value = "Confirmed";
+    $("eventPublicVisibilityInput").value = "public";
     $("eventDateInput").value = "";
     $("eventStartTimeInput").value = "";
     $("eventEndTimeInput").value = "";
@@ -912,6 +913,7 @@
     }
     populateTypeControls(typeOptions.includes(event.type) ? event.type : (typeOptions[0] || ""));
     $("eventStatusInput").value = STATUS_OPTIONS.includes(event.status) ? event.status : "Confirmed";
+    $("eventPublicVisibilityInput").value = event.publicVisibility || ((event.isTest||/(?:^|\s)test(?:\s|$)/i.test(`${event.name||""} ${event.venue||""}`))?"test":event.isPrivate||event.publicVisible===false?"private":"public");
     $("eventDateInput").value = event.date || "";
     $("eventStartTimeInput").value = event.startTime || "";
     $("eventEndTimeInput").value = event.endTime || "";
@@ -1002,6 +1004,7 @@
       venue: selectedVenue?.name || "",
       type: $("eventTypeInput").value,
       status: $("eventStatusInput").value,
+      publicVisibility: $("eventPublicVisibilityInput").value,
       date: $("eventDateInput").value,
       startTime: $("eventStartTimeInput").value,
       endTime: $("eventEndTimeInput").value,

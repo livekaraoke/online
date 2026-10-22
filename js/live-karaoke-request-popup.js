@@ -8,10 +8,11 @@
 
   // Request-only Live Karaoke document. This is not /billylee26/ and does not
   // contain the Billy Lee website shell.
-  const FRAME_URL = "livekaraoke26/request.html?v=20261014-catalogue-v9#req";
+  const FRAME_URL = "livekaraoke26/request.html?v=20261022-public#req";
   let overlay = null;
   let frame = null;
   let previousBodyOverflow = "";
+  let returnFocus = null;
 
   const REQUEST_THEME_CSS = `
     :root{
@@ -381,6 +382,7 @@
     frame = null;
     document.documentElement.classList.remove("live-karaoke-request-open");
     document.body.style.overflow = previousBodyOverflow;
+    returnFocus?.focus?.();returnFocus=null;
   }
 
   function openPopup() {
@@ -394,10 +396,14 @@
     overlay.setAttribute("role", "presentation");
     overlay.style.cssText = "position:fixed;inset:0;z-index:2147483000;background:rgba(0,0,0,.42);backdrop-filter:blur(6px) brightness(.48) saturate(.78);-webkit-backdrop-filter:blur(6px) brightness(.48) saturate(.78);overflow:hidden;touch-action:none;";
 
+    returnFocus=document.activeElement;
+    overlay.setAttribute("role","dialog");overlay.setAttribute("aria-modal","true");overlay.setAttribute("aria-label","Request a song");
     frame = document.createElement("iframe");
     frame.id = "liveKaraokeRequestFrame";
     frame.title = "Live Karaoke song requests";
-    frame.src = FRAME_URL;
+    const url=new URL(FRAME_URL,location.href),params=new URLSearchParams(location.search);
+    for(const key of ['vac','sessionId'])if(params.has(key))url.searchParams.set(key,params.get(key));
+    frame.src = url.href;
     frame.allow = "clipboard-write";
     frame.setAttribute("allowtransparency", "true");
     frame.style.cssText = "position:absolute;inset:0;width:100%;height:100%;border:0;background:none transparent!important;color-scheme:dark;visibility:hidden;";
@@ -425,7 +431,7 @@
   }
 
   function hardenRequestControls(root = document) {
-    root.querySelectorAll?.("#heroRequestBtn,#songListBtn").forEach(original => {
+    root.querySelectorAll?.("#liveNowRequestBtn,#songListBtn").forEach(original => {
       const button = replaceAnchorWithButton(original);
       button.removeAttribute("href");
       button.removeAttribute("target");
@@ -435,7 +441,7 @@
   }
 
   document.addEventListener("pointerdown", event => {
-    const button = event.target.closest?.("#heroRequestBtn,#songListBtn");
+    const button = event.target.closest?.("#liveNowRequestBtn,#songListBtn");
     if (!button) return;
     const disabled = button.getAttribute("aria-disabled") === "true" || button.classList.contains("disabled-button");
     if (disabled) return;
@@ -443,7 +449,7 @@
   }, true);
 
   document.addEventListener("click", event => {
-    const button = event.target.closest?.("#heroRequestBtn,#songListBtn");
+    const button = event.target.closest?.("#liveNowRequestBtn,#songListBtn");
     if (!button) return;
 
     const disabled = button.getAttribute("aria-disabled") === "true" || button.classList.contains("disabled-button");
@@ -457,7 +463,7 @@
   }, true);
 
   window.addEventListener("message", event => {
-    if (event.origin !== location.origin) return;
+    if (event.origin !== location.origin || event.source !== frame?.contentWindow) return;
     if (event.data?.type === "live-karaoke-request-ready" && frame) {
       applyFrameTheme();
       requestAnimationFrame(() => {
@@ -472,13 +478,6 @@
     if (event.key === "Escape" && overlay) closePopup();
   });
 
-  const observer = new MutationObserver(() => hardenRequestControls());
-  observer.observe(document.documentElement, {
-    subtree: true,
-    childList: true,
-    attributes: true,
-    attributeFilter: ["href", "target", "rel", "class", "aria-disabled"]
-  });
 
   hardenRequestControls();
 
