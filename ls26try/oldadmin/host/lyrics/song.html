@@ -60,13 +60,13 @@ real-time typography control, and performance styling tools.
       transform: translateY(-50%) scale(1);
       display: grid;
       place-items: center;
-      width: clamp(124px, 16vw, 180px);
-      height: clamp(124px, 16vw, 180px);
+      width: var(--prompter-arrow-diameter, clamp(124px, 16vw, 180px));
+      height: var(--prompter-arrow-diameter, clamp(124px, 16vw, 180px));
       border-radius: 50%;
       border: 1px solid rgba(255,255,255,.26);
       background: rgba(28,32,38,.70);
       color: rgba(255,255,255,.85);
-      opacity: .70;
+      opacity: var(--prompter-arrow-opacity, .55);
       pointer-events: none;
       will-change: transform;
     }
@@ -94,7 +94,7 @@ real-time typography control, and performance styling tools.
     }
     .prompter-scroll-zone:active .prompter-scroll-arrow,
     .prompter-scroll-zone:focus-visible .prompter-scroll-arrow {
-      opacity: 1;
+      opacity: var(--prompter-arrow-opacity, .55);
       background: rgba(45,57,67,.88);
     }
     body.prompter-scroll-zones-hidden .prompter-scroll-zone { display: none; }
@@ -155,6 +155,56 @@ real-time typography control, and performance styling tools.
       height: 46px;
       font-size: 20px;
       padding: 0;
+    }
+    .top-bar .controls > .icon-btn {
+      width: 120px;
+      height: 46px;
+      font-size: 18px;
+    }
+    .top-bar .back-button,
+    .top-bar .fs-button,
+    .top-bar .font-buttons button,
+    .prompter-width-toggle {
+      opacity: .83;
+    }
+    .prompter-arrow-settings {
+      margin: 4px 0 10px;
+      padding: 8px 4px 4px;
+    }
+    .prompter-arrow-settings label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      color: #c6d0d6;
+      font: 600 14px/1.4 Arial, sans-serif;
+      margin-bottom: 6px;
+    }
+    .prompter-arrow-settings output {
+      color: #40d8c3;
+      font-variant-numeric: tabular-nums;
+    }
+    .prompter-arrow-settings input[type="range"] {
+      display: block;
+      width: 100%;
+      max-width: 100%;
+      min-height: 36px;
+      margin: 0 0 12px;
+      accent-color: #00d5bc;
+      cursor: pointer;
+    }
+    /* DEV CONSOLE is stored above and behind the fixed header when hidden.
+       Debugging can continue without forcing it onto the performance display. */
+    body:not(.prompter-dev-visible) #devPanel {
+      visibility: hidden;
+      pointer-events: none;
+      transform: translateY(-100%);
+      opacity: 0 !important;
+    }
+    body.prompter-dev-visible #devPanel {
+      visibility: visible;
+      pointer-events: auto;
+      transform: none;
     }
     /* A distinct control above the right-hand hold-to-scroll areas. */
     .prompter-width-toggle {
@@ -740,6 +790,16 @@ function toggleAutoscrollVisibility() {
       <input type="checkbox" id="prompterScrollZonesToggle" checked>
       <span>Show scroll buttons</span>
     </label>
+    <div class="prompter-arrow-settings">
+      <label for="prompterArrowOpacity">Arrow transparency <output id="prompterArrowOpacityValue" for="prompterArrowOpacity">55%</output></label>
+      <input id="prompterArrowOpacity" type="range" min="20" max="100" step="5" value="55" aria-label="Arrow opacity percentage">
+      <label for="prompterArrowSize">Arrow size <output id="prompterArrowSizeValue" for="prompterArrowSize">100%</output></label>
+      <input id="prompterArrowSize" type="range" min="70" max="150" step="10" value="100" aria-label="Arrow size percentage">
+    </div>
+    <label class="prompter-sidebar-toggle">
+      <input type="checkbox" id="prompterDevConsoleToggle">
+      <span>Show DEV CONSOLE</span>
+    </label>
     <div class="prompter-quick-autoscroll">
       <span class="prompter-quick-label">Auto-scroll Interface</span>
       <div class="interface-group">
@@ -910,14 +970,8 @@ function updateDebugHeader(songTitle, artist, bpm, speed) {
 // DEV PANEL --------------------------------------------
 
 function toggleDevPanel() {
-  const panel = document.getElementById("devPanel");
-  if (!panel) return;
-
-  if (panel.style.display === "none") {
-    panel.style.display = "block";
-  } else {
-    panel.style.display = "none";
-  }
+  // Keep the existing DEV CONSOLE close button in sync with the saved setting.
+  window.prompterToggleDevConsole?.();
 }
 
 function refreshDevOpacity() {
@@ -1231,7 +1285,7 @@ slaveLyricsToggle.addEventListener("change", function() {
   aria-label="Scroll lyrics down" title="Tap to scroll down; hold to keep scrolling">
   <span class="prompter-scroll-arrow" aria-hidden="true"><svg viewBox="0 0 96 96" focusable="false"><path d="M16 34 L48 66 L80 34"/></svg></span>
 </button>
-<script src="prompter-ui.js?v=20261022-width-v1"></script>
+<script src="prompter-ui.js?v=20261022-stage-controls-v1"></script>
 </body>
 </html>
 

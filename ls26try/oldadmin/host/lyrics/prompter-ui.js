@@ -7,7 +7,7 @@
   const defaults = {
     theme: 'default', font: 'verdana', lineSpacing: '1.5',
     charSpacing: '0px', fontSizeOffset: 0, scrollZones: true, slaveLyrics: false,
-    wideLyrics: false
+    wideLyrics: false, arrowOpacity: 55, arrowSize: 100, devConsole: false
   };
   function readSaved() {
     try {
@@ -189,6 +189,48 @@
     if (toggle) toggle.checked = enabled;
   }
 
+  const clampPreference = (value, fallback, min, max, step) => {
+    const n = Number(value);
+    return Number.isFinite(n) ? Math.min(max, Math.max(min,
+      min + Math.round((n - min) / step) * step)) : fallback;
+  };
+
+  function updateArrowAppearance() {
+    const opacity = clampPreference(prefs.arrowOpacity, 55, 20, 100, 5);
+    const size = clampPreference(prefs.arrowSize, 100, 70, 150, 10);
+    const base = Math.max(124, Math.min(180,
+      (Number(window.innerWidth) || document.documentElement.clientWidth || 1024) * .16));
+    document.documentElement.style.setProperty('--prompter-arrow-opacity', String(opacity / 100));
+    document.documentElement.style.setProperty('--prompter-arrow-diameter',
+      Math.round(base * size / 100) + 'px');
+    const opacityInput = byId('prompterArrowOpacity');
+    const sizeInput = byId('prompterArrowSize');
+    if (opacityInput) opacityInput.value = String(opacity);
+    if (sizeInput) sizeInput.value = String(size);
+    if (byId('prompterArrowOpacityValue')) byId('prompterArrowOpacityValue').textContent = opacity + '%';
+    if (byId('prompterArrowSizeValue')) byId('prompterArrowSizeValue').textContent = size + '%';
+  }
+
+  function updateDevConsole() {
+    const visible = prefs.devConsole === true;
+    document.body.classList.toggle('prompter-dev-visible', visible);
+    const panel = byId('devPanel');
+    if (panel) {
+      // Logging may set display:block; visibility stays controlled by the class.
+      panel.style.display = 'block';
+      panel.setAttribute('aria-hidden', visible ? 'false' : 'true');
+    }
+    const toggle = byId('prompterDevConsoleToggle');
+    if (toggle) toggle.checked = visible;
+  }
+
+  function setDevConsoleVisible(visible) {
+    prefs.devConsole = Boolean(visible);
+    save();
+    updateDevConsole();
+  }
+  window.prompterToggleDevConsole = () => setDevConsoleVisible(prefs.devConsole !== true);
+
   function updateSlaveLyrics(enabled, changeUrl) {
     const toggle = byId('slaveLyricsToggle');
     if (!toggle) return;
@@ -224,6 +266,8 @@
     applyStyles();
     syncAutoScrollVisibility();
     updateScrollZones();
+    updateArrowAppearance();
+    updateDevConsole();
     updateWidthButton();
     scheduleWideLyricsLayout();
     // Explicit ?slave=1 overrides a locally stored off setting on initial entry.
@@ -311,12 +355,26 @@
   function initialize() {
     byId('prompterFitWidthToggle')?.addEventListener('click', toggleWideLyrics);
     window.addEventListener('resize', () => {
+      updateArrowAppearance();
       if (prefs.wideLyrics === true) scheduleWideLyricsLayout();
     });
     byId('prompterScrollZonesToggle')?.addEventListener('change', event => {
       prefs.scrollZones = Boolean(event.target.checked);
       save();
       updateScrollZones();
+    });
+    byId('prompterArrowOpacity')?.addEventListener('input', event => {
+      prefs.arrowOpacity = clampPreference(event.target.value, 55, 20, 100, 5);
+      save();
+      updateArrowAppearance();
+    });
+    byId('prompterArrowSize')?.addEventListener('input', event => {
+      prefs.arrowSize = clampPreference(event.target.value, 100, 70, 150, 10);
+      save();
+      updateArrowAppearance();
+    });
+    byId('prompterDevConsoleToggle')?.addEventListener('change', event => {
+      setDevConsoleVisible(event.target.checked);
     });
     byId('slaveLyricsToggle')?.addEventListener('change', event => {
       updateSlaveLyrics(Boolean(event.target.checked), true);
