@@ -190,7 +190,7 @@ body.library-page{height:100dvh;overflow:hidden;display:flex;flex-direction:colu
 .library-page .library-controls .library-search input{box-sizing:border-box;width:100%;min-width:0;height:46px;min-height:46px;font-size:16px}
 .library-page .library-controls #sidebarToggleBtn{height:46px;min-height:46px;padding:6px 12px;font-size:13px;white-space:nowrap}
 .library-page .library-heading-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;width:auto!important;min-width:0;flex:none!important;flex-wrap:nowrap!important}
-.library-page .library-heading-actions .library-button,.library-page .library-heading-actions button{display:flex;align-items:center;justify-content:center;height:46px;min-height:46px;padding:6px 11px;font-size:13px;white-space:nowrap}
+.library-page .library-heading-actions .library-button,.library-page .library-heading-actions button{display:flex;align-items:center;justify-content:center;box-sizing:border-box;height:46px;min-height:46px;padding:6px 11px;font-size:13px;white-space:nowrap}
 .library-page .library-browse-row{display:grid;grid-template-columns:minmax(0,54%) minmax(0,1fr);gap:8px;align-items:stretch;margin-bottom:6px;min-width:0}
 .library-page .library-browse-row .library-scope{display:grid;grid-template-columns:auto auto auto minmax(0,1fr);align-items:stretch;gap:6px;margin:0;min-width:0}
 .library-page .library-browse-row .library-scope button,.library-page .library-browse-row .library-scope select{min-width:0;height:46px;min-height:46px;padding:6px 8px;font-size:13px;white-space:nowrap}

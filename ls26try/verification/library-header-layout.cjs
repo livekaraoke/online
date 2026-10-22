@@ -34,7 +34,7 @@ const chrome=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin
      return {rect,scrollWidth:document.documentElement.scrollWidth,innerWidth:window.innerWidth};
     });
     const b=boxes.rect,aligned=(a,c)=>Math.abs((b[a].top+b[a].height/2)-(b[c].top+b[c].height/2))<5;
-    console.log('LAYOUT '+width+'px '+JSON.stringify(b));
+    assert.ok(Math.abs(b.add.height-b.search.height)<3,width+': Add button height differs from Search/Filters');
     assert.ok(aligned('title','search')&&aligned('search','filters')&&aligned('filters','add')&&aligned('add','export'),width+': heading controls stacked unexpectedly');
     assert.ok(aligned('setlist','best')&&aligned('best','rotation'),width+': recommendation row stacked unexpectedly');
     assert.ok(b.title.right<=b.search.left+2&&b.search.right<=b.filters.left+2&&b.filters.right<=b.add.left+2&&b.add.right<=b.export.left+2,width+': heading overlap');
