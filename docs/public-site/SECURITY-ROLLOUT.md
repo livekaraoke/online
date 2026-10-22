@@ -95,7 +95,8 @@ The exact Console-exported restore source is
   current/reserved session, selected repertoire, act, publication metadata,
   venue code and request-open state at the authoritative rules boundary.
   Existing fresh-capability edit/cancel rules and kiosk branch are retained.
-  This candidate must be deployed only after the updated clients are verified.
+  Published in Console at **05:43 Malta, 22 October 2026**, after Pages and
+  private Cloudflare builds succeeded and updated public files were verified.
 
 The Roxanna request gate verifies its existing named Roxanna repertoire rather
 than assuming the shared LiveSuite publicSongList is the band's repertoire.
