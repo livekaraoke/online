@@ -168,7 +168,7 @@
       if (!held) { frame = null; return; }
       if (lastTime !== null) {
         const delta = Math.min(0.05, (timestamp - lastTime) / 1000);
-        window.scrollBy(0, direction * 420 * delta);
+        window.scrollBy(0, direction * 210 * delta);
       }
       lastTime = timestamp;
       frame = requestAnimationFrame(animate);
@@ -176,7 +176,7 @@
 
     function step() {
       window.stopAutoScroll?.();
-      window.scrollBy({ top: direction * Math.max(120, window.innerHeight * .30),
+      window.scrollBy({ top: direction * Math.max(60, window.innerHeight * .15),
         behavior: 'smooth' });
     }
 
