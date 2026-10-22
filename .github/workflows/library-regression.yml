@@ -1,0 +1,36 @@
+name: LiveSuite Library and recommendation regression
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'ls26try/library.html'
+      - 'ls26try/shared/library.css'
+      - 'ls26try/shared/best-next.css'
+      - 'ls26try/shared/best-next.js'
+      - 'ls26try/shared/song-rotation.js'
+      - 'ls26try/host/js/lyricsviewer.js'
+      - 'ls26try/tests/song-rotation.test.cjs'
+      - 'ls26try/tests/best-next-integration.test.cjs'
+      - '.github/workflows/library-regression.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  library:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install lightweight DOM test dependency
+        run: npm install --prefix "$RUNNER_TEMP/ls26-library-tests" --no-audit --no-fund linkedom@0.18.12
+      - name: Run focused Library and recommendation checks
+        run: |
+          export LS26_TEST_NODE_MODULES="$RUNNER_TEMP/ls26-library-tests/node_modules"
+          node --test ls26try/tests/song-rotation.test.cjs ls26try/tests/best-next-integration.test.cjs
+          node ls26try/verification/library-filters.cjs
