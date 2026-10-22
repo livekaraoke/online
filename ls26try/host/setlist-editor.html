@@ -53,7 +53,7 @@
       font-size: 13px;
     }
   </style>
-<link rel="stylesheet" href="../shared/theme.css?v=20260929-topbar-size-v5"><link rel="stylesheet" href="../shared/performance.css?v=20260925-live-click"><script src="../shared/data.js?v=20260910-stage4"></script></head>
+<link rel="stylesheet" href="../shared/theme.css?v=20260929-topbar-size-v5"><link rel="stylesheet" href="../shared/performance.css?v=20260925-live-click"><link rel="stylesheet" href="css/setlist-editor-theme.css?v=20261022-layout-v1"><script src="../shared/data.js?v=20260910-stage4"></script></head>
 <body class="setlist-page">
 
   <div id="setlistLoadingGate" class="setlist-auth-gate">
@@ -92,12 +92,12 @@
 
       <div id="setlistEditor" class="hidden">
         <div class="setlist-header-fields">
-          <input id="setlistNameInput" placeholder="Setlist name">
-          <textarea id="setlistNotesInput" placeholder="Setlist notes"></textarea>
-          <div>
+          <label class="setlist-name-field" for="setlistNameInput"><span>SETLIST NAME</span><input id="setlistNameInput" placeholder="Setlist name"></label>
+          <div class="setlist-header-actions">
             <button id="saveSetlistBtn" class="btn red" type="button">SAVE SETLIST</button>
             <button id="deleteSetlistBtn" class="btn ghost" type="button">DELETE</button>
           </div>
+          <label class="setlist-notes-field" for="setlistNotesInput"><span>SETLIST NOTES</span><textarea id="setlistNotesInput" placeholder="Optional notes about this setlist"></textarea></label>
         </div>
 
         <div id="setlistEditorMessage" class="setlist-editor-message"></div>

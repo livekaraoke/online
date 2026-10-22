@@ -1,0 +1,387 @@
+/* Copyright © 2026 LiveSuite. Setlist Editor only.
+   Scoped layout/theme layer over the legacy LyricsSuite base stylesheet.
+   No changes to Library, LyricView, Creator, shared navigation or setlist persistence. */
+body.setlist-page {
+  margin:0;
+  min-height:100dvh;
+  overflow-x:hidden;
+  color:var(--ls-text,#f3f7fc);
+  background:radial-gradient(ellipse at top,#06283c 0%,var(--ls-bg,#020e17) 70%)!important;
+  font:15px/1.4 Arial,Helvetica,sans-serif;
+}
+.setlist-page .app-topbar {
+  position:relative;
+  top:auto;
+  z-index:2;
+  display:grid;
+  grid-template-columns:minmax(135px,185px) minmax(0,1fr) auto auto;
+  align-items:center;
+  gap:12px;
+  width:min(100%,1600px);
+  margin:0 auto;
+  padding:15px 14px 12px;
+  border-bottom:1px solid var(--ls-border);
+  background:transparent;
+  box-shadow:none;
+  backdrop-filter:none;
+}
+.setlist-page .brand-block{margin:0;min-width:0}
+.setlist-page .brand-block strong{font-size:21px;line-height:1.1;letter-spacing:.01em;color:var(--ls-text)}
+.setlist-page .brand-block span{display:block;margin-top:5px;font-size:13px;color:var(--ls-muted);line-height:1.3}
+.setlist-page .setlist-auth-state {
+  display:block;
+  margin:0;
+  padding:0 4px;
+  max-width:215px;
+  overflow:hidden;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+  color:var(--ls-success);
+  font-size:12px;
+  font-weight:750;
+}
+.setlist-page .app-topbar .btn {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-height:46px;
+  padding:9px 12px;
+  background:var(--ls-panel)!important;
+  border:1px solid var(--ls-border)!important;
+  border-radius:8px;
+  box-shadow:none;
+  color:var(--ls-text)!important;
+  font-size:13px;
+  text-decoration:none;
+  text-align:center;
+  letter-spacing:0;
+  white-space:normal;
+  line-height:1.18;
+}
+.setlist-page #newSetlistBtn {
+  min-width:135px;
+  color:var(--ls-success)!important;
+  border-color:#197e65!important;
+  background:linear-gradient(125deg,#0b342f,#07211e)!important;
+}
+.setlist-page .app-topbar .btn:hover,.setlist-page #newSetlistBtn:hover{border-color:var(--ls-accent)!important;background:var(--ls-soft)!important}
+.setlist-page .setlist-shell {
+  display:grid;
+  grid-template-columns:clamp(205px,22vw,278px) minmax(0,1fr);
+  gap:12px;
+  align-items:start;
+  width:min(100%,1600px);
+  margin:0 auto;
+  padding:12px 14px 24px;
+}
+.setlist-page .setlist-shell > *{min-width:0}
+.setlist-page .setlist-shell .panel {
+  min-width:0;
+  margin:0;
+  padding:14px;
+  background:linear-gradient(160deg,var(--ls-panel,#051925),#03141f)!important;
+  color:var(--ls-text);
+  border:1px solid var(--ls-border);
+  border-radius:10px;
+  box-shadow:0 8px 28px rgba(0,0,0,.16);
+}
+.setlist-page .setlist-list-panel{position:relative;top:auto;align-self:start;min-width:0}
+.setlist-page .panel-title-row{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0}
+.setlist-page .panel-title-row h3 {
+  margin:0;
+  color:var(--ls-text);
+  font-size:13px;
+  font-weight:850;
+  letter-spacing:.045em;
+  line-height:1.25;
+}
+.setlist-page #setlistCount,.setlist-page #selectedSongCount {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  flex:none;
+  min-width:29px;
+  min-height:28px;
+  padding:1px 7px;
+  border-radius:6px;
+  color:var(--ls-accent);
+  border:1px solid var(--ls-border);
+  background:var(--ls-soft);
+  font-size:13px;
+  font-variant-numeric:tabular-nums;
+}
+.setlist-page .setlist-list{
+  display:flex;
+  flex-direction:column;
+  gap:7px;
+  max-height:min(76dvh,1000px);
+  min-height:0;
+  overflow-y:auto;
+  overflow-x:hidden;
+  margin-top:12px;
+  padding:1px 3px 3px 0;
+}
+.setlist-page .setlist-list-item{
+  display:block;
+  flex:none;
+  min-width:0;
+  width:100%;
+  min-height:58px;
+  text-align:left;
+  padding:10px 12px;
+  border:1px solid #234759;
+  border-radius:8px;
+  background:#071e2e;
+  color:var(--ls-text);
+  transition:border-color .1s,background .1s;
+}
+.setlist-page .setlist-list-item strong{
+  display:block;
+  font-size:14px;
+  font-weight:800;
+  line-height:1.25;
+  overflow-wrap:anywhere;
+}
+.setlist-page .setlist-list-item span{display:block;margin-top:4px;color:var(--ls-muted);font-size:12px}
+.setlist-page .setlist-list-item:hover{background:#0b2c40;border-color:#3c7c96}
+.setlist-page .setlist-list-item.active{
+  background:linear-gradient(95deg,#074359,#07293b);
+  border-color:var(--ls-accent);
+  color:#fff;
+  box-shadow:inset 3px 0 var(--ls-accent);
+}
+.setlist-page .setlist-list-item.active span{color:#a8d8ed}
+.setlist-page .setlist-editor-panel{min-width:0}
+.setlist-page .setlist-header-fields{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  align-items:end;
+  gap:10px 12px;
+  margin-bottom:6px;
+}
+.setlist-page .setlist-header-fields label{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  min-width:0;
+  color:var(--ls-muted);
+  font-size:11px;
+  font-weight:800;
+  letter-spacing:.05em;
+}
+.setlist-page .setlist-name-field{grid-column:1}
+.setlist-page .setlist-notes-field{grid-column:1/-1}
+.setlist-page .setlist-header-fields input,
+.setlist-page .setlist-header-fields textarea,
+.setlist-page #availableSearch{
+  box-sizing:border-box;
+  display:block;
+  width:100%;
+  min-width:0;
+  margin:0;
+  border:1px solid var(--ls-border);
+  border-radius:7px;
+  outline-offset:2px;
+  background:#031420;
+  color:var(--ls-text);
+  font-size:14px;
+  font-weight:500;
+  line-height:1.4;
+  padding:10px 11px;
+}
+.setlist-page .setlist-header-fields input{height:45px;min-height:45px}
+.setlist-page .setlist-header-fields textarea{
+  height:62px;
+  min-height:62px;
+  max-height:180px;
+  resize:vertical;
+}
+.setlist-page .setlist-header-fields :is(input,textarea)::placeholder,
+.setlist-page #availableSearch::placeholder{color:#809cb0}
+.setlist-page .setlist-header-actions{grid-column:2;grid-row:1;display:flex;align-items:center;gap:7px;min-width:0}
+.setlist-page .setlist-header-actions .btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:45px;
+  padding:8px 12px;
+  border:1px solid #2a586d;
+  border-radius:7px;
+  background:#0b3044;
+  color:var(--ls-text);
+  font-size:12px;
+  font-weight:800;
+  letter-spacing:0;
+  text-align:center;
+  line-height:1.2;
+  white-space:nowrap;
+}
+.setlist-page #saveSetlistBtn{
+  color:var(--ls-success);
+  border-color:#167c61;
+  background:linear-gradient(125deg,#0a392e,#06231f);
+}
+.setlist-page #deleteSetlistBtn{color:#ff9fac;border-color:#794354;background:#251b27}
+.setlist-page #saveSetlistBtn:hover{border-color:var(--ls-success)}
+.setlist-page #deleteSetlistBtn:hover{border-color:var(--ls-danger)}
+.setlist-page .setlist-editor-message{
+  margin:3px 0 8px;
+  min-height:18px;
+  font-size:12px;
+  overflow-wrap:anywhere;
+}
+.setlist-page .setlist-columns{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  gap:10px;
+  width:100%;
+  min-width:0;
+  align-items:stretch;
+}
+.setlist-page .setlist-columns>section{
+  display:flex;
+  flex-direction:column;
+  min-width:0;
+  margin:0;
+  padding:10px;
+  border:1px solid var(--ls-border);
+  border-radius:8px;
+  background:#041722;
+}
+.setlist-page .setlist-columns>section>.panel-title-row{
+  flex:none;
+  align-items:center;
+  flex-wrap:wrap;
+  min-height:35px;
+  margin-bottom:7px;
+}
+.setlist-page #availableSearch {
+  flex:1 1 100%;
+  height:42px;
+  min-height:42px;
+  font-size:13px;
+  padding:8px 10px;
+}
+.setlist-page .setlist-song-list{
+  min-width:0;
+  min-height:250px;
+  max-height:min(62dvh,800px);
+  overflow-y:auto;
+  overflow-x:hidden;
+  overscroll-behavior:contain;
+  scrollbar-color:#2a647c transparent;
+  scrollbar-width:thin;
+}
+.setlist-page .setlist-song-row{
+  display:grid;
+  grid-template-columns:14px minmax(0,1fr) repeat(3,36px);
+  gap:4px;
+  align-items:center;
+  min-width:0;
+  width:100%;
+  padding:8px 1px;
+  border-bottom:1px solid #204154;
+  background:transparent;
+}
+.setlist-page .setlist-song-row:last-child{border-bottom:0}
+.setlist-page .setlist-song-row>div{min-width:0}
+.setlist-page .setlist-song-row strong{
+  display:block;
+  max-width:100%;
+  color:var(--ls-text);
+  font-size:13px;
+  font-weight:800;
+  line-height:1.3;
+  overflow-wrap:anywhere;
+  word-break:normal;
+}
+.setlist-page .setlist-song-row small{
+  display:block;
+  margin-top:3px;
+  color:var(--ls-muted);
+  font-size:11px;
+  line-height:1.25;
+  overflow-wrap:anywhere;
+}
+.setlist-page .setlist-song-row .drag{
+  justify-self:center;
+  color:var(--ls-accent);
+  font-size:16px;
+  cursor:grab;
+  touch-action:none;
+}
+.setlist-page .setlist-song-row button{
+  display:grid;
+  place-items:center;
+  box-sizing:border-box;
+  width:36px;
+  height:42px;
+  min-height:42px;
+  min-width:0;
+  padding:0;
+  background:#0b3044;
+  color:var(--ls-text);
+  border:1px solid #315d73;
+  border-radius:6px;
+  font-size:19px;
+  font-weight:700;
+  line-height:1;
+}
+.setlist-page .setlist-song-row button:hover{border-color:var(--ls-accent);background:#124059}
+.setlist-page #selectedSongs .setlist-song-row [data-remove]{color:#ffafbf;border-color:#754658}
+.setlist-page #availableSongs .setlist-song-row{
+  grid-template-columns:minmax(0,1fr) 42px;
+  gap:7px;
+}
+.setlist-page #availableSongs .setlist-song-row button{
+  width:42px;
+  color:var(--ls-success);
+  border-color:#1c765a;
+  background:#07332b;
+}
+.setlist-page .setlist-auth-gate{background:rgba(0,10,18,.95)}
+.setlist-page .setlist-auth-box{
+  background:linear-gradient(145deg,var(--ls-panel),#04141f);
+  border:1px solid var(--ls-border);
+  color:var(--ls-text);
+  box-shadow:0 14px 55px #000b;
+}
+.setlist-page .setlist-auth-box p{color:var(--ls-muted)}
+.setlist-page .setlist-auth-box h2{color:var(--ls-accent)}
+.setlist-page .setlist-auth-box .btn.red{background:#07382b;border:1px solid #1c795a;color:var(--ls-success)}
+.setlist-page .setlist-auth-box .btn.ghost{background:var(--ls-soft);border:1px solid var(--ls-border);color:var(--ls-text)}
+.setlist-page .setlist-auth-box .setlist-auth-error{color:#ff93a3}
+@media(max-width:1050px){
+  .setlist-page .setlist-shell{grid-template-columns:210px minmax(0,1fr);gap:10px;padding:10px}
+  .setlist-page .setlist-shell .panel{padding:10px}
+  .setlist-page .setlist-columns{gap:8px}
+  .setlist-page .setlist-columns>section{padding:8px}
+  .setlist-page .setlist-song-row{grid-template-columns:12px minmax(0,1fr) repeat(3,34px);gap:3px}
+  .setlist-page .setlist-song-row button{width:34px;height:42px;min-height:42px}
+  .setlist-page #availableSongs .setlist-song-row{grid-template-columns:minmax(0,1fr) 40px;gap:5px}
+  .setlist-page #availableSongs .setlist-song-row button{width:40px}
+  .setlist-page .setlist-header-actions .btn{padding:8px 9px;font-size:11px}
+  .setlist-page .app-topbar{grid-template-columns:minmax(115px,155px) minmax(0,1fr) auto auto;gap:8px;padding:11px 10px}
+  .setlist-page .setlist-auth-state{max-width:170px}
+  .setlist-page .brand-block strong{font-size:19px}
+}
+@media(max-width:790px){
+  .setlist-page .setlist-shell{display:block}
+  .setlist-page .setlist-list-panel{margin-bottom:10px!important}
+  .setlist-page .setlist-list{flex-direction:row;overflow-x:auto;overflow-y:hidden;max-height:none;gap:7px;padding:2px 1px 5px}
+  .setlist-page .setlist-list-item{flex:0 0 160px;width:160px;min-height:58px}
+  .setlist-page .setlist-columns{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  .setlist-page .app-topbar{grid-template-columns:minmax(0,1fr) auto}
+  .setlist-page .brand-block{grid-column:1}
+  .setlist-page .app-topbar>a{grid-column:1;grid-row:2;justify-self:start}
+  .setlist-page #newSetlistBtn{grid-column:2;grid-row:1/3;min-width:115px}
+  .setlist-page .setlist-auth-state{grid-column:1;grid-row:3;max-width:100%}
+}
+@media(max-width:600px){
+  .setlist-page .setlist-columns{grid-template-columns:1fr}
+  .setlist-page .setlist-song-list{max-height:360px}
+  .setlist-page .setlist-header-fields{grid-template-columns:1fr}
+  .setlist-page .setlist-header-actions{grid-row:3;grid-column:1;justify-content:flex-start;flex-wrap:wrap}
+  .setlist-page .setlist-notes-field{grid-column:1;grid-row:2}
+  .setlist-page .setlist-header-actions .btn{font-size:12px}
+}
