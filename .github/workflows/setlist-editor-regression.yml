@@ -1,0 +1,30 @@
+name: LiveSuite Setlist Editor layout regression
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'ls26try/host/setlist-editor.html'
+      - 'ls26try/host/css/setlist-editor-theme.css'
+      - 'ls26try/verification/setlist-editor-layout.cjs'
+      - '.github/workflows/setlist-editor-regression.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  layout:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install test-only browser dependencies
+        run: npm install --prefix "$RUNNER_TEMP/ls26-setlist-test" --no-audit --no-fund linkedom@0.18.12 playwright@1.62.1
+      - name: Test Setlist Editor layout in Chromium
+        run: |
+          export LS26_TEST_NODE_MODULES="$RUNNER_TEMP/ls26-setlist-test/node_modules"
+          if ! command -v google-chrome >/dev/null && ! command -v chromium >/dev/null; then
+            "$RUNNER_TEMP/ls26-setlist-test/node_modules/.bin/playwright" install chromium
+          fi
+          node ls26try/verification/setlist-editor-layout.cjs
