@@ -20,7 +20,7 @@ const cases=[
  ['/ls26try/host/setlist-editor','Setlists'],['/ls26try/host/setlist-editor.html','Setlists'],['/ls26try/host/setlist-editor/','Setlists'],
  ['/ls26try/requests','Requests'],['/ls26try/requests.html','Requests']
 ];
-const html='<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>'+sharedTheme+'</style></head><body><div id="topStatusContainer"></div><script>window.LS26Data={invalidate(){}};window.ArtistNames={display:v=>v};</script><script src="/ls26try/shared/shell.js?v=20261022-nav-route-v2"></script></body></html>';
+const html='<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>'+sharedTheme+'</style></head><body><div id="topStatusContainer"></div><script>window.LS26Data={invalidate(){}};window.ArtistNames={display:v=>v};</script><script src="/ls26try/shared/shell.js?v=20261022-nav-route-v2"></script></body></html>';
 const browserExe=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(fs.existsSync);
 (async()=>{
  const browser=await chromium.launch({headless:true,...(browserExe?{executablePath:browserExe}:{}),args:['--no-sandbox']});
