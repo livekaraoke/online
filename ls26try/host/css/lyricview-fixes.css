@@ -2491,3 +2491,19 @@ body.host-lyric-view-page {
 .host-section-body .ls26-active-chord{outline:2px solid var(--ls-accent);outline-offset:3px;border-radius:4px;background:#00cafa25!important;box-shadow:0 0 0 4px #00cafa15;color:var(--ls-accent)!important}
 @media(min-width:601px) and (max-width:1180px){.host-scroll-player:has(#chordFollowBtn){flex-wrap:wrap!important;gap:5px!important}#chordFollowStatus{max-width:180px;font-size:12px}.host-scroll-player #chordFollowBtn,.host-scroll-player #rejoinChordBtn,.host-scroll-player #resetChordTimingBtn{padding-inline:8px;font-size:13px}}
 @media(max-width:600px){.host-scroll-player:has(#chordFollowBtn){flex-wrap:wrap!important;gap:4px!important}#chordFollowStatus{flex-basis:100%;max-width:none;text-align:center;font-size:12px}}
+
+/* SEND LYRICS: show the async result inside the existing quick/drawer button. */
+#quickSendSlaveLyricsBtn.lyrics-send-pending,
+#sendSlaveLyricsBtn.lyrics-send-pending {
+  color:#e7f6fc!important; border-color:#6b9cb2!important;
+}
+#quickSendSlaveLyricsBtn.lyrics-send-success,
+#sendSlaveLyricsBtn.lyrics-send-success {
+  color:#adffd2!important; border-color:#36db8a!important;
+  background:rgba(16,116,65,.34)!important;
+}
+#quickSendSlaveLyricsBtn.lyrics-send-error,
+#sendSlaveLyricsBtn.lyrics-send-error {
+  color:#ffc7c7!important; border-color:#ff7373!important;
+  background:rgba(119,29,38,.3)!important;
+}

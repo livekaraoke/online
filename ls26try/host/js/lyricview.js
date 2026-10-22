@@ -1981,37 +1981,72 @@
     );
   }
 
+  // Inline status confirms that Firestore accepted the selected lyrics ID;
+  // it does not claim an acknowledgement from the remote singer display.
+  const slaveLyricsFeedbackTimers = new WeakMap();
+
+  function setSlaveLyricsButtonFeedback(button, state, detail = "") {
+    if (!button) return;
+    clearTimeout(slaveLyricsFeedbackTimers.get(button));
+    button.dataset.defaultLyricsLabel ||= button.textContent.trim() || "▶ SEND LYRICS";
+    button.classList.remove("lyrics-send-pending", "lyrics-send-success", "lyrics-send-error");
+    const labels = {
+      pending: "… SENDING",
+      success: "✓ SENT",
+      error: "✕ FAILED",
+      missing: "✕ CHOOSE LYRICS"
+    };
+    button.textContent = labels[state] || button.dataset.defaultLyricsLabel;
+    button.classList.add(state === "missing" ? "lyrics-send-error" : `lyrics-send-${state}`);
+    button.title = detail || (state === "success" ? "Lyrics selection saved for the singer display." : "");
+    button.setAttribute("aria-label", button.textContent);
+    if (state === "pending") return;
+    const timer = setTimeout(() => {
+      button.classList.remove("lyrics-send-pending", "lyrics-send-success", "lyrics-send-error");
+      button.textContent = button.dataset.defaultLyricsLabel;
+      button.title = "";
+      button.setAttribute("aria-label", button.textContent);
+      slaveLyricsFeedbackTimers.delete(button);
+    }, 2400);
+    slaveLyricsFeedbackTimers.set(button, timer);
+  }
+
   async function sendSlaveLyrics(selectId = "slaveLyricsSelect") {
     const select = $(selectId);
+    const button = $(selectId === "quickSlaveLyricsSelect" ? "quickSendSlaveLyricsBtn" : "sendSlaveLyricsBtn");
+    if (button?.disabled) return false;
     const id = String(select?.value || "").trim();
-
     if (!id) {
-      return showModal(
-        "Choose Lyrics",
-        "Select lyrics to send first."
-      );
+      setSlaveLyricsButtonFeedback(button, "missing", "Select lyrics from the dropdown first.");
+      return false;
     }
 
     const fileName = `${id}.js`;
+    if (button) button.disabled = true;
+    setSlaveLyricsButtonFeedback(button, "pending");
+    try {
+      await db.collection("karaokeControl").doc("liveLyrics").set({
+        currentSongId: id,
+        songId: id,
 
-    await db.collection("karaokeControl").doc("liveLyrics").set({
-      currentSongId: id,
-      songId: id,
+        // Explicit legacy mapping. No artist is added to the filename.
+        lyricsFileId: id,
+        lyricsFileName: fileName,
+        lyricsFilePath: `../oldadmin/host/lyrics/lyrics-data/${fileName}`,
+        lyricsSource: "song-data-js",
 
-      // Explicit legacy mapping. No artist is added to the filename.
-      lyricsFileId: id,
-      lyricsFileName: fileName,
-      lyricsFilePath: `../oldadmin/host/lyrics/lyrics-data/${fileName}`,
-      lyricsSource: "song-data-js",
-
-      reset: false,
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    }, { merge: true });
-
-    showModal(
-      "Singer Lyrics Updated",
-      `${fileName} was sent to the singer display.`
-    );
+        reset: false,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+      setSlaveLyricsButtonFeedback(button, "success");
+      return true;
+    } catch (error) {
+      console.error("Could not send singer lyrics:", error);
+      setSlaveLyricsButtonFeedback(button, "error", error?.message || "Could not send lyrics. Try again.");
+      return false;
+    } finally {
+      if (button) button.disabled = false;
+    }
   }
 
   async function saveMyNotes() {
