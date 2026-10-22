@@ -42,12 +42,12 @@ test('Recommendations do not occupy the approved LyricView header; library tools
 
 for(const route of ['host/lyricview','host/lyricview.html'])test('Run Order owns recommendation on '+route,async()=>{
  const f=await setup(route),d=f.document,card=d.getElementById('tsRunOrderBestNext'),list=d.getElementById('tsRunOrderList');
- assert.equal(card.nextElementSibling,list);assert.equal(card.previousElementSibling.id,'ls26AddSong');assert.match(list.textContent,/empty/);
+ const quickrow=card.parentElement;assert.equal(quickrow.id,'tsRunOrderQuickRow');assert.equal(quickrow.nextElementSibling,list);assert.equal(quickrow.previousElementSibling?.id,'ls26AddSong');assert.match(list.textContent,/empty/);
  assert.equal(d.querySelector('#hostStickyStack #tsRunOrderBestNext'),null);assert.match(card.textContent,/FRESH/);
  card.querySelector('[data-show-best]').click();assert.equal(d.getElementById('bestNextPanel').hidden,false);
  d.getElementById('bestNextClose').click();assert.equal(d.getElementById('bestNextPanel').hidden,true);
  const selected=card.querySelector('[data-use-next]').dataset.useNext;card.querySelector('[data-use-next]').click();await tick();assert.equal(f.stats().writes[0][0].id,selected);assert.equal(f.stats().writes[0][1].next,true);
- list.innerHTML='<div>Existing queued song</div>';f.setRun([{songId:'b',status:'queued'}]);assert.equal(card.nextElementSibling,list);assert.match(list.textContent,/Existing/);
+ list.innerHTML='<div>Existing queued song</div>';f.setRun([{songId:'b',status:'queued'}]);assert.equal(card.parentElement.nextElementSibling,list);assert.match(list.textContent,/Existing/);
  f.performed([{songId:selected}]);assert.equal(card.querySelector(`[data-use-next="${selected}"]`),null);
  f.window.dispatchEvent(new f.window.CustomEvent('ls26:current-song',{detail:{songId:'b'}}));assert.equal(card.querySelector('[data-use-next="b"]'),null);
  f.setSession({id:'s1',venue:'Other'});assert.equal(d.querySelectorAll('#tsRunOrderBestNext').length,1);assert.equal(f.stats().reads,1);
