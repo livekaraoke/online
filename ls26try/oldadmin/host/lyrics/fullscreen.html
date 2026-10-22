@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LiveSuite — Persistent Fullscreen Prompter</title>
+<style>
+  html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #000; color: #eee; font-family: Arial, sans-serif; }
+  .viewer-toolbar { box-sizing: border-box; height: 52px; padding: 5px 12px; background: #14171a; border-bottom: 1px solid #353a40; display: flex; align-items: center; gap: 12px; }
+  .viewer-toolbar button, .viewer-toolbar a { box-sizing: border-box; min-height: 40px; border: 1px solid #505963; border-radius: 7px; padding: 9px 13px; color: #f5f5f5; background: #27323b; font: 700 14px Arial, sans-serif; text-decoration: none; cursor: pointer; }
+  .viewer-toolbar .viewer-hint { color: #9ca8b2; font-size: 13px; font-weight: normal; }
+  #prompterFrame { display: block; box-sizing: border-box; border: 0; width: 100%; height: calc(100vh - 52px); height: calc(100dvh - 52px); background: #000; }
+  :fullscreen .viewer-toolbar { display: none; }
+  :fullscreen #prompterFrame { height: 100vh; height: 100dvh; }
+  @media (max-width: 700px) { .viewer-toolbar .viewer-hint { display: none; } }
+</style>
+</head>
+<body>
+<div class="viewer-toolbar">
+  <button type="button" id="viewerFullscreenButton">⛶ Enter Fullscreen</button>
+  <a id="viewerDirectLink" href="song.html">Leave Viewer</a>
+  <span class="viewer-hint">Reloading the lyrics inside the frame keeps this viewer fullscreen.</span>
+</div>
+<iframe id="prompterFrame" title="LiveSuite Lyrics Prompter" allow="fullscreen" allowfullscreen></iframe>
+<script>
+(() => {
+  'use strict';
+  window.__ls26PrompterShell = true;
+  const frame = document.getElementById('prompterFrame');
+  const button = document.getElementById('viewerFullscreenButton');
+  const directLink = document.getElementById('viewerDirectLink');
+  const songUrl = new URL('song.html', location.href);
+  songUrl.search = location.search;
+  songUrl.hash = location.hash;
+  frame.src = songUrl.href;
+  directLink.href = songUrl.href;
+
+  function refreshDirectLink() {
+    try {
+      const currentUrl = new URL(frame.contentWindow.location.href);
+      if (currentUrl.origin === location.origin) directLink.href = currentUrl.href;
+    } catch (_) { /* retain the initial safe link */ }
+  }
+  frame.addEventListener('load', refreshDirectLink);
+  function syncFullscreenButton() {
+    button.textContent = document.fullscreenElement ? '✖ Exit Fullscreen' : '⛶ Enter Fullscreen';
+  }
+  window.__ls26PrompterToggleFullscreen = async function() {
+    try {
+      if (document.fullscreenElement) await document.exitFullscreen();
+      else await document.documentElement.requestFullscreen();
+    } catch (error) {
+      console.warn('Persistent Prompter fullscreen unavailable:', error);
+    }
+    syncFullscreenButton();
+  };
+  button.addEventListener('click', () => { void window.__ls26PrompterToggleFullscreen(); });
+  document.addEventListener('fullscreenchange', syncFullscreenButton);
+})();
+</script>
+</body>
+</html>

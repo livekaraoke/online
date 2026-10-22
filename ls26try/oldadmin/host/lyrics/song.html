@@ -33,6 +33,82 @@ real-time typography control, and performance styling tools.
       backdrop-filter: none !important;
       -webkit-backdrop-filter: none !important;
     }
+
+    /* Large, translucent performance scroll targets; the lyrics stay visible. */
+    .prompter-scroll-zone {
+      position: fixed;
+      right: 0;
+      width: min(62vw, 880px);
+      padding: 0;
+      margin: 0;
+      border: 0;
+      background: transparent;
+      z-index: 950; /* under the top bar, sidebar and Auto Scroll controls */
+      cursor: pointer;
+      touch-action: pan-y;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+    .prompter-scroll-zone-up { top: 30vh; height: 27vh; }
+    .prompter-scroll-zone-down { top: 57vh; height: 33vh; }
+    .prompter-scroll-zone .prompter-scroll-arrow {
+      position: absolute;
+      right: 12%;
+      top: 50%;
+      transform: translateY(-50%);
+      display: grid;
+      place-items: center;
+      width: clamp(62px, 8vw, 90px);
+      height: clamp(62px, 8vw, 90px);
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,.26);
+      background: rgba(28,32,38,.70);
+      color: rgba(255,255,255,.80);
+      font: bold clamp(32px, 4.5vw, 48px)/1 Arial, sans-serif;
+      opacity: .70;
+      pointer-events: none;
+    }
+    .prompter-scroll-zone:active .prompter-scroll-arrow,
+    .prompter-scroll-zone:focus-visible .prompter-scroll-arrow {
+      opacity: 1;
+      background: rgba(45,57,67,.88);
+    }
+    body.prompter-scroll-zones-hidden .prompter-scroll-zone { display: none; }
+    .prompter-sidebar-action {
+      width: 100%;
+      min-height: 48px;
+      border: 1px solid #4c6471;
+      border-radius: 8px;
+      padding: 10px;
+      color: #f1f5f9;
+      font-weight: 700;
+      background: #1c3440;
+      text-align: center;
+    }
+    .prompter-sidebar-toggle {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      min-height: 48px;
+      padding: 8px 4px;
+      color: #f1f5f9;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .prompter-sidebar-toggle input {
+      width: 22px;
+      height: 22px;
+      accent-color: #00d9b0;
+      flex: none;
+    }
+    .prompter-sidebar-note {
+      font-size: 12px;
+      line-height: 1.35;
+      color: #9eaab6;
+      margin: 2px 0 12px;
+      font-weight: normal;
+    }
   </style>
 </head>
 <!-- ------------------------------------------------------- -->
@@ -492,38 +568,32 @@ function tryEnterFullscreenOnce() {
 }
 
 function toggleSongFullscreen(btn) {
-  if (!document.fullscreenElement) {
-    document.documentElement.requestFullscreen();
-    localStorage.setItem(FS_KEY, "1");
-    btn.textContent = "✖ Exit FS";
-  } else {
-    document.exitFullscreen();
-    localStorage.setItem(FS_KEY, "0");
-    btn.textContent = "⛶ Fullscreen";
+  // In the persistent viewer, fullscreen the PARENT document, not this iframe.
+  // Replacing/reloading the iframe then cannot exit the parent's fullscreen.
+  const embedded = window.parent !== window && window.parent.__ls26PrompterShell === true;
+  const fullscreenDoc = embedded ? window.parent.document : document;
+  const target = fullscreenDoc.documentElement;
+  const entering = !fullscreenDoc.fullscreenElement;
+  try {
+    const operation = entering ? target.requestFullscreen() : fullscreenDoc.exitFullscreen();
+    Promise.resolve(operation).then(() => {
+      try { localStorage.setItem(FS_KEY, entering ? "1" : "0"); } catch (_) {}
+      btn.textContent = entering ? "✖ Exit FS" : "⛶ Fullscreen";
+    }).catch(error => console.warn("Fullscreen request failed:", error));
+  } catch (error) {
+    console.warn("Fullscreen unavailable:", error);
   }
 }
 
 function toggleAutoscrollVisibility() {
-
   const controls = document.getElementById("autoScrollControls");
   const btn = document.getElementById("toggleAutoscrollBtn");
-
-  const hidden = controls.style.display === "none";
-
-  if (hidden) {
-
-    controls.style.display = "flex";
-
-    btn.innerText = "Auto-scroll: ON";
-    btn.classList.add("active");
-
-  } else {
-
-    controls.style.display = "none";
-
-    btn.innerText = "Auto-scroll: OFF";
-    btn.classList.remove("active");
-  }
+  if (!controls || !btn) return;
+  const hide = !controls.classList.contains("hidden");
+  controls.classList.toggle("hidden", hide);
+  btn.textContent = hide ? "AUTO-SCROLL: OFF" : "AUTO-SCROLL: ON";
+  btn.classList.toggle("active", !hide);
+  try { localStorage.setItem("karaoke_hide_autoscroll", hide ? "1" : "0"); } catch (_) {}
 }
 
 </script>
@@ -547,10 +617,6 @@ function toggleAutoscrollVisibility() {
     <button class="fs-button" onclick="toggleSongFullscreen(this)">
       ⛶ Fullscreen
     </button>
-    <label class="slave-lyrics-toggle">
-      <input type="checkbox" id="slaveLyricsToggle">
-      <span>Slave Lyrics</span>
-    </label>
   </div>
 
   <!-- SONG TITLE & ARTIST -->
@@ -571,6 +637,16 @@ function toggleAutoscrollVisibility() {
   <div id="controlPanel" class="side-panel">
     <button class="close-btn" onclick="closePanel()">✖</button>
 
+    <button type="button" id="prompterFullscreenViewerBtn" class="prompter-sidebar-action">⛶ Persistent Fullscreen Viewer</button>
+    <div class="prompter-sidebar-note">Opens the Prompter in a fullscreen-capable iframe. Reloading the lyrics inside it keeps the outer viewer fullscreen.</div>
+    <label class="prompter-sidebar-toggle">
+      <input type="checkbox" id="slaveLyricsToggle">
+      <span>Slave Lyrics</span>
+    </label>
+    <label class="prompter-sidebar-toggle">
+      <input type="checkbox" id="prompterScrollZonesToggle" checked>
+      <span>Show scroll buttons</span>
+    </label>
     <h2>Settings</h2>
 
     <h3>Theme</h3>
@@ -968,6 +1044,7 @@ function renderLyrics(blocks) {
 
     container.appendChild(div);
   });
+  window.applySavedPrompterStyles?.();
 }
 
 // ------------------------------------------------------
@@ -1044,6 +1121,15 @@ slaveLyricsToggle.addEventListener("change", function() {
 ===================== END OF AUTO SCROLL CONTROLS ===================
 ================================================================= -->
 
+<button type="button" id="prompterScrollUp" class="prompter-scroll-zone prompter-scroll-zone-up"
+  aria-label="Scroll lyrics up" title="Tap to scroll up; hold to keep scrolling">
+  <span class="prompter-scroll-arrow" aria-hidden="true">↑</span>
+</button>
+<button type="button" id="prompterScrollDown" class="prompter-scroll-zone prompter-scroll-zone-down"
+  aria-label="Scroll lyrics down" title="Tap to scroll down; hold to keep scrolling">
+  <span class="prompter-scroll-arrow" aria-hidden="true">↓</span>
+</button>
+<script src="prompter-ui.js?v=20261022-controls-v1"></script>
 </body>
 </html>
 
