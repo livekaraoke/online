@@ -142,6 +142,18 @@
     if (!button) return;
     let pointerId = null, timer = null, frame = null, lastTime = null, held = false;
 
+    function pulse() {
+      // Restart the CSS animation on every press, including successive quick taps.
+      button.classList.remove('prompter-scroll-pulse');
+      void button.offsetWidth;
+      button.classList.add('prompter-scroll-pulse');
+    }
+    button.addEventListener('animationend', event => {
+      if (event.animationName === 'prompter-scroll-tap-pulse') {
+        button.classList.remove('prompter-scroll-pulse');
+      }
+    });
+
     function stop() {
       if (timer !== null) { clearTimeout(timer); timer = null; }
       if (frame !== null) { cancelAnimationFrame(frame); frame = null; }
@@ -171,6 +183,7 @@
     button.addEventListener('pointerdown', event => {
       if (event.button !== 0 || pointerId !== null) return;
       window.stopAutoScroll?.();
+      pulse();
       pointerId = event.pointerId;
       held = false;
       try { button.setPointerCapture(event.pointerId); } catch (_) {}
@@ -192,7 +205,7 @@
       if (pointerId !== null) stop();
     });
     button.addEventListener('click', event => {
-      if (event.detail === 0) step(); // keyboard and accessibility activation
+      if (event.detail === 0) { pulse(); step(); } // keyboard and accessibility activation
     });
     button.addEventListener('contextmenu', event => event.preventDefault());
     window.addEventListener('blur', () => { stop(); });

@@ -50,24 +50,47 @@ real-time typography control, and performance styling tools.
       -webkit-user-select: none;
       user-select: none;
     }
-    .prompter-scroll-zone-up { top: 30vh; height: 27vh; }
-    .prompter-scroll-zone-down { top: 57vh; height: 33vh; }
+    /* Both targets shift down; larger arrows sit further left inside the same tap areas. */
+    .prompter-scroll-zone-up { top: 34vh; height: 27vh; }
+    .prompter-scroll-zone-down { top: 61vh; height: 33vh; }
     .prompter-scroll-zone .prompter-scroll-arrow {
       position: absolute;
-      right: 12%;
+      right: 18%;
       top: 50%;
-      transform: translateY(-50%);
+      transform: translateY(-50%) scale(1);
       display: grid;
       place-items: center;
-      width: clamp(62px, 8vw, 90px);
-      height: clamp(62px, 8vw, 90px);
+      width: clamp(124px, 16vw, 180px);
+      height: clamp(124px, 16vw, 180px);
       border-radius: 50%;
       border: 1px solid rgba(255,255,255,.26);
       background: rgba(28,32,38,.70);
-      color: rgba(255,255,255,.80);
-      font: bold clamp(32px, 4.5vw, 48px)/1 Arial, sans-serif;
+      color: rgba(255,255,255,.85);
       opacity: .70;
       pointer-events: none;
+      will-change: transform;
+    }
+    .prompter-scroll-arrow svg {
+      width: 54%;
+      height: 54%;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 9;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    @keyframes prompter-scroll-tap-pulse {
+      0% { transform: translateY(-50%) scale(1); }
+      16% { transform: translateY(-50%) scale(1.17); }
+      100% { transform: translateY(-50%) scale(1); }
+    }
+    .prompter-scroll-zone.prompter-scroll-pulse .prompter-scroll-arrow {
+      animation: prompter-scroll-tap-pulse 1050ms cubic-bezier(.19,.68,.23,1) both;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .prompter-scroll-zone.prompter-scroll-pulse .prompter-scroll-arrow {
+        animation-duration: 160ms;
+      }
     }
     .prompter-scroll-zone:active .prompter-scroll-arrow,
     .prompter-scroll-zone:focus-visible .prompter-scroll-arrow {
@@ -77,6 +100,7 @@ real-time typography control, and performance styling tools.
     body.prompter-scroll-zones-hidden .prompter-scroll-zone { display: none; }
     .prompter-sidebar-action {
       width: 100%;
+      margin-top: 52px; /* clear the sidebar close button */
       min-height: 48px;
       border: 1px solid #4c6471;
       border-radius: 8px;
@@ -108,6 +132,16 @@ real-time typography control, and performance styling tools.
       color: #9eaab6;
       margin: 2px 0 12px;
       font-weight: normal;
+    }
+    .prompter-quick-autoscroll {
+      margin: 2px 0 14px 4px;
+    }
+    .prompter-quick-autoscroll .prompter-quick-label {
+      display: block;
+      margin-bottom: 8px;
+      color: #a9a9a9;
+      font-size: 14px;
+      font-weight: 600;
     }
   </style>
 </head>
@@ -647,6 +681,14 @@ function toggleAutoscrollVisibility() {
       <input type="checkbox" id="prompterScrollZonesToggle" checked>
       <span>Show scroll buttons</span>
     </label>
+    <div class="prompter-quick-autoscroll">
+      <span class="prompter-quick-label">Auto-scroll Interface</span>
+      <div class="interface-group">
+        <button id="toggleAutoscrollBtn" class="autoscroll-toggle active" onclick="toggleAutoscrollVisibility()">
+          AUTO-SCROLL: ON
+        </button>
+      </div>
+    </div>
     <h2>Settings</h2>
 
     <h3>Theme</h3>
@@ -677,13 +719,7 @@ function toggleAutoscrollVisibility() {
       <button onclick="setCharSpacing('1px', event)">Wider</button>
     </div>
 
-    <h3>Auto-scroll Interface</h3>
 
-    <div class="interface-group">
-      <button id="toggleAutoscrollBtn" class="autoscroll-toggle active"                   onclick="toggleAutoscrollVisibility()">
-        AUTO-SCROLL: ON
-      </button> 
-    </div>
 
   </div><!-- End Side Panel -->
 </div>
@@ -1123,13 +1159,13 @@ slaveLyricsToggle.addEventListener("change", function() {
 
 <button type="button" id="prompterScrollUp" class="prompter-scroll-zone prompter-scroll-zone-up"
   aria-label="Scroll lyrics up" title="Tap to scroll up; hold to keep scrolling">
-  <span class="prompter-scroll-arrow" aria-hidden="true">↑</span>
+  <span class="prompter-scroll-arrow" aria-hidden="true"><svg viewBox="0 0 96 96" focusable="false"><path d="M16 62 L48 30 L80 62"/></svg></span>
 </button>
 <button type="button" id="prompterScrollDown" class="prompter-scroll-zone prompter-scroll-zone-down"
   aria-label="Scroll lyrics down" title="Tap to scroll down; hold to keep scrolling">
-  <span class="prompter-scroll-arrow" aria-hidden="true">↓</span>
+  <span class="prompter-scroll-arrow" aria-hidden="true"><svg viewBox="0 0 96 96" focusable="false"><path d="M16 34 L48 66 L80 34"/></svg></span>
 </button>
-<script src="prompter-ui.js?v=20261022-controls-v1"></script>
+<script src="prompter-ui.js?v=20261022-controls-v2"></script>
 </body>
 </html>
 
