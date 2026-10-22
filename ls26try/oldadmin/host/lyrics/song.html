@@ -87,6 +87,20 @@ real-time typography control, and performance styling tools.
     .prompter-scroll-zone.prompter-scroll-pulse .prompter-scroll-arrow {
       animation: prompter-scroll-tap-pulse 1050ms cubic-bezier(.19,.68,.23,1) both;
     }
+    /* Anchor the Up arrow near the lower edge of its large clickable region. */
+    .prompter-scroll-zone-up .prompter-scroll-arrow {
+      top: auto;
+      bottom: 12px;
+      transform: scale(1);
+    }
+    @keyframes prompter-scroll-up-tap-pulse {
+      0% { transform: scale(1); }
+      16% { transform: scale(1.17); }
+      100% { transform: scale(1); }
+    }
+    .prompter-scroll-zone-up.prompter-scroll-pulse .prompter-scroll-arrow {
+      animation-name: prompter-scroll-up-tap-pulse;
+    }
     @media (prefers-reduced-motion: reduce) {
       .prompter-scroll-zone.prompter-scroll-pulse .prompter-scroll-arrow {
         animation-duration: 160ms;
