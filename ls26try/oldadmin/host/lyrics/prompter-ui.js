@@ -293,12 +293,14 @@
       button.classList.add('prompter-scroll-pulse');
     }
     button.addEventListener('animationend', event => {
-      if (event.animationName === 'prompter-scroll-tap-pulse') {
+      if (event.animationName === 'prompter-scroll-tap-pulse' ||
+          event.animationName === 'prompter-scroll-up-tap-pulse') {
         button.classList.remove('prompter-scroll-pulse');
       }
     });
 
     function stop() {
+      if (pointerId !== null) window.setAutoScrollManualGesture?.(false);
       if (timer !== null) { clearTimeout(timer); timer = null; }
       if (frame !== null) { cancelAnimationFrame(frame); frame = null; }
       lastTime = null;
@@ -319,14 +321,14 @@
     }
 
     function step() {
-      window.stopAutoScroll?.();
+      window.deferAutoScroll?.(950);
       window.scrollBy({ top: direction * Math.max(60, window.innerHeight * .15),
         behavior: 'smooth' });
     }
 
     button.addEventListener('pointerdown', event => {
       if (event.button !== 0 || pointerId !== null) return;
-      window.stopAutoScroll?.();
+      window.setAutoScrollManualGesture?.(true);
       pulse();
       pointerId = event.pointerId;
       held = false;
@@ -370,6 +372,7 @@
   // deliberately narrow left-hand strip. Programmatic arrows and Auto Scroll
   // use window.scrollBy/scrollTo and remain unaffected.
   let manualTouchStartedInStrip = false;
+  let manualTouchAutoScrollGesture = false;
   const manualStripWidth = () =>
     (document.documentElement.clientWidth || window.innerWidth || 0) * .26;
   const inAllowedManualArea = (x, y) => {
@@ -382,22 +385,34 @@
   function installRestrictedManualScrolling() {
     document.addEventListener('touchstart', event => {
       const touch = event.touches?.[0];
+      const sidebarTouch = inSidebar(event.target);
       manualTouchStartedInStrip = Boolean(touch &&
-        (inSidebar(event.target) || inAllowedManualArea(touch.clientX, touch.clientY)));
+        (sidebarTouch || inAllowedManualArea(touch.clientX, touch.clientY)));
+      manualTouchAutoScrollGesture = manualTouchStartedInStrip && !sidebarTouch;
+      if (manualTouchAutoScrollGesture) window.setAutoScrollManualGesture?.(true);
     }, { capture: true, passive: true });
     document.addEventListener('touchmove', event => {
       if (event.touches?.length > 1) return; // preserve pinch zoom
       if (!manualTouchStartedInStrip && event.cancelable) event.preventDefault();
     }, { capture: true, passive: false });
     document.addEventListener('touchend', event => {
-      if (!event.touches?.length) manualTouchStartedInStrip = false;
+      if (!event.touches?.length) {
+        if (manualTouchAutoScrollGesture) window.setAutoScrollManualGesture?.(false);
+        manualTouchAutoScrollGesture = false;
+        manualTouchStartedInStrip = false;
+      }
     }, { capture: true, passive: true });
     document.addEventListener('touchcancel', () => {
+      if (manualTouchAutoScrollGesture) window.setAutoScrollManualGesture?.(false);
+      manualTouchAutoScrollGesture = false;
       manualTouchStartedInStrip = false;
     }, { capture: true, passive: true });
     document.addEventListener('wheel', event => {
-      if (inSidebar(event.target) ||
-          inAllowedManualArea(event.clientX, event.clientY)) return;
+      if (inSidebar(event.target)) return;
+      if (inAllowedManualArea(event.clientX, event.clientY)) {
+        window.deferAutoScroll?.(650);
+        return;
+      }
       if (event.cancelable) event.preventDefault();
     }, { capture: true, passive: false });
   }
