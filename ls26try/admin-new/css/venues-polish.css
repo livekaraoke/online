@@ -1,0 +1,55 @@
+/* LiveSuite Admin Venues theme. Mirrors Gigs & Events while keeping
+   destructive/closed venue states red for clarity. Keep layout in venues.css. */
+
+.venues-page{background:var(--ls-bg,#00121b)!important;color:var(--ls-text,#eef8ff)!important}
+.venues-main{background:transparent!important}
+.venues-topbar{border-bottom-color:var(--ls-border,#23546a)!important}
+.venues-eyebrow{color:var(--ls-accent,#00cafa)!important}
+.venues-topbar h1{color:var(--ls-accent,#00cafa)!important}
+.venues-subtitle{color:var(--ls-muted,#8faabd)!important}
+
+/* Buttons follow the Gigs & Events palette: neutral blue, green create,
+   and red reserved for genuine destructive actions. */
+.venues-btn{border-color:var(--ls-border,#23546a)!important;background:#051b28!important;color:var(--ls-text,#eef8ff)!important}
+.venues-btn:hover{border-color:var(--ls-accent,#00cafa)!important;background:#082536!important}
+.venues-btn.primary{border-color:var(--ls-success,#00e88a)!important;background:linear-gradient(180deg,#064e3a,#043126)!important;color:var(--ls-success,#00e88a)!important;box-shadow:none!important}
+.venues-btn.primary:hover{background:linear-gradient(180deg,#086247,#043b2d)!important}
+.venues-btn.danger{border-color:var(--ls-danger,#ff465e)!important;background:#321019!important;color:#ff9ba8!important}
+
+.venues-summary-card,.venues-panel{border-color:var(--ls-border,#23546a)!important;background:linear-gradient(155deg,#061d2a,#03121b)!important;box-shadow:none!important}
+.venues-summary-card span,.venues-summary-card small{color:var(--ls-muted,#8faabd)!important}
+.venues-summary-card strong{color:var(--ls-text,#eef8ff)!important}
+.venues-toolbar{border-bottom-color:var(--ls-border,#23546a)!important;background:#041722!important}
+.venues-toolbar-search label,.venues-list-heading span,.venues-list-heading small{color:var(--ls-muted,#8faabd)!important}
+.venues-toolbar-search input{border-color:#24536a!important;background:#020f18!important;color:var(--ls-text,#eef8ff)!important}
+.venues-toolbar-search input:focus{border-color:var(--ls-accent,#00cafa)!important;box-shadow:0 0 0 1px rgba(0,202,250,.18)!important;outline:none!important}
+.venues-list-heading h2{color:var(--ls-accent,#00cafa)!important}
+.venue-row{border-color:#1b465b!important;background:#031722!important}
+.venue-row:hover{border-color:#2e718e!important;background:#05202e!important}
+.venue-row-main strong,.venue-row-address strong,.venue-row-contact strong,.venue-capacity strong{color:var(--ls-text,#eef8ff)!important}
+.venue-row-main span,.venue-row-address span,.venue-row-contact span,.venue-capacity span{color:#95afc0!important}
+.venue-row-actions button{border-color:#24536a!important;background:#041722!important;color:#d8edf8!important}
+.venue-row-actions button:hover{border-color:var(--ls-accent,#00cafa)!important;color:var(--ls-accent,#00cafa)!important}
+.venue-row-actions button.delete:hover{border-color:var(--ls-danger,#ff465e)!important;background:#2a1017!important;color:#ff8996!important}
+.venues-empty{border-color:var(--ls-border,#23546a)!important;color:var(--ls-muted,#8faabd)!important}
+.venues-footer{color:#7895a8!important}
+.venues-list-scroll{scrollbar-color:#24536a #041722!important}
+.venues-list-scroll::-webkit-scrollbar-track{background:#041722!important}
+.venues-list-scroll::-webkit-scrollbar-thumb{background:#24536a!important}
+.venues-list-scroll::-webkit-scrollbar-thumb:hover{background:#33758f!important}
+
+/* New/edit, history, and delete modals retain their existing behavior. */
+.venues-modal-card{border-color:var(--ls-border,#23546a)!important;background:linear-gradient(155deg,#061d2a,#03121b)!important}
+.venues-modal-head span{color:var(--ls-accent,#00cafa)!important}
+.venue-icon-close{border-color:#285d75!important;background:#041722!important;color:#fff!important;box-shadow:none!important}
+.venue-form-grid label>span,.venue-field-label{color:#87a4b5!important}
+.venue-form-grid input,.venue-form-grid textarea{border-color:#24536a!important;background:#020f18!important;color:var(--ls-text,#eef8ff)!important}
+.venue-form-grid input:focus,.venue-form-grid textarea:focus{border-color:var(--ls-accent,#00cafa)!important;box-shadow:0 0 0 1px rgba(0,202,250,.18)!important}
+.venue-closed-toggle{border-color:#24536a!important;background:#041722!important}
+.venue-closed-toggle input{accent-color:var(--ls-accent,#00cafa)!important}
+.venue-closed-toggle span{color:var(--ls-text,#eef8ff)!important}
+.venues-auth-gate{background:var(--ls-bg,#00121b)!important}
+.venues-auth-card small{color:var(--ls-muted,#8faabd)!important}
+.venues-auth-spinner{border-color:#24536a!important;border-top-color:var(--ls-accent,#00cafa)!important}
+
+/* Destructive delete indicators and CLOSED DOWN badges intentionally stay red. */
