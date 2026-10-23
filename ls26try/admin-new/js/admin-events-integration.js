@@ -842,6 +842,9 @@
 
     setText("sessionNameLiveLabel", chosen?.name || "No upcoming gig");
     setText("sessionStatusLiveLabel", status);
+    const statusEl = $("sessionStatusLiveLabel");
+    statusEl?.classList.add("is-pre-session");
+    statusEl?.classList.toggle("is-tentative", bookingStatus === "tentative");
     setText("sessionDateLiveLabel", displayDate);
     setText("sessionScheduledLiveLabel", chosen?.startTime || "-");
     setText("sessionStartedLiveLabel", "-");
