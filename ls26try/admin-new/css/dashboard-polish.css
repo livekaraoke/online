@@ -219,3 +219,11 @@
   pointer-events:none!important;
   filter:none!important;
 }
+
+/* A selected upcoming gig is scheduled, not yet an active performance. */
+#activeSessionLabels #sessionStatusLiveLabel.is-pre-session{
+  color:var(--ls-accent,#00cafa)!important;
+}
+#activeSessionLabels #sessionStatusLiveLabel.is-pre-session.is-tentative{
+  color:var(--ls-warning,#ffc329)!important;
+}
