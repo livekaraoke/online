@@ -857,6 +857,77 @@
     }
   }
 
+
+  /* Each occurrence stays a normal upcomingEvents record; finance is separate
+     because upcomingEvents itself is publicly readable. */
+  const gigOps=window.LS26GigOps;
+  const FINANCES_COLLECTION="gigFinances";
+  const FINANCE_FIELDS=["eventFeeInput","eventReceivedInput","eventShareInput","eventOrganiserInput","eventExpensesInput","eventPaymentDateInput","eventFinanceNotesInput"];
+  let financeLoadToken=0,financeLoadFailed=false,financeExisted=false;
+  function financeValues(){
+    const val=id=>$(id)?.value.trim()||"";
+    const number=id=>val(id)===""?0:gigOps.money(val(id));
+    return {
+      agreedFee:number("eventFeeInput"),amountReceived:number("eventReceivedInput"),
+      personalShare:val("eventShareInput")===""?null:number("eventShareInput"),
+      organiserFee:number("eventOrganiserInput"),expenses:number("eventExpensesInput"),
+      paymentDate:val("eventPaymentDateInput"),financeNotes:val("eventFinanceNotesInput")
+    };
+  }
+  function financeEntered(){
+    return FINANCE_FIELDS.some(id=>String($(id)?.value||"").trim()!=="");
+  }
+  function renderFinanceSummary(){
+    const f=financeValues(),v=gigOps.financeSummary(f);
+    $("eventFinanceSummary").textContent="Agreed €"+v.fee.toFixed(2)+" · Received €"+v.received.toFixed(2)+" · Outstanding €"+v.outstanding.toFixed(2)+" · My net earnings €"+v.personalNet.toFixed(2);
+  }
+  function resetFinance(){
+    ++financeLoadToken;financeLoadFailed=false;financeExisted=false;
+    FINANCE_FIELDS.forEach(id=>{if($(id)){$(id).value="";$(id).disabled=false;}});
+    $("eventFinanceMessage").textContent="Private finance records are linked by gig ID.";
+    renderFinanceSummary();
+  }
+  async function loadPrivateFinance(eventId){
+    const token=++financeLoadToken;
+    $("eventFinanceMessage").textContent="Loading private finance…";
+    FINANCE_FIELDS.forEach(id=>{if($(id))$(id).disabled=true;});
+    try{
+      const snapshot=await db.collection(FINANCES_COLLECTION).doc(eventId).get();
+      if(token!==financeLoadToken)return;
+      financeExisted=snapshot.exists;
+      const f=snapshot.exists?(snapshot.data()||{}):{};
+      const set=(id,value)=>{if($(id))$(id).value=value??"";};
+      set("eventFeeInput",f.agreedFee);set("eventReceivedInput",f.amountReceived);
+      set("eventShareInput",f.personalShare);set("eventOrganiserInput",f.organiserFee);
+      set("eventExpensesInput",f.expenses);set("eventPaymentDateInput",f.paymentDate);
+      set("eventFinanceNotesInput",f.financeNotes);
+      $("eventFinanceMessage").textContent=snapshot.exists?"Finance loaded. Editing this gig does not change other occurrences.":"No finance entered yet.";
+      financeLoadFailed=false;
+    }catch(error){
+      if(token!==financeLoadToken)return;
+      financeLoadFailed=true;
+      $("eventFinanceMessage").textContent="Private finance unavailable ("+(error.message||"permissions")+"). Gig details can still be edited, but finances are locked.";
+    }finally{
+      if(token===financeLoadToken){
+        FINANCE_FIELDS.forEach(id=>{if($(id))$(id).disabled=financeLoadFailed;});
+        renderFinanceSummary();
+      }
+    }
+  }
+  function refreshRecurrenceControls(){
+    const hasSeries=!!events.find(e=>e.id===$("eventIdInput").value)?.recurrenceSeriesId;
+    $("eventRepeatInput").disabled=hasSeries;
+    $("eventRepeatCountField").hidden=hasSeries||$("eventRepeatInput").value==="none";
+    $("eventSeriesMessage").hidden=!hasSeries;
+    if(hasSeries)$("eventSeriesMessage").textContent="This gig belongs to a repeating series. Edit this occurrence independently; other dates will remain unchanged.";
+  }
+  function privateFinancePayload(eventId,venueId,type,values){
+    const v=gigOps.financeSummary(values);
+    return {...values,eventId,venueId,act:type,amountOutstanding:v.outstanding,personalNet:v.personalNet,
+      paymentStatus:values.agreedFee>0?(v.outstanding===0?"Paid":values.amountReceived>0?"Part paid":"Unpaid"):"Not set",
+      updatedAt:firebase.firestore.FieldValue.serverTimestamp()};
+  }
+
   function resetForm() {
     eventNameManuallyEdited = false;
     lastAutoEventName = "";
@@ -875,6 +946,11 @@
     $("eventContactNameInput").value = "";
     $("eventContactInput").value = "";
     $("eventNotesInput").value = "";
+    $("eventRepeatInput").value="none";$("eventRepeatInput").disabled=false;
+    $("eventRepeatCountInput").value="4";
+    $("eventRepeatCountField").hidden=true;
+    $("eventSeriesMessage").hidden=true;
+    resetFinance();
     $("eventFormMessage").textContent = "";
   }
 
@@ -919,7 +995,11 @@
     $("eventEndTimeInput").value = event.endTime || "";
     $("eventArrivalTimeInput").value = event.arrivalTime || "";
     $("eventNotesInput").value = event.notes || "";
-
+    $("eventRepeatInput").value=event.recurrenceSeriesId?(event.recurrenceFrequency||"none"):"none";
+    $("eventRepeatCountInput").value=event.recurrenceCount||4;
+    refreshRecurrenceControls();
+    loadPrivateFinance(event.id);
+    
     $("eventModalMode").textContent = "EDIT EVENT";
     $("eventModalTitle").textContent = event.name || "Edit Event";
     $("eventSaveBtn").textContent = "SAVE CHANGES";
@@ -940,110 +1020,68 @@
     return "";
   }
 
-  function buildScheduledTimes(dateString, startTime, endTime) {
-    if (!dateString || !startTime || !endTime) {
-      return {
-        scheduledStartAt: null,
-        scheduledEndAt: null,
-        scheduledDurationMs: null
-      };
-    }
-
-    const startDate = new Date(`${dateString}T${startTime}:00`);
-    let endDate = new Date(`${dateString}T${endTime}:00`);
-
-    if (
-      Number.isNaN(startDate.getTime()) ||
-      Number.isNaN(endDate.getTime())
-    ) {
-      return {
-        scheduledStartAt: null,
-        scheduledEndAt: null,
-        scheduledDurationMs: null
-      };
-    }
-
-    // Overnight performance, e.g. 22:00 -> 01:00.
-    if (endDate <= startDate) {
-      endDate = new Date(endDate.getTime() + 24 * 60 * 60 * 1000);
-    }
-
-    return {
-      scheduledStartAt: firebase.firestore.Timestamp.fromDate(startDate),
-      scheduledEndAt: firebase.firestore.Timestamp.fromDate(endDate),
-      scheduledDurationMs: endDate.getTime() - startDate.getTime()
-    };
+  function buildScheduledTimes(dateString,startTime,endTime){
+    const range=gigOps.schedule(dateString,startTime,endTime);
+    return {scheduledStartAt:firebase.firestore.Timestamp.fromDate(range.start),
+      scheduledEndAt:firebase.firestore.Timestamp.fromDate(range.end),scheduledDurationMs:range.durationMs};
   }
-
-  async function saveEvent() {
-    const validation = validateForm();
-    if (validation) {
-      $("eventFormMessage").textContent = validation;
-      return;
-    }
-
-    const id = $("eventIdInput").value.trim();
-    const saveBtn = $("eventSaveBtn");
-    saveBtn.disabled = true;
-    $("eventFormMessage").textContent = "Saving…";
-
-    const selectedVenue = getSelectedVenue();
-
-    const schedule = buildScheduledTimes(
-      $("eventDateInput").value,
-      $("eventStartTimeInput").value,
-      $("eventEndTimeInput").value
-    );
-
-    const payload = {
-      name: $("eventNameInput").value.trim(),
-
-      // Save both the Venue document link and a snapshot of its display data.
-      // This keeps old event records readable even if the Venue is edited later.
-      venueId: selectedVenue?.id || "",
-      venue: selectedVenue?.name || "",
-      type: $("eventTypeInput").value,
-      status: $("eventStatusInput").value,
-      publicVisibility: $("eventPublicVisibilityInput").value,
-      date: $("eventDateInput").value,
-      startTime: $("eventStartTimeInput").value,
-      endTime: $("eventEndTimeInput").value,
-
-      // Canonical schedule fields used by Performance Sessions and Top Status Bar.
-      scheduledStartAt: schedule.scheduledStartAt,
-      scheduledEndAt: schedule.scheduledEndAt,
-      scheduledDurationMs: schedule.scheduledDurationMs,
-
-      arrivalTime: $("eventArrivalTimeInput").value,
-      address: selectedVenue?.address || "",
-      contactName: selectedVenue?.contactName || "",
-      contact: venueCombinedContact(selectedVenue),
-      venueLocality: selectedVenue?.locality || "",
-      venueWebsite: selectedVenue?.website || "",
-      venueMapUrl: selectedVenue?.mapUrl || "",
-      venueContactPhone: selectedVenue?.contactPhone || "",
-      venueContactEmail: selectedVenue?.contactEmail || "",
-      notes: $("eventNotesInput").value.trim(),
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-      updatedBy: firebase.auth().currentUser?.email || ""
-    };
-
-    try {
-      if (id) {
-        await db.collection(COLLECTION).doc(id).set(payload, { merge: true });
-      } else {
-        payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-        payload.createdBy = firebase.auth().currentUser?.email || "";
-        await db.collection(COLLECTION).add(payload);
+  async function saveEvent(){
+    const validation=validateForm();
+    if(validation){$("eventFormMessage").textContent=validation;return;}
+    if(financeLoadFailed && financeEntered()){$("eventFormMessage").textContent="Private finance is unavailable. Clear financial details before saving.";return;}
+    const id=$("eventIdInput").value.trim(),existing=events.find(x=>x.id===id),venue=getSelectedVenue();
+    const frequency=existing?.recurrenceSeriesId?"none":$("eventRepeatInput").value;
+    let dates;
+    try{dates=gigOps.recurrenceDates($("eventDateInput").value,frequency,$("eventRepeatCountInput").value);}catch(error){$("eventFormMessage").textContent=error.message;return;}
+    const button=$("eventSaveBtn");button.disabled=true;$("eventFormMessage").textContent="Checking gig dates…";
+    try{
+      const firstId=id||db.collection(COLLECTION).doc().id;
+      const fresh=await db.collection(COLLECTION).where("venueId","==",venue.id).get();
+      const candidates=[...events,...fresh.docs.map(doc=>({id:doc.id,...doc.data()}))];
+      const startTime=$("eventStartTimeInput").value,type=$("eventTypeInput").value;
+      for(const date of dates){
+        const collision=candidates.find(g=>g.id!==id&&g.venueId===venue.id&&g.date===date&&g.startTime===startTime&&g.type===type&&String(g.status).toLowerCase()!=="cancelled");
+        if(collision)throw Error("An existing "+type+" gig at this venue is already scheduled for "+date+" "+startTime+". Nothing was saved.");
       }
-
+      const base={
+        name:$("eventNameInput").value.trim(),venueId:venue.id,venue:venue.name||"",type,
+        status:$("eventStatusInput").value,publicVisibility:$("eventPublicVisibilityInput").value,
+        startTime,endTime:$("eventEndTimeInput").value,arrivalTime:$("eventArrivalTimeInput").value,
+        address:venue.address||"",contactName:venue.contactName||"",contact:venueCombinedContact(venue),
+        venueLocality:venue.locality||"",venueWebsite:venue.website||"",venueMapUrl:venue.mapUrl||"",
+        venueContactPhone:venue.contactPhone||"",venueContactEmail:venue.contactEmail||"",
+        notes:$("eventNotesInput").value.trim(),updatedAt:firebase.firestore.FieldValue.serverTimestamp(),
+        updatedBy:firebase.auth().currentUser?.email||""
+      };
+      const finance=financeValues();
+      const writeFinance=!financeLoadFailed&&(financeEntered()||financeExisted);
+      const batch=db.batch();
+      dates.forEach((date,index)=>{
+        const eventId=index===0?firstId:firstId+"_occ_"+index;
+        const schedule=buildScheduledTimes(date,base.startTime,base.endTime);
+        const generatedTitle=/^.+ @ .+ \d{2}\/\d{2}$/.test(base.name)
+          ?base.name.replace(/\d{2}\/\d{2}$/,date.slice(8,10)+"/"+date.slice(5,7)):base.name;
+        const patch={...base,date,name:generatedTitle,
+          scheduledStartAt:schedule.scheduledStartAt,scheduledEndAt:schedule.scheduledEndAt,
+          scheduledDurationMs:schedule.scheduledDurationMs};
+        if(dates.length>1)Object.assign(patch,{recurrenceSeriesId:firstId,recurrenceFrequency:frequency,recurrenceCount:dates.length,recurrenceIndex:index});
+        if(index===0&&existing?.recurrenceSeriesId)Object.assign(patch,{recurrenceSeriesId:existing.recurrenceSeriesId,
+          recurrenceFrequency:existing.recurrenceFrequency,recurrenceCount:existing.recurrenceCount,recurrenceIndex:existing.recurrenceIndex});
+        if(index===0&&!id||index>0){patch.createdAt=firebase.firestore.FieldValue.serverTimestamp();patch.createdBy=firebase.auth().currentUser?.email||"";}
+        batch.set(db.collection(COLLECTION).doc(eventId),patch,{merge:true});
+        if(writeFinance){
+          batch.set(db.collection(FINANCES_COLLECTION).doc(eventId),
+            privateFinancePayload(eventId,venue.id,type,finance),{merge:true});
+        }
+      });
+      $("eventFormMessage").textContent="Saving "+dates.length+" gig"+(dates.length===1?"":"s")+"…";
+      await batch.commit();
       closeEventModal();
-    } catch (error) {
-      console.error("Could not save event:", error);
-      $("eventFormMessage").textContent = error.message || "Could not save event.";
-    } finally {
-      saveBtn.disabled = false;
-    }
+    }catch(error){
+      console.error("Could not save event:",error);
+      $("eventFormMessage").textContent=(error.code==="permission-denied"?
+        "Private finance security rules have not been enabled. No gigs were saved. ": "")+(error.message||"Could not save gig.");
+    }finally{button.disabled=false;}
   }
 
   function askDelete(id) {
@@ -1062,22 +1100,40 @@
     $("deleteEventModal").classList.add("hidden");
   }
 
-  async function confirmDelete() {
-    if (!pendingDeleteId) return;
-
-    const id = pendingDeleteId;
-    const button = $("deleteEventConfirmBtn");
-    button.disabled = true;
-
-    try {
-      await db.collection(COLLECTION).doc(id).delete();
-      closeDeleteModal();
-    } catch (error) {
-      console.error("Could not delete event:", error);
-      $("deleteEventMessage").textContent = error.message || "Could not delete event.";
-    } finally {
-      button.disabled = false;
-    }
+  async function eventLinkedSession(eventId){
+    const event=events.find(item=>item.id===eventId)||{};
+    if(event.linkedSessionId||["active","ended","completed"].includes(String(event.sessionStatus||"").toLowerCase()))return true;
+    const [snap,active]=await Promise.all([
+      db.collection("performanceSessions").where("eventId","==",eventId).limit(1).get(),
+      db.collection("karaokeControl").doc("currentSession").get()
+    ]);
+    const control=active.data()||{};
+    return !snap.empty||(control.active===true&&control.eventId===eventId);
+  }
+  async function confirmDelete(){
+    if(!pendingDeleteId)return;
+    const id=pendingDeleteId,button=$("deleteEventConfirmBtn");
+    button.disabled=true;
+    try{
+      if(await eventLinkedSession(id)){
+        $("deleteEventMessage").textContent="Deletion blocked: a performance session refers to this gig. Set its status to Cancelled instead; session history must be preserved.";
+        return;
+      }
+      const ref=db.collection(COLLECTION).doc(id);
+      const latest=await ref.get();
+      if(!latest.exists){closeDeleteModal();return;}
+      const snapshot=latest.data()||{};
+      if(snapshot.linkedSessionId||["active","ended","completed"].includes(String(snapshot.sessionStatus||"").toLowerCase())){
+        $("deleteEventMessage").textContent="Deletion blocked: this gig has a linked session.";return;
+      }
+      const batch=db.batch();batch.delete(ref);
+      // Finance deletion is private and explicitly tied to this gig; it must
+      // succeed together with event deletion, avoiding orphaned amounts.
+      batch.delete(db.collection(FINANCES_COLLECTION).doc(id));
+      await batch.commit();closeDeleteModal();
+    }catch(error){console.error("Could not delete event:",error);
+      $("deleteEventMessage").textContent="Deletion blocked until linked records and permissions can be checked: "+(error.message||"Unknown error");
+    }finally{button.disabled=false;}
   }
 
   function startEventListener() {
@@ -1184,6 +1240,8 @@
     $("eventModalCloseBtn").onclick = closeEventModal;
     $("eventCancelBtn").onclick = closeEventModal;
     $("eventSaveBtn").onclick = saveEvent;
+    $("eventRepeatInput").addEventListener("change",refreshRecurrenceControls);
+    FINANCE_FIELDS.forEach(id=>$(id)?.addEventListener("input",renderFinanceSummary));
     $("eventVenueInput").addEventListener("change", handleVenueSelection);
     $("eventTypeInput").addEventListener("change", () => updateAutomaticEventName());
     $("eventDateInput").addEventListener("change", () => updateAutomaticEventName());
