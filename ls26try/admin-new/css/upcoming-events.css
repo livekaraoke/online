@@ -1023,3 +1023,14 @@
 @media(max-width:760px){
   .event-type-colour-palette{grid-template-columns:repeat(4,minmax(0,1fr))}
 }
+
+/* Gig business operations enhancement */
+
+.event-private-finance{padding:15px;margin:14px 0;border:1px solid #245165;border-radius:10px;background:rgba(5,22,33,.65);min-width:0}
+.event-private-finance h3{margin:0 0 12px;color:#d4eaf5;font-size:13px}.event-private-finance h3 small{font-size:11px;font-weight:400;color:#8ba8b8}
+.event-finance-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.event-finance-grid label,.event-finance-notes{min-width:0;display:flex;flex-direction:column;gap:5px;font-size:11px;color:#a8bfd0}
+.event-finance-grid input,.event-finance-notes textarea{width:100%;min-height:44px;box-sizing:border-box;border:1px solid #305167;background:#05151f;color:#f0f7fb;border-radius:7px;padding:10px}
+.event-finance-summary{padding:9px 0;color:#b7dfed;font-size:13px}.event-finance-notes textarea{min-height:70px;resize:vertical}
+.event-form-hint{color:#9ab1bd;font-size:12px;line-height:1.4}.event-form-grid [hidden]{display:none!important}
+@media(max-width:620px){.event-finance-grid{grid-template-columns:1fr}}
