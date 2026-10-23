@@ -701,6 +701,7 @@
   function listenForActiveSessionStatus() {
     db.collection("karaokeControl").doc("currentSession").onSnapshot(doc => {
       activeSessionControl = doc.exists ? (doc.data() || {}) : null;
+      if (!activeSessionControl?.active) renderPreparedSessionDetails();
 
       if (activeSessionUnsubscribe) {
         activeSessionUnsubscribe();
@@ -741,6 +742,7 @@
       } else {
         activeSessionData = null;
         renderVenueContextStatus();
+        renderPreparedSessionDetails();
       }
     }, error => {
       console.warn("Current Session status unavailable:", error);
@@ -817,6 +819,45 @@
     return lines.join("\n");
   }
 
+  function renderPreparedSessionDetails(event = null) {
+    // Show the selected gig's identity while no performance is running.
+    // An active session's figures remain owned by sessions.js.
+    const currentSession = window.LK?.state?.currentSessionData;
+    if (activeSessionControl?.active ||
+        (currentSession && currentSession.status !== "ended")) return;
+
+    const chosen = event || selectedSessionEvent() || upcomingExcludingActive()[0] || null;
+    const setText = (id, value) => {
+      const el = $(id);
+      if (el && el.textContent !== String(value)) el.textContent = String(value);
+    };
+    const rawDate = String(chosen?.date || "");
+    const displayDate = /^\\d{4}-\\d{2}-\\d{2}$/.test(rawDate)
+      ? rawDate.slice(8,10) + "/" + rawDate.slice(5,7) + "/" + rawDate.slice(0,4)
+      : "-";
+    const bookingStatus = String(chosen?.status || "").toLowerCase();
+    const status = !chosen ? "No Session"
+      : bookingStatus === "tentative" ? "Tentative · Not Started"
+      : "Scheduled · Not Started";
+
+    setText("sessionNameLiveLabel", chosen?.name || "No upcoming gig");
+    setText("sessionStatusLiveLabel", status);
+    setText("sessionDateLiveLabel", displayDate);
+    setText("sessionScheduledLiveLabel", chosen?.startTime || "-");
+    setText("sessionStartedLiveLabel", "-");
+    setText("sessionElapsedLiveLabel", "0 mins");
+    setText("sessionPlayLiveLabel", "0 mins");
+    setText("sessionBreaksLiveLabel", "0");
+    setText("sessionAvgBpmLiveLabel", "-");
+    const variance = $("sessionStartVarianceLabel");
+    if (variance) {
+      variance.textContent = "";
+      variance.classList.remove("is-late", "is-early");
+    }
+  }
+
+  window.LKAdminRenderSessionPreview = renderPreparedSessionDetails;
+
   function selectSessionEvent(eventId, { updateNotes = true } = {}) {
     const event = upcomingEvents.find(item => item.id === eventId);
     if (!event) return null;
@@ -841,6 +882,7 @@
     }
 
     renderSessionSuggestion(event);
+    renderPreparedSessionDetails(event);
     updateStartButtonForEvent();
     return event;
   }
@@ -912,6 +954,7 @@
       if ($("sessionEventIdInput")) $("sessionEventIdInput").value = "";
       try { sessionStorage.removeItem("lkSelectedUpcomingEventId"); } catch {}
       renderSessionSuggestion();
+      renderPreparedSessionDetails(null);
       updateStartButtonForEvent();
     }
   }
@@ -1084,6 +1127,7 @@
     renderNextGigsStatus();
     renderDashboardEvents();
     renderSessionEventSelect();
+    renderPreparedSessionDetails();
   }
 
   async function seedEventTypesIfNeeded() {
@@ -1207,6 +1251,7 @@
         if ($("sessionEventSelect")) $("sessionEventSelect").value = "";
         try { sessionStorage.removeItem("lkSelectedUpcomingEventId"); } catch {}
         renderSessionSuggestion();
+        renderPreparedSessionDetails(null);
         updateStartButtonForEvent();
       }
     });
