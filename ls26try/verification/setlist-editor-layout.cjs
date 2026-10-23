@@ -17,7 +17,7 @@ doc.getElementById('setlistList').innerHTML=names.map((name,i)=>'<button class="
 const esc=v=>String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;');
 const songs=['Ain’t no sunshine','All the Small Things','Another Brick in the Wall (pt. 2)','Bohemian like you','Born to be Wild','Boulevard of Broken Dreams','Breakfast at Tiffany’s','Have You Ever Seen The Rain'];
 doc.getElementById('selectedSongCount').textContent='78';
-doc.getElementById('selectedSongs').innerHTML=Array.from({length:78},(_,i)=>'<div class="setlist-song-row" draggable="true" data-id="song'+i+'"><span class="drag">☰</span><div><strong>'+esc(songs[i%songs.length])+'</strong><small>Artist &amp; collaborators · 1999</small></div><button data-up="'+i+'">↑</button><button data-down="'+i+'">↓</button><button data-remove="'+i+'">×</button></div>').join('');
+doc.getElementById('selectedSongs').innerHTML=Array.from({length:78},(_,i)=>'<div class="setlist-song-row" data-id="song'+i+'"><div><strong>'+esc(songs[i%songs.length])+'</strong><small>Artist &amp; collaborators · 1999</small></div><button data-remove="'+i+'">×</button></div>').join('');
 doc.getElementById('availableSongs').innerHTML=Array.from({length:110},(_,i)=>'<div class="setlist-song-row"><div><strong>'+esc('0 - 0.'+i+' '+songs[i%songs.length]+' Extended title')+'</strong><small>Artist · 1999</small></div><button data-add="'+i+'">＋</button></div>').join('');
 const style=doc.createElement('style');
 style.textContent=read('host/css/lyrics-suite.css')+'\n'+read('shared/theme.css')+'\n'+read('host/css/setlist-editor-theme.css');
