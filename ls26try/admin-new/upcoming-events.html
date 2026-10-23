@@ -237,6 +237,9 @@
           <span>ARRIVAL / SETUP</span>
           <input id="eventArrivalTimeInput" type="time">
         </label>
+        <label><span>REPEAT GIG</span><select id="eventRepeatInput"><option value="none">Does not repeat</option><option value="weekly">Every week</option><option value="biweekly">Every two weeks</option></select></label>
+        <label id="eventRepeatCountField" class="wide" hidden><span>NUMBER OF GIGS (INCLUDING FIRST)</span><input id="eventRepeatCountInput" type="number" min="2" max="52" step="1" value="4"><small>Each occurrence can later be edited or cancelled independently (maximum 52).</small></label>
+        <p id="eventSeriesMessage" class="wide event-form-hint" hidden></p>
 
         <label class="wide">
           <span>ADDRESS / LOCATION DETAILS</span>
@@ -259,6 +262,20 @@
         </label>
       </div>
 
+      <section class="event-private-finance">
+        <h3>PRIVATE GIG FINANCES <small>Owner-only · never shown on public event pages</small></h3>
+        <div class="event-finance-grid">
+          <label><span>AGREED FEE (€) · BAND TOTAL FOR ROXANNA</span><input id="eventFeeInput" type="number" min="0" step="0.01" placeholder="0.00"></label>
+          <label><span>AMOUNT RECEIVED (€)</span><input id="eventReceivedInput" type="number" min="0" step="0.01" placeholder="0.00"></label>
+          <label><span>MY SHARE (€) · OPTIONAL</span><input id="eventShareInput" type="number" min="0" step="0.01" placeholder="Automatic for solo"></label>
+          <label><span>SEPARATE ORGANISER FEE (€)</span><input id="eventOrganiserInput" type="number" min="0" step="0.01" placeholder="0.00"></label>
+          <label><span>MY EXPENSES (€)</span><input id="eventExpensesInput" type="number" min="0" step="0.01" placeholder="0.00"></label>
+          <label><span>PAYMENT DATE</span><input id="eventPaymentDateInput" type="date"></label>
+        </div>
+        <div id="eventFinanceSummary" class="event-finance-summary">No fee recorded.</div>
+        <label class="event-finance-notes"><span>PRIVATE PAYMENT NOTES</span><textarea id="eventFinanceNotesInput" rows="2" placeholder="Deposits, transfers, balances…"></textarea></label>
+        <p id="eventFinanceMessage" class="event-form-hint"></p>
+      </section>
       <p id="eventFormMessage" class="event-form-message"></p>
 
       <div class="events-modal-actions">
@@ -330,6 +347,7 @@
   <script src="js/sidebar.js?v=20261006-chord-settings"></script>
   <script src="js/profile.js?v=20260929-members-align"></script>
   <script src="js/auth.js?v=20260910-stage4"></script>
-  <script src="js/upcoming-events.js?v=20261022-public"></script>
+  <script src="js/gig-operations.js?v=20261023-business"></script>
+  <script src="js/upcoming-events.js?v=20261023-business"></script>
 <script src="../shared/shell.js?v=20260929-topbar-force-v7"></script><script src="../shared/inbox.js?v=20260925-artist-names"></script><script src="../shared/session-ui.js?v=20260925-live-click"></script><script src="../shared/performance.js?v=20260925-live-click"></script></body>
 </html>
