@@ -62,3 +62,7 @@
 .venues-auth-spinner{border-color:#24536a!important;border-top-color:var(--ls-accent,#00cafa)!important}
 
 /* Destructive delete indicators and CLOSED DOWN badges intentionally stay red. */
+
+/* Old shared dialog scripts may prepend a redundant X to these native-header modals. */
+#venueModal > .venues-modal-card > .ls26-modal-close-bar,
+#venueHistoryModal > .venues-modal-card > .ls26-modal-close-bar{display:none!important}
