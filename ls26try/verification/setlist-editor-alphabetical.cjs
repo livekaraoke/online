@@ -35,7 +35,7 @@ const chrome=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin
     window.db={collection(name){
      return {
       onSnapshot(cb){callbacks[name]=cb;cb({docs:name==='lyrics'?docs:records});return()=>{}},
-      doc(id){return {async set(fields,options){writes.push({id,fields,options});records[0]={id,data:()=>({...records[0].data(),...fields})}},async delete(){}}},
+      doc(id){return {async set(fields,options){writes.push({id,fields,options});const previous=records[0].data();records[0]={id,data:()=>({...previous,...fields})}},async delete(){}}},
       async add(){throw Error('Creating setlist not expected in this regression')}
      };
     }};
