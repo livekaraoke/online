@@ -666,7 +666,11 @@
   function updateSessionUi(session) {
     const active = !!(session && session.status !== "ended");
     if ($("sessionSetupFields")) $("sessionSetupFields").style.display = active ? "none" : "block";
-    if ($("activeSessionLabels")) $("activeSessionLabels").classList.toggle("hidden", !active);
+    // Identity cards show the upcoming event before start and live values after.
+    if ($("activeSessionLabels")) $("activeSessionLabels").classList.remove("hidden");
+    if (!active && typeof window.LKAdminRenderSessionPreview === "function") {
+      window.LKAdminRenderSessionPreview();
+    }
 
     if (active) {
       if ($("sessionNotesInput") && document.activeElement !== $("sessionNotesInput")) {
