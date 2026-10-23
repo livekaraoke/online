@@ -159,6 +159,7 @@
 
     setDashValue("sessionNameLiveLabel", session.title || session.eventSnapshot?.name || "-");
     setDashValue("sessionStatusLiveLabel", "Active Session");
+    $("sessionStatusLiveLabel")?.classList.remove("is-pre-session", "is-tentative");
     setDashValue("sessionStartedLiveLabel", LK.dashboard.formatTime(started));
     setDashValue(
       "sessionScheduledLiveLabel",
