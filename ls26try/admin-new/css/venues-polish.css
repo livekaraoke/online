@@ -30,6 +30,15 @@
 .venue-row-main span,.venue-row-address span,.venue-row-contact span,.venue-capacity span{color:#95afc0!important}
 .venue-row-actions button{border-color:#24536a!important;background:#041722!important;color:#d8edf8!important}
 .venue-row-actions button:hover{border-color:var(--ls-accent,#00cafa)!important;color:var(--ls-accent,#00cafa)!important}
+
+.venue-row-actions button.history{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:44px;min-width:44px;height:44px;min-height:44px;
+  padding:0;line-height:1;
+}
+.venue-row-actions button.history svg{display:block;pointer-events:none}
+.venue-row-actions button.history:focus-visible{outline:2px solid var(--ls-accent,#00cafa);outline-offset:2px}
+
 .venue-row-actions button.delete:hover{border-color:var(--ls-danger,#ff465e)!important;background:#2a1017!important;color:#ff8996!important}
 .venues-empty{border-color:var(--ls-border,#23546a)!important;color:var(--ls-muted,#8faabd)!important}
 .venues-footer{color:#7895a8!important}
