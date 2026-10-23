@@ -1,0 +1,21 @@
+name: LiveSuite Admin gigs regression
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'ls26try/admin-new/**'
+      - 'ls26try/tests/gig-operations.test.cjs'
+      - '.github/workflows/admin-gigs-regression.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  admin-gigs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Test gigs, recurrence, finances and venue safeguards
+        run: node --test ls26try/tests/gig-operations.test.cjs
