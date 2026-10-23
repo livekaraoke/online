@@ -6,6 +6,8 @@ on:
       - 'ls26try/host/setlist-editor.html'
       - 'ls26try/host/css/setlist-editor-theme.css'
       - 'ls26try/verification/setlist-editor-layout.cjs'
+      - 'ls26try/verification/setlist-editor-alphabetical.cjs'
+      - 'ls26try/host/js/setlist-editor.js'
       - 'ls26try/verification/shared-nav-active.cjs'
       - 'ls26try/shared/shell.js'
       - 'ls26try/shared/theme.css'
@@ -34,4 +36,5 @@ jobs:
             "$RUNNER_TEMP/ls26-setlist-test/node_modules/.bin/playwright" install chromium
           fi
           node ls26try/verification/setlist-editor-layout.cjs
+          node ls26try/verification/setlist-editor-alphabetical.cjs
           node ls26try/verification/shared-nav-active.cjs
