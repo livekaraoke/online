@@ -60,7 +60,7 @@ test('next gig countdown never displays seconds',()=>{
 });
 test('Venues page uses same LiveSuite theme tokens as Gigs & Events',()=>{
  const html=read('venues.html'),theme=read('css/venues-polish.css');
- assert.match(html,/venues-polish\.css\?v=20261023-livesuite-blue/);
+ assert.match(html,/venues-polish\.css\?v=20261023-history-eye-single-close/);
  for(const token of ['--ls-bg','--ls-accent','--ls-border','--ls-success'])
   assert.ok(theme.includes(token),token+' theme token missing');
  assert.match(theme,/\.venues-btn\.primary\s*\{/);
