@@ -44,3 +44,28 @@ test('venue deletion blocks records with historical references and venue history
  assert.match(s,/playedSongsSnapshot/);
  assert.match(s,/gigFinances/);
 });
+
+test('next gig countdown never displays seconds',()=>{
+ const vm=require('node:vm');
+ const source=read('js/upcoming-events.js');
+ const from=source.indexOf('  function formatGigCountdown(');
+ const to=source.indexOf('  function tickNextGigCountdown()',from);
+ assert.ok(from>=0&&to>from,'Countdown formatter must exist');
+ const countdown=vm.runInNewContext('('+source.slice(from,to).trim()+')');
+ assert.equal(countdown(1*3600000+43*60000+23*1000),'1h 43m');
+ assert.equal(countdown(2*86400000+5*3600000+8*60000),'2d 5h 8m');
+ assert.equal(countdown(2*60000+20*1000),'2m');
+ assert.equal(countdown(40*1000),'STARTING SOON');
+ assert.equal(countdown(0),'START TIME PASSED');
+});
+test('Venues page uses same LiveSuite theme tokens as Gigs & Events',()=>{
+ const html=read('venues.html'),theme=read('css/venues-polish.css');
+ assert.match(html,/venues-polish\.css\?v=20261023-livesuite-blue/);
+ for(const token of ['--ls-bg','--ls-accent','--ls-border','--ls-success'])
+  assert.ok(theme.includes(token),token+' theme token missing');
+ assert.match(theme,/\.venues-btn\.primary\s*\{/);
+ assert.match(theme,/\.venues-modal-card\s*\{/);
+ assert.match(theme,/\.venues-summary-card/);
+ assert.match(theme,/\.venue-row/);
+ assert.match(theme,/\.venue-closed-badge|CLOSED DOWN badges intentionally stay red/);
+});
