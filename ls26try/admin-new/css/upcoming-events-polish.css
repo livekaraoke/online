@@ -427,3 +427,7 @@
 }
 #eventModal .venue-source-hint a:hover,
 #eventModal .venue-source-hint a:focus-visible{color:#7dd3fc!important}
+
+/* Compatibility with cached shared dialogs.js: these modals already contain a native X. */
+#eventModal > .events-modal-card > .ls26-modal-close-bar,
+#eventTypesModal > .events-modal-card > .ls26-modal-close-bar{display:none!important}
