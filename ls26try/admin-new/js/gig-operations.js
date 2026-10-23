@@ -6,7 +6,7 @@
  "use strict";
  const ZONE="Europe/Malta";
  const fmt=new Intl.DateTimeFormat("en-GB",{timeZone:ZONE,year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",second:"2-digit",hourCycle:"h23"});
- const normalise=s=>String(s||"").normalize("NFKD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/\bthe\b/g,"").replace(/[^a-z0-9]+/g," ").trim().replace(/\s+/g," ");
+ const normalise=s=>String(s||"").normalize("NFKD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[’\x27]/g,"").replace(/\bthe\b/g,"").replace(/[^a-z0-9]+/g," ").trim().replace(/\s+/g," ");
  function sameVenue(a,b){const an=normalise(a.name),bn=normalise(b.name);if(!an||an!==bn)return false;const aa=normalise(a.address),ba=normalise(b.address),al=normalise(a.locality),bl=normalise(b.locality);return !(aa&&ba&&aa!==ba)&&!(al&&bl&&al!==bl);}
  function recurrenceDates(start,frequency,count){
   if(!/^\d{4}-\d{2}-\d{2}$/.test(start))throw Error("Enter a valid date.");
