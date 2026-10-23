@@ -109,7 +109,12 @@
         </div>
 
         <div class="venue-row-actions">
-          <button type="button" class="history" data-history-venue="${escapeHTML(venue.id)}" title="Bookings, payments and repertoire">HISTORY</button>
+          <button type="button" class="history" data-history-venue="${escapeHTML(venue.id)}" title="View venue history" aria-label="View history for ${escapeHTML(venue.name || "venue")}">
+            <svg aria-hidden="true" viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"></path>
+              <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+          </button>
           <button type="button" class="edit" data-edit-venue="${escapeHTML(venue.id)}" title="Edit venue">✎ <span>EDIT</span></button>
           <button type="button" class="delete" data-delete-venue="${escapeHTML(venue.id)}" title="Delete venue">🗑</button>
         </div>
