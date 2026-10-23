@@ -5,6 +5,7 @@ on:
     paths:
       - 'ls26try/admin-new/**'
       - 'ls26try/tests/gig-operations.test.cjs'
+      - 'ls26try/tests/admin-session-preview.test.cjs'
       - '.github/workflows/admin-gigs-regression.yml'
   workflow_dispatch:
 permissions:
@@ -17,5 +18,5 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Test gigs, recurrence, finances and venue safeguards
-        run: node --test ls26try/tests/gig-operations.test.cjs
+      - name: Test Admin gigs and session preview regressions
+        run: node --test ls26try/tests/gig-operations.test.cjs ls26try/tests/admin-session-preview.test.cjs
