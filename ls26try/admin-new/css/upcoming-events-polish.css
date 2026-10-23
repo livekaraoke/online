@@ -386,3 +386,44 @@
   .event-badges{grid-column:2!important;grid-row:3!important;justify-self:end!important;width:118px!important}
   .event-actions{grid-column:2!important;grid-row:4!important;justify-self:end!important;width:118px!important}
 }
+
+/* Admin gigs modal: a single flat close control, no duplicate-looking offset
+   border or pseudo element. Restore an accessible keyboard focus outline. */
+#eventModal #eventModalCloseBtn{
+  position:relative!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  flex:0 0 44px!important;
+  width:44px!important;
+  height:44px!important;
+  min-width:44px!important;
+  min-height:44px!important;
+  margin:0!important;
+  padding:0!important;
+  border:1px solid #285d75!important;
+  border-radius:8px!important;
+  background:#041722!important;
+  color:#fff!important;
+  box-shadow:none!important;
+  filter:none!important;
+  text-shadow:none!important;
+  transform:none!important;
+  outline:none!important;
+  line-height:1!important;
+  appearance:none!important;
+}
+#eventModal #eventModalCloseBtn::before,
+#eventModal #eventModalCloseBtn::after{content:none!important;display:none!important}
+#eventModal #eventModalCloseBtn:focus-visible{
+  outline:2px solid var(--ls-accent,#00cafa)!important;
+  outline-offset:2px!important;
+}
+#eventModal .venue-source-hint a,
+#eventModal .venue-source-hint a:visited{
+  color:#38bdf8!important;
+  text-decoration:underline;
+  text-underline-offset:2px;
+}
+#eventModal .venue-source-hint a:hover,
+#eventModal .venue-source-hint a:focus-visible{color:#7dd3fc!important}
