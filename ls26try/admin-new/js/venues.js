@@ -189,15 +189,16 @@
   async function loadVenueReferences(venue){
     const id=venue.id,name=venue.name||"";
     const q=[db.collection("upcomingEvents").where("venueId","==",id).limit(1).get(),
-      db.collection("performanceSessions").where("venueId","==",id).limit(1).get()];
+      db.collection("performanceSessions").where("venueId","==",id).limit(1).get(),
+      db.collection("performanceSessions").where("eventSnapshot.venueId","==",id).limit(1).get()];
     if(name){
-      q.push(db.collection("upcomingEvents").where("venue","==",name).limit(15).get());
-      q.push(db.collection("performanceSessions").where("venue","==",name).limit(15).get());
+      q.push(db.collection("upcomingEvents").where("venue","==",name).get());
+      q.push(db.collection("performanceSessions").where("venue","==",name).get());
     }
     const results=await Promise.all(q);
-    const actual=results.slice(0,2).some(s=>!s.empty);
+    const actual=results.slice(0,3).some(s=>!s.empty);
     // Old records may contain only the venue's name; protect those too.
-    const legacy=results.slice(2).some(s=>s.docs.some(doc=>!doc.data().venueId||doc.data().venueId===id));
+    const legacy=results.slice(3).some(s=>s.docs.some(doc=>!doc.data().venueId||doc.data().venueId===id));
     return {blocked:actual||legacy,events:results[0].size,sessions:results[1].size};
   }
   function closeVenueHistory(){$("venueHistoryModal").classList.add("hidden");}
