@@ -862,7 +862,7 @@
      because upcomingEvents itself is publicly readable. */
   const gigOps=window.LS26GigOps;
   const FINANCES_COLLECTION="gigFinances";
-  const FINANCE_FIELDS=["eventFeeInput","eventReceivedInput","eventShareInput","eventOrganiserInput","eventExpensesInput","eventPaymentDateInput","eventFinanceNotesInput"];
+  const FINANCE_FIELDS=["eventFeeInput","eventReceivedInput","eventShareInput","eventOrganiserInput","eventExpensesInput","eventDepositInput","eventPaymentMethodInput","eventPaymentDateInput","eventFinanceNotesInput"];
   let financeLoadToken=0,financeLoadFailed=false,financeExisted=false;
   function financeValues(){
     const val=id=>$(id)?.value.trim()||"";
@@ -871,7 +871,7 @@
       agreedFee:number("eventFeeInput"),amountReceived:number("eventReceivedInput"),
       personalShare:val("eventShareInput")===""?null:number("eventShareInput"),
       organiserFee:number("eventOrganiserInput"),expenses:number("eventExpensesInput"),
-      paymentDate:val("eventPaymentDateInput"),financeNotes:val("eventFinanceNotesInput")
+      deposit:number("eventDepositInput"),paymentMethod:val("eventPaymentMethodInput"),paymentDate:val("eventPaymentDateInput"),financeNotes:val("eventFinanceNotesInput")
     };
   }
   function financeEntered(){
@@ -879,7 +879,8 @@
   }
   function renderFinanceSummary(){
     const f=financeValues(),v=gigOps.financeSummary(f);
-    $("eventFinanceSummary").textContent="Agreed €"+v.fee.toFixed(2)+" · Received €"+v.received.toFixed(2)+" · Outstanding €"+v.outstanding.toFixed(2)+" · My net earnings €"+v.personalNet.toFixed(2);
+    const status=v.fee>0?(v.outstanding===0?"PAID":v.received>0?"PART PAID":"UNPAID"):"FEE NOT SET";
+    $("eventFinanceSummary").textContent="Payment "+status+" · Agreed €"+v.fee.toFixed(2)+" · Received €"+v.received.toFixed(2)+" · Outstanding €"+v.outstanding.toFixed(2)+" · My net €"+v.personalNet.toFixed(2);
   }
   function resetFinance(){
     ++financeLoadToken;financeLoadFailed=false;financeExisted=false;
@@ -899,7 +900,7 @@
       const set=(id,value)=>{if($(id))$(id).value=value??"";};
       set("eventFeeInput",f.agreedFee);set("eventReceivedInput",f.amountReceived);
       set("eventShareInput",f.personalShare);set("eventOrganiserInput",f.organiserFee);
-      set("eventExpensesInput",f.expenses);set("eventPaymentDateInput",f.paymentDate);
+      set("eventExpensesInput",f.expenses);set("eventDepositInput",f.deposit);set("eventPaymentMethodInput",f.paymentMethod);set("eventPaymentDateInput",f.paymentDate);
       set("eventFinanceNotesInput",f.financeNotes);
       $("eventFinanceMessage").textContent=snapshot.exists?"Finance loaded. Editing this gig does not change other occurrences.":"No finance entered yet.";
       financeLoadFailed=false;
@@ -1054,6 +1055,8 @@
         updatedBy:firebase.auth().currentUser?.email||""
       };
       const finance=financeValues();
+      if(finance.deposit>finance.amountReceived)throw Error("Deposit cannot exceed the total amount received.");
+      if(type==="Roxanna"&&financeEntered()&&finance.personalShare===null)throw Error("Enter your own Roxanna share separately from the band's total fee.");
       const writeFinance=!financeLoadFailed&&(financeEntered()||financeExisted);
       const batch=db.batch();
       dates.forEach((date,index)=>{
@@ -1103,12 +1106,13 @@
   async function eventLinkedSession(eventId){
     const event=events.find(item=>item.id===eventId)||{};
     if(event.linkedSessionId||["active","ended","completed"].includes(String(event.sessionStatus||"").toLowerCase()))return true;
-    const [snap,active]=await Promise.all([
+    const [snap,active,snapshotMatch]=await Promise.all([
       db.collection("performanceSessions").where("eventId","==",eventId).limit(1).get(),
-      db.collection("karaokeControl").doc("currentSession").get()
+      db.collection("karaokeControl").doc("currentSession").get(),
+      db.collection("performanceSessions").where("eventSnapshot.id","==",eventId).limit(1).get()
     ]);
     const control=active.data()||{};
-    return !snap.empty||(control.active===true&&control.eventId===eventId);
+    return !snap.empty||!snapshotMatch.empty||(control.active===true&&control.eventId===eventId);
   }
   async function confirmDelete(){
     if(!pendingDeleteId)return;
