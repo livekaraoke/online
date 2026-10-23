@@ -7,6 +7,8 @@ const {parseHTML}=require(require.resolve('linkedom',{paths:[process.env.LS26_TE
 const root=path.join(__dirname,'..'),read=p=>fs.readFileSync(path.join(root,p),'utf8');
 const doc=parseHTML(read('host/setlist-editor.html')).document;
 doc.querySelectorAll('script,link[rel="stylesheet"]').forEach(n=>n.remove());
+// The auth overlay has no external .hidden stylesheet in this isolated DOM fixture.
+doc.getElementById('setlistLoadingGate').remove();
 const html='<!DOCTYPE html>'+doc.documentElement.outerHTML;
 const js=read('host/js/setlist-editor.js');
 const chrome=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(fs.existsSync);
