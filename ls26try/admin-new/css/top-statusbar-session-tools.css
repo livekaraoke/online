@@ -2408,17 +2408,26 @@
 
 /* ------------------------------------------------------------------------
    OVERDUE VALUES
-   No "Over" text: RED value alone indicates that scheduled time has passed.
+   No "Over" text: RED value alone indicates that adjusted finish has passed.
    ------------------------------------------------------------------------ */
 
 #topStatusBar #tsCompactRemaining.is-overdue,
-#topStatusBar #tsAdjustedRemainingTime.is-overdue {
+#topStatusBar #tsAdjustedRemainingTime.is-overdue,
+#topStatusBar #tsRemainingTime.is-overdue {
   color: #ff4b55 !important;
   text-shadow: 0 0 8px rgba(255,75,85,.14) !important;
 }
 
 #topStatusBar #tsCompactRemaining.is-remaining,
-#topStatusBar #tsAdjustedRemainingTime.is-remaining {
+#topStatusBar #tsAdjustedRemainingTime.is-remaining,
+#topStatusBar #tsRemainingTime.is-remaining {
+  color: var(--host-blue, #67bff0) !important;
+  text-shadow: none !important;
+}
+
+#topStatusBar #tsCompactRemaining.is-ending-soon,
+#topStatusBar #tsAdjustedRemainingTime.is-ending-soon,
+#topStatusBar #tsRemainingTime.is-ending-soon {
   color: #f2cf4d !important;
   text-shadow: none !important;
 }

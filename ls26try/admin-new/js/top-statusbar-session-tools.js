@@ -193,13 +193,15 @@
       if (!el) return;
       if (!Number.isFinite(ms)) {
         el.textContent = "-";
-        el.classList.remove("is-overdue", "is-remaining");
+        el.classList.remove("is-overdue", "is-remaining", "is-ending-soon");
         return;
       }
-      const overdue = ms <= -300000;
+      const overdue = ms < 0;
+      const endingSoon = !overdue && ms <= 15 * 60000;
       const value=shortDuration(ms);if(el.textContent!==value)el.textContent=value;
       el.classList.toggle("is-overdue", overdue);
-      el.classList.toggle("is-remaining", !overdue);
+      el.classList.toggle("is-remaining", !overdue && !endingSoon);
+      el.classList.toggle("is-ending-soon", endingSoon);
     };
 
     if (!state.sessionId || !state.session) {
@@ -215,14 +217,13 @@
 
     const actualStart = actualStartDate();
     const schedule = resolvedSchedule();
-    let duration = scheduledDurationMs();
-
-    if ((!Number.isFinite(duration) || duration <= 0) && schedule.start && schedule.end && schedule.end > schedule.start) {
-      duration = schedule.end - schedule.start;
-    }
-
-    // Scheduled commitment stays fixed unless the host explicitly edits the target.
-    const target=tsDate(state.session?.projectedEndAt)||schedule.end;
+    // Only an explicit host edit supplies projectedEndAt. Otherwise preserve
+    // the scheduled finish plus the actual late-start delay (without rounding).
+    const lateMs = actualStart && schedule.start
+      ? Math.max(0, actualStart.getTime() - schedule.start.getTime()) : 0;
+    const projectedEnd = tsDate(state.session?.projectedEndAt);
+    const target = projectedEnd || (schedule.end
+      ? new Date(schedule.end.getTime() + lateMs) : null);
 
     const remainingMs = target ? target.getTime() - Date.now() : NaN;
     setValueState(compactRemaining, remainingMs);
@@ -249,9 +250,11 @@
     if (adjustedHint) {
       if (!target) {
         adjustedHint.textContent = "Scheduled duration unavailable";
+      } else if (projectedEnd) {
+        adjustedHint.textContent = "Host-adjusted projected finish";
       } else if (schedule.start && actualStart) {
         const delay = Math.round((actualStart - schedule.start) / 60000);
-        if (delay > 0) adjustedHint.textContent = `Started ${delay} min${delay === 1 ? "" : "s"} late • scheduled finish unchanged`;
+        if (delay > 0) adjustedHint.textContent = `Started ${delay} min${delay === 1 ? "" : "s"} late • finish extended by start delay`;
         else if (delay < 0) adjustedHint.textContent = `Started ${Math.abs(delay)} min${Math.abs(delay) === 1 ? "" : "s"} early • scheduled finish unchanged`;
         else adjustedHint.textContent = "Started on schedule";
       } else {
