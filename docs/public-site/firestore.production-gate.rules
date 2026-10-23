@@ -1107,6 +1107,12 @@ match /publicSongRequestProofs/{proofId} {
     /*
      * VENUES
      */
+    // Admin-only gig income, payments and earnings. Never publish these fields
+    // in upcomingEvents, which is intentionally publicly readable.
+    match /gigFinances/{eventId} {
+      allow read, create, update, delete: if isOwner();
+    }
+
     match /venues/{docId} {
 
       allow read:
