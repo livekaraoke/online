@@ -16,7 +16,7 @@ function buildPreview({ event = null, active = false } = {}) {
     'sessionPlayLiveLabel','sessionBreaksLiveLabel','sessionAvgBpmLiveLabel',
     'sessionStartVarianceLabel'];
   const elements = Object.fromEntries(ids.map(id => [id, {
-    textContent: 'OLD', classList: { remove() {} }
+    textContent: 'OLD', classList: { add() {}, remove() {}, toggle() {} }
   }]));
   const context = {
     window: { LK: {state: {currentSessionData: null}} },
@@ -40,6 +40,7 @@ test('selected gig fills title, scheduled status, time and exact event date befo
   assert.equal(elements.sessionDateLiveLabel.textContent,'23/10/2026');
   assert.equal(elements.sessionScheduledLiveLabel.textContent,'21:00');
   assert.equal(elements.sessionStartedLiveLabel.textContent,'-');
+  assert.match(read('css/dashboard-polish.css'),/#sessionStatusLiveLabel\.is-pre-session/);
 });
 
 test('tentative events and empty schedules have accurate labels', () => {
