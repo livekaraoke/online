@@ -832,7 +832,7 @@
       if (el && el.textContent !== String(value)) el.textContent = String(value);
     };
     const rawDate = String(chosen?.date || "");
-    const displayDate = /^\\d{4}-\\d{2}-\\d{2}$/.test(rawDate)
+    const displayDate = /^\d{4}-\d{2}-\d{2}$/.test(rawDate)
       ? rawDate.slice(8,10) + "/" + rawDate.slice(5,7) + "/" + rawDate.slice(0,4)
       : "-";
     const bookingStatus = String(chosen?.status || "").toLowerCase();
