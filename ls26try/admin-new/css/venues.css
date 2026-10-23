@@ -674,3 +674,13 @@
   font-weight: 950;
   letter-spacing: .07em;
 }
+
+/* Gig business operations enhancement */
+
+.venue-history-card{max-width:850px!important}.venue-history-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:14px 0}
+.venue-history-stats>div{border:1px solid #285168;padding:12px;border-radius:8px;background:#081c28}
+.venue-history-stats strong{display:block;color:#e8f8ff;font-size:20px}.venue-history-stats small{color:#9ab0bd;font-size:11px}
+.venue-history-section{padding:12px 0;border-top:1px solid #254251}.venue-history-section h3{margin:0 0 9px;font-size:15px;color:#e5f1f7}
+.venue-history-row{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid #1b3946;font-size:12px}
+.venue-history-row span{color:#a5bbca}.venue-history-note{font-size:12px;color:#f3c88a}
+@media(max-width:620px){.venue-history-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.venue-history-row{flex-wrap:wrap}}
