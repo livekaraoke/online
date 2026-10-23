@@ -69,3 +69,23 @@ test('Venues page uses same LiveSuite theme tokens as Gigs & Events',()=>{
  assert.match(theme,/\.venue-row/);
  assert.match(theme,/\.venue-closed-badge|CLOSED DOWN badges intentionally stay red/);
 });
+
+
+test('existing Admin close buttons are not duplicated by the shared dialog enhancer',()=>{
+ const shared=fs.readFileSync(path.join(__dirname,'../shared/dialogs.js'),'utf8');
+ assert.match(shared,/panel\.querySelector\('\.events-modal-head button\[aria-label="Close"\], \.venues-modal-head button\[aria-label="Close"\]'\)/);
+ assert.match(shared,/modal\.dataset\.ls26Close='native';/);
+ const events=read('upcoming-events.html');
+ assert.equal((events.match(/id="eventModalCloseBtn"/g)||[]).length,1);
+ assert.match(events,/dialogs\.js\?v=20261023-single-close/);
+});
+test('venue history uses an accessible eye icon and a touch-sized button',()=>{
+ const js=read('js/venues.js'),css=read('css/venues-polish.css'),html=read('venues.html');
+ assert.match(js,/data-history-venue/);
+ assert.match(js,/aria-label="View history for/);
+ assert.match(js,/<svg aria-hidden="true" viewBox="0 0 24 24"/);
+ assert.doesNotMatch(js,/>HISTORY<\/button>/);
+ assert.match(css,/\.venue-row-actions button\.history\{/);
+ assert.match(css,/min-width:44px/);
+ assert.match(html,/js\/venues\.js\?v=20261023-eye-icon/);
+});
