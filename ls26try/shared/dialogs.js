@@ -35,7 +35,13 @@
   function enhance(modal){
     if(modal.dataset.ls26Close)return;
     const panel=modal.tagName==='DIALOG'?modal:(modal.querySelector('.suite-modal-box,.admin-modal-box,.creator-modal-box,.session-modal-box,.events-modal-card,.venues-modal-card,.signup-box,.dialog-box')||modal.firstElementChild);
-    if(!panel)return;modal.dataset.ls26Close='true';
+    if(!panel)return;
+    // Admin event and venue modal headers already have a wired close button.
+    if(panel.querySelector('.events-modal-head button[aria-label="Close"], .venues-modal-head button[aria-label="Close"]')){
+      modal.dataset.ls26Close='native';
+      return;
+    }
+    modal.dataset.ls26Close='true';
     const bar=document.createElement('div');bar.className='ls26-modal-close-bar';
     const x=document.createElement('button');x.type='button';x.className='ls26-modal-x';x.textContent='×';x.setAttribute('aria-label','Close dialog');bar.append(x);panel.prepend(bar);
     x.onclick=()=>{
