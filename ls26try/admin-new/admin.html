@@ -201,8 +201,9 @@
 
               <input id="sessionEventIdInput" type="hidden" value="">
 
-              <label for="sessionEventSelect">Upcoming Event</label>
-              <select id="sessionEventSelect" class="session-event-select">
+              <!-- Existing selection service remains the single source of truth;
+                   the duplicate chooser is hidden in favour of the suggestion and gig list. -->
+              <select id="sessionEventSelect" hidden aria-hidden="true" tabindex="-1">
                 <option value="">Loading upcoming events…</option>
               </select>
 
@@ -212,7 +213,7 @@
             </div>
             <div id="activeSessionLabels" class="active-session-labels session-live-details hidden">
               <div class="session-live-detail"><span>Session Name</span><strong id="sessionNameLiveLabel">-</strong></div>
-              <div class="session-live-detail"><span>Status</span><strong id="sessionStatusLiveLabel">Active Session</strong></div>
+              <div class="session-live-detail"><span>Status</span><strong id="sessionStatusLiveLabel">No Session</strong></div>
               <div class="session-live-detail"><span>Started Time</span><strong id="sessionStartedLiveLabel">-</strong><small id="sessionStartVarianceLabel"></small></div>
               <div class="session-live-detail"><span>Scheduled Time</span><strong id="sessionScheduledLiveLabel">-</strong></div>
               <div class="session-live-detail"><span>Elapsed</span><strong id="sessionElapsedLiveLabel">0 mins</strong></div>
@@ -468,12 +469,12 @@
 <script src="js/sidebar.js?v=20261006-chord-settings"></script>
 <script src="js/profile.js?v=20260929-members-align"></script>
 <script src="js/auth.js?v=20260910-stage4"></script>
-<script src="js/sessions.js?v=20261022-public"></script>
+<script src="js/sessions.js?v=20261023-session-preview"></script>
 <script src="js/requests.js?v=20261007-kiosk1"></script>
 <script src="js/members.js?v=20260910-stage4"></script>
 <script src="js/admin.js?v=20260910-stage4"></script>
 <script src="js/public-setlist-session-addon.js?v=20260924-admin-polish"></script>
-<script src="js/admin-events-integration.js?v=20260929-session-due-countdown"></script>
+<script src="js/admin-events-integration.js?v=20261023-session-preview"></script>
 <script src="js/run-order.js?v=20260925-artist-names"></script>
 <script src="js/admin-session-lifecycle.js?v=20261018-smart-v1"></script>
 <script src="js/admin-dashboard-enhancements.js?v=20260926-preserve-start"></script>
