@@ -384,3 +384,26 @@ body.setlist-page {
   .setlist-page .setlist-notes-field{grid-column:1;grid-row:2}
   .setlist-page .setlist-header-actions .btn{font-size:12px}
 }
+
+/* Fixed A–Z order in Setlist Editor: remove manual reorder affordances. */
+.setlist-page .setlist-az-indicator{
+  display:inline-block;
+  vertical-align:middle;
+  margin-left:5px;
+  padding:2px 5px;
+  color:var(--ls-accent);
+  border:1px solid var(--ls-border);
+  border-radius:5px;
+  background:var(--ls-soft);
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:.03em;
+}
+.setlist-page #selectedSongs .setlist-song-row{
+  grid-template-columns:minmax(0,1fr) 42px;
+  gap:8px;
+}
+.setlist-page #selectedSongs .setlist-song-row [data-remove]{
+  width:42px;
+  min-height:42px;
+}

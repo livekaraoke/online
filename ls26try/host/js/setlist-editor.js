@@ -33,6 +33,21 @@
     };
   }
 
+  // Use title first and artist/ID as stable tiebreakers. Retain any legacy
+  // IDs whose songs are unavailable so a Save cannot silently discard them.
+  const titleCollator = new Intl.Collator(undefined, { sensitivity: "base", numeric: true });
+  function alphabetizeSongIds(ids) {
+    const lookup = new Map(songs.map(song => [song.firebaseId, song]));
+    return [...ids].sort((a, b) => {
+      const first = lookup.get(a);
+      const second = lookup.get(b);
+      if (!first || !second) return first ? -1 : second ? 1 : 0;
+      return titleCollator.compare(first.title, second.title)
+        || titleCollator.compare(first.artist, second.artist)
+        || titleCollator.compare(a, b);
+    });
+  }
+
   function showEditorMessage(message, isError = false) {
     const el = $("setlistEditorMessage");
     if (!el) return;
@@ -162,6 +177,8 @@
     if (!songOrder.length || songOrder.join("|") !== current.songIds.join("|")) {
       songOrder = [...current.songIds];
     }
+    // Display A–Z even for older setlists; opening a setlist does not write it.
+    songOrder = alphabetizeSongIds(songOrder);
 
     $("setlistNameInput").value = current.name || "";
     $("setlistNotesInput").value = current.notes || "";
@@ -172,21 +189,17 @@
       if (!song) return "";
 
       return `
-        <div class="setlist-song-row" draggable="true" data-id="${esc(id)}">
-          <span class="drag" title="Drag to reorder">☰</span>
+        <div class="setlist-song-row" data-id="${esc(id)}">
           <div>
             <strong>${esc(song.title)}</strong>
             <small>${esc(ArtistNames.display(song.artist))}${song.year ? ` · ${esc(song.year)}` : ""}</small>
           </div>
-          <button data-up="${esc(id)}" type="button" title="Move up">↑</button>
-          <button data-down="${esc(id)}" type="button" title="Move down">↓</button>
-          <button data-remove="${esc(id)}" type="button" title="Remove from setlist">×</button>
+          <button data-remove="${esc(id)}" type="button" title="Remove from setlist" aria-label="Remove ${esc(song.title)} from setlist">×</button>
         </div>
       `;
     }).join("") || '<div class="empty-state">No songs in this setlist.</div>';
 
     renderAvailable();
-    enableDrag();
   }
 
   function renderAvailable() {
@@ -272,20 +285,22 @@
     }
 
     const button = $("saveSetlistBtn");
+    const sortedIds = alphabetizeSongIds(songOrder);
     setBusy(button, true, "SAVING...");
 
     try {
       await db.collection("lyricsSetlists").doc(current.id).set({
         name,
         notes: $("setlistNotesInput")?.value || "",
-        songIds: [...songOrder],
+        songIds: sortedIds,
         updatedBy: auth.currentUser.uid,
         updatedByEmail: auth.currentUser.email || "",
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       }, { merge: true });
 
-      current = { ...current, name, notes: $("setlistNotesInput")?.value || "", songIds: [...songOrder] };
-      showEditorMessage("Setlist saved.");
+      songOrder = sortedIds;
+      current = { ...current, name, notes: $("setlistNotesInput")?.value || "", songIds: [...sortedIds] };
+      showEditorMessage("Setlist saved in alphabetical order.");
     } catch (error) {
       console.error("Could not save setlist:", error);
       showEditorMessage(error?.message || "Could not save the setlist.", true);
@@ -315,39 +330,11 @@
     }
   }
 
-  function enableDrag() {
-    let dragged = null;
-
-    document.querySelectorAll("#selectedSongs .setlist-song-row").forEach(row => {
-      row.addEventListener("dragstart", () => {
-        dragged = row;
-        row.classList.add("dragging");
-      });
-
-      row.addEventListener("dragend", () => {
-        row.classList.remove("dragging");
-        dragged = null;
-        songOrder = [...document.querySelectorAll("#selectedSongs .setlist-song-row")]
-          .map(item => item.dataset.id);
-        current = { ...current, songIds: [...songOrder] };
-        renderEditor();
-      });
-
-      row.addEventListener("dragover", event => {
-        event.preventDefault();
-        if (!dragged || dragged === row) return;
-        const rect = row.getBoundingClientRect();
-        if (event.clientY > rect.top + rect.height / 2) row.after(dragged);
-        else row.before(dragged);
-      });
-    });
-  }
-
   document.addEventListener("click", event => {
     const select = event.target.closest("[data-select]");
     if (select) {
       current = setlists.find(item => item.id === select.dataset.select) || null;
-      songOrder = [...(current?.songIds || [])];
+      songOrder = alphabetizeSongIds(current?.songIds || []);
       renderList();
       renderEditor();
       showEditorMessage("");
@@ -357,6 +344,7 @@
     const add = event.target.closest("[data-add]");
     if (add) {
       if (!songOrder.includes(add.dataset.add)) songOrder.push(add.dataset.add);
+      songOrder = alphabetizeSongIds(songOrder);
       current = { ...current, songIds: [...songOrder] };
       renderEditor();
       return;
@@ -370,21 +358,6 @@
       return;
     }
 
-    const up = event.target.closest("[data-up]");
-    const down = event.target.closest("[data-down]");
-    const moveButton = up || down;
-
-    if (moveButton) {
-      const id = moveButton.dataset.up || moveButton.dataset.down;
-      const index = songOrder.indexOf(id);
-      const targetIndex = index + (up ? -1 : 1);
-
-      if (targetIndex >= 0 && targetIndex < songOrder.length) {
-        [songOrder[index], songOrder[targetIndex]] = [songOrder[targetIndex], songOrder[index]];
-        current = { ...current, songIds: [...songOrder] };
-        renderEditor();
-      }
-    }
   });
 
   $("newSetlistBtn")?.addEventListener("click", createNewSetlist);
