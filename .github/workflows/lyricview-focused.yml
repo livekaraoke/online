@@ -4,6 +4,13 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/lyricview-focused.yml'
+      - 'ls26try/admin-new/js/top-statusbar-session-tools.js'
+      - 'ls26try/shared/performance-tools-ui.js'
+      - 'ls26try/host/js/lyricview.js'
+      - 'ls26try/host/lyricview.html'
+      - 'ls26try/host/css/lyricview-completion.css'
+      - 'ls26try/verification/queue-workflows.cjs'
+      - 'ls26try/verification/lyricview-end-regression.cjs'
   workflow_dispatch:
 permissions:
   contents: read
