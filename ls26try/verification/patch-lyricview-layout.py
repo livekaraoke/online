@@ -9,14 +9,13 @@ change('<div id="endMarker" class="host-end-marker">[ END ]</div>',
        '<div id="endMarker" class="host-end-marker">[ END ]</div><button id="endCompleteSongBtn" class="host-complete-song-btn" type="button">✓ COMPLETE</button>')
 change('<p>Great run. Keep it going.</p><div class="host-end-next-wrap">',
        '<p>Great run. Keep it going.</p><div id="endCompletionFinishSlot" class="host-end-finish-slot" aria-label="Finish and next controls"></div><div class="host-end-next-wrap">')
-change('js/lyricview.js?v=', 'js/lyricview.js?v=') if False else None
 # Replace only the actual controller entry, leaving all other scripts unchanged.
 import re
-s,n=re.subn(r'js/lyricview\\.js\\?v=[^" ]+', 'js/lyricview.js?v=20261024-complete-v1', s)
+s,n=re.subn(r'js/lyricview\.js\?v=[^" ]+', 'js/lyricview.js?v=20261024-complete-v1', s)
 if n!=1:raise ValueError("Controller script version not found uniquely: "+str(n))
-s,n=re.subn(r'../admin-new/js/top-statusbar-session-tools\\.js\\?v=[^" ]+', '../admin-new/js/top-statusbar-session-tools.js?v=20261024-queue-v1',s)
+s,n=re.subn(r'../admin-new/js/top-statusbar-session-tools\.js\?v=[^" ]+', '../admin-new/js/top-statusbar-session-tools.js?v=20261024-queue-v1',s)
 if n!=1:raise ValueError("Queue controller version not found uniquely: "+str(n))
-s,n=re.subn(r'../shared/performance-tools-ui\\.js\\?v=[^" ]+', '../shared/performance-tools-ui.js?v=20261024-finish-v1',s)
+s,n=re.subn(r'../shared/performance-tools-ui\.js\?v=[^" ]+', '../shared/performance-tools-ui.js?v=20261024-finish-v1',s)
 if n!=1:raise ValueError("Performance tools script version not found uniquely: "+str(n))
 # Screen-specific additions load last, and don't change global shared app styling.
 needle='</head>'
