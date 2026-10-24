@@ -36,7 +36,8 @@ const ctx={
  $:id=>els[id]||null,
  autoScrollEndHandled:false,autoScrollOn:true,sectionPauseStartsAt:4,sectionPauseUntil:4,scrollTimer:99,completingSong:false,
  clearSectionPauseCountdown:()=>{},queueSingerSync:()=>{},cancelAnimationFrame:()=>{},
- finalizeCurrentSongPlayed:async()=>{counters.finish++;if(failSave)throw Error('network failure')},
+ finalizeCurrentSongPlayed:async()=>{counters.finish++;if(failSave)throw Error('network failure');return {completed:true,item:{performanceId:'perf123'}}},
+ getActiveSessionContext:async()=>({sessionId:'gig123'}),
  publishSingerSongFinished:async()=>{counters.singer++},
  showEndCompletionPanel:show=>{panel.hidden=!show;ctx.window.dispatchEvent({type:'ls26:completion-state'})},
  showEndNextSongButton:show=>{endNext.hidden=!show},
@@ -56,6 +57,7 @@ vm.runInContext(extract('stopAutoScrollAtEnd')+'\n'+extract('completeSongAtEnd')
  await ctx.complete();
  assert.equal(counters.finish,1,'COMPLETE must finalize exactly once');
  assert.equal(counters.singer,1,'COMPLETE must update singer state once');
+ assert.ok(counters.event.includes('ls26:performance-completed'),'Completion must reveal an exact saved performance to rating UI');
  assert.equal(panel.hidden,false,'COMPLETE must reveal panel');
  await ctx.complete();
  assert.equal(counters.finish,1,'Repeated COMPLETE must be idempotent');
