@@ -93,3 +93,63 @@ body.host-lyric-view-page #topStatusBar #tsRunOrderBestNext .ts-best-next-action
   body.host-lyric-view-page #topStatusBar #tsRunOrderBestNext .ts-best-next-heading small{display:none}
   body.host-lyric-view-page #endCompletionFinishSlot .smart-finish{grid-template-columns:1fr}
 }
+
+
+/* Completed performance rating; never a second Next Song control. */
+body.host-lyric-view-page #endCompletionFinishSlot #smartRunTools{display:none!important}
+body.host-lyric-view-page #endSongRating{
+  box-sizing:border-box;
+  width:100%;
+  margin:0;
+  padding:15px;
+  border:1px solid #27617a;
+  border-radius:12px;
+  background:linear-gradient(135deg,#053044,#071f30);
+  color:#eaf7fd;
+}
+body.host-lyric-view-page #endSongRating h3{
+  margin:0 0 12px;
+  font-size:15px;
+  letter-spacing:.055em;
+  color:#b9e1f1;
+}
+body.host-lyric-view-page .host-end-rating-choices{
+  display:grid;
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  gap:8px;
+}
+body.host-lyric-view-page .host-end-rating-choices button{
+  box-sizing:border-box;
+  min-width:0;
+  min-height:52px;
+  padding:9px 5px;
+  border:1px solid #35657a;
+  border-radius:8px;
+  background:#0a2c3c;
+  color:#e5f5fd;
+  font-size:13px;
+  font-weight:850;
+  cursor:pointer;
+}
+body.host-lyric-view-page .host-end-rating-choices button:disabled{opacity:.48;cursor:not-allowed}
+body.host-lyric-view-page .host-end-rating-choices button.is-selected{
+  border-color:#24e4a2;
+  color:#75ffd1;
+  background:#074134;
+  box-shadow:inset 0 0 0 1px #24e4a2;
+}
+body.host-lyric-view-page .host-end-rating-choices button:not(:disabled):focus-visible{
+  outline:3px solid #42cafa;outline-offset:2px;
+}
+body.host-lyric-view-page #endRatingStatus{
+  margin:10px 0 0;
+  min-height:19px;
+  color:#a7cad9;
+  font-size:13px;
+}
+body.host-lyric-view-page #endRatingStatus.is-error{color:#ff9caa}
+body.host-lyric-view-page #endSongChoiceActions{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+@media(max-width:640px){
+  body.host-lyric-view-page .host-end-rating-choices{grid-template-columns:repeat(2,minmax(0,1fr))}
+  body.host-lyric-view-page .host-end-rating-choices button:last-child{grid-column:1/-1}
+}

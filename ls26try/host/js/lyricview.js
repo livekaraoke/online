@@ -2221,14 +2221,21 @@
     try {
       await stopAutoScrollAtEnd();
       // Do not show success if the existing lifecycle failed to save completion.
-      await finalizeCurrentSongPlayed();
+      const completedRecord=await finalizeCurrentSongPlayed();
+      // Rating is attached to this exact completed performance, never a song
+      // metadata document or a subsequent Run Order item.
+      if(completedRecord?.completed&&completedRecord.item?.performanceId){
+        const {sessionId}=await getActiveSessionContext();
+        if(sessionId)window.dispatchEvent(new CustomEvent("ls26:performance-completed",{
+          detail:{sessionId,performanceId:completedRecord.item.performanceId,songId:currentSongId}
+        }));
+      }
       window.dispatchEvent(new Event("ls26:song-finished"));
       await publishSingerSongFinished();
       showEndCompletionPanel(true);
-      showEndNextSongButton(true);
+      // Completion is about recording and rating the song, not loading Next.
       if ($("endSessionActions")) $("endSessionActions").hidden=false;
       syncEndSessionActions();
-      await renderEndNextSongDetails();
       requestAnimationFrame(()=>setTimeout(slowScrollCompletionIntoView,80));
     } catch(error) {
       window.LS26?.toast("Could not complete song: "+error.message);
