@@ -9,4 +9,14 @@ await ctx.LK.sessionTools.enqueueSong({firebaseId:'fresh',title:'Fresh Song'},{n
 assert.equal(ctx.__fixture.data['karaokeControl/runOrder'].items[1].songId,'fresh');
 assert.equal(ctx.__fixture.data['karaokeControl/runOrder'].items[0].id,'q0');
 await assert.rejects(()=>ctx.LK.sessionTools.enqueueSong({firebaseId:'song0'},{next:true}));
-ctx.__state.sessionId='other';await assert.rejects(()=>ctx.LK.sessionTools.enqueueSong({firebaseId:'bad'}));console.log('PASS: Library enqueue and session mismatch guard; atomic/idempotent acceptance, current song cannot reorder, queued song reorder, foreign-session request rejected.');})().catch(e=>{console.error(e);process.exit(1)});
+ctx.__state.sessionId='other';await assert.rejects(()=>ctx.LK.sessionTools.enqueueSong({firebaseId:'bad'}));ctx.__state.sessionId='';
+ctx.__fixture.data['karaokeControl/runOrder'].sessionId='';
+const pre=ctx.__fixture.data['karaokeControl/runOrder'].items.map(x=>x.id);
+const preIndex=pre.indexOf('q2');
+assert.ok(preIndex>=0&&preIndex<pre.length-1,'pre-session fixture needs movable song');
+assert.equal(await a.moveRunOrder('q2',1),true,'pre-session Move Down should succeed');
+const after=ctx.__fixture.data['karaokeControl/runOrder'].items.map(x=>x.id);
+assert.equal(after.indexOf('q2'),preIndex+1,'pre-session persisted queue order');
+assert.equal(ctx.__state.runOrder.items.map(x=>x.id).indexOf('q2'),preIndex+1,'UI cache reflects committed order before snapshot');
+console.log('PASS: pre-session Run Order down arrow persists and immediately updates host UI cache.');
+console.log('PASS: Library enqueue and session mismatch guard; atomic/idempotent acceptance, current song cannot reorder, queued song reorder, foreign-session request rejected.');})().catch(e=>{console.error(e);process.exit(1)});
