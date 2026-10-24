@@ -6,7 +6,7 @@ on:
     paths:
       - '.github/workflows/lyricview-focused.yml'
 permissions:
-  contents: read
+  contents: write
 jobs:
   check:
     runs-on: ubuntu-latest
