@@ -854,7 +854,7 @@
     // Keep the one existing Finish/Next control with Song Complete in LyricView.
     const finish=$("smartRunTools");
     const panel=$("endCompletionPanel"),slot=$("endCompletionFinishSlot");
-    const destination=slot&&panel&&!panel.hidden?slot:row;
+    const destination=slot||row;
     if(finish&&finish.parentElement!==destination)destination.append(finish);
     window.LS26BestNext.renderRunOrder(card);
   }

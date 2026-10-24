@@ -13,7 +13,7 @@ function render(){
   const best=$('tsRunOrderBestNext');if(best&&best.parentElement!==row)row.prepend(best);
   let box=$('smartRunTools');if(!box){box=document.createElement('div');box.id='smartRunTools';box.className='smart-performance-tools smart-finish-tools';}const panel=$('endCompletionPanel'),finishSlot=$('endCompletionFinishSlot');
   const completeView=Boolean(finishSlot&&panel&&!panel.hidden);
-  const finishDestination=completeView?finishSlot:row;
+  const finishDestination=finishSlot||row;
   if(box.parentElement!==finishDestination)finishDestination.append(box);
   let flowBox=$('smartRunFlow');if(!flowBox){flowBox=document.createElement('div');flowBox.id='smartRunFlow';flowBox.className='smart-performance-tools smart-flow-tools';}if(flowBox.parentElement!==pane)row.after(flowBox);
   const current=queue.find(r=>r.status==='playing'),next=queue.find(r=>!I.terminal(r.status)&&r.status!=='playing'),f=I.flow(queue,songs);
