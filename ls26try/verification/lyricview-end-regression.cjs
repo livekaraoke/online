@@ -34,6 +34,7 @@ const ctx={
  window:{dispatchEvent:e=>counters.event.push(e.type),LS26:{toast:m=>counters.event.push(m)}},
  document:{},
  $:id=>els[id]||null,
+ currentSongId:'s42',
  autoScrollEndHandled:false,autoScrollOn:true,sectionPauseStartsAt:4,sectionPauseUntil:4,scrollTimer:99,completingSong:false,
  clearSectionPauseCountdown:()=>{},queueSingerSync:()=>{},cancelAnimationFrame:()=>{},
  finalizeCurrentSongPlayed:async()=>{counters.finish++;if(failSave)throw Error('network failure');return {completed:true,item:{performanceId:'perf123'}}},
@@ -68,5 +69,5 @@ vm.runInContext(extract('stopAutoScrollAtEnd')+'\n'+extract('completeSongAtEnd')
  assert.ok(counters.event.some(s=>String(s).includes('network failure')));
  console.log('PASS: END pauses only, COMPLETE finalizes once, persistence failure leaves success hidden');
  console.log('PASS: next-song navigation never silently completes; new playback abandons interrupted song');
- console.log('PASS: same Finish & Next element moves to completion panel; BEST NEXT stays in Run Order');
+ console.log('PASS: confirmed performance provides exact record identity to rating controls');
 })().catch(e=>{console.error(e);process.exitCode=1});
