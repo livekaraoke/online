@@ -1,0 +1,27 @@
+name: LyricView Best Next layout
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'ls26try/host/css/lyricview-best-next-row.css'
+      - 'ls26try/host/lyricview.html'
+      - 'ls26try/verification/lyricview-best-next-row.cjs'
+      - '.github/workflows/lyricview-best-next-layout.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install test browser
+        run: npm install --prefix "$RUNNER_TEMP/ls26-layout" --no-audit --no-fund playwright@1.62.1
+      - name: Check tablet layout in Chromium
+        run: |
+          export LS26_TEST_NODE_MODULES="$RUNNER_TEMP/ls26-layout/node_modules"
+          node ls26try/verification/lyricview-best-next-row.cjs
