@@ -1,0 +1,41 @@
+name: Implement LyricView end-of-song ratings
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/apply-lyricview-rating.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: apply-lyricview-rating
+  cancel-in-progress: false
+jobs:
+  apply-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Apply targeted rating and end-panel changes
+        run: python3 ls26try/verification/patch-lyricview-rating.py
+      - name: Validate JavaScript, rating writes and completion logic
+        run: |
+          node --check ls26try/host/js/lyricview.js
+          node --check ls26try/host/js/lyricview-end-rating.js
+          node ls26try/verification/lyricview-end-regression.cjs
+          node ls26try/verification/lyricview-rating-regression.cjs
+          node ls26try/verification/queue-workflows.cjs
+      - name: Commit working change on online main
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add ls26try/host/js/lyricview.js ls26try/host/lyricview.html ls26try/host/css/lyricview-completion.css
+          git commit -m "Replace LyricView Next Song card with persisted crowd rating"
+          git push origin HEAD:main
