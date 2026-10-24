@@ -49,6 +49,7 @@
   let performanceRecordCreated = false;
   let performanceRecordPromise = null;
   let autoScrollEndHandled = false;
+  let completingSong = false;
   let karaokeSendInFlightSongId = "";
   let autoKaraokeSentSongId = "";
   const AUTO_SEND_KARAOKE_KEY = "ls26:autoSendToKaraoke";
@@ -2141,6 +2142,16 @@
       const {sessionId}=await getActiveSessionContext();
       if(!sessionId){performanceRecordCreated=false;return;}
       try {
+        // A different song may be loaded while another is still playing.
+        // Close that earlier performance as interrupted, never as completed.
+        const runSnap=await db.collection("karaokeControl").doc("runOrder").get();
+        const run=runSnap.data()||{};
+        if(run.sessionId===sessionId){
+          const active=(run.items||[]).find(item=>String(item.status||'').toLowerCase()==='playing');
+          if(active && String(active.songId)!==String(currentSongId)){
+            await performanceLifecycle().finish({sessionId,itemId:active.id,status:'abandoned'});
+          }
+        }
         const result=await performanceLifecycle().start({sessionId,song:{...currentSong,id:currentSongId},requestId,bpm:performanceTempo.get()});
         window.__lyricviewPlayingStartedMs=result.startedMs;
         await performanceTempo.attach(result.ref,result.record.performanceBpm);
@@ -2169,6 +2180,7 @@
   function showEndCompletionPanel(show) {
     const panel=$("endCompletionPanel");
     if (panel) panel.hidden=!show;
+    window.dispatchEvent(new Event("ls26:completion-state"));
   }
 
   function showEndNextSongButton(show) {
@@ -2186,7 +2198,7 @@
     sectionPauseUntil = 0;
     clearSectionPauseCountdown();
     window.dispatchEvent(new CustomEvent("ls26:scroll-state",{detail:{playing:false}}));
-    window.dispatchEvent(new Event("ls26:song-finished"));
+    // Reaching the marker only stops scrolling; completion is host-confirmed.
     queueSingerSync(true);
 
     if (scrollTimer) {
@@ -2197,18 +2209,33 @@
     $("autoScrollBtn")?.classList.remove("active");
     if ($("autoScrollBtn")) $("autoScrollBtn").innerHTML = '<svg class="ls26-play-icon" viewBox="0 0 32 32" aria-hidden="true"><path d="M7 3 29 16 7 29Z"/></svg>';
 
-    // Start persistence immediately, but do not hold the UI at [ END ] while
-    // waiting for Firestore/network work.
-    const finalizePromise=finalizeCurrentSongPlayed();
-    const singerFinishedPromise=publishSingerSongFinished();
-    showEndCompletionPanel(true);
-    showEndNextSongButton(true);
-    if ($("endSessionActions")) $("endSessionActions").hidden = false;
-    syncEndSessionActions();
-    const detailsPromise=renderEndNextSongDetails();
+    // The performer can still sing/play the ending. COMPLETE is deliberate.
+    $("endCompleteSongBtn")?.focus({preventScroll:true});
+  }
 
-    requestAnimationFrame(()=>setTimeout(slowScrollCompletionIntoView,80));
-    await Promise.allSettled([finalizePromise,detailsPromise,singerFinishedPromise]);
+  async function completeSongAtEnd() {
+    if (completingSong || !$("endCompletionPanel")?.hidden) return;
+    completingSong=true;
+    const button=$("endCompleteSongBtn");
+    if(button){button.disabled=true;button.textContent="COMPLETING...";}
+    try {
+      await stopAutoScrollAtEnd();
+      // Do not show success if the existing lifecycle failed to save completion.
+      await finalizeCurrentSongPlayed();
+      window.dispatchEvent(new Event("ls26:song-finished"));
+      await publishSingerSongFinished();
+      showEndCompletionPanel(true);
+      showEndNextSongButton(true);
+      if ($("endSessionActions")) $("endSessionActions").hidden=false;
+      syncEndSessionActions();
+      await renderEndNextSongDetails();
+      requestAnimationFrame(()=>setTimeout(slowScrollCompletionIntoView,80));
+    } catch(error) {
+      window.LS26?.toast("Could not complete song: "+error.message);
+    } finally {
+      completingSong=false;
+      if(button){button.disabled=false;button.textContent="✓ COMPLETE";}
+    }
   }
 
 
@@ -2409,8 +2436,10 @@
   }
 
   async function goToNextRunOrderSong() {
-    // PLAY NEXT finalizes a started song; previewing end cards never changes status.
-    if(performanceRecordCreated)await finalizeCurrentSongPlayed();
+    // Loading another song never silently marks the current performance complete.
+    // If the performer starts the new song, the previous one is recorded as
+    // abandoned by recordCurrentSongPlayed(), not as a completed performance.
+    await flushPerformanceTempo();
     const next = await getNextRunOrderItem();
 
     if (!next) {
@@ -2699,11 +2728,10 @@
       clearTimeout(window.__ls26SpeedSave); window.__ls26SpeedSave=setTimeout(saveSongScrollSpeed,1200);
     };
     if ($("nextRunOrderSongBtn")) {
-      $("nextRunOrderSongBtn").onclick = async () => {
-        if (autoScrollOn) startAutoScroll();
-        await renderEndNextSongDetails();
-        $("endMarker").scrollIntoView({behavior:"smooth",block:"start"});
-      };
+      $("nextRunOrderSongBtn").onclick = goToNextRunOrderSong;
+    }
+    if ($("endCompleteSongBtn")) {
+      $("endCompleteSongBtn").onclick = completeSongAtEnd;
     }
     if ($("endNextRunOrderSongBtn")) {
       $("endNextRunOrderSongBtn").onclick = goToNextRunOrderSong;

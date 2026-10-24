@@ -1,0 +1,95 @@
+
+/* Host LyricView: [END] is not completion; require a clear stage-safe tap. */
+body.host-lyric-view-page #endCompleteSongBtn {
+  display:block!important;
+  box-sizing:border-box;
+  width:min(420px,calc(100% - 48px));
+  min-height:58px;
+  margin:10px auto 32px;
+  border:2px solid #20d89a;
+  border-radius:10px;
+  background:#063b30;
+  color:#53ffba;
+  font-size:20px;
+  font-weight:900;
+  letter-spacing:.045em;
+  text-align:center;
+  cursor:pointer;
+}
+body.host-lyric-view-page #endCompleteSongBtn:disabled{opacity:.55}
+body.host-lyric-view-page #endCompleteSongBtn:focus-visible{outline:3px solid #38bdf8;outline-offset:3px}
+/* The original shared Finish & Next controls are moved, not cloned. */
+body.host-lyric-view-page #endCompletionFinishSlot {
+  width:100%;
+  margin:10px 0 18px;
+}
+body.host-lyric-view-page #endCompletionFinishSlot:empty{display:none}
+body.host-lyric-view-page #endCompletionFinishSlot #smartRunTools{
+  display:block;
+  width:100%!important;
+  max-width:none!important;
+  margin:0!important;
+}
+body.host-lyric-view-page #endCompletionFinishSlot .smart-finish{
+  display:grid;
+  grid-template-columns:minmax(160px,.42fr) minmax(0,1fr);
+  align-items:center;
+  gap:12px;
+}
+body.host-lyric-view-page #endCompletionFinishSlot .smart-finish button{
+  min-height:50px;
+  font-size:15px;
+  font-weight:800;
+}
+body.host-lyric-view-page #endCompletionFinishSlot .smart-finish span{
+  font-size:13px;
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+/* BEST NEXT: one compact row in the expanded Run Order. */
+body.host-lyric-view-page #topStatusBar #tsRunOrderBestNext{
+  display:flex!important;
+  flex-wrap:nowrap!important;
+  gap:10px!important;
+  align-items:center!important;
+  min-height:58px;
+  padding:8px 12px!important;
+  min-width:0;
+  width:100%;
+}
+body.host-lyric-view-page #topStatusBar #tsRunOrderBestNext .ts-best-next-heading{
+  display:flex!important;
+  flex:1 1 auto;
+  align-items:center!important;
+  gap:8px;
+  min-width:0;
+  white-space:nowrap;
+}
+body.host-lyric-view-page #topStatusBar #tsRunOrderBestNext .ts-best-next-heading strong{
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+body.host-lyric-view-page #topStatusBar #tsRunOrderBestNext>p{
+  display:none!important;
+}
+body.host-lyric-view-page #topStatusBar #tsRunOrderBestNext .ts-best-next-actions{
+  display:flex!important;
+  flex:0 0 auto;
+  flex-wrap:nowrap!important;
+  gap:5px!important;
+  margin:0!important;
+}
+body.host-lyric-view-page #topStatusBar #tsRunOrderBestNext .ts-best-next-actions button{
+  min-height:42px;
+  margin:0!important;
+  padding:7px 9px!important;
+  font-size:12px!important;
+}
+@media(max-width:600px){
+  body.host-lyric-view-page #topStatusBar #tsRunOrderBestNext{gap:6px!important;padding:6px!important}
+  body.host-lyric-view-page #topStatusBar #tsRunOrderBestNext .ts-best-next-heading{gap:4px}
+  body.host-lyric-view-page #topStatusBar #tsRunOrderBestNext .ts-best-next-heading small{display:none}
+  body.host-lyric-view-page #endCompletionFinishSlot .smart-finish{grid-template-columns:1fr}
+}

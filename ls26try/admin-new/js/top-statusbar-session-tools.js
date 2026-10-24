@@ -851,7 +851,11 @@
     let card = $("tsRunOrderBestNext");
     if (!card) { card=document.createElement("section"); card.id="tsRunOrderBestNext"; card.className="ts-best-next"; card.setAttribute("aria-label","Best Next song"); }
     if (card.parentElement!==row) row.prepend(card);
-    const finish=$("smartRunTools"); if (finish&&finish.parentElement!==row) row.append(finish);
+    // Keep the one existing Finish/Next control with Song Complete in LyricView.
+    const finish=$("smartRunTools");
+    const panel=$("endCompletionPanel"),slot=$("endCompletionFinishSlot");
+    const destination=slot&&panel&&!panel.hidden?slot:row;
+    if(finish&&finish.parentElement!==destination)destination.append(finish);
     window.LS26BestNext.renderRunOrder(card);
   }
   window.addEventListener("ls26:rotation-updated", renderBestNextRunOrder);
@@ -1103,19 +1107,28 @@
   async function moveRunOrder(itemId,direction) {
     const sessionId=state.sessionId||"";
     const ref=state.db.collection('karaokeControl').doc('runOrder');
-    return state.db.runTransaction(async tx=>{
+    const updated=await state.db.runTransaction(async tx=>{
       const snap=await tx.get(ref),data=snap.data()||{};
       if((state.sessionId||"")!==sessionId)throw Error('Session changed. Refresh before reordering.');
       if((data.sessionId||"")!==sessionId)throw Error('Run Order changed. Refresh before reordering.');
       const items=(data.items||[]).map(x=>({...x}));
-      const terminal=new Set(['playing','played','abandoned','left','declined','deleted','deletedbyhost','cancelled']);
+      const terminal=new Set(['playing','played','completed','finished','abandoned','left','declined','deleted','deletedbyhost','cancelled']);
       const indexes=items.map((x,i)=>terminal.has(String(x.status||'').toLowerCase())?-1:i).filter(i=>i>=0);
       const at=indexes.findIndex(i=>items[i].id===itemId),to=at+direction;
-      if(at<0||to<0||to>=indexes.length)return false;
+      if(at<0||to<0||to>=indexes.length)return null;
       [items[indexes[at]],items[indexes[to]]]=[items[indexes[to]],items[indexes[at]]];
       tx.set(ref,{items,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
-      return true;
+      return items;
     });
+    if(!updated)return false;
+    // Show the committed order immediately; keep the existing Firestore snapshot
+    // as authoritative when it arrives. No extra listener or write.
+    if(state.sessionId===sessionId){
+      state.runOrder={...state.runOrder,sessionId,items:updated};
+      renderRunOrder();
+      window.dispatchEvent(new CustomEvent('lk:runorder-updated',{detail:{sessionId,items:updated}}));
+    }
+    return true;
   }
 
   async function abandonRunOrder(itemId, reason="") {

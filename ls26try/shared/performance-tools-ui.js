@@ -11,11 +11,14 @@ function render(){
  const list=$('tsRunOrderList'),pane=$('tsRunOrderPane');if(list&&pane){
   let row=$('tsRunOrderQuickRow');if(!row){row=document.createElement('div');row.id='tsRunOrderQuickRow';row.className='ts-run-order-quickrow';list.before(row);}
   const best=$('tsRunOrderBestNext');if(best&&best.parentElement!==row)row.prepend(best);
-  let box=$('smartRunTools');if(!box){box=document.createElement('div');box.id='smartRunTools';box.className='smart-performance-tools smart-finish-tools';}if(box.parentElement!==row)row.append(box);
+  let box=$('smartRunTools');if(!box){box=document.createElement('div');box.id='smartRunTools';box.className='smart-performance-tools smart-finish-tools';}const panel=$('endCompletionPanel'),finishSlot=$('endCompletionFinishSlot');
+  const completeView=Boolean(finishSlot&&panel&&!panel.hidden);
+  const finishDestination=completeView?finishSlot:row;
+  if(box.parentElement!==finishDestination)finishDestination.append(box);
   let flowBox=$('smartRunFlow');if(!flowBox){flowBox=document.createElement('div');flowBox.id='smartRunFlow';flowBox.className='smart-performance-tools smart-flow-tools';}if(flowBox.parentElement!==pane)row.after(flowBox);
   const current=queue.find(r=>r.status==='playing'),next=queue.find(r=>!I.terminal(r.status)&&r.status!=='playing'),f=I.flow(queue,songs);
   const oldOutcome=$('smartOutcome')?.value||'',flowOpen=!!flowBox.querySelector('details')?.open;
-  box.innerHTML=`<div class="smart-finish"><button type="button" data-smart-finish="${esc(current?.id||'')}" ${!current||busy?'disabled':''}>FINISH &amp; NEXT</button><select id="smartOutcome" aria-label="Optional crowd response"><option value="">Not rated</option><option value="great">Great response</option><option value="good">Good</option><option value="average">Average</option><option value="weak">Weak</option></select><span>${current?'Complete current · '+esc(next?.songTitle||'Queue empty'):'No song playing'}</span></div><p id="smartRunError" role="status"></p>`;
+  box.innerHTML=`<div class="smart-finish"><button type="button" ${completeView?'data-smart-next':'data-smart-finish="'+esc(current?.id||'')+'"'} ${(completeView?!next:!current)||busy?'disabled':''}>${completeView?'NEXT SONG':'FINISH &amp; NEXT'}</button>${completeView?'':`<select id="smartOutcome" aria-label="Optional crowd response"><option value="">Not rated</option><option value="great">Great response</option><option value="good">Good</option><option value="average">Average</option><option value="weak">Weak</option></select>`}<span>${completeView?(next?'Up next · '+esc(next.songTitle||'Queued song'):'Run Order empty'):current?'Complete current · '+esc(next?.songTitle||'Queue empty'):'No song playing'}</span></div><p id="smartRunError" role="status"></p>`;
   flowBox.innerHTML=`<details><summary>ENERGY FLOW · ${f.rows.slice(0,8).map(r=>r.energy?['','LOW','MED','HIGH'][r.energy]:'?').join(' → ')||'Empty queue'}${f.rows.length>8?' · +'+(f.rows.length-8)+' songs':''}</summary><div class="smart-flow">${f.rows.map(r=>`<button type="button" data-smart-song="${esc(r.id)}">${esc(r.songTitle)} · ${r.energy?['','LOW','MEDIUM','HIGH'][r.energy]:'Unknown energy'}</button>`).join('')}</div><small>${esc(f.warnings.join(' · '))} · Suggestions only; queue order unchanged.</small></details>`;
   if($('smartOutcome'))$('smartOutcome').value=oldOutcome;if(flowBox.querySelector('details'))flowBox.querySelector('details').open=flowOpen;
  }
@@ -27,12 +30,17 @@ function render(){
 }
 document.addEventListener('click',async e=>{
  const button=e.target.closest('button');if(!button)return;
+ if(button.hasAttribute('data-smart-next')){
+   const next=tools()?.getRunOrder?.().find(r=>!I.terminal(r.status)&&r.status!=='playing');
+   if(next)await tools().actions.openRunOrderSong(next.id);
+   return;
+ }
  if(button.hasAttribute('data-smart-finish')){if(busy)return;const id=button.dataset.smartFinish;if(!id)return;busy=true;button.disabled=true;const outcome=$('smartOutcome')?.value||'';try{await window.LS26Performance?.flushTempo?.();const result=await tools().finishCurrent(id,outcome);if(result.completed){window.LS26Performance?.stop?.();if(result.next)await tools().actions.openRunOrderSong(result.next.id);else window.LS26?.toast('Song completed. Run Order is empty.');}}catch(error){const node=$('smartRunError');if(node)node.textContent='Not advanced: '+error.message;window.LS26?.toast(error.message);}finally{busy=false;button.disabled=false;const currentButton=document.querySelector('[data-smart-finish]');if(currentButton)currentButton.disabled=!currentButton.dataset.smartFinish;}return;}
  if(button.dataset.smartSong){tools().actions.openRunOrderDetails(button.dataset.smartSong);return;}
  if(button.dataset.smartAccept){button.disabled=true;try{await tools().actions.acceptRequest(button.dataset.smartAccept);}catch(error){window.LS26?.toast(error.message);}finally{button.disabled=false;}return;}
  if(button.hasAttribute('data-smart-start')){const t=tools(),s=t.getSession(),date=new Date($('smartActualStart').value),err=$('smartTimingError');if(!s||!Number.isFinite(+date)||+date>Date.now()){err.textContent='Choose a valid past start time.';return;}button.disabled=true;try{const db=window.db||LK.db;await db.runTransaction(async tx=>{const sr=db.collection('performanceSessions').doc(s.id),cr=db.collection('karaokeControl').doc('currentSession'),snap=await tx.get(sr),control=await tx.get(cr);if((control.data()?.sessionId||control.data()?.activeSessionId)!==s.id||snap.data()?.status!=='active')throw Error('Session changed.');const patch={actualStartedAt:firebase.firestore.Timestamp.fromDate(date),actualStartSource:'host-correction',actualStartCorrectionPrevious:snap.data().actualStartedAt||null,actualStartCorrectedAt:firebase.firestore.Timestamp.now()};tx.set(sr,patch,{merge:true});tx.set(cr,{actualStartedAt:patch.actualStartedAt},{merge:true});});err.textContent='Actual start corrected.';}catch(error){err.textContent=error.message;}finally{button.disabled=false;}}
 });
 document.addEventListener('change',e=>{if(!['smartAverage','smartGap'].includes(e.target.id))return;preferences.averageSeconds=Math.max(60,Math.min(1200,Number($('smartAverage').value)*60||240));preferences.gapSeconds=Math.max(0,Math.min(300,Number($('smartGap').value)||0));localStorage.setItem('ls26:estimates:v1',JSON.stringify(preferences));timing();});
-for(const event of ['lk:session-updated','lk:runorder-updated','ls26:rotation-updated','ls26:requests-updated'])window.addEventListener(event,render);
+for(const event of ['lk:session-updated','lk:runorder-updated','ls26:rotation-updated','ls26:requests-updated','ls26:completion-state'])window.addEventListener(event,render);
 setInterval(timing,15000);if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',render);else render();
 })();
