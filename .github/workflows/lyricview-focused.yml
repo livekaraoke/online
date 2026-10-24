@@ -1,15 +1,43 @@
-name: LyricView focused checks
+name: LyricView and Run Order implementation checks
 on:
-  workflow_dispatch:
   push:
     branches: [main]
     paths:
       - '.github/workflows/lyricview-focused.yml'
+  workflow_dispatch:
 permissions:
   contents: write
+concurrency:
+  group: lyricview-focused-update-main
+  cancel-in-progress: false
 jobs:
-  check:
+  apply-test-commit:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-      - run: node --check ls26try/host/js/lyricview.js
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Apply scoped patches to current source
+        run: |
+          python3 ls26try/verification/patch-runorder-tools.py
+          python3 ls26try/verification/patch-lyricview-completion.py
+          python3 ls26try/verification/patch-lyricview-layout.py
+      - name: Check JavaScript syntax and workflow invariants
+        run: |
+          node --check ls26try/admin-new/js/top-statusbar-session-tools.js
+          node --check ls26try/shared/performance-tools-ui.js
+          node --check ls26try/host/js/lyricview.js
+          node ls26try/verification/queue-workflows.cjs
+      - name: Commit targeted LiveSuite changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add ls26try/admin-new/js/top-statusbar-session-tools.js ls26try/shared/performance-tools-ui.js ls26try/host/js/lyricview.js ls26try/host/lyricview.html ls26try/host/css/lyricview-completion.css
+          git commit -m "Require explicit song completion, allow switching and fix Run Order movement"
+          git push origin HEAD:main
