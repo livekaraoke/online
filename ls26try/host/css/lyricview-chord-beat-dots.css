@@ -54,8 +54,10 @@ body.host-lyric-view-page .host-section-body .ls26-timed-chord.ls26-active-chord
   background:transparent!important;
 }
 body.host-lyric-view-page .host-section-body .ls26-timed-chord.ls26-active-chord[data-ls26-beat-dots]::before{
-  left:0!important;
-  padding-left:calc(var(--ls26-active-chord-width, 0px) + .6em)!important;
+  /* Expand only the LEFT edge of the capsule by 0.55em.
+     Compensate in padding so lit and dim beat dots do not move. */
+  left:-.55em!important;
+  padding-left:calc(var(--ls26-active-chord-width, 0px) + 1.15em)!important;
   background:rgba(10,210,105,.17)!important;
   border-color:#00d85e!important;
   box-shadow:0 0 0 2px rgba(10,220,140,.15)!important;
@@ -64,8 +66,10 @@ body.host-lyric-view-page .host-section-body .ls26-timed-chord.ls26-active-chord
    Otherwise bright dots drift away from the dim beats inside the capsule.
    Both layers share border, font, letter spacing and this exact inset. */
 body.host-lyric-view-page .host-section-body .ls26-timed-chord.ls26-active-chord[data-ls26-beat-dots]::after{
-  left:0!important;
-  padding-left:calc(var(--ls26-active-chord-width, 0px) + .6em)!important;
+  /* Expand only the LEFT edge of the capsule by 0.55em.
+     Compensate in padding so lit and dim beat dots do not move. */
+  left:-.55em!important;
+  padding-left:calc(var(--ls26-active-chord-width, 0px) + 1.15em)!important;
 }
 /* Hide Chord Highlight remains the explicit performer preference. */
 html.ls26-hide-active-chord body.host-lyric-view-page .host-section-body .ls26-timed-chord.ls26-active-chord[data-ls26-beat-dots]::before{
