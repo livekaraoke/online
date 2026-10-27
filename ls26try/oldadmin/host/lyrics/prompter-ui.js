@@ -279,8 +279,51 @@
     updateSlaveLyrics(enableSlave, false);
   }
 
-  // Tap to advance a substantial amount; long-press for continuous motion.
-  // Native swipes can still pan the page because the targets use touch-action: pan-y.
+  // Share one eased tap animation between both arrow zones, so rapid taps and
+  // opposite directions never run competing browser scroll animations.
+  let arrowTapFrame = null;
+  let arrowTapTarget = null;
+  function cancelArrowTapAnimation() {
+    if (arrowTapFrame !== null) cancelAnimationFrame(arrowTapFrame);
+    arrowTapFrame = null;
+    arrowTapTarget = null;
+  }
+
+  function smoothArrowStep(direction) {
+    const startY = window.scrollY;
+    const stepAmount = direction * Math.max(60, window.innerHeight * .15);
+    const documentHeight = Math.max(document.documentElement.scrollHeight || 0,
+      document.body.scrollHeight || 0);
+    const previousTarget = arrowTapTarget === null ? startY : arrowTapTarget;
+    const targetY = Math.max(0, Math.min(
+      documentHeight > 0 ? Math.max(0, documentHeight - window.innerHeight) : Infinity,
+      previousTarget + stepAmount
+    ));
+    if (arrowTapFrame !== null) cancelAnimationFrame(arrowTapFrame);
+    arrowTapFrame = null;
+    arrowTapTarget = targetY;
+    window.deferAutoScroll?.(1000);
+    if (Math.abs(targetY - startY) < .5) {
+      arrowTapTarget = null;
+      return;
+    }
+    const duration = 560;
+    let startedAt = null;
+    function animateStep(timestamp) {
+      if (startedAt === null) startedAt = timestamp;
+      const fraction = Math.min(1, Math.max(0, (timestamp - startedAt) / duration));
+      const ease = fraction * fraction * (3 - 2 * fraction);
+      window.scrollTo(0, startY + (targetY - startY) * ease);
+      if (fraction < 1) arrowTapFrame = requestAnimationFrame(animateStep);
+      else {
+        arrowTapFrame = null;
+        arrowTapTarget = null;
+      }
+    }
+    arrowTapFrame = requestAnimationFrame(animateStep);
+  }
+
+  // A quick tap uses a 560ms eased step; long-press scrolls continuously.
   function installScrollTarget(id, direction) {
     const button = byId(id);
     if (!button) return;
@@ -322,9 +365,7 @@
     }
 
     function step() {
-      window.deferAutoScroll?.(950);
-      window.scrollBy({ top: direction * Math.max(60, window.innerHeight * .15),
-        behavior: 'smooth' });
+      smoothArrowStep(direction);
     }
 
     button.addEventListener('pointerdown', event => {
@@ -340,6 +381,7 @@
       timer = setTimeout(() => {
         timer = null;
         if (pointerId === null) return;
+        cancelArrowTapAnimation();
         held = true;
         frame = requestAnimationFrame(animate);
       }, 220);
@@ -393,7 +435,10 @@
       const isControl = Boolean(event.target?.closest?.(
         '.top-bar,#autoScrollControls,button,a,input,select,textarea'));
       manualTouchAutoScrollGesture = manualTouchStartedInStrip && !sidebarTouch && !isControl;
-      if (manualTouchAutoScrollGesture) window.setAutoScrollManualGesture?.(true);
+      if (manualTouchAutoScrollGesture) {
+        cancelArrowTapAnimation();
+        window.setAutoScrollManualGesture?.(true);
+      }
     }, { capture: true, passive: true });
     document.addEventListener('touchmove', event => {
       if (event.touches?.length > 1) return; // preserve pinch zoom
@@ -417,6 +462,7 @@
       if (inSidebar(event.target)) return;
       if (prefs.scrollZones === false ||
           inAllowedManualArea(event.clientX, event.clientY)) {
+        cancelArrowTapAnimation();
         window.deferAutoScroll?.(650);
         return;
       }
@@ -464,6 +510,7 @@
     });
     byId('prompterScrollZonesToggle')?.addEventListener('change', event => {
       prefs.scrollZones = Boolean(event.target.checked);
+      if (!prefs.scrollZones) cancelArrowTapAnimation();
       if (!prefs.scrollZones && manualTouchAutoScrollGesture) {
         window.setAutoScrollManualGesture?.(false);
         manualTouchAutoScrollGesture = false;
