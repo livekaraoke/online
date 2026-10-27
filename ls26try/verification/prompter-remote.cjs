@@ -100,6 +100,7 @@ assert.match(prompterHtml,/prompterScrollUp/);assert.match(prompterHtml,/prompte
   const saved=await host.evaluate(()=>JSON.parse(localStorage.getItem('ls26:prompter-remote-position-v1')));
   assert.ok(Math.abs(saved.x-moved.x)<2&&Math.abs(saved.y-moved.y)<2,'Drag position saved');
   const fresh=await context.newPage();
+  await fresh.setViewportSize({width:1024,height:1536});
   await fresh.goto('http://remote.test/ls26try/host/lyricview.html');
   await fresh.setContent('<style>'+css+'</style><input type="checkbox" id="ls26ShowKaraoke" checked>');
   await fresh.addScriptTag({content:hostScript});
