@@ -12,7 +12,7 @@ const prompterHtml=fs.readFileSync(path.join(root,'oldadmin/host/lyrics/song.htm
 const performance=fs.readFileSync(path.join(root,'shared/performance.js'),'utf8');
 assert.match(viewerHtml,/lyricview-prompter-remote\.js\?v=20261027-v2/);
 assert.match(viewerHtml,/lyricview-prompter-remote\.css\?v=20261027-v2/);
-assert.match(prompterHtml,/prompter-remote-receiver\.js\?v=20261027-v2/);
+assert.match(prompterHtml,/prompter-remote-receiver\.js\?v=20261027-v1/);
 assert.match(performance,/ls26:karaoke-tools-visibility/);
 assert.match(prompterHtml,/prompterScrollUp/);assert.match(prompterHtml,/prompterScrollDown/);
 (async()=>{
