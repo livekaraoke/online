@@ -30,7 +30,7 @@
     else drawer.querySelector('.song-info-scroll').prepend(karaokePreferences);
 
     const hide=document.createElement('button');hide.type='button';hide.className='ls26-hide-karaoke';hide.textContent='×';hide.setAttribute('aria-label','Hide karaoke tools');karaoke.querySelector('.performance-quick-karaoke').append(hide);
-    function showKaraoke(show){karaoke.hidden=!show;$('ls26ShowKaraoke').checked=show;try{localStorage.setItem('ls26:showKaraokeTools',String(show));}catch(_){}}
+    function showKaraoke(show){karaoke.hidden=!show;$('ls26ShowKaraoke').checked=show;try{localStorage.setItem('ls26:showKaraokeTools',String(show));}catch(_){}window.dispatchEvent(new CustomEvent('ls26:karaoke-tools-visibility',{detail:{visible:show}}));}
     let show=true;try{show=localStorage.getItem('ls26:showKaraokeTools')!=='false';}catch(_){}showKaraoke(show);
     hide.onclick=()=>showKaraoke(false);$('ls26ShowKaraoke').onchange=e=>showKaraoke(e.target.checked);
 
