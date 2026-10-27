@@ -1,37 +1,47 @@
-/* Saved timing duration markers: one ● per transport beat, ◐ for half.
-   These are CSS-only decorations on already validated timed chord elements.
-   Do not edit chords, text nodes, spacing, alignment or timing documents. */
+/* Saved chord beat duration — original inline-right presentation.
+   Dots are pseudo-elements, never inserted into lyrics or chord text.
+   One additional bright dot is revealed each musical beat by Chord Follow. */
 body.host-lyric-view-page .host-section-body .ls26-timed-chord[data-ls26-beat-dots] {
   position:relative;
 }
-body.host-lyric-view-page .host-section-body .ls26-timed-chord[data-ls26-beat-dots]::before {
-  content:attr(data-ls26-beat-dots);
-  position:absolute;
-  left:0;
-  bottom:calc(100% - 2px);
+body.host-lyric-view-page .host-section-body .ls26-timed-chord[data-ls26-beat-dots]::before,
+body.host-lyric-view-page .host-section-body .ls26-timed-chord[data-ls26-beat-dots]::after {
+  position:absolute!important;
+  left:calc(100% + 0.16em)!important;
+  top:50%!important;
+  bottom:auto!important;
   display:block;
   width:max-content;
   max-width:none;
-  padding:0;
-  margin:0;
-  border:0;
-  background:transparent;
-  box-shadow:none;
-  color:#65b9d0;
+  height:auto;
+  padding:0!important;
+  margin:0!important;
+  border:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  transform:translateY(-50%)!important;
   font-family:Arial,sans-serif;
   font-size:.33em;
-  font-weight:700;
+  font-weight:800;
   line-height:1;
-  letter-spacing:.10em;
+  letter-spacing:0.02em;
   white-space:nowrap;
   pointer-events:none;
   user-select:none;
-  opacity:.9;
+  text-decoration:none;
 }
-body.host-lyric-view-page .host-section-body .ls26-timed-chord.ls26-active-chord[data-ls26-beat-dots]::before {
-  color:#63efd1;
+body.host-lyric-view-page .host-section-body .ls26-timed-chord[data-ls26-beat-dots]::before {
+  content:attr(data-ls26-beat-dots);
+  color:#668896;
+  opacity:.82;
+}
+body.host-lyric-view-page .host-section-body .ls26-timed-chord[data-ls26-beat-dots]::after {
+  content:attr(data-ls26-lit-dots);
+  color:#64ffd0;
   opacity:1;
+  text-shadow:0 0 5px rgba(64,255,200,.6);
 }
+/* Hiding the active-chord outline must not hide the beat count. */
 html.ls26-hide-active-chord body.host-lyric-view-page .host-section-body .ls26-timed-chord[data-ls26-beat-dots]::before {
-  color:#65b9d0;
+  color:#668896;
 }
