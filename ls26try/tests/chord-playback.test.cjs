@@ -21,6 +21,28 @@ async function fixture({untimed=false,partial=false,review=false,collapsed=false
 }
 test('ordered timeline has exact fractional boundaries, repeated IDs and no chord-text identity',async()=>{const e=await fixture(),t=playback.timeline(e.timing);assert.equal(t.totalBeats,12);for(const [beat,index]of [[0,0],[3.999,0],[4,1],[6,2],[9.5,3],[10,4],[11.999,4]])assert.equal(t.at(beat).index,index);assert.equal(t.at(-1),null);assert.equal(t.at(12),null);assert.notEqual(t.events[0].id,t.events[2].id);});
 test('render mapping preserves exact text, whitespace, repeated symbols and slash occurrences',async()=>{const e=await fixture(),before=[...e.bodies.values()].map(b=>b.textContent),nodes=playback.bind(e.timing.events,e.bodies,e.document);assert.equal(nodes.size,5);assert.notEqual(nodes.get(e.timing.events[0].id),nodes.get(e.timing.events[2].id));assert.deepEqual([...e.bodies.values()].map(b=>b.textContent),before);assert.equal(nodes.get(e.timing.events[3].id).textContent,'C/G');assert.equal(e.document.querySelectorAll('[data-event-id]').length,0);});
+test('valid timed chords expose beat dots without touching saved chord formatting',async()=>{
+ const e=await fixture();
+ const before=[...e.bodies.values()].map(b=>b.textContent);
+ const timed=playback.timeline(e.timing);
+ const nodes=playback.bind(timed.events,e.bodies,e.document);
+ assert.deepEqual(timed.events.map(x=>x.durationBeats),[4,2,3.5,.5,2]);
+ const expected=['●●●●','●●','●●●◐','◐','●●'];
+ for(let i=0;i<timed.events.length;i++){
+  const node=nodes.get(timed.events[i].id);
+  assert.equal(node.dataset.ls26BeatDots,expected[i]);
+  assert.equal(node.dataset.ls26DurationBeats,String(timed.events[i].durationBeats));
+  assert.equal(node.textContent,timed.events[i].chord);
+ }
+ assert.deepEqual([...e.bodies.values()].map(b=>b.textContent),before,'lyrics and chord text must not change');
+ const css=fs.readFileSync(require('node:path').join(__dirname,'../host/css/lyricview-chord-beat-dots.css'),'utf8');
+ const page=fs.readFileSync(require('node:path').join(__dirname,'../host/lyricview.html'),'utf8');
+ assert.match(css,/content:attr\(data-ls26-beat-dots\)/);
+ assert.match(css,/position:absolute/);
+ assert.match(page,/chord-playback\.js\?v=20261027-beat-dots-v1/);
+ assert.match(page,/lyricview-chord-beat-dots\.css\?v=20261027-v1/);
+});
+
 test('render mismatch fails before any wrapper or highlight is applied',async()=>{const e=await fixture();e.bodies.get(0).textContent='G D C';assert.throws(()=>playback.bind(e.timing.events,e.bodies,e.document),/match/);assert.equal(e.document.querySelectorAll('.ls26-timed-chord').length,0);});
 test('Viewer loads timing lazily once and progresses current chord/section using only transport position',async()=>{const e=await fixture();assert.equal(e.reads,0);assert.equal(await e.api.enable(),true);assert.equal(e.reads,1);e.clock.start();
  for(const [time,index]of [[0,0],[2,1],[3,2],[4.75,3],[5,4]]){e.time(time);e.api.update();assert.equal(e.api.snapshot().index,index);const highlighted=e.document.querySelectorAll('.ls26-active-chord');assert.equal(highlighted.length,1);assert.equal(highlighted[0].textContent,e.timing.events[index].chord);}
