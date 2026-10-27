@@ -38,11 +38,35 @@ test('valid timed chords expose beat dots without touching saved chord formattin
  const css=fs.readFileSync(require('node:path').join(__dirname,'../host/css/lyricview-chord-beat-dots.css'),'utf8');
  const page=fs.readFileSync(require('node:path').join(__dirname,'../host/lyricview.html'),'utf8');
  assert.match(css,/content:attr\(data-ls26-beat-dots\)/);
- assert.match(css,/position:absolute/);
- assert.match(page,/chord-playback\.js\?v=20261027-beat-dots-v1/);
- assert.match(page,/lyricview-chord-beat-dots\.css\?v=20261027-v1/);
+ assert.match(css,/content:attr\(data-ls26-lit-dots\)/);
+ assert.match(css,/left:calc\(100% \+ 0\.16em\)/);
+ assert.match(css,/top:50%/);
+ assert.match(page,/chord-playback\.js\?v=20261027-beat-follow-v2/);
+ assert.match(page,/lyricview-chord-follow\.js\?v=20261027-beat-follow-v2/);
+ assert.match(page,/lyricview-chord-beat-dots\.css\?v=20261027-inline-beat-v2/);
 });
 
+test('right-side beat dots illuminate sequentially on the actual chord-follow clock and reset between chords',async()=>{
+ const e=await fixture(),t=playback.timeline(e.timing);
+ await e.api.enable();
+ const nodes=[...e.document.querySelectorAll('.ls26-timed-chord')];
+ assert.equal(nodes.length,5);
+ assert.equal(nodes[0].dataset.ls26BeatDots,'●●●●');
+ assert.equal(nodes[0].dataset.ls26LitDots,undefined,'inactive transport has no highlighted beat');
+ e.clock.start();
+ for(const [time,idx,lit] of [[0,0,'●'],[.49,0,'●'],[.5,0,'●●'],[1,0,'●●●'],[1.5,0,'●●●●'],[2,1,'●'],[2.5,1,'●●'],[3,2,'●'],[3.5,2,'●●'],[4,2,'●●●'],[4.5,2,'●●●◐'],[4.75,3,'◐'],[5,4,'●']]){
+  e.time(time);e.api.update();
+  const node=nodes[idx];
+  assert.equal(node.dataset.ls26LitDots,lit,'wrong lit beat at '+time+' seconds');
+  assert.equal(e.document.querySelectorAll('.ls26-active-chord').length,1,'only current chord highlighted');
+  for(const other of nodes.filter((_,i)=>i!==idx))assert.ok(!other.dataset.ls26LitDots,'previous chord must dim when next starts');
+ }
+ e.clock.pause();e.time(30);e.api.update();
+ assert.equal(nodes[4].dataset.ls26LitDots,'●','paused beat remains highlighted');
+ e.api.disable();
+ for(const node of nodes)assert.ok(!node.dataset.ls26LitDots,'follow off resets every glowing beat');
+ assert.equal(e.bodies.get(0).textContent,'G D G','original spacing remains intact');
+});
 test('render mismatch fails before any wrapper or highlight is applied',async()=>{const e=await fixture();e.bodies.get(0).textContent='G D C';assert.throws(()=>playback.bind(e.timing.events,e.bodies,e.document),/match/);assert.equal(e.document.querySelectorAll('.ls26-timed-chord').length,0);});
 test('Viewer loads timing lazily once and progresses current chord/section using only transport position',async()=>{const e=await fixture();assert.equal(e.reads,0);assert.equal(await e.api.enable(),true);assert.equal(e.reads,1);e.clock.start();
  for(const [time,index]of [[0,0],[2,1],[3,2],[4.75,3],[5,4]]){e.time(time);e.api.update();assert.equal(e.api.snapshot().index,index);const highlighted=e.document.querySelectorAll('.ls26-active-chord');assert.equal(highlighted.length,1);assert.equal(highlighted[0].textContent,e.timing.events[index].chord);}
