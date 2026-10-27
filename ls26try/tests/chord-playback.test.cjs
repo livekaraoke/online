@@ -45,7 +45,7 @@ test('valid timed chords expose beat dots without touching saved chord formattin
  assert.match(css,/top:50%/);
  assert.match(page,/chord-playback\.js\?v=20261027-beat-follow-v2/);
  assert.match(page,/lyricview-chord-follow\.js\?v=20261027-unified-highlight-v3/);
- assert.match(page,/lyricview-chord-beat-dots\.css\?v=20261027-aligned-beats-v4/);
+ assert.match(page,/lyricview-chord-beat-dots\.css\?v=20261027-left-inset-v5/);
 });
 
 test('right-side beat dots illuminate sequentially on the actual chord-follow clock and reset between chords',async()=>{
