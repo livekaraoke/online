@@ -34,6 +34,11 @@ css+'</style></head><body class="host-lyric-view-page"><div class="host-section-
        background:dim.backgroundColor,border:dim.borderTopColor,pad:parseFloat(dim.paddingLeft),
        width:r.width,outline:normal.outlineStyle,letterSpace:parseFloat(dim.letterSpacing),
        left:dim.left,content:dim.content,litContent:lit.content,
+       dimPadLeft:parseFloat(dim.paddingLeft),litPadLeft:parseFloat(lit.paddingLeft),
+       dimLeft:parseFloat(dim.left),litLeft:parseFloat(lit.left),
+       dimTop:parseFloat(dim.top),litTop:parseFloat(lit.top),
+       dimFont:dim.font,litFont:lit.font,dimLetterSpacing:dim.letterSpacing,litLetterSpacing:lit.letterSpacing,
+       dimBorder:dim.borderLeftWidth,litBorder:lit.borderLeftWidth,
        nextX:document.querySelector('#next').getBoundingClientRect().x,
        pageOverflow:document.documentElement.scrollWidth-window.innerWidth
       };
@@ -46,13 +51,24 @@ css+'</style></head><body class="host-lyric-view-page"><div class="host-section-
     assert.equal(after.border,'rgb(0, 216, 94)','Unified beat border missing at '+width);
     assert.ok(after.pad>after.width+3,width+' unified border does not cover entire chord text');
     assert.ok(after.letterSpace>1.8,width+' beat dots lack visual spacing: '+after.letterSpace);
+    assert.ok(Math.abs(after.dimLeft-after.litLeft)<.1,width+' dim and bright dots have different left origins');
+    assert.ok(Math.abs(after.dimPadLeft-after.litPadLeft)<.1,width+' dim and bright dots have different horizontal insets');
+    assert.ok(Math.abs(after.dimTop-after.litTop)<.1,width+' dim and bright dots have different vertical positions');
+    assert.equal(after.dimFont,after.litFont,width+' beat layers must use identical fonts');
+    assert.equal(after.dimLetterSpacing,after.litLetterSpacing,width+' beat layers must use identical inter-dot spacing');
+    assert.equal(after.dimBorder,after.litBorder,width+' beat layers must have identical border offsets');
     assert.ok(Math.abs(after.nextX-nextBefore.x)<.15,width+' next chord shifted by styling');
     const targetAfter=await rect('#target');
     assert.ok(Math.abs(targetAfter.width-targetBefore.width)<.15,width+' chord text width changed');
     assert.ok(after.pageOverflow<=2,width+' page scroll overflow');
     await page.evaluate(()=>document.documentElement.classList.add('ls26-hide-active-chord'));
-    const hidden=await page.locator('#target').evaluate(el=>getComputedStyle(el,'::before').backgroundColor);
-    assert.ok(!hidden.includes('10, 210, 105'),'Hide chord highlight setting must remain respected');
+    const hidden=await page.locator('#target').evaluate(el=>{
+      const dim=getComputedStyle(el,'::before'),lit=getComputedStyle(el,'::after');
+      return {bg:dim.backgroundColor,dimLeft:parseFloat(dim.left),litLeft:parseFloat(lit.left),dimPad:parseFloat(dim.paddingLeft),litPad:parseFloat(lit.paddingLeft)};
+    });
+    assert.ok(!hidden.bg.includes('10, 210, 105'),'Hide chord highlight setting must remain respected');
+    assert.ok(Math.abs(hidden.dimLeft-hidden.litLeft)<.1,width+' hidden beat layers became unaligned');
+    assert.ok(Math.abs(hidden.dimPad-hidden.litPad)<.1,width+' hidden beats retained mismatched insets');
     console.log('PASS '+width+'px: one chord + spaced beats capsule; live overlay, no text/layout shift');
    }finally{await page.close();}
   }
