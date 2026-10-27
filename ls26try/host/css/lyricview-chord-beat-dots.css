@@ -1,0 +1,37 @@
+/* Saved timing duration markers: one ● per transport beat, ◐ for half.
+   These are CSS-only decorations on already validated timed chord elements.
+   Do not edit chords, text nodes, spacing, alignment or timing documents. */
+body.host-lyric-view-page .host-section-body .ls26-timed-chord[data-ls26-beat-dots] {
+  position:relative;
+}
+body.host-lyric-view-page .host-section-body .ls26-timed-chord[data-ls26-beat-dots]::before {
+  content:attr(data-ls26-beat-dots);
+  position:absolute;
+  left:0;
+  bottom:calc(100% - 2px);
+  display:block;
+  width:max-content;
+  max-width:none;
+  padding:0;
+  margin:0;
+  border:0;
+  background:transparent;
+  box-shadow:none;
+  color:#65b9d0;
+  font-family:Arial,sans-serif;
+  font-size:.33em;
+  font-weight:700;
+  line-height:1;
+  letter-spacing:.10em;
+  white-space:nowrap;
+  pointer-events:none;
+  user-select:none;
+  opacity:.9;
+}
+body.host-lyric-view-page .host-section-body .ls26-timed-chord.ls26-active-chord[data-ls26-beat-dots]::before {
+  color:#63efd1;
+  opacity:1;
+}
+html.ls26-hide-active-chord body.host-lyric-view-page .host-section-body .ls26-timed-chord[data-ls26-beat-dots]::before {
+  color:#65b9d0;
+}
