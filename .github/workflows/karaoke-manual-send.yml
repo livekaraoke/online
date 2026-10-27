@@ -1,0 +1,31 @@
+name: Karaoke manual-send integration
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'ls26try/host/js/karaoke-lyric-view.js'
+      - 'ls26try/host/karaoke-lyric-view.html'
+      - 'ls26try/verification/karaoke-manual-send.cjs'
+      - '.github/workflows/karaoke-manual-send.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  singer:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install browser test dependency
+        run: npm install --prefix "$RUNNER_TEMP/singer-send" --no-audit --no-fund playwright@1.62.1
+      - name: Test host Send to Karaoke and singer display
+        run: |
+          export LS26_TEST_NODE_MODULES="$RUNNER_TEMP/singer-send/node_modules"
+          if ! command -v chromium >/dev/null; then
+            "$RUNNER_TEMP/singer-send/node_modules/.bin/playwright" install chromium
+          fi
+          node --check ls26try/host/js/karaoke-lyric-view.js
+          node ls26try/verification/karaoke-manual-send.cjs
