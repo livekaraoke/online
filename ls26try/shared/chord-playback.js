@@ -12,6 +12,25 @@
   if(!Number.isFinite(beats)||beats<=0||!Number.isSafeInteger(beats*2))return '';
   return '●'.repeat(Math.floor(beats))+(beats%1?'◐':'');
  }
+ // Use the same beat units as the validated transport timeline.
+ // This changes a tiny DOM attribute only when the visible beat advances.
+ function paintBeatProgress(event,node,logicalBeat){
+  if(!node||!event||!Number.isFinite(logicalBeat))return 0;
+  const dots=node.dataset.ls26BeatDots||'';
+  if(!dots)return 0;
+  const from=Number(event.startBeat);
+  if(!Number.isFinite(from))return 0;
+  const elapsed=Math.max(0,logicalBeat-from);
+  const lit=Math.max(1,Math.min(dots.length,Math.floor(elapsed+1e-7)+1));
+  const value=dots.slice(0,lit);
+  if(node.dataset.ls26LitDots!==value)node.dataset.ls26LitDots=value;
+  return lit;
+ }
+ function clearBeatProgress(nodes){
+  for(const node of nodes.values()){
+   if(node?.dataset?.ls26LitDots)node.dataset.ls26LitDots='';
+  }
+ }
  function bind(events,bodies,document){
   const result=new Map(),plans=[];
   for(const event of events){
@@ -51,5 +70,5 @@
   }
   return result;
  }
- return Object.freeze({timeline,bind});
+ return Object.freeze({timeline,bind,paintBeatProgress,clearBeatProgress});
 });
