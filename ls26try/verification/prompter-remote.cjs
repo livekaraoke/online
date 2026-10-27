@@ -66,6 +66,11 @@ assert.match(prompterHtml,/prompterScrollUp/);assert.match(prompterHtml,/prompte
   console.log('PASS: Show Karaoke Tools setting independently hides and reveals the remote');
   // Match the portrait tablet: low, centred, and clear of right-hand navigation.
   await host.setViewportSize({width:1024,height:1536});
+  await host.waitForFunction(()=>{
+    const box=document.getElementById('ls26PrompterRemote').getBoundingClientRect();
+    const gap=window.innerHeight-box.bottom;
+    return gap>=175&&gap<=195;
+  });
   const b=await host.locator('#ls26PrompterRemote').boundingBox();
   const bottomGap=1536-(b.y+b.height);
   assert.ok(b.width>=490&&b.width<=510&&b.height<=150,'Remote must be wide and shallow');
