@@ -39,11 +39,11 @@ test('valid timed chords expose beat dots without touching saved chord formattin
  const page=fs.readFileSync(require('node:path').join(__dirname,'../host/lyricview.html'),'utf8');
  assert.match(css,/content:attr\(data-ls26-beat-dots\)/);
  assert.match(css,/content:attr\(data-ls26-lit-dots\)/);
- assert.match(css,/left:calc\(100% \+ 0\.16em\)/);
+ assert.match(css,/padding-left:calc\(var\(--ls26-active-chord-width, 0px\) \+ \.6em\)/);\n assert.match(css,/letter-spacing:\.25em/);\n assert.match(css,/border-color:#00d85e/);
  assert.match(css,/top:50%/);
  assert.match(page,/chord-playback\.js\?v=20261027-beat-follow-v2/);
- assert.match(page,/lyricview-chord-follow\.js\?v=20261027-beat-follow-v2/);
- assert.match(page,/lyricview-chord-beat-dots\.css\?v=20261027-inline-beat-v2/);
+ assert.match(page,/lyricview-chord-follow\.js\?v=20261027-unified-highlight-v3/);
+ assert.match(page,/lyricview-chord-beat-dots\.css\?v=20261027-unified-highlight-v3/);
 });
 
 test('right-side beat dots illuminate sequentially on the actual chord-follow clock and reset between chords',async()=>{
@@ -57,7 +57,7 @@ test('right-side beat dots illuminate sequentially on the actual chord-follow cl
  for(const [time,idx,lit] of [[0,0,'●'],[.49,0,'●'],[.5,0,'●●'],[1,0,'●●●'],[1.5,0,'●●●●'],[2,1,'●'],[2.5,1,'●●'],[3,2,'●'],[3.5,2,'●●'],[4,2,'●●●'],[4.5,2,'●●●◐'],[4.75,3,'◐'],[5,4,'●']]){
   e.time(time);e.api.update();
   const node=nodes[idx];
-  assert.equal(node.dataset.ls26LitDots,lit,'wrong lit beat at '+time+' seconds');
+  assert.equal(node.dataset.ls26LitDots,lit,'wrong lit beat at '+time+' seconds');\n  assert.ok(node.style.getPropertyValue('--ls26-active-chord-width'),'Highlighted chord should measure its width for the full chord + beat capsule');
   assert.equal(e.document.querySelectorAll('.ls26-active-chord').length,1,'only current chord highlighted');
   for(const other of nodes.filter((_,i)=>i!==idx))assert.ok(!other.dataset.ls26LitDots,'previous chord must dim when next starts');
  }
