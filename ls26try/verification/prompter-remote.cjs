@@ -88,6 +88,11 @@ assert.match(prompterHtml,/prompterScrollUp/);assert.match(prompterHtml,/prompte
     assert.ok((await arrow.locator('svg').evaluate(el=>el.getBoundingClientRect().width))>=35,'Chevron must be large');
   }
   await host.setViewportSize({width:600,height:740});
+  await host.waitForFunction(()=>{
+    const play=document.getElementById('ls26PrompterRemotePlay')?.getBoundingClientRect();
+    const up=document.querySelector('#ls26PrompterRemote [data-remote="up"]')?.getBoundingClientRect();
+    return play&&up&&up.top>play.top+40;
+  });
   const compact=await host.locator('#ls26PrompterRemote').boundingBox();
   assert.ok(compact.x+compact.width<=525,'Narrow remote must leave space for side navigation');
   const playTop=await host.locator('#ls26PrompterRemotePlay').evaluate(el=>el.getBoundingClientRect().top);
