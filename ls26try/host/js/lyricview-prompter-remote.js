@@ -10,7 +10,7 @@
   const OLD_POSITION_KEY='ls26:prompter-remote-position-v1';
   const $=id=>document.getElementById(id);
   let channel=null,lastRequest='',timeout=null,cloudWriteChain=Promise.resolve();
-  let drag=null,customPosition=false,positionRestored=false;
+  let drag=null,customPosition=false,positionRestored=false,userMoved=false;
   const panel=document.createElement('aside');
   panel.id='ls26PrompterRemote';
   panel.setAttribute('aria-label','Fullscreen Prompter remote');
@@ -51,25 +51,28 @@
     const r=panel.getBoundingClientRect();
     try{localStorage.setItem(POSITION_KEY,JSON.stringify({x:r.left,y:r.top+window.scrollY}));}catch(_){}
   };
+  const placeDefault=()=>{
+    const rect=panel.getBoundingClientRect();
+    const safeBottom=Math.max(125,Math.min(190,window.innerHeight*0.12));
+    const x=window.innerWidth<=760?8:window.innerWidth*0.46-rect.width/2;
+    place(x,window.scrollY+window.innerHeight-safeBottom-rect.height,true);
+  };
   const restorePosition=()=>{
     if(positionRestored)return;
     positionRestored=true;
     try{
       const p=JSON.parse(localStorage.getItem(POSITION_KEY)||'null');
-      if(Number.isFinite(p?.x)&&Number.isFinite(p?.y)){place(p.x,p.y);return;}
+      if(Number.isFinite(p?.x)&&Number.isFinite(p?.y)){userMoved=true;place(p.x,p.y);return;}
       // Migrate the earlier fixed card position to its current page position.
       const old=JSON.parse(localStorage.getItem(OLD_POSITION_KEY)||'null');
       if(Number.isFinite(old?.x)&&Number.isFinite(old?.y)){
+        userMoved=true;
         place(old.x,old.y+window.scrollY);
         savePosition();
         return;
       }
     }catch(_){}
-    const rect=panel.getBoundingClientRect();
-    const safeBottom=Math.max(125,Math.min(190,window.innerHeight*0.12));
-    const width=rect.width;
-    const x=window.innerWidth<=760?8:window.innerWidth*0.46-width/2;
-    place(x,window.scrollY+window.innerHeight-safeBottom-rect.height,true);
+    placeDefault();
   };
   const enableDragging=()=>{
     const bar=panel.querySelector('.ls26-prompter-remote-head');
@@ -87,14 +90,14 @@
     });
     const end=e=>{
       if(drag?.id!==e.pointerId)return;
-      drag=null;bar.classList.remove('is-dragging');savePosition();
+      drag=null;userMoved=true;bar.classList.remove('is-dragging');savePosition();
       if(bar.hasPointerCapture(e.pointerId))bar.releasePointerCapture(e.pointerId);
     };
     bar.addEventListener('pointerup',end);
     bar.addEventListener('pointercancel',end);
     bar.addEventListener('lostpointercapture',e=>{
       if(drag?.id===e.pointerId){
-        drag=null;bar.classList.remove('is-dragging');savePosition();
+        drag=null;userMoved=true;bar.classList.remove('is-dragging');savePosition();
       }
     });
   };
@@ -159,8 +162,11 @@
     document.body.append(panel);
     enableDragging();
     window.addEventListener('resize',()=>{
-      if(customPosition&&!panel.hidden){
-        const r=panel.getBoundingClientRect();place(r.left,r.top+window.scrollY);savePosition();
+      if(!panel.hidden){
+        if(!userMoved){placeDefault();return;}
+        if(customPosition){
+          const r=panel.getBoundingClientRect();place(r.left,r.top+window.scrollY);savePosition();
+        }
       }
     });
     panel.addEventListener('click',event=>{
