@@ -1,47 +1,70 @@
-/* Saved chord beat duration — original inline-right presentation.
-   Dots are pseudo-elements, never inserted into lyrics or chord text.
-   One additional bright dot is revealed each musical beat by Chord Follow. */
-body.host-lyric-view-page .host-section-body .ls26-timed-chord[data-ls26-beat-dots] {
+/* Saved chord beat counts stay to the right of each chord.
+   Visual-only pseudo-elements: no edits to lyrics, chord spacing or timing. */
+body.host-lyric-view-page .host-section-body .ls26-timed-chord[data-ls26-beat-dots]{
   position:relative;
+  isolation:isolate;
 }
 body.host-lyric-view-page .host-section-body .ls26-timed-chord[data-ls26-beat-dots]::before,
-body.host-lyric-view-page .host-section-body .ls26-timed-chord[data-ls26-beat-dots]::after {
+body.host-lyric-view-page .host-section-body .ls26-timed-chord[data-ls26-beat-dots]::after{
+  content:attr(data-ls26-beat-dots);
   position:absolute!important;
-  left:calc(100% + 0.16em)!important;
+  left:calc(100% + .25em)!important;
   top:50%!important;
   bottom:auto!important;
-  display:block;
+  display:flex!important;
+  align-items:center;
   width:max-content;
   max-width:none;
-  height:auto;
-  padding:0!important;
+  height:calc(100% + .3em);
+  box-sizing:content-box;
+  padding:0 .37em 0 0!important;
   margin:0!important;
-  border:0!important;
+  border:2px solid transparent!important;
+  border-radius:5px;
   background:transparent!important;
   box-shadow:none!important;
   transform:translateY(-50%)!important;
   font-family:Arial,sans-serif;
-  font-size:.33em;
+  font-size:.42em;
   font-weight:800;
   line-height:1;
-  letter-spacing:0.02em;
+  letter-spacing:.25em;
   white-space:nowrap;
   pointer-events:none;
   user-select:none;
   text-decoration:none;
 }
-body.host-lyric-view-page .host-section-body .ls26-timed-chord[data-ls26-beat-dots]::before {
-  content:attr(data-ls26-beat-dots);
-  color:#668896;
-  opacity:.82;
+body.host-lyric-view-page .host-section-body .ls26-timed-chord[data-ls26-beat-dots]::before{
+  color:#718e9c;
+  opacity:.9;
+  z-index:-1;
 }
-body.host-lyric-view-page .host-section-body .ls26-timed-chord[data-ls26-beat-dots]::after {
+body.host-lyric-view-page .host-section-body .ls26-timed-chord[data-ls26-beat-dots]::after{
   content:attr(data-ls26-lit-dots);
-  color:#64ffd0;
-  opacity:1;
-  text-shadow:0 0 5px rgba(64,255,200,.6);
+  color:#63ffd2;
+  text-shadow:0 0 5px rgba(64,255,200,.5);
+  z-index:1;
 }
-/* Hiding the active-chord outline must not hide the beat count. */
-html.ls26-hide-active-chord body.host-lyric-view-page .host-section-body .ls26-timed-chord[data-ls26-beat-dots]::before {
-  color:#668896;
+/* Replace the chord-only outline with ONE unified capsule: chord + spaced dots.
+   Chord width is measured only when the active chord changes, never each beat.
+   The absolute pseudo-element does not consume any lyrical layout width. */
+body.host-lyric-view-page .host-section-body .ls26-timed-chord.ls26-active-chord[data-ls26-beat-dots]{
+  outline:none!important;
+  box-shadow:none!important;
+  background:transparent!important;
+}
+body.host-lyric-view-page .host-section-body .ls26-timed-chord.ls26-active-chord[data-ls26-beat-dots]::before{
+  left:0!important;
+  padding-left:calc(var(--ls26-active-chord-width, 0px) + .6em)!important;
+  background:rgba(10,210,105,.17)!important;
+  border-color:#00d85e!important;
+  box-shadow:0 0 0 2px rgba(10,220,140,.15)!important;
+}
+/* Hide Chord Highlight remains the explicit performer preference. */
+html.ls26-hide-active-chord body.host-lyric-view-page .host-section-body .ls26-timed-chord.ls26-active-chord[data-ls26-beat-dots]::before{
+  left:calc(100% + .25em)!important;
+  padding-left:0!important;
+  background:transparent!important;
+  border-color:transparent!important;
+  box-shadow:none!important;
 }
