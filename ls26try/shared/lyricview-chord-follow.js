@@ -283,7 +283,19 @@ html.ls26-hide-active-chord .host-section-body .ls26-active-chord{outline:none!i
     if(changed){
      const gate=pendingImprovBetween(current?.event||null,hit.event);
      if(gate&&enterImprovHold(gate,{resumeBeat:hit.event.startBeat,position:true}))return;
-     clearActive();current=hit;nodes.get(hit.event.id)?.classList.add('ls26-active-chord');onSection(hit.event.sourceAnchor.sectionIndex);position(hit.event);
+     clearActive();current=hit;
+     const activeNode=nodes.get(hit.event.id);
+     if(activeNode){
+      // Measure once per chord transition so the single highlight capsule covers
+      // both the chord and its out-of-flow beat dots without moving lyric text.
+      const rect=activeNode.getBoundingClientRect?.();
+      const chordWidth=Number(rect?.width)||(Number(rect?.right)-Number(rect?.left));
+      if(Number.isFinite(chordWidth)&&chordWidth>0){
+       activeNode.style?.setProperty('--ls26-active-chord-width',chordWidth+'px');
+      }
+      activeNode.classList.add('ls26-active-chord');
+     }
+     onSection(hit.event.sourceAnchor.sectionIndex);position(hit.event);
     }else current=hit;
     // Highlight the chord's beat dots using the SAME clock as chord-follow.
     // Pausing preserves the lit beats; advancing or disabling resets them.
