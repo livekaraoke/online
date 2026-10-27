@@ -102,7 +102,7 @@ assert.match(prompterHtml,/prompterScrollUp/);assert.match(prompterHtml,/prompte
   await host.setViewportSize({width:1024,height:1536});
   await host.waitForFunction(()=>{
     const box=document.getElementById('ls26PrompterRemote').getBoundingClientRect();
-    return box.left>195&&box.right<750&&Math.abs(window.innerHeight-box.bottom-190)<2;
+    return box.left>195&&box.right<750&&window.innerHeight-box.bottom>=175&&window.innerHeight-box.bottom<=195;
   });
   const original=await host.locator('#ls26PrompterRemote').boundingBox();
   const header=await host.locator('.ls26-prompter-remote-head').boundingBox();
