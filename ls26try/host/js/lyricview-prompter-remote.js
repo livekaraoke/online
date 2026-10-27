@@ -1,12 +1,13 @@
 /* LyricView -> legacy fullscreen Prompter remote.
- * Same-origin tabs/windows only: BroadcastChannel, storage-event fallback.
- * No Firestore writes, new listeners or duplicated auto-scroll state.
+ * Same-device fast path: BroadcastChannel/localStorage.
+ * Cross-device: one merge write per press to existing karaokeControl/liveLyrics.
+ * Cloud writes confirm delivery to Firestore, not execution on another tablet.
  */
 (() => {
   'use strict';
   const CHANNEL='ls26-prompter-remote-v1',STORAGE='ls26:prompter-remote-command-v1';
   const $=id=>document.getElementById(id);
-  let channel=null,lastRequest='',timeout=null;
+  let channel=null,lastRequest='',timeout=null,cloudWriteChain=Promise.resolve();
   const panel=document.createElement('aside');
   panel.id='ls26PrompterRemote';
   panel.setAttribute('aria-label','Fullscreen Prompter remote');
@@ -25,7 +26,7 @@
 
   const show=visible=>{
     panel.hidden=!visible;
-    if(visible)send('status');
+    if(visible){$('ls26PrompterRemoteStatus').textContent='Cross-tablet ready';send('status');}
   };
   const post=packet=>{
     try{channel?.postMessage(packet);}catch(_){}
@@ -35,12 +36,31 @@
     if(panel.hidden)return;
     const id=String(Date.now())+'-'+Math.random().toString(36).slice(2,8);
     lastRequest=id;
-    post({v:1,kind:'command',id,action,at:Date.now()});
+    const packet={v:1,kind:'command',id,action,at:Date.now()};
+    post(packet);
     clearTimeout(timeout);
-    timeout=setTimeout(()=>{
-      // Only report unavailable if this specific command received no response.
-      if(lastRequest===id)$('ls26PrompterRemoteStatus').textContent='Open Prompter tab';
-    },1500);
+    const status=$('ls26PrompterRemoteStatus');
+    if(action==='status'){
+      // Local-tab discovery is free; remote availability cannot be verified here.
+      timeout=setTimeout(()=>{if(lastRequest===id)status.textContent='Cross-tablet ready';},1500);
+      return;
+    }
+    status.textContent='Sending…';
+    const sharedDb=window.db||window.LK?.db;
+    if(!sharedDb?.collection){status.textContent='Cloud sync unavailable';return;}
+    // Serialize taps to prevent ordered +/-/Play commands overtaking each other.
+    // Never write on autoscroll frames or touch singer lyrics/scroll sync fields.
+    cloudWriteChain=cloudWriteChain.catch(()=>{}).then(()=>
+      sharedDb.collection('karaokeControl').doc('liveLyrics')
+        .set({prompterRemoteCommand:packet},{merge:true})
+    ).then(()=>{
+      if(lastRequest===id&&!status.textContent.startsWith('Connected'))
+        status.textContent='Sent via Firestore';
+    }).catch(error=>{
+      console.warn('Prompter cross-tablet command failed:',error);
+      if(lastRequest===id&&!status.textContent.startsWith('Connected'))
+        status.textContent='Sync failed — check sign-in';
+    });
   };
   const receive=packet=>{
     if(!packet||packet.v!==1||packet.kind!=='state'||!packet.id)return;

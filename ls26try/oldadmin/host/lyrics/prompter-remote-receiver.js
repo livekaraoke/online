@@ -1,13 +1,13 @@
-/* Fullscreen Prompter receiver for LyricView's optional same-browser remote.
- * Runs inside the existing song.html frame, so commands use the authoritative
- * toggleAutoScroll, changeScrollSpeed and accessible up/down arrow handlers.
+/* Fullscreen Prompter receiver for LyricView's optional cross-device remote.
+ * Same-device fast path plus one listener on existing karaokeControl/liveLyrics.
+ * Uses authoritative scroll/speed/arrow controls. No per-frame writes.
  */
 (() => {
   'use strict';
   const CHANNEL='ls26-prompter-remote-v1',STORAGE='ls26:prompter-remote-command-v1';
   const valid=new Set(['status','toggle','slower','faster','up','down']);
   const seen=new Set();
-  let channel=null;
+  let channel=null,unsubscribeRemote=null,firstCloudSnapshot=true,lastCloudId='';
   const state=id=>{
     const label=document.getElementById('scrollToggleBtn')?.textContent?.trim()||'';
     const speed=document.getElementById('scrollSpeedDisplay')?.textContent?.trim()||'';
@@ -49,7 +49,23 @@
     if(e.key!==STORAGE||!e.newValue)return;
     try{receive(JSON.parse(e.newValue));}catch(_){}
   });
-  window.addEventListener('pagehide',()=>channel?.close(),{once:true});
+  // Use song.html's existing Firestore instance; no new project or permissions.
+  // An initial persisted command is NOT a fresh press: skip the first snapshot.
+  const sharedDb=window.db||(typeof db!=='undefined'?db:null);
+  if(sharedDb?.collection){
+    try{
+      unsubscribeRemote=sharedDb.collection('karaokeControl').doc('liveLyrics')
+        .onSnapshot(snapshot=>{
+          const packet=snapshot.exists?snapshot.data()?.prompterRemoteCommand:null;
+          const id=typeof packet?.id==='string'?packet.id:'';
+          if(firstCloudSnapshot){firstCloudSnapshot=false;lastCloudId=id;return;}
+          if(!id||id===lastCloudId)return;
+          lastCloudId=id;
+          receive(packet);
+        },error=>console.warn('Prompter cross-device listener failed:',error));
+    }catch(error){console.warn('Prompter remote listener unavailable:',error);}
+  }
+  window.addEventListener('pagehide',()=>{channel?.close();unsubscribeRemote?.();},{once:true});
   // Lets the host remote discover a newly opened or reloaded Prompter.
   state('ready-'+Date.now());
 })();

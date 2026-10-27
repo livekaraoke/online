@@ -10,6 +10,7 @@ on:
       - 'ls26try/host/lyricview.html'
       - 'ls26try/oldadmin/host/lyrics/song.html'
       - 'ls26try/verification/prompter-remote.cjs'
+      - 'ls26try/verification/prompter-remote-devices.cjs'
       - '.github/workflows/lyricview-prompter-remote.yml'
   workflow_dispatch:
 permissions:
@@ -32,3 +33,4 @@ jobs:
           node --check ls26try/oldadmin/host/lyrics/prompter-remote-receiver.js
           node --check ls26try/shared/performance.js
           node ls26try/verification/prompter-remote.cjs
+          node ls26try/verification/prompter-remote-devices.cjs
