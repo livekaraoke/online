@@ -156,7 +156,26 @@
   if(latest.phase==='idle'||!id){loadGeneration++;pendingId='';song=null;songId='';lines=[];focused=null;latest={...next,phase:'idle'};show(true);return;}if(id!==songId){if(pendingId!==id){song=null;stopMovement();show(true);void loadSong(id);}return;}show();
  }
  function control(data){
-  const phase=String(data?.displayState||'');if(['idle','auto-send-off','finished'].includes(phase)||data?.reset){accept({version:3,phase:'idle',songId:'',updatedAtMs:Date.now()});return;}const token=data?.forceReloadToken;if(token&&reloadToken&&token!==reloadToken){songId='';viewKey='';localReceivedAt=0;}if(token)reloadToken=token;const id=String(data?.currentLyricsSongId||data?.currentSongId||data?.songId||'');if(data?.singerV3&&data.singerV3.songId===id){accept(data.singerV3);return;}accept({version:3,songId:id,phase:id?'preview':'idle',title:data?.songTitle||'',artist:data?.songArtist||'',syncEnabled:true,updatedAtMs:Date.now()});
+  const phase=String(data?.displayState||'');
+  if(['idle','auto-send-off','finished'].includes(phase)||data?.reset){
+   accept({version:3,phase:'idle',songId:'',updatedAtMs:Date.now()});return;
+  }
+  const token=data?.forceReloadToken;
+  if(token&&reloadToken&&token!==reloadToken){songId='';viewKey='';localReceivedAt=0;}
+  if(token)reloadToken=token;
+  const id=String(data?.currentLyricsSongId||data?.currentSongId||data?.songId||'');
+  // SEND TO KARAOKE reveals lyrics immediately without starting auto-scroll.
+  // Ordinary queued-song previews still show UP NEXT until actually sent.
+  const sent=Boolean(id)&&phase==='song';
+  if(data?.singerV3&&data.singerV3.songId===id){
+   const live=data.singerV3;
+   if(sent&&!['playing','countin','paused'].includes(live.phase)){
+    // A stale preview/complete snapshot must not conceal a manual resend.
+    accept({...live,phase:'paused',sync:null,updatedAtMs:Date.now()});
+   }else accept(live);
+   return;
+  }
+  accept({version:3,songId:id,phase:sent?'paused':id?'preview':'idle',title:data?.songTitle||'',artist:data?.songArtist||'',syncEnabled:true,updatedAtMs:Date.now()});
  }
  function manualHold(event){if(event.target?.closest?.('#singerSettings,.singer-topbar,#singerControls'))return;manualHoldUntil=Date.now()+2600;stopMovement();setTimeout(()=>{if(Date.now()>=manualHoldUntil)follow();},2650);}
  installControls();applySettings();
