@@ -6,7 +6,8 @@
 (() => {
   'use strict';
   const CHANNEL='ls26-prompter-remote-v1',STORAGE='ls26:prompter-remote-command-v1';
-  const POSITION_KEY='ls26:prompter-remote-position-v1';
+  const POSITION_KEY='ls26:prompter-remote-page-position-v2';
+  const OLD_POSITION_KEY='ls26:prompter-remote-position-v1';
   const $=id=>document.getElementById(id);
   let channel=null,lastRequest='',timeout=null,cloudWriteChain=Promise.resolve();
   let drag=null,customPosition=false,positionRestored=false;
@@ -29,43 +30,60 @@
   const setPlayState=playing=>{
     const button=$('ls26PrompterRemotePlay');
     if(!button)return;
-    button.textContent=playing?'■ STOP':'▶';
+    button.textContent=playing?'■':'▶';
     button.setAttribute('aria-pressed',String(playing));
     button.setAttribute('aria-label',playing?'Stop Prompter autoscroll':'Play Prompter autoscroll');
   };
-  const place=(x,y)=>{
+  // Use page coordinates, not fixed viewport coordinates. The card travels
+  // with the lyrics when the document scrolls; the sticky tools bar does not.
+  const place=(x,pageY,limitToViewport=false)=>{
     const rect=panel.getBoundingClientRect();
-    const left=Math.max(8,Math.min(x,Math.max(8,innerWidth-rect.width-8)));
-    const top=Math.max(8,Math.min(y,Math.max(8,innerHeight-rect.height-8)));
+    const maxX=Math.max(8,window.innerWidth-rect.width-8);
+    const minY=window.scrollY+8;
+    const maxY=Math.max(minY,window.scrollY+window.innerHeight-rect.height-8);
+    const left=Math.max(8,Math.min(x,maxX));
+    const top=limitToViewport?Math.max(minY,Math.min(pageY,maxY)):Math.max(8,pageY);
     Object.assign(panel.style,{left:left+'px',top:top+'px',right:'auto',bottom:'auto',transform:'none'});
     customPosition=true;
   };
   const savePosition=()=>{
     if(!customPosition)return;
     const r=panel.getBoundingClientRect();
-    try{localStorage.setItem(POSITION_KEY,JSON.stringify({x:r.left,y:r.top}));}catch(_){}
+    try{localStorage.setItem(POSITION_KEY,JSON.stringify({x:r.left,y:r.top+window.scrollY}));}catch(_){}
   };
   const restorePosition=()=>{
     if(positionRestored)return;
     positionRestored=true;
     try{
       const p=JSON.parse(localStorage.getItem(POSITION_KEY)||'null');
-      if(Number.isFinite(p?.x)&&Number.isFinite(p?.y))place(p.x,p.y);
+      if(Number.isFinite(p?.x)&&Number.isFinite(p?.y)){place(p.x,p.y);return;}
+      // Migrate the earlier fixed card position to its current page position.
+      const old=JSON.parse(localStorage.getItem(OLD_POSITION_KEY)||'null');
+      if(Number.isFinite(old?.x)&&Number.isFinite(old?.y)){
+        place(old.x,old.y+window.scrollY);
+        savePosition();
+        return;
+      }
     }catch(_){}
+    const rect=panel.getBoundingClientRect();
+    const safeBottom=Math.max(125,Math.min(190,window.innerHeight*0.12));
+    const width=rect.width;
+    const x=window.innerWidth<=760?8:window.innerWidth*0.46-width/2;
+    place(x,window.scrollY+window.innerHeight-safeBottom-rect.height,true);
   };
   const enableDragging=()=>{
     const bar=panel.querySelector('.ls26-prompter-remote-head');
     bar.addEventListener('pointerdown',e=>{
       if(e.pointerType==='mouse'&&e.button!==0)return;
       const r=panel.getBoundingClientRect();
-      drag={id:e.pointerId,startX:e.clientX,startY:e.clientY,left:r.left,top:r.top};
+      drag={id:e.pointerId,startX:e.clientX,startY:e.clientY,left:r.left,top:r.top+window.scrollY,scrollY:window.scrollY};
       bar.setPointerCapture(e.pointerId);
       bar.classList.add('is-dragging');
       e.preventDefault();
     });
     bar.addEventListener('pointermove',e=>{
       if(drag?.id!==e.pointerId)return;
-      place(drag.left+e.clientX-drag.startX,drag.top+e.clientY-drag.startY);
+      place(drag.left+e.clientX-drag.startX,drag.top+e.clientY-drag.startY+(window.scrollY-drag.scrollY),true);
     });
     const end=e=>{
       if(drag?.id!==e.pointerId)return;
@@ -142,7 +160,7 @@
     enableDragging();
     window.addEventListener('resize',()=>{
       if(customPosition&&!panel.hidden){
-        const r=panel.getBoundingClientRect();place(r.left,r.top);savePosition();
+        const r=panel.getBoundingClientRect();place(r.left,r.top+window.scrollY);savePosition();
       }
     });
     panel.addEventListener('click',event=>{

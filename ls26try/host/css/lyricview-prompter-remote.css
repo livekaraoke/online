@@ -1,8 +1,8 @@
 /* Compact stage-friendly controller shown only with Karaoke Tools.
  * Keep clear of the right-hand navigation arrows and bottom transport dock. */
 #ls26PrompterRemote{
- position:fixed;left:46%;right:auto;transform:translateX(-50%);
- bottom:clamp(125px,12vh,190px);z-index:2400;
+ position:absolute;left:0;top:0;right:auto;transform:none;
+ bottom:auto;z-index:2400;
  width:min(500px,calc(100vw - 260px));box-sizing:border-box;
  display:flex;flex-direction:column;gap:7px;padding:10px;
  background:rgba(3,29,42,.96);border:1px solid #26738b;
@@ -25,7 +25,7 @@
 #ls26PrompterRemote button:active{background:#126781}
 #ls26PrompterRemote button:focus-visible{outline:2px solid #22d5ff;outline-offset:2px}
 #ls26PrompterRemote #ls26PrompterRemotePlay{background:#063d32;border-color:#18a782;color:#35f4ae}
-#ls26PrompterRemote #ls26PrompterRemotePlay[aria-pressed="true"]{background:#501a20;border-color:#ed6572;color:#ffd7da;font-size:17px}
+#ls26PrompterRemote #ls26PrompterRemotePlay[aria-pressed="true"]{background:#501a20;border-color:#ed6572;color:#ffd7da;font-size:26px}
 #ls26PrompterRemoteSpeed{text-align:center;font-size:14px;font-weight:700;white-space:nowrap;font-variant-numeric:tabular-nums}
 #ls26PrompterRemote .ls26-prompter-remote-arrow{display:flex;align-items:center;justify-content:center;color:#c1ebfb}
 #ls26PrompterRemote .ls26-prompter-remote-arrow svg{
@@ -33,11 +33,11 @@
  stroke-width:3.5;stroke-linecap:round;stroke-linejoin:round;
 }
 @media(max-width:760px){
- #ls26PrompterRemote{left:8px;right:auto;transform:none;bottom:clamp(115px,15vh,170px);width:min(450px,calc(100vw - 84px))}
+ #ls26PrompterRemote{width:min(450px,calc(100vw - 84px))}
  #ls26PrompterRemote .ls26-prompter-remote-controls{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr) 48px minmax(0,1fr)}
  #ls26PrompterRemote .ls26-prompter-remote-arrow{grid-column:span 2}
 }
 @media(max-height:500px){
- #ls26PrompterRemote{bottom:104px;padding:8px;gap:5px}
+ #ls26PrompterRemote{padding:8px;gap:5px}
  #ls26PrompterRemote button{min-height:52px}
 }

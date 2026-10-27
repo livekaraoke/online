@@ -67,7 +67,7 @@ const receiver=fs.readFileSync(path.join(root,'oldadmin/host/lyrics/prompter-rem
   for(let i=0;i<expected.length;i++){
     await host.locator('[data-remote="'+expected[i]+'"]').click();
     await target.waitForFunction(n=>window.__actions.length===n,i+1);
-    if(i===0)assert.equal(await host.locator('#ls26PrompterRemotePlay').textContent(),'■ STOP');
+    if(i===0)assert.equal(await host.locator('#ls26PrompterRemotePlay').textContent(),'■');
     if(i===5)assert.equal(await host.locator('#ls26PrompterRemotePlay').textContent(),'▶');
   }
   assert.deepEqual(await target.evaluate(()=>window.__actions),expected);
