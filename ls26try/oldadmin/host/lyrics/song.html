@@ -112,6 +112,14 @@ real-time typography control, and performance styling tools.
       background: rgba(45,57,67,.88);
     }
     body.prompter-scroll-zones-hidden .prompter-scroll-zone { display: none; }
+    /* In arrow mode the left swipe strip must never trigger text selection.
+       Normal selection returns as soon as Show scroll buttons is unchecked. */
+    body.prompter-scroll-restricted #lyrics-container,
+    body.prompter-scroll-restricted #lyrics-container * {
+      -webkit-user-select: none !important;
+      user-select: none !important;
+      -webkit-touch-callout: none;
+    }
     .prompter-sidebar-action {
       width: 100%;
       margin-top: 52px; /* clear the sidebar close button */
@@ -1316,7 +1324,7 @@ slaveLyricsToggle.addEventListener("change", function() {
   aria-label="Scroll lyrics down" title="Tap to scroll down; hold to keep scrolling">
   <span class="prompter-scroll-arrow" aria-hidden="true"><svg viewBox="0 0 96 96" focusable="false"><path d="M16 34 L48 66 L80 34"/></svg></span>
 </button>
-<script src="prompter-ui.js?v=20261022-scroll-continue-v1"></script>
+<script src="prompter-ui.js?v=20261027-scroll-mode-v1"></script>
 </body>
 </html>
 
