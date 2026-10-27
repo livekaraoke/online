@@ -37,7 +37,7 @@ css+'</style></head><body class="host-lyric-view-page"><div class="host-section-
        dimPadLeft:parseFloat(dim.paddingLeft),litPadLeft:parseFloat(lit.paddingLeft),
        dimLeft:parseFloat(dim.left),litLeft:parseFloat(lit.left),
        dimTop:parseFloat(dim.top),litTop:parseFloat(lit.top),
-       dimFont:dim.font,litFont:lit.font,dimLetterSpacing:dim.letterSpacing,litLetterSpacing:lit.letterSpacing,
+       dimFont:dim.font,litFont:lit.font,dimFontSize:parseFloat(dim.fontSize),litFontSize:parseFloat(lit.fontSize),dimLetterSpacing:dim.letterSpacing,litLetterSpacing:lit.letterSpacing,
        dimBorder:dim.borderLeftWidth,litBorder:lit.borderLeftWidth,
        nextX:document.querySelector('#next').getBoundingClientRect().x,
        pageOverflow:document.documentElement.scrollWidth-window.innerWidth
@@ -51,6 +51,10 @@ css+'</style></head><body class="host-lyric-view-page"><div class="host-section-
     assert.equal(after.border,'rgb(0, 216, 94)','Unified beat border missing at '+width);
     assert.ok(after.pad>after.width+3,width+' unified border does not cover entire chord text');
     assert.ok(after.letterSpace>1.8,width+' beat dots lack visual spacing: '+after.letterSpace);
+    assert.ok(after.dimLeft<=-4,width+' green outline is too close to chord text: '+after.dimLeft+'px');
+    const dotOffset=after.dimLeft+after.dimPadLeft;
+    const preservedOffset=after.width+0.6*after.dimFontSize;
+    assert.ok(Math.abs(dotOffset-preservedOffset)<1,width+' increasing left inset displaced the beat dots: '+dotOffset+' vs '+preservedOffset);
     assert.ok(Math.abs(after.dimLeft-after.litLeft)<.1,width+' dim and bright dots have different left origins');
     assert.ok(Math.abs(after.dimPadLeft-after.litPadLeft)<.1,width+' dim and bright dots have different horizontal insets');
     assert.ok(Math.abs(after.dimTop-after.litTop)<.1,width+' dim and bright dots have different vertical positions');
