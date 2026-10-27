@@ -10,8 +10,8 @@ const css=fs.readFileSync(path.join(root,'host/css/lyricview-prompter-remote.css
 const viewerHtml=fs.readFileSync(path.join(root,'host/lyricview.html'),'utf8');
 const prompterHtml=fs.readFileSync(path.join(root,'oldadmin/host/lyrics/song.html'),'utf8');
 const performance=fs.readFileSync(path.join(root,'shared/performance.js'),'utf8');
-assert.match(viewerHtml,/lyricview-prompter-remote\.js\?v=20261028-page-scroll-v1/);
-assert.match(viewerHtml,/lyricview-prompter-remote\.css\?v=20261028-page-scroll-v1/);
+assert.match(viewerHtml,/lyricview-prompter-remote\.js\?v=20261028-independent-fixed-v1/);
+assert.match(viewerHtml,/lyricview-prompter-remote\.css\?v=20261028-independent-fixed-v1/);
 assert.match(prompterHtml,/prompter-remote-receiver\.js\?v=20261027-cross-tablet-v1/);
 assert.match(performance,/ls26:karaoke-tools-visibility/);
 assert.match(prompterHtml,/prompterScrollUp/);assert.match(prompterHtml,/prompterScrollDown/);
@@ -76,7 +76,8 @@ assert.match(prompterHtml,/prompterScrollUp/);assert.match(prompterHtml,/prompte
   assert.ok(b.width>=490&&b.width<=510&&b.height<=150,'Remote must be wide and shallow');
   assert.ok(b.x>=195&&b.x+b.width<=750,'Remote must clear side navigation');
   assert.ok(bottomGap>=175&&bottomGap<=195,'Remote must start just above the bottom toolbar');
-  assert.equal(await host.locator('#ls26PrompterRemote').evaluate(el=>getComputedStyle(el).position),'absolute','Remote must not be fixed or sticky');
+  assert.equal(await host.locator('#ls26PrompterRemote').evaluate(el=>getComputedStyle(el).position),'fixed','Remote must float independently of sticky tools');
+  assert.equal(await host.locator('#ls26PrompterRemote').evaluate(el=>el.parentElement===document.body),true,'Remote must not be nested inside Karaoke Tools bar');
   const buttonSizes=await host.locator('#ls26PrompterRemote button').evaluateAll(nodes=>nodes.map(n=>n.getBoundingClientRect().height));
   assert.ok(buttonSizes.every(h=>h>=56),'All touch targets should be at least 48px tall');
   const controlTops=await host.locator('#ls26PrompterRemote .ls26-prompter-remote-controls button').evaluateAll(nodes=>nodes.map(n=>n.getBoundingClientRect().top));
@@ -115,7 +116,7 @@ assert.match(prompterHtml,/prompterScrollUp/);assert.match(prompterHtml,/prompte
   await host.mouse.up();
   const moved=await host.locator('#ls26PrompterRemote').boundingBox();
   assert.ok(moved.x>original.x+45&&moved.y<original.y-40,'Title drag repositions card');
-  const saved=await host.evaluate(()=>JSON.parse(localStorage.getItem('ls26:prompter-remote-page-position-v2')));
+  const saved=await host.evaluate(()=>JSON.parse(localStorage.getItem('ls26:prompter-remote-fixed-position-v3')));
   assert.ok(Math.abs(saved.x-moved.x)<2&&Math.abs(saved.y-moved.y)<2,'Drag position saved');
   const fresh=await context.newPage();
   await fresh.setViewportSize({width:1024,height:1536});
@@ -132,21 +133,25 @@ assert.match(prompterHtml,/prompterScrollUp/);assert.match(prompterHtml,/prompte
   const clamp=await fresh.locator('#ls26PrompterRemote').boundingBox();
   assert.ok(clamp.x>=7&&clamp.x+clamp.width<=343,'Card stays within resized screen');
   await fresh.close();
-  // Scrolling the page must move the card with the lyric document, rather
-  // than pinning it like the Karaoke Tools sticky bar.
+  // A separate sticky Karaoke Tools bar moves according to its own layout.
+  // The remote must keep exactly the same viewport coordinates as the page scrolls.
   await host.evaluate(()=>{
     const spacer=document.createElement('div');spacer.id='lyricScrollTestSpacer';
     spacer.style.height='3500px';document.body.append(spacer);
+    const top=document.createElement('div');top.id='karaokeToolsTestBar';
+    top.style.cssText='position:sticky;top:0;height:35px;background:#123';
+    top.textContent='Karaoke Tools';document.body.prepend(top);
     window.scrollTo(0,0);
   });
+  await host.waitForFunction(()=>window.scrollY===0);
   const atTop=await host.locator('#ls26PrompterRemote').boundingBox();
   await host.evaluate(()=>window.scrollTo(0,230));
   await host.waitForFunction(()=>window.scrollY>=200);
-  const afterPageScroll=await host.locator('#ls26PrompterRemote').boundingBox();
-  assert.ok(Math.abs((atTop.y-afterPageScroll.y)-230)<3,
-    'Remote must scroll away with lyrics, not follow sticky Karaoke Tools');
+  const afterScroll=await host.locator('#ls26PrompterRemote').boundingBox();
+  assert.ok(Math.abs(afterScroll.y-atTop.y)<2&&Math.abs(afterScroll.x-atTop.x)<2,
+    'Remote must stay fixed at its own position while lyrics and top tools scroll');
   await host.evaluate(()=>window.scrollTo(0,0));
-  console.log('PASS: remote scrolls with page content, independent of sticky Karaoke Tools');
+  console.log('PASS: remote remains independently fixed during page scroll');
   console.log('PASS: drag from title only, persisted page position, restore and resize clamp');
   await context.close();
  }finally{await browser.close();}

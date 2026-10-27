@@ -1,8 +1,8 @@
-/* Compact stage-friendly controller shown only with Karaoke Tools.
- * Keep clear of the right-hand navigation arrows and bottom transport dock. */
+/* Independent fixed-stage controller, visible with Karaoke Tools.
+ * Its viewport position does not follow the sticky Karaoke Tools header. */
 #ls26PrompterRemote{
- position:absolute;left:46%;top:0;right:auto;transform:translateX(-50%);
- bottom:auto;z-index:2400;
+ position:fixed;left:46%;top:auto;right:auto;transform:translateX(-50%);
+ bottom:clamp(125px,12vh,190px);z-index:2400;
  width:min(500px,calc(100vw - 260px));box-sizing:border-box;
  display:flex;flex-direction:column;gap:7px;padding:10px;
  background:rgba(3,29,42,.96);border:1px solid #26738b;
@@ -33,11 +33,11 @@
  stroke-width:3.5;stroke-linecap:round;stroke-linejoin:round;
 }
 @media(max-width:760px){
- #ls26PrompterRemote{left:8px;transform:none;width:min(450px,calc(100vw - 84px))}
+ #ls26PrompterRemote{left:8px;transform:none;bottom:clamp(115px,15vh,170px);width:min(450px,calc(100vw - 84px))}
  #ls26PrompterRemote .ls26-prompter-remote-controls{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr) 48px minmax(0,1fr)}
  #ls26PrompterRemote .ls26-prompter-remote-arrow{grid-column:span 2}
 }
 @media(max-height:500px){
- #ls26PrompterRemote{padding:8px;gap:5px}
+ #ls26PrompterRemote{bottom:104px;padding:8px;gap:5px}
  #ls26PrompterRemote button{min-height:52px}
 }

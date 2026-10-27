@@ -6,7 +6,8 @@
 (() => {
   'use strict';
   const CHANNEL='ls26-prompter-remote-v1',STORAGE='ls26:prompter-remote-command-v1';
-  const POSITION_KEY='ls26:prompter-remote-page-position-v2';
+  const POSITION_KEY='ls26:prompter-remote-fixed-position-v3';
+  const PAGE_POSITION_KEY='ls26:prompter-remote-page-position-v2';
   const OLD_POSITION_KEY='ls26:prompter-remote-position-v1';
   const $=id=>document.getElementById(id);
   let channel=null,lastRequest='',timeout=null,cloudWriteChain=Promise.resolve();
@@ -34,44 +35,44 @@
     button.setAttribute('aria-pressed',String(playing));
     button.setAttribute('aria-label',playing?'Stop Prompter autoscroll':'Play Prompter autoscroll');
   };
-  // Use page coordinates, not fixed viewport coordinates. The card travels
-  // with the lyrics when the document scrolls; the sticky tools bar does not.
-  const place=(x,pageY,limitToViewport=false)=>{
+  // The remote floats independently of the Karaoke Tools header and lyrics.
+  // All saved and drag coordinates are viewport-relative, not document-relative.
+  const place=(x,y)=>{
     const rect=panel.getBoundingClientRect();
-    const maxX=Math.max(8,window.innerWidth-rect.width-8);
-    const minY=window.scrollY+8;
-    const maxY=Math.max(minY,window.scrollY+window.innerHeight-rect.height-8);
-    const left=Math.max(8,Math.min(x,maxX));
-    const top=limitToViewport?Math.max(minY,Math.min(pageY,maxY)):Math.max(8,pageY);
+    const left=Math.max(8,Math.min(x,Math.max(8,innerWidth-rect.width-8)));
+    const top=Math.max(8,Math.min(y,Math.max(8,innerHeight-rect.height-8)));
     Object.assign(panel.style,{left:left+'px',top:top+'px',right:'auto',bottom:'auto',transform:'none'});
     customPosition=true;
   };
   const savePosition=()=>{
     if(!customPosition)return;
     const r=panel.getBoundingClientRect();
-    try{localStorage.setItem(POSITION_KEY,JSON.stringify({x:r.left,y:r.top+window.scrollY}));}catch(_){}
+    try{localStorage.setItem(POSITION_KEY,JSON.stringify({x:r.left,y:r.top}));}catch(_){}
   };
   const placeDefault=()=>{
-    const rect=panel.getBoundingClientRect();
-    const safeBottom=Math.max(125,Math.min(190,window.innerHeight*0.12));
-    const top=Math.max(window.scrollY+8,window.scrollY+window.innerHeight-safeBottom-rect.height);
-    // Keep the responsive CSS horizontal anchor active until the user drags.
-    Object.assign(panel.style,{left:'',top:top+'px',right:'',bottom:'auto',transform:''});
+    // Use the CSS viewport anchor so orientation changes keep it above the dock.
+    Object.assign(panel.style,{left:'',top:'',right:'',bottom:'',transform:''});
     customPosition=false;
   };
   const restorePosition=()=>{
     if(positionRestored)return;
     positionRestored=true;
     try{
-      const p=JSON.parse(localStorage.getItem(POSITION_KEY)||'null');
-      if(Number.isFinite(p?.x)&&Number.isFinite(p?.y)){userMoved=true;place(p.x,p.y);return;}
-      // Migrate the earlier fixed card position to its current page position.
+      const saved=JSON.parse(localStorage.getItem(POSITION_KEY)||'null');
+      if(Number.isFinite(saved?.x)&&Number.isFinite(saved?.y)){
+        userMoved=true;place(saved.x,saved.y);return;
+      }
+      // Earlier release stored document coordinates. Convert to viewport
+      // coordinates only once; don't permanently adopt a scrolled offset.
+      const page=JSON.parse(localStorage.getItem(PAGE_POSITION_KEY)||'null');
+      if(Number.isFinite(page?.x)&&Number.isFinite(page?.y)){
+        userMoved=true;
+        place(page.x,page.y-window.scrollY);
+        savePosition();return;
+      }
       const old=JSON.parse(localStorage.getItem(OLD_POSITION_KEY)||'null');
       if(Number.isFinite(old?.x)&&Number.isFinite(old?.y)){
-        userMoved=true;
-        place(old.x,old.y+window.scrollY);
-        savePosition();
-        return;
+        userMoved=true;place(old.x,old.y);savePosition();return;
       }
     }catch(_){}
     placeDefault();
@@ -81,14 +82,14 @@
     bar.addEventListener('pointerdown',e=>{
       if(e.pointerType==='mouse'&&e.button!==0)return;
       const r=panel.getBoundingClientRect();
-      drag={id:e.pointerId,startX:e.clientX,startY:e.clientY,left:r.left,top:r.top+window.scrollY,scrollY:window.scrollY};
+      drag={id:e.pointerId,startX:e.clientX,startY:e.clientY,left:r.left,top:r.top};
       bar.setPointerCapture(e.pointerId);
       bar.classList.add('is-dragging');
       e.preventDefault();
     });
     bar.addEventListener('pointermove',e=>{
       if(drag?.id!==e.pointerId)return;
-      place(drag.left+e.clientX-drag.startX,drag.top+e.clientY-drag.startY+(window.scrollY-drag.scrollY),true);
+      place(drag.left+e.clientX-drag.startX,drag.top+e.clientY-drag.startY);
     });
     const end=e=>{
       if(drag?.id!==e.pointerId)return;
@@ -167,7 +168,7 @@
       if(!panel.hidden){
         if(!userMoved){placeDefault();return;}
         if(customPosition){
-          const r=panel.getBoundingClientRect();place(r.left,r.top+window.scrollY);savePosition();
+          const r=panel.getBoundingClientRect();place(r.left,r.top);savePosition();
         }
       }
     });
