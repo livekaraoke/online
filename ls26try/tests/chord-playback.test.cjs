@@ -39,7 +39,9 @@ test('valid timed chords expose beat dots without touching saved chord formattin
  const page=fs.readFileSync(require('node:path').join(__dirname,'../host/lyricview.html'),'utf8');
  assert.match(css,/content:attr\(data-ls26-beat-dots\)/);
  assert.match(css,/content:attr\(data-ls26-lit-dots\)/);
- assert.match(css,/padding-left:calc\(var\(--ls26-active-chord-width, 0px\) \+ \.6em\)/);\n assert.match(css,/letter-spacing:\.25em/);\n assert.match(css,/border-color:#00d85e/);
+ assert.match(css,/padding-left:calc\(var\(--ls26-active-chord-width, 0px\) \+ \.6em\)/);
+ assert.match(css,/letter-spacing:\.25em/);
+ assert.match(css,/border-color:#00d85e/);
  assert.match(css,/top:50%/);
  assert.match(page,/chord-playback\.js\?v=20261027-beat-follow-v2/);
  assert.match(page,/lyricview-chord-follow\.js\?v=20261027-unified-highlight-v3/);
