@@ -1,0 +1,53 @@
+/* Compact stage-friendly controller; shown only with Karaoke Tools.
+ * Does not move the lyric columns, dock, or legacy Prompter layout. */
+#ls26PrompterRemote{
+  position:fixed;
+  right:clamp(205px,22vw,290px);
+  bottom:clamp(180px,19vh,270px);
+  z-index:2400;
+  width:clamp(222px,25vw,286px);
+  box-sizing:border-box;
+  display:flex;
+  flex-direction:column;
+  gap:7px;
+  padding:10px;
+  background:rgba(3,29,42,.96);
+  border:1px solid #26738b;
+  border-radius:12px;
+  box-shadow:0 8px 24px rgba(0,0,0,.6);
+  color:#d9f5ff;
+}
+#ls26PrompterRemote[hidden]{display:none!important}
+#ls26PrompterRemote .ls26-prompter-remote-head{display:flex;align-items:center;justify-content:space-between;gap:6px}
+#ls26PrompterRemote .ls26-prompter-remote-head strong{color:#40c9eb;font-size:12px;letter-spacing:.035em;white-space:nowrap}
+#ls26PrompterRemoteStatus{font-size:10px;color:#9abfce;max-width:100px;text-align:right;line-height:1.2}
+#ls26PrompterRemote .ls26-prompter-remote-row{display:flex;gap:6px;align-items:center;width:100%}
+#ls26PrompterRemote button{
+  flex:1 1 0;
+  min-height:48px;
+  min-width:0;
+  border:1px solid #28637a;
+  border-radius:8px;
+  background:#082f42;
+  color:#e3f8ff;
+  font-size:20px;
+  font-weight:800;
+  padding:5px;
+  touch-action:manipulation;
+  cursor:pointer;
+}
+#ls26PrompterRemote button:active{background:#126781}
+#ls26PrompterRemote button:focus-visible{outline:2px solid #22d5ff;outline-offset:2px}
+#ls26PrompterRemote #ls26PrompterRemotePlay{
+  background:#063d32;border-color:#18a782;color:#35f4ae;flex:1.1 1 0;
+}
+#ls26PrompterRemote #ls26PrompterRemotePlay[aria-pressed="true"]{background:#3d2711;border-color:#d59d36;color:#ffd58c}
+#ls26PrompterRemoteSpeed{flex:0 0 50px;text-align:center;font-size:14px;font-weight:700;white-space:nowrap;font-variant-numeric:tabular-nums}
+#ls26PrompterRemote .ls26-prompter-remote-nav button{font-size:15px;color:#c1ebfb}
+@media(max-width:760px){
+  #ls26PrompterRemote{right:10px;bottom:clamp(160px,19vh,230px);width:220px}
+}
+@media(max-height:500px){
+  #ls26PrompterRemote{bottom:105px;right:10px;padding:6px;gap:4px}
+  #ls26PrompterRemote button{min-height:42px}
+}
