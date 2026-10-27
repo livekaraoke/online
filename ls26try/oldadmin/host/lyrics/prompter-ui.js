@@ -186,6 +186,7 @@
   function updateScrollZones() {
     const enabled = prefs.scrollZones !== false;
     document.body.classList.toggle('prompter-scroll-zones-hidden', !enabled);
+    document.body.classList.toggle('prompter-scroll-restricted', enabled);
     const toggle = byId('prompterScrollZonesToggle');
     if (toggle) toggle.checked = enabled;
   }
@@ -368,9 +369,9 @@
     window.addEventListener('blur', () => { stop(); });
   }
 
-  // Native gestures may scroll the document only if they started in the
-  // deliberately narrow left-hand strip. Programmatic arrows and Auto Scroll
-  // use window.scrollBy/scrollTo and remain unaffected.
+  // With the arrow zones enabled, allow native scroll only from the left strip.
+  // Disabling the arrow zones restores native scrolling everywhere.
+  // Programmatic arrows and Auto Scroll remain unaffected.
   let manualTouchStartedInStrip = false;
   let manualTouchAutoScrollGesture = false;
   const manualStripWidth = () =>
@@ -386,14 +387,19 @@
     document.addEventListener('touchstart', event => {
       const touch = event.touches?.[0];
       const sidebarTouch = inSidebar(event.target);
+      const restricted = prefs.scrollZones !== false;
       manualTouchStartedInStrip = Boolean(touch &&
-        (sidebarTouch || inAllowedManualArea(touch.clientX, touch.clientY)));
-      manualTouchAutoScrollGesture = manualTouchStartedInStrip && !sidebarTouch;
+        (sidebarTouch || !restricted || inAllowedManualArea(touch.clientX, touch.clientY)));
+      const isControl = Boolean(event.target?.closest?.(
+        '.top-bar,#autoScrollControls,button,a,input,select,textarea'));
+      manualTouchAutoScrollGesture = manualTouchStartedInStrip && !sidebarTouch && !isControl;
       if (manualTouchAutoScrollGesture) window.setAutoScrollManualGesture?.(true);
     }, { capture: true, passive: true });
     document.addEventListener('touchmove', event => {
       if (event.touches?.length > 1) return; // preserve pinch zoom
-      if (!manualTouchStartedInStrip && event.cancelable) event.preventDefault();
+      if (prefs.scrollZones !== false && !manualTouchStartedInStrip && event.cancelable) {
+        event.preventDefault();
+      }
     }, { capture: true, passive: false });
     document.addEventListener('touchend', event => {
       if (!event.touches?.length) {
@@ -409,12 +415,26 @@
     }, { capture: true, passive: true });
     document.addEventListener('wheel', event => {
       if (inSidebar(event.target)) return;
-      if (inAllowedManualArea(event.clientX, event.clientY)) {
+      if (prefs.scrollZones === false ||
+          inAllowedManualArea(event.clientX, event.clientY)) {
         window.deferAutoScroll?.(650);
         return;
       }
       if (event.cancelable) event.preventDefault();
     }, { capture: true, passive: false });
+    // Prevent long-press highlighting and the Android text-selection callout
+    // only in the lyric content, and only while arrow controls are enabled.
+    const isLyricText = target => Boolean(target?.closest?.('#lyrics-container'));
+    document.addEventListener('selectstart', event => {
+      if (prefs.scrollZones !== false && isLyricText(event.target) && event.cancelable) {
+        event.preventDefault();
+      }
+    }, { capture: true });
+    document.addEventListener('contextmenu', event => {
+      if (prefs.scrollZones !== false && isLyricText(event.target) && event.cancelable) {
+        event.preventDefault();
+      }
+    }, { capture: true });
   }
 
   // Fade only the header background; keep the buttons readable on stage.
@@ -444,6 +464,10 @@
     });
     byId('prompterScrollZonesToggle')?.addEventListener('change', event => {
       prefs.scrollZones = Boolean(event.target.checked);
+      if (!prefs.scrollZones && manualTouchAutoScrollGesture) {
+        window.setAutoScrollManualGesture?.(false);
+        manualTouchAutoScrollGesture = false;
+      }
       save();
       updateScrollZones();
     });
