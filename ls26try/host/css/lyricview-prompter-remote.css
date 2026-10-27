@@ -1,7 +1,7 @@
 /* Compact stage-friendly controller shown only with Karaoke Tools.
  * Keep clear of the right-hand navigation arrows and bottom transport dock. */
 #ls26PrompterRemote{
- position:absolute;left:0;top:0;right:auto;transform:none;
+ position:absolute;left:46%;top:0;right:auto;transform:translateX(-50%);
  bottom:auto;z-index:2400;
  width:min(500px,calc(100vw - 260px));box-sizing:border-box;
  display:flex;flex-direction:column;gap:7px;padding:10px;
@@ -33,7 +33,7 @@
  stroke-width:3.5;stroke-linecap:round;stroke-linejoin:round;
 }
 @media(max-width:760px){
- #ls26PrompterRemote{width:min(450px,calc(100vw - 84px))}
+ #ls26PrompterRemote{left:8px;transform:none;width:min(450px,calc(100vw - 84px))}
  #ls26PrompterRemote .ls26-prompter-remote-controls{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr) 48px minmax(0,1fr)}
  #ls26PrompterRemote .ls26-prompter-remote-arrow{grid-column:span 2}
 }
