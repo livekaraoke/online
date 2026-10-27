@@ -6,17 +6,19 @@
 (() => {
   'use strict';
   const CHANNEL='ls26-prompter-remote-v1',STORAGE='ls26:prompter-remote-command-v1';
+  const POSITION_KEY='ls26:prompter-remote-position-v1';
   const $=id=>document.getElementById(id);
   let channel=null,lastRequest='',timeout=null,cloudWriteChain=Promise.resolve();
+  let drag=null,customPosition=false,positionRestored=false;
   const panel=document.createElement('aside');
   panel.id='ls26PrompterRemote';
   panel.setAttribute('aria-label','Fullscreen Prompter remote');
   panel.hidden=true;
   panel.innerHTML=`
-    <div class="ls26-prompter-remote-head"><strong>PROMPTER REMOTE</strong>
+    <div class="ls26-prompter-remote-head" title="Drag to move Prompter Remote"><strong>PROMPTER REMOTE</strong>
       <span id="ls26PrompterRemoteStatus" role="status">Open Prompter tab</span></div>
     <div class="ls26-prompter-remote-controls">
-      <button type="button" data-remote="toggle" id="ls26PrompterRemotePlay" aria-label="Play or pause Prompter autoscroll">▶</button>
+      <button type="button" data-remote="toggle" id="ls26PrompterRemotePlay" aria-pressed="false" aria-label="Play Prompter autoscroll">▶</button>
       <button type="button" data-remote="slower" aria-label="Decrease Prompter scroll speed">−</button>
       <output id="ls26PrompterRemoteSpeed" aria-label="Prompter scroll speed">—</output>
       <button type="button" data-remote="faster" aria-label="Increase Prompter scroll speed">+</button>
@@ -24,8 +26,63 @@
       <button type="button" class="ls26-prompter-remote-arrow" data-remote="down" aria-label="Scroll Prompter down" title="Scroll Prompter down"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9l7 7 7-7"/></svg></button>
     </div>`;
 
+  const setPlayState=playing=>{
+    const button=$('ls26PrompterRemotePlay');
+    if(!button)return;
+    button.textContent=playing?'■ STOP':'▶';
+    button.setAttribute('aria-pressed',String(playing));
+    button.setAttribute('aria-label',playing?'Stop Prompter autoscroll':'Play Prompter autoscroll');
+  };
+  const place=(x,y)=>{
+    const rect=panel.getBoundingClientRect();
+    const left=Math.max(8,Math.min(x,Math.max(8,innerWidth-rect.width-8)));
+    const top=Math.max(8,Math.min(y,Math.max(8,innerHeight-rect.height-8)));
+    Object.assign(panel.style,{left:left+'px',top:top+'px',right:'auto',bottom:'auto',transform:'none'});
+    customPosition=true;
+  };
+  const savePosition=()=>{
+    if(!customPosition)return;
+    const r=panel.getBoundingClientRect();
+    try{localStorage.setItem(POSITION_KEY,JSON.stringify({x:r.left,y:r.top}));}catch(_){}
+  };
+  const restorePosition=()=>{
+    if(positionRestored)return;
+    positionRestored=true;
+    try{
+      const p=JSON.parse(localStorage.getItem(POSITION_KEY)||'null');
+      if(Number.isFinite(p?.x)&&Number.isFinite(p?.y))place(p.x,p.y);
+    }catch(_){}
+  };
+  const enableDragging=()=>{
+    const bar=panel.querySelector('.ls26-prompter-remote-head');
+    bar.addEventListener('pointerdown',e=>{
+      if(e.pointerType==='mouse'&&e.button!==0)return;
+      const r=panel.getBoundingClientRect();
+      drag={id:e.pointerId,startX:e.clientX,startY:e.clientY,left:r.left,top:r.top};
+      bar.setPointerCapture(e.pointerId);
+      bar.classList.add('is-dragging');
+      e.preventDefault();
+    });
+    bar.addEventListener('pointermove',e=>{
+      if(drag?.id!==e.pointerId)return;
+      place(drag.left+e.clientX-drag.startX,drag.top+e.clientY-drag.startY);
+    });
+    const end=e=>{
+      if(drag?.id!==e.pointerId)return;
+      drag=null;bar.classList.remove('is-dragging');savePosition();
+      if(bar.hasPointerCapture(e.pointerId))bar.releasePointerCapture(e.pointerId);
+    };
+    bar.addEventListener('pointerup',end);
+    bar.addEventListener('pointercancel',end);
+    bar.addEventListener('lostpointercapture',e=>{
+      if(drag?.id===e.pointerId){
+        drag=null;bar.classList.remove('is-dragging');savePosition();
+      }
+    });
+  };
   const show=visible=>{
     panel.hidden=!visible;
+    if(visible)restorePosition();
     if(visible){$('ls26PrompterRemoteStatus').textContent='Cross-tablet ready';send('status');}
   };
   const post=packet=>{
@@ -36,6 +93,8 @@
     if(panel.hidden)return;
     const id=String(Date.now())+'-'+Math.random().toString(36).slice(2,8);
     lastRequest=id;
+    const wasPlaying=$('ls26PrompterRemotePlay')?.getAttribute('aria-pressed')==='true';
+    if(action==='toggle')setPlayState(!wasPlaying);
     const packet={v:1,kind:'command',id,action,at:Date.now()};
     post(packet);
     clearTimeout(timeout);
@@ -47,7 +106,10 @@
     }
     status.textContent='Sending…';
     const sharedDb=window.db||window.LK?.db;
-    if(!sharedDb?.collection){status.textContent='Cloud sync unavailable';return;}
+    if(!sharedDb?.collection){
+      if(action==='toggle')setPlayState(wasPlaying);
+      status.textContent='Cloud sync unavailable';return;
+    }
     // Serialize taps to prevent ordered +/-/Play commands overtaking each other.
     // Never write on autoscroll frames or touch singer lyrics/scroll sync fields.
     cloudWriteChain=cloudWriteChain.catch(()=>{}).then(()=>
@@ -58,8 +120,10 @@
         status.textContent='Sent via Firestore';
     }).catch(error=>{
       console.warn('Prompter cross-tablet command failed:',error);
-      if(lastRequest===id&&!status.textContent.startsWith('Connected'))
+      if(lastRequest===id&&!status.textContent.startsWith('Connected')){
+        if(action==='toggle')setPlayState(wasPlaying);
         status.textContent='Sync failed — check sign-in';
+      }
     });
   };
   const receive=packet=>{
@@ -71,12 +135,16 @@
     lastRequest='';
     status.textContent='Connected';
     if(packet.speed)speed.textContent=String(packet.speed);
-    play.textContent=packet.playing?'Ⅱ':'▶';
-    play.setAttribute('aria-pressed',String(Boolean(packet.playing)));
-    play.setAttribute('aria-label',packet.playing?'Pause Prompter autoscroll':'Play Prompter autoscroll');
+    setPlayState(Boolean(packet.playing));
   };
   function start(){
     document.body.append(panel);
+    enableDragging();
+    window.addEventListener('resize',()=>{
+      if(customPosition&&!panel.hidden){
+        const r=panel.getBoundingClientRect();place(r.left,r.top);savePosition();
+      }
+    });
     panel.addEventListener('click',event=>{
       const action=event.target.closest('button[data-remote]')?.dataset.remote;
       if(action&&['toggle','slower','faster','up','down'].includes(action))send(action);

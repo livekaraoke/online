@@ -62,10 +62,13 @@ const receiver=fs.readFileSync(path.join(root,'oldadmin/host/lyrics/prompter-rem
   await target.addScriptTag({content:receiver});
   await host.addScriptTag({content:sender});
   assert.equal(writes.length,0,'Initial ready check must not write to Firestore');
+  assert.equal(await host.locator('#ls26PrompterRemotePlay').textContent(),'▶');
   const expected=['toggle','faster','slower','up','down','toggle'];
   for(let i=0;i<expected.length;i++){
     await host.locator('[data-remote="'+expected[i]+'"]').click();
     await target.waitForFunction(n=>window.__actions.length===n,i+1);
+    if(i===0)assert.equal(await host.locator('#ls26PrompterRemotePlay').textContent(),'■ STOP');
+    if(i===5)assert.equal(await host.locator('#ls26PrompterRemotePlay').textContent(),'▶');
   }
   assert.deepEqual(await target.evaluate(()=>window.__actions),expected);
   assert.deepEqual(writes.map(p=>p.action),expected,'One merged write per press');

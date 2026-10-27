@@ -10,8 +10,8 @@ const css=fs.readFileSync(path.join(root,'host/css/lyricview-prompter-remote.css
 const viewerHtml=fs.readFileSync(path.join(root,'host/lyricview.html'),'utf8');
 const prompterHtml=fs.readFileSync(path.join(root,'oldadmin/host/lyrics/song.html'),'utf8');
 const performance=fs.readFileSync(path.join(root,'shared/performance.js'),'utf8');
-assert.match(viewerHtml,/lyricview-prompter-remote\.js\?v=20261027-cross-tablet-v1/);
-assert.match(viewerHtml,/lyricview-prompter-remote\.css\?v=20261027-v2/);
+assert.match(viewerHtml,/lyricview-prompter-remote\.js\?v=20261027-drag-stop-v1/);
+assert.match(viewerHtml,/lyricview-prompter-remote\.css\?v=20261027-drag-stop-v1/);
 assert.match(prompterHtml,/prompter-remote-receiver\.js\?v=20261027-cross-tablet-v1/);
 assert.match(performance,/ls26:karaoke-tools-visibility/);
 assert.match(prompterHtml,/prompterScrollUp/);assert.match(prompterHtml,/prompterScrollDown/);
@@ -49,12 +49,14 @@ assert.match(prompterHtml,/prompterScrollUp/);assert.match(prompterHtml,/prompte
   }
   await press('toggle',()=>document.getElementById('scrollToggleBtn').textContent==='⏸');
   await host.waitForFunction(()=>document.getElementById('ls26PrompterRemotePlay')?.getAttribute('aria-pressed')==='true');
+  assert.equal(await host.locator('#ls26PrompterRemotePlay').textContent(),'■ STOP');
   await press('faster',()=>document.getElementById('scrollSpeedDisplay').textContent==='0.85x');
   await host.waitForFunction(()=>document.getElementById('ls26PrompterRemoteSpeed').textContent==='0.85x');
   await press('slower',()=>document.getElementById('scrollSpeedDisplay').textContent==='0.80x');
   await press('up',()=>window.__actions.includes('up'));
   await press('down',()=>window.__actions.includes('down'));
   await press('toggle',()=>document.getElementById('scrollToggleBtn').textContent==='▶');
+  assert.equal(await host.locator('#ls26PrompterRemotePlay').textContent(),'▶');
   assert.deepEqual(await prompter.evaluate(()=>window.__actions),['toggle','faster','slower','up','down','toggle'],'Every gesture must arrive once, not twice via channel + storage');
   console.log('PASS: cross-tab Play/Pause, +/− speed, scroll up/down, acknowledgement; no duplicate actions');
   await host.evaluate(()=>window.dispatchEvent(new CustomEvent('ls26:karaoke-tools-visibility',{detail:{visible:false}})));
@@ -66,18 +68,18 @@ assert.match(prompterHtml,/prompterScrollUp/);assert.match(prompterHtml,/prompte
   await host.setViewportSize({width:1024,height:1536});
   const b=await host.locator('#ls26PrompterRemote').boundingBox();
   const bottomGap=1536-(b.y+b.height);
-  assert.ok(b.width>=440&&b.width<=480&&b.height<=130,'Remote must be wide and shallow');
-  assert.ok(b.x>=270&&b.x+b.width<=760,'Remote must clear side navigation');
+  assert.ok(b.width>=490&&b.width<=510&&b.height<=150,'Remote must be wide and shallow');
+  assert.ok(b.x>=195&&b.x+b.width<=750,'Remote must clear side navigation');
   assert.ok(bottomGap>=175&&bottomGap<=195,'Remote must sit just above the bottom toolbar');
   const buttonSizes=await host.locator('#ls26PrompterRemote button').evaluateAll(nodes=>nodes.map(n=>n.getBoundingClientRect().height));
-  assert.ok(buttonSizes.every(h=>h>=48),'All touch targets should be at least 48px tall');
+  assert.ok(buttonSizes.every(h=>h>=56),'All touch targets should be at least 48px tall');
   const controlTops=await host.locator('#ls26PrompterRemote .ls26-prompter-remote-controls button').evaluateAll(nodes=>nodes.map(n=>n.getBoundingClientRect().top));
   assert.ok(controlTops.every(y=>Math.abs(y-controlTops[0])<2),'Tablet remote buttons must occupy one row');
   for(const direction of ['up','down']){
     const arrow=host.locator('[data-remote="'+direction+'"]');
     assert.equal((await arrow.textContent()).trim(),'','Up/down controls must have no text');
     assert.equal(await arrow.locator('svg path').count(),1,'Chevron icon should be present');
-    assert.ok((await arrow.locator('svg').evaluate(el=>el.getBoundingClientRect().width))>=30,'Chevron must be large');
+    assert.ok((await arrow.locator('svg').evaluate(el=>el.getBoundingClientRect().width))>=35,'Chevron must be large');
   }
   await host.setViewportSize({width:600,height:740});
   const compact=await host.locator('#ls26PrompterRemote').boundingBox();
@@ -86,6 +88,28 @@ assert.match(prompterHtml,/prompterScrollUp/);assert.match(prompterHtml,/prompte
   const arrowTop=await host.locator('[data-remote="up"]').evaluate(el=>el.getBoundingClientRect().top);
   assert.ok(arrowTop>playTop+40,'Narrow remote should wrap the arrows to the second row');
   console.log('PASS: portrait placement, compact controls, large arrow icons, small-screen layout, 48px touch targets');
+  await host.setViewportSize({width:1024,height:1536});
+  const original=await host.locator('#ls26PrompterRemote').boundingBox();
+  const header=await host.locator('.ls26-prompter-remote-head').boundingBox();
+  await host.mouse.move(header.x+55,header.y+header.height/2);
+  await host.mouse.down();
+  await host.mouse.move(header.x+125,header.y+header.height/2-65,{steps:5});
+  await host.mouse.up();
+  const moved=await host.locator('#ls26PrompterRemote').boundingBox();
+  assert.ok(moved.x>original.x+45&&moved.y<original.y-40,'Title drag repositions card');
+  const saved=await host.evaluate(()=>JSON.parse(localStorage.getItem('ls26:prompter-remote-position-v1')));
+  assert.ok(Math.abs(saved.x-moved.x)<2&&Math.abs(saved.y-moved.y)<2,'Drag position saved');
+  const fresh=await context.newPage();
+  await fresh.goto('http://remote.test/ls26try/host/lyricview.html');
+  await fresh.setContent('<style>'+css+'</style><input type="checkbox" id="ls26ShowKaraoke" checked>');
+  await fresh.addScriptTag({content:hostScript});
+  const restored=await fresh.locator('#ls26PrompterRemote').boundingBox();
+  assert.ok(Math.abs(restored.x-moved.x)<2&&Math.abs(restored.y-moved.y)<2,'Reload restores card position');
+  await fresh.setViewportSize({width:350,height:560});
+  const clamp=await fresh.locator('#ls26PrompterRemote').boundingBox();
+  assert.ok(clamp.x>=7&&clamp.x+clamp.width<=343,'Card stays within resized screen');
+  await fresh.close();
+  console.log('PASS: drag from title only, persisted position, restore and resize clamp');
   await context.close();
  }finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});
