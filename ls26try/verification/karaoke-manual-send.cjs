@@ -43,6 +43,13 @@ const song={title:'Karaoke send regression',artist:'Regression Artist',year:2026
   // Real host button, not a synthetic write. No Play/count-in beforehand.
   await host.locator('#quickSendToKaraokeBtn').click();
   await host.waitForFunction(()=>__fixture.data['karaokeControl/liveLyrics']?.displayState==='song');
+  // The memory-only Firebase fixture is tab-local; replicate the accepted
+  // host write to the singer tab as Firestore's realtime listener would.
+  const mirror=async()=>{
+    const payload=await host.evaluate(()=>__fixture.data['karaokeControl/liveLyrics']);
+    await singer.evaluate(async value=>db.collection('karaokeControl').doc('liveLyrics').set(value,{merge:true}),payload);
+  };
+  await mirror();
   await singer.waitForFunction(()=>!document.querySelector('#ls26SingerV31Lyrics')?.hidden&&document.querySelector('#ls26SingerV31Lyrics')?.textContent.includes('First line visible on singer screen'),{timeout:15000});
   assert.ok(await singer.locator('#ls26SingerV31Lyrics').isVisible(),'Lyrics must display before pressing Play');
   const content=await singer.locator('#ls26SingerV31Lyrics').textContent();
@@ -55,9 +62,13 @@ const song={title:'Karaoke send regression',artist:'Regression Artist',year:2026
   await host.locator('#confirmOk').click();
   await host.locator('#quickKaraokeMenuBtn').click();
   await host.locator('#quickResetKaraokeBtn').click();
+  await host.waitForFunction(()=>__fixture.data['karaokeControl/liveLyrics']?.reset===true);
+  await mirror();
   await singer.waitForFunction(()=>document.querySelector('#ls26SingerV31Lyrics')?.hidden);
   console.log('PASS RESET KARAOKE returns singer screen to standby');
   await host.locator('#quickSendToKaraokeBtn').click();
+  await host.waitForFunction(()=>__fixture.data['karaokeControl/liveLyrics']?.displayState==='song');
+  await mirror();
   await singer.waitForFunction(()=>!document.querySelector('#ls26SingerV31Lyrics')?.hidden&&document.querySelector('#ls26SingerV31Lyrics')?.textContent.includes('First line visible on singer screen'));
   const newToken=await host.evaluate(()=>__fixture.data['karaokeControl/liveLyrics']?.forceReloadToken);
   assert.notEqual(firstToken,newToken,'Resending same song must force reload');
