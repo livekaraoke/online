@@ -10,9 +10,9 @@ const css=fs.readFileSync(path.join(root,'host/css/lyricview-prompter-remote.css
 const viewerHtml=fs.readFileSync(path.join(root,'host/lyricview.html'),'utf8');
 const prompterHtml=fs.readFileSync(path.join(root,'oldadmin/host/lyrics/song.html'),'utf8');
 const performance=fs.readFileSync(path.join(root,'shared/performance.js'),'utf8');
-assert.match(viewerHtml,/lyricview-prompter-remote\.js\?v=20261027-v1/);
-assert.match(viewerHtml,/lyricview-prompter-remote\.css\?v=20261027-v1/);
-assert.match(prompterHtml,/prompter-remote-receiver\.js\?v=20261027-v1/);
+assert.match(viewerHtml,/lyricview-prompter-remote\.js\?v=20261027-v2/);
+assert.match(viewerHtml,/lyricview-prompter-remote\.css\?v=20261027-v2/);
+assert.match(prompterHtml,/prompter-remote-receiver\.js\?v=20261027-v2/);
 assert.match(performance,/ls26:karaoke-tools-visibility/);
 assert.match(prompterHtml,/prompterScrollUp/);assert.match(prompterHtml,/prompterScrollDown/);
 (async()=>{
@@ -62,11 +62,30 @@ assert.match(prompterHtml,/prompterScrollUp/);assert.match(prompterHtml,/prompte
   await host.evaluate(()=>window.dispatchEvent(new CustomEvent('ls26:karaoke-tools-visibility',{detail:{visible:true}})));
   assert.equal(await host.locator('#ls26PrompterRemote').isVisible(),true);
   console.log('PASS: Show Karaoke Tools setting independently hides and reveals the remote');
+  // Match the portrait tablet: low, centred, and clear of right-hand navigation.
+  await host.setViewportSize({width:1024,height:1536});
   const b=await host.locator('#ls26PrompterRemote').boundingBox();
-  assert.ok(b.width<=300&&b.height<=200,'Remote should remain compact on the stage');
+  const bottomGap=1536-(b.y+b.height);
+  assert.ok(b.width>=440&&b.width<=480&&b.height<=130,'Remote must be wide and shallow');
+  assert.ok(b.x>=270&&b.x+b.width<=760,'Remote must clear side navigation');
+  assert.ok(bottomGap>=175&&bottomGap<=195,'Remote must sit just above the bottom toolbar');
   const buttonSizes=await host.locator('#ls26PrompterRemote button').evaluateAll(nodes=>nodes.map(n=>n.getBoundingClientRect().height));
-  assert.ok(buttonSizes.every(h=>h>=48),'Remote requires large touch targets');
-  console.log('PASS: compact floating card, 48px+ touch targets');
+  assert.ok(buttonSizes.every(h=>h>=48),'All touch targets should be at least 48px tall');
+  const controlTops=await host.locator('#ls26PrompterRemote .ls26-prompter-remote-controls button').evaluateAll(nodes=>nodes.map(n=>n.getBoundingClientRect().top));
+  assert.ok(controlTops.every(y=>Math.abs(y-controlTops[0])<2),'Tablet remote buttons must occupy one row');
+  for(const direction of ['up','down']){
+    const arrow=host.locator('[data-remote="'+direction+'"]');
+    assert.equal((await arrow.textContent()).trim(),'','Up/down controls must have no text');
+    assert.equal(await arrow.locator('svg path').count(),1,'Chevron icon should be present');
+    assert.ok((await arrow.locator('svg').evaluate(el=>el.getBoundingClientRect().width))>=30,'Chevron must be large');
+  }
+  await host.setViewportSize({width:600,height:740});
+  const compact=await host.locator('#ls26PrompterRemote').boundingBox();
+  assert.ok(compact.x+compact.width<=525,'Narrow remote must leave space for side navigation');
+  const playTop=await host.locator('#ls26PrompterRemotePlay').evaluate(el=>el.getBoundingClientRect().top);
+  const arrowTop=await host.locator('[data-remote="up"]').evaluate(el=>el.getBoundingClientRect().top);
+  assert.ok(arrowTop>playTop+40,'Narrow remote should wrap the arrows to the second row');
+  console.log('PASS: portrait placement, compact controls, large arrow icons, small-screen layout, 48px touch targets');
   await context.close();
  }finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});

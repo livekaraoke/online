@@ -14,15 +14,13 @@
   panel.innerHTML=`
     <div class="ls26-prompter-remote-head"><strong>PROMPTER REMOTE</strong>
       <span id="ls26PrompterRemoteStatus" role="status">Open Prompter tab</span></div>
-    <div class="ls26-prompter-remote-row">
+    <div class="ls26-prompter-remote-controls">
       <button type="button" data-remote="toggle" id="ls26PrompterRemotePlay" aria-label="Play or pause Prompter autoscroll">▶</button>
       <button type="button" data-remote="slower" aria-label="Decrease Prompter scroll speed">−</button>
       <output id="ls26PrompterRemoteSpeed" aria-label="Prompter scroll speed">—</output>
       <button type="button" data-remote="faster" aria-label="Increase Prompter scroll speed">+</button>
-    </div>
-    <div class="ls26-prompter-remote-row ls26-prompter-remote-nav">
-      <button type="button" data-remote="up" aria-label="Scroll Prompter up">↑ UP</button>
-      <button type="button" data-remote="down" aria-label="Scroll Prompter down">↓ DOWN</button>
+      <button type="button" class="ls26-prompter-remote-arrow" data-remote="up" aria-label="Scroll Prompter up" title="Scroll Prompter up"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 15l7-7 7 7"/></svg></button>
+      <button type="button" class="ls26-prompter-remote-arrow" data-remote="down" aria-label="Scroll Prompter down" title="Scroll Prompter down"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9l7 7 7-7"/></svg></button>
     </div>`;
 
   const show=visible=>{
