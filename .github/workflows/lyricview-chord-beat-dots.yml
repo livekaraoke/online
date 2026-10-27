@@ -4,6 +4,8 @@ on:
     branches: [main]
     paths:
       - 'ls26try/shared/chord-playback.js'
+      - 'ls26try/shared/lyricview-chord-follow.js'
+      - 'ls26try/verification/chord-beat-capsule-layout.cjs'
       - 'ls26try/host/css/lyricview-chord-beat-dots.css'
       - 'ls26try/host/lyricview.html'
       - 'ls26try/tests/chord-playback.test.cjs'
@@ -21,9 +23,11 @@ jobs:
         with:
           node-version: '22'
       - name: Install DOM fixture dependency
-        run: npm install --prefix "$RUNNER_TEMP/ls26-chord-dots" --no-audit --no-fund linkedom@0.18.12
+        run: npm install --prefix "$RUNNER_TEMP/ls26-chord-dots" --no-audit --no-fund linkedom@0.18.12 playwright@1.62.1
       - name: Validate chord renderer and regression tests
         run: |
           export LS26_TEST_NODE_MODULES="$RUNNER_TEMP/ls26-chord-dots/node_modules"
           node --check ls26try/shared/chord-playback.js
+          node --check ls26try/shared/lyricview-chord-follow.js
           node --test --test-name-pattern='ordered timeline|render mapping|valid timed chords|right-side beat dots|render mismatch|Viewer loads timing|paused clock|untimed, partial|timeline finishes|review-required|untimed follow' ls26try/tests/chord-playback.test.cjs
+          node ls26try/verification/chord-beat-capsule-layout.cjs
