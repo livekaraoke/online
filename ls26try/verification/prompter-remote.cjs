@@ -95,9 +95,12 @@ assert.match(prompterHtml,/prompterScrollUp/);assert.match(prompterHtml,/prompte
   });
   const compact=await host.locator('#ls26PrompterRemote').boundingBox();
   assert.ok(compact.x+compact.width<=525,'Narrow remote must leave space for side navigation');
-  const playTop=await host.locator('#ls26PrompterRemotePlay').evaluate(el=>el.getBoundingClientRect().top);
-  const arrowTop=await host.locator('[data-remote="up"]').evaluate(el=>el.getBoundingClientRect().top);
-  assert.ok(arrowTop>playTop+40,'Narrow remote should wrap the arrows to the second row');
+  const positions=await host.evaluate(()=>{
+    const play=document.getElementById('ls26PrompterRemotePlay').getBoundingClientRect();
+    const arrow=document.querySelector('#ls26PrompterRemote [data-remote="up"]').getBoundingClientRect();
+    return {play:play.top,arrow:arrow.top};
+  });
+  assert.ok(positions.arrow>positions.play+40,'Narrow remote should wrap the arrows to the second row');
   console.log('PASS: portrait placement, compact controls, large arrow icons, small-screen layout, 48px touch targets');
   await host.setViewportSize({width:1024,height:1536});
   await host.waitForFunction(()=>{
