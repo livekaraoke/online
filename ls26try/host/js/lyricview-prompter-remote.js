@@ -54,8 +54,10 @@
   const placeDefault=()=>{
     const rect=panel.getBoundingClientRect();
     const safeBottom=Math.max(125,Math.min(190,window.innerHeight*0.12));
-    const x=window.innerWidth<=760?8:window.innerWidth*0.46-rect.width/2;
-    place(x,window.scrollY+window.innerHeight-safeBottom-rect.height,true);
+    const top=Math.max(window.scrollY+8,window.scrollY+window.innerHeight-safeBottom-rect.height);
+    // Keep the responsive CSS horizontal anchor active until the user drags.
+    Object.assign(panel.style,{left:'',top:top+'px',right:'',bottom:'auto',transform:''});
+    customPosition=false;
   };
   const restorePosition=()=>{
     if(positionRestored)return;
