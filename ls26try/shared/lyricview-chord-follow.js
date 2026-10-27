@@ -124,7 +124,7 @@ html.ls26-hide-active-chord .host-section-body .ls26-active-chord{outline:none!i
 
   function visibleSections(){return track?.events.every(e=>{const section=document.querySelector(`.host-section[data-section-index="${e.sourceAnchor.sectionIndex}"]`);return section&&!section.classList.contains('collapsed')&&!section.classList.contains('session-visibility-hidden');});}
   async function load(){if(loaded)return result;if(pending)return pending;pending=store.load(songId,getSong()).then(value=>{loaded=true;result=value;return value;}).finally(()=>{pending=null;});return pending;}
-  function clearActive(){for(const node of nodes.values())node.classList.remove('ls26-active-chord');}
+  function clearActive(){for(const node of nodes.values())node.classList.remove('ls26-active-chord');playback.clearBeatProgress?.(nodes);}
   function clear(){clearActive();current=null;}
   function placeCard(){if(card.hidden)return;const nav=document.querySelector('.host-nav-pad'),rect=nav?.getBoundingClientRect?.();const right=rect?Math.max(12,window.innerWidth-rect.right):14;const bottom=rect?Math.max(100,window.innerHeight-rect.top+10):220;card.style.right=right+'px';card.style.bottom=bottom+'px';}
   function setControlsVisible(value,{persist=true,broadcast=false}={}){controlsVisible=Boolean(value);card.hidden=!controlsVisible;if(persist)writeControlsPreference(controlsVisible);if(controlsVisible)window.requestAnimationFrame?.(placeCard);if(broadcast)window.dispatchEvent(new CustomEvent('ls26:chord-follow-controls-visibility',{detail:{visible:controlsVisible,source:'follow-card'}}));}
@@ -285,6 +285,9 @@ html.ls26-hide-active-chord .host-section-body .ls26-active-chord{outline:none!i
      if(gate&&enterImprovHold(gate,{resumeBeat:hit.event.startBeat,position:true}))return;
      clearActive();current=hit;nodes.get(hit.event.id)?.classList.add('ls26-active-chord');onSection(hit.event.sourceAnchor.sectionIndex);position(hit.event);
     }else current=hit;
+    // Highlight the chord's beat dots using the SAME clock as chord-follow.
+    // Pausing preserves the lit beats; advancing or disabling resets them.
+    playback.paintBeatProgress?.(hit.event,nodes.get(hit.event.id),logicalBeat);
     const summary=`${name(hit.event)} · chord ${hit.index+1} of ${track.events.length}${state?.state==='paused'?' · paused':''}`;if(!manual&&label.textContent!==summary)notify(summary);
    }
    if(state?.state==='playing'&&!hit&&logicalBeat>=track.totalBeats-1e-9&&!finished){
