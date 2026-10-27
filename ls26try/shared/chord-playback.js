@@ -6,6 +6,12 @@
   let total=0;const events=timing.events.map(event=>{const start=total;total+=event.durationBeats;return {...event,startBeat:start,endBeat:total};});
   return Object.freeze({events,totalBeats:total,at(beat){if(!Number.isFinite(beat)||beat<0)return null;let low=0,high=events.length;while(low<high){const mid=(low+high)>>1;if(events[mid].endBeat<=beat+1e-9)low=mid+1;else high=mid;}return low<events.length?{event:events[low],index:low,progress:Math.max(0,(beat-events[low].startBeat)/events[low].durationBeats)}:null;}});
  }
+ // Beat dots are visual metadata only: never mutate original chord text.
+ function beatDots(durationBeats){
+  const beats=Number(durationBeats);
+  if(!Number.isFinite(beats)||beats<=0||!Number.isSafeInteger(beats*2))return '';
+  return '●'.repeat(Math.floor(beats))+(beats%1?'◐':'');
+ }
  function bind(events,bodies,document){
   const result=new Map(),plans=[];
   for(const event of events){
@@ -27,6 +33,11 @@
    node.dataset.ls26EventId=String(event.id||'');
    node.dataset.ls26StartBeat=String(Number(event.startBeat)||0);
    node.dataset.ls26EndBeat=String(Number(event.endBeat)||0);
+   const dots=beatDots(event.durationBeats);
+   if(dots){
+    node.dataset.ls26BeatDots=dots;
+    node.dataset.ls26DurationBeats=String(event.durationBeats);
+   }
    node.dataset.ls26SectionIndex=String(event.sourceAnchor?.sectionIndex??'');
    node.dataset.ls26LineIndex=String(event.sourceAnchor?.lineIndex??'');
    result.set(event.id,node);
