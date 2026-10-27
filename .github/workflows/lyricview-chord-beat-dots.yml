@@ -1,0 +1,29 @@
+name: LyricView chord beat dots regression
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'ls26try/shared/chord-playback.js'
+      - 'ls26try/host/css/lyricview-chord-beat-dots.css'
+      - 'ls26try/host/lyricview.html'
+      - 'ls26try/tests/chord-playback.test.cjs'
+      - '.github/workflows/lyricview-chord-beat-dots.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  chord-beats:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install DOM fixture dependency
+        run: npm install --prefix "$RUNNER_TEMP/ls26-chord-dots" --no-audit --no-fund linkedom@0.18.12
+      - name: Validate chord renderer and regression tests
+        run: |
+          export LS26_TEST_NODE_MODULES="$RUNNER_TEMP/ls26-chord-dots/node_modules"
+          node --check ls26try/shared/chord-playback.js
+          node --test ls26try/tests/chord-playback.test.cjs
