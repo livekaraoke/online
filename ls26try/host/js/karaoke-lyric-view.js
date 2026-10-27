@@ -161,7 +161,7 @@
    accept({version:3,phase:'idle',songId:'',updatedAtMs:Date.now()});return;
   }
   const token=data?.forceReloadToken;
-  if(token&&reloadToken&&token!==reloadToken){songId='';viewKey='';localReceivedAt=0;}
+  if(token&&token!==reloadToken){songId='';viewKey='';localReceivedAt=0;}
   if(token)reloadToken=token;
   const id=String(data?.currentLyricsSongId||data?.currentSongId||data?.songId||'');
   // SEND TO KARAOKE reveals lyrics immediately without starting auto-scroll.
