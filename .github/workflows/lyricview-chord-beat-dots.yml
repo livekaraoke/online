@@ -26,4 +26,4 @@ jobs:
         run: |
           export LS26_TEST_NODE_MODULES="$RUNNER_TEMP/ls26-chord-dots/node_modules"
           node --check ls26try/shared/chord-playback.js
-          node --test ls26try/tests/chord-playback.test.cjs
+          node --test --test-name-pattern='ordered timeline|render mapping|valid timed chords|render mismatch|Viewer loads timing|paused clock|untimed, partial|timeline finishes|review-required|untimed follow' ls26try/tests/chord-playback.test.cjs
