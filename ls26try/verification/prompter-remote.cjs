@@ -107,6 +107,10 @@ assert.match(prompterHtml,/prompterScrollUp/);assert.match(prompterHtml,/prompte
   const restored=await fresh.locator('#ls26PrompterRemote').boundingBox();
   assert.ok(Math.abs(restored.x-moved.x)<2&&Math.abs(restored.y-moved.y)<2,'Reload restores card position');
   await fresh.setViewportSize({width:350,height:560});
+  await fresh.waitForFunction(()=>{
+    const rect=document.getElementById('ls26PrompterRemote').getBoundingClientRect();
+    return rect.left>=7&&rect.right<=window.innerWidth-7;
+  },{timeout:2000});
   const clamp=await fresh.locator('#ls26PrompterRemote').boundingBox();
   assert.ok(clamp.x>=7&&clamp.x+clamp.width<=343,'Card stays within resized screen');
   await fresh.close();
