@@ -60,6 +60,13 @@ body.host-lyric-view-page .host-section-body .ls26-timed-chord.ls26-active-chord
   border-color:#00d85e!important;
   box-shadow:0 0 0 2px rgba(10,220,140,.15)!important;
 }
+/* The dim (before) and lit (after) glyphs MUST have identical origins.
+   Otherwise bright dots drift away from the dim beats inside the capsule.
+   Both layers share border, font, letter spacing and this exact inset. */
+body.host-lyric-view-page .host-section-body .ls26-timed-chord.ls26-active-chord[data-ls26-beat-dots]::after{
+  left:0!important;
+  padding-left:calc(var(--ls26-active-chord-width, 0px) + .6em)!important;
+}
 /* Hide Chord Highlight remains the explicit performer preference. */
 html.ls26-hide-active-chord body.host-lyric-view-page .host-section-body .ls26-timed-chord.ls26-active-chord[data-ls26-beat-dots]::before{
   left:calc(100% + .25em)!important;
@@ -67,4 +74,10 @@ html.ls26-hide-active-chord body.host-lyric-view-page .host-section-body .ls26-t
   background:transparent!important;
   border-color:transparent!important;
   box-shadow:none!important;
+}
+/* When the performer hides the capsule, BOTH layers return to the
+   normal right-of-chord anchor. Do not leave lit dots inside an old inset. */
+html.ls26-hide-active-chord body.host-lyric-view-page .host-section-body .ls26-timed-chord.ls26-active-chord[data-ls26-beat-dots]::after{
+  left:calc(100% + .25em)!important;
+  padding-left:0!important;
 }
