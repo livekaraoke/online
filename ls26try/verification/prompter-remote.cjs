@@ -100,6 +100,10 @@ assert.match(prompterHtml,/prompterScrollUp/);assert.match(prompterHtml,/prompte
   assert.ok(arrowTop>playTop+40,'Narrow remote should wrap the arrows to the second row');
   console.log('PASS: portrait placement, compact controls, large arrow icons, small-screen layout, 48px touch targets');
   await host.setViewportSize({width:1024,height:1536});
+  await host.waitForFunction(()=>{
+    const box=document.getElementById('ls26PrompterRemote').getBoundingClientRect();
+    return box.left>195&&box.right<750&&Math.abs(window.innerHeight-box.bottom-190)<2;
+  });
   const original=await host.locator('#ls26PrompterRemote').boundingBox();
   const header=await host.locator('.ls26-prompter-remote-head').boundingBox();
   await host.mouse.move(header.x+55,header.y+header.height/2);
