@@ -97,3 +97,13 @@
 @media(max-width:560px){
   .ls26-reason-actions{grid-template-columns:1fr!important}
 }
+
+/* A showModal() dialog belongs to the visual viewport, not document flow.
+ * The shared panel rule above uses relative positioning for close-bar layout,
+ * which can trigger browser scroll-to-focus when a popup is opened far down
+ * a song. Keep only modal dialogs fixed; ordinary cards are unaffected. */
+dialog.ls26-dialog:modal{
+  position:fixed!important;
+  inset:0;
+  margin:auto;
+}

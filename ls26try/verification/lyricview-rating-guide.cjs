@@ -10,6 +10,8 @@ const appCss=fs.readFileSync(path.join(root,'shared/dialogs.css'),'utf8');
 const ratingCss=fs.readFileSync(path.join(root,'host/css/lyricview-completion.css'),'utf8');
 assert.match(pageHtml,/lyricview-end-rating\.js\?v=20261028-rating-guide-v1/);
 assert.match(pageHtml,/lyricview-completion\.css\?v=20261028-rating-guide-v1/);
+assert.match(pageHtml,/dialogs\.css\?v=20261028-modal-stationary-v1/);
+assert.match(pageHtml,/dialogs\.js\?v=20261028-modal-stationary-v1/);
 const rating=pageHtml.match(/<section id="endSongRating"[^]*?<\/section>/)?.[0];
 const dialog=pageHtml.match(/<dialog id="endRatingGuideDialog"[^]*?<\/dialog>/)?.[0];
 assert.ok(rating&&dialog,'Rating section and guidance modal are present');
@@ -17,15 +19,26 @@ assert.ok(rating&&dialog,'Rating section and guidance modal are present');
  const browser=await chromium.launch({headless:true,...(fs.existsSync('/usr/bin/chromium')?{executablePath:'/usr/bin/chromium'}:{}),args:['--no-sandbox']});
  try{
   const page=await browser.newPage({viewport:{width:1024,height:768}});
-  await page.setContent('<!doctype html><html><head><style>'+appCss+'\n'+ratingCss+'</style></head><body class="host-lyric-view-page">'+rating+dialog+'</body></html>');
+  // Match the real lyric page: completion and popup markup are far below top.
+  await page.setContent('<!doctype html><html><head><style>'+appCss+'\n'+ratingCss+'</style></head><body class="host-lyric-view-page"><div style="height:1800px" aria-hidden="true"></div>'+rating+dialog+'<div style="height:1800px" aria-hidden="true"></div></body></html>');
   await page.addScriptTag({content:appDialogs});
   await page.addScriptTag({content:ratingJs});
   const trigger=page.locator('#endRatingInfoBtn'),modal=page.locator('#endRatingGuideDialog');
   assert.equal(await trigger.textContent(),'i');
   assert.equal(await modal.isVisible(),false,'Dialog starts closed');
   assert.ok(await page.locator('.host-end-rating-choices button:disabled').count()===5,'Ratings are disabled without a completed performance');
+  // Set a non-zero lyric scroll position with the info button visible.
+  await page.evaluate(()=>{
+    const trigger=document.getElementById('endRatingInfoBtn');
+    window.scrollTo(0,window.scrollY+trigger.getBoundingClientRect().top-210);
+  });
+  await page.waitForFunction(()=>scrollY>500);
+  const before=await page.evaluate(()=>window.scrollY);
   await trigger.click();
   assert.equal(await modal.isVisible(),true,'Info button opens custom dialog');
+  const afterOpen=await page.evaluate(()=>window.scrollY);
+  assert.ok(Math.abs(afterOpen-before)<2,'Opening the info popup must preserve the exact lyric scroll position');
+  assert.equal(await modal.evaluate(el=>getComputedStyle(el).position),'fixed','Modal must be viewport-fixed rather than page-relative');
   assert.equal(await trigger.getAttribute('aria-expanded'),'true');
   assert.equal(await modal.evaluate(el=>el.matches(':modal')),true,'Native modal isolates background interaction');
   const labels=await modal.locator('tbody tr th').allTextContents();
@@ -36,12 +49,25 @@ assert.ok(rating&&dialog,'Rating section and guidance modal are present');
   await close.waitFor({state:'visible'});
   await close.click();
   await modal.waitFor({state:'hidden'});
+  assert.ok(Math.abs((await page.evaluate(()=>window.scrollY))-before)<2,'Closing X must not move the lyrics');
   assert.equal(await trigger.getAttribute('aria-expanded'),'false');
   assert.equal(await trigger.evaluate(el=>document.activeElement===el),true,'Close returns focus to help trigger');
   await trigger.click();
   await page.keyboard.press('Escape');
   await modal.waitFor({state:'hidden'});
+  assert.ok(Math.abs((await page.evaluate(()=>window.scrollY))-before)<2,'Escape must not move the lyrics');
   assert.equal(await trigger.getAttribute('aria-expanded'),'false','Escape closes modal');
+  // Other shared dialogs use the same CSS and focus management.
+  const sharedBefore=await page.evaluate(()=>window.scrollY);
+  await page.evaluate(()=>{window.__sharedAlert=window.LS26Dialogs.alert('An example stage popup');});
+  const sharedDialog=page.locator('dialog.ls26-dialog').filter({hasText:'An example stage popup'});
+  await sharedDialog.waitFor({state:'visible'});
+  assert.ok(Math.abs((await page.evaluate(()=>window.scrollY))-sharedBefore)<2,
+    'Opening an existing shared LiveSuite alert must not scroll the page');
+  await sharedDialog.locator('.ls26-modal-x').click();
+  await sharedDialog.waitFor({state:'detached'});
+  assert.ok(Math.abs((await page.evaluate(()=>window.scrollY))-sharedBefore)<2,
+    'Closing an existing shared LiveSuite alert must preserve lyric position');
   await page.setViewportSize({width:375,height:667});
   await trigger.click();
   const box=await modal.boundingBox();
@@ -50,6 +76,6 @@ assert.ok(rating&&dialog,'Rating section and guidance modal are present');
   await page.evaluate(()=>document.getElementById('endRatingGuideDialog').click());
   await modal.waitFor({state:'hidden'});
   assert.ok(await page.locator('.host-end-rating-choices button:disabled').count()===5,'Help does not enable rating or change Firestore');
-  console.log('PASS: info popup, five descriptions, close X, Escape, focus restore, small-screen fit and unchanged rating state');
+  console.log('PASS: info popup, five descriptions, X/Escape, focus, mobile fit, no scroll jumps for rating and shared dialogs, unchanged rating state');
  }finally{await browser.close();}
 })().catch(error=>{console.error(error);process.exitCode=1;});

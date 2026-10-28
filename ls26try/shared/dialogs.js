@@ -23,7 +23,7 @@
       if(kind!=='alert'){const cancel=document.createElement('button');cancel.type='button';cancel.textContent='Cancel';cancel.onclick=()=>d.close();actions.append(cancel);}
       form.append(actions);d.append(form);document.body.append(d);enhance(d);
       form.onsubmit=e=>{e.preventDefault();result=kind==='prompt'?input.value:kind==='choice'?null:true;d.close();};
-      d.addEventListener('close',()=>{d.remove();resolve(result);},{once:true});d.showModal();(input||ok).focus();
+      d.addEventListener('close',()=>{d.remove();resolve(result);},{once:true});d.showModal();(input||ok).focus({preventScroll:true});
     });
   }
   function fadeClose(dialog){
