@@ -119,7 +119,10 @@
       if (!rows.length) continue;
       const group = document.createElement('div');
       group.className = 'verse modern-prompter-section';
-      if (section.title) {
+      const isPerformanceNote = ['performancenote', 'performance-note']
+        .includes(String(section.type || '').toLowerCase());
+      // Performance Note is a generic editor label, not part of the cue.
+      if (section.title && !isPerformanceNote) {
         const label = document.createElement('div');
         label.className = 'section modern-prompter-heading';
         label.textContent = section.title;
@@ -129,7 +132,12 @@
         const line = document.createElement('div');
         line.className = row.kind === 'cue'
           ? 'modern-prompter-cue' : 'modern-prompter-line';
-        line.textContent = row.text;
+        // The shared Singer Lines helper shortens performance notes to the
+        // trailing parenthetical ("wait for signal"). LyricView, however,
+        // shows the complete author-entered note stored in section.text.
+        // Preserve that exact text for the dedicated Prompter only.
+        line.textContent = isPerformanceNote && row.kind === 'cue'
+          ? (section.text || section.note || row.text) : row.text;
         group.appendChild(line);
         visibleLines++;
       }
