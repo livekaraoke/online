@@ -381,6 +381,7 @@ real-time typography control, and performance styling tools.
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 
 <script>
   const firebaseConfig = window.LKFirebaseProjects
@@ -1227,6 +1228,7 @@ function loadSong() {
       window.scrollTo(0, 0);
     }
     lastRenderedLyricsId = id;
+    window.dispatchEvent(new CustomEvent('ls26:prompter-song-changed', {detail:{id,source:'legacy'}}));
     setDebug("Lyrics loaded successfully", "INFO");
   };
 
@@ -1417,7 +1419,7 @@ slaveLyricsToggle.addEventListener("change", function() {
 <!-- Reuse atomic session finish logic; rating uses the existing performedSongs record. -->
 <script src="../../../shared/performance-intelligence.js?v=20261018-smart-v1"></script>
 <script src="../../../shared/performance-lifecycle.js?v=20261018-smart-v1"></script>
-<script src="prompter-end-rating.js?v=20261028-stage-v1"></script>
+<script src="prompter-end-rating.js?v=20261028-stage-v2"></script>
 </body>
 </html>
 
