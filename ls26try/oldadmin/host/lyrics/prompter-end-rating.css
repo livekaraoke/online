@@ -1,4 +1,20 @@
 /* Legacy Prompter end-of-song rating. Stage-sized touch controls. */
+/* End label is a separate non-interactive marker: both modern Firestore songs
+   and legacy .js lyrics finish above it, without changing stored song data. */
+#prompterEndMarker {
+  position:relative;
+  z-index:970;
+  width:max-content;
+  max-width:calc(100% - 40px);
+  margin:72px auto 52px;
+  text-align:center;
+  color:#05ddb0;
+  font:700 clamp(25px,3vw,36px)/1.3 Verdana,Arial,sans-serif;
+  letter-spacing:.14em;
+  pointer-events:none;
+}
+/* Replace the card's former top margin with the marker's explicit gap. */
+#prompterEndMarker + #prompterEndRating { margin-top:0; }
 #prompterEndRating {
   position:relative;
   z-index:970; /* above the wide arrow click zones while this card is in view */
@@ -102,6 +118,7 @@
   border-radius:8px;background:#05435b;color:white;cursor:pointer;
 }
 @media(max-width:740px){
+  #prompterEndMarker{margin-top:56px;margin-bottom:42px;}
   #prompterEndRating{width:calc(100% - 24px);padding:16px;margin-top:64px;}
   #prompterEndRating .prompter-rating-choices{grid-template-columns:repeat(2,minmax(0,1fr));}
   #prompterEndRating .prompter-rating-choices button:last-child{grid-column:1/-1;}
