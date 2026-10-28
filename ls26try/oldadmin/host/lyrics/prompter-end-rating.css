@@ -72,11 +72,16 @@
   display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;
 }
 #prompterEndRating .prompter-rating-choices button {
-  min-height:62px;min-width:0;box-sizing:border-box;
+  /* Each singer rating is a square, generous touch target. */
+  aspect-ratio:1 / 1;
+  display:grid;place-items:center;
+  width:100%;height:auto;min-width:0;min-height:0;box-sizing:border-box;
   border:1px solid #216078;border-radius:10px;
   background:#003047;color:#def5fc;
-  padding:10px 4px;
-  font:bold 15px Verdana,Arial,sans-serif;
+  padding:12px 8px;
+  font:800 clamp(18px,1.8vw,21px)/1.25 Verdana,Arial,sans-serif;
+  text-align:center;
+  overflow-wrap:break-word;
   cursor:pointer;
 }
 #prompterEndRating .prompter-rating-choices button:disabled {opacity:.45;cursor:not-allowed;}
@@ -121,6 +126,8 @@
   #prompterEndMarker{margin-top:56px;margin-bottom:42px;}
   #prompterEndRating{width:calc(100% - 24px);padding:16px;margin-top:64px;}
   #prompterEndRating .prompter-rating-choices{grid-template-columns:repeat(2,minmax(0,1fr));}
-  #prompterEndRating .prompter-rating-choices button:last-child{grid-column:1/-1;}
+  #prompterEndRating .prompter-rating-choices button:last-child{
+    grid-column:1/-1;width:min(100%,220px);justify-self:center;
+  }
   #prompterEndRating .prompter-rating-inner{padding:16px 10px;}
 }
