@@ -1349,6 +1349,10 @@ slaveLyricsToggle.addEventListener("change", function() {
 <!-- ********************************************************* -->
 <!-- ================ END OF LYRICS CONTAINER ================ -->
 
+<!-- The visual end-of-lyrics marker belongs after the dynamic lyrics
+     container so song loads and Slave updates never remove it. -->
+<div id="prompterEndMarker" aria-label="End of song">[ END ]</div>
+
 <!-- Singer feedback belongs to a recorded performance but cannot complete
      songs or modify the host's separate audience-response rating. -->
 <section id="prompterEndRating" aria-label="Rate your Live Karaoke experience">
