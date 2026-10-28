@@ -381,7 +381,6 @@ real-time typography control, and performance styling tools.
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 
 <script>
   const firebaseConfig = window.LKFirebaseProjects
@@ -1330,38 +1329,37 @@ slaveLyricsToggle.addEventListener("change", function() {
 <!-- ********************************************************* -->
 <!-- ================ END OF LYRICS CONTAINER ================ -->
 
-<!-- A rating may only be saved against an actual completed session
-     performance. Reaching this card never silently completes a song. -->
-<section id="prompterEndRating" aria-label="Audience response after song">
+<!-- Singer feedback belongs to a recorded performance but cannot complete
+     songs or modify the host's separate audience-response rating. -->
+<section id="prompterEndRating" aria-label="Rate your Live Karaoke experience">
   <div class="prompter-rating-check" aria-hidden="true">✓</div>
-  <h2>SONG COMPLETE</h2>
-  <p class="prompter-rating-subtitle">Great run. Keep it going.</p>
+  <h2>THANKS FOR SINGING!</h2>
+  <p class="prompter-rating-subtitle">We'd love to hear how it felt to sing with live music.</p>
   <div class="prompter-rating-inner">
     <div class="prompter-rating-title-row">
-      <h3>HOW DID THE AUDIENCE RESPOND?</h3>
-      <button type="button" id="prompterRatingInfoBtn" aria-label="Audience response rating guidance"
+      <h3>HOW WAS YOUR LIVE KARAOKE EXPERIENCE?</h3>
+      <button type="button" id="prompterRatingInfoBtn" aria-label="How to rate your experience"
         aria-haspopup="dialog" aria-controls="prompterRatingGuide" aria-expanded="false">i</button>
     </div>
-    <button type="button" id="prompterCompleteSong" hidden>✓ COMPLETE SONG &amp; RATE</button>
-    <div class="prompter-rating-choices" role="group" aria-label="Audience response">
-      <button type="button" data-prompter-rating="great" disabled>GREAT</button>
+    <div class="prompter-rating-choices" role="group" aria-label="Your Live Karaoke experience">
+      <button type="button" data-prompter-rating="amazing" disabled>AMAZING</button>
       <button type="button" data-prompter-rating="good" disabled>GOOD</button>
-      <button type="button" data-prompter-rating="average" disabled>AVERAGE</button>
-      <button type="button" data-prompter-rating="weak" disabled>WEAK</button>
-      <button type="button" data-prompter-rating="" disabled>NOT RATED</button>
+      <button type="button" data-prompter-rating="okay" disabled>OKAY</button>
+      <button type="button" data-prompter-rating="notGreat" disabled>NOT GREAT</button>
+      <button type="button" data-prompter-rating="" disabled>SKIP</button>
     </div>
-    <p id="prompterRatingStatus" role="status" aria-live="polite">Rating available for a saved performance.</p>
+    <p id="prompterRatingStatus" role="status" aria-live="polite">Choose how the experience felt to you.</p>
   </div>
 </section>
-<dialog id="prompterRatingGuide" aria-label="Audience response guidance">
-  <h3>HOW TO RATE THE AUDIENCE RESPONSE</h3>
-  <p>Judge how the audience reacted to the song, not the guitar or vocal performance.</p>
-  <table><thead><tr><th>RATING</th><th>WHAT TO JUDGE</th></tr></thead><tbody>
-    <tr><th>GREAT</th><td>Strong singing, dancing, applause, or visible excitement.</td></tr>
-    <tr><th>GOOD</th><td>Clearly positive reaction and engagement.</td></tr>
-    <tr><th>AVERAGE</th><td>Some response but no strong reaction.</td></tr>
-    <tr><th>WEAK</th><td>Little engagement or noticeable drop in energy.</td></tr>
-    <tr><th>NOT RATED</th><td>No reliable judgement or leave this performance unrated.</td></tr>
+<dialog id="prompterRatingGuide" aria-label="How to rate your Live Karaoke experience">
+  <h3>RATE YOUR EXPERIENCE</h3>
+  <p>Think about how much you enjoyed singing with live music, how comfortable you felt, and the overall experience. This is <strong>not</strong> a rating of your singing ability or the audience's reaction.</p>
+  <table><thead><tr><th>RATING</th><th>WHAT IT MEANS</th></tr></thead><tbody>
+    <tr><th>AMAZING</th><td>Loved it! You'd happily sing with us again.</td></tr>
+    <tr><th>GOOD</th><td>Enjoyed it overall, even if a few things could improve.</td></tr>
+    <tr><th>OKAY</th><td>It was alright, but the experience could be better.</td></tr>
+    <tr><th>NOT GREAT</th><td>You didn't enjoy it or something made it difficult.</td></tr>
+    <tr><th>SKIP</th><td>Prefer not to rate? That's fine. This also clears an earlier choice.</td></tr>
   </tbody></table>
   <button id="prompterRatingGuideClose" type="button" onclick="this.closest('dialog').close()">CLOSE</button>
 </dialog>
@@ -1419,7 +1417,7 @@ slaveLyricsToggle.addEventListener("change", function() {
 <!-- Reuse atomic session finish logic; rating uses the existing performedSongs record. -->
 <script src="../../../shared/performance-intelligence.js?v=20261018-smart-v1"></script>
 <script src="../../../shared/performance-lifecycle.js?v=20261018-smart-v1"></script>
-<script src="prompter-end-rating.js?v=20261028-stage-v2"></script>
+<script src="prompter-end-rating.js?v=20261028-singer-experience-v1"></script>
 </body>
 </html>
 
