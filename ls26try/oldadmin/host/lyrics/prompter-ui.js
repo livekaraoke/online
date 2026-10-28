@@ -6,6 +6,7 @@
   const STORE = 'ls26_legacy_prompter_prefs_v1';
   const defaults = {
     theme: 'default', font: 'verdana', lineSpacing: '1.5', lineGap: 8,
+    noteGapAbove: 48, noteGapBelow: 48,
     charSpacing: '0px', fontSizeOffset: 0, scrollZones: true, slaveLyrics: false,
     wideLyrics: false, arrowOpacity: 55, arrowSize: 100, devConsole: false
   };
@@ -47,6 +48,21 @@
     if (output) output.textContent = gap + ' px';
   }
 
+  function applyNoteSpacing() {
+    const above = clampPreference(prefs.noteGapAbove, 48, 0, 160, 8);
+    const below = clampPreference(prefs.noteGapBelow, 48, 0, 160, 8);
+    document.documentElement.style.setProperty('--prompter-note-extra-above', above + 'px');
+    document.documentElement.style.setProperty('--prompter-note-extra-below', below + 'px');
+    const aboveSlider = byId('prompterNoteGapAbove');
+    const belowSlider = byId('prompterNoteGapBelow');
+    const aboveOutput = byId('prompterNoteGapAboveValue');
+    const belowOutput = byId('prompterNoteGapBelowValue');
+    if (aboveSlider) aboveSlider.value = String(above);
+    if (belowSlider) belowSlider.value = String(below);
+    if (aboveOutput) aboveOutput.textContent = above + ' px';
+    if (belowOutput) belowOutput.textContent = below + ' px';
+  }
+
   function applyStyles() {
     const theme = themes[prefs.theme] || themes.default;
     document.body.style.background = theme.background;
@@ -58,6 +74,7 @@
       el.style.letterSpacing = prefs.charSpacing;
     });
     applyLineGap();
+    applyNoteSpacing();
     window.applyTextSizes?.();
     scheduleWideLyricsLayout();
     scheduleHeaderOpacity();
@@ -547,6 +564,16 @@
       // Rescale the FIT view to account for the updated document height.
       if (prefs.wideLyrics === true) scheduleWideLyricsLayout();
     });
+    const changeNoteGap = (preference, event) => {
+      prefs[preference] = clampPreference(event.target.value, 48, 0, 160, 8);
+      save();
+      applyNoteSpacing();
+      if (prefs.wideLyrics === true) scheduleWideLyricsLayout();
+    };
+    byId('prompterNoteGapAbove')?.addEventListener('input', event =>
+      changeNoteGap('noteGapAbove', event));
+    byId('prompterNoteGapBelow')?.addEventListener('input', event =>
+      changeNoteGap('noteGapBelow', event));
     byId('prompterArrowOpacity')?.addEventListener('input', event => {
       prefs.arrowOpacity = clampPreference(event.target.value, 55, 20, 100, 5);
       save();
