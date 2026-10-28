@@ -183,6 +183,28 @@ assert.match(prompterHtml,/prompterScrollUp/);assert.match(prompterHtml,/prompte
   const clamp=await fresh.locator('#ls26PrompterRemote').boundingBox();
   assert.ok(clamp.x>=7&&clamp.x+clamp.width<=343,'Card stays within resized screen');
   await fresh.close();
+  // Migrate the saved TOP pixel positions from the previous release.
+  // After migration the remote must use only a bottom anchor.
+  const migration=await context.newPage();
+  await migration.setViewportSize({width:1024,height:1536});
+  await migration.goto('http://remote.test/ls26try/host/lyricview.html');
+  await migration.setContent('<style>'+css+'</style><input type="checkbox" id="ls26ShowKaraoke" checked>');
+  await migration.evaluate(()=>{
+    localStorage.removeItem('ls26:prompter-remote-bottom-position-v4');
+    localStorage.setItem('ls26:prompter-remote-fixed-position-v3',JSON.stringify({x:255,y:1010}));
+  });
+  await migration.addScriptTag({content:hostScript});
+  const migrated=await migration.locator('#ls26PrompterRemote').boundingBox();
+  const migratedSaved=await migration.evaluate(()=>JSON.parse(localStorage.getItem('ls26:prompter-remote-bottom-position-v4')));
+  assert.ok(Math.abs(migrated.x-255)<1&&Math.abs(migrated.y-1010)<1,'Earlier dragged position migrates intact');
+  assert.ok(Math.abs(migratedSaved.bottom-(1536-migrated.bottom))<2,'Migration creates bottom position, not another top position');
+  assert.equal(await migration.locator('#ls26PrompterRemote').evaluate(el=>el.style.top),'auto');
+  await migration.setViewportSize({width:1024,height:1400});
+  const migratedAfter=await migration.locator('#ls26PrompterRemote').boundingBox();
+  assert.ok(Math.abs((1400-migratedAfter.bottom)-(1536-migrated.bottom))<1,
+    'Migrated position stays bottom-stationary when Chrome top chrome collapses');
+  await migration.close();
+  console.log('PASS: saved top position migrates into stable bottom anchored position');
   // A separate sticky Karaoke Tools bar moves according to its own layout.
   // The remote must keep exactly the same viewport coordinates as the page scrolls.
   await host.evaluate(()=>{
