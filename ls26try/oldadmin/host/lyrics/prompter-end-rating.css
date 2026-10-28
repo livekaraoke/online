@@ -126,6 +126,7 @@
   #prompterEndMarker{margin-top:56px;margin-bottom:42px;}
   #prompterEndRating{width:calc(100% - 24px);padding:16px;margin-top:64px;}
   #prompterEndRating .prompter-rating-choices{grid-template-columns:repeat(2,minmax(0,1fr));}
+  #prompterEndRating .prompter-rating-choices button{max-width:220px;justify-self:center;}
   #prompterEndRating .prompter-rating-choices button:last-child{
     grid-column:1/-1;width:min(100%,220px);justify-self:center;
   }
