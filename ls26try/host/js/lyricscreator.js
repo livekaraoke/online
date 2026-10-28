@@ -1147,7 +1147,7 @@
       options.push([`Custom (${value})`, String(value)]);
     }
     return options.map(([label, colour]) =>
-      `<option value="${esc(colour)}" ${colour.toLowerCase() === String(value).toLowerCase() ? "selected" : ""}>${esc(label)}</option>`
+      `<option value="${esc(colour)}" ${label.startsWith("Custom (") ? 'data-custom-title-colour="true"' : ""} ${colour.toLowerCase() === String(value).toLowerCase() ? "selected" : ""}>${esc(label)}</option>`
     ).join("");
   }
 
