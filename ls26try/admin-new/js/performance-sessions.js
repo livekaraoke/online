@@ -424,6 +424,33 @@
     renderTable();
   };
 
+  function mergePerformedHistoryRows(rows, latest) {
+    const byId = new Map(latest.map(item => [String(item.id || ""), item]));
+    const matched = new Set();
+    const sameStart = (a,b) => {
+      const start = tsDate(a.startedAt || a.playedAt || a.createdAt)?.getTime();
+      const end = tsDate(b.startedAt || b.playedAt || b.createdAt)?.getTime();
+      return Boolean(start && end && start === end && a.songId === b.songId);
+    };
+    const updated = rows.map(row => {
+      const id = String(row.performanceId || row.id || "");
+      let live = byId.get(id);
+      if (!live) {
+        const matches = latest.filter(item => sameStart(row,item));
+        if (matches.length === 1) live = matches[0];
+      }
+      if (!live) return row;
+      matched.add(String(live.id));
+      return {...row,...live};
+    });
+    for (const item of latest) {
+      if (!matched.has(String(item.id)) && !updated.some(row => sameStart(row,item))) {
+        updated.push(item);
+      }
+    }
+    return updated;
+  }
+
   async function loadLiveFallback(session) {
     const result = {
       requests:getRequestSnapshot(session),
@@ -432,38 +459,15 @@
     };
 
     if (Array.isArray(session.requestSnapshot) && Array.isArray(session.playedSongsSnapshot)) {
-      // Session snapshots are a fallback, but rating may be changed afterward.
-      // Read authoritative performedSongs once when this history detail opens.
+      // Use the authoritative performed-song ratings even when the archived
+      // session has an older snapshot. Read only when details are opened.
       try {
-        const live = await db.collection("performanceSessions").doc(session.id)
+        const snap = await db.collection("performanceSessions").doc(session.id)
           .collection("performedSongs").get();
-        const byId = new Map(live.docs.map(doc => [doc.id, {id:doc.id,...(doc.data()||{})}]));
-        const matched = new Set();
-        result.played = result.played.map(row => {
-          const id = String(row.performanceId || row.id || "");
-          let actual = byId.get(id);
-          if (!actual) {
-            const start = tsDate(row.startedAt || row.playedAt || row.createdAt)?.getTime();
-            const matches = [...byId.values()].filter(item =>
-              item.songId === row.songId &&
-              tsDate(item.startedAt || item.playedAt || item.createdAt)?.getTime() === start);
-            if (start && matches.length === 1) actual = matches[0];
-          }
-          if (!actual) return row;
-          matched.add(actual.id);
-          return {...row,...actual};
-        });
-        // Include a performance not present in an older session snapshot.
-        for (const item of byId.values()) {
-          if (!matched.has(item.id) && !result.played.some(row =>
-            row.songId === item.songId &&
-            tsDate(row.startedAt || row.playedAt || row.createdAt)?.getTime() ===
-              tsDate(item.startedAt || item.playedAt || item.createdAt)?.getTime())) {
-            result.played.push(item);
-          }
-        }
+        const latest = snap.docs.map(doc => ({id:doc.id,...(doc.data()||{})}));
+        result.played = mergePerformedHistoryRows(result.played, latest);
       } catch(error) {
-        console.warn("Could not refresh performed-song ratings; using session snapshot:",error);
+        console.warn("Could not refresh performed-song ratings; using session snapshot:", error);
       }
       result.requests = chronological(result.requests, requestOrderMs);
       result.played = chronological(result.played, playedOrderMs);
@@ -481,10 +485,12 @@
         result.requests = requestsSnap.docs.map(doc => ({id:doc.id,...(doc.data() || {})}));
       }
 
+      const performed = performedSnap.docs.map(doc => ({id:doc.id,...(doc.data() || {})}));
       if (!result.played.length) {
         const logs = logsSnap.docs.map(doc => ({id:doc.id,...(doc.data() || {})}));
-        const performed = performedSnap.docs.map(doc => ({id:doc.id,...(doc.data() || {})}));
         result.played = [...performed,...logs];
+      } else {
+        result.played = mergePerformedHistoryRows(result.played, performed);
       }
     } catch (error) {
       console.warn("Could not load live fallback session detail:",error);
