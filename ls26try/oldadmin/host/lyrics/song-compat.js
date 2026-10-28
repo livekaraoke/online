@@ -78,13 +78,107 @@
   let version = 0;
   let displayedId = '';
   let lastHostKey = '';
+  let currentRenderMode = 'legacy';
   let enabled = false;
 
-  function replaceUrlId(id) {
+  function replaceUrlId(id, mode = 'legacy') {
     const url = new URL(location.href);
     url.searchParams.set('id', id);
-    // URL is updated in-place: no page navigation, no lost scrolling state.
+    if (mode === 'modern') url.searchParams.set('source', 'modern');
+    else url.searchParams.delete('source');
+    // In-place update avoids full-page reloads and preserves fullscreen.
     history.replaceState(null, '', url.href);
+  }
+
+  // The source is the same Firestore lyrics/{id} document consumed by the
+  // existing Singer Screen. Reuse its section-visibility and line filtering
+  // helpers rather than maintaining a second chord/lyrics parser.
+  function renderModernSong(song) {
+    const container = document.getElementById('lyrics-container');
+    const title = document.getElementById('songTitle');
+    if (!container || !title) return false;
+    if (!Array.isArray(song.sections) || !window.LyricsCommon ||
+        !window.LS26SingerLines) {
+      throw new Error('The modern lyrics renderer or song sections are unavailable.');
+    }
+    const heading = document.createElement('div');
+    heading.className = 'song-main-title';
+    heading.textContent = song.title || 'Untitled';
+    const artist = document.createElement('div');
+    artist.className = 'song-artist';
+    artist.textContent = song.artist || '';
+    title.replaceChildren(heading, artist);
+
+    const fragment = document.createDocumentFragment();
+    let visibleLines = 0;
+    for (const section of song.sections) {
+      // Explicitly hidden sections must not leak chords, lyrics, or cues.
+      if (!window.LyricsCommon.sectionVisibleOnSingerScreen(section)) continue;
+      const rows = window.LS26SingerLines.section(section, document)
+        .filter(row => row.kind === 'lyric' || row.kind === 'cue');
+      if (!rows.length) continue;
+      const group = document.createElement('div');
+      group.className = 'verse modern-prompter-section';
+      if (section.title) {
+        const label = document.createElement('div');
+        label.className = 'section modern-prompter-heading';
+        label.textContent = section.title;
+        group.appendChild(label);
+      }
+      for (const row of rows) {
+        const line = document.createElement('div');
+        line.className = row.kind === 'cue'
+          ? 'modern-prompter-cue' : 'modern-prompter-line';
+        line.textContent = row.text;
+        group.appendChild(line);
+        visibleLines++;
+      }
+      fragment.appendChild(group);
+    }
+    if (!visibleLines) {
+      const empty = document.createElement('div');
+      empty.className = 'modern-prompter-empty';
+      empty.textContent = 'No lyrics are visible on Singer Screen for this song.';
+      fragment.appendChild(empty);
+    }
+    container.replaceChildren(fragment);
+    window.applySavedPrompterStyles?.();
+    return true;
+  }
+
+  async function showModernSong(rawId) {
+    const id = String(rawId || '').trim();
+    if (!id || !window.firebase?.firestore) return;
+    const token = ++version;
+    try {
+      const snap = await firebase.firestore().collection('lyrics').doc(id).get();
+      if (token !== version || (enabled === false &&
+          new URLSearchParams(location.search).get('source') !== 'modern')) return;
+      if (!snap.exists) throw new Error('Modern lyrics not found for this song.');
+      const song = snap.data() || {};
+      if (!Array.isArray(song.sections)) throw new Error('Song has no valid lyrics sections.');
+      if (displayedId && displayedId !== 'modern:' + id) window.stopAutoScroll?.();
+      renderModernSong(song);
+      replaceUrlId(id, 'modern');
+      const changed = displayedId !== 'modern:' + id;
+      displayedId = 'modern:' + id;
+      currentRenderMode = 'modern';
+      window.currentSongId = id;
+      window.currentBPM = Number(song.userBpm || song.originalBpm) || 120;
+      window.recalcSpeed?.();
+      if (changed) window.scrollTo(0, 0);
+    } catch (error) {
+      if (token !== version) return;
+      console.warn('Modern Prompter lyrics unavailable:', error);
+      const container = document.getElementById('lyrics-container');
+      if (container) {
+        const message = document.createElement('p');
+        message.className = 'modern-prompter-empty';
+        message.textContent = error.message || 'Could not load modern lyrics.';
+        container.replaceChildren(message);
+      }
+      // Failed requests never enter an automatic retry/navigation loop.
+    }
   }
 
   async function showSong(rawId, metadata = {}) {
@@ -93,17 +187,20 @@
     const token = ++version;
     const id = await resolveId(raw, metadata);
     if (token !== version || !id) return;
-    if (displayedId === id) return;
+    if (displayedId === id && currentRenderMode === 'legacy') return;
     if (displayedId) window.stopAutoScroll?.();
-    replaceUrlId(id);
+    replaceUrlId(id, 'legacy');
     displayedId = id;
+    currentRenderMode = 'legacy';
     originalLoadSong();
   }
 
   // The original DOMContentLoaded callback will call this wrapper once.
   window.loadSong = function () {
-    const id = new URLSearchParams(location.search).get('id') || '';
-    if (displayedId === id) return;
+    const params = new URLSearchParams(location.search);
+    const id = params.get('id') || '';
+    if (params.get('source') === 'modern') return showModernSong(id);
+    if (displayedId === id && currentRenderMode === 'legacy') return;
     return showSong(id);
   };
 
@@ -124,18 +221,20 @@
         const data = snap.data() || {};
         // Manual SEND LYRICS may update currentSongId while the modern
         // singer-display ID remains stale.
-        const raw = String(data.currentSongId || data.currentLyricsSongId || data.songId || '').trim();
+        const modern = data.prompterLyricsSource === 'modern';
+        const raw = String(modern ? data.prompterSongId :
+          (data.currentSongId || data.currentLyricsSongId || data.songId) || '').trim();
         if (!raw) return;
         const meta = data.song || data;
-        const signature = [
-          raw,
-          value(data, 'lyricsFileId', 'lyricsFileName'),
-          value(meta, 'karaokeLyrics', 'songTitle', 'title'),
-          value(meta, 'songArtist', 'artist')
-        ].join('|');
+        const signature = modern
+          ? ['modern', raw, String(data.prompterRequestToken || '')].join('|')
+          : ['legacy', raw, value(data, 'lyricsFileId', 'lyricsFileName'),
+             value(meta, 'karaokeLyrics', 'songTitle', 'title'),
+             value(meta, 'songArtist', 'artist')].join('|');
         if (signature === lastHostKey) return;
         lastHostKey = signature;
-        void showSong(raw, meta);
+        if (modern) void showModernSong(raw);
+        else void showSong(raw, meta);
       }, error => console.warn('Slave Lyrics sync failed:', error));
   };
 
