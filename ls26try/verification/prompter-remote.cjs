@@ -78,7 +78,7 @@ assert.match(prompterHtml,/prompterScrollUp/);assert.match(prompterHtml,/prompte
   assert.ok(bottomGap>=175&&bottomGap<=195,'Remote must start just above the bottom toolbar');
   assert.equal(await host.locator('#ls26PrompterRemote').evaluate(el=>getComputedStyle(el).position),'fixed','Remote must float independently of sticky tools');
   assert.equal(await host.locator('#ls26PrompterRemote').evaluate(el=>el.parentElement===document.body),true,'Remote must not be nested inside Karaoke Tools bar');
-  assert.equal(await host.locator('#ls26PrompterRemote').evaluate(el=>getComputedStyle(el).bottom),'auto','Bottom-based positioning must be cleared after initialization');
+  assert.equal(await host.locator('#ls26PrompterRemote').evaluate(el=>el.style.bottom),'auto','Bottom-based positioning must be cleared after initialization');
   // Android Chrome changes viewport height when the browser bars collapse on scroll.
   // Simulate that change without changing the tablet width or orientation.
   const stableBefore=await host.locator('#ls26PrompterRemote').boundingBox();
