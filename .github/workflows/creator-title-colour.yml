@@ -6,6 +6,8 @@ on:
       - 'ls26try/host/js/lyricscreator.js'
       - 'ls26try/host/css/lyricscreator-fixes.css'
       - 'ls26try/host/lyricscreator.html'
+      - 'ls26try/host/js/lyricview.js'
+      - 'ls26try/host/lyricview.html'
       - 'ls26try/verification/creator-title-colour.cjs'
       - '.github/workflows/creator-title-colour.yml'
   workflow_dispatch:
@@ -26,4 +28,5 @@ jobs:
         run: |
           export LS26_TEST_NODE_MODULES="$RUNNER_TEMP/ls26-title-colour/node_modules"
           node --check ls26try/host/js/lyricscreator.js
+          node --check ls26try/host/js/lyricview.js
           node ls26try/verification/creator-title-colour.cjs

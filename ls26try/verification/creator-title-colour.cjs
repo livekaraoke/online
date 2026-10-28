@@ -18,7 +18,7 @@ const change=slice('  document.addEventListener("change", event => {','  documen
 assert.match(html,/lyricscreator\.js\?v=20261028-title-colour-fix-v1/);
 assert.match(html,/lyricscreator-fixes\.css\?v=20261028-title-colour-fix-v1/);
 assert.match(view,/section\.style\?\.titleColor \|\| getSystemSectionTitleColour\(section\.title\)/);
-assert.match(view,/titleEl\.style\.color = titleColour/);
+assert.match(view,/titleEl\.style\.setProperty\("color", titleColour, "important"\)/);
 (async()=>{
  const browser=await chromium.launch({headless:true,...(fs.existsSync('/usr/bin/chromium')?{executablePath:'/usr/bin/chromium'}:{}),args:['--no-sandbox']});
  try{
@@ -69,6 +69,20 @@ assert.match(view,/titleEl\.style\.color = titleColour/);
   saved=await page.evaluate(()=>{window.__test.sync();return window.__test.state()});
   assert.equal(saved[0].style.titleColor,'#123abc','Legacy no-selection still retains custom');
   assert.equal(saved[0].type,'lyrics');
-  console.log('PASS: TITLE swatch instant display, custom/preset/default, save/reload, legacy custom fallback, LyricView colour contract');
+  // LyricView has a stronger legacy rule for the currently active section.
+  // The persisted titleColor must override that rule, not render pale blue.
+  const viewerCss=read('host/css/lyricview-fixes.css');
+  await page.addStyleTag({content:viewerCss});
+  await page.evaluate(()=>{
+    const host=document.createElement('div');
+    host.className='host-lyric-view-page';
+    host.innerHTML='<section class="host-section current-section"><button class="host-section-header"><strong>OUTRO</strong></button></section>';
+    document.body.append(host);
+    host.querySelector('strong').style.setProperty('color','#fede27','important');
+  });
+  const hostColor=await page.locator('.host-lyric-view-page .current-section .host-section-header strong')
+    .evaluate(el=>getComputedStyle(el).color);
+  assert.equal(hostColor,'rgb(254, 222, 39)','Active LyricView section must use the saved title colour');
+  console.log('PASS: TITLE swatch instant display, custom/preset/default, save/reload, legacy custom fallback, LyricView active-section override');
  }finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});

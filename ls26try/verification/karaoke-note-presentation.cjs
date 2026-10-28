@@ -16,7 +16,7 @@ assert.ok(creatorHtml.includes('＋ KARAOKE NOTE</button>'));
 assert.match(creatorHtml,/lyricscreator-fixes\.css\?v=20261028-title-colour-fix-v1/);
 assert.match(creatorHtml,/lyricscreator\.js\?v=20261028-title-colour-fix-v1/);
 assert.match(viewHtml,/lyricview-fixes\.css\?v=20261028-karaoke-note-v1/);
-assert.match(viewHtml,/lyricview\.js\?v=20261028-karaoke-note-v1/);
+assert.match(viewHtml,/lyricview\.js\?v=20261028-title-colour-fix-v1/);
 assert.match(creator,/title: template\?\.title \|\| "KARAOKE NOTE"/);
 assert.match(creator,/^.*\? "KARAOKE NOTE" : type === "hostNote"/m);
 assert.match(viewer,/body\.textContent = section\.text/);

@@ -780,7 +780,9 @@
       const titleColour = section.style?.titleColor || getSystemSectionTitleColour(section.title);
       card.dataset.sectionTitleColor = titleColour;
       const titleEl = header.querySelector("strong");
-      if (titleEl) titleEl.style.color = titleColour;
+      // The active section's legacy CSS uses !important pale blue. Honour the
+      // saved custom title colour there as well as on inactive sections.
+      if (titleEl) titleEl.style.setProperty("color", titleColour, "important");
 
       // Fill the otherwise empty part of the section heading with the exact
       // section-title colour chosen in Lyrics Creator. This is deliberately
