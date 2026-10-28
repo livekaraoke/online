@@ -189,7 +189,7 @@
     else node.dataset.performanceNote=result.text;
     applyMarkerStyle(node,type,result.size,result.colour);
     node.setAttribute('aria-label',(type==='host'?'Host note: ':'Karaoke note: ')+result.text);
-    node.title='Tap to edit '+(type==='host'?'host':'performance')+' note';
+    node.title='Tap to edit '+(type==='host'?'host':'karaoke')+' note';
     try{
       range.deleteContents();range.insertNode(node);
       // A collapsed DOM boundary after the zero-text marker is sufficient.

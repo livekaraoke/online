@@ -1,0 +1,33 @@
+name: Karaoke Note presentation regression
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'ls26try/host/js/lyricscreator.js'
+      - 'ls26try/host/js/lyricview.js'
+      - 'ls26try/host/lyricscreator.html'
+      - 'ls26try/host/lyricview.html'
+      - 'ls26try/host/css/lyricscreator-fixes.css'
+      - 'ls26try/host/css/lyricview-fixes.css'
+      - 'ls26try/verification/karaoke-note-presentation.cjs'
+      - '.github/workflows/karaoke-note-presentation.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  note-presentation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Chromium test dependency
+        run: npm install --prefix "$RUNNER_TEMP/ls26-note-test" --no-audit --no-fund playwright@1.62.1
+      - name: Verify Karaoke Note presentation and schema
+        run: |
+          export LS26_TEST_NODE_MODULES="$RUNNER_TEMP/ls26-note-test/node_modules"
+          node --check ls26try/host/js/lyricscreator.js
+          node --check ls26try/host/js/lyricview.js
+          node ls26try/verification/karaoke-note-presentation.cjs

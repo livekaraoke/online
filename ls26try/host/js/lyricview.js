@@ -763,7 +763,9 @@
       card.className = `host-section ${sectionTypeClass(section)}`;
       if (hostNote && section.displayAsCard === true) card.classList.add("display-as-card");
       card.dataset.sectionIndex = String(index);
-      card.dataset.sectionTitle = section.title || section.type || `Section ${index + 1}`;
+      card.dataset.sectionTitle = /^performance-?note$/i.test(String(section.type || "")) &&
+        /^PERFORMANCE NOTE$/i.test(String(section.title || "").trim())
+        ? "KARAOKE NOTE" : (section.title || section.type || `Section ${index + 1}`);
       card.dataset.typeRestricted = restrictedByType ? "true" : "false";
       if (section.collapsed === true) card.classList.add("collapsed");
 
