@@ -305,6 +305,39 @@ real-time typography control, and performance styling tools.
       outline-offset: 3px;
     }
     body.prompter-wide-lyrics { overflow-x: hidden; }
+    /* Modern fallback: reuse existing lyric scroll controls and typography,
+       never show hidden sections, chord rows or editor-only markup. */
+    #lyrics-container .modern-prompter-section {
+      margin-bottom: 58px;
+      font-weight: 700;
+    }
+    #lyrics-container .modern-prompter-heading {
+      margin: 32px 0 16px;
+      text-transform: uppercase;
+      letter-spacing: .035em;
+      font-weight: 800;
+    }
+    #lyrics-container .modern-prompter-line {
+      display: block;
+      white-space: pre-wrap;
+      overflow-wrap: break-word;
+      line-height: 1.35;
+      margin: .25em 0;
+    }
+    #lyrics-container .modern-prompter-cue {
+      display: block;
+      color: #00dfb5;
+      text-align: center;
+      font-size: .7em;
+      margin: 28px 0;
+      white-space: pre-wrap;
+    }
+    #lyrics-container .modern-prompter-empty {
+      color: #a6b6c1;
+      font: 600 24px/1.5 Verdana, sans-serif;
+      text-align: center;
+      margin: 80px auto;
+    }
   </style>
 </head>
 <!-- ------------------------------------------------------- -->
@@ -1265,8 +1298,12 @@ slaveLyricsToggle.addEventListener("change", function() {
 });
 
 </script>
-<!-- Resolve modern song IDs to legacy file slugs before initial load and Slave updates. -->
-<script src="song-compat.js?v=20261022-inplace-v2"></script>
+<!-- Reuse the same Singer Screen section/chord filtering helpers for modern songs. -->
+<script src="../../../host/js/lyrics-common.js?v=20260930-singer-visibility-v3"></script>
+<script src="../../../shared/chord-foundation.js?v=20261006-chord-settings"></script>
+<script src="../../../shared/singer-lines.js?v=20261007-performance-notes-v2"></script>
+<!-- One existing Slave listener now supports legacy files and modern Firestore songs. -->
+<script src="song-compat.js?v=20261028-modern-singer-v1"></script>
 <!-- ********************************************************* -->
 <!-- ==================== END OF JS CODE ===================== -->
 
