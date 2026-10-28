@@ -5,7 +5,7 @@
 
   const STORE = 'ls26_legacy_prompter_prefs_v1';
   const defaults = {
-    theme: 'default', font: 'verdana', lineSpacing: '1.5',
+    theme: 'default', font: 'verdana', lineSpacing: '1.5', lineGap: 8,
     charSpacing: '0px', fontSizeOffset: 0, scrollZones: true, slaveLyrics: false,
     wideLyrics: false, arrowOpacity: 55, arrowSize: 100, devConsole: false
   };
@@ -26,6 +26,27 @@
     highcontrast: { background: 'black', verse: '#00FF00' }
   };
 
+  function applyLineGap() {
+    const gap = clampPreference(prefs.lineGap, 8, 0, 28, 2);
+    const spacing = ['1.5', '1.75', '2'].includes(String(prefs.lineSpacing))
+      ? Number(prefs.lineSpacing) : 1.5;
+    // Legacy files encode lyric lines with <br>, so extra line-height adds
+    // vertical space without altering lyrics, whitespace, or chord positions.
+    // Exclude modern sections: their discrete lyric rows use a CSS margin.
+    document.querySelectorAll(
+      '#lyrics-container .verse:not(.modern-prompter-section),' +
+      '#lyrics-container .chorus,#lyrics-container .chorusrepeat,' +
+      '#lyrics-container .bridge'
+    ).forEach(el => {
+      el.style.lineHeight = `calc(${spacing}em + ${gap}px)`;
+    });
+    document.documentElement.style.setProperty('--prompter-line-gap', gap + 'px');
+    const input = byId('prompterLineGap');
+    const output = byId('prompterLineGapValue');
+    if (input) input.value = String(gap);
+    if (output) output.textContent = gap + ' px';
+  }
+
   function applyStyles() {
     const theme = themes[prefs.theme] || themes.default;
     document.body.style.background = theme.background;
@@ -36,6 +57,7 @@
       el.style.lineHeight = prefs.lineSpacing;
       el.style.letterSpacing = prefs.charSpacing;
     });
+    applyLineGap();
     window.applyTextSizes?.();
     scheduleWideLyricsLayout();
     scheduleHeaderOpacity();
@@ -517,6 +539,13 @@
       }
       save();
       updateScrollZones();
+    });
+    byId('prompterLineGap')?.addEventListener('input', event => {
+      prefs.lineGap = clampPreference(event.target.value, 8, 0, 28, 2);
+      save();
+      applyLineGap();
+      // Rescale the FIT view to account for the updated document height.
+      if (prefs.wideLyrics === true) scheduleWideLyricsLayout();
     });
     byId('prompterArrowOpacity')?.addEventListener('input', event => {
       prefs.arrowOpacity = clampPreference(event.target.value, 55, 20, 100, 5);
