@@ -1,6 +1,7 @@
-/* End-of-song rating in the legacy Prompter.
- * Reads only when the card is reached; uses the existing Run Order,
- * LS26Lifecycle, and performedSongs.crowdResponse. No extra listeners.
+/* Singer's own Live Karaoke experience, separate from LyricView's
+ * host-rated crowdResponse. Linked to an existing performanceSessions/
+ * performedSongs record: no duplicate performance or listener system.
+ * Ratings never complete songs or alter session state.
  */
 (() => {
   'use strict';
@@ -9,7 +10,7 @@
   if (!card || !window.firebase?.firestore) return;
 
   const db = firebase.firestore();
-  const values = {great:'Great response',good:'Good',average:'Average',weak:'Weak','':'Not rated'};
+  const values = {amazing:'Amazing',good:'Good',okay:'Okay',notGreat:'Not great','':'Skipped'};
   let current = null;
   let selected = null;
   let working = false;
@@ -24,18 +25,13 @@
     if(el){el.textContent=message;el.classList.toggle('is-error',error);}
   };
   const buttons = () => {
-    const active=Boolean(current?.record?.status==='completed')&&!working;
+    const active=Boolean(current && ['playing','completed'].includes(current.record?.status))&&!working;
     card.querySelectorAll('[data-prompter-rating]').forEach(button=>{
       button.disabled=!active;
       const chosen=selected!==null&&selected===button.dataset.prompterRating;
       button.classList.toggle('is-selected',chosen);
       button.setAttribute('aria-pressed',String(chosen));
     });
-    const finish=$('prompterCompleteSong');
-    if(finish){
-      finish.hidden=!(current?.item?.status==='playing'&&current?.record?.status==='playing');
-      finish.disabled=working;
-    }
   };
   function songDetails(){
     const params=new URLSearchParams(location.search);
@@ -65,7 +61,7 @@
     current=null;
     selected=null;
     buttons();
-    status('Rating available for a completed performance in an active session.');
+    status('How was your experience singing with live music?');
     if(reachedEnd) void refresh();
   }
   function chooseItem(items,song){
@@ -91,8 +87,8 @@
     const ticket=++requestVersion;
     current=null;selected=null;buttons();
     const song=songDetails();
-    if(!song.id){status('Load a song to rate its performance.');return;}
-    status('Checking tonight’s performance...');
+    if(!song.id){status('Finish singing a song to rate your experience.');return;}
+    status('Getting your experience rating ready...');
     try{
       const controlSnap=await db.collection('karaokeControl').doc('currentSession').get();
       if(ticket!==requestVersion)return;
@@ -100,11 +96,11 @@
       const sessionId=String(control.active===true?
         (control.sessionId||control.activeSessionId||''):'');
       if(!sessionId){
-        status('No active session. Ratings can only be saved to a recorded performance.');
+        status('This rating is available when singing at an active Live Karaoke session.');
         return;
       }
       if(!firebase.auth?.().currentUser){
-        status('Sign in to LiveSuite as the owner on this device to save ratings.');
+        status('Ask the host to enable rating on this device.');
         return;
       }
       const runSnap=await db.collection('karaokeControl').doc('runOrder').get();
@@ -115,7 +111,7 @@
       }
       const item=chooseItem(run.items||[],song);
       if(!item){
-        status('No saved performance for this song tonight. Start the song in LyricView first.');
+        status('Your song is not linked to a recorded performance yet. Ask the host.');
         return;
       }
       const ref=db.collection('performanceSessions').doc(sessionId)
@@ -128,71 +124,51 @@
         status('No matching started/completed performance record was found.',true);return;
       }
       current={sessionId,item,ref,record,songId:String(item.songId)};
-      selected=Object.hasOwn(values,String(record.crowdResponse))?
-        String(record.crowdResponse):null;
+      selected=Object.hasOwn(values,String(record.singerExperienceRating))?
+        String(record.singerExperienceRating):null;
       buttons();
-      if(record.status==='completed')status(selected!==null?
-        'Saved: '+values[selected]:'How did the audience respond? Select a rating.');
-      else status('The song is still playing. Complete it to enable rating.');
+      status(selected!==null && selected!=='' ?
+        'Your rating: '+values[selected]+'. Thanks for your feedback!' :
+        'Choose how the Live Karaoke experience felt to you.');
     }catch(error){
       if(ticket===requestVersion)status('Cannot load tonight’s performance: '+error.message,true);
     }
   }
-  async function finish(){
-    if(!current||current.item.status!=='playing'||working)return;
-    const info=current,ticket=requestVersion;
-    if(!window.LS26Lifecycle?.create){
-      status('Session completion tools could not load.',true);return;
-    }
-    working=true;buttons();status('Completing song...');
-    try{
-      const api=window.LS26Lifecycle.create(db,ms=>firebase.firestore.Timestamp.fromMillis(ms));
-      const result=await api.finish({sessionId:info.sessionId,itemId:info.item.id});
-      if(ticket!==requestVersion)return;
-      if(!result?.completed){
-        status('The song was already changed. Refreshing performance...');
-        return;
-      }
-      const saved=await info.ref.get();
-      if(ticket!==requestVersion)return;
-      if(!saved.exists||saved.data()?.status!=='completed'){
-        throw new Error('The completed record could not be verified.');
-      }
-      current={...info,item:{...info.item,status:'played'},record:saved.data()};
-      selected=Object.hasOwn(values,String(saved.data().crowdResponse))?
-        String(saved.data().crowdResponse):null;
-      status('Song complete. How did the audience respond?');
-    }catch(error){
-      if(ticket===requestVersion)status('Could not complete song: '+error.message,true);
-    }finally{
-      working=false;buttons();
-    }
-  }
   async function rate(value){
-    if(!Object.hasOwn(values,value)||!current||current.record.status!=='completed'||working)return;
+    if(!Object.hasOwn(values,value)||!current||
+      !['playing','completed'].includes(current.record.status)||working)return;
+    if(selected===value){status(value ? 'Thanks! Your rating is saved.' :
+      'No rating selected.');return;}
     const info=current,ticket=requestVersion;
     working=true;buttons();status('Saving rating...');
     try{
       await db.runTransaction(async tx=>{
         const snap=await tx.get(info.ref),data=snap.exists?snap.data()||{}:{};
-        if(!snap.exists||data.status!=='completed'||String(data.songId||'')!==info.songId)
-          throw new Error('Completed song mismatch. Rating not saved.');
-        tx.update(info.ref,{crowdResponse:value||firebase.firestore.FieldValue.delete()});
+        if(!snap.exists||!['playing','completed'].includes(data.status)||
+            String(data.songId||'')!==info.songId)
+          throw new Error('This performance was changed. Your rating was not saved.');
+        const fields = value
+          ? {singerExperienceRating:value,
+             singerExperienceRatedAt:firebase.firestore.FieldValue.serverTimestamp()}
+          : {singerExperienceRating:firebase.firestore.FieldValue.delete(),
+             singerExperienceRatedAt:firebase.firestore.FieldValue.delete()};
+        // Deliberately do NOT update crowdResponse: that belongs to LyricView.
+        tx.update(info.ref,fields);
       });
       if(ticket===requestVersion){
         selected=value;
-        current.record={...current.record,crowdResponse:value};
-        status('Saved: '+values[value]+'. View it in Session History.');
+        current.record={...current.record,singerExperienceRating:value};
+        status(value ? 'Thank you! Your experience rating was saved.' :
+          'Your rating was cleared. Thank you for singing!');
       }
     }catch(error){
-      if(ticket===requestVersion)status('Rating not saved: '+error.message,true);
+      if(ticket===requestVersion)status('Sorry, your rating could not be saved: '+error.message,true);
     }finally{working=false;buttons();}
   }
 
   card.addEventListener('click',event=>{
     const button=event.target.closest?.('[data-prompter-rating]');
-    if(button&&card.contains(button)){void rate(button.dataset.prompterRating);return;}
-    if(event.target.closest?.('#prompterCompleteSong'))void finish();
+    if(button&&card.contains(button)) void rate(button.dataset.prompterRating);
   });
   const guide=$('prompterRatingGuide'),guideButton=$('prompterRatingInfoBtn');
   guideButton?.addEventListener('click',()=>{
