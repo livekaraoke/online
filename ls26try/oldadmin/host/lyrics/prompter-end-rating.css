@@ -1,0 +1,109 @@
+/* Legacy Prompter end-of-song rating. Stage-sized touch controls. */
+#prompterEndRating {
+  position:relative;
+  z-index:970; /* above the wide arrow click zones while this card is in view */
+  box-sizing:border-box;
+  width:min(1100px,calc(100% - 40px));
+  margin:90px auto 140px;
+  padding:24px;
+  border:1px solid #245c71;
+  border-radius:16px;
+  background:linear-gradient(145deg,#001b24,#03232b);
+  color:#ebfaff;
+  text-align:center;
+  font-family:Verdana,Arial,sans-serif;
+  box-shadow:0 0 22px rgba(0,205,197,.07);
+  touch-action:pan-y;
+}
+#prompterEndRating .prompter-rating-check {
+  display:grid;place-items:center;
+  margin:0 auto 10px;
+  width:64px;height:64px;
+  font-size:44px;line-height:1;
+  border:3px solid #04dca0;color:#04dca0;border-radius:50%;
+}
+#prompterEndRating h2 {
+  margin:8px 0 12px;
+  color:#04deb2;
+  font-size:clamp(22px,3vw,34px);
+  letter-spacing:.12em;
+}
+#prompterEndRating .prompter-rating-subtitle {
+  color:#a3c0c8;font-size:16px;margin:0 0 24px;
+}
+#prompterEndRating .prompter-rating-inner {
+  background:rgba(0,67,91,.48);
+  border:1px solid #235a74;border-radius:14px;
+  padding:24px 16px 16px;
+}
+#prompterEndRating .prompter-rating-title-row {
+  display:flex;align-items:center;justify-content:center;gap:14px;
+  flex-wrap:wrap;
+}
+#prompterEndRating h3 {
+  font-size:clamp(16px,2.1vw,23px);
+  margin:0 0 18px;
+  color:#c0e1ec;letter-spacing:.04em;
+}
+#prompterRatingInfoBtn {
+  width:48px;height:48px;min-width:48px;
+  border:1px solid #3586a5;border-radius:50%;
+  background:#03435c;color:#caeafa;
+  font:bold italic 27px Arial;cursor:pointer;
+  margin-bottom:16px;
+}
+#prompterEndRating .prompter-rating-choices {
+  display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;
+}
+#prompterEndRating .prompter-rating-choices button {
+  min-height:62px;min-width:0;box-sizing:border-box;
+  border:1px solid #216078;border-radius:10px;
+  background:#003047;color:#def5fc;
+  padding:10px 4px;
+  font:bold 15px Verdana,Arial,sans-serif;
+  cursor:pointer;
+}
+#prompterEndRating .prompter-rating-choices button:disabled {opacity:.45;cursor:not-allowed;}
+#prompterEndRating .prompter-rating-choices button.is-selected {
+  color:#85ffcd;border-color:#06d9a3;
+  background:#004936;box-shadow:inset 0 0 0 1px #05dcab;
+}
+#prompterEndRating button:focus-visible,#prompterRatingGuide button:focus-visible {
+  outline:3px solid #39d6ff;outline-offset:3px;
+}
+#prompterCompleteSong {
+  min-height:56px;margin:0 0 18px;padding:12px 24px;
+  border:1px solid #07d9ac;border-radius:10px;
+  background:#06483d;color:#b6ffe7;
+  font:bold 18px Verdana,Arial,sans-serif;cursor:pointer;
+}
+#prompterCompleteSong[hidden]{display:none;}
+#prompterRatingStatus {
+  min-height:22px;margin:18px 0 0;color:#a9ccd9;
+  font-size:15px;line-height:1.4;
+}
+#prompterRatingStatus.is-error{color:#ffc2c2;}
+#prompterRatingGuide {
+  box-sizing:border-box;
+  max-width:min(620px,calc(100vw - 36px));
+  max-height:85vh;overflow:auto;padding:24px;
+  border:1px solid #3685a4;border-radius:14px;
+  color:#e8faff;background:#032432;
+}
+#prompterRatingGuide::backdrop{background:rgba(0,0,0,.75);}
+#prompterRatingGuide h3{margin:0 0 14px;color:#77eddb;}
+#prompterRatingGuide table{border-collapse:collapse;width:100%;font:14px/1.45 Arial,sans-serif;}
+#prompterRatingGuide th,#prompterRatingGuide td{
+  border-bottom:1px solid #254658;padding:10px;text-align:left;
+}
+#prompterRatingGuideClose {
+  display:block;min-height:48px;min-width:130px;
+  margin:16px 0 0 auto;border:1px solid #43738c;
+  border-radius:8px;background:#05435b;color:white;cursor:pointer;
+}
+@media(max-width:740px){
+  #prompterEndRating{width:calc(100% - 24px);padding:16px;margin-top:64px;}
+  #prompterEndRating .prompter-rating-choices{grid-template-columns:repeat(2,minmax(0,1fr));}
+  #prompterEndRating .prompter-rating-choices button:last-child{grid-column:1/-1;}
+  #prompterEndRating .prompter-rating-inner{padding:16px 10px;}
+}
