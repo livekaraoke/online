@@ -103,6 +103,10 @@
         status('No active session. Ratings can only be saved to a recorded performance.');
         return;
       }
+      if(!firebase.auth?.().currentUser){
+        status('Sign in to LiveSuite as the owner on this device to save ratings.');
+        return;
+      }
       const runSnap=await db.collection('karaokeControl').doc('runOrder').get();
       if(ticket!==requestVersion)return;
       const run=runSnap.data()||{};
@@ -200,6 +204,13 @@
   });
   guide?.addEventListener('click',event=>{if(event.target===guide)guide.close();});
 
+  // Auth persists across LiveSuite pages on the same device. An initial
+  // Firebase sign-in restoration can occur after the card becomes visible.
+  if(typeof firebase.auth==='function'){
+    firebase.auth().onAuthStateChanged(user=>{
+      if(user&&reachedEnd&&!current&&!working)void refresh();
+    });
+  }
   window.addEventListener('ls26:prompter-song-changed',()=>{
     // A second performance of the same song can reuse the song ID, so do not
     // keep the previous performance's rating across an explicit resend.
