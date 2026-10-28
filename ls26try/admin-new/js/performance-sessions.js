@@ -569,7 +569,8 @@
                 <strong>${esc(item.songTitle || item.title || item.songId || "Untitled Song")} — ${esc(ArtistNames.display(item.songArtist || item.artist || ""))}</strong>
                 <span>${formatTime(tsDate(item.playedAt || item.startedAt || item.playingAt || item.createdAt))}${Number(item.performanceBpm || item.userBpm)>0 ? ` · ${esc(item.performanceBpm || item.userBpm)} BPM used` : ""}</span>
                 <span class="status-chip played">Played</span>
-                <span>Audience: <strong>${esc(({great:"GREAT",good:"GOOD",average:"AVERAGE",weak:"WEAK"}[String(item.crowdResponse||"").toLowerCase()])||"Not rated")}</strong></span>
+                <span>Singer experience: <strong>${esc(({amazing:"AMAZING",good:"GOOD",okay:"OKAY",notGreat:"NOT GREAT"}[String(item.singerExperienceRating||"")])||"Not rated")}</strong></span>
+                <span>Audience response (host): <strong>${esc(({great:"GREAT",good:"GOOD",average:"AVERAGE",weak:"WEAK"}[String(item.crowdResponse||"").toLowerCase()])||"Not rated")}</strong></span>
               </div>
             `;
           }
