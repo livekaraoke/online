@@ -124,6 +124,9 @@
       group.className = 'verse modern-prompter-section';
       const isPerformanceNote = ['performancenote', 'performance-note']
         .includes(String(section.type || '').toLowerCase());
+      // Dedicated class makes note spacing adjustable without changing the
+      // verse/chorus layout or the saved lyrics.
+      if (isPerformanceNote) group.classList.add('modern-prompter-performance-note');
       // Performance Note is a generic editor label, not part of the cue.
       if (section.title && !isPerformanceNote) {
         const label = document.createElement('div');
