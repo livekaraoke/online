@@ -197,11 +197,11 @@ assert.match(prompterHtml,/prompterScrollUp/);assert.match(prompterHtml,/prompte
   const migrated=await migration.locator('#ls26PrompterRemote').boundingBox();
   const migratedSaved=await migration.evaluate(()=>JSON.parse(localStorage.getItem('ls26:prompter-remote-bottom-position-v4')));
   assert.ok(Math.abs(migrated.x-255)<1&&Math.abs(migrated.y-1010)<1,'Earlier dragged position migrates intact');
-  assert.ok(Math.abs(migratedSaved.bottom-(1536-migrated.bottom))<2,'Migration creates bottom position, not another top position');
+  assert.ok(Math.abs(migratedSaved.bottom-(1536-migrated.y-migrated.height))<2,'Migration creates bottom position, not another top position');
   assert.equal(await migration.locator('#ls26PrompterRemote').evaluate(el=>el.style.top),'auto');
   await migration.setViewportSize({width:1024,height:1400});
   const migratedAfter=await migration.locator('#ls26PrompterRemote').boundingBox();
-  assert.ok(Math.abs((1400-migratedAfter.bottom)-(1536-migrated.bottom))<1,
+  assert.ok(Math.abs((1400-migratedAfter.y-migratedAfter.height)-(1536-migrated.y-migrated.height))<1,
     'Migrated position stays bottom-stationary when Chrome top chrome collapses');
   await migration.close();
   console.log('PASS: saved top position migrates into stable bottom anchored position');
