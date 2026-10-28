@@ -325,6 +325,14 @@ real-time typography control, and performance styling tools.
       /* Extra space after each singer lyric row; no changes to the text. */
       margin: .25em 0 calc(.25em + var(--prompter-line-gap, 8px));
     }
+    #lyrics-container .modern-prompter-blank {
+      /* Each empty source line gets a full line box, independent of chords.
+         The adjustable Extra Line Gap also applies to these blank rows. */
+      display: block;
+      height: calc(1.35em + var(--prompter-line-gap, 8px));
+      margin: 0;
+      pointer-events: none;
+    }
     #lyrics-container .modern-prompter-cue {
       display: block;
       color: #00dfb5;
@@ -1307,9 +1315,9 @@ slaveLyricsToggle.addEventListener("change", function() {
 <!-- Reuse the same Singer Screen section/chord filtering helpers for modern songs. -->
 <script src="../../../host/js/lyrics-common.js?v=20260930-singer-visibility-v3"></script>
 <script src="../../../shared/chord-foundation.js?v=20261006-chord-settings"></script>
-<script src="../../../shared/singer-lines.js?v=20261007-performance-notes-v2"></script>
+<script src="../../../shared/singer-lines.js?v=20261028-prompter-blank-v1"></script>
 <!-- One existing Slave listener now supports legacy files and modern Firestore songs. -->
-<script src="song-compat.js?v=20261028-performance-note-v2"></script>
+<script src="song-compat.js?v=20261028-blank-lines-v1"></script>
 <!-- ********************************************************* -->
 <!-- ==================== END OF JS CODE ===================== -->
 
