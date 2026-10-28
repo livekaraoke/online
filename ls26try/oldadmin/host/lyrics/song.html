@@ -342,6 +342,17 @@ real-time typography control, and performance styling tools.
       margin: 28px 0;
       white-space: pre-wrap;
     }
+    /* Extra space for LyricsCreator Karaoke/Performance Notes, independent of
+       regular line gaps. At 0px the existing note margins remain unchanged. */
+    #lyrics-container .modern-prompter-section.modern-prompter-performance-note {
+      padding-top: var(--prompter-note-extra-above, 48px);
+      padding-bottom: var(--prompter-note-extra-below, 48px);
+    }
+    /* Older JS-file notes use the original 90px/70px margins as a baseline. */
+    #lyrics-container .note {
+      margin-top: calc(90px + var(--prompter-note-extra-above, 48px)) !important;
+      margin-bottom: calc(70px + var(--prompter-note-extra-below, 48px)) !important;
+    }
     #lyrics-container .modern-prompter-empty {
       color: #a6b6c1;
       font: 600 24px/1.5 Verdana, sans-serif;
@@ -918,6 +929,15 @@ function toggleAutoscrollVisibility() {
       <input id="prompterLineGap" type="range" min="0" max="28" step="2" value="8"
              aria-label="Additional vertical space after each lyric line">
     </div>
+    <h3>Karaoke Note Spacing</h3>
+    <div class="prompter-arrow-settings prompter-note-spacing-control">
+      <label for="prompterNoteGapAbove">Extra Space Above <output id="prompterNoteGapAboveValue" for="prompterNoteGapAbove">48 px</output></label>
+      <input id="prompterNoteGapAbove" type="range" min="0" max="160" step="8" value="48"
+             aria-label="Extra space before each karaoke note">
+      <label for="prompterNoteGapBelow">Extra Space Below <output id="prompterNoteGapBelowValue" for="prompterNoteGapBelow">48 px</output></label>
+      <input id="prompterNoteGapBelow" type="range" min="0" max="160" step="8" value="48"
+             aria-label="Extra space after each karaoke note">
+    </div>
 
     <h3>Character Spacing</h3>
     <div class="cspacing">
@@ -1320,7 +1340,7 @@ slaveLyricsToggle.addEventListener("change", function() {
 <script src="../../../shared/chord-foundation.js?v=20261006-chord-settings"></script>
 <script src="../../../shared/singer-lines.js?v=20261028-prompter-blank-v1"></script>
 <!-- One existing Slave listener now supports legacy files and modern Firestore songs. -->
-<script src="song-compat.js?v=20261028-blank-lines-v1"></script>
+<script src="song-compat.js?v=20261028-note-spacing-v1"></script>
 <!-- ********************************************************* -->
 <!-- ==================== END OF JS CODE ===================== -->
 
@@ -1412,7 +1432,7 @@ slaveLyricsToggle.addEventListener("change", function() {
   aria-label="Scroll lyrics down" title="Tap to scroll down; hold to keep scrolling">
   <span class="prompter-scroll-arrow" aria-hidden="true"><svg viewBox="0 0 96 96" focusable="false"><path d="M16 34 L48 66 L80 34"/></svg></span>
 </button>
-<script src="prompter-ui.js?v=20261028-line-gap-v1"></script>
+<script src="prompter-ui.js?v=20261028-note-spacing-v1"></script>
 <script src="prompter-remote-receiver.js?v=20261027-cross-tablet-v1"></script>
 <!-- Reuse atomic session finish logic; rating uses the existing performedSongs record. -->
 <script src="../../../shared/performance-intelligence.js?v=20261018-smart-v1"></script>
