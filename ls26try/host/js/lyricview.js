@@ -1892,8 +1892,16 @@
         select.innerHTML = validLegacyList
           ? `<option value="">Send to New UI</option>`
           : `<option value="">No karaoke lyric songs found</option>`;
-        // Do not mistake missing song-data.js for a legitimate unmatched song.
-        setSlaveLyricsAvailability(select, !validLegacyList);
+        // A missing song-data.js is a load failure, not evidence that the
+        // current song has no legacy match. Keep the diagnostic label intact.
+        if (validLegacyList) {
+          setSlaveLyricsAvailability(select, false);
+        } else {
+          select.classList.remove("ls26-slave-lyrics-unavailable");
+          select.dataset.ls26SlaveCurrentMatch = "true";
+          select.title = "";
+          select.setAttribute("aria-label", "Choose slave lyrics");
+        }
       });
       return;
     }
