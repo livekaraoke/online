@@ -2565,3 +2565,19 @@ body.host-lyric-view-page {
   .host-lyric-view-page .performance-more-details-card{grid-column:1!important}
   .host-lyric-view-page .performance-loop-stack{grid-template-columns:repeat(2,minmax(0,1fr))!important}
 }
+
+/* LyricView legacy lyrics availability: red only when the current song has
+   no matching entry in the legacy dropdown and no other entry is selected. */
+body.host-lyric-view-page #quickSlaveLyricsSelect.ls26-slave-lyrics-unavailable,
+body.host-lyric-view-page #slaveLyricsSelect.ls26-slave-lyrics-unavailable{
+  background:#641421!important;
+  border:2px solid #ff5267!important;
+  color:#fff0f2!important;
+  font-weight:800!important;
+  box-shadow:0 0 0 1px rgba(255,82,103,.34),0 0 12px rgba(255,55,85,.24)!important;
+}
+body.host-lyric-view-page #quickSlaveLyricsSelect.ls26-slave-lyrics-unavailable:focus-visible,
+body.host-lyric-view-page #slaveLyricsSelect.ls26-slave-lyrics-unavailable:focus-visible{
+  outline:2px solid #ff8e9d!important;
+  outline-offset:2px!important;
+}

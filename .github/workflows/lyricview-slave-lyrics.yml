@@ -1,0 +1,29 @@
+name: LyricView legacy lyrics availability
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'ls26try/host/js/lyricview.js'
+      - 'ls26try/host/css/lyricview-fixes.css'
+      - 'ls26try/host/lyricview.html'
+      - 'ls26try/verification/slave-lyrics-availability.cjs'
+      - '.github/workflows/lyricview-slave-lyrics.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  availability:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Chromium test dependency
+        run: npm install --prefix "$RUNNER_TEMP/ls26-slave-lyrics" --no-audit --no-fund playwright@1.62.1
+      - name: Verify matched and unmatched songs
+        run: |
+          export LS26_TEST_NODE_MODULES="$RUNNER_TEMP/ls26-slave-lyrics/node_modules"
+          node --check ls26try/host/js/lyricview.js
+          node ls26try/verification/slave-lyrics-availability.cjs

@@ -1842,6 +1842,34 @@
     return match?.id || "";
   }
 
+  // The legacy song-data list is separate from Firestore's current LyricView song.
+  // A missing *current-song* match is a New UI fallback, not a loading failure.
+  function setSlaveLyricsAvailability(select, currentSongMatched) {
+    if (!select) return;
+    select.dataset.ls26SlaveCurrentMatch = currentSongMatched ? "true" : "false";
+    const placeholder = select.querySelector('option[value=""]');
+    if (placeholder) {
+      placeholder.textContent = currentSongMatched
+        ? "Choose lyrics to send…"
+        : "Send to New UI";
+    }
+    const update = () => {
+      const unavailable = select.dataset.ls26SlaveCurrentMatch === "false" && !select.value;
+      select.classList.toggle("ls26-slave-lyrics-unavailable", unavailable);
+      select.title = unavailable
+        ? "This song has no legacy lyrics entry. Use SEND TO KARAOKE for the new UI."
+        : "";
+      select.setAttribute("aria-label", unavailable
+        ? "Send to New UI — no legacy lyrics for this song"
+        : "Choose slave lyrics");
+    };
+    if (select.dataset.ls26SlaveAvailabilityBound !== "true") {
+      select.addEventListener("change", update);
+      select.dataset.ls26SlaveAvailabilityBound = "true";
+    }
+    update();
+  }
+
   async function loadSlaveLyricsOptions() {
     const selects = [
       $("slaveLyricsSelect"),
@@ -1860,8 +1888,12 @@
 
       selects.forEach(select => {
         select.disabled = false;
-        select.innerHTML =
-          `<option value="">No karaoke lyric songs found</option>`;
+        const validLegacyList = Array.isArray(window.songs);
+        select.innerHTML = validLegacyList
+          ? `<option value="">Send to New UI</option>`
+          : `<option value="">No karaoke lyric songs found</option>`;
+        // Do not mistake missing song-data.js for a legitimate unmatched song.
+        setSlaveLyricsAvailability(select, !validLegacyList);
       });
       return;
     }
@@ -1885,6 +1917,7 @@
       select.innerHTML = options;
       select.disabled = false;
       select.value = selectedId || "";
+      setSlaveLyricsAvailability(select, Boolean(selectedId));
     });
 
     console.log(
