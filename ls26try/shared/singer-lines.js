@@ -28,7 +28,10 @@
   }
   return result;
  }
- function section(section,document){
+ function section(section,document,options={}){
+  // Opt-in for the Prompter. Existing singer-screen consumers keep the
+  // original output and never receive blank rows.
+  const includeBlankLines=options.includeBlankLines===true;
   const type=String(section?.type||'lyrics').toLowerCase();
   if(['hostnote','host-note','tab','separator'].includes(type))return [];
   if(['performancenote','performance-note'].includes(type))return [{kind:'cue',performance:true,sectionTitle:String(section.title||'').trim(),text:displayPerformanceNote(section.text||section.note||section.title||''),sourceLineIndex:-1,size:18,colour:'#75F2A0'}];
@@ -69,11 +72,16 @@
    }
    const text=norm(lyrics.textContent),all=norm(full.textContent);
    const isChord=!row.excluded.length&&chordOnly(all);
+   // Retain only genuinely empty source lines; deleted chord/hidden content
+   // must not turn into an artificial blank spacer.
+   const isBlank=!String(row.text||'').replace(/[\u200b\u00a0]/g,' ').trim() &&
+     !row.excluded.length;
    const cue=/^\[[^\]\n]{1,100}\]$/.test(text)||/^(?:(?:guitar|bass|drums?|piano)\s+)?(?:solo|riff|instrumental|interlude|break)(?:\s+(?:x|×)?\d+)?$/i.test(text);
-   return {sourceLineIndex,kind:isChord?'chord':cue?'cue':'lyric',text:isChord?all:text,html:lyrics.innerHTML,guitarHtml:full.innerHTML};
+   return {sourceLineIndex,kind:isBlank?'blank':isChord?'chord':cue?'cue':'lyric',text:isChord?all:text,html:lyrics.innerHTML,guitarHtml:full.innerHTML};
   });
   result.push(...cueRows);
-  return result.filter(row=>row.text).sort((a,b)=>a.sourceLineIndex-b.sourceLineIndex||(a.kind==='cue'?-1:1));
+  return result.filter(row=>row.text||(includeBlankLines&&row.kind==='blank'))
+   .sort((a,b)=>a.sourceLineIndex-b.sourceLineIndex||(a.kind==='cue'?-1:1));
  }
  function target(rows,chordLineIndex){
   const index=Number(chordLineIndex);if(!Number.isInteger(index)||index<0)return null;
