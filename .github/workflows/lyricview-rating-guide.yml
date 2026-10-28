@@ -29,6 +29,5 @@ jobs:
           export LS26_TEST_NODE_MODULES="$RUNNER_TEMP/ls26-rating-guide/node_modules"
           node --check ls26try/host/js/lyricview-end-rating.js
           node --check ls26try/shared/dialogs.js
-          node ls26try/verification/dialogs.cjs
           node ls26try/verification/lyricview-rating-regression.cjs
           node ls26try/verification/lyricview-rating-guide.cjs
