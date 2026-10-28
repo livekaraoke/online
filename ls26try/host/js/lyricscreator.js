@@ -1140,9 +1140,35 @@
       ["Yellow", "#ffe23d"], ["Green", "#42f35c"], ["Bright Teal", "#00ffd5"],
       ["Blue", "#4fa3ff"], ["Purple", "#9b5cff"], ["Bright Purple", "#c14cff"]
     ];
+    // A song-specific hex is valid even if it isn't in our preset menu.
+    // Include it so rendering a section or saving cannot silently select
+    // "Default" and erase that title-colour override.
+    if (value && !options.some(([,colour]) => colour.toLowerCase() === String(value).toLowerCase())) {
+      options.push([`Custom (${value})`, String(value)]);
+    }
     return options.map(([label, colour]) =>
-      `<option value="${colour}" ${colour.toLowerCase() === String(value).toLowerCase() ? "selected" : ""}>${label}</option>`
+      `<option value="${esc(colour)}" ${colour.toLowerCase() === String(value).toLowerCase() ? "selected" : ""}>${esc(label)}</option>`
     ).join("");
+  }
+
+  function syncTitleColourPreset(select, colour) {
+    if (!select) return;
+    const current = String(colour || "").toLowerCase();
+    const custom = select.querySelector("option[data-custom-title-colour]");
+    const existing = [...select.options].find(opt =>
+      !opt.hasAttribute("data-custom-title-colour") && opt.value.toLowerCase() === current
+    );
+    if (existing) {
+      custom?.remove();
+      select.value = existing.value;
+    } else {
+      const option = custom || document.createElement("option");
+      option.dataset.customTitleColour = "true";
+      option.value = colour;
+      option.textContent = `Custom (${colour})`;
+      if (!custom) select.append(option);
+      select.value = option.value;
+    }
   }
 
   function unwrapDashSpans(root) {
@@ -1408,7 +1434,7 @@
         card.innerHTML = `
           <div class="creator-section-head">
             <button class="editor-collapse-btn" type="button" data-editor-collapse="${index}" title="Collapse editor section">${s.editorCollapsed ? "▼" : "▲"}</button>
-            <input class="section-title-input" data-title="${index}" value="${esc(s.title)}" style="color:${esc(getEffectiveSectionTitleColour(s))}">
+            <input class="section-title-input" data-title="${index}" value="${esc(s.title)}" style="--ls26-section-title-colour:${esc(getEffectiveSectionTitleColour(s))}">
             <div class="creator-section-positioning">
               <label class="load-collapsed-check" title="Checked = load this section closed in Lyric View">
                 <input type="checkbox" data-load-collapsed="${index}" ${s.collapsed ? "checked" : ""}>
@@ -1639,7 +1665,12 @@
       const i = Number(el.dataset.titleColour);
       if (sections[i]) {
         sections[i].style = { ...defaultStyle(sections[i].type), ...(sections[i].style || {}) };
-        sections[i].style.titleColor = el.value || "";
+        // The picker may contain a custom hex absent from standard presets.
+        // Never turn an unselected dropdown into an accidental "Default".
+        const custom = document.querySelector(`[data-title-custom="${i}"]`);
+        sections[i].style.titleColor = el.selectedIndex >= 0
+          ? el.value
+          : (custom?.value || sections[i].style.titleColor || "");
       }
     });
     refreshChordOccurrences();
@@ -2153,7 +2184,7 @@
       renderSectionNavigator();
       const index = Number(event.target.dataset.title);
       if (sections[index] && !sections[index].style?.titleColor) {
-        event.target.style.color = getSystemSectionTitleColour(event.target.value);
+        event.target.style.setProperty("--ls26-section-title-colour", getSystemSectionTitleColour(event.target.value));
         const custom = document.querySelector(`[data-title-custom="${index}"]`);
         if (custom) custom.value = getSystemSectionTitleColour(event.target.value);
       }
@@ -2179,22 +2210,11 @@
         sections[index].style.titleColor = colourInput.value;
 
         const titleInput = document.querySelector(`[data-title="${index}"]`);
-        if (titleInput) titleInput.style.color = colourInput.value;
+        if (titleInput) titleInput.style.setProperty("--ls26-section-title-colour", colourInput.value);
 
-        // Keep the dropdown in sync only when it contains the EXACT same hex.
-        const select = document.querySelector(`[data-title-colour="${index}"]`);
-        if (select) {
-          const exactOption = [...select.options].find(
-            opt => String(opt.value).toLowerCase() === String(colourInput.value).toLowerCase()
-          );
-          if (exactOption) {
-            select.value = exactOption.value;
-          } else {
-            // A custom strip colour is a real per-song override even if it is
-            // not one of the named dropdown presets.
-            select.selectedIndex = -1;
-          }
-        }
+        // Keep a real selected custom option, not selectedIndex=-1: a later
+        // syncSectionsFromDOM() must preserve this override during Save.
+        syncTitleColourPreset(document.querySelector(`[data-title-colour="${index}"]`), colourInput.value);
 
         markDirty();
       }
@@ -2287,9 +2307,9 @@
 
       const titleInput = document.querySelector(`[data-title="${index}"]`);
       if (titleInput) {
-        titleInput.style.color =
+        titleInput.style.setProperty("--ls26-section-title-colour",
           sections[index].style.titleColor ||
-          getSystemSectionTitleColour(sections[index].title);
+          getSystemSectionTitleColour(sections[index].title));
       }
 
       markDirty();
@@ -2306,17 +2326,10 @@
       };
       sections[index].style.titleColor = titleCustom.value;
 
-      const select = document.querySelector(`[data-title-colour="${index}"]`);
-      if (select) {
-        const exactOption = [...select.options].find(
-          opt => String(opt.value).toLowerCase() === String(titleCustom.value).toLowerCase()
-        );
-        if (exactOption) select.value = exactOption.value;
-        else select.selectedIndex = -1;
-      }
+      syncTitleColourPreset(document.querySelector(`[data-title-colour="${index}"]`), titleCustom.value);
 
       const titleInput = document.querySelector(`[data-title="${index}"]`);
-      if (titleInput) titleInput.style.color = titleCustom.value;
+      if (titleInput) titleInput.style.setProperty("--ls26-section-title-colour", titleCustom.value);
 
       markDirty();
       return;

@@ -1651,3 +1651,10 @@
   outline:2px solid #12d5b9;
   outline-offset:-2px;
 }
+
+/* 2026-10-28: Per-section title colour must win against the legacy
+   .section-title-input { color:#fff!important } rule in lyrics-suite.css.
+   The CSS variable is updated live by the existing title colour controls. */
+.creator-page .creator-section-head input.section-title-input {
+  color:var(--ls26-section-title-colour, #ffffff)!important;
+}
