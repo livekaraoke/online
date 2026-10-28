@@ -187,6 +187,9 @@
       window.currentBPM = Number(song.userBpm || song.originalBpm) || 120;
       window.recalcSpeed?.();
       if (changed) window.scrollTo(0, 0);
+      window.dispatchEvent(new CustomEvent('ls26:prompter-song-changed', {
+        detail: {songId:id, source:'modern'}
+      }));
     } catch (error) {
       if (token !== version) return;
       console.warn('Modern Prompter lyrics unavailable:', error);
@@ -213,6 +216,9 @@
     displayedId = id;
     currentRenderMode = 'legacy';
     originalLoadSong();
+    window.dispatchEvent(new CustomEvent('ls26:prompter-song-changed', {
+      detail: {songId:id, source:'legacy'}
+    }));
   }
 
   // The original DOMContentLoaded callback will call this wrapper once.
