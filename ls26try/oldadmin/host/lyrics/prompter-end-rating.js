@@ -200,7 +200,15 @@
   });
   guide?.addEventListener('click',event=>{if(event.target===guide)guide.close();});
 
-  window.addEventListener('ls26:prompter-song-changed',clearForSong);
+  window.addEventListener('ls26:prompter-song-changed',()=>{
+    // A second performance of the same song can reuse the song ID, so do not
+    // keep the previous performance's rating across an explicit resend.
+    if(lastSongKey===songKey()){
+      ++requestVersion;
+      current=null;selected=null;buttons();
+      if(reachedEnd)void refresh();
+    }else clearForSong();
+  });
   // Check the selected song on startup without any network reads until the
   // card actually enters the viewport, even during long stage sessions.
   clearForSong();
