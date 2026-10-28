@@ -10,8 +10,8 @@ const css=fs.readFileSync(path.join(root,'host/css/lyricview-prompter-remote.css
 const viewerHtml=fs.readFileSync(path.join(root,'host/lyricview.html'),'utf8');
 const prompterHtml=fs.readFileSync(path.join(root,'oldadmin/host/lyrics/song.html'),'utf8');
 const performance=fs.readFileSync(path.join(root,'shared/performance.js'),'utf8');
-assert.match(viewerHtml,/lyricview-prompter-remote\.js\?v=20261028-close-toggle-v1/);
-assert.match(viewerHtml,/lyricview-prompter-remote\.css\?v=20261028-close-toggle-v1/);
+assert.match(viewerHtml,/lyricview-prompter-remote\.js\?v=20261028-bottom-anchor-v1/);
+assert.match(viewerHtml,/lyricview-prompter-remote\.css\?v=20261028-bottom-anchor-v1/);
 assert.match(prompterHtml,/prompter-remote-receiver\.js\?v=20261027-cross-tablet-v1/);
 assert.match(performance,/ls26:karaoke-tools-visibility/);
 assert.match(performance,/id="ls26ShowKaraoke"> Show karaoke tools<\/label>\s*<label class="ls26-karaoke-toggle"><input type="checkbox" id="ls26ShowPrompterRemote"> Show Prompter Remote/);
@@ -106,17 +106,20 @@ assert.match(prompterHtml,/prompterScrollUp/);assert.match(prompterHtml,/prompte
   assert.ok(bottomGap>=175&&bottomGap<=195,'Remote must start just above the bottom toolbar');
   assert.equal(await host.locator('#ls26PrompterRemote').evaluate(el=>getComputedStyle(el).position),'fixed','Remote must float independently of sticky tools');
   assert.equal(await host.locator('#ls26PrompterRemote').evaluate(el=>el.parentElement===document.body),true,'Remote must not be nested inside Karaoke Tools bar');
-  assert.equal(await host.locator('#ls26PrompterRemote').evaluate(el=>el.style.bottom),'auto','Bottom-based positioning must be cleared after initialization');
-  // Android Chrome changes viewport height when the browser bars collapse on scroll.
-  // Simulate that change without changing the tablet width or orientation.
+  assert.equal(await host.locator('#ls26PrompterRemote').evaluate(el=>el.style.top),'','Default position must not freeze top coordinates');
+  assert.equal(await host.locator('#ls26PrompterRemote').evaluate(el=>getComputedStyle(el).bottom),'190px','Default remote must remain bottom anchored');
+  // Chromium has no Android address-bar UI. Reproduce its viewport-height
+  // change: screen-bottom placement must stay identical even as top shifts.
   const stableBefore=await host.locator('#ls26PrompterRemote').boundingBox();
   await host.setViewportSize({width:1024,height:1400});
-  await host.evaluate(()=>window.dispatchEvent(new Event('resize')));
   const stableAfter=await host.locator('#ls26PrompterRemote').boundingBox();
-  assert.ok(Math.abs(stableAfter.y-stableBefore.y)<1&&Math.abs(stableAfter.x-stableBefore.x)<1,
-    'Chrome height-only viewport changes must not shift an undragged remote');
+  assert.ok(Math.abs((1400-stableAfter.y-stableAfter.height)-
+    (1536-stableBefore.y-stableBefore.height))<1&&Math.abs(stableAfter.x-stableBefore.x)<1,
+    'Chrome top-toolbar collapse must not change the bottom screen offset');
+  assert.ok(Math.abs((stableAfter.y-stableBefore.y)+136)<2,
+    'Remote must follow the bottom-docked controls, not the top browser chrome');
   await host.setViewportSize({width:1024,height:1536});
-  console.log('PASS: default card does not jump during browser toolbar height changes');
+  console.log('PASS: default card stays docked to screen bottom when Chrome top bars collapse');
   const buttonSizes=await host.locator('#ls26PrompterRemote button[data-remote]').evaluateAll(nodes=>nodes.map(n=>n.getBoundingClientRect().height));
   assert.ok(buttonSizes.every(h=>h>=56),'All touch targets should be at least 48px tall');
   const controlTops=await host.locator('#ls26PrompterRemote .ls26-prompter-remote-controls button').evaluateAll(nodes=>nodes.map(n=>n.getBoundingClientRect().top));
@@ -155,12 +158,15 @@ assert.match(prompterHtml,/prompterScrollUp/);assert.match(prompterHtml,/prompte
   await host.mouse.up();
   const moved=await host.locator('#ls26PrompterRemote').boundingBox();
   assert.ok(moved.x>original.x+45&&moved.y<original.y-40,'Title drag repositions card');
-  const saved=await host.evaluate(()=>JSON.parse(localStorage.getItem('ls26:prompter-remote-fixed-position-v3')));
-  assert.ok(Math.abs(saved.x-moved.x)<2&&Math.abs(saved.y-moved.y)<2,'Drag position saved');
+  const saved=await host.evaluate(()=>JSON.parse(localStorage.getItem('ls26:prompter-remote-bottom-position-v4')));
+  const movedBottom=1536-moved.y-moved.height;
+  assert.ok(Math.abs(saved.x-moved.x)<2&&Math.abs(saved.bottom-movedBottom)<2,'Drag bottom offset saved');
+  assert.equal(await host.locator('#ls26PrompterRemote').evaluate(el=>el.style.top),'auto','Dragged card never uses a top anchor');
   await host.setViewportSize({width:1024,height:1400});
   const duringToolbarResize=await host.locator('#ls26PrompterRemote').boundingBox();
-  assert.ok(Math.abs(duringToolbarResize.x-moved.x)<1&&Math.abs(duringToolbarResize.y-moved.y)<1,
-    'Chrome height-only viewport changes must not shift the dragged remote');
+  const toolbarBottom=1400-duringToolbarResize.y-duringToolbarResize.height;
+  assert.ok(Math.abs(duringToolbarResize.x-moved.x)<1&&Math.abs(toolbarBottom-movedBottom)<1,
+    'Chrome top-toolbar collapse must not move a dragged card relative to bottom dock');
   await host.setViewportSize({width:1024,height:1536});
   const fresh=await context.newPage();
   await fresh.setViewportSize({width:1024,height:1536});
@@ -168,7 +174,7 @@ assert.match(prompterHtml,/prompterScrollUp/);assert.match(prompterHtml,/prompte
   await fresh.setContent('<style>'+css+'</style><input type="checkbox" id="ls26ShowKaraoke" checked>');
   await fresh.addScriptTag({content:hostScript});
   const restored=await fresh.locator('#ls26PrompterRemote').boundingBox();
-  assert.ok(Math.abs(restored.x-moved.x)<2&&Math.abs(restored.y-moved.y)<2,'Reload restores card position');
+  assert.ok(Math.abs(restored.x-moved.x)<2&&Math.abs((1536-restored.y-restored.height)-movedBottom)<2,'Reload restores bottom-anchored card position');
   await fresh.setViewportSize({width:350,height:560});
   await fresh.waitForFunction(()=>{
     const rect=document.getElementById('ls26PrompterRemote').getBoundingClientRect();
@@ -193,11 +199,12 @@ assert.match(prompterHtml,/prompterScrollUp/);assert.match(prompterHtml,/prompte
   await host.waitForFunction(()=>window.scrollY>=200);
   await host.setViewportSize({width:1024,height:1400});
   const afterScroll=await host.locator('#ls26PrompterRemote').boundingBox();
-  assert.ok(Math.abs(afterScroll.y-atTop.y)<1&&Math.abs(afterScroll.x-atTop.x)<1,
-    'Remote must stay pixel-stationary as lyrics scroll AND Chrome toolbar height changes');
+  assert.ok(Math.abs((1400-afterScroll.y-afterScroll.height)-(1536-atTop.y-atTop.height))<1 &&
+    Math.abs(afterScroll.x-atTop.x)<1,
+    'Remote must stay stationary relative to bottom dock as lyrics scroll and Chrome top bars hide');
   await host.evaluate(()=>window.scrollTo(0,0));
   console.log('PASS: remote remains independently fixed during page scroll');
-  console.log('PASS: drag from title only, persisted page position, restore and resize clamp');
+  console.log('PASS: drag from title only, persisted bottom offset, reload, resize clamp');
   await context.close();
  }finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});

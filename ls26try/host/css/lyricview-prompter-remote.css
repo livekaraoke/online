@@ -1,8 +1,8 @@
-/* Independent floating controller; initialise at a bottom offset, then freeze
- * the pixel top in JS so browser-toolbar height changes don't move the card. */
+/* Fixed bottom-anchored controller, independent of the Karaoke Tools strip.
+ * Android Chrome collapsing its top bars must not move the remote upward. */
 #ls26PrompterRemote{
  position:fixed;left:46%;top:auto;right:auto;transform:translateX(-50%);
- bottom:clamp(125px,12vh,190px);z-index:2400;
+ bottom:190px;z-index:2400;
  width:min(500px,calc(100vw - 260px));box-sizing:border-box;
  display:flex;flex-direction:column;gap:7px;padding:10px;
  background:rgba(3,29,42,.96);border:1px solid #26738b;
@@ -43,7 +43,7 @@
  stroke-width:3.5;stroke-linecap:round;stroke-linejoin:round;
 }
 @media(max-width:760px){
- #ls26PrompterRemote{left:8px;transform:none;bottom:clamp(115px,15vh,170px);width:min(450px,calc(100vw - 84px))}
+ #ls26PrompterRemote{left:8px;transform:none;bottom:170px;width:min(450px,calc(100vw - 84px))}
  #ls26PrompterRemote .ls26-prompter-remote-controls{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr) 48px minmax(0,1fr)}
  #ls26PrompterRemote .ls26-prompter-remote-arrow{grid-column:span 2}
 }

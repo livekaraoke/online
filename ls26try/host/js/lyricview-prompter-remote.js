@@ -6,7 +6,8 @@
 (() => {
   'use strict';
   const CHANNEL='ls26-prompter-remote-v1',STORAGE='ls26:prompter-remote-command-v1';
-  const POSITION_KEY='ls26:prompter-remote-fixed-position-v3';
+  const POSITION_KEY='ls26:prompter-remote-bottom-position-v4';
+  const FIXED_TOP_POSITION_KEY='ls26:prompter-remote-fixed-position-v3';
   const PAGE_POSITION_KEY='ls26:prompter-remote-page-position-v2';
   const OLD_POSITION_KEY='ls26:prompter-remote-position-v1';
   const $=id=>document.getElementById(id);
@@ -39,28 +40,27 @@
     button.setAttribute('aria-pressed',String(playing));
     button.setAttribute('aria-label',playing?'Stop Prompter autoscroll':'Play Prompter autoscroll');
   };
-  // The remote floats independently of the Karaoke Tools header and lyrics.
-  // All saved and drag coordinates are viewport-relative, not document-relative.
-  const place=(x,y)=>{
+  // Android Chrome collapses its top browser chrome as lyrics scroll. A
+  // fixed TOP coordinate then moves up with that chrome in the physical screen,
+  // unlike the bottom playback dock. Anchor the remote by BOTTOM instead.
+  // All drag and persisted coordinates use the viewport's bottom edge.
+  const viewportBottom=rect=>window.innerHeight-rect.bottom;
+  const place=(x,bottomOffset)=>{
     const rect=panel.getBoundingClientRect();
     const left=Math.max(8,Math.min(x,Math.max(8,innerWidth-rect.width-8)));
-    const top=Math.max(8,Math.min(y,Math.max(8,innerHeight-rect.height-8)));
-    Object.assign(panel.style,{left:left+'px',top:top+'px',right:'auto',bottom:'auto',transform:'none'});
+    const bottom=Math.max(8,Math.min(bottomOffset,Math.max(8,innerHeight-rect.height-8)));
+    Object.assign(panel.style,{left:left+'px',top:'auto',right:'auto',bottom:bottom+'px',transform:'none'});
     customPosition=true;
   };
   const savePosition=()=>{
     if(!customPosition)return;
     const r=panel.getBoundingClientRect();
-    try{localStorage.setItem(POSITION_KEY,JSON.stringify({x:r.left,y:r.top}));}catch(_){}
+    try{localStorage.setItem(POSITION_KEY,JSON.stringify({x:r.left,bottom:viewportBottom(r)}));}catch(_){}
   };
   const placeDefault=()=>{
-    // CSS's bottom offset is only used to select the INITIAL position.
-    // Freeze the computed top in pixels so changing browser toolbar/viewport
-    // height during a lyrics scroll cannot lift or lower the remote.
+    // Leave the fixed pixel bottom CSS anchor live, just like the playback dock.
+    // In particular NEVER freeze the initial top pixel coordinate.
     Object.assign(panel.style,{left:'',top:'',right:'',bottom:'',transform:''});
-    const top=Math.max(8,panel.getBoundingClientRect().top);
-    panel.style.top=top+'px';
-    panel.style.bottom='auto';
     customPosition=false;
   };
   const restorePosition=()=>{
@@ -68,20 +68,28 @@
     positionRestored=true;
     try{
       const saved=JSON.parse(localStorage.getItem(POSITION_KEY)||'null');
-      if(Number.isFinite(saved?.x)&&Number.isFinite(saved?.y)){
-        userMoved=true;place(saved.x,saved.y);return;
+      if(Number.isFinite(saved?.x)&&Number.isFinite(saved?.bottom)){
+        userMoved=true;place(saved.x,saved.bottom);return;
       }
-      // Earlier release stored document coordinates. Convert to viewport
-      // coordinates only once; don't permanently adopt a scrolled offset.
+      // Convert earlier top-anchored saved positions once to bottom offsets.
+      // This preserves user placement while avoiding subsequent Chrome jumps.
+      const topSaved=JSON.parse(localStorage.getItem(FIXED_TOP_POSITION_KEY)||'null');
+      if(Number.isFinite(topSaved?.x)&&Number.isFinite(topSaved?.y)){
+        userMoved=true;
+        place(topSaved.x,innerHeight-topSaved.y-panel.getBoundingClientRect().height);
+        savePosition();return;
+      }
       const page=JSON.parse(localStorage.getItem(PAGE_POSITION_KEY)||'null');
       if(Number.isFinite(page?.x)&&Number.isFinite(page?.y)){
         userMoved=true;
-        place(page.x,page.y-window.scrollY);
+        place(page.x,innerHeight-(page.y-window.scrollY)-panel.getBoundingClientRect().height);
         savePosition();return;
       }
       const old=JSON.parse(localStorage.getItem(OLD_POSITION_KEY)||'null');
       if(Number.isFinite(old?.x)&&Number.isFinite(old?.y)){
-        userMoved=true;place(old.x,old.y);savePosition();return;
+        userMoved=true;
+        place(old.x,innerHeight-old.y-panel.getBoundingClientRect().height);
+        savePosition();return;
       }
     }catch(_){}
     placeDefault();
@@ -93,14 +101,14 @@
       if(e.target.closest('button'))return;
       if(e.pointerType==='mouse'&&e.button!==0)return;
       const r=panel.getBoundingClientRect();
-      drag={id:e.pointerId,startX:e.clientX,startY:e.clientY,left:r.left,top:r.top};
+      drag={id:e.pointerId,startX:e.clientX,startY:e.clientY,left:r.left,bottom:viewportBottom(r)};
       bar.setPointerCapture(e.pointerId);
       bar.classList.add('is-dragging');
       e.preventDefault();
     });
     bar.addEventListener('pointermove',e=>{
       if(drag?.id!==e.pointerId)return;
-      place(drag.left+e.clientX-drag.startX,drag.top+e.clientY-drag.startY);
+      place(drag.left+e.clientX-drag.startX,drag.bottom-(e.clientY-drag.startY));
     });
     const end=e=>{
       if(drag?.id!==e.pointerId)return;
@@ -195,7 +203,7 @@
       if(!userMoved){placeDefault();return;}
       if(customPosition){
         const r=panel.getBoundingClientRect();
-        place(r.left,r.top);
+        place(r.left,viewportBottom(r));
         savePosition();
       }
     });
