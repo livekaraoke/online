@@ -56,6 +56,7 @@ assert.ok(rating&&dialog,'Rating section and guidance modal are present');
   await page.keyboard.press('Escape');
   await modal.waitFor({state:'hidden'});
   assert.ok(Math.abs((await page.evaluate(()=>window.scrollY))-before)<2,'Escape must not move the lyrics');
+  await page.waitForFunction(()=>document.getElementById('endRatingInfoBtn')?.getAttribute('aria-expanded')==='false');
   assert.equal(await trigger.getAttribute('aria-expanded'),'false','Escape closes modal');
   // Other shared dialogs use the same CSS and focus management.
   const sharedBefore=await page.evaluate(()=>window.scrollY);
