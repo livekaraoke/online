@@ -1,5 +1,5 @@
-/* Independent fixed-stage controller, visible with Karaoke Tools.
- * Its viewport position does not follow the sticky Karaoke Tools header. */
+/* Independent floating controller; initialise at a bottom offset, then freeze
+ * the pixel top in JS so browser-toolbar height changes don't move the card. */
 #ls26PrompterRemote{
  position:fixed;left:46%;top:auto;right:auto;transform:translateX(-50%);
  bottom:clamp(125px,12vh,190px);z-index:2400;

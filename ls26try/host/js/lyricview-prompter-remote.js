@@ -12,6 +12,9 @@
   const $=id=>document.getElementById(id);
   let channel=null,lastRequest='',timeout=null,cloudWriteChain=Promise.resolve();
   let drag=null,customPosition=false,positionRestored=false,userMoved=false;
+  // Height-only resizes often mean Chrome's address/navigation bars hid on scroll.
+  // They must never shift the remote or rewrite its saved screen position.
+  let placementWidth=window.innerWidth;
   const panel=document.createElement('aside');
   panel.id='ls26PrompterRemote';
   panel.setAttribute('aria-label','Fullscreen Prompter remote');
@@ -50,8 +53,13 @@
     try{localStorage.setItem(POSITION_KEY,JSON.stringify({x:r.left,y:r.top}));}catch(_){}
   };
   const placeDefault=()=>{
-    // Use the CSS viewport anchor so orientation changes keep it above the dock.
+    // CSS's bottom offset is only used to select the INITIAL position.
+    // Freeze the computed top in pixels so changing browser toolbar/viewport
+    // height during a lyrics scroll cannot lift or lower the remote.
     Object.assign(panel.style,{left:'',top:'',right:'',bottom:'',transform:''});
+    const top=Math.max(8,panel.getBoundingClientRect().top);
+    panel.style.top=top+'px';
+    panel.style.bottom='auto';
     customPosition=false;
   };
   const restorePosition=()=>{
@@ -165,11 +173,17 @@
     document.body.append(panel);
     enableDragging();
     window.addEventListener('resize',()=>{
-      if(!panel.hidden){
-        if(!userMoved){placeDefault();return;}
-        if(customPosition){
-          const r=panel.getBoundingClientRect();place(r.left,r.top);savePosition();
-        }
+      const width=window.innerWidth;
+      // Ignore height-only browser UI changes, including Chrome on Android
+      // showing/hiding its address bar when scrolling the lyrics.
+      if(Math.abs(width-placementWidth)<24)return;
+      placementWidth=width;
+      if(panel.hidden)return;
+      if(!userMoved){placeDefault();return;}
+      if(customPosition){
+        const r=panel.getBoundingClientRect();
+        place(r.left,r.top);
+        savePosition();
       }
     });
     panel.addEventListener('click',event=>{
