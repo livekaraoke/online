@@ -432,6 +432,39 @@
     };
 
     if (Array.isArray(session.requestSnapshot) && Array.isArray(session.playedSongsSnapshot)) {
+      // Session snapshots are a fallback, but rating may be changed afterward.
+      // Read authoritative performedSongs once when this history detail opens.
+      try {
+        const live = await db.collection("performanceSessions").doc(session.id)
+          .collection("performedSongs").get();
+        const byId = new Map(live.docs.map(doc => [doc.id, {id:doc.id,...(doc.data()||{})}]));
+        const matched = new Set();
+        result.played = result.played.map(row => {
+          const id = String(row.performanceId || row.id || "");
+          let actual = byId.get(id);
+          if (!actual) {
+            const start = tsDate(row.startedAt || row.playedAt || row.createdAt)?.getTime();
+            const matches = [...byId.values()].filter(item =>
+              item.songId === row.songId &&
+              tsDate(item.startedAt || item.playedAt || item.createdAt)?.getTime() === start);
+            if (start && matches.length === 1) actual = matches[0];
+          }
+          if (!actual) return row;
+          matched.add(actual.id);
+          return {...row,...actual};
+        });
+        // Include a performance not present in an older session snapshot.
+        for (const item of byId.values()) {
+          if (!matched.has(item.id) && !result.played.some(row =>
+            row.songId === item.songId &&
+            tsDate(row.startedAt || row.playedAt || row.createdAt)?.getTime() ===
+              tsDate(item.startedAt || item.playedAt || item.createdAt)?.getTime())) {
+            result.played.push(item);
+          }
+        }
+      } catch(error) {
+        console.warn("Could not refresh performed-song ratings; using session snapshot:",error);
+      }
       result.requests = chronological(result.requests, requestOrderMs);
       result.played = chronological(result.played, playedOrderMs);
       return result;
@@ -530,6 +563,7 @@
                 <strong>${esc(item.songTitle || item.title || item.songId || "Untitled Song")} — ${esc(ArtistNames.display(item.songArtist || item.artist || ""))}</strong>
                 <span>${formatTime(tsDate(item.playedAt || item.startedAt || item.playingAt || item.createdAt))}${Number(item.performanceBpm || item.userBpm)>0 ? ` · ${esc(item.performanceBpm || item.userBpm)} BPM used` : ""}</span>
                 <span class="status-chip played">Played</span>
+                <span>Audience: <strong>${esc(({great:"GREAT",good:"GOOD",average:"AVERAGE",weak:"WEAK"}[String(item.crowdResponse||"").toLowerCase()])||"Not rated")}</strong></span>
               </div>
             `;
           }
