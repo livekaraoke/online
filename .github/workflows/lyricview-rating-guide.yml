@@ -1,0 +1,30 @@
+name: LyricView audience rating guidance
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'ls26try/host/lyricview.html'
+      - 'ls26try/host/js/lyricview-end-rating.js'
+      - 'ls26try/host/css/lyricview-completion.css'
+      - 'ls26try/verification/lyricview-rating-guide.cjs'
+      - '.github/workflows/lyricview-rating-guide.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  guidance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Chromium test dependency
+        run: npm install --prefix "$RUNNER_TEMP/ls26-rating-guide" --no-audit --no-fund playwright@1.62.1
+      - name: Verify rating guide and persistence invariants
+        run: |
+          export LS26_TEST_NODE_MODULES="$RUNNER_TEMP/ls26-rating-guide/node_modules"
+          node --check ls26try/host/js/lyricview-end-rating.js
+          node ls26try/verification/lyricview-rating-regression.cjs
+          node ls26try/verification/lyricview-rating-guide.cjs

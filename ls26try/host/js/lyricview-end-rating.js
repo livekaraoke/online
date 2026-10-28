@@ -74,6 +74,25 @@
       updateButtons();
     }
   });
-  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",updateButtons);
-  else updateButtons();
+  function setupRatingGuide(){
+    const button=$("endRatingInfoBtn");
+    const dialog=$("endRatingGuideDialog");
+    if(!button||!dialog)return;
+    button.addEventListener("click",()=>{
+      if(dialog.open)return;
+      dialog.showModal();
+      button.setAttribute("aria-expanded","true");
+    });
+    dialog.addEventListener("click",event=>{
+      // A click on the modal backdrop targets the dialog itself.
+      if(event.target===dialog)dialog.close();
+    });
+    dialog.addEventListener("close",()=>{
+      button.setAttribute("aria-expanded","false");
+      // Restore the stage user's keyboard focus without scrolling the lyrics.
+      button.focus({preventScroll:true});
+    });
+  }
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",()=>{updateButtons();setupRatingGuide();});
+  else{updateButtons();setupRatingGuide();}
 })();

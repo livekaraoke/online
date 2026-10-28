@@ -153,3 +153,69 @@ body.host-lyric-view-page #endSongChoiceActions{grid-template-columns:repeat(2,m
   body.host-lyric-view-page .host-end-rating-choices{grid-template-columns:repeat(2,minmax(0,1fr))}
   body.host-lyric-view-page .host-end-rating-choices button:last-child{grid-column:1/-1}
 }
+
+/* Completion screen: small, always-accessible guidance next to the audience rating. */
+body.host-lyric-view-page .host-end-rating-heading{
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  flex-wrap:wrap;margin:0 0 12px;
+}
+body.host-lyric-view-page #endSongRating .host-end-rating-heading h3{
+  margin:0;min-width:0;text-align:center;
+}
+body.host-lyric-view-page #endRatingInfoBtn{
+  display:inline-grid;place-items:center;flex:0 0 42px;
+  width:42px;height:42px;min-width:42px;min-height:42px;
+  padding:0;border:1px solid #45a6c6;border-radius:50%;
+  background:#0b3448;color:#a8edff;font-size:21px;font-weight:900;
+  font-style:italic;line-height:1;cursor:pointer;touch-action:manipulation;
+}
+body.host-lyric-view-page #endRatingInfoBtn:active,
+body.host-lyric-view-page #endRatingInfoBtn[aria-expanded="true"]{
+  background:#0d5368;border-color:#64dfff;
+}
+body.host-lyric-view-page #endRatingInfoBtn:focus-visible{
+  outline:3px solid #57d5fb;outline-offset:2px;
+}
+/* Reuse the app's native modal chrome, focus trapping, Escape and X control. */
+body.host-lyric-view-page #endRatingGuideDialog{
+  box-sizing:border-box;width:min(680px,calc(100vw - 28px));
+  max-height:min(86dvh,750px);overflow:auto;
+  padding:22px 18px 20px;border-color:#32afda;
+  background:#061f2e;color:#e5f5ff;
+  box-shadow:0 16px 55px rgba(0,0,0,.75);
+}
+body.host-lyric-view-page #endRatingGuideDialog h2{
+  font-size:19px;letter-spacing:.025em;line-height:1.25;
+}
+body.host-lyric-view-page #endRatingGuideDescription{
+  margin:2px 0 17px;line-height:1.5;font-size:15px;color:#c5e4f1;
+}
+body.host-lyric-view-page .host-audience-rating-table{
+  border-collapse:separate;border-spacing:0;width:100%;
+  table-layout:fixed;font-size:14px;line-height:1.45;
+}
+body.host-lyric-view-page .host-audience-rating-table th,
+body.host-lyric-view-page .host-audience-rating-table td{
+  padding:12px 10px;border-bottom:1px solid #245066;vertical-align:top;text-align:left;
+  overflow-wrap:anywhere;
+}
+body.host-lyric-view-page .host-audience-rating-table thead th{
+  background:#0c3549;color:#85dffa;font-size:12px;letter-spacing:.04em;
+}
+body.host-lyric-view-page .host-audience-rating-table th:first-child{width:25%}
+body.host-lyric-view-page .host-audience-rating-table tbody th{
+  color:#a9eeff;font-weight:850;
+}
+body.host-lyric-view-page .host-audience-rating-table tbody tr:nth-child(even){
+  background:rgba(28,100,130,.11);
+}
+body.host-lyric-view-page .host-audience-rating-hint{
+  color:#a7cdda;font-size:13px;line-height:1.45;margin:17px 0 0;
+}
+@media(max-width:440px){
+  body.host-lyric-view-page #endRatingGuideDialog{padding:18px 10px 15px}
+  body.host-lyric-view-page #endRatingGuideDialog h2{font-size:16px}
+  body.host-lyric-view-page .host-audience-rating-table{font-size:13px}
+  body.host-lyric-view-page .host-audience-rating-table th,
+  body.host-lyric-view-page .host-audience-rating-table td{padding:10px 7px}
+}
