@@ -1857,7 +1857,7 @@
       const unavailable = select.dataset.ls26SlaveCurrentMatch === "false" && !select.value;
       select.classList.toggle("ls26-slave-lyrics-unavailable", unavailable);
       select.title = unavailable
-        ? "This song has no legacy lyrics entry. Use SEND TO KARAOKE for the new UI."
+        ? "No legacy lyrics entry. SEND LYRICS will send the current song to the Prompter using the new lyrics renderer."
         : "";
       select.setAttribute("aria-label", unavailable
         ? "Send to New UI — no legacy lyrics for this song"
@@ -1968,28 +1968,49 @@
     const button = $(selectId === "quickSlaveLyricsSelect" ? "quickSendSlaveLyricsBtn" : "sendSlaveLyricsBtn");
     if (button?.disabled) return false;
     const id = String(select?.value || "").trim();
-    if (!id) {
+    // The empty option is an intentional modern-song fallback ONLY if the
+    // current song has no matching legacy lyrics file. A load failure or an
+    // ordinary unselected dropdown must never silently send another song.
+    const useModern = !id && select?.dataset.ls26SlaveCurrentMatch === "false" &&
+      Array.isArray(window.songs) && Boolean(currentSongId && currentSong);
+    if (!id && !useModern) {
       setSlaveLyricsButtonFeedback(button, "missing", "Select lyrics from the dropdown first.");
       return false;
     }
 
-    const fileName = `${id}.js`;
     if (button) button.disabled = true;
     setSlaveLyricsButtonFeedback(button, "pending");
     try {
-      await db.collection("karaokeControl").doc("liveLyrics").set({
-        currentSongId: id,
-        songId: id,
+      if (useModern) {
+        // Only the existing Prompter's Slave listener consumes these fields.
+        // Do not alter the karaoke singer screen's current song/displayState.
+        await db.collection("karaokeControl").doc("liveLyrics").set({
+          prompterLyricsSource: "modern",
+          prompterSongId: currentSongId,
+          prompterSongTitle: currentSong.title || "",
+          prompterSongArtist: currentSong.artist || "",
+          prompterRequestToken: `${Date.now()}_${Math.random().toString(36).slice(2,7)}`,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+      } else {
+        const fileName = `${id}.js`;
+        await db.collection("karaokeControl").doc("liveLyrics").set({
+          currentSongId: id,
+          songId: id,
 
-        // Explicit legacy mapping. No artist is added to the filename.
-        lyricsFileId: id,
-        lyricsFileName: fileName,
-        lyricsFilePath: `../oldadmin/host/lyrics/lyrics-data/${fileName}`,
-        lyricsSource: "song-data-js",
+          // Explicit legacy mapping. No artist is added to the filename.
+          lyricsFileId: id,
+          lyricsFileName: fileName,
+          lyricsFilePath: `../oldadmin/host/lyrics/lyrics-data/${fileName}`,
+          lyricsSource: "song-data-js",
+          prompterLyricsSource: "legacy",
+          prompterSongId: "",
+          prompterRequestToken: "",
 
-        reset: false,
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-      }, { merge: true });
+          reset: false,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+      }
       setSlaveLyricsButtonFeedback(button, "success");
       return true;
     } catch (error) {
