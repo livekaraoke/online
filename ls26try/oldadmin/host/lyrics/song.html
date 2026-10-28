@@ -322,7 +322,8 @@ real-time typography control, and performance styling tools.
       white-space: pre-wrap;
       overflow-wrap: break-word;
       line-height: 1.35;
-      margin: .25em 0;
+      /* Extra space after each singer lyric row; no changes to the text. */
+      margin: .25em 0 calc(.25em + var(--prompter-line-gap, 8px));
     }
     #lyrics-container .modern-prompter-cue {
       display: block;
@@ -902,6 +903,11 @@ function toggleAutoscrollVisibility() {
       <button onclick="setLineSpacing(1.75, event)">Loose</button>
       <button onclick="setLineSpacing(2, event)">Looser</button>
     </div>
+    <div class="prompter-arrow-settings prompter-line-gap-control">
+      <label for="prompterLineGap">Extra Line Gap <output id="prompterLineGapValue" for="prompterLineGap">8 px</output></label>
+      <input id="prompterLineGap" type="range" min="0" max="28" step="2" value="8"
+             aria-label="Additional vertical space after each lyric line">
+    </div>
 
     <h3>Character Spacing</h3>
     <div class="cspacing">
@@ -1361,7 +1367,7 @@ slaveLyricsToggle.addEventListener("change", function() {
   aria-label="Scroll lyrics down" title="Tap to scroll down; hold to keep scrolling">
   <span class="prompter-scroll-arrow" aria-hidden="true"><svg viewBox="0 0 96 96" focusable="false"><path d="M16 34 L48 66 L80 34"/></svg></span>
 </button>
-<script src="prompter-ui.js?v=20261027-scroll-mode-v1"></script>
+<script src="prompter-ui.js?v=20261028-line-gap-v1"></script>
 <script src="prompter-remote-receiver.js?v=20261027-cross-tablet-v1"></script>
 </body>
 </html>
