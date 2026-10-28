@@ -2581,3 +2581,23 @@ body.host-lyric-view-page #slaveLyricsSelect.ls26-slave-lyrics-unavailable:focus
   outline:2px solid #ff8e9d!important;
   outline-offset:2px!important;
 }
+
+/* KARAOKE NOTE: match the singer Prompter's turquoise centred cue, regardless
+ * of saved section title (INTRO/SOLO/OUTRO etc) or old plain-text styling. */
+.host-lyric-view-page .host-section.is-performance-note .host-section-body{
+  font-family:Arial,Helvetica,sans-serif!important;
+  font-size:28px!important;
+  line-height:1.5!important;
+  font-weight:800!important;
+  color:#12d5b9!important;
+  text-align:center!important;
+  white-space:pre-wrap!important;
+  overflow-wrap:break-word!important;
+  word-break:normal!important;
+  padding:26px 18px!important;
+}
+@media(max-width:650px){
+  .host-lyric-view-page .host-section.is-performance-note .host-section-body{
+    font-size:24px!important;
+  }
+}

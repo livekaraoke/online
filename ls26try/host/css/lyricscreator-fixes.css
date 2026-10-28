@@ -1627,3 +1627,27 @@
 .creator-page #capoInput[data-zero="true"]{
   color:inherit!important;
 }
+
+/* KARAOKE NOTE (stored as performanceNote for existing songs and singer sync).
+ * Match the bold centred turquoise stage cue used by the legacy Prompter. */
+.creator-page .creator-section-card.type-performanceNote .performance-note-editor{
+  box-sizing:border-box;
+  width:100%;
+  min-height:100px;
+  padding:22px 18px;
+  background:#050b0b;
+  color:#12d5b9!important;
+  border:0;
+  font-family:Arial,Helvetica,sans-serif!important;
+  font-size:28px!important;
+  line-height:1.5;
+  font-weight:800!important;
+  text-align:center!important;
+  white-space:pre-wrap;
+  overflow-wrap:break-word;
+  resize:vertical;
+}
+.creator-page .creator-section-card.type-performanceNote .performance-note-editor:focus-visible{
+  outline:2px solid #12d5b9;
+  outline-offset:-2px;
+}

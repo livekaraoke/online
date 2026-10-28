@@ -542,6 +542,9 @@
   }
 
   function sectionTypeClass(section) {
+    // Note type wins over names like INTRO/SOLO, which are also valid names
+    // for singer-visible Karaoke Notes. Do not infer their styling from title.
+    if (/^performance-?note$/i.test(String(section?.type || ""))) return "is-performance-note";
     const key = `${section.type || ""} ${section.title || ""}`.toLowerCase();
     if (/tab/.test(key)) return "is-tab";
     if (/chorus repeat|repeat chorus|refrain/.test(key)) return "is-repeat";
@@ -767,7 +770,10 @@
       const header = document.createElement("button");
       header.className = "host-section-header";
       header.type = "button";
-      header.innerHTML = `<span class="collapse-arrow">${card.classList.contains("collapsed") ? "▸" : "▾"}</span><strong>${esc(section.title || section.type || "SECTION")}</strong><span class="section-colour-indicator" aria-hidden="true"></span><span class="collapse-hint">${card.classList.contains("collapsed") ? "SHOW" : "HIDE"}</span>`;
+      const displayedTitle = /^performance-?note$/i.test(String(section.type || "")) &&
+        /^PERFORMANCE NOTE$/i.test(String(section.title || "").trim())
+        ? "KARAOKE NOTE" : (section.title || section.type || "SECTION");
+      header.innerHTML = `<span class="collapse-arrow">${card.classList.contains("collapsed") ? "▸" : "▾"}</span><strong>${esc(displayedTitle)}</strong><span class="section-colour-indicator" aria-hidden="true"></span><span class="collapse-hint">${card.classList.contains("collapsed") ? "SHOW" : "HIDE"}</span>`;
 
       const titleColour = section.style?.titleColor || getSystemSectionTitleColour(section.title);
       card.dataset.sectionTitleColor = titleColour;
@@ -799,12 +805,19 @@
         body.innerHTML = section.html
           ? cleanSectionHtml(section.html)
           : esc(section.text || "").replace(/\r?\n/g, "<br>");
+      } else if (sectionTypeClass(section) === "is-performance-note") {
+        // A Karaoke Note is a plain-text stage cue, not a chord row or HTML.
+        // textContent preserves parentheses and other literal cue punctuation.
+        if (section.text != null && section.text !== "") body.textContent = section.text;
+        else body.innerHTML = cleanSectionHtml(section.html || "");
       } else {
         body.innerHTML = cleanSectionHtml(section.html || section.text || "");
       }
 
-      spaceChordRows(body);
-      applySectionDashColour(body, section.style?.dashColor || "#777777");
+      if (sectionTypeClass(section) !== "is-performance-note") {
+        spaceChordRows(body);
+        applySectionDashColour(body, section.style?.dashColor || "#777777");
+      }
 
       header.addEventListener("click", () => {
         card.classList.toggle("collapsed");

@@ -133,7 +133,7 @@
     if(hexInput.value.toUpperCase()!==c)hexInput.value=c;
     preview.style.setProperty('--note-preview-colour',c);
     preview.style.setProperty('--note-preview-size',`${size}px`);
-    preview.textContent=(activeType==='host'?'HOST NOTE · ':'PERFORMANCE NOTE · ')+(textInput.value.trim()||'Note preview');
+    preview.textContent=(activeType==='host'?'HOST NOTE · ':'KARAOKE NOTE · ')+(textInput.value.trim()||'Note preview');
   }
   textInput.addEventListener('input',syncPreview);
   sizeInput.addEventListener('input',syncPreview);
@@ -167,7 +167,7 @@
     if(activeResolve)return Promise.resolve(null);
     previousFocus=document.activeElement;activeType=type;
     const fallback=type==='host'?HOST_DEFAULT:PERF_DEFAULT;
-    modal.querySelector('#ls26InlineNoteTitle').textContent=type==='host'?'HOST NOTE':'PERFORMANCE NOTE';
+    modal.querySelector('#ls26InlineNoteTitle').textContent=type==='host'?'HOST NOTE':'KARAOKE NOTE';
     textInput.value=String(initial.text||'');
     sizeInput.value=String(clampSize(initial.size||18));
     const c=validColour(initial.colour,fallback);
@@ -188,7 +188,7 @@
     if(type==='host')node.dataset.hostNote=result.text;
     else node.dataset.performanceNote=result.text;
     applyMarkerStyle(node,type,result.size,result.colour);
-    node.setAttribute('aria-label',(type==='host'?'Host note: ':'Performance note: ')+result.text);
+    node.setAttribute('aria-label',(type==='host'?'Host note: ':'Karaoke note: ')+result.text);
     node.title='Tap to edit '+(type==='host'?'host':'performance')+' note';
     try{
       range.deleteContents();range.insertNode(node);
@@ -208,7 +208,7 @@
     const result=await openModal(type,initial);if(!result)return;
     if(type==='host')marker.dataset.hostNote=result.text;else marker.dataset.performanceNote=result.text;
     applyMarkerStyle(marker,type,result.size,result.colour);
-    marker.setAttribute('aria-label',(type==='host'?'Host note: ':'Performance note: ')+result.text);
+    marker.setAttribute('aria-label',(type==='host'?'Host note: ':'Karaoke note: ')+result.text);
     dispatchEdit(editor);
   }
 

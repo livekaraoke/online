@@ -143,9 +143,9 @@
 
   function defaultStyle(type = "lyrics") {
     return {
-      fontFamily: type === "tab" ? "Consolas" : "Verdana",
-      fontSize: 23,
-      color: type === "tab" ? "#ffd400" : "#ffffff",
+      fontFamily: type === "tab" ? "Consolas" : type === "performanceNote" ? "Arial" : "Verdana",
+      fontSize: type === "performanceNote" ? 28 : 23,
+      color: type === "tab" ? "#ffd400" : type === "performanceNote" ? "#12d5b9" : "#ffffff",
 
       // NEW: every "-" character defaults to gray. This is especially useful
       // for guitar tabs so fret numbers stand out clearly.
@@ -156,7 +156,7 @@
       titleColor: "",
 
       // Whole-section alignment used by Lyrics Creator and Lyric View.
-      textAlign: "left"
+      textAlign: type === "performanceNote" ? "center" : "left"
     };
   }
 
@@ -569,7 +569,11 @@
     return {
       ...section,
       type,
-      title: String(section.title || (type === "performanceNote" ? "PERFORMANCE NOTE" : type === "hostNote" ? "HOST NOTE" : type === "tab" ? "GUITAR TAB" : "VERSE")).toUpperCase(),
+      // Rename only the generic label; keep custom titles such as INTRO,
+      // SOLO and OUTRO and do not change the Firestore section type.
+      title: (type === "performanceNote" && /^PERFORMANCE NOTE$/i.test(String(section.title || "").trim())
+        ? "KARAOKE NOTE"
+        : String(section.title || (type === "performanceNote" ? "KARAOKE NOTE" : type === "hostNote" ? "HOST NOTE" : type === "tab" ? "GUITAR TAB" : "VERSE")).toUpperCase()),
       html: stripLegacyMarkerFromHtml(section.html || ""),
       text: stripLegacyMarkerFromText(section.text || ""),
       visibleForTypes: normaliseVisibleForTypes(section),
@@ -592,7 +596,7 @@
   function makeSection(type, template = null) {
     if (type === "separator") return { type: "separator" };
     if (type === "performanceNote") {
-      return normalizeSection({ type, title: template?.title || "PERFORMANCE NOTE", text: template?.text || "Short instrumental (wait for signal)" });
+      return normalizeSection({ type, title: template?.title || "KARAOKE NOTE", text: template?.text || "Short instrumental (wait for signal)" });
     }
     if (type === "hostNote") {
       return normalizeSection({
@@ -1368,7 +1372,7 @@
         <div class="creator-add-toolbar creator-inline-add-toolbar">
           <button type="button" class="btn ghost" data-inline-add="lyrics" data-insert-index="${insertIndex}">＋ LYRICS / CHORDS</button>
           <button type="button" class="btn ghost" data-inline-add="tab" data-insert-index="${insertIndex}">＋ TAB</button>
-          <button type="button" class="btn green" data-inline-add="performanceNote" data-insert-index="${insertIndex}">＋ PERFORMANCE NOTE</button>
+          <button type="button" class="btn green" data-inline-add="performanceNote" data-insert-index="${insertIndex}">＋ KARAOKE NOTE</button>
           <button type="button" class="btn teal" data-inline-add="hostNote" data-insert-index="${insertIndex}">＋ HOST NOTE</button>
           <button type="button" class="btn ghost" data-inline-add="separator" data-insert-index="${insertIndex}">＋ SEPARATOR</button>
           <button type="button" class="btn gold" data-inline-template="${insertIndex}">＋ SECTION TEMPLATE</button>
@@ -1414,7 +1418,7 @@
                 <button type="button" data-section-align="${index}" data-align="center" class="${s.style?.textAlign === "center" ? "active" : ""}" aria-label="Align center">↔</button>
                 <button type="button" data-section-align="${index}" data-align="right" class="${s.style?.textAlign === "right" ? "active" : ""}" aria-label="Align right">⇥</button>
               </div>
-              <span class="section-type-badge ${s.type === "hostNote" ? "host-note-badge" : ""}">${s.type === "tab" ? "TAB" : s.type === "performanceNote" ? "SINGER NOTE" : s.type === "hostNote" ? "HOST ONLY" : "LYRICS"}</span>
+              <span class="section-type-badge ${s.type === "hostNote" ? "host-note-badge" : ""}">${s.type === "tab" ? "TAB" : s.type === "performanceNote" ? "KARAOKE NOTE" : s.type === "hostNote" ? "HOST ONLY" : "LYRICS"}</span>
             </div>
             <div class="creator-section-actions">
               <button type="button" data-up="${index}">↑</button>
