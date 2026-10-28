@@ -10,10 +10,13 @@ const css=fs.readFileSync(path.join(root,'host/css/lyricview-prompter-remote.css
 const viewerHtml=fs.readFileSync(path.join(root,'host/lyricview.html'),'utf8');
 const prompterHtml=fs.readFileSync(path.join(root,'oldadmin/host/lyrics/song.html'),'utf8');
 const performance=fs.readFileSync(path.join(root,'shared/performance.js'),'utf8');
-assert.match(viewerHtml,/lyricview-prompter-remote\.js\?v=20261028-stable-fixed-v2/);
-assert.match(viewerHtml,/lyricview-prompter-remote\.css\?v=20261028-stable-fixed-v2/);
+assert.match(viewerHtml,/lyricview-prompter-remote\.js\?v=20261028-close-toggle-v1/);
+assert.match(viewerHtml,/lyricview-prompter-remote\.css\?v=20261028-close-toggle-v1/);
 assert.match(prompterHtml,/prompter-remote-receiver\.js\?v=20261027-cross-tablet-v1/);
 assert.match(performance,/ls26:karaoke-tools-visibility/);
+assert.match(performance,/id="ls26ShowKaraoke"> Show karaoke tools<\/label>\s*<label class="ls26-karaoke-toggle"><input type="checkbox" id="ls26ShowPrompterRemote"> Show Prompter Remote/);
+assert.match(performance,/ls26:prompter-remote-visibility/);
+assert.match(viewerHtml,/performance\.js\?v=20261028-prompter-remote-toggle-v1/);
 assert.match(prompterHtml,/prompterScrollUp/);assert.match(prompterHtml,/prompterScrollDown/);
 (async()=>{
  const browser=await chromium.launch({headless:true,...(fs.existsSync('/usr/bin/chromium')?{executablePath:'/usr/bin/chromium'}:{}),args:['--no-sandbox']});
@@ -24,7 +27,15 @@ assert.match(prompterHtml,/prompterScrollUp/);assert.match(prompterHtml,/prompte
   const host=await context.newPage(),prompter=await context.newPage();
   await host.goto('http://remote.test/ls26try/host/lyricview.html');
   await prompter.goto('http://remote.test/ls26try/oldadmin/host/lyrics/song.html');
-  await host.setContent('<style>'+css+'</style><input type="checkbox" id="ls26ShowKaraoke" checked>');
+  await host.setContent('<style>'+css+'</style><input type="checkbox" id="ls26ShowKaraoke" checked><input type="checkbox" id="ls26ShowPrompterRemote" checked>');
+  // Mirror performance.js's event contract for this isolated remote test.
+  await host.evaluate(()=>{
+    const toggle=document.getElementById('ls26ShowPrompterRemote');
+    toggle.addEventListener('change',()=>{
+      localStorage.setItem('ls26:showPrompterRemote',String(toggle.checked));
+      dispatchEvent(new CustomEvent('ls26:prompter-remote-visibility',{detail:{visible:toggle.checked}}));
+    });
+  });
   await prompter.setContent('<button id="scrollToggleBtn">▶</button><span id="scrollSpeedDisplay">0.80x</span><button id="prompterScrollUp"></button><button id="prompterScrollDown"></button>');
   await prompter.evaluate(()=>{
     window.__actions=[];
@@ -59,11 +70,28 @@ assert.match(prompterHtml,/prompterScrollUp/);assert.match(prompterHtml,/prompte
   assert.equal(await host.locator('#ls26PrompterRemotePlay').textContent(),'▶');
   assert.deepEqual(await prompter.evaluate(()=>window.__actions),['toggle','faster','slower','up','down','toggle'],'Every gesture must arrive once, not twice via channel + storage');
   console.log('PASS: cross-tab Play/Pause, +/− speed, scroll up/down, acknowledgement; no duplicate actions');
+  // The remote's own toggle, not the separate Karaoke Tools visibility, owns it.
   await host.evaluate(()=>window.dispatchEvent(new CustomEvent('ls26:karaoke-tools-visibility',{detail:{visible:false}})));
+  assert.equal(await host.locator('#ls26PrompterRemote').isVisible(),true,'Karaoke Tools can hide independently');
+  const title=host.locator('.ls26-prompter-remote-head');
+  const beforeClose=await host.locator('#ls26PrompterRemote').boundingBox();
+  await host.locator('#ls26PrompterRemoteClose').click();
+  assert.equal(await host.locator('#ls26PrompterRemote').isVisible(),false,'X hides card');
+  assert.equal(await host.locator('#ls26ShowPrompterRemote').isChecked(),false,'X unticks sidebar toggle');
+  assert.equal(await host.evaluate(()=>localStorage.getItem('ls26:showPrompterRemote')),'false','X persists hidden preference');
+  assert.equal(await host.locator('#ls26ShowKaraoke').isChecked(),true,'X must not change Karaoke Tools');
+  await host.locator('#ls26ShowPrompterRemote').check();
+  assert.equal(await host.locator('#ls26PrompterRemote').isVisible(),true,'sidebar toggle reopens card');
+  assert.equal(await host.evaluate(()=>localStorage.getItem('ls26:showPrompterRemote')),'true');
+  const afterOpen=await host.locator('#ls26PrompterRemote').boundingBox();
+  assert.ok(Math.abs(afterOpen.x-beforeClose.x)<1&&Math.abs(afterOpen.y-beforeClose.y)<1,'X and reopen preserve card position');
+  assert.ok((await host.locator('#ls26PrompterRemoteClose').boundingBox()).height<=38,'X is compact');
+  // Setting is independent in both directions.
+  await host.locator('#ls26ShowPrompterRemote').uncheck();
   assert.equal(await host.locator('#ls26PrompterRemote').isVisible(),false);
-  await host.evaluate(()=>window.dispatchEvent(new CustomEvent('ls26:karaoke-tools-visibility',{detail:{visible:true}})));
+  await host.locator('#ls26ShowPrompterRemote').check();
   assert.equal(await host.locator('#ls26PrompterRemote').isVisible(),true);
-  console.log('PASS: Show Karaoke Tools setting independently hides and reveals the remote');
+  console.log('PASS: X/toggle, persisted independent visibility and card-position preservation');
   // Match the portrait tablet: low, centred, and clear of right-hand navigation.
   await host.setViewportSize({width:1024,height:1536});
   await host.waitForFunction(()=>{
@@ -89,7 +117,7 @@ assert.match(prompterHtml,/prompterScrollUp/);assert.match(prompterHtml,/prompte
     'Chrome height-only viewport changes must not shift an undragged remote');
   await host.setViewportSize({width:1024,height:1536});
   console.log('PASS: default card does not jump during browser toolbar height changes');
-  const buttonSizes=await host.locator('#ls26PrompterRemote button').evaluateAll(nodes=>nodes.map(n=>n.getBoundingClientRect().height));
+  const buttonSizes=await host.locator('#ls26PrompterRemote button[data-remote]').evaluateAll(nodes=>nodes.map(n=>n.getBoundingClientRect().height));
   assert.ok(buttonSizes.every(h=>h>=56),'All touch targets should be at least 48px tall');
   const controlTops=await host.locator('#ls26PrompterRemote .ls26-prompter-remote-controls button').evaluateAll(nodes=>nodes.map(n=>n.getBoundingClientRect().top));
   assert.ok(controlTops.every(y=>Math.abs(y-controlTops[0])<2),'Tablet remote buttons must occupy one row');

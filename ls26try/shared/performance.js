@@ -24,7 +24,8 @@
         <strong id="ls26AutoSendKaraokeState">ON</strong>
       </button>
       <label class="ls26-karaoke-toggle"><input type="checkbox" id="ls26SyncSingerScroll"> Sync singer auto-scroll with LyricView</label>
-      <label class="ls26-karaoke-toggle"><input type="checkbox" id="ls26ShowKaraoke"> Show karaoke tools</label>`;
+      <label class="ls26-karaoke-toggle"><input type="checkbox" id="ls26ShowKaraoke"> Show karaoke tools</label>
+      <label class="ls26-karaoke-toggle"><input type="checkbox" id="ls26ShowPrompterRemote"> Show Prompter Remote</label>`;
     const karaokeHeading=karaokeCard?.querySelector('h3');
     if(karaokeHeading)karaokeHeading.insertAdjacentElement('afterend',karaokePreferences);
     else drawer.querySelector('.song-info-scroll').prepend(karaokePreferences);
@@ -33,6 +34,26 @@
     function showKaraoke(show){karaoke.hidden=!show;$('ls26ShowKaraoke').checked=show;try{localStorage.setItem('ls26:showKaraokeTools',String(show));}catch(_){}window.dispatchEvent(new CustomEvent('ls26:karaoke-tools-visibility',{detail:{visible:show}}));}
     let show=true;try{show=localStorage.getItem('ls26:showKaraokeTools')!=='false';}catch(_){}showKaraoke(show);
     hide.onclick=()=>showKaraoke(false);$('ls26ShowKaraoke').onchange=e=>showKaraoke(e.target.checked);
+
+    // Separate local preference: closing the floating remote does not hide
+    // the Karaoke Tools strip and never sends an autoscroll command.
+    const remoteToggle=$('ls26ShowPrompterRemote');
+    const remoteVisibilityKey='ls26:showPrompterRemote';
+    function setRemoteVisibility(visible){
+      const on=visible===true;
+      if(remoteToggle)remoteToggle.checked=on;
+      try{localStorage.setItem(remoteVisibilityKey,String(on));}catch(_){}
+      window.dispatchEvent(new CustomEvent('ls26:prompter-remote-visibility',{detail:{visible:on}}));
+    }
+    // Initially respect older setups that have karaoke tools hidden; after
+    // the first change, the two visibility controls remain independent.
+    let showRemote=show;
+    try{
+      const preference=localStorage.getItem(remoteVisibilityKey);
+      if(preference!==null)showRemote=preference!=='false';
+    }catch(_){}
+    setRemoteVisibility(showRemote);
+    if(remoteToggle)remoteToggle.onchange=e=>setRemoteVisibility(e.target.checked);
 
     const autoSendButton=$('ls26AutoSendKaraoke');
     const autoSendState=$('ls26AutoSendKaraokeState');

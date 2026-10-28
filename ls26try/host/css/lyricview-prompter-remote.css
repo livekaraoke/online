@@ -12,7 +12,17 @@
 #ls26PrompterRemote .ls26-prompter-remote-head{display:flex;align-items:center;justify-content:space-between;gap:6px;min-height:28px;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none}
 #ls26PrompterRemote .ls26-prompter-remote-head.is-dragging{cursor:grabbing}
 #ls26PrompterRemote .ls26-prompter-remote-head strong{color:#40c9eb;font-size:12px;letter-spacing:.035em;white-space:nowrap}
-#ls26PrompterRemoteStatus{font-size:10px;color:#9abfce;max-width:120px;text-align:right;line-height:1.2}
+#ls26PrompterRemoteStatus{font-size:10px;color:#9abfce;max-width:120px;text-align:right;line-height:1.2;margin-left:auto}
+#ls26PrompterRemote #ls26PrompterRemoteClose{
+  flex:0 0 36px;
+  width:36px;min-width:36px;max-width:36px;
+  height:36px;min-height:36px;max-height:36px;
+  padding:0;display:grid;place-items:center;
+  font-size:22px;line-height:1;font-weight:700;
+  background:#103549;border:1px solid #39677a;border-radius:7px;
+  color:#d9f5ff;cursor:pointer;touch-action:manipulation;
+}
+#ls26PrompterRemote #ls26PrompterRemoteClose:active{background:#612332;color:#fff}
 #ls26PrompterRemote .ls26-prompter-remote-controls{
  display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr) 51px minmax(0,1fr) minmax(0,1.05fr) minmax(0,1.05fr);
  gap:6px;align-items:center;width:100%;

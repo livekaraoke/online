@@ -21,7 +21,8 @@
   panel.hidden=true;
   panel.innerHTML=`
     <div class="ls26-prompter-remote-head" title="Drag to move Prompter Remote"><strong>PROMPTER REMOTE</strong>
-      <span id="ls26PrompterRemoteStatus" role="status">Open Prompter tab</span></div>
+      <span id="ls26PrompterRemoteStatus" role="status">Open Prompter tab</span>
+      <button type="button" id="ls26PrompterRemoteClose" aria-label="Hide Prompter Remote" title="Hide Prompter Remote">×</button></div>
     <div class="ls26-prompter-remote-controls">
       <button type="button" data-remote="toggle" id="ls26PrompterRemotePlay" aria-pressed="false" aria-label="Play Prompter autoscroll">▶</button>
       <button type="button" data-remote="slower" aria-label="Decrease Prompter scroll speed">−</button>
@@ -88,6 +89,8 @@
   const enableDragging=()=>{
     const bar=panel.querySelector('.ls26-prompter-remote-head');
     bar.addEventListener('pointerdown',e=>{
+      // The close button is an independent touch action, never a drag handle.
+      if(e.target.closest('button'))return;
       if(e.pointerType==='mouse'&&e.button!==0)return;
       const r=panel.getBoundingClientRect();
       drag={id:e.pointerId,startX:e.clientX,startY:e.clientY,left:r.left,top:r.top};
@@ -172,6 +175,16 @@
   function start(){
     document.body.append(panel);
     enableDragging();
+    $('ls26PrompterRemoteClose').addEventListener('click',event=>{
+      event.stopPropagation();
+      const preference=$('ls26ShowPrompterRemote');
+      if(preference){
+        preference.checked=false;
+        preference.dispatchEvent(new Event('change',{bubbles:true}));
+      }else{
+        show(false);
+      }
+    });
     window.addEventListener('resize',()=>{
       const width=window.innerWidth;
       // Ignore height-only browser UI changes, including Chrome on Android
@@ -198,9 +211,10 @@
       if(event.key!==STORAGE||!event.newValue)return;
       try{receive(JSON.parse(event.newValue));}catch(_){}
     });
-    window.addEventListener('ls26:karaoke-tools-visibility',event=>show(event.detail?.visible===true));
-    // Preserve persisted setting; performance.js owns the checkbox and strip.
-    show($('ls26ShowKaraoke')?.checked===true);
+    window.addEventListener('ls26:prompter-remote-visibility',event=>show(event.detail?.visible===true));
+    // This setting is owned by performance.js; Karaoke Tools is separate.
+    // Preserve the old default when a standalone/older page lacks the toggle.
+    show($('ls26ShowPrompterRemote')?.checked ?? $('ls26ShowKaraoke')?.checked===true);
     window.addEventListener('pagehide',()=>{clearTimeout(timeout);channel?.close();},{once:true});
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});
