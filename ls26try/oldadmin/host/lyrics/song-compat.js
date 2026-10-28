@@ -114,9 +114,12 @@
     for (const section of song.sections) {
       // Explicitly hidden sections must not leak chords, lyrics, or cues.
       if (!window.LyricsCommon.sectionVisibleOnSingerScreen(section)) continue;
-      const rows = window.LS26SingerLines.section(section, document)
-        .filter(row => row.kind === 'lyric' || row.kind === 'cue');
-      if (!rows.length) continue;
+      const rows = window.LS26SingerLines.section(section, document,
+        { includeBlankLines: true })
+        .filter(row => row.kind === 'lyric' || row.kind === 'cue' ||
+          row.kind === 'blank');
+      // Empty sections should not introduce a heading by themselves.
+      if (!rows.some(row => row.kind !== 'blank')) continue;
       const group = document.createElement('div');
       group.className = 'verse modern-prompter-section';
       const isPerformanceNote = ['performancenote', 'performance-note']
@@ -129,6 +132,15 @@
         group.appendChild(label);
       }
       for (const row of rows) {
+        if (row.kind === 'blank') {
+          // A dedicated blank line occupies vertical space without changing
+          // the stored lyrics, injecting <br>, or exposing chord-only rows.
+          const blank = document.createElement('div');
+          blank.className = 'modern-prompter-blank';
+          blank.setAttribute('aria-hidden', 'true');
+          group.appendChild(blank);
+          continue;
+        }
         const line = document.createElement('div');
         line.className = row.kind === 'cue'
           ? 'modern-prompter-cue' : 'modern-prompter-line';
