@@ -120,16 +120,20 @@
     return tsDate(session.scheduledEndAt);
   }
 
-  function breakDurationMs(session) {
-    const now = new Date();
-
-    return (session.breaks || []).reduce((sum, br) => {
-      const start = tsDate(br.startedAt || br.start);
-      const end = tsDate(br.endedAt || br.end) || now;
-
-      if (!start || !end || end < start) return sum;
-      return sum + (end - start);
-    }, 0);
+  function breakDurationMs(session, from = null, to = null) {
+    const lower = from ? from.getTime() : 0;
+    const upper = to ? to.getTime() : Date.now();
+    const intervals = (session.breaks || []).map(br => {
+      const start = tsDate(br.startedAt || br.start)?.getTime() || 0;
+      const end = tsDate(br.endedAt || br.end)?.getTime() || upper;
+      return [Math.max(start, lower), Math.min(end, upper)];
+    }).filter(([a,b]) => a && b > a).sort((a,b) => a[0]-b[0]);
+    let total=0, last=0;
+    for (const [a,b] of intervals) {
+      total += Math.max(0,b-Math.max(a,last));
+      last=Math.max(last,b);
+    }
+    return total;
   }
 
   function sessionDuration(session) {
@@ -139,7 +143,7 @@
     if (!start || !end) return "-";
 
     const total = Math.max(0, end - start);
-    const active = Math.max(0, total - breakDurationMs(session));
+    const active = Math.max(0, total - breakDurationMs(session, start, end));
 
     return `${formatDurationMs(active)} (${formatDurationMs(total)})`;
   }
@@ -413,7 +417,7 @@
     const previousEnd = sessionActualEnd(latest);
     const previousTotalMs = previousStart && previousEnd ? Math.max(0, previousEnd - previousStart) : null;
     const previousActiveMs = Number.isFinite(previousTotalMs)
-      ? Math.max(0, previousTotalMs - breakDurationMs(latest))
+      ? Math.max(0, previousTotalMs - breakDurationMs(latest, previousStart, previousEnd))
       : null;
 
     const breakCount = (latest.breaks || []).length;
