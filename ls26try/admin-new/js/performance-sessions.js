@@ -94,23 +94,27 @@
     return `${mins}mins`;
   }
 
-  function getBreakMs(session) {
-    const now = new Date();
-    let total = 0;
-
-    (session.breaks || []).forEach(br => {
-      const start = tsDate(br.startedAt || br.start);
-      const end = tsDate(br.endedAt || br.end) || now;
-      if (start && end && end >= start) total += end - start;
-    });
-
+  function getBreakMs(session, from = null, to = null) {
+    const lower = from ? from.getTime() : 0;
+    const upper = to ? to.getTime() : Date.now();
+    const intervals = (session.breaks || []).map(br => {
+      const start = tsDate(br.startedAt || br.start)?.getTime() || 0;
+      const end = tsDate(br.endedAt || br.end)?.getTime() || upper;
+      return [Math.max(start, lower), Math.min(end, upper)];
+    }).filter(([a,b]) => a && b > a).sort((a,b) => a[0]-b[0]);
+    let total=0,last=0;
+    for(const [a,b] of intervals) {
+      total += Math.max(0,b-Math.max(a,last));
+      last=Math.max(last,b);
+    }
     return total;
   }
 
+  function sessionStart(session) {
+    return tsDate(session.openedAt || session.startedAt);
+  }
+
   function actualStart(session) {
-    // startedAt is written atomically when Start Session is pressed.
-    // actualStartedAt existed as an event-link metadata field and older code
-    // could overwrite it during a later repair, so it is only a fallback.
     return tsDate(session.actualStartedAt || (session.timingVersion===2 ? null : session.startedAt));
   }
 
@@ -133,7 +137,7 @@
     if (!start || !end) return {totalMs:null,activeMs:null};
 
     const totalMs = Math.max(0,end-start);
-    const activeMs = Math.max(0,totalMs-getBreakMs(session));
+    const activeMs = Math.max(0,totalMs-getBreakMs(session,start,end));
 
     return {totalMs,activeMs};
   }
@@ -285,6 +289,7 @@
         <div class="session-metric"><span>VENUE</span><strong>${esc(active.venue || "-")}</strong></div>
         <div class="session-metric"><span>TYPE</span><strong>${esc(active.sessionType || active.type || "-")}</strong></div>
         <div class="session-metric"><span>SCHEDULED</span><strong>${formatTime(scheduledStart(active))}–${formatTime(scheduledEnd(active))}</strong></div>
+        <div class="session-metric"><span>SESSION START</span><strong>${formatTime(sessionStart(active))}</strong></div>
         <div class="session-metric"><span>ACTUAL START</span><strong>${formatTime(actualStart(active))}</strong></div>
         <div class="session-metric"><span>ELAPSED X/BREAKS</span><strong>${formatHours(duration.activeMs)}</strong></div>
         <div class="session-metric"><span>REQUESTS</span><strong>${counts.total}</strong></div>
@@ -610,6 +615,7 @@
       <div class="detail-grid">
         ${editableFinishedCard(session,"scheduledStart","SCHEDULED START",`${formatDate(scheduledStart(session))} ${formatTime(scheduledStart(session))}`)}
         ${editableFinishedCard(session,"scheduledEnd","SCHEDULED END",`${formatDate(scheduledEnd(session))} ${formatTime(scheduledEnd(session))}`)}
+        <div class="detail-card"><span>SESSION START</span><strong>${formatDate(sessionStart(session))} ${formatTime(sessionStart(session))}</strong></div>
         ${editableFinishedCard(session,"actualStart","ACTUAL START",`${formatDate(actualStart(session))} ${formatTime(actualStart(session))}`)}
         ${editableFinishedCard(session,"actualEnd","ACTUAL END",`${formatDate(actualEnd(session))} ${formatTime(actualEnd(session))}`)}
         <div class="detail-card"><span>DURATION X/BREAKS</span><strong>${formatHours(duration.activeMs)}</strong></div>
@@ -755,7 +761,7 @@
   window.exportSessionsCsv = function exportSessionsCsv() {
     const rows = [[
       "Session","Venue","Type","Scheduled Start","Scheduled End",
-      "Actual Start","Actual End","Duration Excl Breaks","Total Elapsed",
+      "Session Start","Actual Start","Actual End","Duration Excl Breaks","Total Elapsed",
       "Requests","Completed","Left","Abandoned","Deleted","Songs Played","Status"
     ]];
 
@@ -769,6 +775,7 @@
         session.sessionType || session.type || "",
         scheduledStart(session)?.toISOString() || "",
         scheduledEnd(session)?.toISOString() || "",
+        sessionStart(session)?.toISOString() || "",
         actualStart(session)?.toISOString() || "",
         actualEnd(session)?.toISOString() || "",
         formatHours(duration.activeMs),
