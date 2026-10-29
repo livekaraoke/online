@@ -104,27 +104,34 @@
   }
 
   function actualStart(session) {
-    return tsDate(session.actualStartedAt || session.startedAt);
+    return tsDate(session.actualStartedAt || (session.timingVersion === 2 ? null : session.startedAt));
   }
 
   function actualEnd(session) {
-    return tsDate(session.actualEndedAt || session.endedAt);
+    return tsDate(session.actualEndedAt || (session.timingVersion === 2 ? null : session.endedAt));
   }
 
-  function breakMs(session) {
-    const now = new Date();
-    return (Array.isArray(session.breaks) ? session.breaks : []).reduce((sum, br) => {
-      const start = tsDate(br.startedAt || br.start);
-      const end = tsDate(br.endedAt || br.end) || now;
-      return sum + (start && end && end >= start ? end - start : 0);
-    }, 0);
+  function breakMs(session, from, to) {
+    const low = from?.getTime() || 0;
+    const high = to?.getTime() || Date.now();
+    const intervals = (session.breaks || []).map(br => {
+      const start = tsDate(br.startedAt || br.start)?.getTime() || 0;
+      const end = tsDate(br.endedAt || br.end)?.getTime() || high;
+      return [Math.max(start,low),Math.min(end,high)];
+    }).filter(([a,b])=>a&&b>a).sort((a,b)=>a[0]-b[0]);
+    let sum=0,last=0;
+    for(const [a,b] of intervals) {
+      sum += Math.max(0,b-Math.max(a,last));
+      last=Math.max(last,b);
+    }
+    return sum;
   }
 
   function durationMs(session) {
     const start = actualStart(session);
     const end = actualEnd(session);
     if (!start || !end || end < start) return null;
-    return Math.max(0, end - start - breakMs(session));
+    return Math.max(0, end - start - breakMs(session,start,end));
   }
 
   function requestSnapshot(session) {
