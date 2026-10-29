@@ -100,14 +100,16 @@
     return formatDurationMs(end - start);
   }
 
+  function sessionStart(session) {
+    return tsDate(session.openedAt || session.startedAt);
+  }
+
   function sessionActualStart(session) {
-    // Prefer the immutable session-start timestamp. Older lifecycle repair code
-    // could overwrite actualStartedAt long after the performance had begun.
-    return tsDate(session.startedAt || session.actualStartedAt);
+    return tsDate(session.actualStartedAt || (session.timingVersion === 2 ? null : session.startedAt));
   }
 
   function sessionActualEnd(session) {
-    return tsDate(session.actualEndedAt || session.endedAt);
+    return tsDate(session.actualEndedAt || (session.timingVersion === 2 ? null : session.endedAt));
   }
 
   function sessionScheduledStart(session) {
