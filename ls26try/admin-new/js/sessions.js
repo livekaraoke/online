@@ -158,9 +158,10 @@
     const variance = varianceText(started, scheduled);
 
     setDashValue("sessionNameLiveLabel", session.title || session.eventSnapshot?.name || "-");
-    setDashValue("sessionStatusLiveLabel", "Active Session");
+    const musicalStarted = !!LK.dashboard.getDateFromTimestamp(session.actualStartedAt || (session.timingVersion === 2 ? null : session.startedAt));
+    setDashValue("sessionStatusLiveLabel", musicalStarted ? "Active Session" : "Session Prepared");
     $("sessionStatusLiveLabel")?.classList.remove("is-pre-session", "is-tentative");
-    setDashValue("sessionStartedLiveLabel", LK.dashboard.formatTime(started));
+    setDashValue("sessionStartedLiveLabel", LK.dashboard.formatTime(LK.dashboard.getDateFromTimestamp(session.openedAt || session.startedAt)));
     setDashValue(
       "sessionScheduledLiveLabel",
       scheduled ? LK.dashboard.formatTime(scheduled) : "-"
@@ -217,9 +218,13 @@
 
     if (!session) return;
 
-    const started = LK.dashboard.getDateFromTimestamp(session.startedAt);
-    const breakMs = calculateBreakMs(session);
-    const elapsedMs = started ? Math.max(0, Date.now() - started.getTime()) : 0;
+    const started = LK.dashboard.getDateFromTimestamp(session.actualStartedAt || (session.timingVersion === 2 ? null : session.startedAt));
+    const startedMs = started?.getTime() || 0;
+    const now = Date.now();
+    const breakMs = startedMs && window.LS26Intelligence
+      ? window.LS26Intelligence.breakMs(session.breaks, startedMs, now)
+      : 0;
+    const elapsedMs = startedMs ? Math.max(0, now - startedMs) : 0;
     const playingMs = Math.max(0, elapsedMs - breakMs);
 
     const requestBpms = requests
@@ -562,7 +567,7 @@
     const sr=LK.db.collection('performanceSessions').doc(endingId),cr=LK.db.collection('karaokeControl').doc('currentSession'),ss=await tx.get(sr),cs=await tx.get(cr),saved=ss.data()||{},control=cs.data()||{};
     if(saved.status==='ended')return;
     if((control.sessionId||control.activeSessionId)!==endingId)throw Error('Session changed. No session was ended.');
-    tx.set(sr,{status:'ended',isActive:false,breakOpen:false,closedAt:ended,endedAt:ended,actualEndedAt:saved.lastPerformanceEndedAt||(saved.timingVersion===2?null:saved.actualEndedAt||null),breaks:(saved.breaks||[]).map(b=>(b.start||b.startedAt)&&!(b.end||b.endedAt)?{...b,end:ended}:b),updatedAt:serverNow()},{merge:true});
+    tx.set(sr,{status:'ended',isActive:false,breakOpen:false,closedAt:ended,endedAt:ended,actualEndedAt:saved.lastPerformanceEndedAt||(saved.actualStartedAt?ended:(saved.timingVersion===2?null:saved.actualEndedAt||null)),breaks:(saved.breaks||[]).map(b=>(b.start||b.startedAt)&&!(b.end||b.endedAt)?{...b,end:ended}:b),updatedAt:serverNow()},{merge:true});
     tx.set(cr,{active:false,sessionId:null,activeSessionId:null,eventId:null,title:'',venue:'',type:'',sessionType:'',updatedAt:serverNow()},{merge:true});
     tx.set(LK.db.collection('karaoke').doc('state'),{isLive:false,manualOverride:true,songsOverride:true,songsEnabled:false,preSessionRequestSessionId:firebase.firestore.FieldValue.delete(),preSessionRequestEventId:firebase.firestore.FieldValue.delete(),updatedAt:serverNow()},{merge:true});
   },{maxAttempts:3});
@@ -667,6 +672,12 @@
   function updateSessionUi(session) {
     const active = !!(session && session.status !== "ended");
     if ($("sessionSetupFields")) $("sessionSetupFields").style.display = active ? "none" : "block";
+    // Show PRE-SHOW until the first real song Play (not merely Start Session).
+    const performanceStarted = !!(session && (
+      session.actualStartedAt || (session.timingVersion !== 2 && session.startedAt)
+    ));
+    if ($("sessionPanelHeading")) $("sessionPanelHeading").textContent =
+      performanceStarted && active ? "◉ LIVE SESSION" : "◉ PRE-SHOW";
     // Identity cards show the upcoming event before start and live values after.
     if ($("activeSessionLabels")) $("activeSessionLabels").classList.remove("hidden");
     if (!active && typeof window.LKAdminRenderSessionPreview === "function") {
