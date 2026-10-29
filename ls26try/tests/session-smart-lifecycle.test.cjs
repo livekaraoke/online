@@ -7,3 +7,48 @@ function setup(){const rows=new Map([['karaokeControl/currentSession',{active:fa
  vm.createContext(c);vm.runInContext(source.slice(source.indexOf('  let startingPerformance'),source.indexOf('  async function startBreak()')),c);return {c,rows,messages,setNow:v=>now=v};}
 test('Actual START action records preparation once and preserves multiline notes and midnight schedule',async()=>{const f=setup();await Promise.all([f.c.startPerformance(),f.c.startPerformance()]);const sessions=[...f.rows].filter(([p])=>p.startsWith('performanceSessions/'));assert.equal(sessions.length,1);const s=sessions[0][1];assert.equal(s.timingVersion,2);assert.equal(s.actualStartedAt,null);assert.equal(I.ms(s.openedAt),Date.UTC(2026,9,18,20,50));assert.equal(s.notes.split('Session started/prepared').length,2);assert.ok(s.notes.startsWith('Keep this\nexisting note'));assert.equal((I.ms(s.scheduledEndAt)-I.ms(s.scheduledStartAt))/3600000,4);assert.equal(s.venueId,'v');assert.deepEqual(Array.from(s.setlistSongIds),['a','b']);await f.c.startPerformance();assert.equal([...f.rows.keys()].filter(k=>k.startsWith('performanceSessions/')).length,1);});
 test('END closes active song and ongoing break, preserving real last performance end',async()=>{const f=setup();await f.c.startPerformance();const id=f.c.LK.state.currentSessionId,api=L.create(f.c.LK.db,n=>({seconds:n/1000})),start=Date.UTC(2026,9,18,21,7);await api.start({sessionId:id,song:{id:'a',title:'Song'},now:start});const end=start+240000;await api.finish({sessionId:id,itemId:'lyricview_a_'+start,now:end});await api.setBreak(id,true,end+1000);f.setNow(end+61000);await f.c.endPerformance();const s=f.rows.get('performanceSessions/'+id);assert.equal(I.ms(s.actualStartedAt),start);assert.equal(I.ms(s.actualEndedAt),end);assert.equal(I.ms(s.closedAt),end+61000);assert.equal(I.ms(s.breaks[0].end),end+61000);assert.equal(s.status,'ended');assert.equal(f.rows.get('karaokeControl/currentSession').active,false);});
+
+
+test('Ending while last song is still playing records Session End as musical finish',async()=>{
+ const f=setup();
+ await f.c.startPerformance();
+ const id=f.c.LK.state.currentSessionId;
+ const api=L.create(f.c.LK.db,n=>({seconds:n/1000,toMillis:()=>n,toDate:()=>new Date(n)}));
+ const first=Date.UTC(2026,9,18,21,5),closed=first+210000;
+ await api.start({sessionId:id,song:{id:'a',title:'Song'},now:first});
+ f.setNow(closed);
+ await f.c.endPerformance();
+ const session=f.rows.get('performanceSessions/'+id);
+ assert.equal(I.ms(session.openedAt),Date.UTC(2026,9,18,20,50));
+ assert.equal(I.ms(session.actualStartedAt),first);
+ assert.equal(I.ms(session.actualEndedAt),closed);
+ assert.equal(I.ms(session.closedAt),closed);
+ assert.equal(I.ms(session.lastPerformanceEndedAt),closed);
+ assert.equal(I.summary(session).performance,210000);
+});
+test('Ending a prepared session with no played songs leaves musical duration unknown',async()=>{
+ const f=setup();
+ await f.c.startPerformance();
+ const id=f.c.LK.state.currentSessionId;
+ f.setNow(Date.UTC(2026,9,18,21,5));
+ await f.c.endPerformance();
+ const session=f.rows.get('performanceSessions/'+id);
+ assert.equal(session.actualStartedAt,null);
+ assert.equal(session.actualEndedAt,null);
+ assert.ok(I.ms(session.closedAt)>I.ms(session.openedAt));
+ assert.equal(I.summary(session).awaiting,true);
+});
+test('Completed final song defines musical end even when host closes the session later',async()=>{
+ const f=setup();
+ await f.c.startPerformance();
+ const id=f.c.LK.state.currentSessionId,api=L.create(f.c.LK.db,n=>({seconds:n/1000,toMillis:()=>n,toDate:()=>new Date(n)}));
+ const first=Date.UTC(2026,9,18,21,5),last=first+180000;
+ await api.start({sessionId:id,song:{id:'a',title:'Song'},now:first});
+ await api.finish({sessionId:id,itemId:'lyricview_a_'+first,now:last});
+ f.setNow(last+600000);
+ await f.c.endPerformance();
+ const session=f.rows.get('performanceSessions/'+id);
+ assert.equal(I.ms(session.actualEndedAt),last);
+ assert.equal(I.ms(session.closedAt),last+600000);
+ assert.equal(I.summary(session).performance,180000);
+});
