@@ -449,6 +449,7 @@
             <span>TIMING</span>
           </div>
           <div class="previous-session-info-list">
+            ${previousInfoRow("Session start", formatTime(sessionStart(latest)))}
             ${previousInfoRow("Scheduled", `${formatTime(sessionScheduledStart(latest))}–${formatTime(sessionScheduledEnd(latest))}`)}
             ${previousInfoRow("Actual", `${formatTime(sessionActualStart(latest))}–${formatTime(sessionActualEnd(latest))}`)}
             ${previousInfoRow("Total elapsed", formatDurationMs(previousTotalMs))}
@@ -614,6 +615,7 @@
         ${detailCell("TYPE", session.sessionType || session.type || "-")}
         ${detailCell("SCHED. START", displayFinishedEdit(session,"scheduledStart",`${formatLongDate(sessionScheduledStart(session))} ${formatTime(sessionScheduledStart(session))}`))}
         ${detailCell("SCHED. END", displayFinishedEdit(session,"scheduledEnd",`${formatLongDate(sessionScheduledEnd(session))} ${formatTime(sessionScheduledEnd(session))}`))}
+        ${detailCell("SESSION START", `${formatLongDate(sessionStart(session))} ${formatTime(sessionStart(session))}`)}
         ${detailCell("ACTUAL START", displayFinishedEdit(session,"actualStart",`${formatLongDate(sessionActualStart(session))} ${formatTime(sessionActualStart(session))}`))}
         ${detailCell("ACTUAL END", displayFinishedEdit(session,"actualEnd",`${formatLongDate(sessionActualEnd(session))} ${formatTime(sessionActualEnd(session))}`))}
         ${detailCell("DURATION", sessionDuration(session))}
