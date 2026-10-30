@@ -643,6 +643,8 @@
         <div class="detail-list">${requestRows}</div>
       </div>
 
+      ${window.LS26NightFlow?.card()||""}
+
       <div class="detail-section">
         <h3>PLAYED SONGS &amp; BREAKS (${detail.played.length} songs · ${breakEventCount} break events)</h3>
         <div class="detail-list">${playedRows}</div>
@@ -652,6 +654,9 @@
     `;
 
     $("sessionDetailModal").classList.remove("hidden");
+    // Chart uses the exact same already loaded performed songs and session breaks.
+    // No new Firestore listener, writes or per-song lookups.
+    window.LS26NightFlow?.mount($("nightFlow"), detail.played, session.breaks, formatTime);
   };
 
   window.editFinishedSessionField = async function editFinishedSessionField(sessionId, field, label) {
