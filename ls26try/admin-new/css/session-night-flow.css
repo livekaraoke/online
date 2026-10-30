@@ -1,0 +1,129 @@
+/* Session History → NIGHT FLOW. Read-only SVG, scoped to the existing detail modal. */
+.session-modal .night-flow{
+  margin-top:18px;
+  padding:14px;
+  border:1px solid #23546a;
+  border-radius:11px;
+  background:linear-gradient(155deg,#052333,#031822);
+}
+.session-modal .night-flow h3{
+  margin:0 0 3px!important;
+  color:#00cafa!important;
+  letter-spacing:.055em;
+  font-size:15px!important;
+}
+.session-modal .night-flow-subtitle{
+  margin:0 0 14px;
+  font-size:12px;
+  color:#a5c1d0;
+}
+.session-modal .night-flow-toolbar{
+  display:flex;
+  flex-wrap:wrap;
+  gap:7px;
+  margin-bottom:12px;
+}
+.session-modal .night-flow-mode{
+  flex:0 1 auto;
+  min-height:44px;
+  padding:9px 12px;
+  border:1px solid #326177;
+  border-radius:8px;
+  background:#061924;
+  color:#bdd7e4;
+  font-size:12px;
+  font-weight:750;
+  letter-spacing:.02em;
+  cursor:pointer;
+  touch-action:manipulation;
+}
+.session-modal .night-flow-mode.is-active{
+  border-color:#00cafa;
+  background:#07425a;
+  color:#edfbff;
+  box-shadow:inset 0 -2px #00cafa;
+}
+.session-modal .night-flow-mode:focus-visible{
+  outline:2px solid #6ee6ff;
+  outline-offset:2px;
+}
+.session-modal .night-flow-summary{
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:space-between;
+  gap:6px 15px;
+  margin:0 0 10px;
+  color:#a8c5d5;
+  font-size:12px;
+  font-variant-numeric:tabular-nums;
+}
+.session-modal .night-flow-summary span:last-child{
+  color:#d4eff8;
+  font-weight:700;
+}
+.session-modal .night-flow-scroll{
+  max-width:100%;
+  overflow-x:auto;
+  overflow-y:hidden;
+  border:1px solid #244859;
+  background:#041722;
+  border-radius:9px;
+  padding:10px 0 2px;
+  overscroll-behavior-x:contain;
+  scrollbar-color:#34718e #071b27;
+  -webkit-overflow-scrolling:touch;
+}
+.session-modal .night-flow-svg{
+  display:block;
+  max-width:none;
+  user-select:none;
+}
+.session-modal .night-flow-hit{
+  cursor:pointer;
+  touch-action:manipulation;
+}
+.session-modal .night-flow-hit:focus-visible{
+  stroke:#fff;
+  stroke-width:2.5px;
+}
+.session-modal .night-flow-legend{
+  margin:9px 0;
+  color:#a8c1d1;
+  font-size:11px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.session-modal .night-flow-break-key{
+  display:inline-block;
+  border-left:3px dashed #f3ae56;
+  height:16px;
+}
+.session-modal .night-flow-empty{
+  border:1px dashed #315368;
+  border-radius:8px;
+  padding:24px 14px;
+  color:#a9c2d1;
+  text-align:center;
+  font-size:13px;
+}
+.session-modal .night-flow-selected{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:baseline;
+  gap:5px 12px;
+  margin-top:11px;
+  min-height:48px;
+  padding:12px;
+  background:#071e2b;
+  border:1px solid #265268;
+  border-radius:8px;
+  font-size:12px;
+}
+.session-modal .night-flow-selected strong{color:#e5f8ff;}
+.session-modal .night-flow-selected span{color:#a9cad9;}
+.session-modal .night-flow-selected b{color:#00cafa;}
+@media (max-width:620px){
+  .session-modal .night-flow{padding:10px;}
+  .session-modal .night-flow-mode{flex:1 1 calc(50% - 7px);}
+}
