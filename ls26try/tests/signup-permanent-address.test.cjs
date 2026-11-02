@@ -2,8 +2,12 @@ const test=require('node:test'),assert=require('node:assert/strict'),fs=require(
 const script=fs.readFileSync(require.resolve('../../signup/signup.js'),'utf8');
 function run(responses,query=''){
  const nodes={},calls=[];
- function node(){return {value:'',hidden:false,disabled:false,textContent:'',children:[],appendChild(x){this.children.push(x)},setAttribute(){}}}
- const document={getElementById(id){return nodes[id]||(nodes[id]=node());},createElement:node,addEventListener(){},hidden:false};
+ function node(){return {value:'',hidden:false,disabled:false,textContent:'',children:[],style:{},attributes:{},
+ appendChild(x){if(x.fragment){while(x.children.length)this.appendChild(x.children.shift())}else this.children.push(x)},
+ removeChild(x){this.children.splice(this.children.indexOf(x),1)},
+ get firstChild(){return this.children[0]||null},
+ setAttribute(name,value){this.attributes[name]=String(value)},blur(){}};}
+ const document={getElementById(id){return nodes[id]||(nodes[id]=node());},createElement:node,createDocumentFragment(){const f=node();f.fragment=true;return f},addEventListener(){},hidden:false};
  document.getElementById('success').hidden=true;
  function XHR(){this.open=(method,url)=>{calls.push({method,url})};this.send=()=>{const r=responses.shift();assert.ok(r,'unexpected network operation');this.status=r.status||200;this.readyState=4;this.responseText=JSON.stringify(r.body||{});this.onreadystatechange()};}
  const window={document,LKSignupPolicy:{rulesVerified:true,projectId:'demo-test'},location:{search:query},addEventListener(){}};
@@ -19,3 +23,27 @@ test('unpublished kiosk shows host setup rather than demanding a link',()=>{cons
 test('discovery connection failure never enables submission',()=>{const r=run([{status:500}]);assert.match(r.nodes.notice.textContent,/NO CONNECTION/);assert.equal(r.nodes.send.disabled,true)});
 test('legacy keyed links still use one snapshot read',()=>{const r=run([view],'?k='+token);assert.equal(r.calls.length,1);assert.ok(r.calls[0].url.includes('/signupKioskViews/'))});
 test('host publishes discovery with snapshot and removes key from generated URL',()=>{const s=fs.readFileSync(require.resolve('../shared/signup-kiosk.js'),'utf8');assert.match(s,/tx.set\(ref\('karaokeControl\/signupKioskPublic'\),\{schemaVersion:1,enabled:result.enabled,token:kioskToken/);assert.match(s,/enabled:false,updatedAt:stamp\(\)/);assert.match(s,/\$\('kioskUrl'\)\.href=publicPage;/);});
+
+test('full 80-song list, name first, search, selection, confirmed POST reset',()=>{
+ const songs={};
+ for(let i=0;i<80;i++)songs['s'+i]={mapValue:{fields:{title:{stringValue:'Song '+String(i).padStart(3,'0')},artist:{stringValue:'Artist'}}}};
+ const fullView={body:{fields:{...view.body.fields,songs:{mapValue:{fields:songs}}}}};
+ const r=run([doc({schemaVersion:1,enabled:true,token}),fullView,{body:{writeResults:[{},{}]}}]);
+ assert.equal(r.nodes.songResults.children.length,80);
+ assert.equal(r.nodes.nameStep.hidden,false);
+ assert.equal(r.nodes.songStep.hidden,true);
+ assert.equal(r.nodes.next.disabled,true);
+ r.nodes.singerName.value='Jane';r.nodes.singerName.oninput();
+ assert.equal(r.nodes.next.disabled,false);r.nodes.next.onclick();
+ assert.equal(r.nodes.nameStep.hidden,true);assert.equal(r.nodes.songStep.hidden,false);
+ r.nodes.songSearch.value='Song 079';r.nodes.songSearch.oninput();
+ assert.equal(r.nodes.songResults.children.filter(x=>x.style.display==='block').length,1);
+ r.nodes.songSearch.value='';r.nodes.clearSearch.onclick();
+ const row=r.nodes.songResults.children[79];row.onclick();
+ assert.match(row.className,/selected/);assert.match(r.nodes.selection.textContent,/Song 079/);
+ assert.equal(r.nodes.send.disabled,false);
+ r.nodes.signupForm.onsubmit({preventDefault(){}});
+ assert.equal(r.calls.filter(x=>x.method==='POST').length,1);
+ assert.equal(r.nodes.success.hidden,false);assert.equal(r.nodes.singerName.value,'');
+ assert.equal(r.nodes.songStep.hidden,true);
+});
