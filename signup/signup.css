@@ -1,40 +1,69 @@
-/* Standalone iOS 9 layout: no grid, CSS variables, webfonts or animation. */
+/* iPad 2 / iOS 9 first: standalone Home Screen, Safari-safe flex, no grid or modern CSS. */
 * { box-sizing: border-box; }
-body { margin: 0; color: #f7f7f7; background: #101010; font: 20px/1.4 Arial, Helvetica, sans-serif; -webkit-text-size-adjust: 100%; }
-#kiosk { width: 100%; max-width: 800px; margin: 0 auto; padding: 24px; }
-header { text-align: center; }
-.brand { margin: 0 0 8px; font-size: 24px; letter-spacing: 3px; }
+html, body { margin: 0; height: 100%; width: 100%; overflow: hidden; }
+body { color: #f7f7f7; background: #101010; font: 20px/1.25 Arial, Helvetica, sans-serif; -webkit-text-size-adjust: 100%; }
+#kiosk { height: 100%; height: 100vh; width: 100%; padding: 12px 18px 8px; overflow: hidden; display: -webkit-flex; display: flex; -webkit-flex-direction: column; flex-direction: column; }
+header { text-align: center; -webkit-flex: 0 0 auto; flex: 0 0 auto; }
+.brand { margin: 0 0 2px; font-size: 19px; letter-spacing: 2px; }
 .brand strong { color: #f33d48; }
-h1 { margin: 0; font-size: 36px; line-height: 1.2; }
-#listTitle { margin: 12px 0 22px; color: #ddd; }
-.notice { padding: 14px 18px; margin: 12px 0; border: 2px solid #e63a45; background: #2d1518; white-space: pre-line; overflow-wrap: break-word; }
-.notice.ok { border-color: #777; background: #202020; }
-fieldset { padding: 0; margin: 0; border: 0; min-width: 0; }
-label { display: block; font-size: 18px; font-weight: bold; margin: 24px 0 8px; letter-spacing: 1px; }
+h1 { margin: 0; font-size: 32px; line-height: 1.15; }
+#listTitle { margin: 4px 0 6px; font-size: 15px; color: #ddd; }
+.notice { padding: 9px 14px; margin: 5px 0 8px; border: 2px solid #e63a45; background: #2d1518; white-space: pre-line; overflow-wrap: break-word; font-size: 18px; text-align: center; -webkit-flex: 0 0 auto; flex: 0 0 auto; }
+#refresh { margin: 4px auto 10px; width: 100%; max-width: 560px; -webkit-flex: 0 0 auto; flex: 0 0 auto; }
+#signupForm { -webkit-flex: 1 1 auto; flex: 1 1 auto; min-height: 0; overflow: hidden; }
+fieldset { border: 0; padding: 0; margin: 0; height: 100%; min-width: 0; }
+.step { height: 100%; min-height: 0; }
+#nameStep { max-width: 620px; margin: 0 auto; padding: 8% 16px 0; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.instruction { font-size: 27px; text-align: center; margin: 8px 0 24px; }
+label { display: block; font-size: 20px; font-weight: bold; margin: 0 0 9px; letter-spacing: .5px; }
 input, textarea, button { font: inherit; border-radius: 7px; }
-input, textarea { display: block; width: 100%; padding: 14px; border: 2px solid #777; color: #111; background: #fff; min-height: 56px; }
-button { min-height: 52px; padding: 12px 18px; border: 2px solid #777; cursor: pointer; -webkit-appearance: none; color: #fff; background: #242424; }
+input, textarea { display: block; width: 100%; padding: 12px 15px; border: 2px solid #777; color: #111; background: #fff; min-height: 54px; font-size: 21px; }
+#singerName { min-height: 75px; font-size: 30px; }
+button { min-height: 52px; padding: 10px 14px; border: 2px solid #777; cursor: pointer; -webkit-appearance: none; color: #fff; background: #242424; }
 button:disabled { opacity: .45; cursor: default; }
-button:focus, input:focus, textarea:focus { outline: 3px solid #fff; outline-offset: 2px; }
-input:focus, textarea:focus { border-color: #dc2534; outline-color: #dc2534; }
-#refresh { width: 100%; }
-.search { display: table; width: 100%; }
-.search input { display: table-cell; }
-#clearSearch { margin-top: 8px; }
-.hint { color: #ccc; font-size: 16px; margin: 12px 0 8px; }
-.songs { max-height: 310px; overflow-y: auto; -webkit-overflow-scrolling: touch; border: 1px solid #555; border-radius: 7px; }
-.song { display: block; width: 100%; text-align: left; padding: 13px 18px; min-height: 76px; border: 0; border-bottom: 1px solid #555; border-radius: 0; background: #1c1c1c; }
+button:focus, input:focus, textarea:focus { outline: 3px solid #fff; outline-offset: 1px; }
+input:focus, textarea:focus { border-color: #e83b46; outline-color: #e83b46; }
+.primary { width: 100%; min-height: 72px; margin-top: 24px; background: #be2332; border-color: #f04c5c; font-size: 26px; font-weight: bold; }
+.help { font-size: 18px; color: #ccc; text-align: center; margin: 15px 0; }
+#songStep { display: -webkit-flex; display: flex; -webkit-flex-direction: column; flex-direction: column; }
+.song-top { -webkit-flex: 0 0 auto; flex: 0 0 auto; display: -webkit-flex; display: flex; -webkit-align-items: center; align-items: center; margin: 0 0 8px; }
+.song-top button { min-width: 102px; min-height: 47px; }
+#singerSummary { -webkit-flex: 1; flex: 1; text-align: center; font-weight: bold; font-size: 19px; margin: 0 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.search-label { margin: 0 0 5px; -webkit-flex: 0 0 auto; flex: 0 0 auto; }
+.search { position: relative; padding-right: 105px; -webkit-flex: 0 0 auto; flex: 0 0 auto; }
+.search input { min-height: 53px; }
+#clearSearch { position: absolute; top: 0; right: 0; width: 97px; min-height: 53px; }
+.hint { margin: 6px 0; color: #ccc; font-size: 16px; -webkit-flex: 0 0 auto; flex: 0 0 auto; }
+.songs { -webkit-flex: 1 1 auto; flex: 1 1 auto; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; border: 1px solid #555; border-radius: 7px; }
+.song { display: block; width: 100%; text-align: left; padding: 10px 17px; min-height: 69px; border: 0; border-bottom: 1px solid #555; border-radius: 0; background: #1c1c1c; }
 .song strong, .song span { display: block; }
 .song strong { font-size: 22px; overflow-wrap: break-word; }
-.song span { font-size: 18px; color: #ccc; }
-.song.selected { background: #671823; box-shadow: inset 5px 0 0 #ff4d5a; }
-.selection { padding: 14px; margin-top: 16px; background: #272727; border-left: 5px solid #e63a45; white-space: pre-line; }
-#moreSongs { width: 100%; margin-top: 8px; }
-.send { width: 100%; min-height: 70px; margin-top: 22px; background: #c41f30; border-color: #ef4755; font-size: 25px; font-weight: bold; }
-.success { padding: 36px 20px; text-align: center; border: 3px solid #ef4755; margin-top: 24px; }
-.success h2 { font-size: 34px; }
-footer { margin-top: 26px; text-align: center; font-size: 15px; color: #bbb; }
+.song span { font-size: 17px; color: #d8d8d8; }
+.song.selected { background: #155c36; box-shadow: inset 7px 0 0 #56ed91; }
+.song.selected strong, .song.selected span { color: #fff; }
+.song-bottom { -webkit-flex: 0 0 auto; flex: 0 0 auto; padding-top: 8px; }
+.selection { background: #242424; border-left: 5px solid #43d982; padding: 8px 12px; min-height: 40px; white-space: pre-line; font-size: 17px; }
+.note-toggle { width: 100%; border: 0; text-align: left; padding: 4px 5px; min-height: 35px; font-size: 15px; text-decoration: underline; color: #ddd; background: transparent; }
+#note { margin: 1px 0 4px; font-size: 18px; min-height: 70px; resize: vertical; }
+.send { width: 100%; min-height: 66px; background: #be2332; border-color: #f04c5c; font-size: 25px; font-weight: bold; }
+.success { -webkit-flex: 1 1 auto; flex: 1 1 auto; text-align: center; border: 3px solid #44de81; margin: 15px auto; padding: 48px 24px; width: 100%; max-width: 660px; }
+.success h2 { font-size: 38px; color: #81f2a8; }
+footer { -webkit-flex: 0 0 auto; flex: 0 0 auto; text-align: center; font-size: 13px; color: #bbb; padding-top: 5px; }
 [hidden] { display: none !important; }
-@media (min-width: 650px) { .search { position: relative; padding-right: 118px; } #clearSearch { position: absolute; top: 0; right: 0; margin: 0; } }
-@media (max-width: 480px) { #kiosk { padding: 18px; } h1 { font-size: 29px; } }
-@media (max-height: 800px) and (min-width: 650px) { #kiosk { padding-top: 16px; } .songs { max-height: 210px; } label { margin-top: 16px; } }
+@media (max-width: 700px) {
+ #kiosk { padding: 10px 12px 6px; }
+ h1 { font-size: 26px; }
+ #nameStep { padding: 10% 6px 0; }
+ .song-top button { min-width: 80px; }
+ #singerSummary { font-size: 16px; }
+ .song strong { font-size: 20px; }
+}
+@media (max-height: 520px) {
+ .brand { font-size: 16px; }
+ h1 { font-size: 23px; }
+ #listTitle { margin: 2px 0 3px; }
+ footer { display: none; }
+ .song { min-height: 60px; }
+ .send { min-height: 57px; }
+ #nameStep { padding-top: 3%; }
+}

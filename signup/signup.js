@@ -100,29 +100,71 @@
   if (!root.document || !document.getElementById('signupForm')) { return; }
   var policy = root.LKSignupPolicy || {}, token = param('k', location.search), view = null, songs = [], selected = null;
   var discover = !tokenValid(token);
-  var busy = false, loading = false, uncertain = false, limit = 30, timer = null, resetTimer = null, pending = null;
+  var busy = false, loading = false, uncertain = false, timer = null, resetTimer = null, pending = null, songButtons = [];
   var base = 'https://firestore.googleapis.com/v1/projects/' + policy.projectId + '/databases/(default)/documents';
   function el(id) { return document.getElementById(id); }
-  function notice(text, ok) { el('notice').textContent = text; el('notice').className = ok ? 'notice ok' : 'notice'; }
+  function notice(text, ok) {
+    el('notice').textContent = text;
+    el('notice').hidden = !!ok;
+    el('refresh').hidden = !!ok;
+  }
+  function nameValid() {
+    var name = trim(el('singerName').value);
+    return name.length > 0 && name.length <= 80 && !/[<>]/.test(name);
+  }
+  function showStep(which) {
+    el('nameStep').hidden = which !== 'name';
+    el('songStep').hidden = which !== 'song';
+    el('stepTitle').textContent = which === 'name' ? 'ENTER YOUR NAME' : 'CHOOSE YOUR SONG';
+    if (which === 'song') { el('singerSummary').textContent = 'SINGER: ' + trim(el('singerName').value); }
+  }
   function ready() {
-    el('fields').disabled = !view || !view.enabled || busy || uncertain;
-    el('send').disabled = !view || !view.enabled || busy || loading || uncertain || !validForm(el('singerName').value, selected, el('note').value);
+    var available = !!view && !!view.enabled && !busy && !loading && !uncertain;
+    el('fields').disabled = !available;
+    el('next').disabled = !available || !nameValid();
+    el('send').disabled = !available || !validForm(el('singerName').value, selected, el('note').value);
     el('refresh').disabled = busy || loading;
   }
+  function showSelection() {
+    el('selection').textContent = selected ? 'SELECTED: ' + selected.title + ' - ' + selected.artist : 'Select a song from the list';
+  }
+  function filterVisibleSongs() {
+    var term = trim(el('songSearch').value).toLowerCase(), count = 0, i, row, match;
+    for (i = 0; i < songButtons.length; i += 1) {
+      row = songButtons[i];
+      match = (row.song.title + ' ' + row.song.artist).toLowerCase().indexOf(term) !== -1;
+      row.button.style.display = match ? 'block' : 'none';
+      if (match) { count += 1; }
+    }
+    el('resultCount').textContent = count ? 'Showing all ' + count + ' matching songs. Tap one to select.' : 'No matching songs. Try another title or artist.';
+  }
   function renderSongs() {
-    var matches = filterSongs(songs, el('songSearch').value), container = el('songResults'), i;
+    var container = el('songResults'), fragment = document.createDocumentFragment(), i;
     while (container.firstChild) { container.removeChild(container.firstChild); }
+    songButtons = [];
     function add(song) {
       var button = document.createElement('button'), title = document.createElement('strong'), artist = document.createElement('span');
-      button.type = 'button'; button.className = 'song' + (selected && selected.id === song.id ? ' selected' : '');
+      button.type = 'button';
+      button.className = 'song' + (selected && selected.id === song.id ? ' selected' : '');
       button.setAttribute('aria-pressed', selected && selected.id === song.id ? 'true' : 'false');
-      title.textContent = song.title; artist.textContent = song.artist; button.appendChild(title); button.appendChild(artist);
-      button.onclick = function () { selected = song; el('selection').textContent = 'SELECTED: ' + song.title + '\n' + song.artist; renderSongs(); ready(); };
-      container.appendChild(button);
+      title.textContent = song.title; artist.textContent = song.artist;
+      button.appendChild(title); button.appendChild(artist);
+      button.onclick = function () {
+        var j, item;
+        selected = song;
+        for (j = 0; j < songButtons.length; j += 1) {
+          item = songButtons[j];
+          item.button.className = 'song' + (item.song.id === song.id ? ' selected' : '');
+          item.button.setAttribute('aria-pressed', item.song.id === song.id ? 'true' : 'false');
+        }
+        showSelection(); ready();
+      };
+      songButtons.push({song: song, button: button});
+      fragment.appendChild(button);
     }
-    for (i = 0; i < Math.min(matches.length, limit); i += 1) { add(matches[i]); }
-    el('resultCount').textContent = matches.length ? 'Showing ' + Math.min(matches.length, limit) + ' of ' + matches.length + ' songs. Tap one to select.' : 'No matching songs. Try another title or artist.';
-    el('moreSongs').hidden = matches.length <= limit;
+    for (i = 0; i < songs.length; i += 1) { add(songs[i]); }
+    container.appendChild(fragment);
+    filterVisibleSongs();
   }
   function schedule() {
     clearTimeout(timer);
@@ -166,16 +208,18 @@
       if (selected) {
         match = null; for (i = 0; i < songs.length; i += 1) { if (songs[i].id === selected.id) { match = songs[i]; break; } }
         selected = match;
-        el('selection').textContent = selected ? 'SELECTED: ' + selected.title + '\n' + selected.artist : 'Song list changed. Please choose a song.';
+        showSelection();
       }
       el('listTitle').textContent = view.displayTitle || view.venue || view.setlistName || "Tonight's song list";
-      if (!uncertain) { notice(view.enabled ? 'Choose your song. Requests go straight to the host.' : 'SIGN-UP CLOSED\nPlease ask the host.', view.enabled); }
-      el('refresh').textContent = 'REFRESH SONG LIST'; if (changed) { renderSongs(); } ready(); schedule();
+      if (!uncertain) { notice(view.enabled ? 'Requests go straight to the host.' : 'SIGN-UP CLOSED\nPlease ask the host.', view.enabled); }
+      el('refresh').textContent = 'RETRY / REFRESH SONG LIST'; if (changed) { renderSongs(); } ready(); schedule();
     });
   }
   function resetForm() {
-    el('singerName').value = ''; el('note').value = ''; el('songSearch').value = ''; selected = null; pending = null; uncertain = false; limit = 30;
-    el('selection').textContent = 'No song selected'; el('songResults').scrollTop = 0; renderSongs(); ready();
+    el('singerName').value = ''; el('note').value = ''; el('songSearch').value = '';
+    el('note').hidden = true; el('noteToggle').setAttribute('aria-expanded', 'false');
+    selected = null; pending = null; uncertain = false;
+    showStep('name'); showSelection(); el('songResults').scrollTop = 0; renderSongs(); ready();
   }
   el('signupForm').onsubmit = function (event) {
     event.preventDefault();
@@ -197,9 +241,19 @@
     });
   };
   el('singerName').oninput = el('note').oninput = ready;
-  el('songSearch').oninput = function () { limit = 30; el('songResults').scrollTop = 0; renderSongs(); };
-  el('clearSearch').onclick = function () { el('songSearch').value = ''; limit = 30; renderSongs(); };
-  el('moreSongs').onclick = function () { limit += 30; renderSongs(); };
+  el('next').onclick = function () {
+    if (el('next').disabled || !nameValid()) { return; }
+    if (el('singerName').blur) { el('singerName').blur(); }
+    showStep('song'); el('songResults').scrollTop = 0;
+  };
+  el('back').onclick = function () { if (!busy && !uncertain) { showStep('name'); } };
+  el('cancel').onclick = function () { if (!busy && !uncertain) { resetForm(); } };
+  el('songSearch').oninput = function () { el('songResults').scrollTop = 0; filterVisibleSongs(); };
+  el('clearSearch').onclick = function () { el('songSearch').value = ''; filterVisibleSongs(); };
+  el('noteToggle').onclick = function () {
+    el('note').hidden = !el('note').hidden;
+    el('noteToggle').setAttribute('aria-expanded', el('note').hidden ? 'false' : 'true');
+  };
   el('refresh').onclick = function () {
     if (uncertain) {
       if (!window.confirm('Please check with the host whether the request arrived before starting again. Clear this form?')) { return; }
@@ -210,5 +264,6 @@
   document.addEventListener('visibilitychange', function () { if (document.hidden) { clearTimeout(timer); } else { load(); } });
   window.addEventListener('pagehide', function () { clearTimeout(timer); clearTimeout(resetTimer); resetForm(); });
   window.addEventListener('pageshow', function (event) { if (event.persisted) { el('success').hidden = true; el('signupForm').hidden = false; load(); } });
+  showStep('name');
   load();
 }(typeof window !== 'undefined' ? window : this));
