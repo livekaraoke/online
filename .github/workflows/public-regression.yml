@@ -43,7 +43,7 @@ jobs:
           java-version: '17'
       - name: Install pinned test tools outside the website
         run: |
-          npm install --prefix "$RUNNER_TEMP/lk-test-tools" --no-audit --no-fund firebase@10.14.1 firebase-tools@13.35.1 @firebase/rules-unit-testing@3.0.4 playwright@1.62.1
+          npm install --prefix "$RUNNER_TEMP/lk-test-tools" --no-audit --no-fund firebase@10.14.1 firebase-tools@13.35.1 @firebase/rules-unit-testing@3.0.4 playwright@1.62.1 acorn@8
           echo "NODE_PATH=$RUNNER_TEMP/lk-test-tools/node_modules" >> "$GITHUB_ENV"
           echo "LS26_KIOSK_TEST_MODULES=$RUNNER_TEMP/lk-test-tools" >> "$GITHUB_ENV"
           "$RUNNER_TEMP/lk-test-tools/node_modules/.bin/playwright" install --with-deps chromium
