@@ -10,7 +10,7 @@ function run(responses,query=''){
  const document={getElementById(id){return nodes[id]||(nodes[id]=node());},createElement:node,createDocumentFragment(){const f=node();f.fragment=true;return f},addEventListener(){},hidden:false};
  document.getElementById('success').hidden=true;
  function XHR(){this.open=(method,url)=>{calls.push({method,url})};this.send=()=>{const r=responses.shift();assert.ok(r,'unexpected network operation');this.status=r.status||200;this.readyState=4;this.responseText=JSON.stringify(r.body||{});this.onreadystatechange()};}
- const window={document,LKSignupPolicy:{rulesVerified:true,projectId:'demo-test'},location:{search:query},addEventListener(){}};
+ const window={document,LKSignupPolicy:{rulesVerified:true,projectId:'demo-test'},location:{search:query},addEventListener(){},scrollTo(){},crypto:{getRandomValues(bytes){for(let i=0;i<bytes.length;i++)bytes[i]=i+1;return bytes;}}};
  vm.runInNewContext(script,{window,document,location:window.location,XMLHttpRequest:XHR,clearTimeout(){},setTimeout(){return 1;}});
  return {nodes,calls};
 }
