@@ -73,15 +73,23 @@ const receiver=fs.readFileSync(path.join(root,'oldadmin/host/lyrics/prompter-rem
   })));
   assert.equal(writes.length,0,'Initial ready check must not write to Firestore');
   assert.equal(await host.locator('#ls26PrompterRemotePlay').textContent(),'▶');
-  const expected=['song','faster','slower','up','down','toggle'];
+  const expected=['song','toggle','faster','slower','up','down','toggle'];
   const executed=['toggle','faster','slower','up','down','toggle'];
   for(let i=0;i<expected.length;i++){
     await host.locator('[data-remote="'+expected[i]+'"]').click();
-    await target.waitForFunction(n=>window.__actions.length===n,i+1);
-    if(i===0)assert.equal(await host.locator('#ls26PrompterRemotePlay').textContent(),'■');
-    if(i===1)assert.equal(await target.locator('#scrollSpeedDisplay').textContent(),'0.90x','Remote + must advance by 0.10x');
-    if(i===2)assert.equal(await target.locator('#scrollSpeedDisplay').textContent(),'0.80x','Remote - must decrease by 0.10x');
-    if(i===5)assert.equal(await host.locator('#ls26PrompterRemotePlay').textContent(),'▶');
+    if(i===0){
+      await target.waitForFunction(()=>document.body.dataset.ls26SingerStage==='running');
+      assert.equal(await target.locator('#scrollToggleBtn').textContent(),'▶','START SONG does not start scrolling on another tablet');
+      assert.equal(await target.evaluate(()=>window.autoScrollActive),false);
+      assert.equal(await target.evaluate(()=>window.__actions.length),0,'No implicit remote Play on START SONG');
+      assert.equal(await host.locator('#ls26PrompterRemotePlay').textContent(),'▶');
+    }else{
+      await target.waitForFunction(n=>window.__actions.length===n,i);
+    }
+    if(i===1)assert.equal(await host.locator('#ls26PrompterRemotePlay').textContent(),'■');
+    if(i===2)assert.equal(await target.locator('#scrollSpeedDisplay').textContent(),'0.90x','Remote + must advance by 0.10x');
+    if(i===3)assert.equal(await target.locator('#scrollSpeedDisplay').textContent(),'0.80x','Remote - must decrease by 0.10x');
+    if(i===6)assert.equal(await host.locator('#ls26PrompterRemotePlay').textContent(),'▶');
   }
   assert.deepEqual(await target.evaluate(()=>window.__actions),executed);
   assert.deepEqual(writes.map(p=>p.action),expected,'One merged write per press');

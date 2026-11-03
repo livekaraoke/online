@@ -156,7 +156,9 @@
     if(action==='toggle')setPlayState(!wasPlaying);
     if(action==='song'){
       const next=singerMode==='running'||singerMode==='instrumental'?'ended':'running';
-      setSingerMode(next);setPlayState(next==='running');
+      setSingerMode(next);
+      // Revealing lyrics is not the same as starting autoscroll.
+      setPlayState(false);
     }
     if(action==='instrumental'){
       const next=singerMode==='instrumental'?'running':'instrumental';

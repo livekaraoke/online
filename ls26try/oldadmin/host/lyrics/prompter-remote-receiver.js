@@ -62,12 +62,15 @@
   const applyMode=next=>{
     if(!['idle','waiting','running','instrumental','ended'].includes(next))return;
     stopTimer();
-    if(next!=='running'&&typeof stopAutoScroll==='function')stopAutoScroll();
     const starting=next==='running'&&(mode==='waiting'||mode==='ended'||mode==='idle');
+    // START SONG only reveals the lyrics. The separate Play control owns
+    // autoscroll; keep the Prompter paused until it is pressed explicitly.
+    if((next!=='running'||starting)&&typeof stopAutoScroll==='function')stopAutoScroll();
     mode=next;
     document.body.dataset.ls26SingerStage=next;
     if(starting)window.scrollTo(0,0);
-    if(next==='running'&&typeof autoScrollActive!=='undefined'&&!autoScrollActive&&typeof toggleAutoScroll==='function')toggleAutoScroll();
+    // Keep the existing hold/resume behaviour for an instrumental section.
+    if(next==='running'&&!starting&&typeof autoScrollActive!=='undefined'&&!autoScrollActive&&typeof toggleAutoScroll==='function')toggleAutoScroll();
     if(next==='ended')armTimer();
     window.dispatchEvent(new CustomEvent('ls26:prompter-stage-changed',{detail:{mode:next}}));
   };
