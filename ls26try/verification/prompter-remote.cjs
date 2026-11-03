@@ -10,8 +10,8 @@ const css=fs.readFileSync(path.join(root,'host/css/lyricview-prompter-remote.css
 const viewerHtml=fs.readFileSync(path.join(root,'host/lyricview.html'),'utf8');
 const prompterHtml=fs.readFileSync(path.join(root,'oldadmin/host/lyrics/song.html'),'utf8');
 const performance=fs.readFileSync(path.join(root,'shared/performance.js'),'utf8');
-assert.match(viewerHtml,/lyricview-prompter-remote\.js\?v=20261103-stage-v1/);
-assert.match(viewerHtml,/lyricview-prompter-remote\.css\?v=20261103-stage-v1/);
+assert.match(viewerHtml,/lyricview-prompter-remote\.js\?v=20261103-remote-layout-v2/);
+assert.match(viewerHtml,/lyricview-prompter-remote\.css\?v=20261103-remote-layout-v2/);
 assert.match(prompterHtml,/prompter-remote-receiver\.js\?v=20261103-remote-stage-v1/);
 assert.match(performance,/ls26:karaoke-tools-visibility/);
 assert.match(performance,/id="ls26ShowKaraoke"> Show karaoke tools<\/label>\s*<label class="ls26-karaoke-toggle"><input type="checkbox" id="ls26ShowPrompterRemote"> Show Prompter Remote/);
@@ -61,6 +61,17 @@ assert.match(prompterHtml,/prompterScrollUp/);assert.match(prompterHtml,/prompte
   await prompter.addScriptTag({content:receiverScript});
   await host.waitForFunction(()=>document.getElementById('ls26PrompterRemoteStatus')?.textContent==='Connected');
   assert.equal(await host.locator('#ls26PrompterRemote').isVisible(),true);
+  assert.deepEqual(
+    await host.locator('#ls26PrompterRemote .ls26-prompter-remote-controls button').evaluateAll(nodes=>nodes.map(el=>el.dataset.remote)),
+    ['toggle','slower','faster','up','down'],
+    'Speed placeholder removed; functional tempo +/- remain adjacent'
+  );
+  assert.equal(await host.locator('#ls26PrompterRemoteSpeed').count(),0,'Remove unused dash output');
+  assert.deepEqual(
+    await host.locator('#ls26PrompterRemote .ls26-prompter-remote-stage-actions button').evaluateAll(nodes=>nodes.map(el=>el.dataset.remote)),
+    ['song','instrumental'],
+    'START SONG must be on the left'
+  );
   async function press(action,expected){
     await host.locator('[data-remote="'+action+'"]').click();
     await prompter.waitForFunction(expected);
@@ -72,7 +83,6 @@ assert.match(prompterHtml,/prompterScrollUp/);assert.match(prompterHtml,/prompte
   await host.waitForFunction(()=>document.getElementById('ls26PrompterRemotePlay')?.getAttribute('aria-pressed')==='true');
   assert.equal(await host.locator('#ls26PrompterRemotePlay').textContent(),'■');
   await press('faster',()=>document.getElementById('scrollSpeedDisplay').textContent==='0.90x');
-  await host.waitForFunction(()=>document.getElementById('ls26PrompterRemoteSpeed').textContent==='0.90x');
   await press('slower',()=>document.getElementById('scrollSpeedDisplay').textContent==='0.80x');
   await press('up',()=>window.__actions.includes('up'));
   await press('down',()=>window.__actions.includes('down'));
@@ -117,7 +127,7 @@ assert.match(prompterHtml,/prompterScrollUp/);assert.match(prompterHtml,/prompte
   });
   const b=await host.locator('#ls26PrompterRemote').boundingBox();
   const bottomGap=1536-(b.y+b.height);
-  assert.ok(b.width>=490&&b.width<=510&&b.height<=240,'Remote remains compact with its cue row');
+  assert.ok(b.width>=490&&b.width<=510&&b.height<=250,'Remote remains compact with larger arrow buttons');
   assert.ok(b.x>=195&&b.x+b.width<=750,'Remote must clear side navigation');
   assert.ok(bottomGap>=175&&bottomGap<=195,'Remote must start just above the bottom toolbar');
   assert.equal(await host.locator('#ls26PrompterRemote').evaluate(el=>getComputedStyle(el).position),'fixed','Remote must float independently of sticky tools');
@@ -144,7 +154,8 @@ assert.match(prompterHtml,/prompterScrollUp/);assert.match(prompterHtml,/prompte
     const arrow=host.locator('[data-remote="'+direction+'"]');
     assert.equal((await arrow.textContent()).trim(),'','Up/down controls must have no text');
     assert.equal(await arrow.locator('svg path').count(),1,'Chevron icon should be present');
-    assert.ok((await arrow.locator('svg').evaluate(el=>el.getBoundingClientRect().width))>=35,'Chevron must be large');
+    assert.ok((await arrow.locator('svg').evaluate(el=>el.getBoundingClientRect().width))>=47,'Chevron icon should be visibly larger');
+    assert.ok((await arrow.evaluate(el=>el.getBoundingClientRect().height))>=74,'Arrow touch area must be larger than the other controls');
   }
   await host.setViewportSize({width:600,height:740});
   await host.waitForFunction(()=>{

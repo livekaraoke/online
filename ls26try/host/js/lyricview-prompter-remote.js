@@ -27,14 +27,13 @@
     <div class="ls26-prompter-remote-controls">
       <button type="button" data-remote="toggle" id="ls26PrompterRemotePlay" aria-pressed="false" aria-label="Play Prompter autoscroll">▶</button>
       <button type="button" data-remote="slower" aria-label="Decrease Prompter scroll speed">−</button>
-      <output id="ls26PrompterRemoteSpeed" aria-label="Prompter scroll speed">—</output>
       <button type="button" data-remote="faster" aria-label="Increase Prompter scroll speed">+</button>
       <button type="button" class="ls26-prompter-remote-arrow" data-remote="up" aria-label="Scroll Prompter up" title="Scroll Prompter up"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 15l7-7 7 7"/></svg></button>
       <button type="button" class="ls26-prompter-remote-arrow" data-remote="down" aria-label="Scroll Prompter down" title="Scroll Prompter down"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9l7 7 7-7"/></svg></button>
     </div>
     <div class="ls26-prompter-remote-stage-actions">
-      <button type="button" data-remote="instrumental" id="ls26PrompterInstrumental" aria-pressed="false" disabled>INSTRUMENTAL / HOLD</button>
       <button type="button" data-remote="song" id="ls26PrompterSongCue">START SONG</button>
+      <button type="button" data-remote="instrumental" id="ls26PrompterInstrumental" aria-pressed="false" disabled>INSTRUMENTAL / HOLD</button>
     </div>`;
   let singerMode='waiting';
   const setSingerMode=mode=>{
@@ -199,12 +198,11 @@
   const receive=packet=>{
     if(!packet||packet.v!==1||packet.kind!=='state'||!packet.id)return;
     // The Prompter also broadcasts a ready status with no matching request.
-    const status=$('ls26PrompterRemoteStatus'),speed=$('ls26PrompterRemoteSpeed'),play=$('ls26PrompterRemotePlay');
-    if(!status||!speed||!play)return;
+    const status=$('ls26PrompterRemoteStatus'),play=$('ls26PrompterRemotePlay');
+    if(!status||!play)return;
     clearTimeout(timeout);
     lastRequest='';
     status.textContent='Connected';
-    if(packet.speed)speed.textContent=String(packet.speed);
     setPlayState(Boolean(packet.playing));
     if(packet.mode)setSingerMode(packet.mode);
   };

@@ -14,8 +14,8 @@
 #ls26PrompterRemote .ls26-prompter-remote-head strong{color:#40c9eb;font-size:12px;letter-spacing:.035em;white-space:nowrap}
 #ls26PrompterRemoteStatus{font-size:10px;color:#9abfce;max-width:120px;text-align:right;line-height:1.2;margin-left:auto}
 #ls26PrompterRemote .ls26-prompter-remote-controls{
- display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr) 51px minmax(0,1fr) minmax(0,1.05fr) minmax(0,1.05fr);
- gap:6px;align-items:center;width:100%;
+ display:grid;grid-template-columns:minmax(0,1fr) minmax(0,.9fr) minmax(0,.9fr) minmax(0,1.3fr) minmax(0,1.3fr);
+ gap:6px;align-items:start;width:100%;
 }
 #ls26PrompterRemote button{
  min-height:58px;min-width:0;border:1px solid #28637a;border-radius:8px;
@@ -26,16 +26,20 @@
 #ls26PrompterRemote button:focus-visible{outline:2px solid #22d5ff;outline-offset:2px}
 #ls26PrompterRemote #ls26PrompterRemotePlay{background:#063d32;border-color:#18a782;color:#35f4ae}
 #ls26PrompterRemote #ls26PrompterRemotePlay[aria-pressed="true"]{background:#501a20;border-color:#ed6572;color:#ffd7da;font-size:26px}
-#ls26PrompterRemoteSpeed{text-align:center;font-size:14px;font-weight:700;white-space:nowrap;font-variant-numeric:tabular-nums}
-#ls26PrompterRemote .ls26-prompter-remote-arrow{display:flex;align-items:center;justify-content:center;color:#c1ebfb}
+/* Larger arrow touch zones without enlarging the Play or tempo controls. */
+#ls26PrompterRemote .ls26-prompter-remote-arrow{
+ display:flex;align-items:center;justify-content:center;color:#c1ebfb;
+ min-height:76px;
+}
 #ls26PrompterRemote .ls26-prompter-remote-arrow svg{
- width:36px;height:36px;display:block;fill:none;stroke:currentColor;
+ width:48px;height:48px;display:block;fill:none;stroke:currentColor;
  stroke-width:3.5;stroke-linecap:round;stroke-linejoin:round;
 }
 @media(max-width:760px){
  #ls26PrompterRemote{left:8px;transform:none;bottom:170px;width:min(450px,calc(100vw - 84px))}
- #ls26PrompterRemote .ls26-prompter-remote-controls{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr) 48px minmax(0,1fr)}
- #ls26PrompterRemote .ls26-prompter-remote-arrow{grid-column:span 2}
+ #ls26PrompterRemote .ls26-prompter-remote-controls{grid-template-columns:repeat(6,minmax(0,1fr))}
+ #ls26PrompterRemote .ls26-prompter-remote-controls>button:not(.ls26-prompter-remote-arrow){grid-column:span 2}
+ #ls26PrompterRemote .ls26-prompter-remote-arrow{grid-column:span 3}
 }
 @media(max-height:500px){
  #ls26PrompterRemote{bottom:104px;padding:8px;gap:5px}
