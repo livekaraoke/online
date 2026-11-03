@@ -116,19 +116,26 @@
     const upper=max+padding;
     return Array.from({length:5},(_,i)=>lower+(upper-lower)*i/4);
   }
-  function renderSvg(model,mode){
+  function renderSvg(model,mode,options={}){
     const data=model.songs,valid=data.map(x=>x.metrics[mode]).filter(x=>x!=null);
     if(!data.length||!valid.length)return "";
-    const left=58,right=22,top=20,bottom=58,step=56,height=260;
-    const width=Math.max(520,left+right+Math.max(1,data.length-1)*step);
+    const marks=ticks(mode,valid),categorical=mode==="key";
+    const left=categorical?64:58,right=22,top=20,bottom=58;
+    const height=categorical?Math.max(260,marks.length*24+78):260;
+    const naturalWidth=Math.max(520,left+right+Math.max(1,data.length-1)*56);
+    const wantedWidth=Number(options.width);
+    const width=Number.isFinite(wantedWidth)&&wantedWidth>=260?Math.min(16000,Math.round(wantedWidth)):naturalWidth;
     const plotBottom=height-bottom,plotHeight=plotBottom-top;
-    const marks=ticks(mode,valid),min=marks[0],max=marks[marks.length-1];
-    const x=i=>left+i*step;
-    const y=v=>top+(max-v)/(max-min||1)*plotHeight;
+    const step=(width-left-right)/Math.max(1,data.length-1);
+    const min=categorical?0:marks[0],max=categorical?marks.length-1:marks[marks.length-1];
+    const x=i=>data.length===1?left+(width-left-right)/2:left+i*step;
+    const y=v=>categorical?top+(max-marks.indexOf(v))/(max||1)*plotHeight
+      :top+(max-v)/(max-min||1)*plotHeight;
+    const labelEvery=Math.max(1,Math.ceil(32/Math.max(1,step)));
     const col=MODES[mode].color;
     const out=['<svg class="night-flow-svg" role="img" aria-label="'+escapeHtml(MODES[mode].title)+' by song number" viewBox="0 0 '+width+' '+height+'" width="'+width+'" height="'+height+'">'];
     for(const v of marks){
-      const pos=y(v),label=mode==="host"||mode==="singer"?LABELS[mode][v]:String(Math.round(v));
+      const pos=y(v),label=categorical?String(v):mode==="host"||mode==="singer"?LABELS[mode][v]:String(Math.round(v));
       out.push('<line x1="'+left+'" y1="'+pos+'" x2="'+(width-right)+'" y2="'+pos+'" stroke="#2a5266" stroke-width="1" stroke-dasharray="3 5"/>');
       out.push('<text x="'+(left-9)+'" y="'+(pos+4)+'" fill="#9bbbc9" font-size="10" text-anchor="end">'+escapeHtml(label)+'</text>');
     }
@@ -147,7 +154,7 @@
     for(let i=0;i<data.length;i++){
       const v=data[i].metrics[mode],px=x(i),py=v==null?plotBottom+3:y(v);
       out.push('<line x1="'+px+'" y1="'+(plotBottom+4)+'" x2="'+px+'" y2="'+(plotBottom+10)+'" stroke="#668da0"/>');
-      out.push('<text x="'+px+'" y="'+(plotBottom+25)+'" fill="#adc5d1" font-size="11" text-anchor="middle">'+(i+1)+'</text>');
+      if(i%labelEvery===0||i===data.length-1)out.push('<text x="'+px+'" y="'+(plotBottom+25)+'" fill="#adc5d1" font-size="11" text-anchor="middle">'+(i+1)+'</text>');
       out.push('<circle cx="'+px+'" cy="'+py+'" r="'+(v==null?4:6)+'" fill="'+(v==null?"#587180":col)+'" stroke="#031722" stroke-width="2"/>');
       const label=(i+1)+". "+data[i].title+" — "+valueLabel(mode,v);
       out.push('<circle class="night-flow-hit" tabindex="0" role="button" data-flow-index="'+i+'" aria-label="'+escapeHtml(label)+'" cx="'+px+'" cy="'+py+'" r="21" fill="transparent"/>');
