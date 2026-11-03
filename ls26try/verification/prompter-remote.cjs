@@ -79,7 +79,7 @@ assert.match(prompterHtml,/prompterScrollUp/);assert.match(prompterHtml,/prompte
   assert.equal(await prompter.evaluate(()=>document.body.dataset.ls26SingerStage),'idle');
   assert.equal(await host.locator('#ls26PrompterSongCue').isDisabled(),true,'An idle screen is not a playable song');
   await prompter.evaluate(()=>window.dispatchEvent(new CustomEvent('ls26:prompter-song-changed',{
-    detail:{songId:'demo',title:'Demo Song',artist:'Demo Artist',year:1999}
+    detail:{songId:'demo',cue:true,title:'Demo Song',artist:'Demo Artist',year:1999}
   })));
   await prompter.waitForFunction(()=>document.body.dataset.ls26SingerStage==='waiting');
   assert.equal(await prompter.locator('#ls26SingerUpcomingTitle').textContent(),'Demo Song');

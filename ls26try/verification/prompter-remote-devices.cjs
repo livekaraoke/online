@@ -69,7 +69,7 @@ const receiver=fs.readFileSync(path.join(root,'oldadmin/host/lyrics/prompter-rem
   await target.addScriptTag({content:receiver});
   await host.addScriptTag({content:sender});
   await target.evaluate(()=>window.dispatchEvent(new CustomEvent('ls26:prompter-song-changed',{
-    detail:{songId:'demo',title:'Demo Song',artist:'Demo Artist',year:2001}
+    detail:{songId:'demo',cue:true,title:'Demo Song',artist:'Demo Artist',year:2001}
   })));
   assert.equal(writes.length,0,'Initial ready check must not write to Firestore');
   assert.equal(await host.locator('#ls26PrompterRemotePlay').textContent(),'▶');
