@@ -9,11 +9,21 @@ function value(x){
  if(typeof x==='string')return {stringValue:x};
  if(typeof x==='number')return {integerValue:String(x)};
  if(typeof x==='boolean')return {booleanValue:x};
+ if(Array.isArray(x))return {arrayValue:{values:x.map(value)}};
+ if(x===null)return {nullValue:null};
  const fields={};for(const k of Object.keys(x))fields[k]=value(x[k]);return {mapValue:{fields}};
 }
 function fields(x){const out={};for(const k of Object.keys(x))out[k]=value(x[k]);return {fields:out};}
 const discovery=fields({schemaVersion:1,enabled:true,token});
 const view=fields({schemaVersion:1,enabled:true,sessionId:'s1',revision:'r1',setlistId:'s1',setlistName:'Test',venue:'Test',songs});
+function publicLive(){
+ return fields({schemaVersion:1,act:'live-karaoke',sessionId:'s1',
+   control:{active:true},karaoke:{songsEnabled:requestOpen},
+   kioskQueue:{current:{songTitle:'Current song',singerName:'Alex'},
+    next:[{songTitle:'Next song 1',singerName:'Ben'},
+      {songTitle:'Next song 2',singerName:'Cara'},
+      {songTitle:'Next song 3',singerName:'Dan'}]}});
+}
 let server,browser;let requestOpen=true,sessionActive=true;
 (async()=>{
  server=http.createServer((req,res)=>{
@@ -41,7 +51,8 @@ let server,browser;let requestOpen=true,sessionActive=true;
        body:JSON.stringify([row('song0','pending'),row('song1','played'),row('song2','cancelled')])});
    }
    if(url.includes('/publicSites/live-karaoke/views/live'))
-     return route.fulfill({status:404,contentType:'application/json',body:'{}'});
+     return route.fulfill({status:200,contentType:'application/json',
+       headers:{'access-control-allow-origin':'*'},body:JSON.stringify(publicLive())});
    const doc=url.includes('/signupKioskPublic')?discovery:
      url.includes('/signupKioskViews/')?view:
      url.endsWith('/karaokeControl/currentSession')?fields({active:sessionActive,sessionId:'s1'}):
@@ -54,9 +65,24 @@ let server,browser;let requestOpen=true,sessionActive=true;
   await page.goto('http://127.0.0.1:'+server.address().port+'/signup/sign%20up.html');
   await page.locator('.song').first().waitFor({state:'attached'});
   await page.waitForFunction(()=>!document.getElementById('idleScreen').disabled);
+  await page.waitForFunction(()=>document.getElementById('queueNextSinger3').textContent.indexOf('Dan')!==-1);
+  assert.equal(await page.locator('#queueNowSong').textContent(),'Current song');
+  assert.equal(await page.locator('#queueNowSinger').textContent(),'Singer: Alex');
+  assert.equal(await page.locator('#queueNextSong1').textContent(),'Next song 1');
+  assert.equal(await page.locator('#queueNextSinger3').textContent(),'Singer: Dan');
+  assert.equal(await page.locator('#singerName').evaluate(el=>document.activeElement===el),false,
+    'No automatic keyboard focus when landing appears after refresh');
+  const geometry=await page.evaluate(()=>{
+    const image=document.querySelector('.idle-brand-art').getBoundingClientRect();
+    const queue=document.getElementById('idleQueue').getBoundingClientRect();
+    return {imageBottom:image.bottom,queueTop:queue.top,queueBottom:queue.bottom,
+      visibleHeight:Math.min(window.innerHeight,document.documentElement.clientHeight)};
+  });
+  assert.ok(Math.abs(geometry.imageBottom-geometry.queueTop)<2,'Queue must follow logo: '+JSON.stringify(geometry));
+  assert.ok(geometry.queueBottom<=geometry.visibleHeight+2,'Queue must fit viewport: '+JSON.stringify(geometry));
   assert.equal(await page.locator('#idleScreen').getAttribute('aria-label'),'Click anywhere to sing');
-  const artworkScale=await page.locator('#idleScreen').evaluate(el=>getComputedStyle(el).backgroundSize);
-  assert.equal(artworkScale,'auto 92%','Landing artwork preserves aspect ratio at reduced centered size');
+  const artworkScale=await page.locator('.idle-brand-art').evaluate(el=>getComputedStyle(el).backgroundSize);
+  assert.equal(artworkScale,'auto 148%','Landing art remains proportional and cropped');
   const imageLoaded=await page.evaluate(()=>new Promise(resolve=>{
     const img=new Image();img.onload=()=>resolve(img.naturalWidth>=1000&&img.naturalHeight>=1000);
     img.onerror=()=>resolve(false);img.src='assets/click-to-sing.jpg';
@@ -147,9 +173,9 @@ let server,browser;let requestOpen=true,sessionActive=true;
   const confirmation=await page.evaluate(()=>{
    const box=document.getElementById('success'),rect=box.getBoundingClientRect(),
      paragraphs=box.querySelectorAll('p'),h=box.querySelector('h2'),
-     texts=[h,paragraphs[0],paragraphs[1]],
-     top=texts[0].getBoundingClientRect().top,
-     bottom=texts[2].getBoundingClientRect().bottom;
+     cta=document.getElementById('anotherSong'),
+     top=h.getBoundingClientRect().top,
+     bottom=cta.getBoundingClientRect().bottom;
    return {top:rect.top,bottom:rect.bottom,height:rect.height,center:(top+bottom)/2,
      boxCenter:(rect.top+rect.bottom)/2,viewport:Math.min(window.innerHeight,document.documentElement.clientHeight),
      paragraphSize:parseFloat(getComputedStyle(paragraphs[0]).fontSize),
@@ -159,6 +185,17 @@ let server,browser;let requestOpen=true,sessionActive=true;
   assert.ok(Math.abs(confirmation.center-confirmation.boxCenter)<26,'Success text must be vertically centered: '+JSON.stringify(confirmation));
   assert.ok(confirmation.paragraphSize>=18,'Success messages should be larger: '+JSON.stringify(confirmation));
   assert.ok(confirmation.gap>=10,'Confirmation paragraphs should be separated: '+JSON.stringify(confirmation));
+  assert.ok(await page.locator('#anotherSong').isVisible(),'Repeat-request button must show after confirmed submission');
+  if(viewport.width!==1024){
+    await page.locator('#anotherSong').click();
+    assert.ok(await page.locator('#success').isHidden(),'Repeat button closes confirmation');
+    assert.ok(await page.locator('#songStep').isVisible(),'Repeat button goes directly to song list');
+    assert.equal(await page.locator('#singerName').inputValue(),'Test singer','Repeat request keeps the same singer');
+    assert.ok(!await page.locator('#send').isEnabled(),'A new song must be selected before sending');
+    await page.locator('#cancel').click();
+    assert.ok(await page.locator('#idleScreen').isVisible(),'Cancel after repeat returns to landing');
+    assert.equal(await page.locator('#singerName').evaluate(el=>document.activeElement===el),false,'Landing must not focus keyboard');
+  }
   if(viewport.width===1024){
     await page.locator('#idleScreen').waitFor({state:'visible',timeout:12000});
     assert.equal(await page.locator('#idleScreen').getAttribute('aria-label'),'Click anywhere to sing');

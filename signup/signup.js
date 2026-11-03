@@ -104,6 +104,7 @@
   var focusedName = false, dialogAction = null;
   var unavailable = {}, localBlocked = {}, availabilitySession = '', availabilityVersion = 0;
   var gateOpen = false, gateTimer = null, gateBusy = false;
+  var queueVersion = 0, repeatSinger = '';
   var base = 'https://firestore.googleapis.com/v1/projects/' + policy.projectId + '/databases/(default)/documents';
   function el(id) { return document.getElementById(id); }
   function notice(text, ok) {
@@ -154,7 +155,6 @@
       el('signupForm').style.height = '';
       el('fields').style.height = '';
       el('songStep').style.height = '';
-      if (!el('fields').disabled) { focusName(); }
     }
   }
   function ready() {
@@ -163,10 +163,6 @@
     el('next').disabled = !available || !nameValid();
     el('send').disabled = !available || !validForm(el('singerName').value, selected, el('note').value) ||
       !!(selected && songUnavailable(selected.id));
-    if (available && el('idleScreen').hidden && !el('nameStep').hidden && !focusedName) {
-      focusedName = true;
-      setTimeout(focusName, 0);
-    }
     el('refresh').disabled = busy || loading;
     el('pageRefresh').disabled = busy;
   }
@@ -288,11 +284,47 @@
     filterVisibleSongs();
     updateSongStates();
   }
+  function renderLandingQueue(queue) {
+    var current = queue && queue.current, next = queue && queue.next instanceof Array ? queue.next : [];
+    var i, row, item;
+    el('queueNowSong').textContent = current && trim(current.songTitle) ? trim(current.songTitle) : 'Waiting for the next song';
+    el('queueNowSinger').textContent = current && trim(current.singerName) ? 'Singer: ' + trim(current.singerName) : '';
+    el('queueEmpty').hidden = next.length > 0;
+    for (i = 0; i < 3; i += 1) {
+      row = el('queueNext' + (i + 1));
+      item = next[i];
+      row.hidden = !item || !trim(item.songTitle);
+      el('queueNextSong' + (i + 1)).textContent = item ? trim(item.songTitle) : '';
+      el('queueNextSinger' + (i + 1)).textContent = item && trim(item.singerName)
+        ? 'Singer: ' + trim(item.singerName) : 'Singer to be announced';
+    }
+  }
+  /* Read only the existing owner-published public projection. Never fetch the
+   * private Run Order, notes, or names for more than these four stage slots. */
+  function refreshLandingQueue(session) {
+    var version = ++queueVersion;
+    xhr('GET', base + '/publicSites/live-karaoke/views/live', null, function (error, result) {
+      var data;
+      if (version !== queueVersion || !view || view.sessionId !== session || !gateOpen) { return; }
+      if (error || !result || !result.fields) { renderLandingQueue(null); return; }
+      data = decode({mapValue: {fields: result.fields}});
+      if (data.schemaVersion !== 1 || data.act !== 'live-karaoke' || data.sessionId !== session ||
+          !data.control || data.control.active !== true ||
+          !data.karaoke || data.karaoke.songsEnabled !== true ||
+          (data.expiresAt && Date.parse(data.expiresAt) <= Date.now())) {
+        renderLandingQueue(null);
+        return;
+      }
+      renderLandingQueue(data.kioskQueue);
+    });
+  }
   function showIdle(mode) {
     var closed = mode !== 'open', screen = el('idleScreen');
     var resetNeeded = closed && screen.hidden && !el('signupForm').hidden &&
       el('success').hidden && !busy;
     if (closed) { clearTimeout(resetTimer); }
+    repeatSinger = '';
+    if (closed) { ++queueVersion; renderLandingQueue(null); }
     /* Blur before hiding input containers. Otherwise older Safari can keep
      * its keyboard open while the landing artwork covers the form. */
     if (document.activeElement && document.activeElement.blur) {
@@ -342,7 +374,10 @@
         var wasOpen = gateOpen;
         gateOpen = open;
         if (!open) { showIdle('closed'); }
-        else if (!wasOpen || !el('idleScreen').hidden && el('idleScreen').disabled) { showIdle('open'); }
+        else {
+          if (!wasOpen || !el('idleScreen').hidden && el('idleScreen').disabled) { showIdle('open'); }
+          refreshLandingQueue(linked);
+        }
         ready(); scheduleGate();
       });
     }
@@ -423,6 +458,7 @@
         return;
       }
       if (selected) { localBlocked[selected.id] = 'REQUESTED'; }
+      repeatSinger = trim(el('singerName').value);
       resetForm(); el('idleScreen').hidden = true; el('signupForm').hidden = true;
       el('success').hidden = false; notice('REQUEST SENT', true); window.scrollTo(0, 0);
       resetTimer = setTimeout(function () {
@@ -431,11 +467,24 @@
       }, 8000);
     });
   };
+  el('anotherSong').onclick = function () {
+    var sameSinger = repeatSinger;
+    if (!gateOpen || !view || !view.enabled || busy || uncertain || !sameSinger) { return; }
+    clearTimeout(resetTimer);
+    el('success').hidden = true;
+    el('signupForm').hidden = false;
+    el('idleScreen').hidden = true;
+    resetForm();
+    el('singerName').value = sameSinger;
+    showStep('song');
+    ready();
+  };
   el('idleScreen').onclick = function () {
     if (!gateOpen || el('idleScreen').disabled) { return; }
     el('idleScreen').hidden = true;
     el('signupForm').hidden = false;
     el('success').hidden = true;
+    repeatSinger = '';
     resetForm();
     focusName(); // Synchronous with the physical tap for iOS keyboard permission.
   };
@@ -506,6 +555,7 @@
   });
   showStep('name');
   showIdle('closed');
+  renderLandingQueue(null);
   load();
   scheduleGate();
 }(typeof window !== 'undefined' ? window : this));

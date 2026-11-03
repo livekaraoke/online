@@ -10,11 +10,25 @@
 <meta name="robots" content="noindex,nofollow">
 <title>Sign up to sing · Live Karaoke</title>
 <link rel="apple-touch-icon" href="../apple-touch-icon.png">
-<link rel="stylesheet" href="signup.css?v=20261103-idle-polish">
+<link rel="stylesheet" href="signup.css?v=20261103-landing-queue">
 </head>
 <body>
 <main id="kiosk">
-<button id="idleScreen" class="idle-screen is-closed" type="button" aria-label="Requests closed" disabled></button>
+<button id="idleScreen" class="idle-screen is-closed" type="button" aria-label="Requests closed" disabled>
+  <span class="idle-brand-art" aria-hidden="true"></span>
+  <span id="idleQueue" class="idle-queue">
+    <span class="idle-queue-heading">LIVE KARAOKE QUEUE <span class="idle-tap-hint">TAP ANYWHERE TO SING</span></span>
+    <span class="idle-current-row">
+      <span class="idle-row-number">NOW</span>
+      <span class="idle-row-info"><strong id="queueNowSong">Waiting for the next song</strong><span id="queueNowSinger"></span></span>
+    </span>
+    <span class="idle-next-heading">UP NEXT</span>
+    <span id="queueNext1" class="idle-next-row" hidden><span class="idle-row-number">1</span><span class="idle-row-info"><strong id="queueNextSong1"></strong><span id="queueNextSinger1"></span></span></span>
+    <span id="queueNext2" class="idle-next-row" hidden><span class="idle-row-number">2</span><span class="idle-row-info"><strong id="queueNextSong2"></strong><span id="queueNextSinger2"></span></span></span>
+    <span id="queueNext3" class="idle-next-row" hidden><span class="idle-row-number">3</span><span class="idle-row-info"><strong id="queueNextSong3"></strong><span id="queueNextSinger3"></span></span></span>
+    <span id="queueEmpty" class="idle-queue-empty">No singers queued yet</span>
+  </span>
+</button>
 <header>
   <button id="cancel" class="secondary cancel-button" type="button" hidden>CANCEL</button>
   <p class="brand">LIVE <strong>KARAOKE</strong></p>
@@ -29,7 +43,7 @@
     <h1 class="name-step-title">ENTER YOUR NAME</h1>
     <p class="instruction">Who is singing?</p>
     <label for="singerName">YOUR NAME</label>
-    <input id="singerName" name="singerName" type="text" maxlength="80" autocomplete="off" autocorrect="off" autocapitalize="words" autofocus required>
+    <input id="singerName" name="singerName" type="text" maxlength="80" autocomplete="off" autocorrect="off" autocapitalize="words" required>
     <button id="next" class="primary" type="button" disabled>CHOOSE A SONG</button>
     <p class="help">Enter your name, then choose what you'd like to sing.</p>
     <p class="name-screen-footer">LIVE KARAOKE · Please ask the host if you need a hand.</p>
@@ -59,6 +73,7 @@
   <h2>REQUEST SENT!</h2>
   <p>You're in! Your request has been sent straight to the host.</p>
   <p>Ready for the next singer in a moment…</p>
+  <button id="anotherSong" class="another-song" type="button">REQUEST ANOTHER SONG</button>
 </section>
 <div id="refreshDialog" class="refresh-overlay" role="dialog" aria-modal="true" aria-labelledby="refreshHeading" aria-describedby="refreshMessage" hidden>
   <div class="refresh-card">
@@ -72,5 +87,5 @@
 </div>
 </main>
 <script src="kiosk-policy.js?v=20261007-kiosk2"></script>
-<script src="signup.js?v=20261103-idle-polish"></script>
+<script src="signup.js?v=20261103-landing-queue"></script>
 </body></html>

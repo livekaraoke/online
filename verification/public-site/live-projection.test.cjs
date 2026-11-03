@@ -4,17 +4,24 @@ const source={control:{active:true,sessionId:'s',eventId:'e',type:'Live Karaoke'
   session:{id:'s',status:'active',actualStartedAt:1,hostNotes:'PRIVATE',breakOpen:false},
   event:{id:'e',type:'Live Karaoke',venue:'Whyte Harte',status:'Confirmed',date:'2026-10-28',startTime:'20:00',contactEmail:'PRIVATE'},
   karaoke:{songsEnabled:true,venueAccessCode:'PRIVATE'},
-  run:{sessionId:'s',items:[{id:'1',songId:'one',status:'playing',songTitle:'One',singerName:'PRIVATE',timing:{secret:'PRIVATE'}},{id:'2',songId:'two',status:'queued',songTitle:'Two',note:'PRIVATE'},{songId:'old',status:'played'},{songId:'gone',status:'cancelled'}]},
+  run:{sessionId:'s',items:[{id:'1',songId:'one',status:'playing',songTitle:'One',singerName:'Stage Name',timing:{secret:'PRIVATE'}},{id:'2',songId:'two',status:'queued',songTitle:'Two',note:'PRIVATE'},{songId:'old',status:'played'},{songId:'gone',status:'cancelled'}]},
   requests:[{id:'r',sessionId:'s',songId:'one',status:'active',singerName:'PRIVATE',requesterEmailHash:'PRIVATE',note:'PRIVATE'},{sessionId:'other',songId:'no',status:'active'}]};
 test('live projection keeps public song identity while removing every private field',()=>{
   const value=P.live(source,'live-karaoke');assert.equal(JSON.stringify(value).includes('PRIVATE'),false);
   assert.deepEqual(value.run.items.map(x=>x.songId),['one','two']);
+  assert.deepEqual(value.kioskQueue,{
+    current:{songTitle:'One',singerName:'Stage Name'},
+    next:[{songTitle:'Two',singerName:''}]
+  },'Only a current public stage name and queued names are exposed');
   assert.deepEqual(value.availability,[{songId:'one',status:'active'},{songId:'old',status:'played'}]);
   assert.equal(value.karaoke.venueCodeRequired,true);assert.equal(value.session.actualStartedAt,true);
   assert.deepEqual(Object.keys(value.session),['id','status','isActive','publicVisibility','breakOpen','actualStartedAt','venue']);
 });
 test('other acts, tests, mismatched sessions, ended sessions and stale queues cannot be published as live',()=>{
-  for(const act of ['billy-lee','roxanna'])assert.equal(P.live(source,act).sessionId,'');
+  for(const act of ['billy-lee','roxanna']){
+    assert.equal(P.live(source,act).sessionId,'');
+    assert.deepEqual(P.live(source,act).kioskQueue,{current:null,next:[]});
+  }
   for(const override of [{control:{...source.control,venue:'0 The Test Venue'}},{event:{...source.event,publicVisibility:'private'}},{session:{...source.session,endedAt:1}},{session:{...source.session,id:'old'}}]){
     const result=P.live({...source,...override},'live-karaoke');assert.equal(result.control.active,false);assert.equal(result.run.items.length,0);assert.equal(result.availability.length,0);
   }

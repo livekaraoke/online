@@ -163,3 +163,52 @@ header .cancel-button {
 .idle-screen.is-closed { background-image: url("assets/requests-closed.jpg"); }
 .idle-screen:disabled { opacity: 1; cursor: default; }
 .idle-screen:focus { outline: none; }
+
+/* Singer landing: preserve the original portrait artwork, showing its upper
+ * microphone/logo portion above a compact, privacy-limited public queue.
+ * Old iOS Safari uses percentages and prefixed background sizing. */
+.idle-screen.is-open { background-image: none; }
+.idle-screen .idle-brand-art, .idle-screen .idle-queue { display: none; }
+.idle-screen.is-open .idle-brand-art {
+ display: block; width: 100%; height: 60%; margin: 0;
+ background-image: url("assets/click-to-sing.jpg");
+ background-repeat: no-repeat; background-position: center top;
+ background-size: auto 148%; -webkit-background-size: auto 148%;
+}
+.idle-screen.is-open .idle-queue {
+ display: block; width: 96%; max-width: 940px; height: 40%;
+ margin: 0 auto; padding: 1% 14px 8px;
+ overflow: hidden; border-top: 1px solid #8f292e;
+ text-align: left; background: #080808; color: #f7f7f7;
+}
+.idle-queue-heading { display: block; color: #fff; font-size: 19px; font-weight: bold; letter-spacing: .8px; padding: 3px 0 7px; }
+.idle-tap-hint { float: right; font-size: 15px; font-weight: bold; letter-spacing: .4px; color: #ff6670; }
+.idle-current-row, .idle-next-row { display: -webkit-flex; display: flex; -webkit-align-items: center; align-items: center; min-width: 0; }
+.idle-current-row { border: 1px solid #403333; background: #181111; min-height: 57px; padding: 4px 10px; }
+.idle-next-row { border-bottom: 1px solid #333; min-height: 48px; padding: 2px 11px; }
+.idle-row-number { display: block; -webkit-flex: 0 0 56px; flex: 0 0 56px; color: #eb666d; font-size: 16px; font-weight: bold; }
+.idle-row-info { display: block; -webkit-flex: 1 1 auto; flex: 1 1 auto; min-width: 0; overflow: hidden; }
+.idle-row-info strong, .idle-row-info span { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.idle-row-info strong { color: #fff; font-size: 19px; }
+.idle-row-info span { color: #bcbcbc; font-size: 15px; }
+.idle-next-heading { display: block; color: #d4a7a7; font-size: 14px; font-weight: bold; letter-spacing: 1px; margin-top: 8px; }
+.idle-queue-empty { display: block; padding: 9px 12px; font-size: 17px; color: #aaa; }
+.another-song {
+ display: block; width: 100%; max-width: 500px; min-height: 66px;
+ margin: 30px auto 0; padding: 8px 16px; border: 2px solid #53e58f;
+ background: #146b3b; color: #fff; font-size: 22px; font-weight: bold;
+}
+@media (max-width: 700px), (max-height: 520px) {
+ .idle-screen.is-open .idle-brand-art { height: 53%; background-size: auto 148%; -webkit-background-size: auto 148%; }
+ .idle-screen.is-open .idle-queue { height: 47%; padding: 2px 8px; }
+ .idle-queue-heading { font-size: 15px; padding-bottom: 3px; }
+ .idle-tap-hint { font-size: 11px; }
+ .idle-current-row { min-height: 42px; }
+ .idle-next-row { min-height: 36px; }
+ .idle-row-number { -webkit-flex-basis: 42px; flex-basis: 42px; font-size: 13px; }
+ .idle-row-info strong { font-size: 15px; }
+ .idle-row-info span { font-size: 12px; }
+ .idle-next-heading { margin-top: 3px; font-size: 12px; }
+ .idle-queue-empty { font-size: 13px; padding: 4px; }
+ .another-song { min-height: 52px; font-size: 17px; margin-top: 12px; }
+}
