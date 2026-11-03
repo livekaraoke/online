@@ -33,20 +33,28 @@
   const timeOf=item=>finite(item?.playingAtMs||item?.playedAtMs||item?.startedAtMs,1,99999999999999)
     ||stamp(item?.playedAt||item?.startedAt||item?.playingAt||item?.createdAt)||0;
   const yearOf=item=>{
-    const raw=[item?.releaseYear,item?.songReleaseYear,item?.songYear,item?.year,item?.yearReleased,
+    const sources=[item?.releaseYear,item?.songReleaseYear,item?.songYear,item?.year,item?.yearReleased,
       item?.originalYear,item?.songMetadata?.releaseYear,item?.songMetadata?.year,item?.releaseDate,
-      item?.libraryYear].find(v=>v!==undefined&&v!==null&&v!=="");
-    if(typeof raw==="string" && /^\d{4}(?:-|\/|$)/.test(raw.trim()))return finite(raw.trim().slice(0,4),1880,2100);
-    return finite(raw,1880,2100);
+      item?.libraryYear];
+    for(const source of sources){
+      if(source==null||source==="")continue;
+      const raw=String(source).trim();
+      const year=/^\d{4}(?:-|\/|$)/.test(raw)?raw.slice(0,4):raw;
+      const value=finite(year,1880,2100);
+      if(value!==null)return value;
+    }
+    return null;
   };
   const keyOf=item=>{
-    const raw=[item?.performanceKey,item?.keyAtPerformance,item?.songKey,item?.key,
-      item?.songMetadata?.key,item?.libraryKey].find(v=>v!==undefined&&v!==null&&String(v).trim());
-    if(raw==null)return null;
-    const match=String(raw).trim().replace(/[♯]/g,"#").replace(/[♭]/g,"b")
-      .match(/^([A-Ga-g])([#b]?)(?:\s*(minor|min|m|major|maj))?$/i);
-    if(!match)return null;
-    return match[1].toUpperCase()+match[2]+(/^(minor|min|m)$/i.test(match[3]||"")?"m":"");
+    const sources=[item?.performanceKey,item?.keyAtPerformance,item?.songKey,item?.key,
+      item?.songMetadata?.key,item?.libraryKey];
+    for(const source of sources){
+      if(source==null||!String(source).trim())continue;
+      const match=String(source).trim().replace(/[♯]/g,"#").replace(/[♭]/g,"b")
+        .match(/^([A-Ga-g])([#b]?)(?:\s*(minor|min|m|major|maj))?$/i);
+      if(match)return match[1].toUpperCase()+match[2]+(/^(minor|min|m)$/i.test(match[3]||"")?"m":"");
+    }
+    return null;
   };
   // Categorical keys follow circle of fifths, pairing major and relative minor.
   const keyOrder=value=>{
@@ -178,7 +186,7 @@
       const previous=container.querySelector(".night-flow-scroll");
       const previousWidth=Number(previous?.querySelector("svg")?.getAttribute("width"))||0;
       const previousCenter=(previous?.scrollLeft||0)+(previous?.clientWidth||0)/2;
-      const fitWidth=Math.max(260,container.clientWidth||root.clientWidth||800);
+      const fitWidth=Math.max(260,(container.clientWidth||root.clientWidth||800)-4);
       const chartWidth=Math.round(fitWidth*zoomLevels[zoom]);
       const data=model.songs,svg=renderSvg(model,mode,{width:chartWidth});
       const buttons=Object.entries(MODES).map(([key,obj])=>
