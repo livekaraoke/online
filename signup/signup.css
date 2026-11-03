@@ -97,3 +97,42 @@ input:focus, textarea:focus { border-color: #e83b46; outline-color: #e83b46; }
  .success p { font-size: 18px; }
  .success p + p { margin-top: 12px; }
 }
+
+/* Kiosk tablet-first immediate viewport layout and legible stage controls.
+ * Preserve ES5/iOS 9 Safari support and full row touch targets. */
+#kiosk { position: relative; }
+.page-refresh { opacity: .24; }
+.song-step-title { margin-top: 16px; margin-bottom: 20px; }
+.song-top { margin-bottom: 16px; }
+#signupForm.song-active { position: absolute; top: 66px; left: 18px; right: 18px; bottom: 8px; height: auto; min-height: 0; }
+.song-top button { min-width: 94px; min-height: 46px; font-size: 18px; padding: 7px 11px; }
+.song-top .cancel-button { background: #43181e; border-color: #80313a; }
+#singerSummary { font-size: 20px; }
+.singer-label { font-size: 18px; font-weight: normal; color: #aaa; }
+#singerDisplay { font-size: 27px; font-weight: bold; color: #fff; }
+#clearSearch { font-size: 18px; min-height: 51px; }
+.primary:not(:disabled) { background: #156b3c; border-color: #52df8a; }
+.send:not(:disabled) { background: #146b3b; border-color: #52df8a; }
+.song { position: relative; padding-right: 105px; }
+.song-symbol { position: absolute; top: 50%; right: 16px; width: 44px; height: 44px; margin-top: -22px; border: 2px solid #4de494; border-radius: 9px; color: #4de494; font-size: 32px; font-weight: bold; line-height: 39px; text-align: center; }
+.songs.has-selection .song:not(.selected) .song-symbol { color: #ffd34b; border-color: #ffd34b; }
+.song.selected .song-symbol { color: #fff; border-color: #83f5ac; background: #147d48; }
+.song.unavailable:disabled { opacity: .72; background: #282828; }
+.song.unavailable strong { color: #aaa; }
+.song.unavailable .song-symbol { display: none; }
+.song .song-unavailable { display: none; position: absolute; top: 50%; right: 12px; margin-top: -13px; font-size: 15px; font-weight: bold; color: #e4b46f; }
+.song.unavailable .song-unavailable { display: block; }
+.selection { border-left-width: 6px; padding: 13px 14px; min-height: 54px; font-size: 22px; line-height: 1.25; }
+.note-toggle { border: 1px solid #555; text-align: left; padding: 10px 14px; min-height: 52px; font-size: 20px; font-weight: bold; text-decoration: none; color: #fff; background: #232323; }
+.refresh-overlay { position: fixed; top: 0; bottom: 0; left: 0; right: 0; z-index: 100; background: rgba(0,0,0,.86); display: -webkit-flex; display: flex; -webkit-align-items: center; align-items: center; -webkit-justify-content: center; justify-content: center; padding: 22px; }
+.refresh-card { width: 100%; max-width: 560px; border: 2px solid #cf4855; border-radius: 12px; padding: 24px; text-align: center; background: #1c1c1c; }
+.refresh-card h2 { font-size: 29px; margin: 0 0 20px; }
+.refresh-card p { font-size: 23px; margin: 0 0 25px; }
+.refresh-actions { display: -webkit-flex; display: flex; }
+.refresh-actions button { -webkit-flex: 1; flex: 1; min-height: 62px; font-weight: bold; font-size: 19px; }
+#refreshCancel { margin-right: 12px; }
+#refreshConfirm { background: #a92635; border-color: #f04c5c; }
+@media (max-width: 700px) {
+ #signupForm.song-active { left: 12px; right: 12px; bottom: 6px; }
+ #singerDisplay { font-size: 23px; }
+}
