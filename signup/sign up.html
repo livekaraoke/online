@@ -10,7 +10,7 @@
 <meta name="robots" content="noindex,nofollow">
 <title>Sign up to sing · Live Karaoke</title>
 <link rel="apple-touch-icon" href="../apple-touch-icon.png">
-<link rel="stylesheet" href="signup.css?v=20261103-refresh-confirmation">
+<link rel="stylesheet" href="signup.css?v=20261103-stageux">
 </head>
 <body>
 <main id="kiosk">
@@ -27,7 +27,7 @@
     <h1 class="name-step-title">ENTER YOUR NAME</h1>
     <p class="instruction">Who is singing?</p>
     <label for="singerName">YOUR NAME</label>
-    <input id="singerName" name="singerName" type="text" maxlength="80" autocomplete="off" autocorrect="off" autocapitalize="words" required>
+    <input id="singerName" name="singerName" type="text" maxlength="80" autocomplete="off" autocorrect="off" autocapitalize="words" autofocus required>
     <button id="next" class="primary" type="button" disabled>CHOOSE A SONG</button>
     <p class="help">Enter your name, then choose what you'd like to sing.</p>
     <p class="name-screen-footer">LIVE KARAOKE · Please ask the host if you need a hand.</p>
@@ -36,8 +36,8 @@
     <h1 class="song-step-title">CHOOSE YOUR SONG</h1>
     <div class="song-top">
       <button id="back" class="secondary" type="button">BACK</button>
-      <p id="singerSummary">Choose a song</p>
-      <button id="cancel" class="secondary" type="button">CANCEL</button>
+      <p id="singerSummary"><span class="singer-label">SINGER:</span> <strong id="singerDisplay"></strong></p>
+      <button id="cancel" class="secondary cancel-button" type="button">CANCEL</button>
     </div>
     <label for="songSearch" class="search-label">SEARCH SONG OR ARTIST</label>
     <div class="search">
@@ -60,7 +60,17 @@
   <p>You're in! Your request has been sent straight to the host.</p>
   <p>Ready for the next singer in a moment…</p>
 </section>
+<div id="refreshDialog" class="refresh-overlay" role="dialog" aria-modal="true" aria-labelledby="refreshHeading" aria-describedby="refreshMessage" hidden>
+  <div class="refresh-card">
+    <h2 id="refreshHeading">REFRESH SIGN-UP?</h2>
+    <p id="refreshMessage">Refreshing will clear this unfinished request.</p>
+    <div class="refresh-actions">
+      <button id="refreshCancel" type="button">KEEP REQUEST</button>
+      <button id="refreshConfirm" type="button">REFRESH PAGE</button>
+    </div>
+  </div>
+</div>
 </main>
 <script src="kiosk-policy.js?v=20261007-kiosk2"></script>
-<script src="signup.js?v=20261103-refresh"></script>
+<script src="signup.js?v=20261103-stageux"></script>
 </body></html>
