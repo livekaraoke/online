@@ -91,3 +91,58 @@ test('iPad 2 scroll pane reserves request panel and allows complete list scroll'
  assert.match(css,/#nameStep \{[^}]*padding: 11% 16px 0/);
  assert.match(css,/\.instruction \{[^}]*margin: 8px 0 44px/);
 });
+
+test('explicit public setlist is authoritative for kiosk publisher; no secret song fields',()=>{
+ const host=fs.readFileSync(path.join(root,'ls26try/shared/signup-kiosk.js'),'utf8');
+ const publicList=fs.readFileSync(path.join(root,'ls26try/list/js/songlist.js'),'utf8');
+ assert.match(publicList,/Individual publicSongListVisible flags do not hide songs/);
+ assert.doesNotMatch(host,/value\.publicSongListVisible===false/);
+ assert.match(host,/selectedSongCount:ids\.length,publishedSongCount:Object\.keys\(songs\)\.length/);
+ assert.match(host,/value:\{title,artist\}/);
+ assert.match(host,/Kiosk published: /);
+ const page=fs.readFileSync(path.join(root,'ls26try/requests.html'),'utf8');
+ assert.match(page,/id="kioskCount"/);
+ assert.match(page,/signup-kiosk\.js\?v=20261103-full-setlist/);
+});
+test('confirmation box has a bounded height, larger messages and vertical centering',()=>{
+ const css=fs.readFileSync(path.join(root,'signup/signup.css'),'utf8');
+ assert.match(css,/\.success \{[^}]*-webkit-flex: 0 0 auto/);
+ assert.match(css,/\.success \{[^}]*-webkit-justify-content: center/);
+ assert.match(css,/\.success \{[^}]*max-height: 60vh/);
+ assert.match(css,/\.success p \{[^}]*font-size: 25px/);
+ assert.match(css,/\.success p \+ p \{[^}]*margin-top: 30px/);
+});
+
+test('publisher projects all 169 explicitly selected songs, even if global visibility is false',()=>{
+ const source=fs.readFileSync(path.join(root,'ls26try/shared/signup-kiosk.js'),'utf8');
+ const window={LKSignupPolicy:{},LS26SignupKiosk:null};
+ const document={readyState:'loading',currentScript:{src:'https://livesuite.livekaraoke.eu/ls26try/shared/signup-kiosk.js'},addEventListener(){}};
+ const context={window,document,URL,ArtistNames:{display:value=>String(value||'')},LS26:{escape:value=>String(value)}};
+ vm.runInNewContext(source,context);
+ const documents=Array.from({length:169},(_,i)=>({
+   id:'song'+i,
+   data:()=>({title:'Song '+i,artist:'Artist',publicSongListVisible:i<98?false:true,
+     lyrics:'PRIVATE LYRICS',hostNote:'PRIVATE NOTE'})
+ }));
+ const projected=window.LS26SignupKiosk.projectSongs(documents);
+ assert.equal(Object.keys(projected).length,169);
+ assert.equal(projected.song0.title,'Song 0');
+ assert.equal(projected.song168.title,'Song 168');
+ assert.deepEqual(Object.keys(projected.song0).sort(),['artist','title']);
+ assert.ok(!JSON.stringify(projected).includes('PRIVATE'));
+ assert.throws(()=>window.LS26SignupKiosk.projectSongs([{id:'missing',data:()=>({artist:'Artist'})}]),/title/);
+});
+
+test('semi-transparent touch-size refresh control works on all screens without silently dropping a request',()=>{
+ const html=fs.readFileSync(path.join(root,'signup/sign up.html'),'utf8');
+ const css=fs.readFileSync(path.join(root,'signup/signup.css'),'utf8');
+ const script=fs.readFileSync(path.join(root,'signup/signup.js'),'utf8');
+ assert.match(html,/id="pageRefresh"[^>]*aria-label="Refresh signup page"/);
+ assert.match(css,/\.page-refresh \{[^}]*width: 52px; height: 52px;/);
+ assert.match(css,/\.page-refresh \{[^}]*opacity: \.62;/);
+ assert.match(script,/el\('pageRefresh'\)\.onclick = function/);
+ assert.match(script,/root\.location\.reload\(\)/);
+ assert.match(script,/Refreshing will clear this unfinished request/);
+ assert.match(script,/Ask the host before refreshing/);
+ assert.match(script,/el\('pageRefresh'\)\.disabled = busy/);
+});

@@ -150,6 +150,7 @@
     el('next').disabled = !available || !nameValid();
     el('send').disabled = !available || !validForm(el('singerName').value, selected, el('note').value);
     el('refresh').disabled = busy || loading;
+    el('pageRefresh').disabled = busy;
   }
   function showSelection() {
     el('selection').textContent = selected ? 'SELECTED: ' + selected.title + ' - ' + selected.artist : 'Select a song from the list';
@@ -279,6 +280,15 @@
     el('note').hidden = !el('note').hidden;
     el('noteToggle').setAttribute('aria-expanded', el('note').hidden ? 'false' : 'true');
     layoutSongScreen();
+  };
+  el('pageRefresh').onclick = function () {
+    if (busy) { return; }
+    if (uncertain) {
+      if (!root.confirm('Your previous request may have arrived. Ask the host before refreshing. Refresh anyway?')) { return; }
+    } else if (trim(el('singerName').value) || selected || trim(el('note').value)) {
+      if (!root.confirm('Refreshing will clear this unfinished request. Refresh now?')) { return; }
+    }
+    root.location.reload();
   };
   el('refresh').onclick = function () {
     if (uncertain) {
