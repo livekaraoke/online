@@ -17,7 +17,7 @@
     if(!window.LKPublicVisibility)await loadScript('js/public-visibility.js?v=20261022-views');
     if(!window.LKEventTime)await loadScript('js/public-event-time.js?v=20261022-public');
     if(!window.LKLiveProjection)await loadScript('js/public-live-projection.js?v=20261022-views');
-    if(!window.LS26CreateLivePublisher)await loadScript('ls26try/shared/public-live-publisher.js?v=20261022-views');
+    if(!window.LS26CreateLivePublisher)await loadScript('ls26try/shared/public-live-publisher.js?v=20261103-kioskqueue-independent-v1');
   })();
   let db=null,stopLeader=null,releaseLeader=null,configUnsub=null,authUnsub=null,leaderRequested=false,restartRequested=false;
   const clean=v=>String(v||'').trim();

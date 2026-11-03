@@ -3,7 +3,7 @@
   'use strict';
   const acts=['live-karaoke','billy-lee','roxanna'];
   const settingsId={'live-karaoke':'liveKaraokeWebsiteSettings','billy-lee':'billyLeeWebsiteSettings',roxanna:'roxannaWebsiteSettings'};
-  window.LS26CreateLivePublisher=({db,watch,report})=>{
+  window.LS26CreateLivePublisher=({db,watch,report,publishPublic=true})=>{
     const input={control:{},session:{},event:{},karaoke:{},run:{},requests:[],kioskPublic:{}},unsubs=[];
     const ready=new Set(),errors=new Set(),settings={},published=new Map();
     let closed=false,revision=0,timer=0,writing=false,pending=false,sessionId='',eventId='',requestId='';
@@ -15,9 +15,9 @@
       const eid=String(input.control.active?input.control.eventId||'':input.karaoke.preSessionRequestEventId||'');
       const rid=sid||String(!input.control.active?input.karaoke.preSessionRequestSessionId||'':'');
       if(sid!==sessionId){sessionOff?.();sessionId=sid;input.session={};ready.delete('session');errors.delete('session');
-        if(sid)sessionOff=watch('performanceSessions/'+sid,(d,exists)=>{if(sessionId===sid)receive('session',exists?{...d,id:sid}:{});},e=>fail('session',e));}
+        if(sid&&publishPublic)sessionOff=watch('performanceSessions/'+sid,(d,exists)=>{if(sessionId===sid)receive('session',exists?{...d,id:sid}:{});},e=>fail('session',e));}
       if(eid!==eventId){eventOff?.();eventId=eid;input.event={};ready.delete('event');errors.delete('event');
-        if(eid)eventOff=watch('upcomingEvents/'+eid,(d,exists)=>{if(eventId===eid)receive('event',exists?{...d,id:eid}:{});},e=>fail('event',e));}
+        if(eid&&publishPublic)eventOff=watch('upcomingEvents/'+eid,(d,exists)=>{if(eventId===eid)receive('event',exists?{...d,id:eid}:{});},e=>fail('event',e));}
       if(rid!==requestId){requestOff?.();requestId=rid;input.requests=[];ready.delete('requests');errors.delete('requests');
         if(rid)requestOff=db.collection('publicSongRequests').where('sessionId','==',rid).limit(501).onSnapshot({includeMetadataChanges:true},s=>{
           if(closed||requestId!==rid)return;
@@ -30,13 +30,16 @@
     async function publish(){
       if(closed)return;
       if(writing){pending=true;return;}
-      const required=['control','karaoke','run','events',...acts];
-      if(sessionId)required.push('session');if(eventId)required.push('event');if(requestId)required.push('requests');
+      const required=['control','karaoke','run'];
+      if(publishPublic)required.push('events',...acts);
+      if(sessionId&&publishPublic)required.push('session');
+      if(eventId&&publishPublic)required.push('event');
+      if(requestId)required.push('requests');
       if(errors.size||required.some(k=>!ready.has(k)))return;
       writing=true;pending=false;const version=revision;
       try{
         const candidates=[];
-        for(const act of acts){
+        if(publishPublic)for(const act of acts){
           candidates.push([act,'live',LKLiveProjection.live(input,act)]);
           candidates.push([act,'events',LKLiveProjection.events(events,act)]);
           candidates.push([act,'settings',LKLiveProjection.settings(settings[act],act)]);
@@ -94,7 +97,7 @@
     unsubs.push(watch('karaokeControl/signupKioskPublic',d=>{
       input.kioskPublic=d||{};ready.add('kioskPublic');schedule();
     },e=>{ready.delete('kioskPublic');report(String(e?.message||e));}));
-    for(const act of acts)unsubs.push(watch('karaokeControl/'+settingsId[act],d=>{settings[act]=d;ready.add(act);errors.delete(act);schedule();},e=>fail(act,e)));
+    if(publishPublic)for(const act of acts)unsubs.push(watch('karaokeControl/'+settingsId[act],d=>{settings[act]=d;ready.add(act);errors.delete(act);schedule();},e=>fail(act,e)));
     // Query rolls over at Malta midnight without polling the collection.
     let eventsOff=null,midnightTimer=0;
     function watchEvents(){
@@ -108,7 +111,7 @@
       const tomorrow=new Date(LKEventTime.localDate(new Date())+'T12:00:00Z');tomorrow.setUTCDate(tomorrow.getUTCDate()+1);
       midnightTimer=setTimeout(watchEvents,Math.max(1000,LKEventTime.localInstant(tomorrow.toISOString().slice(0,10)).getTime()-Date.now()+1000));
     }
-    watchEvents();
+    if(publishPublic)watchEvents();
     // A bounded lease heartbeat is necessary to clear stale LIVE displays when
     // the owner browser disappears. It performs no collection polling.
     const heartbeat=setInterval(()=>{if(requestId)schedule();},60000);

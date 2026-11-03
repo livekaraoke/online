@@ -85,3 +85,36 @@ test('explicit kiosk publishes its own safe queue even when public website hides
     assert.deepEqual(JSON.parse(JSON.stringify(f.records['karaokeControl/signupKioskPublic'].kioskQueue)),{current:null,next:[]});
   }finally{f.close();}
 });
+
+test('enabled kiosk publishes next songs without optional public live publication',async()=>{
+ const f=fixture();try{
+   await settle();
+   assert.equal(f.writes.length,0,'The kiosk starts disabled and no public views are written');
+   f.update('karaokeControl/signupKioskPublic',{schemaVersion:1,enabled:true,token:'a'.repeat(64)});
+   f.update('karaokeControl/currentSession',{active:true,sessionId:'gig',type:'Live Karaoke',venue:'0 The Test Venue'});
+   f.update('karaokeControl/runOrder',{sessionId:'gig',items:[
+     {id:'a',status:'playing',songTitle:'Now playing',singerName:'Ana',note:'PRIVATE'},
+     {id:'b',status:'queued',songTitle:'First next',singerName:'Ben',hostNote:'PRIVATE'},
+     {id:'c',status:'queued',songTitle:'Second next',singerName:'Cara'}]});
+   await settle();
+   const path='karaokeControl/signupKioskPublic';
+   assert.deepEqual(JSON.parse(JSON.stringify(f.records[path].kioskQueue)),{
+     current:{songTitle:'Now playing',singerName:'Ana'},
+     next:[{songTitle:'First next',singerName:'Ben'},{songTitle:'Second next',singerName:'Cara'}]});
+   assert.equal(f.records[path].queueSessionId,'gig');
+   assert.equal(f.records['publicSites/live-karaoke/views/live'],undefined,'Disabled public live website is not published');
+   assert.equal([...f.listeners].filter(x=>x.p==='karaokeControl/runOrder').length,1,'One existing Run Order listener');
+   assert.equal([...f.listeners].filter(x=>x.p==='karaokeControl/signupKioskPublic').length,1,'One shared kiosk control listener');
+   assert.equal([...f.listeners].some(x=>x.p==='upcomingEvents'),false,'Kiosk does not depend on unrelated public events');
+   assert.equal(JSON.stringify(f.records[path].kioskQueue).includes('PRIVATE'),false);
+   f.update('karaokeControl/runOrder',{sessionId:'gig',items:[
+     {id:'new',status:'queued',songTitle:'Changed next',singerName:'Dani'}]});
+   await settle();
+   assert.deepEqual(JSON.parse(JSON.stringify(f.records[path].kioskQueue)),{
+     current:null,next:[{songTitle:'Changed next',singerName:'Dani'}]});
+   f.update('karaoke/state',{songsEnabled:false});await settle();
+   assert.deepEqual(JSON.parse(JSON.stringify(f.records[path].kioskQueue)),{current:null,next:[]},'Closing requests clears public stage names');
+   f.update('karaokeControl/signupKioskPublic',{...f.records[path],enabled:false});await settle();
+   assert.equal([...f.listeners].filter(x=>x.p==='karaokeControl/runOrder').length,0,'Disabling kiosk releases Run Order subscription');
+ }finally{f.close();}
+});
