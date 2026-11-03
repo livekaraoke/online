@@ -525,27 +525,30 @@
     for(const doc of snap.docs){
       const v=doc.data()||{};
       if(v.source!=="prompter-singer-experience"||String(v.sessionId||"")!==String(sessionId))continue;
-      const pid=String(v.performanceId||""),token=String(v.feedbackToken||doc.id);
-      const rating=String(v.rating??"");
-      if(!pid||!token||!["amazing","good","okay","notGreat",""].includes(rating))continue;
-      const key=pid+"|"+token,revision=Number(v.feedbackRevision)||0;
+      const pid=String(v.performanceId||""),songId=String(v.songId||"");
+      const token=String(v.feedbackToken||doc.id),rating=String(v.rating??"");
+      if(!pid||!songId||!token||!["amazing","good","okay","notGreat",""].includes(rating))continue;
+      const key=pid+"|"+songId+"|"+token,revision=Number(v.feedbackRevision)||0;
       const at=timestampMs(v.submittedAt)||Number(v.submittedAtMs)||0;
       const prev=latest.get(key);
       if(!prev||revision>prev.revision||(revision===prev.revision&&at>prev.at))
-        latest.set(key,{pid,rating,revision,at});
+        latest.set(key,{pid,songId,rating,revision,at});
     }
     const grouped=new Map();
     for(const vote of latest.values()){
       if(!vote.rating)continue;
-      if(!grouped.has(vote.pid))grouped.set(vote.pid,{amazing:0,good:0,okay:0,notGreat:0});
-      grouped.get(vote.pid)[vote.rating]++;
+      const key=vote.pid+"|"+vote.songId;
+      if(!grouped.has(key))grouped.set(key,{amazing:0,good:0,okay:0,notGreat:0});
+      grouped.get(key)[vote.rating]++;
     }
     return played.map(item=>{
       const id=String(item.performanceId||item.id||"");
-      if(!grouped.has(id))return item;
-      const counts={...grouped.get(id)};
-      const old=String(item.singerExperienceRating||"");
-      if(Object.hasOwn(singerScores,old))counts[old]++;
+      const key=id+"|"+String(item.songId||"");
+      if(!grouped.has(key))return item;
+      // Guest votes are the singer response source when present. The old
+      // direct field remains a fallback when there are no guest votes, so
+      // one person's response is not inadvertently counted twice.
+      const counts={...grouped.get(key)};
       const total=Object.values(counts).reduce((sum,n)=>sum+n,0);
       if(!total)return item;
       const average=Object.entries(counts).reduce((sum,[k,n])=>sum+singerScores[k]*n,0)/total;
