@@ -236,6 +236,9 @@
       try{receive(JSON.parse(event.newValue));}catch(_){}
     });
     window.addEventListener('ls26:prompter-remote-visibility',event=>show(event.detail?.visible===true));
+    window.addEventListener('ls26:prompter-lyrics-sent',()=>{
+      setSingerMode('waiting');setPlayState(false);
+    });
     // This setting is owned by performance.js; Karaoke Tools is separate.
     // Preserve the old default when a standalone/older page lacks the toggle.
     show($('ls26ShowPrompterRemote')?.checked ?? $('ls26ShowKaraoke')?.checked===true);

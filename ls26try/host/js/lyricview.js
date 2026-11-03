@@ -2038,6 +2038,9 @@
         }, { merge: true });
       }
       setSlaveLyricsButtonFeedback(button, "success");
+      // Reset the host remote locally even when the singer uses a separate tablet.
+      window.dispatchEvent(new CustomEvent('ls26:prompter-lyrics-sent',
+        {detail:{songId:useModern?currentSongId:id}}));
       return true;
     } catch (error) {
       console.error("Could not send singer lyrics:", error);

@@ -170,7 +170,7 @@
     return true;
   }
 
-  async function showModernSong(rawId) {
+  async function showModernSong(rawId, cue = false) {
     const id = String(rawId || '').trim();
     if (!id || !window.firebase?.firestore) return;
     const token = ++version;
@@ -192,7 +192,7 @@
       window.recalcSpeed?.();
       if (changed) window.scrollTo(0, 0);
       window.dispatchEvent(new CustomEvent('ls26:prompter-song-changed', {
-        detail: {songId:id, source:'modern', title:song.title, artist:song.artist, year:song.year || song.releaseYear || ''}
+        detail: {songId:id, source:'modern', cue, title:song.title, artist:song.artist, year:song.year || song.releaseYear || ''}
       }));
     } catch (error) {
       if (token !== version) return;
@@ -208,7 +208,7 @@
     }
   }
 
-  async function showSong(rawId, metadata = {}) {
+  async function showSong(rawId, metadata = {}, cue = false) {
     const raw = String(rawId || '').trim();
     if (!raw) return;
     const token = ++version;
@@ -222,7 +222,7 @@
     originalLoadSong();
     const item=entries().find(entry=>entry.id===id)||{};
     window.dispatchEvent(new CustomEvent('ls26:prompter-song-changed', {
-      detail: {songId:id, source:'legacy', title:item.title||metadata.songTitle||metadata.title,
+      detail: {songId:id, source:'legacy', cue, title:item.title||metadata.songTitle||metadata.title,
         artist:item.artist||metadata.songArtist||metadata.artist,
         year:item.year||metadata.prompterSongYear||metadata.year||''}
     }));
@@ -247,6 +247,7 @@
   window.startSlaveLyrics = function () {
     if (unsubscribe || !window.firebase?.firestore) return;
     enabled = true;
+    let firstSnapshot=true;
     unsubscribe = firebase.firestore()
       .collection('karaokeControl').doc('liveLyrics')
       .onSnapshot(snap => {
@@ -267,8 +268,10 @@
              value(meta, 'songArtist', 'artist')].join('|');
         if (signature === lastHostKey) return;
         lastHostKey = signature;
-        if (modern) void showModernSong(raw);
-        else void showSong(raw, meta);
+        const cue=!firstSnapshot;
+        firstSnapshot=false;
+        if (modern) void showModernSong(raw, cue);
+        else void showSong(raw, meta, cue);
       }, error => console.warn('Slave Lyrics sync failed:', error));
   };
 

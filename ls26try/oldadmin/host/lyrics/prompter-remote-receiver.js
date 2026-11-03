@@ -74,6 +74,9 @@
 
   applyMode('idle');
   window.addEventListener('ls26:prompter-song-changed',event=>{
+    // Preload/reload song data silently. Only a fresh SEND LYRICS cue
+    // replaces the waiting-for-next-singer artwork.
+    if(event.detail?.cue!==true)return;
     updateSong(event.detail||{});
     applyMode('waiting');
     state('song-'+Date.now());
