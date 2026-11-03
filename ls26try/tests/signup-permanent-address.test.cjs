@@ -46,7 +46,7 @@ test('full 80-song list, name first, search, selection, confirmed POST reset',()
  const songs={};
  for(let i=0;i<80;i++)songs['s'+i]={mapValue:{fields:{title:{stringValue:'Song '+String(i).padStart(3,'0')},artist:{stringValue:'Artist'}}}};
  const fullView={body:{fields:{...view.body.fields,songs:{mapValue:{fields:songs}}}}};
- const r=run([doc({schemaVersion:1,enabled:true,token}),fullView,{body:{writeResults:[{},{}]}}]);
+ const r=run([doc({schemaVersion:1,enabled:true,token}),fullView,{body:{writeResults:[{},{}]}},doc({schemaVersion:1,enabled:true,token}),fullView]);
  assert.equal(r.nodes.idleScreen.hidden,false);
  assert.equal(r.nodes.idleScreen.disabled,false);
  r.nodes.idleScreen.onclick();
