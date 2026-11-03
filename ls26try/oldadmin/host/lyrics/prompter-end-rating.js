@@ -26,12 +26,15 @@
   let savedInSession = false;
   const freshToken = () => (window.crypto?.randomUUID?.() ||
     Date.now().toString(36)+'-'+Math.random().toString(36).slice(2));
+  const localKey = () => 'ls26:prompter:feedback:' +
+    (current?.sessionId && current?.item?.performanceId
+      ? current.sessionId+':'+current.item.performanceId : songKey());
   const saveLocal = (value) => {
-    try { sessionStorage.setItem('ls26:prompter:feedback:'+songKey(), value); }
+    try { sessionStorage.setItem(localKey(), value); }
     catch (_) {}
   };
   const getLocal = () => {
-    try { return sessionStorage.getItem('ls26:prompter:feedback:'+songKey()); }
+    try { return sessionStorage.getItem(localKey()); }
     catch (_) { return null; }
   };
 
