@@ -88,7 +88,7 @@ test('iPad 2 scroll pane reserves request panel and allows complete list scroll'
  assert.match(script,/list\.style\.height = 'auto'/);
  assert.match(script,/list\.style\.bottom = Math\.ceil\(bottom\.offsetHeight \+ bottomInset \+ 8\)/);
  assert.match(script,/root\.navigator\.standalone === true/);
- assert.match(script,/bottom\.getBoundingClientRect\(\)\.top/);
+ assert.match(script,/bottom\.offsetHeight \+ bottomInset \+ 8/);
  assert.match(css,/\.song-bottom \{[^}]*position: fixed; bottom: 8px/);
  assert.match(script,/root\.addEventListener\('orientationchange', settleSongLayout\)/);
  assert.match(css,/#nameStep \{[^}]*padding: 11% 16px 0/);
@@ -290,7 +290,7 @@ test('full artwork, large queue, visible Android SEND and readable note',()=>{
   assert.match(css,/clip: rect\(0,0,0,0\)/);
   assert.match(html,/id="selection" class="selection" role="status" aria-live="polite"><\/span>/);
   assert.match(js,/root\.visualViewport\.addEventListener\('resize', layoutSongScreen\)/);
-  assert.match(js,/bottomTop = bottom\.getBoundingClientRect\(\)\.top/);
+  assert.match(js,/bottom\.offsetHeight \+ bottomInset \+ 8/);
   assert.match(js,/kiosk\.queueSessionId === linked && kiosk\.kioskQueue/);
   assert.match(js,/el\('anotherSong'\)\.onclick = function \(\) \{[\s\S]*?resetForm\(\);\s*focusName\(\)/);
   assert.doesNotMatch(js,/el\('singerName'\)\.value = sameSinger/);
