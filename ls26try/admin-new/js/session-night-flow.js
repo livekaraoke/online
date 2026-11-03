@@ -168,22 +168,24 @@
   }
   function mount(root,played,breaks,formatTime){
     if(!root)return;
-    const model=buildModel(played,breaks);
     const container=root.querySelector(".night-flow-body");
     if(!container)return;
-    let mode="bpm",selected=-1;
+    let playedRows=Array.isArray(played)?played:[],model=buildModel(playedRows,breaks);
+    let mode="bpm",selected=-1,zoom=0,metadataLoading=false,metadataLoaded=false,metadataError="";
+    const zoomLevels=[1,1.35,1.8,2.4,3.2,4.2];
     const when=ms=>ms>0?typeof formatTime==="function"?formatTime(new Date(ms)):new Date(ms).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"}):"Time unavailable";
     function draw(){
-      const oldScroll=container.querySelector(".night-flow-scroll")?.scrollLeft||0;
-      const data=model.songs,svg=renderSvg(model,mode);
+      const previous=container.querySelector(".night-flow-scroll");
+      const previousWidth=Number(previous?.querySelector("svg")?.getAttribute("width"))||0;
+      const previousCenter=(previous?.scrollLeft||0)+(previous?.clientWidth||0)/2;
+      const fitWidth=Math.max(260,container.clientWidth||root.clientWidth||800);
+      const chartWidth=Math.round(fitWidth*zoomLevels[zoom]);
+      const data=model.songs,svg=renderSvg(model,mode,{width:chartWidth});
       const buttons=Object.entries(MODES).map(([key,obj])=>
         '<button type="button" class="night-flow-mode'+(key===mode?" is-active":"")+'" data-flow-mode="'+key+'" aria-pressed="'+(key===mode)+'">'+escapeHtml(obj.title)+'</button>').join("");
-      let selectedSong=data[selected];
-      if(!selectedSong&&data.length){
-        selected=data.findIndex(song=>song.metrics[mode]!=null);
-        if(selected<0)selected=0;
-        selectedSong=data[selected];
-      }
+      if(selected<0||selected>=data.length)selected=data.findIndex(song=>song.metrics[mode]!=null);
+      if(selected<0&&data.length)selected=0;
+      const selectedSong=data[selected];
       const val=selectedSong?.metrics[mode]??null;
       const detail=selectedSong
         ?'<strong>#'+(selected+1)+' '+escapeHtml(selectedSong.title)+'</strong> <span>'+escapeHtml(selectedSong.artist)+
@@ -191,18 +193,58 @@
         :'<span>No played songs recorded for this session.</span>';
       const empty=data.length&&!svg?'<div class="night-flow-empty">No '+escapeHtml(MODES[mode].title.toLowerCase())+' data recorded for these songs.</div>':
         !data.length?'<div class="night-flow-empty">No played songs recorded for this session.</div>':'';
+      const zoomButtons='<div class="night-flow-zoom" role="group" aria-label="Chart zoom">'+
+        '<button type="button" data-flow-zoom="out" aria-label="Zoom out" title="Zoom out" '+(zoom===0?'disabled':'')+'>−</button>'+
+        '<button type="button" data-flow-zoom="in" aria-label="Zoom in" title="Zoom in" '+(zoom===zoomLevels.length-1?'disabled':'')+'>+</button>'+
+        '<button type="button" class="night-flow-fit'+(zoom===0?' is-active':'')+'" data-flow-zoom="fit" aria-label="Fit entire session to chart width" title="Fit all songs without scrolling">FIT ALL</button>'+
+        '<span class="night-flow-zoom-label">'+(zoom===0?'Full session':Math.round(zoomLevels[zoom]*100)+'%')+'</span></div>';
       container.innerHTML=
-        '<div class="night-flow-toolbar" role="group" aria-label="Night Flow metric">'+buttons+'</div>'+
+        '<div class="night-flow-controls"><div class="night-flow-toolbar" role="group" aria-label="Night Flow metric">'+buttons+'</div>'+zoomButtons+'</div>'+
         '<div class="night-flow-summary"><span>'+data.length+' played songs · '+model.breakCount+' breaks</span><span>'+escapeHtml(summary(model,mode))+'</span></div>'+
-        (svg?'<div class="night-flow-scroll" tabindex="0" aria-label="Scroll through chart by song order">'+svg+'</div>':'')+
+        (metadataLoading&&(mode==="year"||mode==="key")?'<div class="night-flow-loading" role="status">Loading years and keys from saved Song Library…</div>':'')+
+        (metadataError&&(mode==="year"||mode==="key")?'<div class="night-flow-loading" role="status">'+escapeHtml(metadataError)+'</div>':'')+
+        (svg?'<div class="night-flow-scroll" tabindex="0" aria-label="Song order chart; use zoom buttons to fit the full session">'+svg+'</div>':'')+
         empty+(model.markers.length&&svg?'<p class="night-flow-legend"><span class="night-flow-break-key"></span> Recorded break</p>':'')+
         '<div class="night-flow-selected" aria-live="polite">'+detail+'</div>';
       const scroll=container.querySelector(".night-flow-scroll");
-      if(scroll)scroll.scrollLeft=oldScroll;
+      if(scroll&&previousWidth)scroll.scrollLeft=Math.max(0,previousCenter*chartWidth/previousWidth-scroll.clientWidth/2);
+    }
+    async function loadMetadata(){
+      if(metadataLoaded||metadataLoading)return;
+      const db=window.db||window.LK?.db||(window.firebase?.firestore?window.firebase.firestore():null);
+      if(!db){metadataError="Song Library is unavailable; showing recorded values only.";metadataLoaded=true;draw();return;}
+      metadataLoading=true;draw();
+      try{
+        playedRows=await enrichPlayed(playedRows,async ids=>{
+          const field=window.firebase.firestore.FieldPath.documentId();
+          const snapshot=await db.collection("lyrics").where(field,"in",ids).get();
+          const found={};
+          snapshot.docs.forEach(doc=>{found[doc.id]=doc.data()||{};});
+          return found;
+        });
+        model=buildModel(playedRows,breaks);
+      }catch(error){
+        console.warn("Night Flow could not read saved song metadata:",error);
+        metadataError="Some song metadata could not be loaded. Recorded values remain available.";
+      }finally{
+        metadataLoading=false;metadataLoaded=true;
+        // A later session may have replaced this chart while the reads completed.
+        if(root.isConnected!==false)draw();
+      }
     }
     container.addEventListener("click",event=>{
       const button=event.target.closest("[data-flow-mode]");
-      if(button){mode=button.dataset.flowMode;selected=-1;draw();return;}
+      if(button){
+        mode=button.dataset.flowMode;selected=-1;draw();
+        if(mode==="year"||mode==="key")void loadMetadata();
+        return;
+      }
+      const zoomButton=event.target.closest("[data-flow-zoom]");
+      if(zoomButton){
+        const action=zoomButton.dataset.flowZoom;
+        zoom=action==="fit"?0:Math.max(0,Math.min(zoomLevels.length-1,zoom+(action==="in"?1:-1)));
+        draw();return;
+      }
       const circle=event.target.closest("[data-flow-index]");
       if(circle){selected=Number(circle.dataset.flowIndex);draw();}
     });
@@ -216,5 +258,5 @@
     });
     draw();
   }
-  return {MODES,buildModel,valueOf,renderSvg,summary,card,mount};
+  return {MODES,buildModel,valueOf,renderSvg,summary,card,mount,enrichPlayed};
 });
