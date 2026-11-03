@@ -7,7 +7,7 @@ test('ES5 syntax for every kiosk script and inline alias',()=>{
  const html=fs.readFileSync(path.join(root,'signup/sign up.html'),'utf8');assert.doesNotMatch(html,/firebasejs|type="module"|framework|ls26try/);
 });
 test('disabled rollout blocks requests even with a valid kiosk token',()=>{
- const nodes={},document={getElementById(id){return nodes[id]||(nodes[id]={value:'',hidden:true,disabled:false,textContent:''});},addEventListener(){}};
+ const nodes={},document={getElementById(id){return nodes[id]||(nodes[id]={value:'',hidden:true,disabled:false,textContent:'',style:{}});},addEventListener(){}};
  const window={document,LKSignupPolicy:{rulesVerified:false,projectId:'demo-ls26-kiosk'},location:{search:'?k='+'a'.repeat(64)},addEventListener(){}};
  const context={window,document,location:window.location,clearTimeout(){},XMLHttpRequest(){throw Error('Disabled kiosk must not contact Firestore');}};
  vm.runInNewContext(fs.readFileSync(path.join(root,'signup/signup.js'),'utf8'),context);
