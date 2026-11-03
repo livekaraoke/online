@@ -12,7 +12,7 @@ const prompterHtml=fs.readFileSync(path.join(root,'oldadmin/host/lyrics/song.htm
 const performance=fs.readFileSync(path.join(root,'shared/performance.js'),'utf8');
 assert.match(viewerHtml,/lyricview-prompter-remote\.js\?v=20261103-remote-layout-v2/);
 assert.match(viewerHtml,/lyricview-prompter-remote\.css\?v=20261103-remote-layout-v2/);
-assert.match(prompterHtml,/prompter-remote-receiver\.js\?v=20261103-remote-stage-v1/);
+assert.match(prompterHtml,/prompter-remote-receiver\.js\?v=20261103-prompter-artwork-v1/);
 assert.match(performance,/ls26:karaoke-tools-visibility/);
 assert.match(performance,/id="ls26ShowKaraoke"> Show karaoke tools<\/label>\s*<label class="ls26-karaoke-toggle"><input type="checkbox" id="ls26ShowPrompterRemote"> Show Prompter Remote/);
 assert.match(performance,/ls26:prompter-remote-visibility/);
@@ -76,7 +76,16 @@ assert.match(prompterHtml,/prompterScrollUp/);assert.match(prompterHtml,/prompte
     await host.locator('[data-remote="'+action+'"]').click();
     await prompter.waitForFunction(expected);
   }
-  assert.equal(await prompter.evaluate(()=>document.body.dataset.ls26SingerStage),'waiting');
+  assert.equal(await prompter.evaluate(()=>document.body.dataset.ls26SingerStage),'idle');
+  assert.equal(await host.locator('#ls26PrompterSongCue').isDisabled(),true,'An idle screen is not a playable song');
+  await prompter.evaluate(()=>window.dispatchEvent(new CustomEvent('ls26:prompter-song-changed',{
+    detail:{songId:'demo',title:'Demo Song',artist:'Demo Artist',year:1999}
+  })));
+  await prompter.waitForFunction(()=>document.body.dataset.ls26SingerStage==='waiting');
+  assert.equal(await prompter.locator('#ls26SingerUpcomingTitle').textContent(),'Demo Song');
+  assert.equal(await prompter.locator('#ls26SingerUpcomingArtist').textContent(),'Demo Artist');
+  assert.equal(await prompter.locator('#ls26SingerUpcomingYear').textContent(),'(1999)');
+  await host.waitForFunction(()=>document.getElementById('ls26PrompterSongCue')?.disabled===false);
   await press('song',()=>document.getElementById('scrollToggleBtn').textContent==='⏸');
   assert.equal(await prompter.evaluate(()=>document.body.dataset.ls26SingerStage),'running');
   assert.equal(await host.locator('#ls26PrompterSongCue').textContent(),'END SONG');
@@ -98,7 +107,10 @@ assert.match(prompterHtml,/prompterScrollUp/);assert.match(prompterHtml,/prompte
   await press('song',()=>document.body.dataset.ls26SingerStage==='ended');
   assert.equal(await prompter.locator('#scrollToggleBtn').textContent(),'▶','Song end stops scrolling');
   assert.equal(await host.locator('#ls26PrompterSongCue').textContent(),'START AGAIN');
-  console.log('PASS: waiting, instrumental hold/resume and completed singer-screen state');
+  await prompter.evaluate(()=>window.dispatchEvent(new CustomEvent('ls26:prompter-feedback-complete',{detail:{rating:'good'}})));
+  await prompter.waitForFunction(()=>document.body.dataset.ls26SingerStage==='idle');
+  assert.equal(await host.locator('#ls26PrompterSongCue').isDisabled(),true);
+  console.log('PASS: preview art and metadata, instrumental hold/resume, END SONG, and feedback return to idle art');
   // The remote's own toggle, not the separate Karaoke Tools visibility, owns it.
   await host.evaluate(()=>window.dispatchEvent(new CustomEvent('ls26:karaoke-tools-visibility',{detail:{visible:false}})));
   assert.equal(await host.locator('#ls26PrompterRemote').isVisible(),true,'Karaoke Tools can hide independently');
