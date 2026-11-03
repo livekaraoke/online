@@ -71,8 +71,23 @@ test('name screen typography and footer placement stay isolated to first step',(
  assert.match(css,/\.name-step-title \{[^}]*font-size: 40px/);
  assert.match(css,/\.help \{[^}]*font-size: 20px/);
  assert.match(css,/\.name-screen-footer \{[^}]*margin: 100px 0 0/);
- assert.match(css,/footer \{[^}]*font-size: 15px/);
- assert.match(script,/el\('songFooter'\)\.hidden = which !== 'song'/);
+ assert.doesNotMatch(html,/id="songFooter"/);
+ assert.match(script,/layoutSongScreen\(\)/);
  assert.doesNotMatch(script,/el\('listTitle'\)/);
  assert.doesNotMatch(script,/el\('stepTitle'\)/);
+});
+
+test('iPad 2 scroll pane reserves request panel and allows complete list scroll',()=>{
+ const html=fs.readFileSync(path.join(root,'signup/sign up.html'),'utf8');
+ const css=fs.readFileSync(path.join(root,'signup/signup.css'),'utf8');
+ const script=fs.readFileSync(path.join(root,'signup/signup.js'),'utf8');
+ assert.match(html,/id="songBottom"/);
+ assert.doesNotMatch(html,/id="songFooter"/);
+ assert.match(css,/\.songs \{ position: absolute;[^}]*overflow-y: scroll/);
+ assert.match(css,/\.song-bottom \{ position: absolute;[^}]*bottom: 0/);
+ assert.match(script,/list\.style\.height = Math\.max\(40, remaining\)/);
+ assert.match(script,/bottom\.offsetHeight/);
+ assert.match(script,/root\.addEventListener\('orientationchange', layoutSongScreen\)/);
+ assert.match(css,/#nameStep \{[^}]*padding: 11% 16px 0/);
+ assert.match(css,/\.instruction \{[^}]*margin: 8px 0 44px/);
 });

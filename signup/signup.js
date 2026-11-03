@@ -107,16 +107,42 @@
     el('notice').textContent = text;
     el('notice').hidden = !!ok;
     el('refresh').hidden = !!ok;
+    layoutSongScreen();
   }
   function nameValid() {
     var name = trim(el('singerName').value);
     return name.length > 0 && name.length <= 80 && !/[<>]/.test(name);
   }
+  /* In old Safari the nested fieldset/flex box can grow to the entire list
+   * and clip its bottom controls. Measure the visible viewport, then give the
+   * list an explicit scrollable height and reserve space for SEND REQUEST. */
+  function layoutSongScreen() {
+    var form = el('signupForm'), step = el('songStep'), bottom = el('songBottom');
+    var list = el('songResults'), hint = el('resultCount'), docHeight, viewport, pane, top, remaining;
+    if (step.hidden || form.hidden) { return; }
+    docHeight = document.documentElement.clientHeight || root.innerHeight || 768;
+    viewport = Math.min(root.innerHeight || docHeight, docHeight);
+    pane = Math.max(220, Math.floor(viewport - form.getBoundingClientRect().top - 10));
+    form.style.height = pane + 'px';
+    el('fields').style.height = pane + 'px';
+    step.style.height = pane + 'px';
+    top = Math.ceil(hint.getBoundingClientRect().bottom - step.getBoundingClientRect().top + 6);
+    remaining = Math.floor(pane - top - bottom.offsetHeight - 8);
+    list.style.top = top + 'px';
+    list.style.height = Math.max(40, remaining) + 'px';
+  }
   function showStep(which) {
     el('nameStep').hidden = which !== 'name';
     el('songStep').hidden = which !== 'song';
-    el('songFooter').hidden = which !== 'song';
-    if (which === 'song') { el('singerSummary').textContent = 'SINGER: ' + trim(el('singerName').value); }
+    el('signupForm').className = which === 'song' ? 'song-active' : '';
+    if (which === 'song') {
+      el('singerSummary').textContent = 'SINGER: ' + trim(el('singerName').value);
+      layoutSongScreen();
+    } else {
+      el('signupForm').style.height = '';
+      el('fields').style.height = '';
+      el('songStep').style.height = '';
+    }
   }
   function ready() {
     var available = !!view && !!view.enabled && !busy && !loading && !uncertain;
@@ -252,6 +278,7 @@
   el('noteToggle').onclick = function () {
     el('note').hidden = !el('note').hidden;
     el('noteToggle').setAttribute('aria-expanded', el('note').hidden ? 'false' : 'true');
+    layoutSongScreen();
   };
   el('refresh').onclick = function () {
     if (uncertain) {
@@ -260,6 +287,8 @@
     }
     load();
   };
+  root.addEventListener('resize', layoutSongScreen);
+  root.addEventListener('orientationchange', layoutSongScreen);
   document.addEventListener('visibilitychange', function () { if (document.hidden) { clearTimeout(timer); } else { load(); } });
   window.addEventListener('pagehide', function () { clearTimeout(timer); clearTimeout(resetTimer); resetForm(); });
   window.addEventListener('pageshow', function (event) { if (event.persisted) { el('success').hidden = true; el('signupForm').hidden = false; load(); } });

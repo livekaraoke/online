@@ -50,6 +50,8 @@ jobs:
       - name: iPad signup flow and legacy JavaScript checks
         run: |
           node --test ls26try/tests/signup-kiosk.test.cjs ls26try/tests/signup-permanent-address.test.cjs
+      - name: iPad 2 song scrolling and fixed send panel
+        run: node ls26try/verification/signup-kiosk-layout.cjs
       - name: Publication, repertoire and Malta-time tests
         run: |
           node --test verification/public-site/public-policy.test.cjs verification/public-site/event-time.test.cjs verification/public-site/catalogue-projection.test.cjs verification/public-site/catalogue-publisher.test.cjs verification/public-site/live-projection.test.cjs

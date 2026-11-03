@@ -14,8 +14,8 @@ h1 { margin: 0; font-size: 32px; line-height: 1.15; }
 #signupForm { -webkit-flex: 1 1 auto; flex: 1 1 auto; min-height: 0; overflow: hidden; }
 fieldset { border: 0; padding: 0; margin: 0; height: 100%; min-width: 0; }
 .step { height: 100%; min-height: 0; }
-#nameStep { max-width: 620px; margin: 0 auto; padding: 8% 16px 0; overflow-y: auto; -webkit-overflow-scrolling: touch; }
-.instruction { font-size: 27px; text-align: center; margin: 8px 0 24px; }
+#nameStep { max-width: 620px; margin: 0 auto; padding: 11% 16px 0; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.instruction { font-size: 27px; text-align: center; margin: 8px 0 44px; }
 label { display: block; font-size: 20px; font-weight: bold; margin: 0 0 9px; letter-spacing: .5px; }
 input, textarea, button { font: inherit; border-radius: 7px; }
 input, textarea { display: block; width: 100%; padding: 12px 15px; border: 2px solid #777; color: #111; background: #fff; min-height: 54px; font-size: 21px; }
@@ -27,7 +27,11 @@ input:focus, textarea:focus { border-color: #e83b46; outline-color: #e83b46; }
 .primary { width: 100%; min-height: 72px; margin-top: 24px; background: #be2332; border-color: #f04c5c; font-size: 26px; font-weight: bold; }
 .help { font-size: 20px; color: #ccc; text-align: center; margin: 15px 0 0; }
 .name-screen-footer { margin: 100px 0 0; text-align: center; font-size: 15px; color: #bbb; }
-#songStep { display: -webkit-flex; display: flex; -webkit-flex-direction: column; flex-direction: column; }
+/* Explicit pixel-sized scrolling pane: nested flex + fieldset height is unreliable in iOS 9 Safari. */
+#signupForm.song-active { -webkit-flex: none; flex: none; }
+#songStep { display: block; position: relative; overflow: hidden; }
+#songStep .song-top, #songStep .search-label, #songStep .search, #songStep .hint { position: relative; }
+
 .song-top { -webkit-flex: 0 0 auto; flex: 0 0 auto; display: -webkit-flex; display: flex; -webkit-align-items: center; align-items: center; margin: 0 0 8px; }
 .song-top button { min-width: 102px; min-height: 47px; }
 #singerSummary { -webkit-flex: 1; flex: 1; text-align: center; font-weight: bold; font-size: 19px; margin: 0 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -36,21 +40,21 @@ input:focus, textarea:focus { border-color: #e83b46; outline-color: #e83b46; }
 .search input { min-height: 53px; }
 #clearSearch { position: absolute; top: 0; right: 0; width: 97px; min-height: 53px; }
 .hint { margin: 6px 0; color: #ccc; font-size: 16px; -webkit-flex: 0 0 auto; flex: 0 0 auto; }
-.songs { -webkit-flex: 1 1 auto; flex: 1 1 auto; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; border: 1px solid #555; border-radius: 7px; }
+/* Always a real fixed-height scroll box, independent of the form and fieldset flex sizing. */
+.songs { position: absolute; left: 0; right: 0; top: 210px; height: 200px; overflow-y: scroll; -webkit-overflow-scrolling: touch; touch-action: pan-y; border: 1px solid #555; border-radius: 7px; }
 .song { display: block; width: 100%; text-align: left; padding: 10px 17px; min-height: 69px; border: 0; border-bottom: 1px solid #555; border-radius: 0; background: #1c1c1c; }
 .song strong, .song span { display: block; }
 .song strong { font-size: 22px; overflow-wrap: break-word; }
 .song span { font-size: 17px; color: #d8d8d8; }
 .song.selected { background: #155c36; box-shadow: inset 7px 0 0 #56ed91; }
 .song.selected strong, .song.selected span { color: #fff; }
-.song-bottom { -webkit-flex: 0 0 auto; flex: 0 0 auto; padding-top: 8px; }
+.song-bottom { position: absolute; left: 0; right: 0; bottom: 0; z-index: 1; padding-top: 8px; background: #101010; }
 .selection { background: #242424; border-left: 5px solid #43d982; padding: 8px 12px; min-height: 40px; white-space: pre-line; font-size: 17px; }
 .note-toggle { width: 100%; border: 0; text-align: left; padding: 4px 5px; min-height: 35px; font-size: 15px; text-decoration: underline; color: #ddd; background: transparent; }
 #note { margin: 1px 0 4px; font-size: 18px; min-height: 70px; resize: vertical; }
 .send { width: 100%; min-height: 66px; background: #be2332; border-color: #f04c5c; font-size: 25px; font-weight: bold; }
 .success { -webkit-flex: 1 1 auto; flex: 1 1 auto; text-align: center; border: 3px solid #44de81; margin: 15px auto; padding: 48px 24px; width: 100%; max-width: 660px; }
 .success h2 { font-size: 38px; color: #81f2a8; }
-footer { -webkit-flex: 0 0 auto; flex: 0 0 auto; text-align: center; font-size: 15px; color: #bbb; padding-top: 5px; }
 [hidden] { display: none !important; }
 @media (max-width: 700px) {
  #kiosk { padding: 10px 12px 6px; }
@@ -64,7 +68,6 @@ footer { -webkit-flex: 0 0 auto; flex: 0 0 auto; text-align: center; font-size: 
  .brand { font-size: 20px; }
  h1 { font-size: 23px; }
  .name-step-title { font-size: 34px; }
- footer { display: none; }
  .song { min-height: 60px; }
  .send { min-height: 57px; }
  #nameStep { padding-top: 3%; }
