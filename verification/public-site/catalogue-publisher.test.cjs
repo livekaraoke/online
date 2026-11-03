@@ -98,6 +98,11 @@ test('enabled kiosk publishes next songs without optional public live publicatio
      {id:'c',status:'queued',songTitle:'Second next',singerName:'Cara'}]});
    await settle();
    const path='karaokeControl/signupKioskPublic';
+   const state=[];const unsubscribe=f.publisher.subscribe(x=>state.push({...x}));
+   assert.ok(f.records[path].kioskQueue,JSON.stringify({
+     publisher:state.at(-1),writes:f.writes,transactionReads:f.transactionReads,
+     listeners:[...f.listeners].map(x=>x.p),kioskDoc:f.records[path]}));
+   unsubscribe();
    assert.deepEqual(JSON.parse(JSON.stringify(f.records[path].kioskQueue)),{
      current:{songTitle:'Now playing',singerName:'Ana'},
      next:[{songTitle:'First next',singerName:'Ben'},{songTitle:'Second next',singerName:'Cara'}]});
