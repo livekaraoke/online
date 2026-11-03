@@ -29,7 +29,10 @@ let server,browser;
  for(const viewport of [{width:1024,height:768},{width:768,height:1024},{width:375,height:667}]){
   const context=await browser.newContext({viewport,hasTouch:true});
   await context.route('https://firestore.googleapis.com/**',route=>{
-   const url=route.request().url(),doc=url.includes('/signupKioskPublic')?discovery:url.includes('/signupKioskViews/')?view:null;
+   const url=route.request().url();
+   if(route.request().method()==='POST'&&url.endsWith(':commit'))
+     return route.fulfill({status:200,contentType:'application/json',headers:{'access-control-allow-origin':'*'},body:JSON.stringify({writeResults:[{},{}]})});
+   const doc=url.includes('/signupKioskPublic')?discovery:url.includes('/signupKioskViews/')?view:null;
    if(!doc)throw Error('Unexpected Firestore call '+url);
    return route.fulfill({status:200,contentType:'application/json',headers:{'access-control-allow-origin':'*'},body:JSON.stringify(doc)});
   });
@@ -62,8 +65,25 @@ let server,browser;
   await page.locator('#noteToggle').click();
   const expanded=await page.evaluate(()=>({sendBottom:document.getElementById('send').getBoundingClientRect().bottom,viewport:Math.min(window.innerHeight,document.documentElement.clientHeight),listHeight:document.getElementById('songResults').clientHeight}));
   assert.ok(expanded.sendBottom<=expanded.viewport+2&&expanded.listHeight>40,'Expanded note should keep send button visible: '+JSON.stringify(expanded));
+  await page.locator('#send').click();
+  await page.locator('#success').waitFor({state:'visible'});
+  const confirmation=await page.evaluate(()=>{
+   const box=document.getElementById('success'),rect=box.getBoundingClientRect(),
+     paragraphs=box.querySelectorAll('p'),h=box.querySelector('h2'),
+     texts=[h,paragraphs[0],paragraphs[1]],
+     top=texts[0].getBoundingClientRect().top,
+     bottom=texts[2].getBoundingClientRect().bottom;
+   return {top:rect.top,bottom:rect.bottom,height:rect.height,center:(top+bottom)/2,
+     boxCenter:(rect.top+rect.bottom)/2,viewport:Math.min(window.innerHeight,document.documentElement.clientHeight),
+     paragraphSize:parseFloat(getComputedStyle(paragraphs[0]).fontSize),
+     gap:paragraphs[1].getBoundingClientRect().top-paragraphs[0].getBoundingClientRect().bottom};
+  });
+  assert.ok(confirmation.bottom<=confirmation.viewport+2,'Success border must fit viewport: '+JSON.stringify(confirmation));
+  assert.ok(Math.abs(confirmation.center-confirmation.boxCenter)<26,'Success text must be vertically centered: '+JSON.stringify(confirmation));
+  assert.ok(confirmation.paragraphSize>=18,'Success messages should be larger: '+JSON.stringify(confirmation));
+  assert.ok(confirmation.gap>=10,'Confirmation paragraphs should be separated: '+JSON.stringify(confirmation));
   assert.deepEqual(errors,[],'No page errors expected');
-  console.log('PASS signup scroll/panel at '+viewport.width+'x'+viewport.height);
+  console.log('PASS signup scroll, send and confirmation at '+viewport.width+'x'+viewport.height);
   await context.close();
  }
 })().catch(e=>{console.error(e);process.exitCode=1;}).finally(async()=>{if(browser)await browser.close();if(server)server.close();});

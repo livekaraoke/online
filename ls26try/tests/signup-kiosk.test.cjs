@@ -91,3 +91,24 @@ test('iPad 2 scroll pane reserves request panel and allows complete list scroll'
  assert.match(css,/#nameStep \{[^}]*padding: 11% 16px 0/);
  assert.match(css,/\.instruction \{[^}]*margin: 8px 0 44px/);
 });
+
+test('explicit public setlist is authoritative for kiosk publisher; no secret song fields',()=>{
+ const host=fs.readFileSync(path.join(root,'ls26try/shared/signup-kiosk.js'),'utf8');
+ const publicList=fs.readFileSync(path.join(root,'ls26try/list/js/songlist.js'),'utf8');
+ assert.match(publicList,/Individual publicSongListVisible flags do not hide songs/);
+ assert.doesNotMatch(host,/value\.publicSongListVisible===false/);
+ assert.match(host,/selectedSongCount:ids\.length,publishedSongCount:Object\.keys\(songs\)\.length/);
+ assert.match(host,/value:\{title,artist\}/);
+ assert.match(host,/Kiosk published: /);
+ const page=fs.readFileSync(path.join(root,'ls26try/requests.html'),'utf8');
+ assert.match(page,/id="kioskCount"/);
+ assert.match(page,/signup-kiosk\.js\?v=20261103-full-setlist/);
+});
+test('confirmation box has a bounded height, larger messages and vertical centering',()=>{
+ const css=fs.readFileSync(path.join(root,'signup/signup.css'),'utf8');
+ assert.match(css,/\.success \{[^}]*-webkit-flex: 0 0 auto/);
+ assert.match(css,/\.success \{[^}]*-webkit-justify-content: center/);
+ assert.match(css,/\.success \{[^}]*max-height: 60vh/);
+ assert.match(css,/\.success p \{[^}]*font-size: 25px/);
+ assert.match(css,/\.success p \+ p \{[^}]*margin-top: 30px/);
+});

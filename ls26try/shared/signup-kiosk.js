@@ -27,9 +27,11 @@
     const songs={};
     for(const doc of documents){
       const value=doc.data();
-      if(!value||value.publicSongListVisible===false)continue;
+      if(!value)throw Error('A selected song is missing. Refresh the setlist before publishing.');
+      // Explicitly selected public setlists are authoritative, as on /list/.
+      // Publish only title and artist, never lyrics/chords/host notes.
       const title=String(value.title||'').trim(),artist=ArtistNames.display(value.artist||'');
-      if(!title)continue;
+      if(!title)throw Error('A selected song is missing its title. Edit the song before publishing.');
       if(!checkId(doc.id)||title.length>240||artist.length>240)throw Error('A song has an unusually long ID/title/artist. Please shorten it before publishing.');
       Object.defineProperty(songs,doc.id,{value:{title,artist},enumerable:true,writable:true,configurable:true});
     }
@@ -64,7 +66,8 @@
       const kioskToken=!rotate&&/^[a-f0-9]{64}$/.test(config?.token||'')?config.token:candidateToken;
       result={schemaVersion:1,enabled:enabled===true,token:kioskToken,revision,sessionId:current.sessionId||current.activeSessionId,
         setlistId,setlistName:String(latestList.name||'').slice(0,160),venue:String(current.venue||'').slice(0,160),
-        displayTitle:String(displayTitle||'').trim().slice(0,100),updatedAt:stamp()};
+        displayTitle:String(displayTitle||'').trim().slice(0,100),
+        selectedSongCount:ids.length,publishedSongCount:Object.keys(songs).length,updatedAt:stamp()};
       const view={...result,songs};delete view.token;
       tx.set(ref('signupKioskAdmin/control'),result);
       tx.set(ref('signupKioskViews/'+kioskToken),view);
@@ -97,11 +100,21 @@
     const sessionId=window.LK?.sessionTools?.getSessionId?.(),open=window.LK?.topStatus?.getRequestsEnabled?.();
     state.textContent=loaded?.enabled&&sessionId===loaded.sessionId&&open===true?'ACTIVE':loaded?.enabled?'DISABLED — session ended/changed or requests closed':'DISABLED';
   }
+  function renderCount(){
+    const selected=lists.find(item=>item.id===document.getElementById('kioskList')?.value);
+    const count=Array.isArray(selected?.songIds)?new Set(selected.songIds).size:0;
+    const published=loaded?.setlistId===selected?.id&&Number.isInteger(loaded?.publishedSongCount)
+      ?' — last published: '+loaded.publishedSongCount
+      :' — publish to update the iPad';
+    const line=document.getElementById('kioskCount');
+    if(line)line.textContent='Selected setlist: '+count+' songs'+published+'.';
+  }
   function renderConfig(){
     const $=id=>document.getElementById(id);
     renderAvailability();
     $('kioskList').innerHTML=lists.map(row=>`<option value="${esc(row.id)}">${esc(row.name||row.id)}</option>`).join('');
     $('kioskList').value=loaded?.setlistId||window.LK?.sessionTools?.getPublicList?.()?.setlistId||lists[0]?.id||'';
+    renderCount();
     $('kioskDisplayTitle').value=loaded?.displayTitle||'';
     $('kioskSession').textContent=loaded?.sessionId?`${loaded.venue||'Current venue'} · Session ${loaded.sessionId}`:'Derived from your active session when enabled.';
     $('kioskUrl').textContent='OPEN SIGN-UP FORM';
@@ -120,6 +133,7 @@
     const button=document.getElementById('openSignupKiosk'),panel=document.getElementById('signupKioskPanel');
     if(!button||!panel)return;
     const $=id=>document.getElementById(id),status=message=>{$('kioskMessage').textContent=message;};
+    $('kioskList').addEventListener('change',renderCount);
     // Direct opening and device handoff use the existing private URL, without
     // extra reads or exposing the token to a third-party QR/short-link service.
     const transfer=document.createElement('div');
@@ -168,7 +182,7 @@
         if(action==='rotate'&&!await LS26Dialogs.confirm('Refresh kiosk access? Old keyed links will stop working. The permanent sign-up address will keep working.'))return;
         if(action==='disable')loaded=await disable(loaded?.revision);
         else loaded=await publish({setlistId:$('kioskList').value,displayTitle:$('kioskDisplayTitle').value,rotate:action==='rotate',enabled:action==='rotate'?loaded?.enabled===true:true,expectedRevision:loaded?.revision});
-        status(action==='disable'?'Kiosk disabled. No further requests will be accepted.':'Kiosk published. Press OPEN SIGN-UP FORM below, or SHARE TO IPAD to send the link to your other device.');renderConfig();
+        status(action==='disable'?'Kiosk disabled. No further requests will be accepted.':'Kiosk published: '+loaded.publishedSongCount+' of '+loaded.selectedSongCount+' selected songs. The iPad will refresh its list automatically (or reload the page).');renderConfig();
       }catch(error){status(error.message);}finally{busy=false;panel.querySelector('fieldset').disabled=false;renderButtons();}
     }
     function renderButtons(){ $('kioskDisable').disabled=!loaded?.enabled; $('kioskRotate').disabled=!loaded?.token; }

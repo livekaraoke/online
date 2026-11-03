@@ -53,8 +53,25 @@ input:focus, textarea:focus { border-color: #e83b46; outline-color: #e83b46; }
 .note-toggle { width: 100%; border: 0; text-align: left; padding: 4px 5px; min-height: 35px; font-size: 15px; text-decoration: underline; color: #ddd; background: transparent; }
 #note { margin: 1px 0 4px; font-size: 18px; min-height: 70px; resize: vertical; }
 .send { width: 100%; min-height: 66px; background: #be2332; border-color: #f04c5c; font-size: 25px; font-weight: bold; }
-.success { -webkit-flex: 1 1 auto; flex: 1 1 auto; text-align: center; border: 3px solid #44de81; margin: 15px auto; padding: 48px 24px; width: 100%; max-width: 660px; }
-.success h2 { font-size: 38px; color: #81f2a8; }
+/* A compact, vertically centered success panel instead of a flex child
+ * expanding below the iPad viewport. iOS 9 Safari compatible flex properties. */
+.success {
+  -webkit-flex: 0 0 auto; flex: 0 0 auto;
+  display: -webkit-flex; display: flex;
+  -webkit-flex-direction: column; flex-direction: column;
+  -webkit-justify-content: center; justify-content: center;
+  text-align: center;
+  border: 3px solid #44de81;
+  margin: 15px auto;
+  padding: 24px 26px;
+  width: 100%;
+  max-width: 900px;
+  height: 680px;
+  max-height: 60vh;
+}
+.success h2 { font-size: 42px; color: #81f2a8; margin: 0 0 22px; }
+.success p { font-size: 25px; line-height: 1.35; margin: 0; }
+.success p + p { margin-top: 30px; }
 [hidden] { display: none !important; }
 @media (max-width: 700px) {
  #kiosk { padding: 10px 12px 6px; }
@@ -71,4 +88,8 @@ input:focus, textarea:focus { border-color: #e83b46; outline-color: #e83b46; }
  .song { min-height: 60px; }
  .send { min-height: 57px; }
  #nameStep { padding-top: 3%; }
+ .success { max-height: 66vh; padding: 12px 16px; }
+ .success h2 { font-size: 30px; margin-bottom: 10px; }
+ .success p { font-size: 18px; }
+ .success p + p { margin-top: 12px; }
 }
