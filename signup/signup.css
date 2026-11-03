@@ -128,6 +128,12 @@ header .cancel-button {
 .song.unavailable .song-symbol { display: none; }
 .song .song-unavailable { display: none; position: absolute; top: 50%; right: 12px; margin-top: -13px; font-size: 15px; font-weight: bold; color: #e4b46f; }
 .song.unavailable .song-unavailable { display: block; }
+/* Longer ALREADY REQUESTED/PLAYED labels must not overlap song titles. */
+.song.unavailable { padding-right: 185px; }
+.song.unavailable .song-unavailable {
+ width: 160px; margin-top: -11px; font-size: 15px;
+ line-height: 22px; text-align: right; white-space: nowrap;
+}
 .selection { border-left-width: 6px; padding: 13px 14px; min-height: 54px; font-size: 22px; line-height: 1.25; }
 .note-toggle { border: 1px solid #555; text-align: left; padding: 10px 14px; min-height: 52px; font-size: 20px; font-weight: bold; text-decoration: none; color: #fff; background: #232323; }
 .refresh-overlay { position: fixed; top: 0; bottom: 0; left: 0; right: 0; z-index: 100; background: rgba(0,0,0,.86); display: -webkit-flex; display: flex; -webkit-align-items: center; align-items: center; -webkit-justify-content: center; justify-content: center; padding: 22px; }
