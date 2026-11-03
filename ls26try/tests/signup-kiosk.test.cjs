@@ -44,7 +44,7 @@ test('two-step full-list page keeps Safari 9-compatible layout and separate subm
  assert.match(html,/id="nameStep"/);
  assert.match(html,/id="songStep"/);
  assert.match(html,/id="next"/);
- assert.match(html,/id="back"/);
+ assert.doesNotMatch(html,/id="back"/);
  assert.match(html,/id="cancel"/);
  assert.doesNotMatch(html,/id="moreSongs"/);
  assert.match(script,/for \(i = 0; i < songs.length; i \+= 1\)/);
@@ -190,7 +190,7 @@ test('artwork and session gate, eight-second return, no new data model',()=>{
  assert.match(html,/id="idleScreen" class="idle-screen is-closed"/);
  assert.match(css,/\.idle-screen\.is-open \{ background-image: url\("assets\/click-to-sing\.jpg"\)/);
  assert.match(css,/\.idle-screen\.is-closed \{ background-image: url\("assets\/requests-closed\.jpg"\)/);
- assert.match(css,/background-size: contain/);
+ assert.match(css,/background-size: auto 92%/);
  assert.match(script,/resetTimer = setTimeout\(function \(\) \{[\s\S]*?\}, 8000\)/);
  assert.match(script,/songGate\.songsEnabled === true/);
  assert.match(script,/control\.active === true && actual === linked/);
@@ -200,4 +200,24 @@ test('artwork and session gate, eight-second return, no new data model',()=>{
  assert.match(script,/check\('karaokeControl\/signupKioskPublic', 'kiosk'\)/);
  assert.match(script,/focusName\(\); \/\/ Synchronous with the physical tap/);
  assert.doesNotMatch(script,/setInterval/);
+});
+
+test('cancel stays in the top-left header, returns to artwork and blurs the keyboard',()=>{
+ const html=fs.readFileSync(path.join(root,'signup/sign up.html'),'utf8');
+ const css=fs.readFileSync(path.join(root,'signup/signup.css'),'utf8');
+ const js=fs.readFileSync(path.join(root,'signup/signup.js'),'utf8');
+ const header=html.slice(html.indexOf('<header>'),html.indexOf('</header>'));
+ const song=html.slice(html.indexOf('<section id="songStep"'),html.indexOf('</section>',html.indexOf('<section id="songStep"')));
+ assert.match(header,/id="cancel"/);
+ assert.doesNotMatch(header,/id="back"/);
+ assert.doesNotMatch(song,/id="back"|id="cancel"/);
+ assert.match(css,/header \.cancel-button \{[^}]*top: 0; left: 0/);
+ assert.match(js,/el\('cancel'\)\.hidden = which !== 'song'/);
+ assert.match(js,/el\('cancel'\)\.onclick = function \(\) \{[\s\S]*?showIdle\(gateOpen \? 'open' : 'closed'\);[\s\S]*?resetForm\(\)/);
+ assert.match(js,/if \(el\('singerName'\)\.blur\) \{ el\('singerName'\)\.blur\(\); \}/);
+ assert.match(js,/if \(el\('songSearch'\)\.blur\) \{ el\('songSearch'\)\.blur\(\); \}/);
+ assert.match(js,/row\.status\.textContent = reason === 'PLAYED' \? 'ALREADY PLAYED'/);
+ assert.match(js,/reason === 'REQUESTED' \? 'ALREADY REQUESTED'/);
+ assert.match(css,/background-size: auto 92%; -webkit-background-size: auto 92%/);
+ assert.match(css,/background-position: center center/);
 });

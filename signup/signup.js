@@ -144,6 +144,7 @@
   function showStep(which) {
     el('nameStep').hidden = which !== 'name';
     el('songStep').hidden = which !== 'song';
+    el('cancel').hidden = which !== 'song';
     el('signupForm').className = which === 'song' ? 'song-active' : '';
     if (which === 'song') {
       el('singerDisplay').textContent = trim(el('singerName').value);
@@ -195,7 +196,8 @@
       row.button.setAttribute('aria-pressed', active ? 'true' : 'false');
       row.button.setAttribute('aria-disabled', reason ? 'true' : 'false');
       row.symbol.textContent = active ? '\u2713' : '+';
-      row.status.textContent = reason;
+      row.status.textContent = reason === 'PLAYED' ? 'ALREADY PLAYED' :
+        reason === 'REQUESTED' ? 'ALREADY REQUESTED' : reason;
     }
     ready();
   }
@@ -288,8 +290,17 @@
   }
   function showIdle(mode) {
     var closed = mode !== 'open', screen = el('idleScreen');
-    if (closed && screen.hidden && !el('signupForm').hidden && el('success').hidden && !busy) { resetForm(); }
+    var resetNeeded = closed && screen.hidden && !el('signupForm').hidden &&
+      el('success').hidden && !busy;
     if (closed) { clearTimeout(resetTimer); }
+    /* Blur before hiding input containers. Otherwise older Safari can keep
+     * its keyboard open while the landing artwork covers the form. */
+    if (document.activeElement && document.activeElement.blur) {
+      document.activeElement.blur();
+    }
+    if (el('singerName').blur) { el('singerName').blur(); }
+    if (el('songSearch').blur) { el('songSearch').blur(); }
+    if (el('note').blur) { el('note').blur(); }
     screen.className = 'idle-screen ' + (closed ? 'is-closed' : 'is-open');
     screen.setAttribute('aria-label', closed ? 'Requests closed' : 'Click anywhere to sing');
     screen.disabled = closed;
@@ -297,9 +308,7 @@
     el('signupForm').hidden = true;
     el('success').hidden = true;
     el('refreshDialog').hidden = true;
-    if (document.activeElement && document.activeElement.blur) {
-      document.activeElement.blur();
-    }
+    if (resetNeeded) { resetForm(); }
     ready();
   }
   function scheduleGate() {
@@ -436,8 +445,11 @@
     if (el('singerName').blur) { el('singerName').blur(); }
     showStep('song'); el('songResults').scrollTop = 0;
   };
-  el('back').onclick = function () { if (!busy && !uncertain) { showStep('name'); } };
-  el('cancel').onclick = function () { if (!busy && !uncertain) { resetForm(); } };
+  el('cancel').onclick = function () {
+    if (busy || uncertain) { return; }
+    showIdle(gateOpen ? 'open' : 'closed');
+    resetForm();
+  };
   el('songSearch').oninput = function () { el('songResults').scrollTop = 0; filterVisibleSongs(); };
   el('clearSearch').onclick = function () { el('songSearch').value = ''; filterVisibleSongs(); };
   el('noteToggle').onclick = function () {

@@ -106,7 +106,13 @@ input:focus, textarea:focus { border-color: #e83b46; outline-color: #e83b46; }
 .song-top { margin-bottom: 16px; }
 #signupForm.song-active { position: absolute; top: 66px; left: 18px; right: 18px; bottom: 8px; height: auto; min-height: 0; }
 .song-top button { min-width: 94px; min-height: 46px; font-size: 18px; padding: 7px 11px; }
-.song-top .cancel-button { background: #43181e; border-color: #80313a; }
+/* Keep CANCEL opposite the refresh control, out of the scrolling song pane. */
+header .cancel-button {
+ position: absolute; top: 0; left: 0; z-index: 2;
+ min-width: 94px; min-height: 52px;
+ padding: 7px 11px; font-size: 18px;
+ background: #43181e; border-color: #80313a;
+}
 #singerSummary { font-size: 20px; }
 .singer-label { font-size: 18px; font-weight: normal; color: #aaa; }
 #singerDisplay { font-size: 27px; font-weight: bold; color: #fff; }
@@ -122,6 +128,12 @@ input:focus, textarea:focus { border-color: #e83b46; outline-color: #e83b46; }
 .song.unavailable .song-symbol { display: none; }
 .song .song-unavailable { display: none; position: absolute; top: 50%; right: 12px; margin-top: -13px; font-size: 15px; font-weight: bold; color: #e4b46f; }
 .song.unavailable .song-unavailable { display: block; }
+/* Longer ALREADY REQUESTED/PLAYED labels must not overlap song titles. */
+.song.unavailable { padding-right: 185px; }
+.song.unavailable .song-unavailable {
+ width: 160px; margin-top: -11px; font-size: 15px;
+ line-height: 22px; text-align: right; white-space: nowrap;
+}
 .selection { border-left-width: 6px; padding: 13px 14px; min-height: 54px; font-size: 22px; line-height: 1.25; }
 .note-toggle { border: 1px solid #555; text-align: left; padding: 10px 14px; min-height: 52px; font-size: 20px; font-weight: bold; text-decoration: none; color: #fff; background: #232323; }
 .refresh-overlay { position: fixed; top: 0; bottom: 0; left: 0; right: 0; z-index: 100; background: rgba(0,0,0,.86); display: -webkit-flex; display: flex; -webkit-align-items: center; align-items: center; -webkit-justify-content: center; justify-content: center; padding: 22px; }
@@ -137,14 +149,14 @@ input:focus, textarea:focus { border-color: #e83b46; outline-color: #e83b46; }
  #singerDisplay { font-size: 23px; }
 }
 
-/* Original supplied artwork, intact. Fit the entire image in either iPad
- * orientation; the surrounding area remains black, never stretch or crop. */
+/* Original artwork remains unmodified. Keep its aspect ratio, scale it a
+ * little smaller, and centre it both horizontally and vertically. */
 .idle-screen {
   position: fixed; z-index: 80; top: 0; left: 0; right: 0; bottom: 0;
   display: block; width: 100%; height: 100%; min-height: 0; margin: 0;
   padding: 0; border: 0; border-radius: 0; background-color: #000;
   background-repeat: no-repeat; background-position: center center;
-  background-size: contain; -webkit-background-size: contain;
+  background-size: auto 92%; -webkit-background-size: auto 92%;
   -webkit-appearance: none; appearance: none; cursor: pointer;
 }
 .idle-screen.is-open { background-image: url("assets/click-to-sing.jpg"); }

@@ -55,6 +55,8 @@ let server,browser;let requestOpen=true,sessionActive=true;
   await page.locator('.song').first().waitFor({state:'attached'});
   await page.waitForFunction(()=>!document.getElementById('idleScreen').disabled);
   assert.equal(await page.locator('#idleScreen').getAttribute('aria-label'),'Click anywhere to sing');
+  const artworkScale=await page.locator('#idleScreen').evaluate(el=>getComputedStyle(el).backgroundSize);
+  assert.equal(artworkScale,'auto 92%','Landing artwork preserves aspect ratio at reduced centered size');
   const imageLoaded=await page.evaluate(()=>new Promise(resolve=>{
     const img=new Image();img.onload=()=>resolve(img.naturalWidth>=1000&&img.naturalHeight>=1000);
     img.onerror=()=>resolve(false);img.src='assets/click-to-sing.jpg';
@@ -82,12 +84,36 @@ let server,browser;let requestOpen=true,sessionActive=true;
   await page.locator('#refreshCancel').click();
   assert.ok(await page.locator('#refreshDialog').isHidden());
   await page.locator('#next').click();
+  assert.equal(await page.locator('#cancel').isVisible(),true,'Cancel must appear in the top header on the song screen');
+  assert.equal(await page.locator('#back').count(),0,'BACK button must be absent');
+  const positions=await page.evaluate(()=>{
+    const cancel=document.getElementById('cancel').getBoundingClientRect();
+    const refresh=document.getElementById('pageRefresh').getBoundingClientRect();
+    return {cancelLeft:cancel.left,cancelTop:cancel.top,refreshTop:refresh.top};
+  });
+  assert.ok(positions.cancelLeft<120&&Math.abs(positions.cancelTop-positions.refreshTop)<3,'Cancel aligns opposite refresh: '+JSON.stringify(positions));
+  await page.locator('#cancel').click();
+  assert.equal(await page.locator('#idleScreen').isVisible(),true,'Cancel returns to landing art');
+  assert.equal(await page.locator('#singerName').evaluate(el=>document.activeElement===el),false,'Keyboard input must lose focus on landing');
+  assert.equal(await page.locator('#singerName').inputValue(),'','Cancel must clear the unfinished signup');
+  await page.locator('#idleScreen').click();
+  assert.equal(await page.locator('#singerName').evaluate(el=>document.activeElement===el),true,'Next singer tap must focus name input');
+  await page.locator('#singerName').fill('Test singer');
+  await page.locator('#next').click();
   await page.waitForFunction(()=>document.querySelector('#songResults button').disabled);
   assert.ok(!await page.locator('#songResults button').nth(0).isEnabled(),'Requested song unavailable');
   assert.ok(!await page.locator('#songResults button').nth(1).isEnabled(),'Played song unavailable');
   assert.ok(await page.locator('#songResults button').nth(2).isEnabled(),'Cancelled request allows new selection');
-  assert.equal(await page.locator('#songResults button').nth(0).locator('.song-unavailable').textContent(),'REQUESTED');
-  assert.equal(await page.locator('#songResults button').nth(1).locator('.song-unavailable').textContent(),'PLAYED');
+  assert.equal(await page.locator('#songResults button').nth(0).locator('.song-unavailable').textContent(),'ALREADY REQUESTED');
+  assert.equal(await page.locator('#songResults button').nth(1).locator('.song-unavailable').textContent(),'ALREADY PLAYED');
+  const labelPlacement=await page.evaluate(()=>{
+    const row=document.querySelector('#songResults button.unavailable');
+    const title=row.querySelector('strong').getBoundingClientRect();
+    const indicator=row.querySelector('.song-unavailable').getBoundingClientRect();
+    return {titleRight:title.right,labelLeft:indicator.left};
+  });
+  assert.ok(labelPlacement.labelLeft>=labelPlacement.titleRight-2,
+    'ALREADY REQUESTED must not overlap song title: '+JSON.stringify(labelPlacement));
   const layout=await page.evaluate(()=>{
    const list=document.getElementById('songResults'),send=document.getElementById('send'),bottom=document.getElementById('songBottom');
    const r=send.getBoundingClientRect(),b=bottom.getBoundingClientRect(),l=list.getBoundingClientRect();
