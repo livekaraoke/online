@@ -212,3 +212,63 @@ header .cancel-button {
  .idle-queue-empty { font-size: 13px; padding: 4px; }
  .another-song { min-height: 52px; font-size: 17px; margin-top: 12px; }
 }
+
+/* Kiosk stage 2: show the COMPLETE supplied artwork, not a cropped/enlarged
+ * background. Keep the real Run Order panel below it, within one viewport. */
+.idle-screen.is-open .idle-brand-art {
+  height: 57%;
+  background-position: center center;
+  background-size: contain; -webkit-background-size: contain;
+}
+.idle-screen.is-open .idle-queue { height: 43%; padding: 8px 16px 10px; }
+.idle-queue-heading { font-size: 23px; padding: 4px 0 8px; }
+.idle-tap-hint { font-size: 16px; }
+.idle-current-row { min-height: 76px; padding: 6px 12px; }
+.idle-next-row { min-height: 69px; padding: 5px 12px; }
+.idle-next-heading { font-size: 17px; margin-top: 9px; }
+.idle-row-number { -webkit-flex-basis: 76px; flex-basis: 76px; font-size: 19px; }
+.idle-row-info strong { font-size: 25px; line-height: 1.2; }
+.idle-row-info span { font-size: 20px; line-height: 1.2; color: #e0e0e0; }
+.idle-queue-empty { font-size: 20px; padding: 9px 12px; }
+/* Pin controls to the VISUAL bottom instead of relying on fieldset percentage
+ * heights (which varied on Android Chrome and left SEND REQUEST off screen).
+ * Only the list scrolls; note/send remain visible. */
+.song-bottom {
+  position: fixed; bottom: 8px; left: 18px; right: 18px; z-index: 5;
+  padding-top: 5px; background: #101010;
+}
+.selection {
+  position: absolute !important; width: 1px; height: 1px; min-height: 0;
+  padding: 0; margin: 0; border: 0; overflow: hidden;
+  clip: rect(0,0,0,0); white-space: nowrap;
+}
+.note-toggle {
+  min-height: 62px; padding: 13px 16px;
+  font-size: 23px; line-height: 1.25; font-weight: bold;
+}
+#note {
+  font-size: 24px; line-height: 1.4; padding: 13px 15px;
+  min-height: 100px; resize: none; margin: 5px 0 7px;
+}
+@media (max-height: 900px) {
+  .idle-screen.is-open .idle-brand-art { height: 56%; background-size: contain; -webkit-background-size: contain; }
+  .idle-screen.is-open .idle-queue { height: 44%; padding: 5px 12px 7px; }
+  .idle-queue-heading { font-size: 19px; padding: 1px 0 4px; }
+  .idle-tap-hint { font-size: 13px; }
+  .idle-current-row { min-height: 56px; padding: 2px 8px; }
+  .idle-next-row { min-height: 52px; padding: 2px 8px; }
+  .idle-next-heading { font-size: 15px; margin-top: 3px; }
+  .idle-row-number { -webkit-flex-basis: 62px; flex-basis: 62px; font-size: 15px; }
+  .idle-row-info strong { font-size: 20px; }
+  .idle-row-info span { font-size: 16px; }
+  .idle-queue-empty { font-size: 18px; padding: 5px; }
+}
+@media (max-width: 700px) {
+  .song-bottom { left: 12px; right: 12px; bottom: 6px; }
+  .idle-queue-heading { font-size: 17px; }
+  .idle-tap-hint { font-size: 12px; }
+  .idle-row-info strong { font-size: 19px; }
+  .idle-row-info span { font-size: 15px; }
+  .note-toggle { min-height: 57px; font-size: 20px; }
+  #note { font-size: 22px; }
+}

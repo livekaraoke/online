@@ -86,7 +86,8 @@ test('iPad 2 scroll pane reserves request panel and allows complete list scroll'
  assert.match(css,/\.songs \{ position: absolute;[^}]*overflow-y: scroll/);
  assert.match(css,/\.song-bottom \{ position: absolute;[^}]*bottom: 0/);
  assert.match(script,/list\.style\.height = Math\.max\(40, Math\.floor\(available\)\)/);
- assert.match(script,/bottom\.offsetHeight/);
+ assert.match(script,/bottom\.getBoundingClientRect\(\)\.top/);
+ assert.match(css,/\.song-bottom \{[^}]*position: fixed; bottom: 8px/);
  assert.match(script,/root\.addEventListener\('orientationchange', layoutSongScreen\)/);
  assert.match(css,/#nameStep \{[^}]*padding: 11% 16px 0/);
  assert.match(css,/\.instruction \{[^}]*margin: 8px 0 44px/);
@@ -270,4 +271,47 @@ test('public stage projection only includes the visible current and next three s
  assert.deepEqual(projection.live(input,'roxanna').kioskQueue,{current:null,next:[]});
  input.karaoke.songsEnabled=false;
  assert.deepEqual(projection.live(input,'live-karaoke').kioskQueue,{current:null,next:[]});
+});
+
+test('full artwork, large queue, visible Android SEND and readable note',()=>{
+  const html=fs.readFileSync(path.join(root,'signup/sign up.html'),'utf8');
+  const css=fs.readFileSync(path.join(root,'signup/signup.css'),'utf8');
+  const js=fs.readFileSync(path.join(root,'signup/signup.js'),'utf8');
+  assert.match(css,/\.idle-screen\.is-open \.idle-brand-art \{[^}]*height: 57%/);
+  assert.match(css,/background-size: contain; -webkit-background-size: contain/);
+  assert.match(css,/\.idle-screen\.is-open \.idle-queue \{ height: 43%/);
+  assert.match(css,/\.idle-row-info strong \{ font-size: 25px/);
+  assert.match(css,/\.idle-row-info span \{ font-size: 20px/);
+  assert.match(css,/\.song-bottom \{[^}]*position: fixed; bottom: 8px/);
+  assert.match(css,/#note \{[^}]*font-size: 24px/);
+  assert.match(css,/\.note-toggle \{[^}]*min-height: 62px/);
+  assert.match(css,/clip: rect\(0,0,0,0\)/);
+  assert.match(html,/id="selection" class="selection" role="status" aria-live="polite"><\/span>/);
+  assert.match(js,/root\.visualViewport\.addEventListener\('resize', layoutSongScreen\)/);
+  assert.match(js,/bottomTop = bottom\.getBoundingClientRect\(\)\.top/);
+  assert.match(js,/kiosk\.queueSessionId === linked && kiosk\.kioskQueue/);
+  assert.match(js,/el\('anotherSong'\)\.onclick = function \(\) \{[\s\S]*?resetForm\(\);\s*focusName\(\)/);
+  assert.doesNotMatch(js,/el\('singerName'\)\.value = sameSinger/);
+});
+test('kiosk Run Order publisher is session-gated and does not clone the private queue',()=>{
+  const pub=fs.readFileSync(path.join(root,'ls26try/shared/public-live-publisher.js'),'utf8');
+  const projection=require('../../js/public-live-projection.js');
+  const input={run:{sessionId:'gig',items:[
+    {songTitle:'Currently on',singerName:'Anna',status:'playing',requesterNote:'PRIVATE'},
+    {songTitle:'Next',singerName:'Bob',status:'queued',hostNote:'PRIVATE'},
+    {songTitle:'Later',singerName:'Cara',status:'queued'},
+    {songTitle:'Fourth',singerName:'Dan',status:'queued'},
+    {songTitle:'Fifth',singerName:'Eve',status:'queued'}
+  ]},requests:[]};
+  const queue=projection.stageQueue(input,'gig');
+  assert.deepEqual(queue,{current:{songTitle:'Currently on',singerName:'Anna'},
+    next:[{songTitle:'Next',singerName:'Bob'},
+      {songTitle:'Later',singerName:'Cara'},
+      {songTitle:'Fourth',singerName:'Dan'}]});
+  assert.equal(JSON.stringify(queue).includes('PRIVATE'),false);
+  assert.deepEqual(projection.stageQueue(input,'wrong'),{current:null,next:[]});
+  assert.match(pub,/LKPublicVisibility\.act\(input\.control\)==='live-karaoke'/);
+  assert.match(pub,/queueSessionId/);
+  assert.match(pub,/tx\.update\(kioskRef,\{queueSessionId,kioskQueue:queue\}\)/);
+  assert.doesNotMatch(pub,/collection\('lyrics'\)/);
 });

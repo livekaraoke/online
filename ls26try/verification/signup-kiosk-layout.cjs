@@ -14,7 +14,11 @@ function value(x){
  const fields={};for(const k of Object.keys(x))fields[k]=value(x[k]);return {mapValue:{fields}};
 }
 function fields(x){const out={};for(const k of Object.keys(x))out[k]=value(x[k]);return {fields:out};}
-const discovery=fields({schemaVersion:1,enabled:true,token});
+const queue={current:{songTitle:'Current song',singerName:'Alex'},
+ next:[{songTitle:'Next song 1',singerName:'Ben'},
+   {songTitle:'Next song 2',singerName:'Cara'},
+   {songTitle:'Next song 3',singerName:'Dan'}]};
+const discovery=fields({schemaVersion:1,enabled:true,token,queueSessionId:'s1',kioskQueue:queue});
 const view=fields({schemaVersion:1,enabled:true,sessionId:'s1',revision:'r1',setlistId:'s1',setlistName:'Test',venue:'Test',songs});
 function publicLive(){
  return fields({schemaVersion:1,act:'live-karaoke',sessionId:'s1',
@@ -36,7 +40,7 @@ let server,browser;let requestOpen=true,sessionActive=true;
  }).listen(0,'127.0.0.1');
  await new Promise(resolve=>server.on('listening',resolve));
  browser=await chromium.launch({headless:true,args:['--no-sandbox']});
- for(const viewport of [{width:1024,height:768},{width:768,height:1024},{width:375,height:667}]){
+ for(const viewport of [{width:1024,height:768},{width:768,height:1024},{width:375,height:667},{width:960,height:1536}]){
   const context=await browser.newContext({viewport,hasTouch:true});
   await context.route('https://firestore.googleapis.com/**',route=>{
    const url=route.request().url();
@@ -51,8 +55,8 @@ let server,browser;let requestOpen=true,sessionActive=true;
        body:JSON.stringify([row('song0','pending'),row('song1','played'),row('song2','cancelled')])});
    }
    if(url.includes('/publicSites/live-karaoke/views/live'))
-     return route.fulfill({status:200,contentType:'application/json',
-       headers:{'access-control-allow-origin':'*'},body:JSON.stringify(publicLive())});
+     return route.fulfill({status:404,contentType:'application/json',
+       headers:{'access-control-allow-origin':'*'},body:'{}'});
    const doc=url.includes('/signupKioskPublic')?discovery:
      url.includes('/signupKioskViews/')?view:
      url.endsWith('/karaokeControl/currentSession')?fields({active:sessionActive,sessionId:'s1'}):
@@ -132,6 +136,12 @@ let server,browser;let requestOpen=true,sessionActive=true;
   assert.ok(await page.locator('#songResults button').nth(2).isEnabled(),'Cancelled request allows new selection');
   assert.equal(await page.locator('#songResults button').nth(0).locator('.song-unavailable').textContent(),'ALREADY REQUESTED');
   assert.equal(await page.locator('#songResults button').nth(1).locator('.song-unavailable').textContent(),'ALREADY PLAYED');
+  const selectionHeight=await page.locator('#selection').evaluate(el=>el.getBoundingClientRect().height);
+  assert.ok(selectionHeight<=2,'Selected-song banner must not consume space');
+  const noteStyle=await page.locator('#noteToggle').evaluate(el=>({
+    height:el.getBoundingClientRect().height,size:parseFloat(getComputedStyle(el).fontSize)
+  }));
+  assert.ok(noteStyle.height>=57&&noteStyle.size>=20,'Optional note control should be readable: '+JSON.stringify(noteStyle));
   const labelPlacement=await page.evaluate(()=>{
     const row=document.querySelector('#songResults button.unavailable');
     const title=row.querySelector('strong').getBoundingClientRect();
@@ -167,6 +177,8 @@ let server,browser;let requestOpen=true,sessionActive=true;
   await page.locator('#noteToggle').click();
   const expanded=await page.evaluate(()=>({sendBottom:document.getElementById('send').getBoundingClientRect().bottom,viewport:Math.min(window.innerHeight,document.documentElement.clientHeight),listHeight:document.getElementById('songResults').clientHeight}));
   assert.ok(expanded.sendBottom<=expanded.viewport+2&&expanded.listHeight>40,'Expanded note should keep send button visible: '+JSON.stringify(expanded));
+  const noteFont=await page.locator('#note').evaluate(el=>parseFloat(getComputedStyle(el).fontSize));
+  assert.ok(noteFont>=22,'Optional note textbox must use a large font');
   await page.locator('#send').click();
   await page.locator('#success').waitFor({state:'visible'});
   assert.ok(await page.locator('#idleScreen').isHidden(),'Success must temporarily replace landing');
@@ -189,8 +201,11 @@ let server,browser;let requestOpen=true,sessionActive=true;
   if(viewport.width!==1024){
     await page.locator('#anotherSong').click();
     assert.ok(await page.locator('#success').isHidden(),'Repeat button closes confirmation');
-    assert.ok(await page.locator('#songStep').isVisible(),'Repeat button goes directly to song list');
-    assert.equal(await page.locator('#singerName').inputValue(),'Test singer','Repeat request keeps the same singer');
+    assert.ok(await page.locator('#nameStep').isVisible(),'Repeat must return to name entry');
+    assert.equal(await page.locator('#singerName').inputValue(),'','Repeat request must clear the old singer');
+    assert.equal(await page.locator('#singerName').evaluate(el=>document.activeElement===el),true,'Repeat tap focuses name');
+    await page.locator('#singerName').fill('Next singer');
+    await page.locator('#next').click();
     assert.ok(!await page.locator('#send').isEnabled(),'A new song must be selected before sending');
     await page.locator('#cancel').click();
     assert.ok(await page.locator('#idleScreen').isVisible(),'Cancel after repeat returns to landing');

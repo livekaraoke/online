@@ -122,7 +122,7 @@
   function layoutSongScreen() {
     var form = el('signupForm'), step = el('songStep'), bottom = el('songBottom');
     var list = el('songResults'), hint = el('resultCount'), kiosk = el('kiosk');
-    var header, top, listTop, available;
+    var header, top, listTop, available, bottomTop, visibleBottom;
     if (step.hidden || form.hidden) { return; }
     header = kiosk.getElementsByTagName('header')[0];
     top = Math.ceil(header.getBoundingClientRect().bottom - kiosk.getBoundingClientRect().top);
@@ -132,8 +132,18 @@
     form.style.height = '';
     el('fields').style.height = '100%';
     step.style.height = '100%';
+    /* Android's visual viewport can be smaller than the CSS viewport when
+     * the browser bars/keyboard animate. Keep SEND above its bottom edge. */
+    visibleBottom = Math.min(root.innerHeight || step.clientHeight,
+      document.documentElement.clientHeight || root.innerHeight || step.clientHeight);
+    if (root.visualViewport && root.visualViewport.height) {
+      visibleBottom = Math.min(visibleBottom,
+        root.visualViewport.offsetTop + root.visualViewport.height);
+    }
+    bottom.style.bottom = Math.max(8, Math.ceil((root.innerHeight || visibleBottom) - visibleBottom) + 8) + 'px';
     listTop = Math.ceil(hint.getBoundingClientRect().bottom - step.getBoundingClientRect().top + 7);
-    available = step.clientHeight - listTop - bottom.offsetHeight - 8;
+    bottomTop = bottom.getBoundingClientRect().top;
+    available = bottomTop - step.getBoundingClientRect().top - listTop - 8;
     list.style.top = listTop + 'px';
     list.style.height = Math.max(40, Math.floor(available)) + 'px';
   }
@@ -290,6 +300,7 @@
     el('queueNowSong').textContent = current && trim(current.songTitle) ? trim(current.songTitle) : 'Waiting for the next song';
     el('queueNowSinger').textContent = current && trim(current.singerName) ? 'Singer: ' + trim(current.singerName) : '';
     el('queueEmpty').hidden = next.length > 0;
+    el('queueEmpty').textContent = queue ? 'No singers queued yet' : 'Live queue is updating...';
     for (i = 0; i < 3; i += 1) {
       row = el('queueNext' + (i + 1));
       item = next[i];
@@ -376,7 +387,15 @@
         if (!open) { showIdle('closed'); }
         else {
           if (!wasOpen || !el('idleScreen').hidden && el('idleScreen').disabled) { showIdle('open'); }
-          refreshLandingQueue(linked);
+          // The enabled physical kiosk receives a small, dedicated stage
+          // projection from the SAME host Run Order publisher. Unlike the
+          // public website, this also supports an explicitly enabled test gig.
+          if (kiosk.queueSessionId === linked && kiosk.kioskQueue) {
+            ++queueVersion;
+            renderLandingQueue(kiosk.kioskQueue);
+          } else {
+            refreshLandingQueue(linked);
+          }
         }
         ready(); scheduleGate();
       });
@@ -468,16 +487,14 @@
     });
   };
   el('anotherSong').onclick = function () {
-    var sameSinger = repeatSinger;
-    if (!gateOpen || !view || !view.enabled || busy || uncertain || !sameSinger) { return; }
+    if (!gateOpen || !view || !view.enabled || busy || uncertain) { return; }
     clearTimeout(resetTimer);
     el('success').hidden = true;
     el('signupForm').hidden = false;
     el('idleScreen').hidden = true;
+    repeatSinger = '';
     resetForm();
-    el('singerName').value = sameSinger;
-    showStep('song');
-    ready();
+    focusName(); // A new request starts at ENTER YOUR NAME, not song selection.
   };
   el('idleScreen').onclick = function () {
     if (!gateOpen || el('idleScreen').disabled) { return; }
@@ -543,6 +560,10 @@
   };
   root.addEventListener('resize', layoutSongScreen);
   root.addEventListener('orientationchange', layoutSongScreen);
+  if (root.visualViewport && root.visualViewport.addEventListener) {
+    root.visualViewport.addEventListener('resize', layoutSongScreen);
+    root.visualViewport.addEventListener('scroll', layoutSongScreen);
+  }
   document.addEventListener('visibilitychange', function () {
     if (document.hidden) { clearTimeout(timer); clearTimeout(gateTimer); }
     else { load(); refreshGate(); }

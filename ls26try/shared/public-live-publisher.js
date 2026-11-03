@@ -4,7 +4,7 @@
   const acts=['live-karaoke','billy-lee','roxanna'];
   const settingsId={'live-karaoke':'liveKaraokeWebsiteSettings','billy-lee':'billyLeeWebsiteSettings',roxanna:'roxannaWebsiteSettings'};
   window.LS26CreateLivePublisher=({db,watch,report})=>{
-    const input={control:{},session:{},event:{},karaoke:{},run:{},requests:[]},unsubs=[];
+    const input={control:{},session:{},event:{},karaoke:{},run:{},requests:[],kioskPublic:{}},unsubs=[];
     const ready=new Set(),errors=new Set(),settings={},published=new Map();
     let closed=false,revision=0,timer=0,writing=false,pending=false,sessionId='',eventId='',requestId='';
     let sessionOff=null,eventOff=null,requestOff=null,events=[];
@@ -45,13 +45,27 @@
           const prior=published.get(act+'/'+view);
           return !prior||!LKCatalogueProjection.equal(prior.value,value)||(view==='live'&&value.sessionId&&prior.expiry<Date.now()+120000);
         });
-        if(!values.length){report('');return;}
+        // The generic public website deliberately hides private/test sessions.
+        // A separately enabled physical signup kiosk can still show its OWN
+        // session's small public stage queue, without a second Run Order listener.
+        const kiosk=input.kioskPublic||{},sid=String(input.control.sessionId||input.control.activeSessionId||'');
+        const queueLive=kiosk.enabled===true&&input.control.active===true&&
+          LKPublicVisibility.act(input.control)==='live-karaoke'&&input.karaoke.songsEnabled===true&&
+          sid&&input.run.sessionId===sid;
+        const queue=queueLive?LKLiveProjection.stageQueue(input,sid):{current:null,next:[]};
+        const queueSessionId=queueLive?sid:'';
+        const kioskNeedsUpdate=ready.has('kioskPublic')&&kiosk.schemaVersion===1&&
+          (String(kiosk.queueSessionId||'')!==queueSessionId||
+            !LKCatalogueProjection.equal(kiosk.kioskQueue||{current:null,next:[]},queue));
+        if(!values.length&&!kioskNeedsUpdate){report('');return;}
         let committed=[];
         await db.runTransaction(async tx=>{
           const rows=await Promise.all(values.map(async([act,view,value])=>{
             const ref=db.collection('publicSites').doc(act).collection('views').doc(view);
             return {key:act+'/'+view,ref,value,view,snap:await tx.get(ref)};
           }));
+          const kioskRef=db.collection('karaokeControl').doc('signupKioskPublic');
+          const kioskSnap=kioskNeedsUpdate?await tx.get(kioskRef):null;
           if(closed||revision!==version)throw Error('Source changed; waiting for the latest public view.');
           committed=[];
           for(const {key,ref,value,view,snap} of rows){
@@ -64,12 +78,22 @@
             }
             committed.push([key,{value,expiry}]);
           }
+          // Recheck the kiosk's live token & enabled state under this transaction.
+          // Do not overwrite its publication controls or setlist snapshot.
+          if(kioskSnap?.exists&&kioskSnap.data()?.schemaVersion===1&&
+              kioskSnap.data()?.token===kiosk.token&&kioskSnap.data()?.enabled===kiosk.enabled){
+            tx.update(kioskRef,{queueSessionId,kioskQueue:queue});
+          }
         });
         for(const [key,value]of committed)published.set(key,value);
         report('');
       }catch(error){report(error.message);}finally{writing=false;if(pending||version!==revision)schedule();}
     }
     for(const [key,path]of Object.entries({control:'karaokeControl/currentSession',karaoke:'karaoke/state',run:'karaokeControl/runOrder'}))unsubs.push(watch(path,d=>receive(key,d),e=>fail(key,e)));
+    // One small shared control watcher; no additional Run Order or request listeners.
+    unsubs.push(watch('karaokeControl/signupKioskPublic',d=>{
+      input.kioskPublic=d||{};ready.add('kioskPublic');schedule();
+    },e=>{ready.delete('kioskPublic');report(String(e?.message||e));}));
     for(const act of acts)unsubs.push(watch('karaokeControl/'+settingsId[act],d=>{settings[act]=d;ready.add(act);errors.delete(act);schedule();},e=>fail(act,e)));
     // Query rolls over at Malta midnight without polling the collection.
     let eventsOff=null,midnightTimer=0;
