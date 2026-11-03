@@ -173,9 +173,9 @@ let server,browser;let requestOpen=true,sessionActive=true;
   const confirmation=await page.evaluate(()=>{
    const box=document.getElementById('success'),rect=box.getBoundingClientRect(),
      paragraphs=box.querySelectorAll('p'),h=box.querySelector('h2'),
-     texts=[h,paragraphs[0],paragraphs[1]],
-     top=texts[0].getBoundingClientRect().top,
-     bottom=texts[2].getBoundingClientRect().bottom;
+     cta=document.getElementById('anotherSong'),
+     top=h.getBoundingClientRect().top,
+     bottom=cta.getBoundingClientRect().bottom;
    return {top:rect.top,bottom:rect.bottom,height:rect.height,center:(top+bottom)/2,
      boxCenter:(rect.top+rect.bottom)/2,viewport:Math.min(window.innerHeight,document.documentElement.clientHeight),
      paragraphSize:parseFloat(getComputedStyle(paragraphs[0]).fontSize),
