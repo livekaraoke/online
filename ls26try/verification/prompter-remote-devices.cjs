@@ -99,7 +99,7 @@ const receiver=fs.readFileSync(path.join(root,'oldadmin/host/lyrics/prompter-rem
   deny=true;
   await host.locator('[data-remote="faster"]').click();
   await host.waitForFunction(()=>document.getElementById('ls26PrompterRemoteStatus').textContent.includes('Sync failed'));
-  assert.equal((await target.evaluate(()=>window.__actions)).length,expected.length);
+  assert.equal((await target.evaluate(()=>window.__actions)).length,executed.length);
   console.log('PASS: separate-tablet buttons, ordered writes, dedupe, first-snapshot guard, failure feedback');
   await sourceCtx.close();await targetCtx.close();
  }finally{await browser.close();}
