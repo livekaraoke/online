@@ -25,6 +25,8 @@
     knownNotificationIds: new Set(),
     requestSnapshotReady: false,
     knownRequestIds: new Set(),
+    knownPendingRequestIds: new Set(),
+    pendingTabAutoOpenQueued: false,
     lastBreakOpen: null,
     lastRunStatuses: new Map(),
     runOrderSnapshotReady: false,
@@ -610,6 +612,27 @@
     if (raw?.toMillis) return raw.toMillis();
     const date = tsDate(raw);
     return date?.getTime?.() || 0;
+  }
+
+  // Drive the automatic Pending Requests tab from the existing session-scoped
+  // listener. A new pending request opens the panel once; routine snapshots
+  // and manually changing tabs do not repeatedly steal the host's focus.
+  function trackPendingTabArrival(requests) {
+    const ids = new Set(requests.filter(isPendingRequest).map(request => request.id).filter(Boolean));
+    const arrived = [...ids].some(id => !state.knownPendingRequestIds.has(id));
+    state.knownPendingRequestIds = ids;
+    if (!ids.size) state.pendingTabAutoOpenQueued = false;
+    else if (arrived) state.pendingTabAutoOpenQueued = true;
+  }
+
+  function openPendingTabIfRequested() {
+    if (!state.pendingTabAutoOpenQueued || !state.sessionId) return;
+    // Firestore can deliver its first snapshot before the status markup is
+    // injected. Leave the opening queued until both tab and pane exist.
+    if (!$("topStatusBar") || !$("tsPendingTab") || !$("tsPendingPane")) return;
+    state.pendingTabAutoOpenQueued = false;
+    setStatusExpanded(true);
+    selectSessionTab("pending");
   }
 
   function sortPendingRequestsOldestFirst(a,b) {
@@ -1285,6 +1308,8 @@
     state.sessionId = sessionId || "";
     state.session = null;
     state.requests = [];
+    state.knownPendingRequestIds = new Set();
+    state.pendingTabAutoOpenQueued = false;
     state.notifications = [];
     state.notificationUnread = 0;
     state.knownNotificationIds = new Set();
@@ -1346,11 +1371,13 @@
             });
           }
           state.requests = nextRequests;
+          trackPendingTabArrival(nextRequests);
           void reconcileRequesterCancellations(nextRequests);
           window.dispatchEvent(new Event("ls26:requests-updated"));
           state.knownRequestIds = new Set(nextRequests.map(req => req.id));
           state.requestSnapshotReady = true;
           renderPending();
+          openPendingTabIfRequested();
           renderCompactHostStrip();
           renderNotifications();
         }, console.warn)
@@ -1640,6 +1667,7 @@
       bindUi();
       renderRemaining();
       renderPending();
+      openPendingTabIfRequested();
       renderRunOrder();
       renderSongSelect();
       renderCompactHostStrip();
