@@ -103,6 +103,7 @@
   var busy = false, loading = false, uncertain = false, timer = null, resetTimer = null, pending = null, songButtons = [];
   var focusedName = false, dialogAction = null;
   var unavailable = {}, localBlocked = {}, availabilitySession = '', availabilityVersion = 0;
+  var gateOpen = false, gateTimer = null, gateBusy = false;
   var base = 'https://firestore.googleapis.com/v1/projects/' + policy.projectId + '/databases/(default)/documents';
   function el(id) { return document.getElementById(id); }
   function notice(text, ok) {
@@ -136,7 +137,8 @@
     list.style.height = Math.max(40, Math.floor(available)) + 'px';
   }
   function focusName() {
-    if (el('nameStep').hidden || el('fields').disabled || el('signupForm').hidden || !el('refreshDialog').hidden) { return; }
+    if (el('nameStep').hidden || el('fields').disabled || el('signupForm').hidden ||
+        !el('idleScreen').hidden || !el('refreshDialog').hidden) { return; }
     try { el('singerName').focus(); } catch (ignore) {}
   }
   function showStep(which) {
@@ -155,12 +157,12 @@
     }
   }
   function ready() {
-    var available = !!view && !!view.enabled && !busy && !loading && !uncertain;
+    var available = gateOpen && !!view && !!view.enabled && !busy && !loading && !uncertain;
     el('fields').disabled = !available;
     el('next').disabled = !available || !nameValid();
     el('send').disabled = !available || !validForm(el('singerName').value, selected, el('note').value) ||
       !!(selected && songUnavailable(selected.id));
-    if (available && !el('nameStep').hidden && !focusedName) {
+    if (available && el('idleScreen').hidden && !el('nameStep').hidden && !focusedName) {
       focusedName = true;
       setTimeout(focusName, 0);
     }
@@ -284,6 +286,61 @@
     filterVisibleSongs();
     updateSongStates();
   }
+  function showIdle(mode) {
+    var closed = mode !== 'open', screen = el('idleScreen');
+    if (closed && screen.hidden && !el('signupForm').hidden && el('success').hidden && !busy) { resetForm(); }
+    if (closed) { clearTimeout(resetTimer); }
+    screen.className = 'idle-screen ' + (closed ? 'is-closed' : 'is-open');
+    screen.setAttribute('aria-label', closed ? 'Requests closed' : 'Click anywhere to sing');
+    screen.disabled = closed;
+    screen.hidden = false;
+    el('signupForm').hidden = true;
+    el('success').hidden = true;
+    el('refreshDialog').hidden = true;
+    if (document.activeElement && document.activeElement.blur) {
+      document.activeElement.blur();
+    }
+    ready();
+  }
+  function scheduleGate() {
+    clearTimeout(gateTimer);
+    if (!document.hidden) { gateTimer = setTimeout(refreshGate, 12000); }
+  }
+  /* The kiosk has no separate host gate. It checks the existing session,
+   * public request switch and kiosk publication, so every LiveSuite close
+   * action reaches this iPad without any new Firestore collections/writes. */
+  function refreshGate() {
+    var state = {}, remaining = 3, valid = true, linked = view && view.sessionId;
+    if (gateBusy || busy) { scheduleGate(); return; }
+    if (!linked || !view.enabled) {
+      gateOpen = false; showIdle('closed'); load(); scheduleGate(); return;
+    }
+    gateBusy = true;
+    function check(path, key) {
+      xhr('GET', base + '/' + path, null, function (error, result) {
+        if (error || !result || !result.fields) { valid = false; }
+        else { state[key] = decode({mapValue:{fields:result.fields}}); }
+        remaining -= 1;
+        if (remaining) { return; }
+        gateBusy = false;
+        if (!view || view.sessionId !== linked) { scheduleGate(); return; }
+        var control = state.control || {}, songGate = state.songGate || {};
+        var kiosk = state.kiosk || {};
+        var actual = control.sessionId || control.activeSessionId || '';
+        var open = valid && control.active === true && actual === linked &&
+          songGate.songsEnabled === true && kiosk.enabled === true &&
+          tokenValid(kiosk.token) && kiosk.token === token && view.enabled === true;
+        var wasOpen = gateOpen;
+        gateOpen = open;
+        if (!open) { showIdle('closed'); }
+        else if (!wasOpen || !el('idleScreen').hidden && el('idleScreen').disabled) { showIdle('open'); }
+        ready(); scheduleGate();
+      });
+    }
+    check('karaokeControl/currentSession', 'control');
+    check('karaoke/state', 'songGate');
+    check('karaokeControl/signupKioskPublic', 'kiosk');
+  }
   function schedule() {
     clearTimeout(timer);
     if (!document.hidden && !el('success').hidden) { return; }
@@ -292,19 +349,19 @@
   function load() {
     if (busy || loading || !el('success').hidden) { return; }
     clearTimeout(timer);
-    if (policy.rulesVerified !== true) { view = null; notice('HOST SETUP REQUIRED\nSecure kiosk access must be enabled by the host before sign-up opens.'); ready(); return; }
+    if (policy.rulesVerified !== true) { view = null; gateOpen = false; showIdle('closed'); notice('HOST SETUP REQUIRED\nSecure kiosk access must be enabled by the host before sign-up opens.'); ready(); return; }
     loading = true; ready();
     if (discover) {
       xhr('GET', base + '/karaokeControl/signupKioskPublic', null, function (error, data) {
         var current;
         if (error) {
-          loading = false; view = null; ready();
+          loading = false; view = null; gateOpen = false; showIdle('closed'); ready();
           notice(error.status === 403 || error.status === 404 ? 'SIGN-UP NOT OPEN YET\nPlease ask the host to enable sign-up.' : 'NO CONNECTION\nPLEASE ASK THE HOST');
           schedule(); return;
         }
         current = decode({mapValue: {fields: data.fields || {}}});
         if (current.schemaVersion !== 1 || current.enabled !== true || !tokenValid(current.token)) {
-          loading = false; view = null; ready(); notice('SIGN-UP CLOSED\nPlease ask the host.'); schedule(); return;
+          loading = false; view = null; gateOpen = false; showIdle('closed'); ready(); notice('SIGN-UP CLOSED\nPlease ask the host.'); scheduleGate(); schedule(); return;
         }
         token = current.token; loadView();
       });
@@ -315,12 +372,12 @@
       var next, match, i, changed;
       loading = false;
       if (error) {
-        view = null; ready();
+        view = null; gateOpen = false; showIdle('closed'); ready();
         notice(error.status === 403 || error.status === 404 ? 'SIGN-UP UNAVAILABLE\nThe kiosk is closed or this link has expired. Please ask the host.' : 'NO CONNECTION\nPLEASE ASK THE HOST\nUse RETRY when Wi-Fi is available.');
         el('refresh').textContent = 'RETRY'; schedule(); return;
       }
       next = decode({mapValue: {fields: data.fields || {}}});
-      if (next.schemaVersion !== 1 || !next.sessionId || !next.revision || !next.songs) { view = null; notice('SONG LIST UNAVAILABLE\nPlease ask the host to refresh the kiosk setup.'); ready(); schedule(); return; }
+      if (next.schemaVersion !== 1 || !next.sessionId || !next.revision || !next.songs) { view = null; gateOpen = false; showIdle('closed'); notice('SONG LIST UNAVAILABLE\nPlease ask the host to refresh the kiosk setup.'); ready(); schedule(); return; }
       if (view && view.sessionId !== next.sessionId) { resetForm(); }
       changed = !view || view.revision !== next.revision; view = next; songs = songsFrom(view);
       if (selected) {
@@ -330,7 +387,8 @@
       }
       if (!uncertain) { notice(view.enabled ? 'Requests go straight to the host.' : 'SIGN-UP CLOSED\nPlease ask the host.', view.enabled); }
       el('refresh').textContent = 'RETRY / REFRESH SONG LIST'; if (changed) { renderSongs(); } ready(); schedule();
-      if (view.enabled) { loadAvailability(); }
+      if (view.enabled) { loadAvailability(); refreshGate(); }
+      else { gateOpen = false; showIdle('closed'); scheduleGate(); }
     });
   }
   function resetForm() {
@@ -341,7 +399,7 @@
   }
   el('signupForm').onsubmit = function (event) {
     event.preventDefault();
-    if (busy || loading || uncertain || !view || !view.enabled ||
+    if (busy || loading || uncertain || !gateOpen || !view || !view.enabled ||
         !validForm(el('singerName').value, selected, el('note').value) ||
         (selected && songUnavailable(selected.id))) { return; }
     try { pending = commitBody(policy.projectId, randomId(), token, view, selected, el('singerName').value, el('note').value); }
@@ -356,10 +414,21 @@
         return;
       }
       if (selected) { localBlocked[selected.id] = 'REQUESTED'; }
-      resetForm(); el('signupForm').hidden = true; el('success').hidden = false;
-      notice('REQUEST SENT', true); window.scrollTo(0, 0);
-      resetTimer = setTimeout(function () { el('success').hidden = true; el('signupForm').hidden = false; load(); }, 4000);
+      resetForm(); el('idleScreen').hidden = true; el('signupForm').hidden = true;
+      el('success').hidden = false; notice('REQUEST SENT', true); window.scrollTo(0, 0);
+      resetTimer = setTimeout(function () {
+        if (!gateOpen) { showIdle('closed'); } else { showIdle('open'); }
+        load();
+      }, 8000);
     });
+  };
+  el('idleScreen').onclick = function () {
+    if (!gateOpen || el('idleScreen').disabled) { return; }
+    el('idleScreen').hidden = true;
+    el('signupForm').hidden = false;
+    el('success').hidden = true;
+    resetForm();
+    focusName(); // Synchronous with the physical tap for iOS keyboard permission.
   };
   el('singerName').oninput = el('note').oninput = ready;
   el('next').onclick = function () {
@@ -413,9 +482,18 @@
   };
   root.addEventListener('resize', layoutSongScreen);
   root.addEventListener('orientationchange', layoutSongScreen);
-  document.addEventListener('visibilitychange', function () { if (document.hidden) { clearTimeout(timer); } else { load(); } });
-  window.addEventListener('pagehide', function () { clearTimeout(timer); clearTimeout(resetTimer); resetForm(); });
-  window.addEventListener('pageshow', function (event) { if (event.persisted) { el('success').hidden = true; el('signupForm').hidden = false; load(); } });
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden) { clearTimeout(timer); clearTimeout(gateTimer); }
+    else { load(); refreshGate(); }
+  });
+  window.addEventListener('pagehide', function () {
+    clearTimeout(timer); clearTimeout(gateTimer); clearTimeout(resetTimer); resetForm();
+  });
+  window.addEventListener('pageshow', function (event) {
+    if (event.persisted) { showIdle('closed'); load(); }
+  });
   showStep('name');
+  showIdle('closed');
   load();
+  scheduleGate();
 }(typeof window !== 'undefined' ? window : this));

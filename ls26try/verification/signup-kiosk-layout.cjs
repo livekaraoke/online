@@ -14,13 +14,13 @@ function value(x){
 function fields(x){const out={};for(const k of Object.keys(x))out[k]=value(x[k]);return {fields:out};}
 const discovery=fields({schemaVersion:1,enabled:true,token});
 const view=fields({schemaVersion:1,enabled:true,sessionId:'s1',revision:'r1',setlistId:'s1',setlistName:'Test',venue:'Test',songs});
-let server,browser;
+let server,browser;let requestOpen=true,sessionActive=true;
 (async()=>{
  server=http.createServer((req,res)=>{
   try{
    const file=path.join(root,decodeURIComponent(new URL(req.url,'http://localhost').pathname));
    if(!file.startsWith(root+path.sep))throw Error('Bad path');
-   res.setHeader('Content-Type',file.endsWith('.js')?'text/javascript':file.endsWith('.css')?'text/css':'text/html');
+   res.setHeader('Content-Type',file.endsWith('.js')?'text/javascript':file.endsWith('.css')?'text/css':file.endsWith('.jpg')?'image/jpeg':'text/html');
    res.end(fs.readFileSync(file));
   }catch(e){res.statusCode=404;res.end();}
  }).listen(0,'127.0.0.1');
@@ -42,7 +42,10 @@ let server,browser;
    }
    if(url.includes('/publicSites/live-karaoke/views/live'))
      return route.fulfill({status:404,contentType:'application/json',body:'{}'});
-   const doc=url.includes('/signupKioskPublic')?discovery:url.includes('/signupKioskViews/')?view:null;
+   const doc=url.includes('/signupKioskPublic')?discovery:
+     url.includes('/signupKioskViews/')?view:
+     url.endsWith('/karaokeControl/currentSession')?fields({active:sessionActive,sessionId:'s1'}):
+     url.endsWith('/karaoke/state')?fields({songsEnabled:requestOpen}):null;
    if(!doc)throw Error('Unexpected Firestore call '+url);
    return route.fulfill({status:200,contentType:'application/json',headers:{'access-control-allow-origin':'*'},body:JSON.stringify(doc)});
   });
@@ -50,11 +53,24 @@ let server,browser;
   const errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.goto('http://127.0.0.1:'+server.address().port+'/signup/sign%20up.html');
   await page.locator('.song').first().waitFor({state:'attached'});
+  await page.waitForFunction(()=>!document.getElementById('idleScreen').disabled);
+  assert.equal(await page.locator('#idleScreen').getAttribute('aria-label'),'Click anywhere to sing');
+  const imageLoaded=await page.evaluate(()=>new Promise(resolve=>{
+    const img=new Image();img.onload=()=>resolve(img.naturalWidth>=1000&&img.naturalHeight>=1000);
+    img.onerror=()=>resolve(false);img.src='assets/click-to-sing.jpg';
+  }));
+  assert.ok(imageLoaded,'CLICK TO SING artwork must load at full resolution');
+  await page.locator('#idleScreen').click();
+  assert.ok(await page.locator('#idleScreen').isHidden());
+  const focused=await page.locator('#singerName').evaluate(el=>document.activeElement===el);
+  assert.equal(focused,true,'Landing tap must focus singer name input');
   const refresh=page.locator('#pageRefresh'),refreshRect=await refresh.boundingBox();
   assert.ok(refreshRect&&refreshRect.width>=48&&refreshRect.height>=48,'Refresh must be a large touch target');
   assert.ok(refreshRect.x+refreshRect.width<=viewport.width+2,'Refresh must fit at top right');
   await refresh.click();
   await page.locator('.song').first().waitFor({state:'attached'});
+  await page.waitForFunction(()=>!document.getElementById('idleScreen').disabled);
+  await page.locator('#idleScreen').click();
   assert.equal(await page.locator('#singerName').inputValue(),'');
   await page.locator('#singerName').fill('Jo');
   assert.ok(!await page.locator('#next').isEnabled(),'Two letters must not enable CHOOSE A SONG');
@@ -101,6 +117,7 @@ let server,browser;
   assert.ok(expanded.sendBottom<=expanded.viewport+2&&expanded.listHeight>40,'Expanded note should keep send button visible: '+JSON.stringify(expanded));
   await page.locator('#send').click();
   await page.locator('#success').waitFor({state:'visible'});
+  assert.ok(await page.locator('#idleScreen').isHidden(),'Success must temporarily replace landing');
   const confirmation=await page.evaluate(()=>{
    const box=document.getElementById('success'),rect=box.getBoundingClientRect(),
      paragraphs=box.querySelectorAll('p'),h=box.querySelector('h2'),
@@ -116,8 +133,22 @@ let server,browser;
   assert.ok(Math.abs(confirmation.center-confirmation.boxCenter)<26,'Success text must be vertically centered: '+JSON.stringify(confirmation));
   assert.ok(confirmation.paragraphSize>=18,'Success messages should be larger: '+JSON.stringify(confirmation));
   assert.ok(confirmation.gap>=10,'Confirmation paragraphs should be separated: '+JSON.stringify(confirmation));
+  if(viewport.width===1024){
+    await page.locator('#idleScreen').waitFor({state:'visible',timeout:12000});
+    assert.equal(await page.locator('#idleScreen').getAttribute('aria-label'),'Click anywhere to sing');
+    requestOpen=false;
+    await page.waitForFunction(()=>document.getElementById('idleScreen').disabled,{timeout:30000});
+    assert.equal(await page.locator('#idleScreen').getAttribute('aria-label'),'Requests closed');
+    requestOpen=true;
+    await page.waitForFunction(()=>!document.getElementById('idleScreen').disabled,{timeout:30000});
+    await page.locator('#idleScreen').click();
+    sessionActive=false;
+    await page.waitForFunction(()=>document.getElementById('idleScreen').disabled,{timeout:30000});
+    assert.equal(await page.locator('#idleScreen').getAttribute('aria-label'),'Requests closed');
+    sessionActive=true;
+  }
   assert.deepEqual(errors,[],'No page errors expected');
-  console.log('PASS signup scroll, send and confirmation at '+viewport.width+'x'+viewport.height);
+  console.log('PASS signup artwork, scroll, send and gate at '+viewport.width+'x'+viewport.height);
   await context.close();
  }
 })().catch(e=>{console.error(e);process.exitCode=1;}).finally(async()=>{if(browser)await browser.close();if(server)server.close();});
