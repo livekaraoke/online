@@ -94,7 +94,7 @@ const receiver=fs.readFileSync(path.join(root,'oldadmin/host/lyrics/prompter-rem
   assert.deepEqual(await target.evaluate(()=>window.__actions),executed);
   assert.deepEqual(writes.map(p=>p.action),expected,'One merged write per press');
   await target.evaluate(p=>window.__deliverRemote(p),writes.at(-1));
-  assert.equal((await target.evaluate(()=>window.__actions)).length,expected.length,'No duplicate execution');
+  assert.equal((await target.evaluate(()=>window.__actions)).length,executed.length,'No duplicate execution');
   assert.equal(await host.locator('#ls26PrompterRemoteStatus').textContent(),'Sent via Firestore','Do not claim device acknowledgement');
   deny=true;
   await host.locator('[data-remote="faster"]').click();
