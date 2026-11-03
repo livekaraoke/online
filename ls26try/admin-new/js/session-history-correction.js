@@ -31,10 +31,28 @@
     if(actualStart&&actualEnd&&actualEnd<actualStart)throw Error("Actual end cannot precede actual start.");
     return true;
   }
-  function titleFor(act,venue,start){
-    const date=toDate(start),prefix=asInput(date);
-    const token=prefix?prefix.slice(8,10)+"/"+prefix.slice(5,7):"";
-    return [String(act||"").trim()+" @ "+String(venue||"").trim(),token].filter(Boolean).join(" ");
+  const weekdays=["SUN","MON","TUE","WED","THU","FRI","SAT"];
+  function dateKey(start){
+    if(typeof start==="string" && /^\d{4}-\d{2}-\d{2}$/.test(start)) return start;
+    return asInput(start).slice(0,10);
   }
-  return {zone,toDate,asInput,parseInput,validateTimes,titleFor};
+  function withWeekday(title,start){
+    const name=String(title||"").trim();
+    const key=dateKey(start);
+    if(!key)return name;
+    const date=new Date(key+"T12:00:00Z");
+    if(Number.isNaN(date.getTime()))return name;
+    const token=key.slice(8,10)+"/"+key.slice(5,7);
+    const match=name.match(/^(.*?)(?:\s+(?:MON|TUE|WED|THU|FRI|SAT|SUN))?\s+(\d{2}\/\d{2})$/i);
+    // Leave custom titles and inconsistent date tokens unchanged.
+    if(!match||match[2]!==token)return name;
+    return match[1].trim()+" "+weekdays[date.getUTCDay()]+" "+token;
+  }
+  function titleFor(act,venue,start){
+    const key=dateKey(start);
+    const token=key?key.slice(8,10)+"/"+key.slice(5,7):"";
+    const plain=[String(act||"").trim()+" @ "+String(venue||"").trim(),token].filter(Boolean).join(" ");
+    return withWeekday(plain,start);
+  }
+  return {zone,toDate,asInput,parseInput,validateTimes,titleFor,withWeekday};
 });
