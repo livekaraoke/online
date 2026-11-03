@@ -12,7 +12,7 @@ const prompterHtml=fs.readFileSync(path.join(root,'oldadmin/host/lyrics/song.htm
 const performance=fs.readFileSync(path.join(root,'shared/performance.js'),'utf8');
 assert.match(viewerHtml,/lyricview-prompter-remote\.js\?v=20261028-bottom-anchor-v1/);
 assert.match(viewerHtml,/lyricview-prompter-remote\.css\?v=20261028-bottom-anchor-v1/);
-assert.match(prompterHtml,/prompter-remote-receiver\.js\?v=20261027-cross-tablet-v1/);
+assert.match(prompterHtml,/prompter-remote-receiver\.js\?v=20261103-remote-speed-v1/);
 assert.match(performance,/ls26:karaoke-tools-visibility/);
 assert.match(performance,/id="ls26ShowKaraoke"> Show karaoke tools<\/label>\s*<label class="ls26-karaoke-toggle"><input type="checkbox" id="ls26ShowPrompterRemote"> Show Prompter Remote/);
 assert.match(performance,/ls26:prompter-remote-visibility/);
@@ -61,8 +61,8 @@ assert.match(prompterHtml,/prompterScrollUp/);assert.match(prompterHtml,/prompte
   await press('toggle',()=>document.getElementById('scrollToggleBtn').textContent==='⏸');
   await host.waitForFunction(()=>document.getElementById('ls26PrompterRemotePlay')?.getAttribute('aria-pressed')==='true');
   assert.equal(await host.locator('#ls26PrompterRemotePlay').textContent(),'■');
-  await press('faster',()=>document.getElementById('scrollSpeedDisplay').textContent==='0.85x');
-  await host.waitForFunction(()=>document.getElementById('ls26PrompterRemoteSpeed').textContent==='0.85x');
+  await press('faster',()=>document.getElementById('scrollSpeedDisplay').textContent==='0.90x');
+  await host.waitForFunction(()=>document.getElementById('ls26PrompterRemoteSpeed').textContent==='0.90x');
   await press('slower',()=>document.getElementById('scrollSpeedDisplay').textContent==='0.80x');
   await press('up',()=>window.__actions.includes('up'));
   await press('down',()=>window.__actions.includes('down'));
