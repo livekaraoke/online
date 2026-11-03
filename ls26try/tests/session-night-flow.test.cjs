@@ -68,3 +68,39 @@ test("chart is mounted just above existing played-song list with responsive touc
  assert.match(css,/overflow-x:auto/);
  assert.doesNotMatch(lib,/firestore|onSnapshot|\.collection\(/i);
 });
+
+
+test("KEY is categorical and uses recorded key before its library fallback",()=>{
+ const songs=[
+  {songTitle:"A",key:"C",libraryKey:"Am"},
+  {songTitle:"B",performanceKey:"F#m",key:"G"},
+  {songTitle:"C",libraryKey:"Bb"},
+  {songTitle:"D",key:"Unknown",libraryKey:"Dm"},
+  {songTitle:"E",libraryKey:null}
+ ];
+ const model=night.buildModel(songs,[]);
+ assert.deepEqual(model.songs.map(s=>s.metrics.key),["C","F#m","Bb","Dm",null]);
+ assert.match(night.summary(model,"key"),/4\/5 with keys/);
+ const svg=night.renderSvg(model,"key",{width:700});
+ assert.match(svg,/width="700"/);
+ assert.match(svg,/>F#m<\/text>/);
+ assert.match(svg,/>Dm<\/text>/);
+ assert.match(svg,/data-flow-index="4"/);
+ assert.doesNotMatch(svg,/NaN/);
+});
+
+test("FIT ALL draws every point within one chart width for 28 songs",()=>{
+ const played=Array.from({length:28},(_,i)=>({songId:"song-"+i,songTitle:"Song "+i,performanceBpm:100+i}));
+ const model=night.buildModel(played,[]);
+ for(const width of [320,760,900]){
+  const svg=night.renderSvg(model,"bpm",{width});
+  assert.match(svg,new RegExp('viewBox="0 0 '+width+' 260"'));
+  assert.equal((svg.match(/data-flow-index=/g)||[]).length,28);
+  assert.doesNotMatch(svg,/NaN/);
+ }
+ const code=read("js/session-night-flow.js"),css=read("css/session-night-flow.css");
+ for(const action of ["in","out","fit"])assert.ok(code.includes('data-flow-zoom="'+action+'"'));
+ assert.match(code,/zoomLevels=\[1,1\.35,1\.8,2\.4,3\.2,4\.2\]/);
+ assert.match(css,/night-flow-zoom/);
+ assert.match(css,/min-height:44px/);
+});
