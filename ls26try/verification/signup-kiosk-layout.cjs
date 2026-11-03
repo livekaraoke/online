@@ -32,6 +32,16 @@ let server,browser;
    const url=route.request().url();
    if(route.request().method()==='POST'&&url.endsWith(':commit'))
      return route.fulfill({status:200,contentType:'application/json',headers:{'access-control-allow-origin':'*'},body:JSON.stringify({writeResults:[{},{}]})});
+   if(url.endsWith(':runQuery')){
+     const query=JSON.parse(route.request().postData());
+     assert.deepEqual(query.structuredQuery.select.fields.map(x=>x.fieldPath).sort(),['songId','status']);
+     assert.equal(query.structuredQuery.where.fieldFilter.value.stringValue,'s1');
+     const row=(songId,status)=>({document:{fields:{songId:{stringValue:songId},status:{stringValue:status}}}});
+     return route.fulfill({status:200,contentType:'application/json',headers:{'access-control-allow-origin':'*'},
+       body:JSON.stringify([row('song0','pending'),row('song1','played'),row('song2','cancelled')])});
+   }
+   if(url.includes('/publicSites/live-karaoke/views/live'))
+     return route.fulfill({status:404,contentType:'application/json',body:'{}'});
    const doc=url.includes('/signupKioskPublic')?discovery:url.includes('/signupKioskViews/')?view:null;
    if(!doc)throw Error('Unexpected Firestore call '+url);
    return route.fulfill({status:200,contentType:'application/json',headers:{'access-control-allow-origin':'*'},body:JSON.stringify(doc)});
@@ -46,8 +56,22 @@ let server,browser;
   await refresh.click();
   await page.locator('.song').first().waitFor({state:'attached'});
   assert.equal(await page.locator('#singerName').inputValue(),'');
+  await page.locator('#singerName').fill('Jo');
+  assert.ok(!await page.locator('#next').isEnabled(),'Two letters must not enable CHOOSE A SONG');
   await page.locator('#singerName').fill('Test singer');
+  assert.ok(await page.locator('#next').isEnabled(),'Three or more characters must enable CHOOSE A SONG');
+  await page.locator('#pageRefresh').click();
+  await page.locator('#refreshDialog').waitFor({state:'visible'});
+  assert.equal(await page.locator('#singerName').inputValue(),'Test singer','Custom refresh dialog retains unfinished data');
+  await page.locator('#refreshCancel').click();
+  assert.ok(await page.locator('#refreshDialog').isHidden());
   await page.locator('#next').click();
+  await page.waitForFunction(()=>document.querySelector('#songResults button').disabled);
+  assert.ok(!await page.locator('#songResults button').nth(0).isEnabled(),'Requested song unavailable');
+  assert.ok(!await page.locator('#songResults button').nth(1).isEnabled(),'Played song unavailable');
+  assert.ok(await page.locator('#songResults button').nth(2).isEnabled(),'Cancelled request allows new selection');
+  assert.equal(await page.locator('#songResults button').nth(0).locator('.song-unavailable').textContent(),'REQUESTED');
+  assert.equal(await page.locator('#songResults button').nth(1).locator('.song-unavailable').textContent(),'PLAYED');
   const layout=await page.evaluate(()=>{
    const list=document.getElementById('songResults'),send=document.getElementById('send'),bottom=document.getElementById('songBottom');
    const r=send.getBoundingClientRect(),b=bottom.getBoundingClientRect(),l=list.getBoundingClientRect();
@@ -68,6 +92,10 @@ let server,browser;
   assert.equal(layout.extraFooter,false,'Redundant song-screen footer must be absent');
   await page.locator('#songResults button').last().click();
   assert.ok(await page.locator('#send').isEnabled(),'Last song should be selectable');
+  assert.equal(await page.locator('#songResults button').last().locator('.song-symbol').textContent(),'✓');
+  assert.equal(await page.locator('#songResults button').nth(2).locator('.song-symbol').textContent(),'+');
+  const enabledColor=await page.locator('#send').evaluate(x=>getComputedStyle(x).backgroundColor);
+  assert.equal(enabledColor,'rgb(20, 107, 59)','SEND REQUEST turns green when song is selected');
   await page.locator('#noteToggle').click();
   const expanded=await page.evaluate(()=>({sendBottom:document.getElementById('send').getBoundingClientRect().bottom,viewport:Math.min(window.innerHeight,document.documentElement.clientHeight),listHeight:document.getElementById('songResults').clientHeight}));
   assert.ok(expanded.sendBottom<=expanded.viewport+2&&expanded.listHeight>40,'Expanded note should keep send button visible: '+JSON.stringify(expanded));
