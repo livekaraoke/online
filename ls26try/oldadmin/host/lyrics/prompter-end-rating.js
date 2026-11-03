@@ -22,6 +22,7 @@
   // One voting identity per page/song instance for corrections without
   // overwriting another singer's response. This is not an auth credential.
   let feedbackToken = '';
+  let feedbackRevision = 0;
   let savedInSession = false;
   const freshToken = () => (window.crypto?.randomUUID?.() ||
     Date.now().toString(36)+'-'+Math.random().toString(36).slice(2));
@@ -76,6 +77,7 @@
     if(lastSongKey===key)return;
     lastSongKey=key;
     feedbackToken=freshToken();
+    feedbackRevision=0;
     savedInSession=false;
     ++requestVersion;
     current=null;
@@ -201,6 +203,7 @@
           performanceId:String(info.item.performanceId),
           songId:info.songId,
           feedbackToken,
+          feedbackRevision:++feedbackRevision,
           rating:value,
           submittedAtMs,
           submittedAt:firebase.firestore.FieldValue.serverTimestamp()
@@ -243,7 +246,7 @@
     // keep the previous performance's rating across an explicit resend.
     if(lastSongKey===songKey()){
       ++requestVersion;
-      current=null;selected=null;feedbackToken=freshToken();savedInSession=false;buttons();
+      current=null;selected=null;feedbackToken=freshToken();feedbackRevision=0;savedInSession=false;buttons();
       if(reachedEnd)void refresh();
     }else clearForSong();
   });
