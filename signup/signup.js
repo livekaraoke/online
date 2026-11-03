@@ -54,7 +54,7 @@
     var text = trim(query).toLowerCase();
     return songs.filter(function (song) { return (song.title + ' ' + song.artist).toLowerCase().indexOf(text) !== -1; });
   }
-  function validForm(name, song, note) { return !!song && trim(name).length > 0 && trim(name).length <= 80 && String(note || '').length <= 300 && !/[<>]/.test(String(name) + String(note || '')); }
+  function validForm(name, song, note) { return !!song && trim(name).length >= 3 && trim(name).length <= 80 && String(note || '').length <= 300 && !/[<>]/.test(String(name) + String(note || '')); }
   function randomId() {
     var crypto = root.crypto || root.msCrypto, bytes, result = '', i;
     if (!crypto || !crypto.getRandomValues) { throw new Error('Secure request IDs are unavailable. Please ask the host.'); }
@@ -101,6 +101,7 @@
   var policy = root.LKSignupPolicy || {}, token = param('k', location.search), view = null, songs = [], selected = null;
   var discover = !tokenValid(token);
   var busy = false, loading = false, uncertain = false, timer = null, resetTimer = null, pending = null, songButtons = [];
+  var focusedName = false, dialogAction = null;
   var base = 'https://firestore.googleapis.com/v1/projects/' + policy.projectId + '/databases/(default)/documents';
   function el(id) { return document.getElementById(id); }
   function notice(text, ok) {
@@ -111,37 +112,44 @@
   }
   function nameValid() {
     var name = trim(el('singerName').value);
-    return name.length > 0 && name.length <= 80 && !/[<>]/.test(name);
+    return name.length >= 3 && name.length <= 80 && !/[<>]/.test(name);
   }
-  /* In old Safari the nested fieldset/flex box can grow to the entire list
-   * and clip its bottom controls. Measure the visible viewport, then give the
-   * list an explicit scrollable height and reserve space for SEND REQUEST. */
+  /* The song step has viewport-anchored geometry on its first paint. Only
+   * the inner song list receives an explicit height (iOS 9 Safari). */
   function layoutSongScreen() {
     var form = el('signupForm'), step = el('songStep'), bottom = el('songBottom');
-    var list = el('songResults'), hint = el('resultCount'), docHeight, viewport, pane, top, remaining;
+    var list = el('songResults'), hint = el('resultCount'), kiosk = el('kiosk');
+    var header = kiosk.getElementsByTagName('header')[0], top, listTop, available;
     if (step.hidden || form.hidden) { return; }
-    docHeight = document.documentElement.clientHeight || root.innerHeight || 768;
-    viewport = Math.min(root.innerHeight || docHeight, docHeight);
-    pane = Math.max(220, Math.floor(viewport - form.getBoundingClientRect().top - 10));
-    form.style.height = pane + 'px';
-    el('fields').style.height = pane + 'px';
-    step.style.height = pane + 'px';
-    top = Math.ceil(hint.getBoundingClientRect().bottom - step.getBoundingClientRect().top + 6);
-    remaining = Math.floor(pane - top - bottom.offsetHeight - 8);
-    list.style.top = top + 'px';
-    list.style.height = Math.max(40, remaining) + 'px';
+    top = Math.ceil(header.getBoundingClientRect().bottom - kiosk.getBoundingClientRect().top);
+    if (!el('notice').hidden) { top += el('notice').offsetHeight + 8; }
+    if (!el('refresh').hidden) { top += el('refresh').offsetHeight + 8; }
+    form.style.top = top + 'px';
+    form.style.height = '';
+    el('fields').style.height = '100%';
+    step.style.height = '100%';
+    listTop = Math.ceil(hint.getBoundingClientRect().bottom - step.getBoundingClientRect().top + 7);
+    available = step.clientHeight - listTop - bottom.offsetHeight - 8;
+    list.style.top = listTop + 'px';
+    list.style.height = Math.max(40, Math.floor(available)) + 'px';
+  }
+  function focusName() {
+    if (el('nameStep').hidden || el('fields').disabled || el('signupForm').hidden || !el('refreshDialog').hidden) { return; }
+    try { el('singerName').focus(); } catch (ignore) {}
   }
   function showStep(which) {
     el('nameStep').hidden = which !== 'name';
     el('songStep').hidden = which !== 'song';
     el('signupForm').className = which === 'song' ? 'song-active' : '';
     if (which === 'song') {
-      el('singerSummary').textContent = 'SINGER: ' + trim(el('singerName').value);
+      el('singerDisplay').textContent = trim(el('singerName').value);
       layoutSongScreen();
     } else {
+      el('signupForm').style.top = '';
       el('signupForm').style.height = '';
       el('fields').style.height = '';
       el('songStep').style.height = '';
+      if (!el('fields').disabled) { focusName(); }
     }
   }
   function ready() {
@@ -149,6 +157,10 @@
     el('fields').disabled = !available;
     el('next').disabled = !available || !nameValid();
     el('send').disabled = !available || !validForm(el('singerName').value, selected, el('note').value);
+    if (available && !el('nameStep').hidden && !focusedName) {
+      focusedName = true;
+      setTimeout(focusName, 0);
+    }
     el('refresh').disabled = busy || loading;
     el('pageRefresh').disabled = busy;
   }
@@ -244,7 +256,7 @@
   function resetForm() {
     el('singerName').value = ''; el('note').value = ''; el('songSearch').value = '';
     el('note').hidden = true; el('noteToggle').setAttribute('aria-expanded', 'false');
-    selected = null; pending = null; uncertain = false;
+    selected = null; pending = null; uncertain = false; focusedName = false;
     showStep('name'); showSelection(); el('songResults').scrollTop = 0; renderSongs(); ready();
   }
   el('signupForm').onsubmit = function (event) {
@@ -281,19 +293,38 @@
     el('noteToggle').setAttribute('aria-expanded', el('note').hidden ? 'false' : 'true');
     layoutSongScreen();
   };
+  function closeRefreshDialog() {
+    el('refreshDialog').hidden = true;
+    dialogAction = null;
+  }
+  function openRefreshDialog(message, confirmLabel, action) {
+    el('refreshMessage').textContent = message;
+    el('refreshConfirm').textContent = confirmLabel;
+    dialogAction = action;
+    el('refreshDialog').hidden = false;
+    el('refreshCancel').focus();
+  }
+  el('refreshCancel').onclick = closeRefreshDialog;
+  el('refreshConfirm').onclick = function () {
+    var action = dialogAction;
+    closeRefreshDialog();
+    if (action) { action(); }
+  };
   el('pageRefresh').onclick = function () {
     if (busy) { return; }
     if (uncertain) {
-      if (!root.confirm('Your previous request may have arrived. Ask the host before refreshing. Refresh anyway?')) { return; }
+      openRefreshDialog('Your last request may have been sent. Please check with the host before refreshing.',
+        'REFRESH ANYWAY', function () { root.location.reload(); });
     } else if (trim(el('singerName').value) || selected || trim(el('note').value)) {
-      if (!root.confirm('Refreshing will clear this unfinished request. Refresh now?')) { return; }
-    }
-    root.location.reload();
+      openRefreshDialog('Refreshing will clear the name and song currently being entered.',
+        'REFRESH PAGE', function () { root.location.reload(); });
+    } else { root.location.reload(); }
   };
   el('refresh').onclick = function () {
     if (uncertain) {
-      if (!window.confirm('Please check with the host whether the request arrived before starting again. Clear this form?')) { return; }
-      resetForm();
+      openRefreshDialog('Your last request may already be in the queue. Check with the host before clearing this form.',
+        'CLEAR FORM', function () { resetForm(); load(); });
+      return;
     }
     load();
   };
