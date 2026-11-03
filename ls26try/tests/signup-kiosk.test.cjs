@@ -35,3 +35,22 @@ test('pending queue handles missing/date/string timestamps without a render loop
  assert.equal(ctx.pendingRequestTime({}),0);assert.equal(ctx.pendingRequestTime({createdAt:'2026-01-01T00:00:00Z'}),Date.parse('2026-01-01T00:00:00Z'));
  assert.equal(ctx.pendingRequestTime({createdAt:{toMillis:()=>123}}),123);
 });
+
+test('two-step full-list page keeps Safari 9-compatible layout and separate submit',()=>{
+ const html=fs.readFileSync(path.join(root,'signup/sign up.html'),'utf8');
+ const css=fs.readFileSync(path.join(root,'signup/signup.css'),'utf8');
+ const script=fs.readFileSync(path.join(root,'signup/signup.js'),'utf8');
+ assert.match(html,/apple-mobile-web-app-capable" content="yes"/);
+ assert.match(html,/id="nameStep"/);
+ assert.match(html,/id="songStep"/);
+ assert.match(html,/id="next"/);
+ assert.match(html,/id="back"/);
+ assert.match(html,/id="cancel"/);
+ assert.doesNotMatch(html,/id="moreSongs"/);
+ assert.match(script,/for \(i = 0; i < songs.length; i \+= 1\)/);
+ assert.match(script,/button\.className = 'song' \+ \(item\.song\.id === song\.id \? ' selected' : ''\)/);
+ assert.match(css,/\.song\.selected \{ background: #155c36/);
+ assert.match(css,/height: 100vh/);
+ assert.match(script,/el\('next'\)\.onclick/);
+ assert.match(script,/el\('send'\)\.disabled/);
+});
