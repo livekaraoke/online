@@ -120,8 +120,9 @@
   function layoutSongScreen() {
     var form = el('signupForm'), step = el('songStep'), bottom = el('songBottom');
     var list = el('songResults'), hint = el('resultCount'), kiosk = el('kiosk');
-    var header = kiosk.getElementsByTagName('header')[0], top, listTop, available;
+    var header, top, listTop, available;
     if (step.hidden || form.hidden) { return; }
+    header = kiosk.getElementsByTagName('header')[0];
     top = Math.ceil(header.getBoundingClientRect().bottom - kiosk.getBoundingClientRect().top);
     if (!el('notice').hidden) { top += el('notice').offsetHeight + 8; }
     if (!el('refresh').hidden) { top += el('refresh').offsetHeight + 8; }
@@ -272,7 +273,7 @@
       button.appendChild(title); button.appendChild(artist); button.appendChild(symbol); button.appendChild(blocked);
       button.onclick = function () {
         if (songUnavailable(song.id)) { return; }
-        selected = song; updateSongStates();
+        selected = song; showSelection(); updateSongStates();
       };
       songButtons.push({song: song, button: button, symbol: symbol, status: blocked});
       fragment.appendChild(button);
