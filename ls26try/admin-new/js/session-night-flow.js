@@ -9,7 +9,8 @@
     bpm:{title:"BPM",color:"#00cafa",unit:" BPM"},
     year:{title:"RELEASE YEAR",color:"#f5bd56",unit:""},
     host:{title:"HOST REACTION",color:"#48dca4",unit:""},
-    singer:{title:"SINGER EXPERIENCE",color:"#bba2ff",unit:""}
+    singer:{title:"SINGER EXPERIENCE",color:"#bba2ff",unit:""},
+    key:{title:"KEY",color:"#f28cb0",unit:""}
   };
   const HOST={weak:1,average:2,good:3,great:4};
   const SINGER={notgreat:1,okay:2,good:3,amazing:4};
