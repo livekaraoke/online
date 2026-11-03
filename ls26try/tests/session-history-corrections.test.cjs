@@ -23,7 +23,7 @@ test('night gig schedule edits allow cross-midnight but reject negative interval
 });
 test('changing act or venue regenerates title with gig date, not current date',()=>{
  assert.equal(utils.titleFor('Roxanna','Black Gold Saloon',new Date('2026-11-03T00:30:00.000Z')),
-   'Roxanna @ Black Gold Saloon 03/11');
+   'Roxanna @ Black Gold Saloon TUE 03/11');
 });
 test('Session History shows venue and act above the four real editable timestamps',()=>{
  const source=read('js/performance-sessions.js');
@@ -133,10 +133,49 @@ test('archived venue reassignment transaction updates only this session, linked 
  assert.deepEqual(updated.map(x=>x.path),['upcomingEvents/g1','performanceSessions/s1','gigFinances/g1']);
  assert.equal(docs['performanceSessions/s1'].venueId,'v2');
  assert.equal(docs['performanceSessions/s1'].sessionType,'Roxanna');
- assert.equal(docs['performanceSessions/s1'].title,'Roxanna @ Black Gold Saloon 23/10');
- assert.equal(docs['upcomingEvents/g1'].name,'Roxanna @ Black Gold Saloon 23/10');
+ assert.equal(docs['performanceSessions/s1'].title,'Roxanna @ Black Gold Saloon FRI 23/10');
+ assert.equal(docs['upcomingEvents/g1'].name,'Roxanna @ Black Gold Saloon FRI 23/10');
  assert.equal(docs['gigFinances/g1'].venueId,'v2');
  assert.deepEqual(docs['performanceSessions/s1'].requestSnapshot,[{id:'request1'}]);
  assert.deepEqual(docs['performanceSessions/s1'].playedSongsSnapshot,[{id:'song1'}]);
  assert.equal(docs['performanceSessions/s1'].sessionCorrectionHistory.length,1);
+});
+
+
+test('weekday name follows the actual Malta gig date without duplicates or changing custom names',()=>{
+ assert.equal(utils.withWeekday('Live Karaoke @ Venue 03/11','2026-11-03'),'Live Karaoke @ Venue TUE 03/11');
+ assert.equal(utils.withWeekday('Roxanna @ Venue 01/08','2027-08-01'),'Roxanna @ Venue SUN 01/08');
+ assert.equal(utils.withWeekday('Solo @ Venue FRI 23/10','2026-10-23'),'Solo @ Venue FRI 23/10');
+ assert.equal(utils.withWeekday('Solo @ Venue MON 23/10','2026-10-23'),'Solo @ Venue FRI 23/10');
+ assert.equal(utils.withWeekday('Wedding Celebration','2026-10-23'),'Wedding Celebration');
+ assert.equal(utils.withWeekday('Solo @ Venue 24/10','2026-10-23'),'Solo @ Venue 24/10');
+ assert.equal(utils.titleFor('Solo','Venue','2026-10-23'),'Solo @ Venue FRI 23/10');
+});
+
+test('insights appear below session metrics and are expanded by default',()=>{
+ const js=read('js/performance-sessions.js'),css=read('css/performance-sessions.css');
+ assert.match(js,/<details class="history-gig-summary" open>/);
+ const bodyStart=js.indexOf('$("sessionModalContent").innerHTML');
+ const body=js.slice(bodyStart,js.indexOf('    $("sessionDetailModal").classList.remove',bodyStart));
+ const header=body.indexOf('<div class="session-detail-header">');
+ const metrics=body.indexOf('<div class="detail-grid history-session-metrics">');
+ const insights=body.indexOf('sessionHistorySummary(session, detail)');
+ const notes=body.indexOf('SESSION NOTES');
+ assert.ok(header>=0 && metrics>header && insights>metrics && notes>insights);
+ assert.match(css,/\.session-modal \.history-session-close/);
+});
+
+test('session close button is in the header below browser chrome, with no extra injected X',()=>{
+ const html=read('performance-sessions.html'),js=read('js/performance-sessions.js');
+ assert.match(html,/id="sessionDetailModal"[^>]*data-ls26-close="native"/);
+ assert.match(js,/class="history-session-close" onclick="closeSessionModal\(\)"/);
+ assert.match(read('css/performance-sessions.css'),/padding:18px 2px 14px!important/);
+});
+
+test('new sessions persist weekday name and archive displays it without altering the stored title',()=>{
+ const startup=read('js/sessions.js'),dashboard=read('admin.html'),history=read('js/performance-sessions.js');
+ assert.match(dashboard,/session-history-correction\.js\?v=20261103-weekday-names/);
+ assert.match(startup,/LS26SessionCorrection\?\.withWeekday/);
+ assert.match(history,/function displaySessionTitle\(session\)/);
+ assert.match(history,/esc\(displaySessionTitle\(session\)\)/);
 });
