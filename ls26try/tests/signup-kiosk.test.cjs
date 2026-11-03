@@ -9,7 +9,7 @@ test('ES5 syntax for every kiosk script and inline alias',()=>{
 test('disabled rollout blocks requests even with a valid kiosk token',()=>{
  const nodes={},document={getElementById(id){return nodes[id]||(nodes[id]={value:'',hidden:true,disabled:false,textContent:'',style:{},setAttribute(){}});},addEventListener(){}};
  const window={document,LKSignupPolicy:{rulesVerified:false,projectId:'demo-ls26-kiosk'},location:{search:'?k='+'a'.repeat(64)},addEventListener(){}};
- const context={window,document,location:window.location,clearTimeout(){},XMLHttpRequest(){throw Error('Disabled kiosk must not contact Firestore');}};
+ const context={window,document,location:window.location,clearTimeout(){},setTimeout(){},XMLHttpRequest(){throw Error('Disabled kiosk must not contact Firestore');}};
  vm.runInNewContext(fs.readFileSync(path.join(root,'signup/signup.js'),'utf8'),context);
  assert.equal(nodes.send.disabled,true);
  assert.ok(Object.values(nodes).some(n=>/HOST SETUP REQUIRED/.test(n.textContent)));
