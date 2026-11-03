@@ -20,7 +20,7 @@ let server,browser;let requestOpen=true,sessionActive=true;
   try{
    const file=path.join(root,decodeURIComponent(new URL(req.url,'http://localhost').pathname));
    if(!file.startsWith(root+path.sep))throw Error('Bad path');
-   res.setHeader('Content-Type',file.endsWith('.js')?'text/javascript':file.endsWith('.css')?'text/css':'text/html');
+   res.setHeader('Content-Type',file.endsWith('.js')?'text/javascript':file.endsWith('.css')?'text/css':file.endsWith('.jpg')?'image/jpeg':'text/html');
    res.end(fs.readFileSync(file));
   }catch(e){res.statusCode=404;res.end();}
  }).listen(0,'127.0.0.1');
@@ -55,6 +55,11 @@ let server,browser;let requestOpen=true,sessionActive=true;
   await page.locator('.song').first().waitFor({state:'attached'});
   await page.waitForFunction(()=>!document.getElementById('idleScreen').disabled);
   assert.equal(await page.locator('#idleScreen').getAttribute('aria-label'),'Click anywhere to sing');
+  const imageLoaded=await page.evaluate(()=>new Promise(resolve=>{
+    const img=new Image();img.onload=()=>resolve(img.naturalWidth>=1000&&img.naturalHeight>=1000);
+    img.onerror=()=>resolve(false);img.src='assets/click-to-sing.jpg';
+  }));
+  assert.ok(imageLoaded,'CLICK TO SING artwork must load at full resolution');
   await page.locator('#idleScreen').click();
   assert.ok(await page.locator('#idleScreen').isHidden());
   const focused=await page.locator('#singerName').evaluate(el=>document.activeElement===el);
