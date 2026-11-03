@@ -170,7 +170,7 @@ test('touch affordances, no browser confirm, viewport sizing and custom refresh 
  const script=fs.readFileSync(path.join(root,'signup/signup.js'),'utf8');
  assert.match(html,/id="refreshDialog"/);
  assert.match(html,/id="singerDisplay"/);
- assert.match(html,/autofocus required/);
+ assert.doesNotMatch(html,/autofocus/);
  assert.match(css,/#signupForm\.song-active \{ position: absolute; top: 66px;/);
  assert.match(css,/#singerDisplay \{ font-size: 27px/);
  assert.match(css,/\.note-toggle \{[^}]*font-size: 20px/);
@@ -220,4 +220,54 @@ test('cancel stays in the top-left header, returns to artwork and blurs the keyb
  assert.match(js,/reason === 'REQUESTED' \? 'ALREADY REQUESTED'/);
  assert.match(css,/background-size: auto 92%; -webkit-background-size: auto 92%/);
  assert.match(css,/background-position: center center/);
+});
+
+test('landing and repeat-song changes keep the keyboard unfocused until a user tap',()=>{
+ const html=fs.readFileSync(path.join(root,'signup/sign up.html'),'utf8');
+ const css=fs.readFileSync(path.join(root,'signup/signup.css'),'utf8');
+ const js=fs.readFileSync(path.join(root,'signup/signup.js'),'utf8');
+ assert.doesNotMatch(html,/autofocus/);
+ assert.match(html,/id="idleQueue"/);
+ assert.match(html,/id="queueNowSong"/);
+ assert.match(html,/id="queueNextSong3"/);
+ assert.match(html,/id="anotherSong"/);
+ assert.match(css,/\.idle-screen\.is-open \.idle-brand-art \{[^}]*height: 60%/);
+ assert.match(css,/background-size: auto 148%/);
+ assert.match(css,/\.idle-screen\.is-open \.idle-queue \{[^}]*height: 40%/);
+ assert.match(js,/el\('idleScreen'\)\.onclick = function/);
+ assert.match(js,/focusName\(\); \/\/ Synchronous with the physical tap/);
+ assert.doesNotMatch(js,/setTimeout\(focusName, 0\)/);
+ assert.match(js,/el\('anotherSong'\)\.onclick = function/);
+ assert.match(js,/repeatSinger = trim\(el\('singerName'\)\.value\)/);
+ assert.match(js,/refreshLandingQueue\(linked\)/);
+ assert.match(js,/publicSites\/live-karaoke\/views\/live/);
+ assert.doesNotMatch(js,/karaokeControl\/runOrder/);
+});
+test('public stage projection only includes the visible current and next three stage names',()=>{
+ const projection=require('../../js/public-live-projection.js');
+ const rows=[
+   {id:'a',songId:'a',songTitle:'On stage',singerName:'Alice',status:'playing',note:'SECRET'},
+   {id:'b',songId:'b',songTitle:'First up',singerName:'Bob',status:'queued',note:'SECRET'},
+   {id:'c',songId:'c',songTitle:'Second up',singerName:'Cara',status:'pending',note:'SECRET'},
+   {id:'d',songId:'d',songTitle:'Third up',singerName:'Dan',status:'queued',note:'SECRET'},
+   {id:'e',songId:'e',songTitle:'Fourth up',singerName:'Eve',status:'queued',note:'SECRET'},
+   {id:'f',songId:'f',songTitle:'Already played',singerName:'Frank',status:'played',note:'SECRET'}
+ ];
+ const input={control:{active:true,sessionId:'public-session',act:'live-karaoke',publicVisibility:'public'},
+   session:{id:'public-session',status:'active',publicVisibility:'public'},
+   event:{},karaoke:{songsEnabled:true},
+   run:{sessionId:'public-session',items:rows},requests:[]};
+ const publicView=projection.live(input,'live-karaoke');
+ assert.deepEqual(publicView.kioskQueue,{
+   current:{songTitle:'On stage',singerName:'Alice'},
+   next:[{songTitle:'First up',singerName:'Bob'},
+     {songTitle:'Second up',singerName:'Cara'},
+     {songTitle:'Third up',singerName:'Dan'}]
+ });
+ assert.ok(!JSON.stringify(publicView.kioskQueue).includes('Eve'));
+ assert.ok(!JSON.stringify(publicView.kioskQueue).includes('SECRET'));
+ assert.ok(!JSON.stringify(publicView.kioskQueue).includes('Frank'));
+ assert.deepEqual(projection.live(input,'roxanna').kioskQueue,{current:null,next:[]});
+ input.karaoke.songsEnabled=false;
+ assert.deepEqual(projection.live(input,'live-karaoke').kioskQueue,{current:null,next:[]});
 });
