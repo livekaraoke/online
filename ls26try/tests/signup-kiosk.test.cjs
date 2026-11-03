@@ -232,7 +232,7 @@ test('landing and repeat-song changes keep the keyboard unfocused until a user t
  assert.match(html,/id="queueNextSong3"/);
  assert.match(html,/id="anotherSong"/);
  assert.match(css,/\.idle-screen\.is-open \.idle-brand-art \{[^}]*height: 60%/);
- assert.match(css,/background-size: auto 148%/);
+ assert.match(css,/background-size: contain; -webkit-background-size: contain/);
  assert.match(css,/\.idle-screen\.is-open \.idle-queue \{[^}]*height: 40%/);
  assert.match(js,/el\('idleScreen'\)\.onclick = function/);
  assert.match(js,/focusName\(\); \/\/ Synchronous with the physical tap/);
