@@ -10,12 +10,13 @@
 <meta name="robots" content="noindex,nofollow">
 <title>Sign up to sing · Live Karaoke</title>
 <link rel="apple-touch-icon" href="../apple-touch-icon.png">
-<link rel="stylesheet" href="signup.css?v=20261103-idle-artwork">
+<link rel="stylesheet" href="signup.css?v=20261103-idle-polish">
 </head>
 <body>
 <main id="kiosk">
 <button id="idleScreen" class="idle-screen is-closed" type="button" aria-label="Requests closed" disabled></button>
 <header>
+  <button id="cancel" class="secondary cancel-button" type="button" hidden>CANCEL</button>
   <p class="brand">LIVE <strong>KARAOKE</strong></p>
   <button id="pageRefresh" class="page-refresh" type="button" title="Refresh signup page" aria-label="Refresh signup page"><span aria-hidden="true">&#8635;</span></button>
 </header>
@@ -36,9 +37,7 @@
   <section id="songStep" class="step" aria-label="Choose your song" hidden>
     <h1 class="song-step-title">CHOOSE YOUR SONG</h1>
     <div class="song-top">
-      <button id="back" class="secondary" type="button">BACK</button>
       <p id="singerSummary"><span class="singer-label">SINGER:</span> <strong id="singerDisplay"></strong></p>
-      <button id="cancel" class="secondary cancel-button" type="button">CANCEL</button>
     </div>
     <label for="songSearch" class="search-label">SEARCH SONG OR ARTIST</label>
     <div class="search">
@@ -73,5 +72,5 @@
 </div>
 </main>
 <script src="kiosk-policy.js?v=20261007-kiosk2"></script>
-<script src="signup.js?v=20261103-idle-artwork"></script>
+<script src="signup.js?v=20261103-idle-polish"></script>
 </body></html>
