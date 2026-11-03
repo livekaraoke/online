@@ -232,6 +232,43 @@
     return edit ? `${original} (EDIT: ${edit})` : original;
   }
 
+
+  function correctionCard(session,label,value,mode){
+    return '<div class="detail-card finished-session-editable"><span>'+esc(label)+'</span>'+
+      '<div class="finished-session-value-row"><strong>'+esc(value||"Not recorded")+'</strong>'+
+      '<button type="button" class="finished-session-edit-btn" aria-label="Correct '+esc(label)+'" '+
+      'title="Update recorded '+esc(label)+'" onclick="openSessionCorrection(\''+esc(session.id)+'\',\''+mode+'\')">✎</button>'+
+      '</div></div>';
+  }
+  function sessionHistorySummary(session,detail){
+    const api=window.LS26Intelligence;
+    if(!api?.summary)return "";
+    const data=api.summary({...session,playedSongsSnapshot:detail.played,requestSnapshot:detail.requests});
+    const stat=(label,v)=>'<div class="history-gig-stat"><span>'+esc(label)+'</span><strong>'+esc(v)+'</strong></div>';
+    const genres={},energy={},missing=new Set();
+    detail.played.forEach(row=>{
+      api.values(row.genre).forEach(g=>{genres[g]=(genres[g]||0)+1;});
+      const k=api.energy(row)||"unknown";energy[k]=(energy[k]||0)+1;
+      if(row.metadataMissing?.length)missing.add(row.songTitle||row.songId||"Unnamed");
+    });
+    const enumerated=values=>Object.entries(values).map(([k,n])=>k+": "+n).join(" · ")||"Not recorded";
+    return '<details class="history-gig-summary"><summary>'+
+      '<span>GIG SUMMARY</span><strong>'+esc(session.title||"Performance")+'</strong>'+
+      '<small>View performance insights</small></summary>'+
+      '<div class="history-gig-summary-body">'+
+      '<div class="history-gig-stats">'+stat("Songs started",data.played)+stat("Completed",data.completed)+
+      stat("Unknown finish",data.unknownEnds)+stat("Requests fulfilled",data.requestsFulfilled)+
+      stat("Unfulfilled",data.unfulfilled)+stat("Breaks",formatHours(data.breaks))+
+      stat("Performance time",formatHours(data.performance))+stat("Host-rated",data.rated)+'</div>'+
+      '<div class="history-gig-insights">'+
+      '<p><b>Genres</b> '+esc(enumerated(genres))+'</p>'+
+      '<p><b>Energy (1 low / 2 medium / 3 high)</b> '+esc(enumerated(energy))+'</p>'+
+      '<p><b>Positive host ratings</b> '+esc(data.favourites.map(x=>x.songTitle).filter(Boolean).join(", ")||"Not recorded")+'</p>'+
+      (missing.size?'<p><b>Metadata to review</b> '+esc([...missing].join(", "))+'</p>':'')+
+      '<small>Missing outcomes remain unrated. Venue rotation history is available separately.</small>'+
+      '</div></div></details>';
+  }
+
   function editableFinishedCard(session, field, label, original) {
     return `
       <div class="detail-card finished-session-editable">
@@ -606,7 +643,7 @@
         </div>`
       : "";
 
-    $("sessionModalContent").innerHTML = `${window.LS26GigSummary?.html({...session,playedSongsSnapshot:detail.played,requestSnapshot:detail.requests})||""}
+    $("sessionModalContent").innerHTML = `${sessionHistorySummary(session, detail)}
       <div class="session-detail-header">
         <h2>${esc(session.title || "Untitled Session")}</h2>
         <p>${esc(session.sessionType || session.type || "")}${session.venue ? ` • ${esc(session.venue)}` : ""}</p>
