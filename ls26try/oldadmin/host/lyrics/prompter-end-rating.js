@@ -22,6 +22,7 @@
   // One voting identity per page/song instance for corrections without
   // overwriting another singer's response. This is not an auth credential.
   let feedbackToken = '';
+  let savedInSession = false;
   const freshToken = () => (window.crypto?.randomUUID?.() ||
     Date.now().toString(36)+'-'+Math.random().toString(36).slice(2));
   const saveLocal = (value) => {
@@ -75,6 +76,7 @@
     if(lastSongKey===key)return;
     lastSongKey=key;
     feedbackToken=freshToken();
+    savedInSession=false;
     ++requestVersion;
     current=null;
     selected=null;
@@ -165,8 +167,8 @@
       status('Your choice is on this device only. No recorded performance was available to save it to Session History.');
       return;
     }
-    if(selected===value){
-      status('Your rating is already selected. Thank you!');
+    if(savedInSession && selected===value){
+      status('Your rating is already saved. Thank you!');
       return;
     }
     const info=current, ticket=requestVersion;
@@ -206,6 +208,7 @@
       }
       if(ticket===requestVersion && key===songKey()){
         selected=value;
+        savedInSession=true;
         saveLocal(value);
         current.record={...current.record,singerExperienceRating:value};
         status(value
@@ -240,7 +243,7 @@
     // keep the previous performance's rating across an explicit resend.
     if(lastSongKey===songKey()){
       ++requestVersion;
-      current=null;selected=null;feedbackToken=freshToken();buttons();
+      current=null;selected=null;feedbackToken=freshToken();savedInSession=false;buttons();
       if(reachedEnd)void refresh();
     }else clearForSong();
   });
