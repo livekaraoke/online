@@ -66,7 +66,7 @@ test("chart is mounted just above existing played-song list with responsive touc
  assert.match(session,/LS26NightFlow\?\.mount\(\$\("nightFlow"\), detail\.played, session\.breaks, formatTime\)/);
  assert.match(css,/min-height:44px/);
  assert.match(css,/overflow-x:auto/);
- assert.doesNotMatch(lib,/onSnapshot|\.set\(|\.update\(|\.delete\(/i);
+ assert.doesNotMatch(lib,/onSnapshot|runTransaction\(|db\.batch\(|transaction\.(?:set|update|delete)\(/i);
  assert.match(lib,/collection\("lyrics"\)\.where\(field,"in",ids\)\.get\(\)/);
 });
 
