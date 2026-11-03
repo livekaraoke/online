@@ -356,9 +356,12 @@
       return;
     }
 
-    const title =
+    const baseTitle =
       event.name ||
       `${event.type || "Performance"}${event.venue ? ` @ ${event.venue}` : ""}`;
+    const title = window.LS26SessionCorrection?.withWeekday(
+      baseTitle, event.date || event.scheduledStartAt
+    ) || baseTitle;
 
     const venue = event.venue || "Unknown Venue";
     const sessionType = event.type || "Other";
