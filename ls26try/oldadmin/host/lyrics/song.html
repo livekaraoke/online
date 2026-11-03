@@ -1273,6 +1273,12 @@ function renderLyrics(blocks) {
 
   blocks.forEach(block => {
 
+    // Legacy .js catalogues may carry a red [ END ] action. The Prompter
+    // already renders its own green end marker after the lyrics container.
+    // Suppress only this exact redundant action; keep song data untouched.
+    if (block.type === "action" &&
+        /^\[\s*END\s*\]$/i.test(String(block.text || "").trim())) return;
+
     if (
       block.type === "section-seperator" ||
       block.type === "blank-seperator"
