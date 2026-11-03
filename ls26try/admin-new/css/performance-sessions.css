@@ -792,3 +792,114 @@ body.sessions-body {
   background:rgba(87,57,155,.2)!important;
   color:#cbb6ff!important;
 }
+
+
+/* Session History corrections, responsive viewport and professional summary. */
+.session-modal{
+  padding:max(8px,env(safe-area-inset-top)) 10px max(8px,env(safe-area-inset-bottom))!important;
+  width:100vw!important;height:100dvh!important;max-height:100dvh!important;
+  overflow:hidden!important;align-items:center!important;justify-items:center!important;
+}
+.session-modal .session-modal-box{
+  box-sizing:border-box!important;width:min(1040px,100%)!important;
+  max-width:100%!important;min-width:0!important;
+  max-height:calc(100dvh - 20px)!important;
+  overflow-x:hidden!important;overflow-y:auto!important;
+  overscroll-behavior:contain;scrollbar-gutter:stable;
+  padding:14px!important;border-radius:12px!important;
+}
+.session-modal .ls26-modal-close-bar{
+  margin:-6px 0 8px!important;top:-14px!important;background:#061d2a!important;
+  border-bottom:1px solid #184254!important;min-height:47px!important;
+}
+.session-modal #sessionModalContent{min-width:0;overflow-wrap:anywhere}
+.session-modal .session-detail-header{padding:3px 0 10px!important;border-bottom:1px solid #214c62;margin-bottom:13px}
+.session-modal .session-detail-header h2{font-size:clamp(18px,2.8vw,23px)!important;line-height:1.3}
+.session-modal .session-detail-header p{font-size:13px!important}
+.session-modal .history-session-metrics{
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:9px!important;
+}
+.session-modal .history-session-metrics .detail-card{
+  min-width:0;padding:12px!important;border-radius:9px!important;
+}
+.session-modal .history-session-metrics .detail-card span{font-size:10px!important;letter-spacing:.07em}
+.session-modal .history-session-metrics .detail-card strong{
+  font-size:clamp(13px,1.7vw,16px)!important;line-height:1.45!important;
+  overflow-wrap:anywhere;white-space:normal;
+}
+.session-modal .finished-session-edit-btn{
+  flex:0 0 44px!important;width:44px!important;height:44px!important;min-height:44px!important;
+  font-size:19px!important;
+}
+.session-modal .history-session-id{margin:9px 0 16px;color:#7e9caf;font-size:11px;overflow-wrap:anywhere}
+.session-modal .detail-section{margin-top:22px!important}
+.session-modal .detail-section h3{padding-bottom:7px;border-bottom:1px solid #1d465a;font-size:14px!important}
+.history-gig-summary{
+  border:1px solid #286079;background:#051c2a;border-radius:10px;
+  margin-bottom:16px;overflow:hidden;
+}
+.history-gig-summary>summary{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;min-height:54px;
+  cursor:pointer;padding:12px 15px;list-style:none;
+}
+.history-gig-summary>summary::-webkit-details-marker{display:none}
+.history-gig-summary>summary::after{content:"⌄";margin-left:auto;color:#6fdcf6;font-size:19px}
+.history-gig-summary[open]>summary::after{content:"⌃"}
+.history-gig-summary>summary span{color:#00cafa;font-size:12px;font-weight:800;letter-spacing:.05em}
+.history-gig-summary>summary strong{color:#e9f6ff;font-size:14px}
+.history-gig-summary>summary small{color:#89aabb;font-size:11px}
+.history-gig-summary-body{padding:10px 13px 16px;border-top:1px solid #214a5e}
+.history-gig-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.history-gig-stat{background:#03131e;border:1px solid #204a5d;border-radius:8px;padding:11px;min-width:0}
+.history-gig-stat span{display:block;color:#95b2c3;font-size:11px}
+.history-gig-stat strong{display:block;margin-top:6px;font-size:19px;color:#f0f8ff}
+.history-gig-insights{padding:12px 3px 0;font-size:13px;line-height:1.5;color:#b9d1dd}
+.history-gig-insights p{margin:6px 0}.history-gig-insights b{color:#dff3ff}
+.history-gig-insights small{color:#83a1b1}
+
+/* Edit correction form sits above the session modal and scrolls internally. */
+.history-correction-modal{
+  position:fixed;inset:0;z-index:24000;display:grid;place-items:center;
+  padding:12px;background:rgba(0,7,14,.82);backdrop-filter:blur(4px);
+  max-height:100dvh;overflow:hidden;
+}
+.history-correction-modal.hidden{display:none!important}
+.history-correction-panel{
+  width:min(620px,100%);max-height:calc(100dvh - 24px);min-width:0;overflow-y:auto;
+  border:1px solid #2a6c83;border-radius:12px;background:#061c2b;color:#eaf7ff;
+  padding:16px;box-shadow:0 20px 65px #000a;overscroll-behavior:contain;
+}
+.history-correction-header{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:15px}
+.history-correction-header small{color:#00cafa;font-size:11px;font-weight:800}
+.history-correction-header h2{font-size:21px;margin:5px 0}
+.history-correction-x{width:44px;height:44px;flex:0 0 44px;border:1px solid #32647c;border-radius:8px;background:#092636;color:#fff;font-size:25px}
+.history-correction-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.history-correction-fields[hidden]{display:none!important}
+.history-correction-fields label{display:flex;flex-direction:column;gap:7px;color:#9ab9ca;font-weight:700;font-size:11px}
+.history-correction-fields input,.history-correction-fields select{
+  display:block;box-sizing:border-box;width:100%;min-width:0;min-height:48px;
+  background:#02131f;border:1px solid #286078;border-radius:7px;padding:10px;
+  color:#eff9ff;font-size:15px;color-scheme:dark;
+}
+.history-correction-warning{
+  color:#ffdb93;background:#3c270e85;border:1px solid #8d6732;
+  border-radius:8px;padding:12px;font-size:13px;line-height:1.5;margin:15px 0 7px;
+}
+.history-correction-message{color:#ffd17b;min-height:18px;font-size:13px}
+.history-correction-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:12px;flex-wrap:wrap}
+.history-correction-actions button{
+  min-height:46px;padding:10px 17px;border:1px solid #315d71;border-radius:8px;
+  background:#092638;color:#eefaff;font-weight:800;cursor:pointer;
+}
+.history-correction-actions button[type="submit"]{background:#064531;color:#7bf0b5;border-color:#149970}
+.history-correction-actions button:disabled{opacity:.55;cursor:wait}
+@media(max-width:640px){
+  .session-modal{padding:5px!important}
+  .session-modal .session-modal-box{max-height:calc(100dvh - 10px)!important;padding:12px!important}
+  .session-modal .history-session-metrics{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .history-gig-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .history-correction-fields{grid-template-columns:1fr}
+  .history-gig-summary>summary small{display:none}
+}
+@media(max-width:380px){.session-modal .history-session-metrics{grid-template-columns:1fr!important}}
