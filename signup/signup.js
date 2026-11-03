@@ -288,7 +288,7 @@
   }
   function showIdle(mode) {
     var closed = mode !== 'open', screen = el('idleScreen');
-    if (closed && screen.hidden && el('success').hidden && !busy) { resetForm(); }
+    if (closed && screen.hidden && !el('signupForm').hidden && el('success').hidden && !busy) { resetForm(); }
     if (closed) { clearTimeout(resetTimer); }
     screen.className = 'idle-screen ' + (closed ? 'is-closed' : 'is-open');
     screen.setAttribute('aria-label', closed ? 'Requests closed' : 'Click anywhere to sing');
