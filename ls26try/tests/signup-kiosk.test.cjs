@@ -132,3 +132,17 @@ test('publisher projects all 169 explicitly selected songs, even if global visib
  assert.ok(!JSON.stringify(projected).includes('PRIVATE'));
  assert.throws(()=>window.LS26SignupKiosk.projectSongs([{id:'missing',data:()=>({artist:'Artist'})}]),/title/);
 });
+
+test('semi-transparent touch-size refresh control works on all screens without silently dropping a request',()=>{
+ const html=fs.readFileSync(path.join(root,'signup/sign up.html'),'utf8');
+ const css=fs.readFileSync(path.join(root,'signup/signup.css'),'utf8');
+ const script=fs.readFileSync(path.join(root,'signup/signup.js'),'utf8');
+ assert.match(html,/id="pageRefresh"[^>]*aria-label="Refresh signup page"/);
+ assert.match(css,/\.page-refresh \{[^}]*width: 52px; height: 52px;/);
+ assert.match(css,/\.page-refresh \{[^}]*opacity: \.62;/);
+ assert.match(script,/el\('pageRefresh'\)\.onclick = function/);
+ assert.match(script,/root\.location\.reload\(\)/);
+ assert.match(script,/Refreshing will clear this unfinished request/);
+ assert.match(script,/Ask the host before refreshing/);
+ assert.match(script,/el\('pageRefresh'\)\.disabled = busy/);
+});

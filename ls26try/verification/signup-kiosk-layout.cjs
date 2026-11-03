@@ -40,6 +40,12 @@ let server,browser;
   const errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.goto('http://127.0.0.1:'+server.address().port+'/signup/sign%20up.html');
   await page.locator('.song').first().waitFor({state:'attached'});
+  const refresh=page.locator('#pageRefresh'),refreshRect=await refresh.boundingBox();
+  assert.ok(refreshRect&&refreshRect.width>=48&&refreshRect.height>=48,'Refresh must be a large touch target');
+  assert.ok(refreshRect.x+refreshRect.width<=viewport.width+2,'Refresh must fit at top right');
+  await refresh.click();
+  await page.locator('.song').first().waitFor({state:'attached'});
+  assert.equal(await page.locator('#singerName').inputValue(),'');
   await page.locator('#singerName').fill('Test singer');
   await page.locator('#next').click();
   const layout=await page.evaluate(()=>{
