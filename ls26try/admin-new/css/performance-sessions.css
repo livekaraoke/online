@@ -903,3 +903,48 @@ body.sessions-body {
   .history-gig-summary>summary small{display:none}
 }
 @media(max-width:380px){.session-modal .history-session-metrics{grid-template-columns:1fr!important}}
+
+
+/* Session history header: position the single close button with the title,
+   below the browser chrome rather than above the performance insights. */
+.session-modal .session-detail-header{
+  position:sticky!important;
+  top:0!important;
+  z-index:22!important;
+  display:flex!important;
+  align-items:flex-start!important;
+  justify-content:space-between!important;
+  gap:16px!important;
+  padding:18px 2px 14px!important;
+  margin:0 0 16px!important;
+  background:#061d2a!important;
+}
+.session-modal .history-session-heading{flex:1 1 auto;min-width:0}
+.session-modal .history-session-heading h2{
+  margin:0!important;
+  overflow-wrap:anywhere;
+}
+.session-modal .history-session-heading p{margin:5px 0 0!important}
+.session-modal .history-session-close{
+  flex:0 0 46px;
+  width:46px;
+  height:46px;
+  min-width:46px;
+  min-height:46px;
+  display:grid;
+  place-items:center;
+  border:1px solid #2f6077;
+  border-radius:8px;
+  background:#062333;
+  color:#eef8ff;
+  font-size:29px;
+  line-height:1;
+  padding:0;
+  cursor:pointer;
+}
+.session-modal .history-session-close:hover{border-color:#00cafa;background:#083047}
+.session-modal .history-session-close:focus-visible{outline:3px solid #00cafa;outline-offset:2px}
+.session-modal .history-gig-summary{margin-top:8px!important;margin-bottom:18px!important}
+@media(max-width:640px){
+  .session-modal .session-detail-header{padding-top:16px!important;gap:10px!important}
+}
