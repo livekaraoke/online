@@ -7,7 +7,7 @@ test('ES5 syntax for every kiosk script and inline alias',()=>{
  const html=fs.readFileSync(path.join(root,'signup/sign up.html'),'utf8');assert.doesNotMatch(html,/firebasejs|type="module"|framework|ls26try/);
 });
 test('disabled rollout blocks requests even with a valid kiosk token',()=>{
- const nodes={},document={getElementById(id){return nodes[id]||(nodes[id]={value:'',hidden:true,disabled:false,textContent:'',style:{}});},addEventListener(){}};
+ const nodes={},document={getElementById(id){return nodes[id]||(nodes[id]={value:'',hidden:true,disabled:false,textContent:'',style:{},setAttribute(){}});},addEventListener(){}};
  const window={document,LKSignupPolicy:{rulesVerified:false,projectId:'demo-ls26-kiosk'},location:{search:'?k='+'a'.repeat(64)},addEventListener(){}};
  const context={window,document,location:window.location,clearTimeout(){},XMLHttpRequest(){throw Error('Disabled kiosk must not contact Firestore');}};
  vm.runInNewContext(fs.readFileSync(path.join(root,'signup/signup.js'),'utf8'),context);
@@ -179,4 +179,25 @@ test('touch affordances, no browser confirm, viewport sizing and custom refresh 
  assert.match(css,/\.send:not\(:disabled\) \{ background: #146b3b/);
  assert.match(script,/openRefreshDialog\('Refreshing/);
  assert.doesNotMatch(script,/root\.confirm\(|window\.confirm\(/);
+});
+
+test('artwork and session gate, eight-second return, no new data model',()=>{
+ const html=fs.readFileSync(path.join(root,'signup/sign up.html'),'utf8');
+ const css=fs.readFileSync(path.join(root,'signup/signup.css'),'utf8');
+ const script=fs.readFileSync(path.join(root,'signup/signup.js'),'utf8');
+ assert.ok(fs.statSync(path.join(root,'signup/assets/click-to-sing.jpg')).size>100000);
+ assert.ok(fs.statSync(path.join(root,'signup/assets/requests-closed.jpg')).size>100000);
+ assert.match(html,/id="idleScreen" class="idle-screen is-closed"/);
+ assert.match(css,/\.idle-screen\.is-open \{ background-image: url\("assets\/click-to-sing\.jpg"\)/);
+ assert.match(css,/\.idle-screen\.is-closed \{ background-image: url\("assets\/requests-closed\.jpg"\)/);
+ assert.match(css,/background-size: contain/);
+ assert.match(script,/resetTimer = setTimeout\(function \(\) \{[\s\S]*?\}, 8000\)/);
+ assert.match(script,/songGate\.songsEnabled === true/);
+ assert.match(script,/control\.active === true && actual === linked/);
+ assert.match(script,/kiosk\.enabled === true/);
+ assert.match(script,/check\('karaokeControl\/currentSession', 'control'\)/);
+ assert.match(script,/check\('karaoke\/state', 'songGate'\)/);
+ assert.match(script,/check\('karaokeControl\/signupKioskPublic', 'kiosk'\)/);
+ assert.match(script,/focusName\(\); \/\/ Synchronous with the physical tap/);
+ assert.doesNotMatch(script,/setInterval/);
 });
