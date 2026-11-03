@@ -43,7 +43,7 @@
 }
 
 #ls26PrompterRemote .ls26-prompter-remote-stage-actions{display:grid;grid-template-columns:1fr 1fr;gap:7px}
-#ls26PrompterRemote #ls26PrompterInstrumental,#ls26PrompterRemote #ls26PrompterSongCue{min-height:52px;padding:8px 10px;font-size:13px;letter-spacing:.025em}
+#ls26PrompterRemote #ls26PrompterInstrumental,#ls26PrompterRemote #ls26PrompterSongCue{min-height:58px;padding:8px 10px;font-size:13px;letter-spacing:.025em}
 #ls26PrompterRemote #ls26PrompterInstrumental{border-color:#bf932c;background:#342a13;color:#ffe6a1}
 #ls26PrompterRemote #ls26PrompterInstrumental[aria-pressed="true"]{background:#77540a;color:#fff8d8}
 #ls26PrompterRemote #ls26PrompterSongCue{border-color:#10a879;background:#064438;color:#7fffd1}

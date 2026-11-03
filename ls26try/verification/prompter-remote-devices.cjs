@@ -19,9 +19,16 @@ const receiver=fs.readFileSync(path.join(root,'oldadmin/host/lyrics/prompter-rem
   await target.setContent('<button id="scrollToggleBtn">▶</button><span id="scrollSpeedDisplay">0.80x</span><button id="prompterScrollUp"></button><button id="prompterScrollDown"></button>');
   await target.evaluate(()=>{
     window.__actions=[];
+    window.autoScrollActive=false;
+    window.stopAutoScroll=()=>{
+      window.autoScrollActive=false;
+      document.getElementById('scrollToggleBtn').textContent='▶';
+    };
     window.toggleAutoScroll=()=>{
       const el=document.getElementById('scrollToggleBtn');
-      el.textContent=el.textContent==='▶'?'⏸':'▶';window.__actions.push('toggle');
+      el.textContent=el.textContent==='▶'?'⏸':'▶';
+      window.autoScrollActive=el.textContent==='⏸';
+      window.__actions.push('toggle');
     };
     window.changeScrollSpeed=d=>{
       const el=document.getElementById('scrollSpeedDisplay');
@@ -46,7 +53,7 @@ const receiver=fs.readFileSync(path.join(root,'oldadmin/host/lyrics/prompter-rem
   await host.exposeFunction('__testRemoteWrite',async (packet,merge)=>{
     if(deny)throw Error('permission-denied');
     assert.equal(merge,true);
-    assert.ok(['toggle','slower','faster','up','down'].includes(packet.action));
+    assert.ok(['song','instrumental','toggle','slower','faster','up','down'].includes(packet.action));
     writes.push(packet);
     await target.evaluate(p=>window.__deliverRemote(p),packet);
   });
@@ -63,7 +70,8 @@ const receiver=fs.readFileSync(path.join(root,'oldadmin/host/lyrics/prompter-rem
   await host.addScriptTag({content:sender});
   assert.equal(writes.length,0,'Initial ready check must not write to Firestore');
   assert.equal(await host.locator('#ls26PrompterRemotePlay').textContent(),'▶');
-  const expected=['toggle','faster','slower','up','down','toggle'];
+  const expected=['song','faster','slower','up','down','toggle'];
+  const executed=['toggle','faster','slower','up','down','toggle'];
   for(let i=0;i<expected.length;i++){
     await host.locator('[data-remote="'+expected[i]+'"]').click();
     await target.waitForFunction(n=>window.__actions.length===n,i+1);
@@ -72,7 +80,7 @@ const receiver=fs.readFileSync(path.join(root,'oldadmin/host/lyrics/prompter-rem
     if(i===2)assert.equal(await target.locator('#scrollSpeedDisplay').textContent(),'0.80x','Remote - must decrease by 0.10x');
     if(i===5)assert.equal(await host.locator('#ls26PrompterRemotePlay').textContent(),'▶');
   }
-  assert.deepEqual(await target.evaluate(()=>window.__actions),expected);
+  assert.deepEqual(await target.evaluate(()=>window.__actions),executed);
   assert.deepEqual(writes.map(p=>p.action),expected,'One merged write per press');
   await target.evaluate(p=>window.__deliverRemote(p),writes.at(-1));
   assert.equal((await target.evaluate(()=>window.__actions)).length,expected.length,'No duplicate execution');
