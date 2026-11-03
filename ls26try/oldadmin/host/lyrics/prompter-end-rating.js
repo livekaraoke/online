@@ -132,7 +132,7 @@
       }
       const item=chooseItem(run.items||[],song);
       if(!item){
-        status('Your song is not linked to a recorded performance yet. Ask the host.');
+        status('You can still rate, but this song is not linked to a recorded performance yet.');
         return;
       }
       const ref=db.collection('performanceSessions').doc(sessionId)
@@ -169,7 +169,7 @@
       selected=value;
       saveLocal(value);
       buttons();
-      status('Your choice is on this device only. No recorded performance was available to save it to Session History.');
+      status('Thanks! Your choice is remembered on this device. Session saving is unavailable right now.');
       return;
     }
     if(savedInSession && selected===value){
@@ -225,7 +225,8 @@
       if(ticket===requestVersion){
         // Keep controls available for another attempt. Never falsely report
         // an unsuccessful network write as saved to the session.
-        status('Could not save your rating to tonight’s session. Please tap again. '+error.message,true);
+        console.warn('Prompter singer feedback save failed:',error);
+        status('Could not save your rating right now. Please try again.',true);
       }
     }finally{working=false;buttons();}
   }
