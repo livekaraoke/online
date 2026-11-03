@@ -240,6 +240,11 @@
       'title="Update recorded '+esc(label)+'" onclick="openSessionCorrection(\''+esc(session.id)+'\',\''+mode+'\')">✎</button>'+
       '</div></div>';
   }
+  function displaySessionTitle(session){
+    const name=session.title||session.eventSnapshot?.name||"Untitled Session";
+    const date=scheduledStart(session)||session.eventSnapshot?.date||actualStart(session)||sessionStart(session);
+    return window.LS26SessionCorrection?.withWeekday(name,date)||name;
+  }
   function sessionHistorySummary(session,detail){
     const api=window.LS26Intelligence;
     if(!api?.summary)return "";
@@ -252,8 +257,8 @@
       if(row.metadataMissing?.length)missing.add(row.songTitle||row.songId||"Unnamed");
     });
     const enumerated=values=>Object.entries(values).map(([k,n])=>k+": "+n).join(" · ")||"Not recorded";
-    return '<details class="history-gig-summary"><summary>'+
-      '<span>GIG SUMMARY</span><strong>'+esc(session.title||"Performance")+'</strong>'+
+    return '<details class="history-gig-summary" open><summary>'+
+      '<span>GIG SUMMARY</span><strong>'+esc(displaySessionTitle(session))+'</strong>'+
       '<small>View performance insights</small></summary>'+
       '<div class="history-gig-summary-body">'+
       '<div class="history-gig-stats">'+stat("Songs started",data.played)+stat("Completed",data.completed)+
@@ -322,7 +327,7 @@
 
     panel.innerHTML = `
       <div class="current-session-grid">
-        <div class="session-metric"><span>ACTIVE SESSION</span><strong>${esc(active.title || "Untitled")}</strong></div>
+        <div class="session-metric"><span>ACTIVE SESSION</span><strong>${esc(displaySessionTitle(active))}</strong></div>
         <div class="session-metric"><span>VENUE</span><strong>${esc(active.venue || "-")}</strong></div>
         <div class="session-metric"><span>TYPE</span><strong>${esc(active.sessionType || active.type || "-")}</strong></div>
         <div class="session-metric"><span>SCHEDULED</span><strong>${formatTime(scheduledStart(active))}–${formatTime(scheduledEnd(active))}</strong></div>
@@ -381,7 +386,7 @@
         return `
           <tr>
             <td>${start + index + 1}</td>
-            <td>${esc(session.title || "Untitled")}</td>
+            <td>${esc(displaySessionTitle(session))}</td>
             <td>${esc(session.venue || "-")}</td>
             <td>${formatDate(scheduledS || actualS)}</td>
             <td>${formatTime(scheduledS)}</td>
@@ -643,10 +648,13 @@
         </div>`
       : "";
 
-    $("sessionModalContent").innerHTML = `${sessionHistorySummary(session, detail)}
+    $("sessionModalContent").innerHTML = `
       <div class="session-detail-header">
-        <h2>${esc(session.title || "Untitled Session")}</h2>
-        <p>${esc(session.sessionType || session.type || "")}${session.venue ? ` • ${esc(session.venue)}` : ""}</p>
+        <div class="history-session-heading">
+          <h2>${esc(displaySessionTitle(session))}</h2>
+          <p>${esc(session.sessionType || session.type || "")}${session.venue ? ` • ${esc(session.venue)}` : ""}</p>
+        </div>
+        <button type="button" class="history-session-close" onclick="closeSessionModal()" title="Close session details" aria-label="Close session details">×</button>
       </div>
 
       <div class="detail-grid history-session-metrics">
@@ -666,6 +674,8 @@
         <div class="detail-card"><span>SINGER LEFT</span><strong>${counts.abandoned}</strong></div>
       </div>
       <div class="history-session-id">Event reference: ${esc(session.eventId || "Not linked")}</div>
+
+      ${sessionHistorySummary(session, detail)}
 
       <div class="detail-section">
         <h3>SESSION NOTES</h3>
@@ -830,7 +840,7 @@
       const duration = durationValues(session);
 
       rows.push([
-        session.title || "",
+        displaySessionTitle(session),
         session.venue || "",
         session.sessionType || session.type || "",
         scheduledStart(session)?.toISOString() || "",
