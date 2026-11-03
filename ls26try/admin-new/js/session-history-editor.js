@@ -182,10 +182,13 @@
           tx.update(financeRef,{venueId:venueData.id,act,updatedAt:now});
         }
       });
+      const refresh=onSaved;
       alertMessage("Correction saved.");
       isSaving=false;
       close();
-      if(typeof onSaved==="function")await onSaved(id);
+      if(typeof refresh==="function"){
+        try{await refresh(id);}catch(refreshError){console.warn("Correction saved; could not refresh the view:",refreshError);}
+      }
     }catch(error){
       console.error("Session history correction failed:",error);
       alertMessage((error.code==="permission-denied"?
