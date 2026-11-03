@@ -43,6 +43,16 @@
       aboutShort:text(d.aboutShort,2000),aboutDetailed:text(d.aboutDetailed,12000)
     }};
   }
+  function stageQueue(input,sessionId){
+    const {run={},requests=[]}=input;
+    if(!sessionId||run.sessionId!==sessionId)return {current:null,next:[]};
+    const states=new Map(list(requests,500).filter(r=>r.sessionId===sessionId&&r.id).map(r=>[r.id,String(r.status||'').toLowerCase()]));
+    const eligible=policy.runItems(run,sessionId).filter(row=>!row.requestId||!policy.terminal.has(states.get(row.requestId)));
+    const current=eligible.find(row=>String(row.status||'').toLowerCase()==='playing')||null;
+    const stageRow=row=>({songTitle:text(row.songTitle||row.title||'',120),singerName:text(row.singerName||'',80)});
+    return {current:current?stageRow(current):null,
+      next:eligible.filter(row=>row!==current&&String(row.status||'').toLowerCase()!=='playing').slice(0,3).map(stageRow)};
+  }
   function live(input,act){
     if(!acts.includes(act))throw Error('Unknown public act.');
     const {control={},session={},event:sourceEvent={},karaoke={},run={},requests=[]}=input;
@@ -57,10 +67,7 @@
     // Only a singer's public stage name and song title for NOW + next three.
     // Never publish notes, contact details, full run order or non-karaoke acts.
     const queueEnabled=act==='live-karaoke'&&active&&karaoke.songsEnabled===true;
-    const currentRow=queueEnabled?eligible.find(row=>String(row.status||'').toLowerCase()==='playing'):null;
-    const stageRow=row=>({songTitle:text(row.songTitle||row.title||'',120),singerName:text(row.singerName||'',80)});
-    const nextRows=queueEnabled?eligible.filter(row=>row!==currentRow&&String(row.status||'').toLowerCase()!=='playing').slice(0,3):[];
-    const kioskQueue={current:currentRow?stageRow(currentRow):null,next:nextRows.map(stageRow)};
+    const kioskQueue=queueEnabled?stageQueue(input,sessionId):{current:null,next:[]};
     const availability=[];
     // Public availability contains song/status only, never requester names, notes,
     // demographics, device IDs, email hashes, capability tokens or timing.
@@ -81,5 +88,5 @@
         preSessionRequestSessionId:pre?sessionId:'',preSessionRequestEventId:pre?id(sourceEvent.id):''},
       run:{sessionId:active?sessionId:'',items},availability,kioskQueue};
   }
-  return Object.freeze({event,events,settings,live});
+  return Object.freeze({event,events,settings,live,stageQueue});
 });

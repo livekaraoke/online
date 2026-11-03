@@ -11,7 +11,7 @@ function fixture(email='leeborg23@gmail.com'){
  const read=(p,query)=>query?{docs:Object.keys(records).filter(key=>key.startsWith(p+'/')&&key.split('/').length===p.split('/').length+1).map(snap).filter(s=>query.filters.every(([f,op,v])=>{const x=f==='__name__'?s.id:s.data()[f];return op==='in'?v.includes(x):op==='=='?x===v:op==='>='?x>=v:true;})).slice(0,query.limit),metadata:{fromCache:false}}:snap(p);
  function update(p,d){records[p]=d;for(const l of [...listeners])if(l.p===p||(l.ids&&p.startsWith(l.p+'/')))l.fn(read(l.p,l.ids));}
  function ref(p,ids){return{path:p,id:p.split('/').pop(),collection:n=>ref(p+'/'+n),doc:n=>ref(p+'/'+n),where:(f,op,v)=>ref(p,{filters:[...(ids?.filters||[]),[f,op,v]],limit:ids?.limit||Infinity}),orderBy:()=>ref(p,ids),limit:n=>ref(p,{filters:ids?.filters||[],limit:n}),get:async()=>read(p,ids),set:async(d,o)=>{writes.push(p);update(p,o?.merge?{...records[p],...d}:d);},onSnapshot(options,next){const fn=typeof options==='function'?options:next;const l={p,ids,fn};listeners.add(l);queueMicrotask(()=>fn(read(p,ids)));return()=>listeners.delete(l);}};}
- const db={collection:n=>ref(n),runTransaction:async fn=>fn({get:r=>{transactionReads.push(r.path);return r.get();},set:(r,d)=>r.set(d)})};
+ const db={collection:n=>ref(n),runTransaction:async fn=>fn({get:r=>{transactionReads.push(r.path);return r.get();},set:(r,d)=>r.set(d),update:(r,d)=>r.set(d,{merge:true})})};
  const user={email},auth={currentUser:user,onAuthStateChanged(fn){queueMicrotask(()=>fn(user));return()=>{};}};
  const firestore=()=>db;firestore.FieldPath={documentId:()=> '__name__'};firestore.Timestamp={fromMillis:n=>({toMillis:()=>n})};
  const context={URL,Map,Set,Promise,JSON,Object,String,Array,Error,Date,setTimeout,clearTimeout,setInterval,clearInterval,navigator:{},LKCatalogueProjection:projection,
@@ -50,4 +50,38 @@ test('one owner leader publishes live/event/settings views, shares source listen
   f.update('karaokeControl/currentSession',{active:false});await settle();assert.equal(f.records[livePath].sessionId,'');assert.equal(f.records[livePath].expiresAt,null);
   await f.publisher.disableLive();await settle();assert.equal([...f.listeners].some(l=>l.p==='publicSongRequests'),false);
  }finally{f.close();}
+});
+
+test('explicit kiosk publishes its own safe queue even when public website hides a test gig',async()=>{
+  const f=fixture();
+  try{
+    await f.publisher.enable();
+    await f.publisher.enableLive();
+    await settle();
+    f.update('karaokeControl/signupKioskPublic',{schemaVersion:1,enabled:true,token:'a'.repeat(64)});
+    f.update('karaokeControl/currentSession',{active:true,sessionId:'gig',eventId:'event',type:'Live Karaoke',venue:'0 The Test Venue'});
+    f.update('karaokeControl/runOrder',{sessionId:'gig',items:[
+      {id:'1',songTitle:'Playing song',singerName:'Anna',status:'playing',note:'PRIVATE'},
+      {id:'2',songTitle:'First queued',singerName:'Bob',status:'queued',hostNote:'PRIVATE'},
+      {id:'3',songTitle:'Second queued',singerName:'Cara',status:'queued'},
+      {id:'4',songTitle:'Third queued',singerName:'Dan',status:'queued'},
+      {id:'5',songTitle:'Fourth queued',singerName:'Eve',status:'queued'}
+    ]});
+    await settle();
+    const doc=f.records['karaokeControl/signupKioskPublic'];
+    assert.equal(doc.queueSessionId,'gig');
+    assert.deepEqual(JSON.parse(JSON.stringify(doc.kioskQueue)),{
+      current:{songTitle:'Playing song',singerName:'Anna'},
+      next:[{songTitle:'First queued',singerName:'Bob'},
+        {songTitle:'Second queued',singerName:'Cara'},
+        {songTitle:'Third queued',singerName:'Dan'}]
+    });
+    assert.equal(JSON.stringify(doc.kioskQueue).includes('PRIVATE'),false);
+    assert.equal(JSON.stringify(doc.kioskQueue).includes('Eve'),false);
+    assert.equal(f.records['publicSites/live-karaoke/views/live'].sessionId,'','The general public website remains hidden for test gigs');
+    assert.equal([...f.listeners].filter(l=>l.p==='karaokeControl/runOrder').length,1,'Kiosk reuses the host Run Order listener');
+    f.update('karaoke/state',{songsEnabled:false});await settle();
+    assert.equal(f.records['karaokeControl/signupKioskPublic'].queueSessionId,'');
+    assert.deepEqual(JSON.parse(JSON.stringify(f.records['karaokeControl/signupKioskPublic'].kioskQueue)),{current:null,next:[]});
+  }finally{f.close();}
 });
