@@ -104,3 +104,43 @@ test("FIT ALL draws every point within one chart width for 28 songs",()=>{
  assert.match(css,/night-flow-zoom/);
  assert.match(css,/min-height:44px/);
 });
+
+
+test("RELEASE YEAR reads saved song library by ID and preserves unavailable years",async()=>{
+ const rows=[
+  {songId:"a",songTitle:"First",performanceBpm:120},
+  {songId:"a",songTitle:"Repeated"},
+  {songId:"b",songTitle:"Second",releaseYear:1991,key:"C"},
+  {songId:"c",songTitle:"Third"},
+  {songId:"orphan",songTitle:"Missing",key:"Em"}
+ ];
+ const cache=new Map(),reads=[];
+ const lookup=async ids=>{
+  reads.push([...ids]);
+  return {a:{year:"1989",key:"Am"},c:{year:2001,key:"Gm"}};
+ };
+ const enriched=await night.enrichPlayed(rows,lookup,cache);
+ assert.deepEqual(reads,[["a","c","orphan"]]);
+ assert.deepEqual(enriched.map(x=>night.valueOf(x,"year")),[1989,1989,1991,2001,null]);
+ assert.deepEqual(enriched.map(x=>night.valueOf(x,"key")),["Am","Am","C","Gm","Em"]);
+ assert.match(night.summary(night.buildModel(enriched,[]),"year"),/4\/5 dated · 1989–2001/);
+ await night.enrichPlayed(rows,lookup,cache);
+ assert.equal(reads.length,1,"cache prevents redundant Firestore reads");
+ assert.equal(cache.get("orphan"),null,"unavailable metadata stays unknown");
+ assert.equal(rows[0].year,undefined,"the session archive is never modified");
+});
+
+test("28 songs use batched indexed queries, not a whole-library read",async()=>{
+ const rows=Array.from({length:28},(_,i)=>({songId:"id-"+i,songTitle:"Song "+i}));
+ const groups=[];
+ const updated=await night.enrichPlayed(rows,async ids=>{
+  groups.push(ids);
+  return Object.fromEntries(ids.map((id,i)=>[id,{year:1990+i,key:"A"}]));
+ },new Map());
+ assert.deepEqual(groups.map(g=>g.length),[10,10,8]);
+ assert.equal(updated.length,28);
+ assert.equal(updated.every(row=>row.libraryKey==="A"),true);
+ const source=read("js/session-night-flow.js");
+ assert.match(source,/collection\("lyrics"\)\.where\(field,"in",ids\)\.get\(\)/);
+ assert.doesNotMatch(source,/collection\("lyrics"\)\.get\(\)/);
+});
