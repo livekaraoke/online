@@ -123,7 +123,7 @@
   function layoutSongScreen() {
     var form = el('signupForm'), step = el('songStep'), bottom = el('songBottom');
     var list = el('songResults'), hint = el('resultCount'), kiosk = el('kiosk');
-    var header, top, listTop, bottomTop, visibleBottom;
+    var header, top, listTop, visibleBottom;
     if (step.hidden || form.hidden) { return; }
     header = kiosk.getElementsByTagName('header')[0];
     top = Math.ceil(header.getBoundingClientRect().bottom - kiosk.getBoundingClientRect().top);
@@ -133,21 +133,28 @@
     form.style.height = '';
     el('fields').style.height = '100%';
     step.style.height = '100%';
-    /* Android's visual viewport can be smaller than the CSS viewport when
-     * the browser bars/keyboard animate. Keep SEND above its bottom edge. */
+    /* iOS Home Screen web apps can report innerHeight larger than the CSS
+     * fixed-position viewport. Do not treat this difference as keyboard space. */
     visibleBottom = Math.min(root.innerHeight || step.clientHeight,
       document.documentElement.clientHeight || root.innerHeight || step.clientHeight);
     if (root.visualViewport && root.visualViewport.height) {
       visibleBottom = Math.min(visibleBottom,
         root.visualViewport.offsetTop + root.visualViewport.height);
     }
-    bottom.style.bottom = Math.max(8, Math.ceil((root.innerHeight || visibleBottom) - visibleBottom) + 8) + 'px';
+    var standalone = !!(root.navigator && root.navigator.standalone === true);
+    var bottomInset = standalone ? 8 :
+      Math.max(8, Math.ceil((root.innerHeight || visibleBottom) - visibleBottom) + 8);
+    if (standalone && root.visualViewport && root.visualViewport.height) {
+      // On newer iOS, continue to lift SEND above the visible keyboard.
+      var visibleFrame = document.documentElement.clientHeight || visibleBottom;
+      bottomInset = Math.max(8, Math.ceil(visibleFrame - visibleBottom) + 8);
+    }
+    bottom.style.bottom = bottomInset + 'px';
     listTop = Math.ceil(hint.getBoundingClientRect().bottom + 7);
-    bottomTop = bottom.getBoundingClientRect().top;
-    // CSS calculates the remaining height from viewport top/bottom anchors.
-    // A delayed iPad reflow cannot leave a stale, short pixel height behind.
+    // The list and note/SEND panel are both fixed and share CSS bottom
+    // coordinates. Anchor directly to the panel height, never innerHeight.
     list.style.top = listTop + 'px';
-    list.style.bottom = Math.max(8, Math.ceil((root.innerHeight || visibleBottom) - bottomTop + 8)) + 'px';
+    list.style.bottom = Math.ceil(bottom.offsetHeight + bottomInset + 8) + 'px';
     list.style.height = 'auto';
   }
   var layoutSettledTimer = null;

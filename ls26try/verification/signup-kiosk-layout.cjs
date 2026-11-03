@@ -40,8 +40,18 @@ let server,browser;let requestOpen=true,sessionActive=true;
  }).listen(0,'127.0.0.1');
  await new Promise(resolve=>server.on('listening',resolve));
  browser=await chromium.launch({headless:true,args:['--no-sandbox']});
- for(const viewport of [{width:1024,height:768},{width:768,height:1024},{width:375,height:667},{width:960,height:1536}]){
+ for(const viewport of [{width:1024,height:768},{width:768,height:1024},
+   {width:768,height:1024,standalone:true},{width:375,height:667},{width:960,height:1536}]){
   const context=await browser.newContext({viewport,hasTouch:true});
+  if(viewport.standalone){
+   // Emulate old iPad Home Screen: the fixed viewport is 1024px high,
+   // but window.innerHeight initially reports additional phantom space.
+   await context.addInitScript(()=>{
+    Object.defineProperty(navigator,'standalone',{configurable:true,value:true});
+    const measured=window.innerHeight;
+    Object.defineProperty(window,'innerHeight',{configurable:true,get:()=>measured+112});
+   });
+  }
   await context.route('https://firestore.googleapis.com/**',route=>{
    const url=route.request().url();
    if(route.request().method()==='POST'&&url.endsWith(':commit'))
@@ -158,7 +168,7 @@ let server,browser;let requestOpen=true,sessionActive=true;
    return {scrollHeight:list.scrollHeight,clientHeight:list.clientHeight,scrolled,
     sendBottom:r.bottom,panelBottom:b.bottom,listBottom:l.bottom,
     gapBeforeFooter:b.top-l.bottom,position:getComputedStyle(list).position,
-    heightRule:list.style.height,
+    heightRule:list.style.height,footerInset:getComputedStyle(bottom).bottom,
     viewport:Math.min(window.innerHeight,document.documentElement.clientHeight),
     buttons:list.querySelectorAll('button').length,
     extraFooter:!!document.getElementById('songFooter')};
@@ -170,6 +180,8 @@ let server,browser;let requestOpen=true,sessionActive=true;
   assert.ok(layout.panelBottom<=layout.viewport+2,'Bottom request panel must be in viewport: '+JSON.stringify(layout));
   assert.equal(layout.position,'fixed','List should fill space using viewport anchors, not stale fieldset height');
   assert.equal(layout.heightRule,'auto','Do not cache a short first-render height');
+  if(viewport.standalone)assert.equal(layout.footerInset,'8px',
+    'Home Screen mode must not mistake an innerHeight discrepancy for keyboard space');
   assert.ok(layout.gapBeforeFooter>=4&&layout.gapBeforeFooter<=14,
     'Song list must reach the note/SEND panel on the first opening, no empty gap: '+JSON.stringify(layout));
   assert.equal(layout.extraFooter,false,'Redundant song-screen footer must be absent');

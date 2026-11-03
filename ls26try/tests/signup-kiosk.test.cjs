@@ -86,7 +86,8 @@ test('iPad 2 scroll pane reserves request panel and allows complete list scroll'
  assert.match(css,/\.songs \{ position: fixed;[^}]*overflow-y: scroll/);
  assert.match(css,/\.song-bottom \{ position: absolute;[^}]*bottom: 0/);
  assert.match(script,/list\.style\.height = 'auto'/);
- assert.match(script,/list\.style\.bottom = Math\.max\(8,/);
+ assert.match(script,/list\.style\.bottom = Math\.ceil\(bottom\.offsetHeight \+ bottomInset \+ 8\)/);
+ assert.match(script,/root\.navigator\.standalone === true/);
  assert.match(script,/bottom\.getBoundingClientRect\(\)\.top/);
  assert.match(css,/\.song-bottom \{[^}]*position: fixed; bottom: 8px/);
  assert.match(script,/root\.addEventListener\('orientationchange', settleSongLayout\)/);
