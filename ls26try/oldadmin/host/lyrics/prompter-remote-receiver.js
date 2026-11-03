@@ -5,13 +5,33 @@
 (() => {
   'use strict';
   const CHANNEL='ls26-prompter-remote-v1',STORAGE='ls26:prompter-remote-command-v1';
-  const valid=new Set(['status','toggle','slower','faster','up','down']);
+  const valid=new Set(['status','toggle','slower','faster','up','down','instrumental','song']);
   const seen=new Set();
   let channel=null,unsubscribeRemote=null,firstCloudSnapshot=true,lastCloudId='';
+  let mode='waiting';
+  // Presentation-only gate: no extra scroll engine or session history writes.
+  const stage=document.createElement('div');
+  stage.id='ls26SingerRemoteStage';
+  stage.setAttribute('aria-live','polite');
+  stage.innerHTML='<div class="ls26-singer-stage-cue"><strong>INSTRUMENTAL</strong><span>(wait for signal)</span></div>';
+  document.body.appendChild(stage);
+  const applyMode=next=>{
+    if(!['waiting','running','instrumental','ended'].includes(next))return;
+    if(next!=='running'&&typeof stopAutoScroll==='function')stopAutoScroll();
+    mode=next;
+    document.body.dataset.ls26SingerStage=next;
+    if(next==='running'&&typeof autoScrollActive!=='undefined'&&!autoScrollActive&&typeof toggleAutoScroll==='function')toggleAutoScroll();
+    window.dispatchEvent(new CustomEvent('ls26:prompter-stage-changed',{detail:{mode:next}}));
+  };
+  applyMode('waiting');
+  window.addEventListener('ls26:prompter-song-changed',()=>{
+    applyMode('waiting');
+    state('song-'+Date.now());
+  });
   const state=id=>{
     const label=document.getElementById('scrollToggleBtn')?.textContent?.trim()||'';
     const speed=document.getElementById('scrollSpeedDisplay')?.textContent?.trim()||'';
-    const packet={v:1,kind:'state',id,playing:label==='⏸',speed,at:Date.now()};
+    const packet={v:1,kind:'state',id,playing:label==='⏸',speed,mode,at:Date.now()};
     try{channel?.postMessage(packet);}catch(_){}
     try{localStorage.setItem(STORAGE,JSON.stringify(packet));}catch(_){}
   };
@@ -23,7 +43,15 @@
     try {
       switch(packet.action){
         case 'toggle':
-          if(typeof toggleAutoScroll==='function')toggleAutoScroll();
+          if(mode==='running'&&typeof toggleAutoScroll==='function')toggleAutoScroll();
+          break;
+        case 'instrumental':
+          if(mode==='running')applyMode('instrumental');
+          else if(mode==='instrumental')applyMode('running');
+          break;
+        case 'song':
+          if(mode==='waiting'||mode==='ended')applyMode('running');
+          else applyMode('ended');
           break;
         case 'slower':
           if(typeof changeScrollSpeed==='function')changeScrollSpeed(-0.10);
@@ -32,10 +60,10 @@
           if(typeof changeScrollSpeed==='function')changeScrollSpeed(0.10);
           break;
         case 'up':
-          document.getElementById('prompterScrollUp')?.click();
+          if(mode==='running')document.getElementById('prompterScrollUp')?.click();
           break;
         case 'down':
-          document.getElementById('prompterScrollDown')?.click();
+          if(mode==='running')document.getElementById('prompterScrollDown')?.click();
           break;
       }
     }catch(error){console.warn('Prompter remote command failed:',error);}

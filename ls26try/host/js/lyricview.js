@@ -2312,6 +2312,9 @@
       window.dispatchEvent(new Event("ls26:song-finished"));
       await publishSingerSongFinished();
       showEndCompletionPanel(true);
+      // Reuse existing Next Song renderer without navigating automatically.
+      try{await renderEndNextSongDetails();}
+      catch(error){console.warn("Could not render next song:",error);}
       // Completion is about recording and rating the song, not loading Next.
       if ($("endSessionActions")) $("endSessionActions").hidden=false;
       syncEndSessionActions();

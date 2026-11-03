@@ -132,3 +132,22 @@
   }
   #prompterEndRating .prompter-rating-inner{padding:16px 10px;}
 }
+
+/* Remote singer cue; original lyric formatting and rating form remain intact. */
+#lyrics-container,#prompterEndMarker{transition:opacity .85s ease}
+#ls26SingerRemoteStage{position:fixed;inset:0;z-index:2900;display:grid;place-items:center;background:rgba(0,12,20,.48);opacity:0;pointer-events:none;transition:opacity .8s ease;touch-action:none}
+#ls26SingerRemoteStage .ls26-singer-stage-cue{max-width:calc(100vw - 32px);box-sizing:border-box;padding:30px 38px;border:2px solid #13d9c0;border-radius:18px;background:rgba(2,31,41,.97);box-shadow:0 12px 56px rgba(0,0,0,.65);display:grid;gap:12px;text-align:center;color:#b9fff0;font-family:Verdana,Arial,sans-serif}
+#ls26SingerRemoteStage strong{font-size:clamp(26px,5.3vw,58px);font-weight:900;letter-spacing:.08em}
+#ls26SingerRemoteStage span{font-size:clamp(19px,3vw,32px);font-weight:750}
+body[data-ls26-singer-stage="waiting"] #ls26SingerRemoteStage,
+body[data-ls26-singer-stage="instrumental"] #ls26SingerRemoteStage,
+body[data-ls26-singer-stage="ended"] #ls26SingerRemoteStage{opacity:1;pointer-events:auto}
+body[data-ls26-singer-stage="ended"] #ls26SingerRemoteStage .ls26-singer-stage-cue{opacity:0}
+body[data-ls26-singer-stage="waiting"] #lyrics-container,
+body[data-ls26-singer-stage="instrumental"] #lyrics-container{opacity:.08}
+body[data-ls26-singer-stage="ended"] #lyrics-container{opacity:0}
+body[data-ls26-singer-stage="waiting"] #prompterEndMarker,
+body[data-ls26-singer-stage="instrumental"] #prompterEndMarker,
+body[data-ls26-singer-stage="ended"] #prompterEndMarker{opacity:0}
+body[data-ls26-singer-stage="waiting"],body[data-ls26-singer-stage="instrumental"],body[data-ls26-singer-stage="ended"]{overflow:hidden!important;overscroll-behavior:none}
+body[data-ls26-singer-stage="ended"] #prompterEndRating{position:fixed!important;left:50%!important;top:50%!important;transform:translate(-50%,-50%)!important;z-index:3000!important;width:min(950px,calc(100vw - 30px))!important;max-height:calc(100dvh - 24px);overflow-y:auto;margin:0!important;overscroll-behavior:contain}

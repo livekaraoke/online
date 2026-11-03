@@ -245,6 +245,9 @@
   });
   guide?.addEventListener('click',event=>{if(event.target===guide)guide.close();});
 
+  window.addEventListener('ls26:prompter-stage-changed',event=>{
+    if(event.detail?.mode==='ended'){reachedEnd=true;void refresh();}
+  });
   window.addEventListener('ls26:prompter-song-changed',()=>{
     // A second performance of the same song can reuse the song ID, so do not
     // keep the previous performance's rating across an explicit resend.

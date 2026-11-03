@@ -23,7 +23,7 @@
   panel.innerHTML=`
     <div class="ls26-prompter-remote-head" title="Drag to move Prompter Remote"><strong>PROMPTER REMOTE</strong>
       <span id="ls26PrompterRemoteStatus" role="status">Open Prompter tab</span>
-      <button type="button" id="ls26PrompterRemoteClose" aria-label="Hide Prompter Remote" title="Hide Prompter Remote">×</button></div>
+    </div>
     <div class="ls26-prompter-remote-controls">
       <button type="button" data-remote="toggle" id="ls26PrompterRemotePlay" aria-pressed="false" aria-label="Play Prompter autoscroll">▶</button>
       <button type="button" data-remote="slower" aria-label="Decrease Prompter scroll speed">−</button>
@@ -31,7 +31,23 @@
       <button type="button" data-remote="faster" aria-label="Increase Prompter scroll speed">+</button>
       <button type="button" class="ls26-prompter-remote-arrow" data-remote="up" aria-label="Scroll Prompter up" title="Scroll Prompter up"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 15l7-7 7 7"/></svg></button>
       <button type="button" class="ls26-prompter-remote-arrow" data-remote="down" aria-label="Scroll Prompter down" title="Scroll Prompter down"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9l7 7 7-7"/></svg></button>
+    </div>
+    <div class="ls26-prompter-remote-stage-actions">
+      <button type="button" data-remote="instrumental" id="ls26PrompterInstrumental" aria-pressed="false" disabled>INSTRUMENTAL / HOLD</button>
+      <button type="button" data-remote="song" id="ls26PrompterSongCue">START SONG</button>
     </div>`;
+  let singerMode='waiting';
+  const setSingerMode=mode=>{
+    if(!['waiting','running','instrumental','ended'].includes(mode))return;
+    singerMode=mode;
+    const hold=$('ls26PrompterInstrumental'),song=$('ls26PrompterSongCue');
+    if(hold){
+      hold.disabled=mode==='waiting'||mode==='ended';
+      hold.setAttribute('aria-pressed',String(mode==='instrumental'));
+      hold.textContent=mode==='instrumental'?'RESUME LYRICS':'INSTRUMENTAL / HOLD';
+    }
+    if(song)song.textContent=mode==='running'||mode==='instrumental'?'END SONG':mode==='ended'?'START AGAIN':'START SONG';
+  };
 
   const setPlayState=playing=>{
     const button=$('ls26PrompterRemotePlay');
@@ -97,7 +113,7 @@
   const enableDragging=()=>{
     const bar=panel.querySelector('.ls26-prompter-remote-head');
     bar.addEventListener('pointerdown',e=>{
-      // The close button is an independent touch action, never a drag handle.
+      // The title is draggable; stage controls are independent touch actions.
       if(e.target.closest('button'))return;
       if(e.pointerType==='mouse'&&e.button!==0)return;
       const r=panel.getBoundingClientRect();
@@ -137,7 +153,16 @@
     const id=String(Date.now())+'-'+Math.random().toString(36).slice(2,8);
     lastRequest=id;
     const wasPlaying=$('ls26PrompterRemotePlay')?.getAttribute('aria-pressed')==='true';
+    const previousMode=singerMode;
     if(action==='toggle')setPlayState(!wasPlaying);
+    if(action==='song'){
+      const next=singerMode==='running'||singerMode==='instrumental'?'ended':'running';
+      setSingerMode(next);setPlayState(next==='running');
+    }
+    if(action==='instrumental'){
+      const next=singerMode==='instrumental'?'running':'instrumental';
+      setSingerMode(next);setPlayState(next==='running');
+    }
     const packet={v:1,kind:'command',id,action,at:Date.now()};
     post(packet);
     clearTimeout(timeout);
@@ -150,7 +175,8 @@
     status.textContent='Sending…';
     const sharedDb=window.db||window.LK?.db;
     if(!sharedDb?.collection){
-      if(action==='toggle')setPlayState(wasPlaying);
+      if(['toggle','song','instrumental'].includes(action))setPlayState(wasPlaying);
+      setSingerMode(previousMode);
       status.textContent='Cloud sync unavailable';return;
     }
     // Serialize taps to prevent ordered +/-/Play commands overtaking each other.
@@ -164,7 +190,8 @@
     }).catch(error=>{
       console.warn('Prompter cross-tablet command failed:',error);
       if(lastRequest===id&&!status.textContent.startsWith('Connected')){
-        if(action==='toggle')setPlayState(wasPlaying);
+        if(['toggle','song','instrumental'].includes(action))setPlayState(wasPlaying);
+        setSingerMode(previousMode);
         status.textContent='Sync failed — check sign-in';
       }
     });
@@ -179,20 +206,11 @@
     status.textContent='Connected';
     if(packet.speed)speed.textContent=String(packet.speed);
     setPlayState(Boolean(packet.playing));
+    if(packet.mode)setSingerMode(packet.mode);
   };
   function start(){
     document.body.append(panel);
     enableDragging();
-    $('ls26PrompterRemoteClose').addEventListener('click',event=>{
-      event.stopPropagation();
-      const preference=$('ls26ShowPrompterRemote');
-      if(preference){
-        preference.checked=false;
-        preference.dispatchEvent(new Event('change',{bubbles:true}));
-      }else{
-        show(false);
-      }
-    });
     window.addEventListener('resize',()=>{
       const width=window.innerWidth;
       // Ignore height-only browser UI changes, including Chrome on Android
@@ -209,7 +227,7 @@
     });
     panel.addEventListener('click',event=>{
       const action=event.target.closest('button[data-remote]')?.dataset.remote;
-      if(action&&['toggle','slower','faster','up','down'].includes(action))send(action);
+      if(action&&['toggle','slower','faster','up','down','instrumental','song'].includes(action))send(action);
     });
     try{
       channel=new BroadcastChannel(CHANNEL);

@@ -119,6 +119,29 @@
     try{showNavBpmPreference=localStorage.getItem('ls26:showNavCurrentBpm')!=='false';}catch(_){}
     showNavBpm(showNavBpmPreference);
     $('ls26ShowNavBpm').onchange=e=>showNavBpm(e.target.checked);
+    // Intervals, rather than isolated taps, update the shared session tempo.
+    let lastTap=0,intervals=[],flashTimer;
+    navBpmLabel?.addEventListener('click',()=>{
+      const now=performance.now(),gap=now-lastTap;
+      lastTap=now;
+      if(gap<250||gap>2000)intervals=[];
+      else{
+        intervals.push(gap);
+        if(intervals.length>4)intervals.shift();
+        const sorted=[...intervals].sort((a,b)=>a-b);
+        const middle=sorted.length>2?sorted.slice(1,-1):sorted;
+        const bpm=Math.round(60000/(middle.reduce((sum,n)=>sum+n,0)/middle.length));
+        if(bpm>=30&&bpm<=240&&window.LS26Performance?.song()){
+          window.LS26Performance.setBpm(bpm);sync();
+        }
+      }
+      navBpmLabel.classList.remove('is-tapped');
+      void navBpmLabel.offsetWidth;
+      navBpmLabel.classList.add('is-tapped');
+      clearTimeout(flashTimer);
+      flashTimer=setTimeout(()=>navBpmLabel.classList.remove('is-tapped'),320);
+    });
+    window.addEventListener('ls26:song-ready',()=>{lastTap=0;intervals=[];});
     function close(){drawer.classList.remove('open');drawer.setAttribute('aria-hidden','true');infoAction?.setAttribute('aria-expanded','false');}
     const startup=document.createElement('label');startup.className='ls26-info-startup';startup.innerHTML='<input id="ls26InfoStartup" type="checkbox"> Open on LyricView startup';drawer.querySelector('.song-info-scroll').append(startup);
     const preferenceKey='ls26:infoOpenOnStartup';

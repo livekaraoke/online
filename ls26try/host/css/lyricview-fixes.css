@@ -1886,8 +1886,17 @@ body.host-lyric-view-page {
   background:rgba(3,22,31,.82);
   box-shadow:0 0 14px rgba(0,202,250,.12);
   color:#eafaff;
-  pointer-events:none;
+  pointer-events:auto;
+  cursor:pointer;
+  touch-action:manipulation;
+  transition:background .16s,border-color .16s,box-shadow .16s;
 }
+.host-nav-bpm-label.is-tapped{
+  background:rgba(0,111,126,.96)!important;
+  border-color:#9cffff!important;
+  box-shadow:0 0 26px rgba(54,250,242,.72)!important;
+}
+.host-nav-bpm-label.is-tapped strong{color:#fff!important}
 .host-nav-bpm-label[hidden]{display:none!important}
 .host-nav-bpm-label strong{
   margin:0!important;
