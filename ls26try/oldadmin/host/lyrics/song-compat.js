@@ -15,7 +15,8 @@
         return {
           id: String(id || song?.id || '').trim(),
           title: String(song?.title || '').trim(),
-          artist: String(song?.artist || '').trim()
+          artist: String(song?.artist || '').trim(),
+          year: song?.year || ''
         };
       }).filter(item => item.id);
   }
@@ -191,7 +192,7 @@
       window.recalcSpeed?.();
       if (changed) window.scrollTo(0, 0);
       window.dispatchEvent(new CustomEvent('ls26:prompter-song-changed', {
-        detail: {songId:id, source:'modern'}
+        detail: {songId:id, source:'modern', title:song.title, artist:song.artist, year:song.year || song.releaseYear || ''}
       }));
     } catch (error) {
       if (token !== version) return;
@@ -213,14 +214,17 @@
     const token = ++version;
     const id = await resolveId(raw, metadata);
     if (token !== version || !id) return;
-    if (displayedId === id && currentRenderMode === 'legacy') return;
+    // Resending the same song is a fresh cue: return to the preview artwork.
     if (displayedId) window.stopAutoScroll?.();
     replaceUrlId(id, 'legacy');
     displayedId = id;
     currentRenderMode = 'legacy';
     originalLoadSong();
+    const item=entries().find(entry=>entry.id===id)||{};
     window.dispatchEvent(new CustomEvent('ls26:prompter-song-changed', {
-      detail: {songId:id, source:'legacy'}
+      detail: {songId:id, source:'legacy', title:item.title||metadata.songTitle||metadata.title,
+        artist:item.artist||metadata.songArtist||metadata.artist,
+        year:item.year||metadata.prompterSongYear||metadata.year||''}
     }));
   }
 
@@ -257,7 +261,8 @@
         const meta = data.song || data;
         const signature = modern
           ? ['modern', raw, String(data.prompterRequestToken || '')].join('|')
-          : ['legacy', raw, value(data, 'lyricsFileId', 'lyricsFileName'),
+          : ['legacy', raw, String(data.prompterRequestToken || ''),
+             value(data, 'lyricsFileId', 'lyricsFileName'),
              value(meta, 'karaokeLyrics', 'songTitle', 'title'),
              value(meta, 'songArtist', 'artist')].join('|');
         if (signature === lastHostKey) return;

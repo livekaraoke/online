@@ -37,7 +37,7 @@
     </div>`;
   let singerMode='waiting';
   const setSingerMode=mode=>{
-    if(!['waiting','running','instrumental','ended'].includes(mode))return;
+    if(!['idle','waiting','running','instrumental','ended'].includes(mode))return;
     singerMode=mode;
     const hold=$('ls26PrompterInstrumental'),song=$('ls26PrompterSongCue');
     if(hold){
@@ -45,7 +45,7 @@
       hold.setAttribute('aria-pressed',String(mode==='instrumental'));
       hold.textContent=mode==='instrumental'?'RESUME LYRICS':'INSTRUMENTAL / HOLD';
     }
-    if(song)song.textContent=mode==='running'||mode==='instrumental'?'END SONG':mode==='ended'?'START AGAIN':'START SONG';
+    if(song){song.disabled=mode==='idle';song.textContent=mode==='running'||mode==='instrumental'?'END SONG':mode==='ended'?'START AGAIN':'START SONG';}
   };
 
   const setPlayState=playing=>{

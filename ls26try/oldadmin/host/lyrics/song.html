@@ -27,7 +27,7 @@ real-time typography control, and performance styling tools.
   <meta charset="UTF-8">
   <title>Song Lyric Viewer</title>
   <link rel="stylesheet" href="../../css/styleLyrics.css?v=20261016-native-touch-v3">
-  <link rel="stylesheet" href="prompter-end-rating.css?v=20261103-remote-stage-v1">
+  <link rel="stylesheet" href="prompter-end-rating.css?v=20261103-prompter-artwork-v1">
   <style>
     html, body, #lyrics-container { touch-action: pan-y; }
     .autoscroll-controls {
@@ -1346,7 +1346,7 @@ slaveLyricsToggle.addEventListener("change", function() {
 <script src="../../../shared/chord-foundation.js?v=20261006-chord-settings"></script>
 <script src="../../../shared/singer-lines.js?v=20261028-prompter-blank-v1"></script>
 <!-- One existing Slave listener now supports legacy files and modern Firestore songs. -->
-<script src="song-compat.js?v=20261028-note-spacing-v1"></script>
+<script src="song-compat.js?v=20261103-prompter-artwork-v1"></script>
 <!-- ********************************************************* -->
 <!-- ==================== END OF JS CODE ===================== -->
 
@@ -1443,11 +1443,11 @@ slaveLyricsToggle.addEventListener("change", function() {
   <span class="prompter-scroll-arrow" aria-hidden="true"><svg viewBox="0 0 96 96" focusable="false"><path d="M16 34 L48 66 L80 34"/></svg></span>
 </button>
 <script src="prompter-ui.js?v=20261028-note-spacing-v1"></script>
-<script src="prompter-remote-receiver.js?v=20261103-remote-stage-v1"></script>
+<script src="prompter-remote-receiver.js?v=20261103-prompter-artwork-v1"></script>
 <!-- Reuse atomic session finish logic; rating uses the existing performedSongs record. -->
 <script src="../../../shared/performance-intelligence.js?v=20261018-smart-v1"></script>
 <script src="../../../shared/performance-lifecycle.js?v=20261018-smart-v1"></script>
-<script src="prompter-end-rating.js?v=20261103-remote-stage-v1"></script>
+<script src="prompter-end-rating.js?v=20261103-prompter-artwork-v1"></script>
 </body>
 </html>
 

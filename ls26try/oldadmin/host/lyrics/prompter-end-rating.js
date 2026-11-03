@@ -158,6 +158,7 @@
       if(ticket===requestVersion)status('Cannot load tonight’s performance: '+error.message,true);
     }
   }
+  const completed=value=>window.dispatchEvent(new CustomEvent('ls26:prompter-feedback-complete',{detail:{rating:value}}));
   async function rate(value){
     if(!Object.hasOwn(values,value)||working) return;
     const key=songKey();
@@ -170,10 +171,12 @@
       saveLocal(value);
       buttons();
       status('Thanks! Your choice is remembered on this device. Session saving is unavailable right now.');
+      completed(value);
       return;
     }
     if(savedInSession && selected===value){
       status('Your rating is already saved. Thank you!');
+      completed(value);
       return;
     }
     const info=current, ticket=requestVersion;
@@ -220,6 +223,7 @@
         status(value
           ? 'Thank you! Your experience rating was saved for this performance.'
           : 'Your rating was cleared. Thank you for singing!');
+        completed(value);
       }
     }catch(error){
       if(ticket===requestVersion){
@@ -246,32 +250,18 @@
   guide?.addEventListener('click',event=>{if(event.target===guide)guide.close();});
 
   window.addEventListener('ls26:prompter-stage-changed',event=>{
-    if(event.detail?.mode==='ended'){reachedEnd=true;void refresh();}
+    // Only a host END SONG command presents rating, never reaching lyric bottom.
+    reachedEnd=event.detail?.mode==='ended';
+    if(reachedEnd)void refresh();
   });
   window.addEventListener('ls26:prompter-song-changed',()=>{
-    // A second performance of the same song can reuse the song ID, so do not
-    // keep the previous performance's rating across an explicit resend.
+    reachedEnd=false;
+    // A repeated performance of the same song must get fresh feedback.
     if(lastSongKey===songKey()){
       ++requestVersion;
-      current=null;selected=null;feedbackToken=freshToken();feedbackRevision=0;savedInSession=false;buttons();
-      if(reachedEnd)void refresh();
+      current=null;selected=null;feedbackToken=freshToken();
+      feedbackRevision=0;savedInSession=false;buttons();
     }else clearForSong();
   });
-  // Check the selected song on startup without any network reads until the
-  // card actually enters the viewport, even during long stage sessions.
   clearForSong();
-  if('IntersectionObserver' in window){
-    const observer=new IntersectionObserver(entries=>{
-      if(entries.some(x=>x.isIntersecting)){reachedEnd=true;void refresh();}
-      else reachedEnd=false;
-    },{threshold:0.05});
-    observer.observe(card);
-  }else{
-    window.addEventListener('scroll',()=>{
-      if(reachedEnd)return;
-      if(card.getBoundingClientRect().top<window.innerHeight){
-        reachedEnd=true;void refresh();
-      }
-    },{passive:true});
-  }
 })();

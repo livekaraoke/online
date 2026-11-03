@@ -2006,11 +2006,17 @@
           prompterSongId: currentSongId,
           prompterSongTitle: currentSong.title || "",
           prompterSongArtist: currentSong.artist || "",
+          prompterSongYear: currentSong.year || currentSong.releaseYear || "",
           prompterRequestToken: `${Date.now()}_${Math.random().toString(36).slice(2,7)}`,
           updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         }, { merge: true });
       } else {
         const fileName = `${id}.js`;
+        const legacyMatch=(Array.isArray(window.songs)?window.songs:[]).find(item=>{
+          const found=String(item.url||'').match(/[?&]id=([^&#]+)/);
+          if(!found)return false;
+          try{return decodeURIComponent(found[1])===id;}catch(_){return found[1]===id;}
+        })||{};
         await db.collection("karaokeControl").doc("liveLyrics").set({
           currentSongId: id,
           songId: id,
@@ -2022,7 +2028,10 @@
           lyricsSource: "song-data-js",
           prompterLyricsSource: "legacy",
           prompterSongId: "",
-          prompterRequestToken: "",
+          prompterSongTitle: legacyMatch.title || currentSong?.title || "",
+          prompterSongArtist: legacyMatch.artist || currentSong?.artist || "",
+          prompterSongYear: legacyMatch.year || currentSong?.year || "",
+          prompterRequestToken: `${Date.now()}_${Math.random().toString(36).slice(2,7)}`,
 
           reset: false,
           updatedAt: firebase.firestore.FieldValue.serverTimestamp()
