@@ -127,3 +127,52 @@
   .session-modal .night-flow{padding:10px;}
   .session-modal .night-flow-mode{flex:1 1 calc(50% - 7px);}
 }
+
+
+/* Metric tabs on the left, touch-friendly zoom buttons on the right. */
+.session-modal .night-flow-controls{
+  display:flex;align-items:flex-start;justify-content:space-between;
+  gap:10px;flex-wrap:wrap;margin-bottom:12px;
+}
+.session-modal .night-flow-controls .night-flow-toolbar{
+  display:flex;flex:1 1 540px;flex-wrap:wrap;margin:0;gap:7px;
+}
+.session-modal .night-flow-zoom{
+  display:flex;align-items:center;gap:6px;flex:0 0 auto;
+}
+.session-modal .night-flow-zoom button{
+  min-width:44px;min-height:44px;height:44px;padding:0 11px;
+  border:1px solid #326177;border-radius:8px;
+  background:#061924;color:#e1f6ff;font-size:21px;font-weight:750;
+  touch-action:manipulation;cursor:pointer;
+}
+.session-modal .night-flow-zoom button.night-flow-fit{font-size:12px;letter-spacing:.02em}
+.session-modal .night-flow-zoom button.is-active{
+  border-color:#00cafa;background:#08425a;color:#eafaff;
+}
+.session-modal .night-flow-zoom button:disabled{opacity:.35;cursor:default}
+.session-modal .night-flow-zoom button:focus-visible{
+  outline:2px solid #6ee6ff;outline-offset:2px;
+}
+.session-modal .night-flow-zoom-label{
+  min-width:68px;color:#9bb9c9;font-size:11px;text-align:center;
+  font-variant-numeric:tabular-nums;
+}
+.session-modal .night-flow-loading{
+  color:#ffda9d;font-size:12px;margin:5px 0 9px;
+}
+.session-modal .night-flow-scroll{
+  box-sizing:border-box;
+}
+@media(max-width:850px){
+  .session-modal .night-flow-controls{flex-direction:column;align-items:stretch}
+  .session-modal .night-flow-controls .night-flow-toolbar{flex:0 1 auto}
+  .session-modal .night-flow-zoom{justify-content:flex-end}
+}
+@media(max-width:620px){
+  .session-modal .night-flow-controls .night-flow-toolbar{
+    display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+  .session-modal .night-flow-controls .night-flow-mode{width:100%}
+  .session-modal .night-flow-zoom{justify-content:space-between}
+}
