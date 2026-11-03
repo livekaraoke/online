@@ -34,10 +34,28 @@
     ||stamp(item?.playedAt||item?.startedAt||item?.playingAt||item?.createdAt)||0;
   const yearOf=item=>{
     const raw=[item?.releaseYear,item?.songReleaseYear,item?.songYear,item?.year,item?.yearReleased,
-      item?.originalYear,item?.songMetadata?.releaseYear,item?.songMetadata?.year,item?.releaseDate]
-      .find(v=>v!==undefined&&v!==null&&v!=="");
-    if(typeof raw==="string"&&/^\d{4}-/.test(raw))return finite(raw.slice(0,4),1880,2100);
+      item?.originalYear,item?.songMetadata?.releaseYear,item?.songMetadata?.year,item?.releaseDate,
+      item?.libraryYear].find(v=>v!==undefined&&v!==null&&v!=="");
+    if(typeof raw==="string" && /^\d{4}(?:-|\/|$)/.test(raw.trim()))return finite(raw.trim().slice(0,4),1880,2100);
     return finite(raw,1880,2100);
+  };
+  const keyOf=item=>{
+    const raw=[item?.performanceKey,item?.keyAtPerformance,item?.songKey,item?.key,
+      item?.songMetadata?.key,item?.libraryKey].find(v=>v!==undefined&&v!==null&&String(v).trim());
+    if(raw==null)return null;
+    const match=String(raw).trim().replace(/[♯]/g,"#").replace(/[♭]/g,"b")
+      .match(/^([A-Ga-g])([#b]?)(?:\s*(minor|min|m|major|maj))?$/i);
+    if(!match)return null;
+    return match[1].toUpperCase()+match[2]+(/^(minor|min|m)$/i.test(match[3]||"")?"m":"");
+  };
+  // Categorical keys follow circle of fifths, pairing major and relative minor.
+  const keyOrder=value=>{
+    const match=String(value||"").match(/^([A-G])([#b]?)(m?)$/);
+    if(!match)return 99;
+    const notes={C:0,D:2,E:4,F:5,G:7,A:9,B:11};
+    const root=(notes[match[1]]+(match[2]==="#"?1:match[2]==="b"?-1:0)+12)%12;
+    const majorRoot=(root+(match[3]==="m"?3:0))%12;
+    return ((majorRoot*7)%12)*2+(match[3]==="m"?1:0);
   };
   const valueOf=(item,mode)=>{
     if(mode==="bpm")return finite(item.performanceBpm??item.userBpm??item.songUserBpm??item.bpm??item.originalBpm,20,350);
