@@ -26,10 +26,10 @@
           if(typeof toggleAutoScroll==='function')toggleAutoScroll();
           break;
         case 'slower':
-          if(typeof changeScrollSpeed==='function')changeScrollSpeed(-0.05);
+          if(typeof changeScrollSpeed==='function')changeScrollSpeed(-0.10);
           break;
         case 'faster':
-          if(typeof changeScrollSpeed==='function')changeScrollSpeed(0.05);
+          if(typeof changeScrollSpeed==='function')changeScrollSpeed(0.10);
           break;
         case 'up':
           document.getElementById('prompterScrollUp')?.click();
