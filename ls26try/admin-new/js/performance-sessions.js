@@ -649,21 +649,23 @@
         <p>${esc(session.sessionType || session.type || "")}${session.venue ? ` • ${esc(session.venue)}` : ""}</p>
       </div>
 
-      <div class="detail-grid">
-        ${editableFinishedCard(session,"scheduledStart","SCHEDULED START",`${formatDate(scheduledStart(session))} ${formatTime(scheduledStart(session))}`)}
-        ${editableFinishedCard(session,"scheduledEnd","SCHEDULED END",`${formatDate(scheduledEnd(session))} ${formatTime(scheduledEnd(session))}`)}
+      <div class="detail-grid history-session-metrics">
+        ${correctionCard(session,"VENUE",session.venue||session.eventSnapshot?.venue,"identity")}
+        ${correctionCard(session,"ACT TYPE",session.sessionType||session.type||session.eventSnapshot?.type,"identity")}
+        ${correctionCard(session,"SCHEDULED START", scheduledStart(session)?formatDate(scheduledStart(session))+" "+formatTime(scheduledStart(session)):"Not recorded","time")}
+        ${correctionCard(session,"SCHEDULED END",scheduledEnd(session)?formatDate(scheduledEnd(session))+" "+formatTime(scheduledEnd(session)):"Not recorded","time")}
         <div class="detail-card"><span>SESSION START</span><strong>${formatDate(sessionStart(session))} ${formatTime(sessionStart(session))}</strong></div>
-        ${editableFinishedCard(session,"actualStart","ACTUAL START",`${formatDate(actualStart(session))} ${formatTime(actualStart(session))}`)}
-        ${editableFinishedCard(session,"actualEnd","ACTUAL END",`${formatDate(actualEnd(session))} ${formatTime(actualEnd(session))}`)}
+        ${correctionCard(session,"ACTUAL START",actualStart(session)?formatDate(actualStart(session))+" "+formatTime(actualStart(session)):"Not recorded","time")}
+        ${correctionCard(session,"ACTUAL END",actualEnd(session)?formatDate(actualEnd(session))+" "+formatTime(actualEnd(session)):"Not recorded","time")}
         <div class="detail-card"><span>DURATION X/BREAKS</span><strong>${formatHours(duration.activeMs)}</strong></div>
         <div class="detail-card"><span>TOTAL ELAPSED</span><strong>${formatHours(duration.totalMs)}</strong></div>
         <div class="detail-card"><span>BREAKS</span><strong>${(session.breaks || []).length} • ${formatHours(getBreakMs(session))}</strong></div>
-        <div class="detail-card"><span>EVENT ID</span><strong>${esc(session.eventId || "—")}</strong></div>
         <div class="detail-card"><span>REQUESTS</span><strong>${counts.total}</strong></div>
         <div class="detail-card"><span>PLAYED REQUESTS</span><strong>${counts.completed}</strong></div>
         <div class="detail-card"><span>LEFT / NOT PLAYED</span><strong>${counts.left}</strong></div>
         <div class="detail-card"><span>SINGER LEFT</span><strong>${counts.abandoned}</strong></div>
       </div>
+      <div class="history-session-id">Event reference: ${esc(session.eventId || "Not linked")}</div>
 
       <div class="detail-section">
         <h3>SESSION NOTES</h3>
