@@ -117,12 +117,13 @@
     var name = trim(el('singerName').value);
     return name.length >= 3 && name.length <= 80 && !/[<>]/.test(name);
   }
-  /* The song step has viewport-anchored geometry on its first paint. Only
-   * the inner song list receives an explicit height (iOS 9 Safari). */
+  /* The list is anchored to the same viewport as the fixed note/SEND panel,
+   * not to the first measured fieldset height. Old iOS Safari can report the
+   * pre-transition fieldset rect on the first SHOW SONGS layout pass. */
   function layoutSongScreen() {
     var form = el('signupForm'), step = el('songStep'), bottom = el('songBottom');
     var list = el('songResults'), hint = el('resultCount'), kiosk = el('kiosk');
-    var header, top, listTop, available, bottomTop, visibleBottom;
+    var header, top, listTop, bottomTop, visibleBottom;
     if (step.hidden || form.hidden) { return; }
     header = kiosk.getElementsByTagName('header')[0];
     top = Math.ceil(header.getBoundingClientRect().bottom - kiosk.getBoundingClientRect().top);
@@ -141,11 +142,30 @@
         root.visualViewport.offsetTop + root.visualViewport.height);
     }
     bottom.style.bottom = Math.max(8, Math.ceil((root.innerHeight || visibleBottom) - visibleBottom) + 8) + 'px';
-    listTop = Math.ceil(hint.getBoundingClientRect().bottom - step.getBoundingClientRect().top + 7);
+    listTop = Math.ceil(hint.getBoundingClientRect().bottom + 7);
     bottomTop = bottom.getBoundingClientRect().top;
-    available = bottomTop - step.getBoundingClientRect().top - listTop - 8;
+    // CSS calculates the remaining height from viewport top/bottom anchors.
+    // A delayed iPad reflow cannot leave a stale, short pixel height behind.
     list.style.top = listTop + 'px';
-    list.style.height = Math.max(40, Math.floor(available)) + 'px';
+    list.style.bottom = Math.max(8, Math.ceil((root.innerHeight || visibleBottom) - bottomTop + 8)) + 'px';
+    list.style.height = 'auto';
+  }
+  var layoutSettledTimer = null;
+  function settleSongLayout() {
+    layoutSongScreen();
+    if (root.requestAnimationFrame) {
+      root.requestAnimationFrame(function () {
+        layoutSongScreen();
+        root.requestAnimationFrame(layoutSongScreen);
+      });
+    }
+    // iPad 2 Safari can finish applying the new fieldset geometry after paint.
+    // One guarded correction; no polling, network calls or background listeners.
+    clearTimeout(layoutSettledTimer);
+    layoutSettledTimer = setTimeout(function () {
+      layoutSettledTimer = null;
+      layoutSongScreen();
+    }, 180);
   }
   function focusName() {
     if (el('nameStep').hidden || el('fields').disabled || el('signupForm').hidden ||
@@ -159,8 +179,10 @@
     el('signupForm').className = which === 'song' ? 'song-active' : '';
     if (which === 'song') {
       el('singerDisplay').textContent = trim(el('singerName').value);
-      layoutSongScreen();
+      settleSongLayout();
     } else {
+      clearTimeout(layoutSettledTimer);
+      layoutSettledTimer = null;
       el('signupForm').style.top = '';
       el('signupForm').style.height = '';
       el('fields').style.height = '';
@@ -521,7 +543,7 @@
   el('noteToggle').onclick = function () {
     el('note').hidden = !el('note').hidden;
     el('noteToggle').setAttribute('aria-expanded', el('note').hidden ? 'false' : 'true');
-    layoutSongScreen();
+    settleSongLayout();
   };
   function closeRefreshDialog() {
     el('refreshDialog').hidden = true;
@@ -559,7 +581,7 @@
     load();
   };
   root.addEventListener('resize', layoutSongScreen);
-  root.addEventListener('orientationchange', layoutSongScreen);
+  root.addEventListener('orientationchange', settleSongLayout);
   if (root.visualViewport && root.visualViewport.addEventListener) {
     root.visualViewport.addEventListener('resize', layoutSongScreen);
     root.visualViewport.addEventListener('scroll', layoutSongScreen);
@@ -569,7 +591,7 @@
     else { load(); refreshGate(); }
   });
   window.addEventListener('pagehide', function () {
-    clearTimeout(timer); clearTimeout(gateTimer); clearTimeout(resetTimer); resetForm();
+    clearTimeout(timer); clearTimeout(gateTimer); clearTimeout(resetTimer); clearTimeout(layoutSettledTimer); resetForm();
   });
   window.addEventListener('pageshow', function (event) {
     if (event.persisted) { showIdle('closed'); load(); }

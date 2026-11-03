@@ -157,6 +157,8 @@ let server,browser;let requestOpen=true,sessionActive=true;
    const scrolled=list.scrollTop;list.scrollTop=original;
    return {scrollHeight:list.scrollHeight,clientHeight:list.clientHeight,scrolled,
     sendBottom:r.bottom,panelBottom:b.bottom,listBottom:l.bottom,
+    gapBeforeFooter:b.top-l.bottom,position:getComputedStyle(list).position,
+    heightRule:list.style.height,
     viewport:Math.min(window.innerHeight,document.documentElement.clientHeight),
     buttons:list.querySelectorAll('button').length,
     extraFooter:!!document.getElementById('songFooter')};
@@ -166,7 +168,10 @@ let server,browser;let requestOpen=true,sessionActive=true;
   assert.ok(layout.scrolled>100,'Old Safari list must support scrolling: '+JSON.stringify(layout));
   assert.ok(layout.sendBottom>0&&layout.sendBottom<=layout.viewport+2,'SEND REQUEST must be in viewport: '+JSON.stringify(layout));
   assert.ok(layout.panelBottom<=layout.viewport+2,'Bottom request panel must be in viewport: '+JSON.stringify(layout));
-  assert.ok(layout.listBottom<=layout.sendBottom-90,'List must stop above request panel: '+JSON.stringify(layout));
+  assert.equal(layout.position,'fixed','List should fill space using viewport anchors, not stale fieldset height');
+  assert.equal(layout.heightRule,'auto','Do not cache a short first-render height');
+  assert.ok(layout.gapBeforeFooter>=4&&layout.gapBeforeFooter<=14,
+    'Song list must reach the note/SEND panel on the first opening, no empty gap: '+JSON.stringify(layout));
   assert.equal(layout.extraFooter,false,'Redundant song-screen footer must be absent');
   await page.locator('#songResults button').last().click();
   assert.ok(await page.locator('#send').isEnabled(),'Last song should be selectable');
@@ -175,8 +180,17 @@ let server,browser;let requestOpen=true,sessionActive=true;
   const enabledColor=await page.locator('#send').evaluate(x=>getComputedStyle(x).backgroundColor);
   assert.equal(enabledColor,'rgb(20, 107, 59)','SEND REQUEST turns green when song is selected');
   await page.locator('#noteToggle').click();
-  const expanded=await page.evaluate(()=>({sendBottom:document.getElementById('send').getBoundingClientRect().bottom,viewport:Math.min(window.innerHeight,document.documentElement.clientHeight),listHeight:document.getElementById('songResults').clientHeight}));
+  const expanded=await page.evaluate(()=>{
+    const list=document.getElementById('songResults').getBoundingClientRect();
+    const footer=document.getElementById('songBottom').getBoundingClientRect();
+    return {sendBottom:document.getElementById('send').getBoundingClientRect().bottom,
+      viewport:Math.min(window.innerHeight,document.documentElement.clientHeight),
+      listHeight:document.getElementById('songResults').clientHeight,
+      gapBeforeFooter:footer.top-list.bottom};
+  });
   assert.ok(expanded.sendBottom<=expanded.viewport+2&&expanded.listHeight>40,'Expanded note should keep send button visible: '+JSON.stringify(expanded));
+  assert.ok(expanded.gapBeforeFooter>=4&&expanded.gapBeforeFooter<=14,
+    'Expanding the note must immediately resize the list to the new panel: '+JSON.stringify(expanded));
   const noteFont=await page.locator('#note').evaluate(el=>parseFloat(getComputedStyle(el).fontSize));
   assert.ok(noteFont>=22,'Optional note textbox must use a large font');
   await page.locator('#send').click();

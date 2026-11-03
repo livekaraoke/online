@@ -45,7 +45,7 @@ input:focus, textarea:focus { border-color: #e83b46; outline-color: #e83b46; }
 #clearSearch { position: absolute; top: 0; right: 0; width: 97px; min-height: 53px; }
 .hint { margin: 6px 0; color: #ccc; font-size: 16px; -webkit-flex: 0 0 auto; flex: 0 0 auto; }
 /* Always a real fixed-height scroll box, independent of the form and fieldset flex sizing. */
-.songs { position: absolute; left: 0; right: 0; top: 210px; height: 200px; overflow-y: scroll; -webkit-overflow-scrolling: touch; touch-action: pan-y; border: 1px solid #555; border-radius: 7px; }
+.songs { position: fixed; left: 18px; right: 18px; top: 210px; bottom: 155px; height: auto; overflow-y: scroll; -webkit-overflow-scrolling: touch; touch-action: pan-y; border: 1px solid #555; border-radius: 7px; }
 .song { display: block; width: 100%; text-align: left; padding: 10px 17px; min-height: 69px; border: 0; border-bottom: 1px solid #555; border-radius: 0; background: #1c1c1c; }
 .song strong, .song span { display: block; }
 .song strong { font-size: 22px; overflow-wrap: break-word; }
@@ -264,6 +264,7 @@ header .cancel-button {
   .idle-queue-empty { font-size: 18px; padding: 5px; }
 }
 @media (max-width: 700px) {
+  .songs { left: 12px; right: 12px; }
   .song-bottom { left: 12px; right: 12px; bottom: 6px; }
   .idle-queue-heading { font-size: 17px; }
   .idle-tap-hint { font-size: 12px; }
