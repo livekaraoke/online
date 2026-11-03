@@ -498,6 +498,63 @@
     return updated;
   }
 
+
+  // Anonymous singer feedback is linked to existing performedSongs records
+  // by session and performance ID, without opening private records to guests.
+  const singerLabels={amazing:"AMAZING",good:"GOOD",okay:"OKAY",notGreat:"NOT GREAT"};
+  const singerScores={notGreat:1,okay:2,good:3,amazing:4};
+  function singerExperienceLabel(item){
+    const counts=item.singerExperienceVoteCounts;
+    if(counts){
+      const list=["amazing","good","okay","notGreat"].filter(k=>Number(counts[k])>0)
+        .map(k=>singerLabels[k]+" ("+counts[k]+")");
+      return list.join(" · ")||"Not rated";
+    }
+    return singerLabels[String(item.singerExperienceRating||"")]||"Not rated";
+  }
+  async function mergeGuestSingerFeedback(sessionId,played){
+    let snap;
+    try{
+      snap=await db.collection("publicSignupSessions")
+        .where("sessionId","==",String(sessionId)).get();
+    }catch(error){
+      console.warn("Singer experience feedback unavailable:",error);
+      return played;
+    }
+    const latest=new Map();
+    for(const doc of snap.docs){
+      const v=doc.data()||{};
+      if(v.source!=="prompter-singer-experience"||String(v.sessionId||"")!==String(sessionId))continue;
+      const pid=String(v.performanceId||""),token=String(v.feedbackToken||doc.id);
+      const rating=String(v.rating??"");
+      if(!pid||!token||!["amazing","good","okay","notGreat",""].includes(rating))continue;
+      const key=pid+"|"+token,revision=Number(v.feedbackRevision)||0;
+      const at=timestampMs(v.submittedAt)||Number(v.submittedAtMs)||0;
+      const prev=latest.get(key);
+      if(!prev||revision>prev.revision||(revision===prev.revision&&at>prev.at))
+        latest.set(key,{pid,rating,revision,at});
+    }
+    const grouped=new Map();
+    for(const vote of latest.values()){
+      if(!vote.rating)continue;
+      if(!grouped.has(vote.pid))grouped.set(vote.pid,{amazing:0,good:0,okay:0,notGreat:0});
+      grouped.get(vote.pid)[vote.rating]++;
+    }
+    return played.map(item=>{
+      const id=String(item.performanceId||item.id||"");
+      if(!grouped.has(id))return item;
+      const counts={...grouped.get(id)};
+      const old=String(item.singerExperienceRating||"");
+      if(Object.hasOwn(singerScores,old))counts[old]++;
+      const total=Object.values(counts).reduce((sum,n)=>sum+n,0);
+      if(!total)return item;
+      const average=Object.entries(counts).reduce((sum,[k,n])=>sum+singerScores[k]*n,0)/total;
+      const rating={1:"notGreat",2:"okay",3:"good",4:"amazing"}[Math.round(average)];
+      return {...item,singerExperienceRating:rating,
+        singerExperienceVoteCounts:counts,singerExperienceVoteTotal:total};
+    });
+  }
+
   async function loadLiveFallback(session) {
     const result = {
       requests:getRequestSnapshot(session),
@@ -517,6 +574,7 @@
         console.warn("Could not refresh performed-song ratings; using session snapshot:", error);
       }
       result.requests = chronological(result.requests, requestOrderMs);
+      result.played = await mergeGuestSingerFeedback(session.id, result.played);
       result.played = chronological(result.played, playedOrderMs);
       return result;
     }
@@ -544,6 +602,7 @@
     }
 
     result.requests = chronological(result.requests, requestOrderMs);
+    result.played = await mergeGuestSingerFeedback(session.id, result.played);
     result.played = chronological(result.played, playedOrderMs);
     return result;
   }
@@ -616,7 +675,7 @@
                 <strong>${esc(item.songTitle || item.title || item.songId || "Untitled Song")} — ${esc(ArtistNames.display(item.songArtist || item.artist || ""))}</strong>
                 <span>${formatTime(tsDate(item.playedAt || item.startedAt || item.playingAt || item.createdAt))}${Number(item.performanceBpm || item.userBpm)>0 ? ` · ${esc(item.performanceBpm || item.userBpm)} BPM used` : ""}</span>
                 <span class="status-chip played">Played</span>
-                <span>Singer experience: <strong>${esc(({amazing:"AMAZING",good:"GOOD",okay:"OKAY",notGreat:"NOT GREAT"}[String(item.singerExperienceRating||"")])||"Not rated")}</strong></span>
+                <span>Singer experience: <strong>${esc(singerExperienceLabel(item))}</strong></span>
                 <span>Audience response (host): <strong>${esc(({great:"GREAT",good:"GOOD",average:"AVERAGE",weak:"WEAK"}[String(item.crowdResponse||"").toLowerCase()])||"Not rated")}</strong></span>
               </div>
             `;
