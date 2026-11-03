@@ -54,3 +54,25 @@ test('two-step full-list page keeps Safari 9-compatible layout and separate subm
  assert.match(script,/el\('next'\)\.onclick/);
  assert.match(script,/el\('send'\)\.disabled/);
 });
+
+test('name screen typography and footer placement stay isolated to first step',()=>{
+ const html=fs.readFileSync(path.join(root,'signup/sign up.html'),'utf8');
+ const css=fs.readFileSync(path.join(root,'signup/signup.css'),'utf8');
+ const script=fs.readFileSync(path.join(root,'signup/signup.js'),'utf8');
+ const header=html.slice(html.indexOf('<header>'),html.indexOf('</header>')+9);
+ const name=html.slice(html.indexOf('<section id="nameStep"'),html.indexOf('</section>',html.indexOf('<section id="nameStep"')));
+ const song=html.slice(html.indexOf('<section id="songStep"'),html.indexOf('<div class="song-top">'));
+ assert.doesNotMatch(header,/ENTER YOUR NAME|listTitle/);
+ assert.doesNotMatch(html,/id="listTitle"/);
+ assert.ok(name.indexOf('ENTER YOUR NAME')<name.indexOf('Who is singing?'));
+ assert.ok(name.indexOf('name-screen-footer')>name.indexOf("Enter your name, then choose"));
+ assert.match(song,/CHOOSE YOUR SONG/);
+ assert.match(css,/\.brand \{[^}]*font-size: 23px/);
+ assert.match(css,/\.name-step-title \{[^}]*font-size: 40px/);
+ assert.match(css,/\.help \{[^}]*font-size: 20px/);
+ assert.match(css,/\.name-screen-footer \{[^}]*margin: 100px 0 0/);
+ assert.match(css,/footer \{[^}]*font-size: 15px/);
+ assert.match(script,/el\('songFooter'\)\.hidden = which !== 'song'/);
+ assert.doesNotMatch(script,/el\('listTitle'\)/);
+ assert.doesNotMatch(script,/el\('stepTitle'\)/);
+});

@@ -10,14 +10,12 @@
 <meta name="robots" content="noindex,nofollow">
 <title>Sign up to sing · Live Karaoke</title>
 <link rel="apple-touch-icon" href="../apple-touch-icon.png">
-<link rel="stylesheet" href="signup.css?v=20261103-two-step">
+<link rel="stylesheet" href="signup.css?v=20261103-name-layout">
 </head>
 <body>
 <main id="kiosk">
 <header>
   <p class="brand">LIVE <strong>KARAOKE</strong></p>
-  <h1 id="stepTitle">ENTER YOUR NAME</h1>
-  <p id="listTitle">Tonight's song list</p>
 </header>
 <div id="notice" class="notice" role="status" aria-live="polite">Loading song list…</div>
 <button id="refresh" class="secondary" type="button" hidden>RETRY / REFRESH SONG LIST</button>
@@ -25,13 +23,16 @@
 <form id="signupForm" autocomplete="off" novalidate>
 <fieldset id="fields" disabled>
   <section id="nameStep" class="step" aria-label="Enter your name">
+    <h1 class="name-step-title">ENTER YOUR NAME</h1>
     <p class="instruction">Who is singing?</p>
     <label for="singerName">YOUR NAME</label>
     <input id="singerName" name="singerName" type="text" maxlength="80" autocomplete="off" autocorrect="off" autocapitalize="words" required>
     <button id="next" class="primary" type="button" disabled>CHOOSE A SONG</button>
     <p class="help">Enter your name, then choose what you'd like to sing.</p>
+    <p class="name-screen-footer">LIVE KARAOKE · Please ask the host if you need a hand.</p>
   </section>
   <section id="songStep" class="step" aria-label="Choose your song" hidden>
+    <h1 class="song-step-title">CHOOSE YOUR SONG</h1>
     <div class="song-top">
       <button id="back" class="secondary" type="button">BACK</button>
       <p id="singerSummary">Choose a song</p>
@@ -58,8 +59,8 @@
   <p>You're in! Your request has been sent straight to the host.</p>
   <p>Ready for the next singer in a moment…</p>
 </section>
-<footer>LIVE KARAOKE · Please ask the host if you need a hand.</footer>
+<footer id="songFooter" hidden>LIVE KARAOKE · Please ask the host if you need a hand.</footer>
 </main>
 <script src="kiosk-policy.js?v=20261007-kiosk2"></script>
-<script src="signup.js?v=20261103-two-step"></script>
+<script src="signup.js?v=20261103-name-layout"></script>
 </body></html>
