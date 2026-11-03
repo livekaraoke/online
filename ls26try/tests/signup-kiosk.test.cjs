@@ -44,7 +44,7 @@ test('two-step full-list page keeps Safari 9-compatible layout and separate subm
  assert.match(html,/id="nameStep"/);
  assert.match(html,/id="songStep"/);
  assert.match(html,/id="next"/);
- assert.match(html,/id="back"/);
+ assert.doesNotMatch(html,/id="back"/);
  assert.match(html,/id="cancel"/);
  assert.doesNotMatch(html,/id="moreSongs"/);
  assert.match(script,/for \(i = 0; i < songs.length; i \+= 1\)/);
@@ -190,7 +190,7 @@ test('artwork and session gate, eight-second return, no new data model',()=>{
  assert.match(html,/id="idleScreen" class="idle-screen is-closed"/);
  assert.match(css,/\.idle-screen\.is-open \{ background-image: url\("assets\/click-to-sing\.jpg"\)/);
  assert.match(css,/\.idle-screen\.is-closed \{ background-image: url\("assets\/requests-closed\.jpg"\)/);
- assert.match(css,/background-size: contain/);
+ assert.match(css,/background-size: auto 92%/);
  assert.match(script,/resetTimer = setTimeout\(function \(\) \{[\s\S]*?\}, 8000\)/);
  assert.match(script,/songGate\.songsEnabled === true/);
  assert.match(script,/control\.active === true && actual === linked/);
