@@ -7,7 +7,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Performance Sessions</title>
-  <link rel="stylesheet" href="css/performance-sessions.css?v=20260930-history-cancelled-v3">
+  <link rel="stylesheet" href="css/performance-sessions.css?v=20261103-history-corrections">
   <link rel="stylesheet" href="css/session-night-flow.css?v=20261030-v1">
   <link rel="stylesheet" href="css/sidebar.css?v=20260910-stage4">
   <link rel="stylesheet" href="css/sidebar-suite.css?v=20260910-stage4">
@@ -29,6 +29,35 @@
     <div class="session-modal-box">
       <div id="sessionModalContent"></div>
     </div>
+  </div>
+
+  <div id="sessionCorrectionModal" class="history-correction-modal hidden" role="dialog" aria-modal="true" aria-labelledby="sessionCorrectionTitle">
+    <form id="sessionCorrectionForm" class="history-correction-panel">
+      <header class="history-correction-header">
+        <div><small>HISTORICAL RECORD CORRECTION</small><h2 id="sessionCorrectionTitle">Edit session details</h2></div>
+        <button type="button" id="sessionCorrectionX" class="history-correction-x" aria-label="Close correction editor">×</button>
+      </header>
+      <div id="sessionCorrectionIdentity" class="history-correction-fields" hidden>
+        <label>VENUE
+          <select id="sessionCorrectionVenue" required></select>
+        </label>
+        <label>ACT TYPE
+          <select id="sessionCorrectionAct" required></select>
+        </label>
+      </div>
+      <div id="sessionCorrectionTimes" class="history-correction-fields" hidden>
+        <label>SCHEDULED START<input id="sessionCorrectionScheduledStart" type="datetime-local" required></label>
+        <label>SCHEDULED END<input id="sessionCorrectionScheduledEnd" type="datetime-local" required></label>
+        <label>ACTUAL PERFORMANCE START<input id="sessionCorrectionActualStart" type="datetime-local"></label>
+        <label>ACTUAL PERFORMANCE END<input id="sessionCorrectionActualEnd" type="datetime-local"></label>
+      </div>
+      <p id="sessionCorrectionWarning" class="history-correction-warning"></p>
+      <p id="sessionCorrectionMessage" class="history-correction-message" role="status" aria-live="polite"></p>
+      <footer class="history-correction-actions">
+        <button type="button" id="sessionCorrectionCancel">CANCEL</button>
+        <button type="submit" id="sessionCorrectionSave">SAVE CORRECTION</button>
+      </footer>
+    </form>
   </div>
 
   <div id="appShell" class="app-shell" style="display:none;">
@@ -163,6 +192,8 @@
   <script src="js/members.js?v=20260910-stage4"></script>
   
   <script src="js/session-night-flow.js?v=20261030-v1"></script>
-  <script src="js/performance-sessions.js?v=20261030-night-flow"></script>
+  <script src="js/gig-operations.js?v=20261103-history-dates"></script>
+  <script src="js/session-history-correction.js?v=20261103-history-dates"></script>
+  <script src="js/performance-sessions.js?v=20261103-history-corrections"></script>
 <script src="../shared/shell.js?v=20260929-planner-tools"></script><script src="../shared/inbox.js?v=20260925-artist-names"></script><script src="../shared/session-ui.js?v=20261018-smart-v1"></script><script src="../shared/performance.js?v=20260925-live-click"></script></body>
 </html>
