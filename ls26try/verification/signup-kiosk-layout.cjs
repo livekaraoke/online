@@ -55,6 +55,8 @@ let server,browser;let requestOpen=true,sessionActive=true;
   await page.locator('.song').first().waitFor({state:'attached'});
   await page.waitForFunction(()=>!document.getElementById('idleScreen').disabled);
   assert.equal(await page.locator('#idleScreen').getAttribute('aria-label'),'Click anywhere to sing');
+  const artworkScale=await page.locator('#idleScreen').evaluate(el=>getComputedStyle(el).backgroundSize);
+  assert.equal(artworkScale,'auto 92%','Landing artwork preserves aspect ratio at reduced centered size');
   const imageLoaded=await page.evaluate(()=>new Promise(resolve=>{
     const img=new Image();img.onload=()=>resolve(img.naturalWidth>=1000&&img.naturalHeight>=1000);
     img.onerror=()=>resolve(false);img.src='assets/click-to-sing.jpg';
@@ -104,6 +106,14 @@ let server,browser;let requestOpen=true,sessionActive=true;
   assert.ok(await page.locator('#songResults button').nth(2).isEnabled(),'Cancelled request allows new selection');
   assert.equal(await page.locator('#songResults button').nth(0).locator('.song-unavailable').textContent(),'ALREADY REQUESTED');
   assert.equal(await page.locator('#songResults button').nth(1).locator('.song-unavailable').textContent(),'ALREADY PLAYED');
+  const labelPlacement=await page.evaluate(()=>{
+    const row=document.querySelector('#songResults button.unavailable');
+    const title=row.querySelector('strong').getBoundingClientRect();
+    const indicator=row.querySelector('.song-unavailable').getBoundingClientRect();
+    return {titleRight:title.right,labelLeft:indicator.left};
+  });
+  assert.ok(labelPlacement.labelLeft>=labelPlacement.titleRight-2,
+    'ALREADY REQUESTED must not overlap song title: '+JSON.stringify(labelPlacement));
   const layout=await page.evaluate(()=>{
    const list=document.getElementById('songResults'),send=document.getElementById('send'),bottom=document.getElementById('songBottom');
    const r=send.getBoundingClientRect(),b=bottom.getBoundingClientRect(),l=list.getBoundingClientRect();
