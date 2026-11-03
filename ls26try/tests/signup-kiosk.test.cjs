@@ -17,7 +17,7 @@ test('disabled rollout blocks requests even with a valid kiosk token',()=>{
 test('token parsing does not depend on URLSearchParams',()=>{assert.equal(api.param('k','?k=abc%20def'),'abc def');assert.equal(api.param('k','?k=%xx'),'');assert.equal(api.param('k','?other=x'),'');assert.ok(api.tokenValid('a'.repeat(64)));assert.ok(!api.tokenValid('ABCD'));});
 const songs=[{id:'one',title:'Wonderwall',artist:'Oasis'},{id:'two',title:'Zombie',artist:'The Cranberries'}];
 test('search is local, case insensitive, title and artist',()=>{assert.deepEqual(api.filterSongs(songs,'WONDER'),[songs[0]]);assert.deepEqual(api.filterSongs(songs,'cranb'),[songs[1]]);assert.equal(api.filterSongs(songs,'missing').length,0);});
-test('required name/song, optional bounded note',()=>{assert.ok(api.validForm('Alex',songs[0],''));assert.ok(!api.validForm(' ',songs[0],''));assert.ok(!api.validForm('Alex',null,''));assert.ok(!api.validForm('a'.repeat(81),songs[0],''));assert.ok(!api.validForm('Alex',songs[0],'x'.repeat(301)));});
+test('required name/song, optional bounded note',()=>{assert.ok(api.validForm('Alex',songs[0],''));assert.ok(!api.validForm('Al',songs[0],''));assert.ok(!api.validForm(' ',songs[0],''));assert.ok(!api.validForm('Alex',null,''));assert.ok(!api.validForm('a'.repeat(81),songs[0],''));assert.ok(!api.validForm('Alex',songs[0],'x'.repeat(301)));});
 test('only the existing queue request and private proof are written; all server timestamps; create-only',()=>{
  const view={sessionId:'s1',setlistId:'set1',setlistName:'Tonight',revision:'r1',venue:'Test'};
  const body=api.commitBody('demo-ls26-kiosk','kiosk_'+'1'.repeat(32),'a'.repeat(64),view,songs[0],'  Alex  ','');
@@ -48,7 +48,7 @@ test('two-step full-list page keeps Safari 9-compatible layout and separate subm
  assert.match(html,/id="cancel"/);
  assert.doesNotMatch(html,/id="moreSongs"/);
  assert.match(script,/for \(i = 0; i < songs.length; i \+= 1\)/);
- assert.match(script,/button\.className = 'song' \+ \(item\.song\.id === song\.id \? ' selected' : ''\)/);
+ assert.match(script,/row\.button\.className = 'song' \+/);
  assert.match(css,/\.song\.selected \{ background: #155c36/);
  assert.match(css,/height: 100vh/);
  assert.match(script,/el\('next'\)\.onclick/);
@@ -85,7 +85,7 @@ test('iPad 2 scroll pane reserves request panel and allows complete list scroll'
  assert.doesNotMatch(html,/id="songFooter"/);
  assert.match(css,/\.songs \{ position: absolute;[^}]*overflow-y: scroll/);
  assert.match(css,/\.song-bottom \{ position: absolute;[^}]*bottom: 0/);
- assert.match(script,/list\.style\.height = Math\.max\(40, remaining\)/);
+ assert.match(script,/list\.style\.height = Math\.max\(40, Math\.floor\(available\)\)/);
  assert.match(script,/bottom\.offsetHeight/);
  assert.match(script,/root\.addEventListener\('orientationchange', layoutSongScreen\)/);
  assert.match(css,/#nameStep \{[^}]*padding: 11% 16px 0/);
@@ -139,10 +139,44 @@ test('semi-transparent touch-size refresh control works on all screens without s
  const script=fs.readFileSync(path.join(root,'signup/signup.js'),'utf8');
  assert.match(html,/id="pageRefresh"[^>]*aria-label="Refresh signup page"/);
  assert.match(css,/\.page-refresh \{[^}]*width: 52px; height: 52px;/);
- assert.match(css,/\.page-refresh \{[^}]*opacity: \.62;/);
+ assert.match(css,/\.page-refresh \{[^}]*opacity: \.24;/);
  assert.match(script,/el\('pageRefresh'\)\.onclick = function/);
  assert.match(script,/root\.location\.reload\(\)/);
- assert.match(script,/Refreshing will clear this unfinished request/);
- assert.match(script,/Ask the host before refreshing/);
+ assert.match(script,/Refreshing will clear the name and song/);
+ assert.match(script,/Check with the host before clearing this form/);
  assert.match(script,/el\('pageRefresh'\)\.disabled = busy/);
+});
+
+test('kiosk status reads are session scoped, field limited and do not fetch requester details',()=>{
+ const script=fs.readFileSync(path.join(root,'signup/signup.js'),'utf8');
+ assert.match(script,/publicSites\/live-karaoke\/views\/live/);
+ assert.match(script,/collectionId: 'publicSongRequests'/);
+ assert.match(script,/fieldPath: 'songId'/);
+ assert.match(script,/fieldPath: 'status'/);
+ assert.match(script,/fieldPath: 'sessionId'/);
+ const start=script.indexOf("xhr('POST', base + ':runQuery'");
+ const end=script.indexOf("}, function (error, records)",start);
+ const query=script.slice(start,end);
+ assert.doesNotMatch(query,/singerName|requesterName|note|lyrics|hostNote/);
+ assert.match(script,/function songUnavailable\(id\)/);
+ assert.match(script,/row\.button\.disabled = !!reason/);
+ assert.match(script,/localBlocked\[selected\.id\] = 'REQUESTED'/);
+ assert.match(script,/value === 'played' \|\| value === 'completed'/);
+ assert.doesNotMatch(script,/onSnapshot|setInterval/);
+});
+test('touch affordances, no browser confirm, viewport sizing and custom refresh dialog',()=>{
+ const html=fs.readFileSync(path.join(root,'signup/sign up.html'),'utf8');
+ const css=fs.readFileSync(path.join(root,'signup/signup.css'),'utf8');
+ const script=fs.readFileSync(path.join(root,'signup/signup.js'),'utf8');
+ assert.match(html,/id="refreshDialog"/);
+ assert.match(html,/id="singerDisplay"/);
+ assert.match(html,/autofocus required/);
+ assert.match(css,/#signupForm\.song-active \{ position: absolute; top: 66px;/);
+ assert.match(css,/#singerDisplay \{ font-size: 27px/);
+ assert.match(css,/\.note-toggle \{[^}]*font-size: 20px/);
+ assert.match(css,/\.selection \{[^}]*font-size: 22px/);
+ assert.match(css,/\.primary:not\(:disabled\) \{ background: #156b3c/);
+ assert.match(css,/\.send:not\(:disabled\) \{ background: #146b3b/);
+ assert.match(script,/openRefreshDialog\('Refreshing/);
+ assert.doesNotMatch(script,/root\.confirm\(|window\.confirm\(/);
 });
