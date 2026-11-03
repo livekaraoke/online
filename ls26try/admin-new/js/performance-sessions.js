@@ -698,13 +698,29 @@
     window.LS26NightFlow?.mount($("nightFlow"), detail.played, session.breaks, formatTime);
   };
 
+  window.openSessionCorrection = function openSessionCorrection(sessionId, mode) {
+    const record=sessions.find(s=>s.id===sessionId);
+    if(!record)return;
+    window.LS26SessionHistoryEditor?.open(record,mode,async id=>{
+      const doc=await db.collection("performanceSessions").doc(id).get();
+      if(!doc.exists)return;
+      const updated={id:doc.id,...doc.data()};
+      const index=sessions.findIndex(s=>s.id===id);
+      if(index>=0)sessions[index]=updated;
+      populateVenueFilter();
+      renderCurrentSession();
+      applyFilters();
+      await window.viewSessionDetails(id);
+    });
+  };
+
   window.editFinishedSessionField = async function editFinishedSessionField(sessionId, field, label) {
     const session = sessions.find(item => item.id === sessionId);
     if (!session) return;
 
     const ended = String(session.status || "").toLowerCase() === "ended" || !!actualEnd(session);
     if (!ended) {
-      await LS26Dialogs.alert("Only finished sessions can use edit annotations.");
+      await LS26Dialogs.alert("Only finished sessions can edit private session notes.");
       return;
     }
 
