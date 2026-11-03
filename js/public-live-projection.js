@@ -54,6 +54,13 @@
     const eligible=active?policy.runItems(run,sessionId).filter(row=>!row.requestId||!policy.terminal.has(requestStates.get(row.requestId))):[];
     const items=eligible.slice(0,100).map(row=>({id:id(row.id),songId:id(row.songId),requestId:id(row.requestId),
       songTitle:text(row.songTitle||row.title),artist:text(row.artist||row.songArtist),status:text(row.status||'queued',40)}));
+    // Only a singer's public stage name and song title for NOW + next three.
+    // Never publish notes, contact details, full run order or non-karaoke acts.
+    const queueEnabled=act==='live-karaoke'&&active&&karaoke.songsEnabled===true;
+    const currentRow=queueEnabled?eligible.find(row=>String(row.status||'').toLowerCase()==='playing'):null;
+    const stageRow=row=>({songTitle:text(row.songTitle||row.title||'',120),singerName:text(row.singerName||'',80)});
+    const nextRows=queueEnabled?eligible.filter(row=>row!==currentRow&&String(row.status||'').toLowerCase()!=='playing').slice(0,3):[];
+    const kioskQueue={current:currentRow?stageRow(currentRow):null,next:nextRows.map(stageRow)};
     const availability=[];
     // Public availability contains song/status only, never requester names, notes,
     // demographics, device IDs, email hashes, capability tokens or timing.
@@ -72,7 +79,7 @@
         actualStartedAt:started(session),venue:text(session.venue)}:{},event:publicEvent||{},
       karaoke:{songsEnabled:!!sessionId&&karaoke.songsEnabled===true,venueCodeRequired:!!karaoke.venueAccessCode,
         preSessionRequestSessionId:pre?sessionId:'',preSessionRequestEventId:pre?id(sourceEvent.id):''},
-      run:{sessionId:active?sessionId:'',items},availability};
+      run:{sessionId:active?sessionId:'',items},availability,kioskQueue};
   }
   return Object.freeze({event,events,settings,live});
 });
