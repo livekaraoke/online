@@ -222,8 +222,8 @@
     originalLoadSong();
     const item=entries().find(entry=>entry.id===id)||{};
     window.dispatchEvent(new CustomEvent('ls26:prompter-song-changed', {
-      detail: {songId:id, source:'legacy', cue, title:item.title||metadata.songTitle||metadata.title,
-        artist:item.artist||metadata.songArtist||metadata.artist,
+      detail: {songId:id, source:'legacy', cue, title:item.title||metadata.prompterSongTitle||metadata.songTitle||metadata.title,
+        artist:item.artist||metadata.prompterSongArtist||metadata.songArtist||metadata.artist,
         year:item.year||metadata.prompterSongYear||metadata.year||''}
     }));
   }
@@ -251,7 +251,12 @@
     unsubscribe = firebase.firestore()
       .collection('karaokeControl').doc('liveLyrics')
       .onSnapshot(snap => {
-        if (!enabled || !snap.exists) return;
+        if (!enabled) return;
+        // Consume the baseline even when the control document has no song.
+        // The first subsequent SEND LYRICS must still produce a fresh cue.
+        const cue=!firstSnapshot;
+        firstSnapshot=false;
+        if(!snap.exists)return;
         const data = snap.data() || {};
         // Manual SEND LYRICS may update currentSongId while the modern
         // singer-display ID remains stale.
@@ -268,8 +273,6 @@
              value(meta, 'songArtist', 'artist')].join('|');
         if (signature === lastHostKey) return;
         lastHostKey = signature;
-        const cue=!firstSnapshot;
-        firstSnapshot=false;
         if (modern) void showModernSong(raw, cue);
         else void showSong(raw, meta, cue);
       }, error => console.warn('Slave Lyrics sync failed:', error));
