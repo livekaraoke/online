@@ -60,8 +60,8 @@ test("chart is mounted just above existing played-song list with responsive touc
  const session=read("js/performance-sessions.js");
  const css=read("css/session-night-flow.css");
  const lib=read("js/session-night-flow.js");
- assert.match(html,/session-night-flow.js\?v=20261030-v1/);
- assert.match(html,/session-night-flow.css\?v=20261030-v1/);
+ assert.match(html,/session-night-flow.js\?v=20261103-zoom-key-years/);
+ assert.match(html,/session-night-flow.css\?v=20261103-zoom-key-years/);
  assert.ok(session.indexOf("LS26NightFlow?.card()")<session.indexOf("PLAYED SONGS &amp; BREAKS"));
  assert.match(session,/LS26NightFlow\?\.mount\(\$\("nightFlow"\), detail\.played, session\.breaks, formatTime\)/);
  assert.match(css,/min-height:44px/);
