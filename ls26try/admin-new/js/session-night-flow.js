@@ -137,7 +137,7 @@
     const step=(width-left-right)/Math.max(1,data.length-1);
     const min=categorical?0:marks[0],max=categorical?marks.length-1:marks[marks.length-1];
     const x=i=>data.length===1?left+(width-left-right)/2:left+i*step;
-    const y=v=>categorical?top+(max-marks.indexOf(v))/(max||1)*plotHeight
+    const y=v=>categorical?(marks.length===1?top+plotHeight/2:top+(max-marks.indexOf(v))/(max||1)*plotHeight)
       :top+(max-v)/(max-min||1)*plotHeight;
     const labelEvery=Math.max(1,Math.ceil(32/Math.max(1,step)));
     const col=MODES[mode].color;
