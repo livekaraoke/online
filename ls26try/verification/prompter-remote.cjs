@@ -93,14 +93,23 @@ assert.match(prompterHtml,/prompterScrollUp/);assert.match(prompterHtml,/prompte
     const artist=document.getElementById('ls26SingerUpcomingArtist');
     const year=document.getElementById('ls26SingerUpcomingYear');
     const artBox=art.getBoundingClientRect();
+    const style=getComputedStyle(info);
     return {topRatio:(info.getBoundingClientRect().top-artBox.top)/artBox.height,
       title:getComputedStyle(title).color,artist:getComputedStyle(artist).color,
-      year:getComputedStyle(year).color};
+      year:getComputedStyle(year).color,
+      border:style.borderTopColor,borderWidth:style.borderTopWidth,
+      radius:style.borderTopLeftRadius,padding:style.paddingTop,
+      background:style.backgroundImage};
   });
   assert.ok(previewStyle.topRatio>0.765&&previewStyle.topRatio<0.775,'Preview metadata sits clearly below PLEASE WAIT');
   assert.equal(previewStyle.title,'rgb(255, 255, 255)');
   assert.equal(previewStyle.artist,'rgb(174, 180, 188)');
   assert.equal(previewStyle.year,'rgb(142, 148, 156)');
+  assert.equal(previewStyle.border,'rgb(54, 213, 138)','Song information must have a green border');
+  assert.equal(previewStyle.borderWidth,'2px');
+  assert.ok(parseFloat(previewStyle.radius)>=12,'Card has professional rounded corners');
+  assert.ok(parseFloat(previewStyle.padding)>=14,'Card must have comfortable inner spacing');
+  assert.ok(previewStyle.background.includes('linear-gradient'),'Card uses a dark-green gradient');
   assert.equal(await prompter.locator('#ls26SingerUpcomingYear').textContent(),'(1999)');
   await host.waitForFunction(()=>document.getElementById('ls26PrompterSongCue')?.disabled===false);
   await press('song',()=>document.body.dataset.ls26SingerStage==='running');

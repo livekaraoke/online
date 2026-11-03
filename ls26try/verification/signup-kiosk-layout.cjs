@@ -82,7 +82,7 @@ let server,browser;let requestOpen=true,sessionActive=true;
   assert.ok(geometry.queueBottom<=geometry.visibleHeight+2,'Queue must fit viewport: '+JSON.stringify(geometry));
   assert.equal(await page.locator('#idleScreen').getAttribute('aria-label'),'Click anywhere to sing');
   const artworkScale=await page.locator('.idle-brand-art').evaluate(el=>getComputedStyle(el).backgroundSize);
-  assert.equal(artworkScale,'auto 148%','Landing art remains proportional and cropped');
+  assert.equal(artworkScale,'contain','Entire CLICK TO SING artwork fits above the queue without cropping');
   const imageLoaded=await page.evaluate(()=>new Promise(resolve=>{
     const img=new Image();img.onload=()=>resolve(img.naturalWidth>=1000&&img.naturalHeight>=1000);
     img.onerror=()=>resolve(false);img.src='assets/click-to-sing.jpg';

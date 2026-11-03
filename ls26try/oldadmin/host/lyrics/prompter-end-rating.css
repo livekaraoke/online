@@ -167,8 +167,14 @@ body[data-ls26-singer-stage="ended"] #prompterEndRating{display:block}
 #ls26SingerRemoteStage .ls26-singer-artwork-idle{width:min(100vw,calc(100dvh * 1024 / 1536));aspect-ratio:1024/1536}
 #ls26SingerRemoteStage .ls26-singer-song-info{
   position:absolute;left:7%;width:86%;top:77%;
+  box-sizing:border-box;
+  padding:clamp(14px,2.8cqw,26px) clamp(16px,3.6cqw,32px);
+  border:2px solid #36d58a;
+  border-radius:clamp(12px,1.8cqw,18px);
+  background:linear-gradient(155deg,rgba(6,50,33,.96),rgba(3,26,23,.96));
+  box-shadow:0 10px 30px rgba(0,0,0,.55),inset 0 0 0 1px rgba(180,255,211,.09);
   text-align:center;color:#fff;font-family:Arial,Helvetica,sans-serif;
-  text-shadow:0 2px 8px #000,0 0 18px rgba(0,0,0,.65);
+  text-shadow:0 2px 8px rgba(0,0,0,.60);
   display:flex;flex-direction:column;gap:clamp(4px,1.2cqw,12px);
   overflow-wrap:anywhere;
 }

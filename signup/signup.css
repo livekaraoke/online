@@ -164,16 +164,16 @@ header .cancel-button {
 .idle-screen:disabled { opacity: 1; cursor: default; }
 .idle-screen:focus { outline: none; }
 
-/* Singer landing: preserve the original portrait artwork, showing its upper
- * microphone/logo portion above a compact, privacy-limited public queue.
- * Old iOS Safari uses percentages and prefixed background sizing. */
+/* Singer landing: show the COMPLETE original portrait artwork in its
+ * own pane above the public queue, without cropping or distorting it.
+ * 'contain' works on the old Safari kiosk and modern Android tablets. */
 .idle-screen.is-open { background-image: none; }
 .idle-screen .idle-brand-art, .idle-screen .idle-queue { display: none; }
 .idle-screen.is-open .idle-brand-art {
  display: block; width: 100%; height: 60%; margin: 0;
  background-image: url("assets/click-to-sing.jpg");
- background-repeat: no-repeat; background-position: center top;
- background-size: auto 148%; -webkit-background-size: auto 148%;
+ background-repeat: no-repeat; background-position: center center;
+ background-size: contain; -webkit-background-size: contain;
 }
 .idle-screen.is-open .idle-queue {
  display: block; width: 96%; max-width: 940px; height: 40%;
@@ -199,7 +199,7 @@ header .cancel-button {
  background: #146b3b; color: #fff; font-size: 22px; font-weight: bold;
 }
 @media (max-width: 700px), (max-height: 520px) {
- .idle-screen.is-open .idle-brand-art { height: 53%; background-size: auto 148%; -webkit-background-size: auto 148%; }
+ .idle-screen.is-open .idle-brand-art { height: 53%; background-size: contain; -webkit-background-size: contain; }
  .idle-screen.is-open .idle-queue { height: 47%; padding: 2px 8px; }
  .idle-queue-heading { font-size: 15px; padding-bottom: 3px; }
  .idle-tap-hint { font-size: 11px; }
