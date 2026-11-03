@@ -1,6 +1,8 @@
 /* Singer's own Live Karaoke experience, separate from LyricView's
  * host-rated crowdResponse. Linked to an existing performanceSessions/
  * performedSongs record: no duplicate performance or listener system.
+ * Guest submissions use the pre-existing publicSignupSessions feedback path,
+ * with session/performance IDs only (no lyrics or singer identity).
  * Ratings never complete songs or alter session state.
  */
 (() => {
@@ -17,6 +19,19 @@
   let reachedEnd = false;
   let requestVersion = 0;
   let lastSongKey = '';
+  // One voting identity per page/song instance for corrections without
+  // overwriting another singer's response. This is not an auth credential.
+  let feedbackToken = '';
+  const freshToken = () => (window.crypto?.randomUUID?.() ||
+    Date.now().toString(36)+'-'+Math.random().toString(36).slice(2));
+  const saveLocal = (value) => {
+    try { sessionStorage.setItem('ls26:prompter:feedback:'+songKey(), value); }
+    catch (_) {}
+  };
+  const getLocal = () => {
+    try { return sessionStorage.getItem('ls26:prompter:feedback:'+songKey()); }
+    catch (_) { return null; }
+  };
 
   const norm = value => String(value || '').toLowerCase()
     .normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]/g,'');
@@ -25,7 +40,9 @@
     if(el){el.textContent=message;el.classList.toggle('is-error',error);}
   };
   const buttons = () => {
-    const active=Boolean(current && ['playing','completed'].includes(current.record?.status))&&!working;
+    // The singer's choice is always available, including on unsigned-in
+    // tablets. Session persistence is handled separately from button access.
+    const active=!working;
     card.querySelectorAll('[data-prompter-rating]').forEach(button=>{
       button.disabled=!active;
       const chosen=selected!==null&&selected===button.dataset.prompterRating;
@@ -57,6 +74,7 @@
     const key=songKey();
     if(lastSongKey===key)return;
     lastSongKey=key;
+    feedbackToken=freshToken();
     ++requestVersion;
     current=null;
     selected=null;
@@ -96,11 +114,7 @@
       const sessionId=String(control.active===true?
         (control.sessionId||control.activeSessionId||''):'');
       if(!sessionId){
-        status('This rating is available when singing at an active Live Karaoke session.');
-        return;
-      }
-      if(!firebase.auth?.().currentUser){
-        status('Ask the host to enable rating on this device.');
+        status('You can still rate. Without a recorded session, your choice stays on this device.');
         return;
       }
       const runSnap=await db.collection('karaokeControl').doc('runOrder').get();
@@ -124,8 +138,11 @@
         status('No matching started/completed performance record was found.',true);return;
       }
       current={sessionId,item,ref,record,songId:String(item.songId)};
-      selected=Object.hasOwn(values,String(record.singerExperienceRating))?
-        String(record.singerExperienceRating):null;
+      const local = getLocal();
+      selected=local!==null && Object.hasOwn(values,local)
+        ? local
+        : Object.hasOwn(values,String(record.singerExperienceRating))
+          ? String(record.singerExperienceRating):null;
       buttons();
       status(selected!==null && selected!=='' ?
         'Your rating: '+values[selected]+'. Thanks for your feedback!' :
@@ -135,34 +152,72 @@
     }
   }
   async function rate(value){
-    if(!Object.hasOwn(values,value)||!current||
-      !['playing','completed'].includes(current.record.status)||working)return;
-    if(selected===value){status(value ? 'Thanks! Your rating is saved.' :
-      'No rating selected.');return;}
-    const info=current,ticket=requestVersion;
-    working=true;buttons();status('Saving rating...');
+    if(!Object.hasOwn(values,value)||working) return;
+    const key=songKey();
+    // Resolve the active performance again if the card loaded before the
+    // session was started. No singer Firebase sign-in is required.
+    if(!current) await refresh();
+    if(key!==songKey()) return;
+    if(!current || !['playing','completed'].includes(current.record.status)){
+      selected=value;
+      saveLocal(value);
+      buttons();
+      status('Your choice is on this device only. No recorded performance was available to save it to Session History.');
+      return;
+    }
+    if(selected===value){
+      status('Your rating is already selected. Thank you!');
+      return;
+    }
+    const info=current, ticket=requestVersion;
+    working=true;buttons();status('Saving your experience rating...');
     try{
-      await db.runTransaction(async tx=>{
-        const snap=await tx.get(info.ref),data=snap.exists?snap.data()||{}:{};
-        if(!snap.exists||!['playing','completed'].includes(data.status)||
-            String(data.songId||'')!==info.songId)
-          throw new Error('This performance was changed. Your rating was not saved.');
-        const fields = value
-          ? {singerExperienceRating:value,
-             singerExperienceRatedAt:firebase.firestore.FieldValue.serverTimestamp()}
-          : {singerExperienceRating:firebase.firestore.FieldValue.delete(),
-             singerExperienceRatedAt:firebase.firestore.FieldValue.delete()};
-        // Deliberately do NOT update crowdResponse: that belongs to LyricView.
-        tx.update(info.ref,fields);
-      });
-      if(ticket===requestVersion){
+      const user=typeof firebase.auth==='function' ? firebase.auth().currentUser : null;
+      if(user){
+        // Authenticated host/performer: retain the canonical performedSongs
+        // rating field and do not touch the LyricView crowdResponse field.
+        await db.runTransaction(async tx=>{
+          const snap=await tx.get(info.ref),data=snap.exists?snap.data()||{}:{};
+          if(!snap.exists||!['playing','completed'].includes(data.status)||
+              String(data.songId||'')!==info.songId)
+            throw new Error('This performance changed before the rating could be saved.');
+          tx.update(info.ref,value
+            ? {singerExperienceRating:value,
+               singerExperienceRatedAt:firebase.firestore.FieldValue.serverTimestamp()}
+            : {singerExperienceRating:firebase.firestore.FieldValue.delete(),
+               singerExperienceRatedAt:firebase.firestore.FieldValue.delete()});
+        });
+      }else{
+        // Guest tablets are intentionally not allowed to modify private
+        // performedSongs. Append a small, anonymous rating linked to the
+        // existing session + performance; Session History joins those IDs.
+        // Repeated choices use the same token and are deduplicated there.
+        const submittedAtMs=Date.now();
+        await db.collection('publicSignupSessions').add({
+          source:'prompter-singer-experience',
+          sessionId:info.sessionId,
+          performanceId:String(info.item.performanceId),
+          songId:info.songId,
+          feedbackToken,
+          rating:value,
+          submittedAtMs,
+          submittedAt:firebase.firestore.FieldValue.serverTimestamp()
+        });
+      }
+      if(ticket===requestVersion && key===songKey()){
         selected=value;
+        saveLocal(value);
         current.record={...current.record,singerExperienceRating:value};
-        status(value ? 'Thank you! Your experience rating was saved.' :
-          'Your rating was cleared. Thank you for singing!');
+        status(value
+          ? 'Thank you! Your experience rating was saved for this performance.'
+          : 'Your rating was cleared. Thank you for singing!');
       }
     }catch(error){
-      if(ticket===requestVersion)status('Sorry, your rating could not be saved: '+error.message,true);
+      if(ticket===requestVersion){
+        // Keep controls available for another attempt. Never falsely report
+        // an unsuccessful network write as saved to the session.
+        status('Could not save your rating to tonight’s session. Please tap again. '+error.message,true);
+      }
     }finally{working=false;buttons();}
   }
 
@@ -180,19 +235,12 @@
   });
   guide?.addEventListener('click',event=>{if(event.target===guide)guide.close();});
 
-  // Auth persists across LiveSuite pages on the same device. An initial
-  // Firebase sign-in restoration can occur after the card becomes visible.
-  if(typeof firebase.auth==='function'){
-    firebase.auth().onAuthStateChanged(user=>{
-      if(user&&reachedEnd&&!current&&!working)void refresh();
-    });
-  }
   window.addEventListener('ls26:prompter-song-changed',()=>{
     // A second performance of the same song can reuse the song ID, so do not
     // keep the previous performance's rating across an explicit resend.
     if(lastSongKey===songKey()){
       ++requestVersion;
-      current=null;selected=null;buttons();
+      current=null;selected=null;feedbackToken=freshToken();buttons();
       if(reachedEnd)void refresh();
     }else clearForSong();
   });
