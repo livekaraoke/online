@@ -185,6 +185,17 @@ let server,browser;let requestOpen=true,sessionActive=true;
   assert.ok(Math.abs(confirmation.center-confirmation.boxCenter)<26,'Success text must be vertically centered: '+JSON.stringify(confirmation));
   assert.ok(confirmation.paragraphSize>=18,'Success messages should be larger: '+JSON.stringify(confirmation));
   assert.ok(confirmation.gap>=10,'Confirmation paragraphs should be separated: '+JSON.stringify(confirmation));
+  assert.ok(await page.locator('#anotherSong').isVisible(),'Repeat-request button must show after confirmed submission');
+  if(viewport.width!==1024){
+    await page.locator('#anotherSong').click();
+    assert.ok(await page.locator('#success').isHidden(),'Repeat button closes confirmation');
+    assert.ok(await page.locator('#songStep').isVisible(),'Repeat button goes directly to song list');
+    assert.equal(await page.locator('#singerName').inputValue(),'Test singer','Repeat request keeps the same singer');
+    assert.ok(!await page.locator('#send').isEnabled(),'A new song must be selected before sending');
+    await page.locator('#cancel').click();
+    assert.ok(await page.locator('#idleScreen').isVisible(),'Cancel after repeat returns to landing');
+    assert.equal(await page.locator('#singerName').evaluate(el=>document.activeElement===el),false,'Landing must not focus keyboard');
+  }
   if(viewport.width===1024){
     await page.locator('#idleScreen').waitFor({state:'visible',timeout:12000});
     assert.equal(await page.locator('#idleScreen').getAttribute('aria-label'),'Click anywhere to sing');
