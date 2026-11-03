@@ -57,9 +57,27 @@
     const majorRoot=(root+(match[3]==="m"?3:0))%12;
     return ((majorRoot*7)%12)*2+(match[3]==="m"?1:0);
   };
+  // Fetch only the distinct song IDs missing metadata; cache across session views.
+  const catalogueCache=new Map();
+  async function enrichPlayed(played,fetchBatch,cache=catalogueCache){
+    const rows=Array.isArray(played)?played:[];
+    const ids=[...new Set(rows.filter(row=>row?.songId&&(yearOf(row)==null||keyOf(row)==null))
+      .map(row=>String(row.songId).trim()).filter(Boolean))].filter(id=>!cache.has(id));
+    for(let i=0;i<ids.length;i+=10){
+      const batch=ids.slice(i,i+10);
+      const found=await fetchBatch(batch);
+      for(const id of batch)cache.set(id,found?.[id]||null);
+    }
+    return rows.map(row=>{
+      const info=row?.songId?cache.get(String(row.songId).trim()):null;
+      return !info?row:{...row,libraryYear:info.year??info.releaseYear??info.songYear??null,
+        libraryKey:info.key??info.songKey??null};
+    });
+  }
   const valueOf=(item,mode)=>{
     if(mode==="bpm")return finite(item.performanceBpm??item.userBpm??item.songUserBpm??item.bpm??item.originalBpm,20,350);
     if(mode==="year")return yearOf(item);
+    if(mode==="key")return keyOf(item);
     const raw=String(mode==="host"?item.crowdResponse??"":item.singerExperienceRating??"").toLowerCase().replace(/[\s_-]+/g,"");
     return (mode==="host"?HOST:SINGER)[raw]??null;
   };
@@ -86,9 +104,11 @@
     if(!values.length)return "No "+MODES[mode].title.toLowerCase()+" values recorded";
     if(mode==="bpm")return values.length+"/"+model.songs.length+" measured · Avg "+Math.round(values.reduce((a,b)=>a+b,0)/values.length)+" BPM · "+Math.min(...values)+"–"+Math.max(...values)+" BPM";
     if(mode==="year")return values.length+"/"+model.songs.length+" dated · "+Math.min(...values)+"–"+Math.max(...values);
+    if(mode==="key")return values.length+"/"+model.songs.length+" with keys · "+new Set(values).size+" distinct · Library key if not recorded live";
     return values.length+"/"+model.songs.length+" rated";
   }
   function ticks(mode,values){
+    if(mode==="key")return [...new Set(values)].sort((a,b)=>keyOrder(a)-keyOrder(b)||a.localeCompare(b));
     if(mode==="host"||mode==="singer")return [1,2,3,4];
     const min=Math.min(...values),max=Math.max(...values);
     const padding=mode==="year"?Math.max(2,Math.ceil((max-min)*0.12)):Math.max(6,Math.ceil((max-min)*0.12));
