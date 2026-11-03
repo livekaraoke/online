@@ -83,12 +83,13 @@ test('iPad 2 scroll pane reserves request panel and allows complete list scroll'
  const script=fs.readFileSync(path.join(root,'signup/signup.js'),'utf8');
  assert.match(html,/id="songBottom"/);
  assert.doesNotMatch(html,/id="songFooter"/);
- assert.match(css,/\.songs \{ position: absolute;[^}]*overflow-y: scroll/);
+ assert.match(css,/\.songs \{ position: fixed;[^}]*overflow-y: scroll/);
  assert.match(css,/\.song-bottom \{ position: absolute;[^}]*bottom: 0/);
- assert.match(script,/list\.style\.height = Math\.max\(40, Math\.floor\(available\)\)/);
+ assert.match(script,/list\.style\.height = 'auto'/);
+ assert.match(script,/list\.style\.bottom = Math\.max\(8,/);
  assert.match(script,/bottom\.getBoundingClientRect\(\)\.top/);
  assert.match(css,/\.song-bottom \{[^}]*position: fixed; bottom: 8px/);
- assert.match(script,/root\.addEventListener\('orientationchange', layoutSongScreen\)/);
+ assert.match(script,/root\.addEventListener\('orientationchange', settleSongLayout\)/);
  assert.match(css,/#nameStep \{[^}]*padding: 11% 16px 0/);
  assert.match(css,/\.instruction \{[^}]*margin: 8px 0 44px/);
 });
