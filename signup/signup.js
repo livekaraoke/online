@@ -115,7 +115,7 @@
   function showStep(which) {
     el('nameStep').hidden = which !== 'name';
     el('songStep').hidden = which !== 'song';
-    el('stepTitle').textContent = which === 'name' ? 'ENTER YOUR NAME' : 'CHOOSE YOUR SONG';
+    el('songFooter').hidden = which !== 'song';
     if (which === 'song') { el('singerSummary').textContent = 'SINGER: ' + trim(el('singerName').value); }
   }
   function ready() {
@@ -210,7 +210,6 @@
         selected = match;
         showSelection();
       }
-      el('listTitle').textContent = view.displayTitle || view.venue || view.setlistName || "Tonight's song list";
       if (!uncertain) { notice(view.enabled ? 'Requests go straight to the host.' : 'SIGN-UP CLOSED\nPlease ask the host.', view.enabled); }
       el('refresh').textContent = 'RETRY / REFRESH SONG LIST'; if (changed) { renderSongs(); } ready(); schedule();
     });
