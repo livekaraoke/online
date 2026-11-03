@@ -1,0 +1,24 @@
+name: Signup kiosk Run Order projection
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'ls26try/shared/public-catalogue-publisher.js'
+      - 'ls26try/shared/public-live-publisher.js'
+      - 'js/public-live-projection.js'
+      - 'verification/public-site/catalogue-publisher.test.cjs'
+      - '.github/workflows/signup-kiosk-queue.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  kiosk-queue:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Test owner publisher and kiosk queue state
+        run: node --test verification/public-site/catalogue-publisher.test.cjs
