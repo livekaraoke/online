@@ -9,7 +9,7 @@
   const acts=['live-karaoke','billy-lee','roxanna'];
   const settingsId={'live-karaoke':'liveKaraokeWebsiteSettings','billy-lee':'billyLeeWebsiteSettings','roxanna':'roxannaWebsiteSettings'};
   const watchers=new Set();
-  const status={enabled:false,liveEnabled:false,leader:false,acts:{},error:'',liveError:''};
+  const status={enabled:false,liveEnabled:false,kioskEnabled:false,leader:false,acts:{},error:'',liveError:''};
   const emit=()=>watchers.forEach(fn=>fn({...status,acts:{...status.acts}}));
   const loadScript=src=>new Promise((resolve,reject)=>{const s=document.createElement('script');s.src=new URL(src,root);s.onload=resolve;s.onerror=()=>reject(Error('Publication support could not load.'));document.head.append(s);});
   const ready=(async()=>{
@@ -19,7 +19,9 @@
     if(!window.LKLiveProjection)await loadScript('js/public-live-projection.js?v=20261022-views');
     if(!window.LS26CreateLivePublisher)await loadScript('ls26try/shared/public-live-publisher.js?v=20261103-kioskqueue-independent-v1');
   })();
-  let db=null,stopLeader=null,releaseLeader=null,configUnsub=null,authUnsub=null,leaderRequested=false,restartRequested=false;
+  let db=null,stopLeader=null,releaseLeader=null,configUnsub=null,authUnsub=null,kioskUnsub=null,leaderRequested=false,restartRequested=false;
+  let kioskSnapshot=null,kioskFresh=false,kioskExists=false;
+  const kioskObservers=new Set();
   const clean=v=>String(v||'').trim();
   function normalAct(d){const t=clean(d.sessionType||d.type).toLowerCase();return ['live karaoke','live-karaoke'].includes(t)?'live-karaoke':['solo','billy lee'].includes(t)?'billy-lee':t==='roxanna'?'roxanna':'';}
   function owner(){return firebase.auth().currentUser?.email?.toLowerCase()==='leeborg23@gmail.com';}
@@ -27,6 +29,12 @@
     const unsub=[],states=new Map(),documents=new Map(),sourceErrors=new Set();
     // Catalogue and live publishers share source document listeners in this tab.
     function sharedWatch(path,fn,error){
+      if(path==='karaokeControl/signupKioskPublic'){
+        const observer={fn,error};
+        kioskObservers.add(observer);
+        if(kioskFresh)fn(kioskSnapshot,kioskExists);
+        return ()=>kioskObservers.delete(observer);
+      }
       let entry=documents.get(path);
       if(!entry){
         entry={subscribers:new Set(),value:null,exists:false};documents.set(path,entry);
@@ -41,7 +49,8 @@
       if(entry.value)fn(entry.value,entry.exists);
       return ()=>{entry.subscribers.delete(observer);if(!entry.subscribers.size){entry.off();documents.delete(path);sourceErrors.delete(path);}};
     }
-    const stopLive=status.liveEnabled?LS26CreateLivePublisher({db,watch:sharedWatch,report:error=>{status.liveError=error;emit();}}):null;
+    const stopLive=(status.liveEnabled||status.kioskEnabled)?LS26CreateLivePublisher({db,watch:sharedWatch,
+      publishPublic:status.liveEnabled,report:error=>{status.liveError=error;emit();}}):null;
     let control={},list={},settings={},controlReady=false,listReady=false,closed=false;
     for(const act of acts)states.set(act,{id:'',generation:0,listRevision:0,sourceUnsub:null,songUnsubs:[],timer:0,revision:0,writing:false,setlist:null,groups:[],expected:0});
     const report=(act,error,count)=>{status.acts[act]={error:String(error||''),count:count??status.acts[act]?.count??0};emit();};
@@ -113,7 +122,7 @@
     if(leaderRequested)return;leaderRequested=true;
     const work=async()=>{
       restartRequested=false;
-      if(!owner()||(!status.enabled&&!status.liveEnabled))return;
+      if(!owner()||(!status.enabled&&!status.liveEnabled&&!status.kioskEnabled))return;
       status.leader=true;emit();stopLeader=createLeader();
       await new Promise(resolve=>{releaseLeader=resolve;});
       stopLeader?.();stopLeader=null;status.leader=false;emit();
@@ -122,21 +131,45 @@
       await ready;
       if(navigator.locks)await navigator.locks.request('ls26-public-catalogue-'+firebase.app().options.projectId,work);
       else await work(); // Transactional equality prevents duplicate writes on browsers without Web Locks.
-    }catch(error){status.error=error.message;emit();}finally{leaderRequested=false;if(restartRequested&&owner()&&(status.enabled||status.liveEnabled))void startLeader();}
+    }catch(error){status.error=error.message;emit();}finally{leaderRequested=false;if(restartRequested&&owner()&&(status.enabled||status.liveEnabled||status.kioskEnabled))void startLeader();}
   }
   function stop(){releaseLeader?.();releaseLeader=null;stopLeader?.();stopLeader=null;}
   function init(){
     if(!window.firebase?.auth||!firebase.apps?.length)return;
     db=firebase.firestore();
     authUnsub=firebase.auth().onAuthStateChanged(user=>{
-      configUnsub?.();configUnsub=null;status.enabled=false;status.liveEnabled=false;stop();
+      configUnsub?.();configUnsub=null;kioskUnsub?.();kioskUnsub=null;
+      kioskFresh=false;kioskSnapshot=null;kioskExists=false;
+      status.enabled=false;status.liveEnabled=false;status.kioskEnabled=false;stop();
       if(user?.email?.toLowerCase()!=='leeborg23@gmail.com'){emit();return;}
+      function restartIfChanged(changed){
+        if(changed){restartRequested=leaderRequested;stop();}
+        if(status.enabled||status.liveEnabled||status.kioskEnabled)void startLeader();
+      }
+      // One owner-side kiosk control listener activates the stage queue even
+      // when optional public website live-view publication is switched off.
+      // The live publisher shares this snapshot instead of adding a listener.
+      kioskUnsub=db.collection('karaokeControl').doc('signupKioskPublic')
+        .onSnapshot({includeMetadataChanges:true},s=>{
+          if(s.metadata?.fromCache||s.metadata?.hasPendingWrites){
+            kioskFresh=false;
+            for(const observer of kioskObservers)observer.error(Error('Waiting for the kiosk control connection.'));
+            return;
+          }
+          kioskFresh=true;kioskExists=s.exists;
+          kioskSnapshot=s.exists?s.data()||{}:{};
+          const enabled=kioskSnapshot.enabled===true;
+          const changed=enabled!==status.kioskEnabled;
+          status.kioskEnabled=enabled;emit();
+          for(const observer of kioskObservers)observer.fn(kioskSnapshot,kioskExists);
+          restartIfChanged(changed);
+        },error=>{kioskFresh=false;status.error=error.message;emit();
+          for(const observer of kioskObservers)observer.error(error);});
       configUnsub=db.collection('publicPublication').doc('config').onSnapshot(s=>{
         const enabled=s.exists&&s.data().cataloguesEnabled===true,liveEnabled=s.exists&&s.data().liveEnabled===true;
         const changed=enabled!==status.enabled||liveEnabled!==status.liveEnabled;
         status.enabled=enabled;status.liveEnabled=liveEnabled;emit();
-        if(changed){restartRequested=leaderRequested;stop();}
-        if(enabled||liveEnabled)void startLeader();
+        restartIfChanged(changed);
       },error=>{status.error=error.message;emit();});
     });
   }
@@ -148,5 +181,5 @@
     async disable(){if(!owner())throw Error('Sign in as the owner first.');await db.collection('publicPublication').doc('config').set({cataloguesEnabled:false},{merge:true});}
   });
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
-  addEventListener('pagehide',()=>{status.enabled=false;status.liveEnabled=false;stop();configUnsub?.();authUnsub?.();},{once:true});
+  addEventListener('pagehide',()=>{status.enabled=false;status.liveEnabled=false;stop();configUnsub?.();kioskUnsub?.();authUnsub?.();},{once:true});
 })();
