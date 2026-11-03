@@ -112,3 +112,23 @@ test('confirmation box has a bounded height, larger messages and vertical center
  assert.match(css,/\.success p \{[^}]*font-size: 25px/);
  assert.match(css,/\.success p \+ p \{[^}]*margin-top: 30px/);
 });
+
+test('publisher projects all 169 explicitly selected songs, even if global visibility is false',()=>{
+ const source=fs.readFileSync(path.join(root,'ls26try/shared/signup-kiosk.js'),'utf8');
+ const window={LKSignupPolicy:{},LS26SignupKiosk:null};
+ const document={readyState:'loading',currentScript:{src:'https://livesuite.livekaraoke.eu/ls26try/shared/signup-kiosk.js'},addEventListener(){}};
+ const context={window,document,URL,ArtistNames:{display:value=>String(value||'')},LS26:{escape:value=>String(value)}};
+ vm.runInNewContext(source,context);
+ const documents=Array.from({length:169},(_,i)=>({
+   id:'song'+i,
+   data:()=>({title:'Song '+i,artist:'Artist',publicSongListVisible:i<98?false:true,
+     lyrics:'PRIVATE LYRICS',hostNote:'PRIVATE NOTE'})
+ }));
+ const projected=window.LS26SignupKiosk.projectSongs(documents);
+ assert.equal(Object.keys(projected).length,169);
+ assert.equal(projected.song0.title,'Song 0');
+ assert.equal(projected.song168.title,'Song 168');
+ assert.deepEqual(Object.keys(projected.song0).sort(),['artist','title']);
+ assert.ok(!JSON.stringify(projected).includes('PRIVATE'));
+ assert.throws(()=>window.LS26SignupKiosk.projectSongs([{id:'missing',data:()=>({artist:'Artist'})}]),/title/);
+});
