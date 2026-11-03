@@ -7,6 +7,7 @@ const root=path.resolve(__dirname,'..');
 const hostScript=fs.readFileSync(path.join(root,'host/js/lyricview-prompter-remote.js'),'utf8');
 const receiverScript=fs.readFileSync(path.join(root,'oldadmin/host/lyrics/prompter-remote-receiver.js'),'utf8');
 const css=fs.readFileSync(path.join(root,'host/css/lyricview-prompter-remote.css'),'utf8');
+const singerCss=fs.readFileSync(path.join(root,'oldadmin/host/lyrics/prompter-end-rating.css'),'utf8');
 const viewerHtml=fs.readFileSync(path.join(root,'host/lyricview.html'),'utf8');
 const prompterHtml=fs.readFileSync(path.join(root,'oldadmin/host/lyrics/song.html'),'utf8');
 const performance=fs.readFileSync(path.join(root,'shared/performance.js'),'utf8');
@@ -37,6 +38,7 @@ assert.match(prompterHtml,/prompterScrollUp/);assert.match(prompterHtml,/prompte
     });
   });
   await prompter.setContent('<button id="scrollToggleBtn">▶</button><span id="scrollSpeedDisplay">0.80x</span><button id="prompterScrollUp"></button><button id="prompterScrollDown"></button>');
+  await prompter.addStyleTag({content:singerCss});
   await prompter.evaluate(()=>{
     window.__actions=[];
     window.autoScrollActive=false;
@@ -79,11 +81,26 @@ assert.match(prompterHtml,/prompterScrollUp/);assert.match(prompterHtml,/prompte
   assert.equal(await prompter.evaluate(()=>document.body.dataset.ls26SingerStage),'idle');
   assert.equal(await host.locator('#ls26PrompterSongCue').isDisabled(),true,'An idle screen is not a playable song');
   await prompter.evaluate(()=>window.dispatchEvent(new CustomEvent('ls26:prompter-song-changed',{
-    detail:{songId:'demo',cue:true,title:'Demo Song',artist:'Demo Artist',year:1999}
+    detail:{songId:'demo',cue:true,title:'All the Small Things',artist:'Blink 182',year:1999}
   })));
   await prompter.waitForFunction(()=>document.body.dataset.ls26SingerStage==='waiting');
-  assert.equal(await prompter.locator('#ls26SingerUpcomingTitle').textContent(),'Demo Song');
-  assert.equal(await prompter.locator('#ls26SingerUpcomingArtist').textContent(),'Demo Artist');
+  assert.equal(await prompter.locator('#ls26SingerUpcomingTitle').textContent(),'All the Small Things');
+  assert.equal(await prompter.locator('#ls26SingerUpcomingArtist').textContent(),'Blink 182');
+  const previewStyle=await prompter.evaluate(()=>{
+    const art=document.querySelector('.ls26-singer-artwork-preview');
+    const info=document.querySelector('.ls26-singer-song-info');
+    const title=document.getElementById('ls26SingerUpcomingTitle');
+    const artist=document.getElementById('ls26SingerUpcomingArtist');
+    const year=document.getElementById('ls26SingerUpcomingYear');
+    const artBox=art.getBoundingClientRect();
+    return {topRatio:(info.getBoundingClientRect().top-artBox.top)/artBox.height,
+      title:getComputedStyle(title).color,artist:getComputedStyle(artist).color,
+      year:getComputedStyle(year).color};
+  });
+  assert.ok(previewStyle.topRatio>0.765&&previewStyle.topRatio<0.775,'Preview metadata sits clearly below PLEASE WAIT');
+  assert.equal(previewStyle.title,'rgb(255, 255, 255)');
+  assert.equal(previewStyle.artist,'rgb(174, 180, 188)');
+  assert.equal(previewStyle.year,'rgb(142, 148, 156)');
   assert.equal(await prompter.locator('#ls26SingerUpcomingYear').textContent(),'(1999)');
   await host.waitForFunction(()=>document.getElementById('ls26PrompterSongCue')?.disabled===false);
   await press('song',()=>document.body.dataset.ls26SingerStage==='running');

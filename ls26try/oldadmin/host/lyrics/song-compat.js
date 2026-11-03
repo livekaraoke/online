@@ -222,9 +222,9 @@
     originalLoadSong();
     const item=entries().find(entry=>entry.id===id)||{};
     window.dispatchEvent(new CustomEvent('ls26:prompter-song-changed', {
-      detail: {songId:id, source:'legacy', cue, title:item.title||metadata.prompterSongTitle||metadata.songTitle||metadata.title,
-        artist:item.artist||metadata.prompterSongArtist||metadata.songArtist||metadata.artist,
-        year:item.year||metadata.prompterSongYear||metadata.year||''}
+      detail: {songId:id, source:'legacy', cue, title:metadata.prompterSongTitle||item.title||metadata.songTitle||metadata.title,
+        artist:metadata.prompterSongArtist||item.artist||metadata.songArtist||metadata.artist,
+        year:metadata.prompterSongYear||item.year||metadata.year||''}
     }));
   }
 
@@ -264,7 +264,7 @@
         const raw = String(modern ? data.prompterSongId :
           (data.currentSongId || data.currentLyricsSongId || data.songId) || '').trim();
         if (!raw) return;
-        const meta = data.song || data;
+        const meta = data.song ? {...data.song, ...data} : data;
         const signature = modern
           ? ['modern', raw, String(data.prompterRequestToken || '')].join('|')
           : ['legacy', raw, String(data.prompterRequestToken || ''),

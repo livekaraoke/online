@@ -2017,6 +2017,11 @@
           if(!found)return false;
           try{return decodeURIComponent(found[1])===id;}catch(_){return found[1]===id;}
         })||{};
+        // Use the exact Firestore song metadata when these legacy lyrics
+        // belong to the currently selected song. Alternate manual selections
+        // must keep their own legacy metadata, not the host's current song.
+        const previewSong = currentSong?.title &&
+          findCurrentSlaveLyricsId(getSlaveLyricsSongs()) === id ? currentSong : null;
         await db.collection("karaokeControl").doc("liveLyrics").set({
           currentSongId: id,
           songId: id,
@@ -2028,9 +2033,9 @@
           lyricsSource: "song-data-js",
           prompterLyricsSource: "legacy",
           prompterSongId: "",
-          prompterSongTitle: legacyMatch.title || currentSong?.title || "",
-          prompterSongArtist: legacyMatch.artist || currentSong?.artist || "",
-          prompterSongYear: legacyMatch.year || currentSong?.year || "",
+          prompterSongTitle: previewSong?.title || legacyMatch.title || "",
+          prompterSongArtist: previewSong?.artist || legacyMatch.artist || "",
+          prompterSongYear: previewSong?.year || previewSong?.releaseYear || legacyMatch.year || "",
           prompterRequestToken: `${Date.now()}_${Math.random().toString(36).slice(2,7)}`,
 
           reset: false,
