@@ -1633,3 +1633,27 @@ width: 100%;
   .weekly-residency-details { gap: 13px; }
   .weekly-residency-detail { gap: 11px; }
 }
+
+/* Weekly residency address opens Google Maps like the event-card map links. */
+.weekly-residency-map-link {
+  color: inherit;
+  text-decoration: none;
+  border-radius: 2px;
+}
+.weekly-residency-map-link:hover,
+.weekly-residency-map-link:focus-visible {
+  color: #fff;
+  text-decoration: underline;
+  text-decoration-color: #ff6262;
+  text-underline-offset: .2em;
+}
+.weekly-residency-map-link:focus-visible {
+  outline: 2px solid #ff6262;
+  outline-offset: 4px;
+}
+/* With only weekly residency dates, don't render a misleading empty event card
+   or a timing footnote for individual events that are not displayed. */
+#liveKaraokeEventsList[hidden],
+#liveKaraokeEventsList[hidden] + .live-karaoke-event-time-note {
+  display: none !important;
+}
