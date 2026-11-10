@@ -440,6 +440,12 @@
       }finally{
         catalogueLoading=false;
         cataloguePromise=null;
+        // The singer may already be viewing the song list while the catalogue
+        // finishes loading. Replace the loading placeholder immediately, but
+        // never navigate away from the name gate or another selected tab.
+        if($("requestDialog")?.open && $("requestBrowser") && !$("requestBrowser").hidden){
+          renderSongResults();
+        }
       }
     })();
     return cataloguePromise;
