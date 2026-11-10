@@ -361,3 +361,28 @@ header .cancel-button {
  .idle-row-info strong { font-size: 19px; }
  .idle-row-info span { font-size: 15px; }
 }
+
+/* iPad 2 Safari 9: percentage-based flex item background images could
+ * collapse to zero height in the fixed fullscreen button. Render the exact
+ * existing JPEG as an ordinary <img> with an explicit viewport height. This
+ * avoids background-image painting and percentage flex-basis resolution.
+ * Keep the supplied artwork intact, centred and proportionate. */
+.idle-screen.is-open .idle-brand-art {
+  display: block;
+  width: auto;
+  height: 29vh;
+  min-height: 165px;
+  max-height: 300px;
+  max-width: 90%;
+  margin: 0 auto;
+  padding: 0;
+  -webkit-flex: 0 0 auto;
+  flex: 0 0 auto;
+  background: none;
+}
+@media (max-height: 650px) {
+  .idle-screen.is-open .idle-brand-art {
+    height: 25vh;
+    min-height: 120px;
+  }
+}

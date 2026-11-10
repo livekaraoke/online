@@ -326,6 +326,10 @@ test('landing has original user artwork, highly visible CTA and three readable p
  assert.ok(fs.statSync(asset).size>200000,'Use full-resolution supplied artwork, not a redesign or placeholder');
  const banner=fs.readFileSync(asset);
  assert.equal(banner[0],0xff); assert.equal(banner[1],0xd8);
+ assert.match(html,/class="idle-brand-art" src="assets\/live-karaoke-landing-logo\.jpg\?v=20261110-ipad-logo-img-v2"/);
+ assert.doesNotMatch(html,/<span class="idle-brand-art"/);
+ assert.match(css,/\/\* iPad 2 Safari 9:[\s\S]*?-webkit-flex: 0 0 auto;/);
+ assert.match(css,/\.idle-screen\.is-open \.idle-brand-art \{[\s\S]*?height: 29vh/);
  assert.match(html,/class="idle-green-button"/);
  assert.match(html,/TAP HERE TO SING/);
  assert.match(html,/WANT TO SING\?/);
