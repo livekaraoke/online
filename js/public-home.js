@@ -310,25 +310,14 @@
         const container = document.getElementById("liveStatus");
         if (!container) return;
 
-        if (activeLiveKaraoke()) {
-          container.innerHTML = `
-            <div class="live-box public-live-box">
-              <span class="public-live-dot"></span>
-              <div>
-                <strong>LIVE KARAOKE · ${isOnBreak()?"ON BREAK":(currentPerformanceSession.actualStartedAt||currentSessionControl.actualStartedAt)?"LIVE NOW":"STARTING"}</strong>
-                <span>${esc(
-                  currentSessionControl.venue ||
-                  currentPerformanceSession.venue ||
-                  "Live Karaoke"
-                )}</span>
-              </div>
-              ${
-                isOnBreak()
-                  ? `<b class="public-break-chip">☕ CURRENTLY ON BREAK</b>`
-                  : ""
-              }
-            </div>
-          `;
+        const live = activeLiveKaraoke();
+        // One public status surface: the full player while live; the existing
+        // next-event countdown otherwise. Never show the redundant live strip.
+        document.querySelector(".live-status-section")?.classList.toggle("has-live-player",live);
+        container.classList.toggle("hidden",live);
+
+        if (live) {
+          container.replaceChildren();
         } else {
           const event = nextLiveKaraokeEvent();
 
