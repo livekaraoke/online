@@ -631,3 +631,156 @@
   #requestDialog .request-gate-status{font-size:10px!important}
   #requestDialog .request-bottom-tabs button small{font-size:10px!important}
 }
+
+
+/* Mobile simplification: searchable A-Z list gets the usable viewport.
+   Keep desktop category and alphabet navigation intact. */
+#requestDialog .request-profile-status {
+  display:block!important;
+  margin:7px 0 0!important;
+  color:#91dda8!important;
+  font-size:12px!important;
+  line-height:1.35!important;
+  letter-spacing:0!important;
+}
+#requestDialog .request-email-feedback {
+  display:block!important;
+  color:#9bceab!important;
+  font-size:12px!important;
+  line-height:1.4!important;
+}
+#requestDialog .request-email-feedback.error {
+  color:#ff9797!important;
+}
+#requestDialog .request-review-status {
+  display:block!important;
+  margin:0 14px 14px!important;
+  font-size:13px!important;
+  line-height:1.4!important;
+  color:#a5ebbc!important;
+}
+@media(max-width:640px) {
+  /* Avoid covering song results when Samsung/Android keyboard opens. */
+  #requestDialog.request-modal {
+    height:min(calc(100dvh - 16px),calc(var(--request-visual-height,100dvh) - 16px))!important;
+    max-height:min(calc(100dvh - 16px),calc(var(--request-visual-height,100dvh) - 16px))!important;
+  }
+  #requestDialog .request-modal-top {
+    padding:9px 52px 8px 12px!important;
+  }
+  #requestDialog .request-title-line h2 {
+    font-size:20px!important;
+    line-height:1.2!important;
+  }
+  #requestDialog .request-gate-status {
+    min-height:27px!important;
+    padding:4px 8px!important;
+  }
+  #requestDialog .request-modal-close {
+    top:9px!important;
+    right:10px!important;
+    width:44px!important;
+    height:44px!important;
+  }
+  #requestDialog .request-browser {
+    flex:1 1 auto!important;
+    min-height:0!important;
+    padding:9px 10px 8px!important;
+    overflow:hidden!important;
+  }
+  #requestDialog .request-browser .request-panel-heading {
+    flex:0 0 auto!important;
+    margin:0 0 6px!important;
+  }
+  #requestDialog .request-browser .request-panel-heading .eyebrow {
+    display:none!important;
+  }
+  #requestDialog .request-browser .request-panel-heading h3 {
+    margin:0!important;
+    font-size:21px!important;
+    line-height:1.25!important;
+  }
+  #requestDialog .request-browser .request-controls {
+    margin:0 0 4px!important;
+    gap:6px!important;
+  }
+  #requestDialog .request-browser .request-controls input {
+    min-height:47px!important;
+    height:47px!important;
+    padding:10px 13px!important;
+    font-size:16px!important;
+  }
+  #requestDialog .request-browser .request-alphabet-help,
+  #requestDialog .request-browser .request-alphabet-row,
+  #requestDialog .request-browser .request-song-filters {
+    display:none!important;
+  }
+  #requestDialog .request-browser .request-notice {
+    flex:0 0 auto!important;
+    margin:0 0 5px!important;
+    padding:0!important;
+    min-height:0!important;
+    color:#bdbdbd!important;
+    font-size:12px!important;
+    line-height:1.35!important;
+  }
+  #requestDialog .request-browser .song-results {
+    flex:1 1 0%!important;
+    height:0!important;
+    min-height:0!important;
+    max-height:none!important;
+    margin:0!important;
+    overflow-y:auto!important;
+    overflow-x:hidden!important;
+    overscroll-behavior-y:contain!important;
+    -webkit-overflow-scrolling:touch!important;
+  }
+  #requestDialog .request-browser .song-row {
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:stretch!important;
+    justify-content:center!important;
+    gap:5px!important;
+    min-height:0!important;
+    padding:8px 10px!important;
+  }
+  #requestDialog .request-browser .song-row-info strong {
+    font-size:17px!important;
+    line-height:1.22!important;
+  }
+  #requestDialog .request-browser .song-row-info small {
+    margin-top:2px!important;
+    font-size:13px!important;
+    line-height:1.2!important;
+  }
+  #requestDialog .request-browser .song-row-actions {
+    min-height:44px!important;
+    gap:8px!important;
+  }
+  #requestDialog .request-browser .song-row-actions .request-favourite-btn {
+    flex:0 0 44px!important;
+    width:44px!important;
+    min-width:44px!important;
+    height:44px!important;
+    min-height:44px!important;
+    font-size:21px!important;
+  }
+  #requestDialog .request-browser .song-row-actions .song-action {
+    min-height:44px!important;
+    height:44px!important;
+    padding:7px 10px!important;
+    font-size:13px!important;
+    line-height:1.2!important;
+    border-radius:8px!important;
+  }
+  #requestDialog .request-browser .song-row-actions .song-action:disabled {
+    font-size:12px!important;
+  }
+  #requestDialog .request-bottom-tabs button {
+    min-height:56px!important;
+    padding:6px 2px!important;
+  }
+  #requestDialog .request-bottom-tabs button>span {
+    font-size:20px!important;
+  }
+}
