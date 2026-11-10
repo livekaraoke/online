@@ -326,6 +326,7 @@
   function renderLandingQueue(queue) {
     var current = queue && queue.current, next = queue && queue.next instanceof Array ? queue.next : [];
     var i, row, item;
+    el('queueNow').hidden = !current || !trim(current.songTitle);
     el('queueNowSong').textContent = current && trim(current.songTitle) ? trim(current.songTitle) : 'Waiting for the next song';
     el('queueNowSinger').textContent = current && trim(current.singerName) ? 'Singer: ' + trim(current.singerName) : '';
     el('queueEmpty').hidden = next.length > 0;
