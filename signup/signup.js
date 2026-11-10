@@ -105,6 +105,8 @@
   var unavailable = {}, localBlocked = {}, availabilitySession = '', availabilityVersion = 0;
   var gateOpen = false, gateTimer = null, gateBusy = false;
   var queueVersion = 0, repeatSinger = '';
+  var inactivityTimer = null, lastActivityAt = 0;
+  var INACTIVITY_MS = 20000;
   var base = 'https://firestore.googleapis.com/v1/projects/' + policy.projectId + '/databases/(default)/documents';
   function el(id) { return document.getElementById(id); }
   function notice(text, ok) {
@@ -112,6 +114,34 @@
     el('notice').hidden = !!ok;
     el('refresh').hidden = !!ok;
     layoutSongScreen();
+  }
+  /* Only a person operating the name/song form resets the inactivity clock.
+   * Never renew it on background Firestore refreshes or render passes. */
+  function stopInactivity() {
+    clearTimeout(inactivityTimer);
+    inactivityTimer = null;
+  }
+  function formActive() {
+    return gateOpen && !!view && !!view.enabled && !el('signupForm').hidden &&
+      el('idleScreen').hidden && el('success').hidden && !busy && !uncertain;
+  }
+  function expireInactivity() {
+    stopInactivity();
+    if (!formActive()) { return; }
+    showIdle(gateOpen ? 'open' : 'closed');
+    resetForm();
+  }
+  function armInactivity() {
+    stopInactivity();
+    if (!formActive() || document.hidden || !lastActivityAt) { return; }
+    var remaining = INACTIVITY_MS - (Date.now() - lastActivityAt);
+    if (remaining <= 0) { expireInactivity(); return; }
+    inactivityTimer = setTimeout(expireInactivity, remaining);
+  }
+  function userActivity() {
+    if (!formActive()) { return; }
+    lastActivityAt = Date.now();
+    armInactivity();
   }
   function nameValid() {
     var name = trim(el('singerName').value);
@@ -200,6 +230,7 @@
     var available = gateOpen && !!view && !!view.enabled && !busy && !loading && !uncertain;
     el('fields').disabled = !available;
     el('next').disabled = !available || !nameValid();
+    el('singerName').className = nameValid() ? 'valid-name' : '';
     el('send').disabled = !available || !validForm(el('singerName').value, selected, el('note').value) ||
       !!(selected && songUnavailable(selected.id));
     el('refresh').disabled = busy || loading;
@@ -360,6 +391,8 @@
     });
   }
   function showIdle(mode) {
+    stopInactivity();
+    lastActivityAt = 0;
     var closed = mode !== 'open', screen = el('idleScreen');
     var resetNeeded = closed && screen.hidden && !el('signupForm').hidden &&
       el('success').hidden && !busy;
@@ -497,7 +530,7 @@
         (selected && songUnavailable(selected.id))) { return; }
     try { pending = commitBody(policy.projectId, randomId(), token, view, selected, el('singerName').value, el('note').value); }
     catch (error) { notice(error.message); return; }
-    busy = true; clearTimeout(timer); ready(); notice('SENDING REQUEST…');
+    busy = true; stopInactivity(); clearTimeout(timer); ready(); notice('SENDING REQUEST…');
     xhr('POST', base + ':commit', pending, function (error, data) {
       busy = false;
       if (error || !data || !data.writeResults || data.writeResults.length !== 2) {
@@ -522,9 +555,12 @@
     el('success').hidden = true;
     el('signupForm').hidden = false;
     el('idleScreen').hidden = true;
-    repeatSinger = '';
+    var previousName = repeatSinger;
     resetForm();
-    focusName(); // A new request starts at ENTER YOUR NAME, not song selection.
+    el('singerName').value = previousName;
+    ready();
+    focusName(); // Retain the previous singer on the ENTER YOUR NAME screen.
+    userActivity();
   };
   el('idleScreen').onclick = function () {
     if (!gateOpen || el('idleScreen').disabled) { return; }
@@ -534,12 +570,20 @@
     repeatSinger = '';
     resetForm();
     focusName(); // Synchronous with the physical tap for iOS keyboard permission.
+    userActivity();
   };
   el('singerName').oninput = el('note').oninput = ready;
+  /* Input, touch, taps, typing and drag-scrolling keep an active singer's
+   * 20-second window alive. Inert kiosk refreshes and landing do not. */
+  var signup = el('signupForm'), events = ['input', 'keydown', 'touchstart', 'touchmove', 'click', 'wheel'];
+  for (var eventIndex = 0; eventIndex < events.length; eventIndex += 1) {
+    signup.addEventListener(events[eventIndex], userActivity, false);
+  }
   el('next').onclick = function () {
     if (el('next').disabled || !nameValid()) { return; }
     if (el('singerName').blur) { el('singerName').blur(); }
     showStep('song'); el('songResults').scrollTop = 0;
+    userActivity();
   };
   el('cancel').onclick = function () {
     if (busy || uncertain) { return; }
@@ -595,11 +639,14 @@
     root.visualViewport.addEventListener('scroll', layoutSongScreen);
   }
   document.addEventListener('visibilitychange', function () {
-    if (document.hidden) { clearTimeout(timer); clearTimeout(gateTimer); }
-    else { load(); refreshGate(); }
+    if (document.hidden) { clearTimeout(timer); clearTimeout(gateTimer); stopInactivity(); }
+    else {
+      if (formActive()) { armInactivity(); }
+      load(); refreshGate();
+    }
   });
   window.addEventListener('pagehide', function () {
-    clearTimeout(timer); clearTimeout(gateTimer); clearTimeout(resetTimer); clearTimeout(layoutSettledTimer); resetForm();
+    stopInactivity(); clearTimeout(timer); clearTimeout(gateTimer); clearTimeout(resetTimer); clearTimeout(layoutSettledTimer); resetForm();
   });
   window.addEventListener('pageshow', function (event) {
     if (event.persisted) { showIdle('closed'); load(); }
