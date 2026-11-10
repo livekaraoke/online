@@ -55,8 +55,9 @@ if(window.parent===window){window.__publishFixture=()=>{const f=__firebaseFixtur
    await page.locator('#liveNowRequestBtn').tap();const frame=page.frameLocator('#liveKaraokeRequestFrame');
     await frame.locator('#requestNameGate').waitFor({state:'visible'});
     // Async catalogue/request loading must not dismiss the first-time name prompt.
-    await frame.locator('.song-row').first().waitFor({state:'attached'});
-    assert.equal(await frame.locator('#requestNameGate').isVisible(),true,'new singer name gate persists after songs load');
+    await frame.locator('#requestCategoryGrid button').first().waitFor({state:'attached'});
+    await page.waitForTimeout(250);
+    assert.equal(await frame.locator('#requestNameGate').isVisible(),true,'new singer name gate persists after asynchronous loading');
     assert.equal(await frame.locator('#requestBrowser').isVisible(),false,'song list stays hidden until name entered');
     await frame.locator('#requestStartContinueBtn').click();
     assert.equal(await frame.locator('#requestNameGate').isVisible(),true,'blank name cannot continue');
