@@ -408,6 +408,10 @@ header .cancel-button {
   outline-color: #39e78a;
   box-shadow: 0 0 0 2px rgba(57,231,138,.55);
 }
+/* Keep four queue rows fully inside a portrait iPad 2 screen. */
+@media (min-height: 901px) and (max-height: 1100px) {
+ .idle-screen.is-open .idle-brand-art { height: 47vh; }
+}
 @media (max-height: 900px) {
  .idle-screen.is-open .idle-brand-art {
    height: 37vh;
