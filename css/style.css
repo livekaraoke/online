@@ -1716,6 +1716,9 @@ width: 100%;
   }
 }
 
+/* Balance the gap below GET STARTED with the space below the live player. */
+.hero { margin-bottom: 60px; }
+
 /* The existing live player occupies the single status area below the hero.
    The inactive state keeps the existing next-event countdown unchanged. */
 .live-status-section {
