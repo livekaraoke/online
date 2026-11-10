@@ -8,7 +8,7 @@
   <meta name="robots" content="noindex,follow">
   <script src="js/artist-names.js?v=20261022-public"></script>
   <link rel="stylesheet" href="css/style.css?v=20261006-live-karaoke-request-only">
-  <link rel="stylesheet" href="css/request-mobile-ux.css?v=20261110-1">
+  <link rel="stylesheet" href="css/request-mobile-ux.css?v=20261110-autosave-list-1">
   <style>
     html,body{margin:0;min-height:100%;background:transparent!important}
     body{overflow:hidden}
@@ -98,6 +98,7 @@
             <div class="request-field request-name-field">
               <label for="singerName">YOUR NAME</label>
               <div class="request-name-control"><input id="singerName" type="text" maxlength="60" placeholder="Your name" autocomplete="name"></div>
+              <small id="requestProfileStatus" class="request-profile-status" role="status" aria-live="polite">Changes save automatically</small>
             </div>
           </div>
           <button id="continueRequestBtn" class="primary-btn request-profile-choose" type="button">CHOOSE A SONG</button>
@@ -105,7 +106,7 @@
           <details id="requestProfileMore" class="request-simple-details">
             <summary>MORE PROFILE OPTIONS</summary>
             <div class="request-profile-grid request-profile-options-grid">
-              <div class="request-field request-email-field"><label for="requestProfileEmail">EMAIL ADDRESS <small>OPTIONAL · PROFILE RECOVERY</small></label><div class="request-email-control"><input id="requestProfileEmail" type="email" maxlength="160" placeholder="you@example.com" autocomplete="email"></div><small class="request-email-help">Optional. Used only if you want to recover your profile later.</small></div>
+              <div class="request-field request-email-field"><label for="requestProfileEmail">EMAIL ADDRESS <small>OPTIONAL · PROFILE RECOVERY</small></label><div class="request-email-control"><input id="requestProfileEmail" type="email" maxlength="160" placeholder="you@example.com" autocomplete="email"></div><small class="request-email-help">Optional. Used only if you want to recover your profile later.</small><small id="requestEmailFeedback" class="request-email-feedback" role="status" aria-live="polite"></small></div>
               <label class="request-field request-country-field">COUNTRY <small>OPTIONAL</small><input id="requestProfileCountry" type="text" maxlength="80" placeholder="e.g. Malta" autocomplete="country-name"></label>
               <label class="request-field request-age-field">AGE RANGE <small>OPTIONAL</small><select id="requestProfileAge"><option value="">Prefer not to say</option><option>Under 18</option><option>18–24</option><option>25–34</option><option>35–44</option><option>45–54</option><option>55–64</option><option>65+</option></select></label>
               <label class="request-field request-gender-field">GENDER <small>OPTIONAL</small><select id="requestProfileGender"><option value="">Prefer not to say</option><option>Female</option><option>Male</option><option>Non-binary</option><option>Other</option></select></label>
@@ -119,11 +120,10 @@
               <div class="request-review-heading"><h3>RATE / REVIEW YOUR EXPERIENCE</h3><span class="request-review-optional">OPTIONAL</span></div>
               <div class="request-review-rating"><span class="request-review-label">RATING</span><input id="requestReviewRating" type="hidden" value=""><div class="request-star-row" role="group" aria-label="Rating out of five"><button type="button" data-review-rating="1" aria-label="1 star">★</button><button type="button" data-review-rating="2" aria-label="2 stars">★</button><button type="button" data-review-rating="3" aria-label="3 stars">★</button><button type="button" data-review-rating="4" aria-label="4 stars">★</button><button type="button" data-review-rating="5" aria-label="5 stars">★</button><button id="clearReviewRatingBtn" class="clear-rating-btn" type="button">CLEAR</button></div></div>
               <label class="request-review-text" for="requestReviewText"><span>REVIEW</span><textarea id="requestReviewText" maxlength="1000" rows="3" placeholder="How was your experience?"></textarea></label>
-              <label class="request-review-private"><input id="requestReviewPrivate" type="checkbox"><span><strong>Publish my review anonymously</strong><small>Tick to hide your name if your review is published. Only your name, country, rating and review can be shown publicly.</small></span></label>
+              <label class="request-review-private"><input id="requestReviewPrivate" type="checkbox"><span><strong>Publish my review anonymously</strong><small>Tick to hide your name. Reviews may show your country, rating and comments.</small></span></label>
             </div>
-            <button id="submitRequestReviewBtn" class="primary-btn request-review-submit" type="button">SAVE REVIEW</button>
+            <button id="submitRequestReviewBtn" class="primary-btn request-review-submit" type="button">SAVE REVIEW</button><small id="requestReviewStatus" class="request-review-status" role="status" aria-live="polite"></small>
           </details>
-          <div class="request-profile-actions"><button id="saveProfileOnlyBtn" class="primary-btn" type="button">SAVE PROFILE</button><span id="requestProfileStatus" class="request-profile-status" role="status" aria-live="polite"></span></div>
         </section>
 
 
@@ -133,7 +133,7 @@
           <p class="request-alphabet-help">Or browse by first letter</p>
           <div id="requestAlphabetRow" class="request-alphabet-row" aria-label="Jump by first letter"></div>
           <details id="requestSongFilters" class="request-song-filters"><summary>MORE WAYS TO FIND SONGS</summary><div id="requestCategoryGrid" class="request-category-grid" aria-label="Song categories"></div></details>
-          <div id="requestNotice" class="request-notice" role="status">Choose a song, then tap REQUEST SONG.</div>
+          <div id="requestNotice" class="request-notice" role="status">Scroll through the songs or search above.</div>
           <div id="songResults" class="song-results"></div>
         </section>
 
@@ -174,10 +174,10 @@
 <script src="../js/public-catalogue-source.js?v=20261022"></script>
 <script src="js/firebase-config.js?v=20261022-gate"></script>
   <script src="js/youtube-videos.js?v=20261022-public"></script>
-  <script src="../js/public-request-lifecycle.js?v=20261022-public"></script>
+  <script src="../js/public-request-lifecycle.js?v=20261110-live-review-copy-1"></script>
   <script src="js/public-catalogue.js?v=20261022-public"></script>
   <script src="../js/public-booking.js?v=20261022"></script>
-<script src="js/app.js?v=20261110-mobile-simplified-1"></script>
+<script src="js/app.js?v=20261110-autosave-list-1"></script>
   <script src="js/request-ui-extras.js?v=20261006-favs-card-width"></script>
 </body>
 </html>
