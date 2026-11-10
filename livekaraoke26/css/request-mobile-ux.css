@@ -226,6 +226,16 @@
   min-width:23px!important;
   min-height:23px!important;
 }
+#requestDialog .request-review-submit {
+  display:block!important;
+  width:calc(100% - 28px)!important;
+  min-height:48px!important;
+  height:auto!important;
+  padding:11px 16px!important;
+  margin:0 14px 14px!important;
+  font-size:14px!important;
+  letter-spacing:.04em!important;
+}
 #requestDialog .request-profile-actions {
   display:flex!important;
   flex-wrap:wrap!important;
