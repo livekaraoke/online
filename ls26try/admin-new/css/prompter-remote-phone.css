@@ -79,3 +79,14 @@
  .phone-remote-page #ls26PrompterRemote #ls26PrompterSongCue,
  .phone-remote-page #ls26PrompterRemote #ls26PrompterInstrumental{font-size:13px!important}
 }
+/* Current song uses the existing liveLyrics metadata projection; no extra reads. */
+.phone-remote-song{
+ display:grid;gap:5px;min-width:0;padding:15px 17px;
+ border:1px solid #2b6b82;border-radius:12px;
+ background:linear-gradient(145deg,#073144,#041c2c);
+}
+.phone-remote-song-top{display:flex;justify-content:space-between;align-items:center;gap:9px;flex-wrap:wrap}
+.phone-remote-song-top>span{color:#20d3f4;font-size:11px;font-weight:850;letter-spacing:.08em}
+.phone-remote-song-top>small{color:#9debc0;font-size:11px;font-weight:750}
+.phone-remote-song>strong{color:#f3fbff;font-size:clamp(20px,5.2vw,28px);line-height:1.18;overflow-wrap:anywhere}
+.phone-remote-song>p{color:#a9c6d3;font-size:13px;margin:0;line-height:1.35}
