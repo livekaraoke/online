@@ -16,6 +16,7 @@
   const esc=value=>String(value??"").replace(/[&<>\"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
   const asDate=value=>value?.toDate?.()||value instanceof Date?value?.toDate?.()||value:null;
   const millis=value=>asDate(value)?.getTime?.()||0;
+  const hasPublishableFeedback=item=>Boolean(item.review)||Number(item.rating)>=1&&Number(item.rating)<=5;
   const stars=rating=>{const n=Math.max(0,Math.min(5,Math.round(Number(rating)||0)));return n?`${"★".repeat(n)}${"☆".repeat(5-n)}`:"No rating";};
   const reviewerKey=item=>String(item.reviewKey||item.requesterDeviceId||item.id||"");
   const state=item=>item.reviewApproved===true?"approved":(["rejected","withdrawn"].includes(String(item.reviewStatus||"").toLowerCase())?String(item.reviewStatus).toLowerCase():"pending");
@@ -72,12 +73,12 @@
   }
 
   function card(item){
-    const current=state(item),hasText=!!item.review,canApprove=hasText;
+    const current=state(item),hasText=!!item.review,canApprove=hasPublishableFeedback(item);
     const actions=current==="approved"
       ? `<button class="lk-review-action" type="button" data-review-unpublish="${esc(item.id)}">Unpublish</button>`
       : `<button class="lk-review-action primary" type="button" data-review-approve="${esc(item.id)}" ${canApprove?"":"disabled"}>Approve &amp; publish</button><button class="lk-review-action danger" type="button" data-review-reject="${esc(item.id)}">Reject</button>`;
     const privacy=item.reviewPrivate?"Name hidden on public website":"Name eligible to appear publicly";
-    return `<article class="lk-review-card" data-review-id="${esc(item.id)}"><div class="lk-review-head"><div class="lk-review-person"><strong>${esc(item.name||"Live Karaoke guest")}</strong><small>${esc(item.country||"Country not provided")}</small></div><span class="lk-review-status ${esc(current)}">${esc(current==="approved"?"Published":current)}</span></div><div class="lk-review-stars" aria-label="${esc(item.rating?`${item.rating} out of 5 stars`:"No rating")}">${esc(stars(item.rating))}</div><p class="lk-review-copy ${hasText?"":"lk-review-empty-copy"}">${hasText?esc(item.review):"No written review was provided."}</p><div class="lk-review-meta">${formatDate(item)?`<span>${esc(formatDate(item))}</span>`:""}<span>${privacy}</span></div><div class="lk-review-actions">${actions}</div></article>`;
+    return `<article class="lk-review-card" data-review-id="${esc(item.id)}"><div class="lk-review-head"><div class="lk-review-person"><strong>${esc(item.name||"Live Karaoke guest")}</strong><small>${esc(item.country||"Country not provided")}</small></div><span class="lk-review-status ${esc(current)}">${esc(current==="approved"?"Published":current)}</span></div><div class="lk-review-stars" aria-label="${esc(item.rating?`${item.rating} out of 5 stars`:"No rating")}">${esc(stars(item.rating))}</div><p class="lk-review-copy ${hasText?"":"lk-review-empty-copy"}">${hasText?esc(item.review):(item.rating>=1?"Star rating only - no written review.":"No written review was provided.")}</p><div class="lk-review-meta">${formatDate(item)?`<span>${esc(formatDate(item))}</span>`:""}<span>${privacy}</span></div><div class="lk-review-actions">${actions}</div></article>`;
   }
 
   function render(){
@@ -90,7 +91,7 @@
 
   async function publishApproved(snapshot=null){
     const snap=snapshot||await LK.db.collection(PROFILES).get();
-    const approved=dedupe(snap.docs.map(normalise)).filter(item=>item.reviewApproved===true&&item.review).slice(0,24);
+    const approved=dedupe(snap.docs.map(normalise)).filter(item=>item.reviewApproved===true&&hasPublishableFeedback(item)).slice(0,24);
     const publicReviews=approved.map(item=>({
       name:item.reviewPrivate?"":(item.name||"Live Karaoke guest"),
       country:item.country||"",
@@ -103,7 +104,7 @@
 
   async function moderate(id,action){
     const item=reviews.find(review=>review.id===id);if(!item||!LK.auth.currentUser)return;
-    if(action==="approve"&&!item.review)return;
+    if(action==="approve"&&!hasPublishableFeedback(item))return;
     const button=list.querySelector(`[data-review-${action}="${CSS.escape(id)}"]`);if(button)button.disabled=true;
     setStatus(`${action==="approve"?"Publishing":action==="reject"?"Rejecting":"Unpublishing"} review…`);
     try{
