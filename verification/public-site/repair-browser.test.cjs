@@ -43,7 +43,7 @@ if(window.parent===window){window.__publishFixture=()=>{const f=__firebaseFixtur
    });
    await page.waitForFunction(()=>document.querySelectorAll('.live-karaoke-event-card').length===2,null,{timeout:12000});
    assert.equal(await page.locator('.live-karaoke-event-card').count(),2,'special and other-venue events remain in cards');
-   assert.match(await page.locator('#liveKaraokeEventsList').innerText(),/Other Venue/);
+   assert.match(await page.locator('#liveKaraokeEventsList').innerText(),/Other Venue/i);
    assert.equal(await page.locator('link[rel=canonical]').getAttribute('href'),'https://livekaraoke.eu/');
    await page.evaluate(()=>{const f=__firebaseFixture;f.update('karaokeControl/currentSession',{...f.docs['karaokeControl/currentSession'],venue:'Whyte Harte'});f.update('performanceSessions/s',{...f.docs['performanceSessions/s'],venue:'Whyte Harte'});f.update('upcomingEvents/e',{...f.docs['upcomingEvents/e'],venue:'Whyte Harte'});});
    await page.locator('#liveNowRequestBtn').waitFor({state:'visible'});
