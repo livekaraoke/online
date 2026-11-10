@@ -2,7 +2,7 @@
 (() => {
   const inherited=window.parent!==window&&window.parent.__firebaseFixture;
   const docs=inherited?.docs||{
-    'karaokeControl/currentSession':{active:true,sessionId:'s',eventId:'e',type:'Live Karaoke',venue:'0 The Test Venue'},
+    'karaokeControl/currentSession':{active:true,isTestSession:true,sessionId:'s',eventId:'e',type:'Live Karaoke',venue:'0 The Test Venue'},
     'performanceSessions/s':{status:'active',type:'Live Karaoke',venue:'0 The Test Venue',actualStartedAt:1},
     'karaoke/state':{songsEnabled:true},
     'karaokeControl/runOrder':{sessionId:'s',items:[{id:'now',status:'playing',songId:'wonderwall',songTitle:'Wonderwall',artist:'Oasis'},{id:'next',status:'queued',songTitle:'Angels',artist:'Robbie Williams'},{id:'two',status:'queued',songTitle:'Let It Be',artist:'The Beatles'},{id:'three',status:'queued',songTitle:'All Summer Long',artist:'Kid Rock'},{id:'bad',status:'cancelled',songTitle:'Cancelled song'}]},
