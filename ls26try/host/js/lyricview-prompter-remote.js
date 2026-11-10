@@ -143,6 +143,7 @@
     panel.hidden=!visible;
     if(visible)restorePosition();
     if(visible){$('ls26PrompterRemoteStatus').textContent='Cross-tablet ready';observeCloud();send('status');}
+    else if(unsubscribeCloud){unsubscribeCloud();unsubscribeCloud=null;}
   };
   const getCurrentState=id=>({
     v:1,kind:'state',id,at:Date.now(),origin:'remote',
