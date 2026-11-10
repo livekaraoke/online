@@ -166,6 +166,7 @@
     const signature=JSON.stringify(next);
     if(signature===lastSongSignature)return;
     loadedSong=next;lastSongSignature=signature;
+    window.LS26PrompterRemoteCurrentSong={...next};
     window.dispatchEvent(new CustomEvent('ls26:prompter-remote-song',{detail:{...next}}));
   };
   const observeCloud=()=>{
@@ -263,6 +264,7 @@
     }
     setPlayState(Boolean(packet.playing));
     if(packet.mode)setSingerMode(packet.mode);
+    window.LS26PrompterRemoteCurrentState={...packet};
     window.dispatchEvent(new CustomEvent('ls26:prompter-remote-state',{detail:{...packet}}));
   };
   function start(){
