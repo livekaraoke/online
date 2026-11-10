@@ -1547,3 +1547,85 @@ width: 100%;
 @media(max-width:760px){.booking-benefits{grid-template-columns:1fr}}
 @media(max-width:650px){.booking-enquiry-grid{grid-template-columns:1fr}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto} .hero-banner,.main-button{animation:none}}
+
+/* Featured weekly residency (kept separate from live Firestore event cards). */
+.weekly-residency-card {
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: minmax(0, .78fr) minmax(0, 1.22fr);
+  align-items: center;
+  gap: 34px;
+  width: min(1050px, 100%);
+  margin: 24px auto 28px;
+  padding: 29px 38px;
+  text-align: left;
+  border: 2px solid #ff535b;
+  border-radius: 17px;
+  background: linear-gradient(110deg, #180808 0%, #100808 60%, #160808 100%);
+  box-shadow: 0 0 7px rgba(255, 50, 60, .75), inset 0 0 18px rgba(145, 0, 0, .12);
+}
+.weekly-residency-venue {
+  min-width: 0;
+  border-right: 1px solid rgba(240, 240, 240, .52);
+  padding-right: 30px;
+}
+.weekly-residency-label {
+  display: block;
+  color: #ff5664;
+  font-weight: 800;
+  font-size: clamp(.9rem, 2vw, 1.12rem);
+  line-height: 1.4;
+  letter-spacing: .04em;
+}
+.section .weekly-residency-venue h3 {
+  color: #fff;
+  margin: 12px 0 0;
+  font-size: clamp(1.8rem, 4vw, 2.55rem);
+  line-height: 1.13;
+  letter-spacing: .02em;
+  text-shadow: 0 0 8px rgba(255, 255, 255, .12);
+}
+.weekly-residency-details {
+  display: grid;
+  gap: 13px;
+  min-width: 0;
+}
+.weekly-residency-detail {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  color: #f0eded;
+  font-size: clamp(.98rem, 1.8vw, 1.13rem);
+  line-height: 1.43;
+}
+.weekly-residency-detail svg {
+  display: block;
+  width: 23px;
+  height: 23px;
+  flex: 0 0 23px;
+  margin-top: 1px;
+  color: #e4e3e3;
+}
+.weekly-residency-day strong {
+  color: #ffd13d;
+  font-size: clamp(1.14rem, 2.4vw, 1.45rem);
+  line-height: 1.22;
+  letter-spacing: .015em;
+}
+@media (max-width: 720px) {
+  .weekly-residency-card {
+    grid-template-columns: 1fr;
+    gap: 19px;
+    padding: 25px 22px;
+    margin: 20px auto 24px;
+  }
+  .weekly-residency-venue {
+    border-right: 0;
+    border-bottom: 1px solid rgba(240, 240, 240, .28);
+    padding: 0 0 18px;
+    text-align: center;
+  }
+  .section .weekly-residency-venue h3 { margin-top: 8px; }
+  .weekly-residency-details { gap: 13px; }
+  .weekly-residency-detail { gap: 11px; }
+}
