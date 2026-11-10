@@ -386,3 +386,57 @@ header .cancel-button {
     min-height: 120px;
   }
 }
+
+/* Stage signup refinements, Nov 10: 1.7x original 300px branding on tall
+ * tablets, but scale responsibly in short iPad landscape viewports so the
+ * three-song queue and green CTA stay readable without outer scrolling. */
+.idle-screen.is-open .idle-brand-art {
+  height: 49.3vh; /* 29vh x 1.7 */
+  max-height: 510px; /* 300px x 1.7 */
+  min-height: 204px;
+  max-width: 96%;
+  margin: 0 auto 22px;
+  -webkit-flex: 0 0 auto;
+  flex: 0 0 auto;
+}
+.idle-screen.is-open .idle-call-to-action {
+  padding-top: 4px;
+  padding-bottom: 26px; /* extra space before COMING UP NEXT */
+}
+#singerName.valid-name, #singerName.valid-name:focus {
+  border-color: #39e78a;
+  outline-color: #39e78a;
+  box-shadow: 0 0 0 2px rgba(57,231,138,.55);
+}
+/* Keep four queue rows fully inside a portrait iPad 2 screen. */
+@media (min-height: 901px) and (max-height: 1100px) {
+ .idle-screen.is-open .idle-brand-art { height: 47vh; }
+}
+@media (max-height: 900px) {
+ .idle-screen.is-open .idle-brand-art {
+   height: 37vh;
+   max-height: 335px;
+   min-height: 160px;
+   margin-bottom: 15px;
+ }
+ .idle-screen.is-open .idle-call-to-action { padding-bottom: 19px; }
+}
+@media (max-height: 650px) {
+ .idle-screen.is-open .idle-brand-art {
+   height: 34vh;
+   min-height: 110px;
+   margin-bottom: 8px;
+ }
+ .idle-screen.is-open .idle-call-to-action { padding-top: 0; padding-bottom: 10px; }
+ .idle-question { font-size: 20px; padding-bottom: 5px; }
+ .idle-green-button { min-height: 53px; font-size: 19px; }
+ .idle-instructions { font-size: 15px; padding-top: 5px; }
+ .idle-queue-heading { padding-bottom: 3px; }
+ .idle-next-row, .idle-current-row { min-height: 42px; margin-bottom: 4px; }
+}
+
+/* On very small phone viewports, preserve all three queue rows rather than
+ * hiding the last line under the physical browser controls. */
+@media (max-width: 500px) and (max-height: 750px) {
+ .idle-screen.is-open .idle-brand-art { height: 35vh; }
+}

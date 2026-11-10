@@ -7,7 +7,7 @@ test('ES5 syntax for every kiosk script and inline alias',()=>{
  const html=fs.readFileSync(path.join(root,'signup/sign up.html'),'utf8');assert.doesNotMatch(html,/firebasejs|type="module"|framework|ls26try/);
 });
 test('disabled rollout blocks requests even with a valid kiosk token',()=>{
- const nodes={},document={getElementById(id){return nodes[id]||(nodes[id]={value:'',hidden:true,disabled:false,textContent:'',style:{},setAttribute(){}});},addEventListener(){}};
+ const nodes={},document={getElementById(id){return nodes[id]||(nodes[id]={value:'',hidden:true,disabled:false,textContent:'',style:{},setAttribute(){},addEventListener(){}});},addEventListener(){}};
  const window={document,LKSignupPolicy:{rulesVerified:false,projectId:'demo-ls26-kiosk'},location:{search:'?k='+'a'.repeat(64)},addEventListener(){}};
  const context={window,document,location:window.location,clearTimeout(){},setTimeout(){},XMLHttpRequest(){throw Error('Disabled kiosk must not contact Firestore');}};
  vm.runInNewContext(fs.readFileSync(path.join(root,'signup/signup.js'),'utf8'),context);
@@ -345,4 +345,24 @@ test('landing has original user artwork, highly visible CTA and three readable p
  assert.match(js,/el\('queueNow'\)\.hidden = !current/);
  assert.doesNotMatch(html,/autofocus/);
  assert.match(js,/el\('idleScreen'\)\.onclick = function/);
+});
+
+test('enlarged original artwork, green name, same-singer repeat, and stage inactivity reset',()=>{
+ const html=fs.readFileSync(path.join(root,'signup/sign up.html'),'utf8');
+ const css=fs.readFileSync(path.join(root,'signup/signup.css'),'utf8');
+ const js=fs.readFileSync(path.join(root,'signup/signup.js'),'utf8');
+ assert.match(css,/height: 49\.3vh; \/\* 29vh x 1\.7 \*\//);
+ assert.match(css,/max-height: 510px; \/\* 300px x 1\.7 \*\//);
+ assert.match(css,/margin: 0 auto 22px/);
+ assert.match(css,/padding-bottom: 26px; \/\* extra space before COMING UP NEXT \*\//);
+ assert.match(css,/#singerName\.valid-name, #singerName\.valid-name:focus/);
+ assert.match(js,/el\('singerName'\)\.className = nameValid\(\) \? 'valid-name' : ''/);
+ assert.match(js,/var INACTIVITY_MS = 20000/);
+ assert.match(js,/function expireInactivity\(\) \{[\s\S]*?showIdle\(gateOpen \? 'open' : 'closed'\);[\s\S]*?resetForm\(\)/);
+ assert.match(js,/el\('anotherSong'\)\.onclick = function \(\) \{[\s\S]*?var previousName = repeatSinger;[\s\S]*?resetForm\(\);[\s\S]*?el\('singerName'\)\.value = previousName/);
+ assert.match(js,/stopInactivity\(\); clearTimeout\(timer\);/);
+ assert.match(js,/function userActivity\(\) \{/);
+ assert.match(js,/events = \['input', 'keydown', 'touchstart', 'touchmove', 'click', 'wheel'\]/);
+ assert.match(js,/if \(document.hidden\) \{ clearTimeout\(timer\); clearTimeout\(gateTimer\); stopInactivity\(\); \}/);
+ assert.match(html,/signup\.js\?v=20261110-size-idle-v3/);
 });
