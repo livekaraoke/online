@@ -88,20 +88,35 @@ let server,browser;let requestOpen=true,sessionActive=true;
     'No automatic keyboard focus when landing appears after refresh');
   const geometry=await page.evaluate(()=>{
     const image=document.querySelector('.idle-brand-art').getBoundingClientRect();
+    const callToAction=document.querySelector('.idle-call-to-action').getBoundingClientRect();
     const queue=document.getElementById('idleQueue').getBoundingClientRect();
-    return {imageBottom:image.bottom,queueTop:queue.top,queueBottom:queue.bottom,
+    return {imageBottom:image.bottom,actionTop:callToAction.top,actionBottom:callToAction.bottom,
+      queueTop:queue.top,queueBottom:queue.bottom,
       visibleHeight:Math.min(window.innerHeight,document.documentElement.clientHeight)};
   });
-  assert.ok(Math.abs(geometry.imageBottom-geometry.queueTop)<2,'Queue must follow logo: '+JSON.stringify(geometry));
+  assert.ok(Math.abs(geometry.imageBottom-geometry.actionTop)<2,
+    'Signup action must follow the logo: '+JSON.stringify(geometry));
+  assert.ok(Math.abs(geometry.actionBottom-geometry.queueTop)<2,
+    'Queue must follow the signup action: '+JSON.stringify(geometry));
   assert.ok(geometry.queueBottom<=geometry.visibleHeight+2,'Queue must fit viewport: '+JSON.stringify(geometry));
   assert.equal(await page.locator('#idleScreen').getAttribute('aria-label'),'Click anywhere to sing');
+  assert.ok(await page.locator('.idle-green-button').isVisible(),'Large TAP HERE TO SING action must be visible');
+  assert.equal(await page.locator('.idle-green-button').innerText(),'TAP HERE TO SING');
+  const ctaStyle=await page.locator('.idle-green-button').evaluate(el=>({
+    rect:el.getBoundingClientRect().toJSON(),bg:getComputedStyle(el).backgroundColor,
+    border:getComputedStyle(el).borderTopColor
+  }));
+  assert.ok(ctaStyle.rect.height>=58&&ctaStyle.rect.width>=200,'CTA must be large enough to tap: '+JSON.stringify(ctaStyle));
+  assert.equal(ctaStyle.bg,'rgb(11, 120, 61)','CTA must show enabled green action');
+  const finalRow=await page.locator('#queueNext3').boundingBox();
+  assert.ok(finalRow&&finalRow.y+finalRow.height<=viewport.height+2,'All three queued singers must be visible: '+JSON.stringify(finalRow));
   const artworkScale=await page.locator('.idle-brand-art').evaluate(el=>getComputedStyle(el).backgroundSize);
-  assert.equal(artworkScale,'contain','Entire CLICK TO SING artwork fits above the queue without cropping');
+  assert.equal(artworkScale,'contain','Uncropped original logo fits above the signup button');
   const imageLoaded=await page.evaluate(()=>new Promise(resolve=>{
     const img=new Image();img.onload=()=>resolve(img.naturalWidth>=1000&&img.naturalHeight>=1000);
-    img.onerror=()=>resolve(false);img.src='assets/click-to-sing.jpg';
+    img.onerror=()=>resolve(false);img.src='assets/live-karaoke-landing-logo.jpg';
   }));
-  assert.ok(imageLoaded,'CLICK TO SING artwork must load at full resolution');
+  assert.ok(imageLoaded,'Original attached LIVE KARAOKE artwork must load at full resolution');
   await page.locator('#idleScreen').click();
   assert.ok(await page.locator('#idleScreen').isHidden());
   const focused=await page.locator('#singerName').evaluate(el=>document.activeElement===el);
