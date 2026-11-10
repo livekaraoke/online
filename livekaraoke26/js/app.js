@@ -766,6 +766,12 @@
       reviewPrivate:$("requestReviewPrivate")?.checked===true
     };
 
+    if(submitReview && !profile.rating && !profile.review){
+      $("requestProfileStatus").textContent="Choose a star rating or write a review first.";
+      $("requestReviewDetails").open=true;
+      return false;
+    }
+
     localStorage.setItem(REQUEST_PROFILE_KEY,JSON.stringify(profile));
     localStorage.setItem("billylee26.requestName",name);
     syncRequesterUi();
@@ -2047,7 +2053,8 @@
   $("requestActionConfirmDialog").addEventListener("close",()=>{if(requestActionConfirmResolve)finishRequestActionConfirm(false);});
   $("requestNoteDialogInput").addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&e.key==="Enter")saveMyRequestNote();});
   $("continueRequestBtn").addEventListener("click",continueToSongs);
-  $("saveProfileOnlyBtn").addEventListener("click",()=>saveRequestProfile({goToSongs:false,submitReview:true}));
+  $("saveProfileOnlyBtn").addEventListener("click",()=>saveRequestProfile({goToSongs:false,submitReview:false}));
+  $("submitRequestReviewBtn").addEventListener("click",()=>saveRequestProfile({goToSongs:false,submitReview:true}));
   $("singerName").addEventListener("keydown",e=>{if(e.key==="Enter")continueToSongs();});
   $("editRequesterNameBtn").addEventListener("click",beginEditRequesterName);
   $("forgetRequestProfileBtn").addEventListener("click",forgetRequestProfile);
