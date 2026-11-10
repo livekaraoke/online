@@ -209,8 +209,11 @@
     if(packet.mode)setSingerMode(packet.mode);
   };
   function start(){
-    document.body.append(panel);
-    enableDragging();
+    // Standalone Admin phone controller embeds this exact remote rather than
+    // maintaining a duplicate set of Firestore command handlers.
+    const phoneMount=document.getElementById('phonePrompterRemoteMount');
+    (phoneMount||document.body).append(panel);
+    if(!phoneMount)enableDragging();
     window.addEventListener('resize',()=>{
       const width=window.innerWidth;
       // Ignore height-only browser UI changes, including Chrome on Android
