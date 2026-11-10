@@ -52,7 +52,19 @@ if(window.parent===window){window.__publishFixture=()=>{const f=__firebaseFixtur
    assert.ok(button.height>=48);assert.ok(width>600?button.x>list.x+list.width-2:button.y>=list.y+list.height,'requested responsive placement');
    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'no horizontal overflow');
    if(process.env.LK_SCREENSHOT_DIR){fs.mkdirSync(process.env.LK_SCREENSHOT_DIR,{recursive:true});await page.locator('#heroLiveNow').screenshot({path:path.join(process.env.LK_SCREENSHOT_DIR,`live-panel-${width}.png`)});}
-   await page.locator('#liveNowRequestBtn').tap();const frame=page.frameLocator('#liveKaraokeRequestFrame');await frame.locator('.song-row').first().waitFor();
+   await page.locator('#liveNowRequestBtn').tap();const frame=page.frameLocator('#liveKaraokeRequestFrame');
+    await frame.locator('#requestNameGate').waitFor({state:'visible'});
+    // Async catalogue/request loading must not dismiss the first-time name prompt.
+    await frame.locator('#requestCategoryGrid button').first().waitFor({state:'attached'});
+    await page.waitForTimeout(250);
+    assert.equal(await frame.locator('#requestNameGate').isVisible(),true,'new singer name gate persists after asynchronous loading');
+    assert.equal(await frame.locator('#requestBrowser').isVisible(),false,'song list stays hidden until name entered');
+    await frame.locator('#requestStartContinueBtn').click();
+    assert.equal(await frame.locator('#requestNameGate').isVisible(),true,'blank name cannot continue');
+    await frame.locator('#requestStartName').fill('Fixture Singer');
+    await frame.locator('#requestStartContinueBtn').click();
+    await frame.locator('.song-row').first().waitFor({state:'visible'});
+    assert.equal(await frame.locator('#requestNameGate').isVisible(),false,'name accepted and singer can browse');
    assert.equal(await frame.locator('.song-row').count(),3);await frame.locator('#songSearch').fill('cranberries');assert.match(await frame.locator('#songResults').innerText(),/Zombie/);await frame.locator('#songSearch').fill('');
    const counts=await page.evaluate(()=>__firebaseFixture.counts);for(const p of (projected?['publicSites/live-karaoke/views/live','publicSites/live-karaoke/views/events','publicSites/live-karaoke/views/settings']:['karaokeControl/currentSession','karaoke/state','karaokeControl/runOrder','karaokeControl/liveKaraokeWebsiteSettings']))assert.equal(counts[p],1,`one shared listener ${p}`);
    await page.evaluate(()=>__firebaseFixture.update('karaoke/state',{songsEnabled:false}));await frame.getByText('REQUESTS CLOSED · BROWSE THE SONG LIST',{exact:true}).waitFor();assert.equal(await frame.locator('.song-action:not(:disabled)').count(),0);
@@ -62,6 +74,13 @@ if(window.parent===window){window.__publishFixture=()=>{const f=__firebaseFixtur
    await frame.locator('#sendRequestBtn').evaluate(el=>{el.click();el.click();});await frame.locator('#requestSuccess').waitFor({state:'visible'});
    const requests=await page.evaluate(()=>__firebaseFixture.writes.filter(x=>x.path.startsWith('publicSongRequests/')));assert.equal(requests.length,1,'double submit blocked');assert.equal(requests[0].data.source,'live-karaoke-website');assert.equal(requests[0].data.sessionId,'s');
    await frame.locator('[data-close="requestDialog"]').click();await page.locator('#liveKaraokeRequestFrame').waitFor({state:'detached'});
+    // The saved name should skip the initial gate on a fresh popup open.
+    await page.locator('#liveNowRequestBtn').tap();
+    const returningFrame=page.frameLocator('#liveKaraokeRequestFrame');
+    await returningFrame.locator('#requestBrowser').waitFor({state:'visible'});
+    assert.equal(await returningFrame.locator('#requestNameGate').isVisible(),false,'returning singer goes straight to song list');
+    await returningFrame.locator('[data-close="requestDialog"]').click();
+    await page.locator('#liveKaraokeRequestFrame').waitFor({state:'detached'});
    await page.evaluate(()=>__firebaseFixture.update('performanceSessions/s',{...__firebaseFixture.docs['performanceSessions/s'],breakOpen:true}));assert.match(await page.locator('#heroCurrentSong').innerText(),/ON BREAK/);
    await page.evaluate(()=>__firebaseFixture.update('karaokeControl/currentSession',{active:false}));assert.equal(await page.locator('#heroLiveNow').isVisible(),false);assert.equal(await page.locator('#heroCurrentSong').innerText(),'');assert.equal(await page.locator('#songListBtn').getAttribute('aria-disabled'),'true','song browsing locks after session ends');
    await page.locator('#liveKaraokeEnquiryOpen').click();await page.locator('#lkEnquiryName').fill('Fixture Visitor');await page.locator('#lkEnquiryEmail').fill('fixture@example.com');await page.locator('#lkEnquiryEventType').selectOption('Corporate Event');await page.locator('#lkEnquiryMessage').fill('Isolated fixture enquiry.');await page.locator('#lkEnquirySubmit').evaluate(el=>{el.click();el.click();});await page.locator('#liveKaraokeEnquirySuccess').waitFor({state:'visible'});

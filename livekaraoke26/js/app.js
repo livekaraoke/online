@@ -1140,6 +1140,13 @@
     window.parent?.postMessage({type:"live-karaoke-request-ready"},location.origin);
     populateProfileForm();
 
+    // Show the name gate before any asynchronous song/request loading.
+    // Loading must never replace it with the song list until the singer
+    // explicitly continues with a non-empty name. Returning singers who
+    // already saved a name can go straight to their songs.
+    if (requestProfile().name) switchRequestTab("songs");
+    else showRequestNameGate();
+
     try{
       if(!songs.length)await loadPublicSongs();
       await renderMyRequests();
@@ -1149,7 +1156,6 @@
 
     renderRequestCategoryCards();
     renderRequestInfo();
-    switchRequestTab("songs");
   }
 
   async function continueToSongs(){
