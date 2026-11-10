@@ -6,6 +6,29 @@
   const remoteToggle=$("ls26ShowPrompterRemote");
   const login=$("phoneRemoteLogin");
   const controller=$("phoneRemoteController");
+  const stages={
+    idle:"Waiting for next singer",waiting:"Ready to start",
+    running:"Song in progress",instrumental:"Instrumental / Hold",
+    ended:"Song ended"
+  };
+  const displaySong=detail=>{
+    const id=String(detail?.songId||"").trim();
+    const title=$("phoneRemoteSongTitle"),artist=$("phoneRemoteSongArtist");
+    if(title)title.textContent=id?String(detail.title||id):"No song loaded";
+    if(artist)artist.textContent=id
+      ?[detail.artist,detail.year].map(v=>String(v||"").trim()).filter(Boolean).join(" · ")||"Loaded on singer Prompter"
+      :"Send lyrics from LyricView to prepare the singer screen.";
+  };
+  const displayState=detail=>{
+    const target=$("phoneRemoteSongStage");
+    if(!target)return;
+    const mode=stages[detail?.mode]||"Waiting for singer";
+    target.textContent=mode+(detail?.mode==="running"&&detail.playing?" · Scrolling":"");
+  };
+  window.addEventListener("ls26:prompter-remote-song",event=>displaySong(event.detail));
+  window.addEventListener("ls26:prompter-remote-state",event=>displayState(event.detail));
+  displaySong(window.LS26PrompterRemoteCurrentSong);
+  displayState(window.LS26PrompterRemoteCurrentState);
   const menu=$("phoneMenuToggle");
   const backdrop=$("phoneMenuBackdrop");
   function showMenu(open){
