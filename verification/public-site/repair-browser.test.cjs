@@ -45,8 +45,8 @@ if(window.parent===window){window.__publishFixture=()=>{const f=__firebaseFixtur
    assert.equal(await page.locator('.live-karaoke-event-card').count(),2,'special and other-venue events remain in cards');
    assert.match(await page.locator('#liveKaraokeEventsList').innerText(),/Other Venue/i);
    assert.equal(await page.locator('link[rel=canonical]').getAttribute('href'),'https://livekaraoke.eu/');
-   await page.evaluate(()=>{const f=__firebaseFixture;f.update('karaokeControl/currentSession',{...f.docs['karaokeControl/currentSession'],venue:'Whyte Harte'});f.update('performanceSessions/s',{...f.docs['performanceSessions/s'],venue:'Whyte Harte'});f.update('upcomingEvents/e',{...f.docs['upcomingEvents/e'],venue:'Whyte Harte'});});
-   await page.locator('#liveNowRequestBtn').waitFor({state:'visible'});
+   await page.evaluate(()=>{const f=__firebaseFixture;f.update('karaokeControl/currentSession',{...f.docs['karaokeControl/currentSession'],isTestSession:false});});
+   await page.locator('#liveNowRequestBtn').waitFor({state:'visible'});assert.equal(await page.locator('#heroLiveVenue').innerText(),'0 The Test Venue','venue name must not make active public session invisible');
    assert.match(await page.locator('#heroCurrentSong').innerText(),/Wonderwall/);assert.doesNotMatch(await page.locator('#heroComingUp').innerText(),/Cancelled/);
    const list=await page.locator('#heroComingUp').boundingBox(),button=await page.locator('#liveNowRequestBtn').boundingBox();
    assert.ok(button.height>=48);assert.ok(width>600?button.x>list.x+list.width-2:button.y>=list.y+list.height,'requested responsive placement');
