@@ -110,8 +110,19 @@ let server,browser;let requestOpen=true,sessionActive=true;
   assert.equal(ctaStyle.bg,'rgb(11, 120, 61)','CTA must show enabled green action');
   const finalRow=await page.locator('#queueNext3').boundingBox();
   assert.ok(finalRow&&finalRow.y+finalRow.height<=viewport.height+2,'All three queued singers must be visible: '+JSON.stringify(finalRow));
-  const artworkScale=await page.locator('.idle-brand-art').evaluate(el=>getComputedStyle(el).backgroundSize);
-  assert.equal(artworkScale,'contain','Uncropped original logo fits above the signup button');
+  const artworkLayout=await page.locator('.idle-brand-art').evaluate(el=>{
+    const rect=el.getBoundingClientRect();
+    const action=document.querySelector('.idle-question').getBoundingClientRect();
+    return {tag:el.tagName,naturalWidth:el.naturalWidth,naturalHeight:el.naturalHeight,
+      width:rect.width,height:rect.height,bottom:rect.bottom,actionTop:action.top};
+  });
+  assert.equal(artworkLayout.tag,'IMG','Old Safari must use a real image, not a CSS-only background');
+  assert.ok(artworkLayout.naturalWidth>=1000&&artworkLayout.naturalHeight>=1000,
+    'Original artwork must decode at full resolution: '+JSON.stringify(artworkLayout));
+  assert.ok(artworkLayout.height>=120&&artworkLayout.width>=120,
+    'Logo must reserve visible layout space on iPad: '+JSON.stringify(artworkLayout));
+  assert.ok(artworkLayout.actionTop>=artworkLayout.bottom-2,
+    'Logo must be above WANT TO SING, not collapsed behind it: '+JSON.stringify(artworkLayout));
   const imageLoaded=await page.evaluate(()=>new Promise(resolve=>{
     const img=new Image();img.onload=()=>resolve(img.naturalWidth>=1000&&img.naturalHeight>=1000);
     img.onerror=()=>resolve(false);img.src='assets/live-karaoke-landing-logo.jpg';
