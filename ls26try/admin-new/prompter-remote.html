@@ -12,7 +12,7 @@
   <link rel="stylesheet" href="css/admin-navigation.css?v=20260929-admin-polish">
   <link rel="stylesheet" href="../shared/theme.css?v=20260930-release-preview-v2">
   <link rel="stylesheet" href="../host/css/lyricview-prompter-remote.css?v=20261103-remote-layout-v2">
-  <link rel="stylesheet" href="css/prompter-remote-phone.css?v=20261110-phone-v1">
+  <link rel="stylesheet" href="css/prompter-remote-phone.css?v=20261111-current-song-v1">
   <script src="../shared/data.js?v=20260910-stage4"></script>
 </head>
 <body class="admin-body phone-remote-page">
@@ -34,6 +34,11 @@
       </section>
 
       <section class="phone-remote-controller" id="phoneRemoteController" aria-label="Phone Prompter controller" hidden>
+        <div class="phone-remote-song" aria-live="polite">
+          <div class="phone-remote-song-top"><span>LOADED PROMPTER SONG</span><small id="phoneRemoteSongStage">Waiting for singer</small></div>
+          <strong id="phoneRemoteSongTitle">No song loaded</strong>
+          <p id="phoneRemoteSongArtist">Send lyrics from LyricView to prepare the singer screen.</p>
+        </div>
         <div class="phone-remote-connection">
           <span class="phone-remote-indicator" aria-hidden="true"></span>
           <div>
@@ -61,7 +66,7 @@
   <script src="js/profile.js?v=20260929-members-align"></script>
   <script src="js/auth.js?v=20260910-stage4"></script>
   <script src="../shared/shell.js?v=20260930-release-preview-v3"></script>
-  <script src="../host/js/lyricview-prompter-remote.js?v=20261110-phone-mount-v1"></script>
-  <script src="js/prompter-remote-phone.js?v=20261110-phone-v1"></script>
+  <script src="../host/js/lyricview-prompter-remote.js?v=20261111-shared-state-v1"></script>
+  <script src="js/prompter-remote-phone.js?v=20261111-current-song-v1"></script>
 </body>
 </html>
