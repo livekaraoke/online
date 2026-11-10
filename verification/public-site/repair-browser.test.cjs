@@ -27,7 +27,23 @@ if(window.parent===window){window.__publishFixture=()=>{const f=__firebaseFixtur
    await context.route('**/*',route=>{const url=route.request().url();if(projected&&url.includes('/js/public-data-config.js'))return route.fulfill({contentType:'text/javascript',body:fs.readFileSync(path.join(root,'js/public-data-config.js'),'utf8')+"\nwindow.LK_PUBLIC_LIVE_V1={'live-karaoke':true};window.LK_PUBLIC_CATALOGUE_V1={'live-karaoke':true};"});if(url.startsWith('http://127.0.0.1:8180/'))return route.continue();if(url.includes('firebase-app-compat.js'))return route.fulfill({contentType:'text/javascript',body:fixture});if(url.includes('www.gstatic.com/firebasejs/'))return route.fulfill({contentType:'text/javascript',body:''});return route.abort();});
    await page.goto('http://127.0.0.1:8180/online/',{waitUntil:'networkidle'});
    assert.equal(await page.locator('#heroLiveNow').isVisible(),false,'test session hidden');
-   assert.equal(await page.locator('.live-karaoke-event-card').count(),1,'only one published future karaoke event');
+   // The normal Wednesday at Whyte Harte is represented by the residency
+   // card rather than duplicated among individual event cards.
+   assert.equal(await page.locator('.live-karaoke-event-card').count(),0,'weekly Whyte Harte dates excluded from event cards');
+   assert.equal(await page.locator('.lk-past-events-photo').count(),6,'six past-event thumbnails');
+   assert.equal(await page.locator('.lk-past-events-photo a, .lk-past-events-photo button').count(),0,'no clickable photo or lightbox control');
+   await page.locator('.lk-past-events-grid').scrollIntoViewIfNeeded();
+   await page.waitForFunction(()=>[...document.querySelectorAll('.lk-past-events-photo img')].every(img=>img.complete&&img.naturalWidth>0),null,{timeout:12000});
+   const galleryCols=await page.locator('.lk-past-events-grid').evaluate(el=>getComputedStyle(el).gridTemplateColumns.trim().split(/\s+/).length);
+   assert.equal(galleryCols,width<=720?2:3,'responsive gallery columns');
+   // Another venue on a Wednesday and Whyte Harte on a Friday are exceptions.
+   await page.evaluate(()=>{
+     __firebaseFixture.update('upcomingEvents/specialWednesday',{type:'Live Karaoke',venue:'Other Venue',status:'Confirmed',date:'2026-11-11',startTime:'20:00'});
+     __firebaseFixture.update('upcomingEvents/whyteFriday',{type:'Live Karaoke',venue:'Whyte Harte',status:'Confirmed',date:'2026-10-30',startTime:'20:00'});
+   });
+   await page.waitForFunction(()=>document.querySelectorAll('.live-karaoke-event-card').length===2,null,{timeout:12000});
+   assert.equal(await page.locator('.live-karaoke-event-card').count(),2,'special and other-venue events remain in cards');
+   assert.match(await page.locator('#liveKaraokeEventsList').innerText(),/Other Venue/);
    assert.equal(await page.locator('link[rel=canonical]').getAttribute('href'),'https://livekaraoke.eu/');
    await page.evaluate(()=>{const f=__firebaseFixture;f.update('karaokeControl/currentSession',{...f.docs['karaokeControl/currentSession'],venue:'Whyte Harte'});f.update('performanceSessions/s',{...f.docs['performanceSessions/s'],venue:'Whyte Harte'});f.update('upcomingEvents/e',{...f.docs['upcomingEvents/e'],venue:'Whyte Harte'});});
    await page.locator('#liveNowRequestBtn').waitFor({state:'visible'});
