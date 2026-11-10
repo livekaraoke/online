@@ -11,7 +11,8 @@
   const PAGE_POSITION_KEY='ls26:prompter-remote-page-position-v2';
   const OLD_POSITION_KEY='ls26:prompter-remote-position-v1';
   const $=id=>document.getElementById(id);
-  let channel=null,lastRequest='',timeout=null,cloudWriteChain=Promise.resolve();
+  let channel=null,lastRequest='',timeout=null,cloudWriteChain=Promise.resolve(),unsubscribeCloud=null;
+  let loadedSong={songId:'',title:'',artist:'',year:''},lastSongSignature='',lastCueToken='';
   let drag=null,customPosition=false,positionRestored=false,userMoved=false;
   // Height-only resizes often mean Chrome's address/navigation bars hid on scroll.
   // They must never shift the remote or rewrite its saved screen position.
@@ -141,7 +142,57 @@
   const show=visible=>{
     panel.hidden=!visible;
     if(visible)restorePosition();
-    if(visible){$('ls26PrompterRemoteStatus').textContent='Cross-tablet ready';send('status');}
+    if(visible){$('ls26PrompterRemoteStatus').textContent='Cross-tablet ready';observeCloud();send('status');}
+  };
+  const getCurrentState=id=>({
+    v:1,kind:'state',id,at:Date.now(),origin:'remote',
+    mode:singerMode,playing:$('ls26PrompterRemotePlay')?.getAttribute('aria-pressed')==='true',
+    songId:loadedSong.songId,title:loadedSong.title,artist:loadedSong.artist
+  });
+  const songFromDoc=data=>{
+    if(!data||typeof data!=='object')return {songId:'',title:'',artist:'',year:''};
+    const modern=data.prompterLyricsSource==='modern';
+    const songId=String(modern?(data.prompterSongId||''):(data.currentSongId||data.currentLyricsSongId||data.songId||'')).trim();
+    if(!songId)return {songId:'',title:'',artist:'',year:''};
+    const song=data.song||{};
+    return {
+      songId,
+      title:String(data.prompterSongTitle||data.songTitle||data.title||song.title||'').trim(),
+      artist:String(data.prompterSongArtist||data.songArtist||data.artist||song.artist||'').trim(),
+      year:String(data.prompterSongYear||data.songYear||data.year||song.year||'').trim()
+    };
+  };
+  const syncSong=next=>{
+    const signature=JSON.stringify(next);
+    if(signature===lastSongSignature)return;
+    loadedSong=next;lastSongSignature=signature;
+    window.dispatchEvent(new CustomEvent('ls26:prompter-remote-song',{detail:{...next}}));
+  };
+  const observeCloud=()=>{
+    if(unsubscribeCloud)return;
+    const sharedDb=window.db||window.LK?.db;
+    if(!sharedDb?.collection)return;
+    try{
+      unsubscribeCloud=sharedDb.collection('karaokeControl').doc('liveLyrics')
+        .onSnapshot(snapshot=>{
+          if(!snapshot.exists)return;
+          const data=snapshot.data()||{};
+          syncSong(songFromDoc(data));
+          const cueToken=String(data.prompterRequestToken||'');
+          const newCue=Boolean(cueToken&&lastCueToken&&cueToken!==lastCueToken);
+          lastCueToken=cueToken;
+          const state=data.prompterRemoteState;
+          if(state?.v===1&&state.kind==='state'&&
+             ['idle','waiting','running','instrumental','ended'].includes(state.mode)){
+            // Ignore a previous song's stage when new lyrics were just sent.
+            if(!newCue || state.mode==='waiting')receive(state);
+            else {setSingerMode('waiting');setPlayState(false);}
+          }else if(newCue || (loadedSong.songId&&singerMode==='idle')){
+            setSingerMode('waiting');setPlayState(false);
+          }
+        },error=>{console.warn('Prompter remote state subscription failed:',error);
+          const status=$('ls26PrompterRemoteStatus');if(status)status.textContent='Sync unavailable';});
+    }catch(error){console.warn('Prompter remote state unavailable:',error);}
   };
   const post=packet=>{
     try{channel?.postMessage(packet);}catch(_){}
@@ -153,7 +204,7 @@
     lastRequest=id;
     const wasPlaying=$('ls26PrompterRemotePlay')?.getAttribute('aria-pressed')==='true';
     const previousMode=singerMode;
-    if(action==='toggle')setPlayState(!wasPlaying);
+    if(action==='toggle'&&singerMode==='running')setPlayState(!wasPlaying);
     if(action==='song'){
       const next=singerMode==='running'||singerMode==='instrumental'?'ended':'running';
       setSingerMode(next);
@@ -165,6 +216,7 @@
       setSingerMode(next);setPlayState(next==='running');
     }
     const packet={v:1,kind:'command',id,action,at:Date.now()};
+    const projected=getCurrentState(id);
     post(packet);
     clearTimeout(timeout);
     const status=$('ls26PrompterRemoteStatus');
@@ -184,7 +236,7 @@
     // Never write on autoscroll frames or touch singer lyrics/scroll sync fields.
     cloudWriteChain=cloudWriteChain.catch(()=>{}).then(()=>
       sharedDb.collection('karaokeControl').doc('liveLyrics')
-        .set({prompterRemoteCommand:packet},{merge:true})
+        .set({prompterRemoteCommand:packet,prompterRemoteState:projected},{merge:true})
     ).then(()=>{
       if(lastRequest===id&&!status.textContent.startsWith('Connected'))
         status.textContent='Sent via Firestore';
@@ -202,11 +254,16 @@
     // The Prompter also broadcasts a ready status with no matching request.
     const status=$('ls26PrompterRemoteStatus'),play=$('ls26PrompterRemotePlay');
     if(!status||!play)return;
-    clearTimeout(timeout);
-    lastRequest='';
-    status.textContent='Connected';
+    // State from a Firestore command is an intended state, not a singer-device
+    // acknowledgement. Only the singer's direct state message confirms it.
+    if(packet.origin!=='remote'){
+      clearTimeout(timeout);
+      lastRequest='';
+      status.textContent='Connected';
+    }
     setPlayState(Boolean(packet.playing));
     if(packet.mode)setSingerMode(packet.mode);
+    window.dispatchEvent(new CustomEvent('ls26:prompter-remote-state',{detail:{...packet}}));
   };
   function start(){
     // Standalone Admin phone controller embeds this exact remote rather than
@@ -241,13 +298,20 @@
       try{receive(JSON.parse(event.newValue));}catch(_){}
     });
     window.addEventListener('ls26:prompter-remote-visibility',event=>show(event.detail?.visible===true));
-    window.addEventListener('ls26:prompter-lyrics-sent',()=>{
+    window.addEventListener('ls26:prompter-lyrics-sent',event=>{
       setSingerMode('waiting');setPlayState(false);
+      // The sender's liveLyrics SEND LYRICS write is the authoritative cue.
+      // This local reset is immediate while the Firestore snapshot arrives.
+    });
+    // The host's actual song-completion action must also finish the singer
+    // stage when it is running, regardless of which remote is visible.
+    window.addEventListener('ls26:song-finished',()=>{
+      if(singerMode==='running'||singerMode==='instrumental')send('song');
     });
     // This setting is owned by performance.js; Karaoke Tools is separate.
     // Preserve the old default when a standalone/older page lacks the toggle.
     show($('ls26ShowPrompterRemote')?.checked ?? $('ls26ShowKaraoke')?.checked===true);
-    window.addEventListener('pagehide',()=>{clearTimeout(timeout);channel?.close();},{once:true});
+    window.addEventListener('pagehide',()=>{clearTimeout(timeout);channel?.close();unsubscribeCloud?.();},{once:true});
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});
   else start();
