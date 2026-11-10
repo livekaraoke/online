@@ -1,0 +1,67 @@
+<!-- LiveSuite Admin: dedicated phone controller for the existing LyricView Prompter remote. -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#031725">
+  <title>Prompter Remote · LiveSuite</title>
+  <link rel="stylesheet" href="css/admin.css?v=20260910-stage4">
+  <link rel="stylesheet" href="css/sidebar.css?v=20260910-stage4">
+  <link rel="stylesheet" href="css/sidebar-suite.css?v=20260929-admin-polish">
+  <link rel="stylesheet" href="css/admin-navigation.css?v=20260929-admin-polish">
+  <link rel="stylesheet" href="../shared/theme.css?v=20260930-release-preview-v2">
+  <link rel="stylesheet" href="../host/css/lyricview-prompter-remote.css?v=20261103-remote-layout-v2">
+  <link rel="stylesheet" href="css/prompter-remote-phone.css?v=20261110-phone-v1">
+  <script src="../shared/data.js?v=20260910-stage4"></script>
+</head>
+<body class="admin-body phone-remote-page">
+  <button type="button" id="phoneMenuBackdrop" class="phone-remote-menu-backdrop" aria-label="Close navigation" hidden></button>
+  <div class="admin-shell">
+    <div id="sidebarContainer"></div>
+    <main class="admin-main phone-remote-main">
+      <header class="phone-remote-header">
+        <div class="phone-remote-heading">
+          <span class="phone-remote-eyebrow">LIVE OPERATIONS · TOOLS</span>
+          <h1>Prompter Remote</h1>
+          <p>Control the singer's Lyric Prompter directly from your phone.</p>
+        </div>
+        <button type="button" id="phoneMenuToggle" class="phone-remote-menu-toggle" aria-expanded="false" aria-controls="sidebarContainer">MENU</button>
+      </header>
+
+      <section class="phone-remote-login" id="phoneRemoteLogin" role="status">
+        Checking LiveSuite sign-in…
+      </section>
+
+      <section class="phone-remote-controller" id="phoneRemoteController" aria-label="Phone Prompter controller" hidden>
+        <div class="phone-remote-connection">
+          <span class="phone-remote-indicator" aria-hidden="true"></span>
+          <div>
+            <strong>Phone → Singer Prompter</strong>
+            <small>Uses the same cross-tablet remote as LyricView</small>
+          </div>
+        </div>
+
+        <div id="phonePrompterRemoteMount" class="phone-remote-mount"></div>
+
+        <p class="phone-remote-guidance">Play/Pause controls automatic scrolling. START SONG reveals the lyrics without starting scrolling. The arrows scroll the singer's screen; − / + adjust its scroll speed.</p>
+        <p class="phone-remote-notice" id="phoneRemoteNotice" role="status" aria-live="polite">Ready to send. The singer Prompter must be open. A successful Firestore send does not confirm that the other screen executed the command.</p>
+      </section>
+
+      <footer class="phone-remote-footer"><a href="admin.html">Back to Admin Dashboard</a></footer>
+      <input type="checkbox" id="ls26ShowPrompterRemote" hidden aria-hidden="true" tabindex="-1">
+    </main>
+  </div>
+  <script src="../firebase-projects.js?v=20261006-reviews-admin-v1"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="js/firebase.js?v=20260910-stage4"></script>
+  <script src="js/sidebar.js?v=20261110-prompter-phone"></script>
+  <script src="js/profile.js?v=20260929-members-align"></script>
+  <script src="js/auth.js?v=20260910-stage4"></script>
+  <script src="../shared/shell.js?v=20260930-release-preview-v3"></script>
+  <script src="../host/js/lyricview-prompter-remote.js?v=20261110-phone-mount-v1"></script>
+  <script src="js/prompter-remote-phone.js?v=20261110-phone-v1"></script>
+</body>
+</html>
