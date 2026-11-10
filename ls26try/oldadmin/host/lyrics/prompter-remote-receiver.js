@@ -10,7 +10,8 @@
   const valid=new Set(['status','toggle','slower','faster','up','down','instrumental','song']);
   const seen=new Set();
   let channel=null, unsubscribeRemote=null, firstCloudSnapshot=true, lastCloudId='';
-  let mode='idle', feedbackTimer=null;
+  let mode='idle', feedbackTimer=null,cloudStateChain=Promise.resolve();
+  let loadedSong={songId:'',title:'',artist:'',year:''};
 
   const stage=document.createElement('div');
   stage.id='ls26SingerRemoteStage';
@@ -46,18 +47,43 @@
     label('ls26SingerUpcomingArtist',detail.artist||current?.querySelector('.song-artist')?.textContent||catalog.artist||'');
     const year=String(detail.year||catalog.year||'').trim().replace(/[()]/g,'');
     label('ls26SingerUpcomingYear',/^(18|19|20|21)\d{2}$/.test(year)?'('+year+')':'');
+    loadedSong={
+      songId:id,
+      title:document.getElementById('ls26SingerUpcomingTitle')?.textContent?.trim()||'',
+      artist:document.getElementById('ls26SingerUpcomingArtist')?.textContent?.trim()||'',
+      year
+    };
   };
   const stopTimer=()=>{if(feedbackTimer!==null)clearTimeout(feedbackTimer);feedbackTimer=null;};
   const armTimer=()=>{
     stopTimer();
-    if(mode==='ended')feedbackTimer=setTimeout(()=>applyMode('idle'),20000);
+    if(mode==='ended')feedbackTimer=setTimeout(()=>{
+      applyMode('idle');
+      state('idle-'+Date.now(),true);
+    },20000);
   };
-  const state=id=>{
+  const state=(id,publishCloud=false)=>{
     const label=document.getElementById('scrollToggleBtn')?.textContent?.trim()||'';
     const speed=document.getElementById('scrollSpeedDisplay')?.textContent?.trim()||'';
-    const packet={v:1,kind:'state',id,playing:mode==='running'&&label==='⏸',speed,mode,at:Date.now()};
+    const packet={
+      v:1,kind:'state',origin:'prompter',id,
+      playing:mode==='running'&&label==='⏸',speed,mode,at:Date.now(),
+      songId:loadedSong.songId,title:loadedSong.title,artist:loadedSong.artist
+    };
     try{channel?.postMessage(packet);}catch(_){}
     try{localStorage.setItem(STORAGE,JSON.stringify(packet));}catch(_){}
+    // The singer screen may be unsigned-in/public. Never open an anonymous
+    // Firestore write path merely for remote feedback. If owner authenticated,
+    // publish ONLY deliberate state transitions, not scroll frames or beats.
+    let signedIn=false;
+    try{signedIn=Boolean(window.firebase?.auth?.().currentUser);}catch(_){}
+    if(publishCloud&&signedIn&&sharedDb?.collection){
+      cloudStateChain=cloudStateChain.catch(()=>{}).then(()=>
+        sharedDb.collection('karaokeControl').doc('liveLyrics')
+          .set({prompterRemoteState:packet},{merge:true})
+      ).catch(error=>console.warn('Prompter state sync failed:',error));
+    }
+    return packet;
   };
   const applyMode=next=>{
     if(!['idle','waiting','running','instrumental','ended'].includes(next))return;
@@ -82,10 +108,10 @@
     if(event.detail?.cue!==true)return;
     updateSong(event.detail||{});
     applyMode('waiting');
-    state('song-'+Date.now());
+    state('song-'+Date.now(),true);
   });
   window.addEventListener('ls26:prompter-feedback-complete',()=>{
-    if(mode==='ended'){applyMode('idle');state('feedback-'+Date.now());}
+    if(mode==='ended'){applyMode('idle');state('feedback-'+Date.now(),true);}
   });
   // The 20-second end-screen timeout is inactivity-based, not a hard
   // deadline. Tapping the rating card or its info dialog restarts it.
@@ -94,9 +120,16 @@
     if(event.target.closest?.('#prompterEndRating,#prompterRatingGuide'))armTimer();
   },true);
   document.addEventListener('keydown',event=>{
-    if(mode!=='ended')return;
-    if(event.target.closest?.('#prompterEndRating,#prompterRatingGuide'))armTimer();
+    if(mode==='ended'&&event.target.closest?.('#prompterEndRating,#prompterRatingGuide'))armTimer();
+    // The singer can use the keyboard or touch controls directly as well as
+    // the remote. Publish the changed play/speed state on the next event loop.
+    if(['Space','ArrowUp','ArrowDown'].includes(event.code))
+      setTimeout(()=>state('manual-'+Date.now(),true),0);
   },true);
+  document.addEventListener('click',event=>{
+    if(event.target.closest?.('#autoScrollControls button,#scrollSpeedDisplay'))
+      setTimeout(()=>state('manual-'+Date.now(),true),0);
+  });
 
   const receive=packet=>{
     if(!packet||packet.v!==1||packet.kind!=='command'||!valid.has(packet.action)||typeof packet.id!=='string'||packet.id.length>80)return;
