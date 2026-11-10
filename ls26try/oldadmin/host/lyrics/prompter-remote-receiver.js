@@ -18,7 +18,8 @@
   stage.setAttribute('aria-live','polite');
   stage.innerHTML=`
     <div class="ls26-singer-artwork ls26-singer-artwork-preview">
-      <img src="song-about-to-begin.jpg" alt="Live Karaoke - song about to begin. Please wait." draggable="false">
+      <img src="live-karaoke-artwork.jpg" alt="Live Karaoke - You Sing, I Play" draggable="false">
+      <div class="ls26-singer-message ls26-singer-message-preview">PLEASE WAIT</div>
       <div class="ls26-singer-song-info">
         <strong id="ls26SingerUpcomingTitle"></strong>
         <span id="ls26SingerUpcomingArtist"></span>
@@ -26,7 +27,8 @@
       </div>
     </div>
     <div class="ls26-singer-artwork ls26-singer-artwork-idle">
-      <img src="waiting-for-next-singer.jpg" alt="Live Karaoke - waiting for next singer." draggable="false">
+      <img src="live-karaoke-artwork.jpg" alt="Live Karaoke - You Sing, I Play" draggable="false">
+      <div class="ls26-singer-message ls26-singer-message-idle">WAITING FOR<br>NEXT SINGER</div>
     </div>
     <div class="ls26-singer-stage-cue"><strong>INSTRUMENTAL</strong><span>(wait for signal)</span></div>`;
   document.body.appendChild(stage);

@@ -13,11 +13,14 @@ const prompterHtml=fs.readFileSync(path.join(root,'oldadmin/host/lyrics/song.htm
 const performance=fs.readFileSync(path.join(root,'shared/performance.js'),'utf8');
 assert.match(viewerHtml,/lyricview-prompter-remote\.js\?v=20261111-shared-stage-v1/);
 assert.match(viewerHtml,/lyricview-prompter-remote\.css\?v=20261103-remote-layout-v2/);
-assert.match(prompterHtml,/prompter-remote-receiver\.js\?v=20261111-shared-stage-v1/);
+assert.match(prompterHtml,/prompter-remote-receiver\.js\?v=20261111-logo-artwork-v1/);
 assert.match(performance,/ls26:karaoke-tools-visibility/);
 assert.match(performance,/id="ls26ShowKaraoke"> Show karaoke tools<\/label>\s*<label class="ls26-karaoke-toggle"><input type="checkbox" id="ls26ShowPrompterRemote"> Show Prompter Remote/);
 assert.match(performance,/ls26:prompter-remote-visibility/);
 assert.match(viewerHtml,/performance\.js\?v=20261103-tap-tempo-v1/);
+assert.match(prompterHtml,/prompter-end-rating\\.css\\?v=20261111-logo-artwork-v1/);
+assert.match(receiverScript,/live-karaoke-artwork\\.jpg/);
+assert.doesNotMatch(receiverScript,/song-about-to-begin\\.jpg|waiting-for-next-singer\\.jpg/);
 assert.match(prompterHtml,/prompterScrollUp/);assert.match(prompterHtml,/prompterScrollDown/);
 (async()=>{
  const browser=await chromium.launch({headless:true,...(fs.existsSync('/usr/bin/chromium')?{executablePath:'/usr/bin/chromium'}:{}),args:['--no-sandbox']});
@@ -79,6 +82,10 @@ assert.match(prompterHtml,/prompterScrollUp/);assert.match(prompterHtml,/prompte
     await prompter.waitForFunction(expected);
   }
   assert.equal(await prompter.evaluate(()=>document.body.dataset.ls26SingerStage),'idle');
+  assert.equal(await prompter.locator('.ls26-singer-artwork-idle img').getAttribute('src'),'live-karaoke-artwork.jpg');
+  assert.equal((await prompter.locator('.ls26-singer-message-idle').innerText()).replace(/\\s+/g,' '),'WAITING FOR NEXT SINGER');
+  assert.equal(await prompter.locator('.ls26-singer-artwork-preview img').getAttribute('src'),'live-karaoke-artwork.jpg');
+  assert.equal(await prompter.locator('.ls26-singer-message-preview').textContent(),'PLEASE WAIT');
   assert.equal(await host.locator('#ls26PrompterSongCue').isDisabled(),true,'An idle screen is not a playable song');
   await prompter.evaluate(()=>window.dispatchEvent(new CustomEvent('ls26:prompter-song-changed',{
     detail:{songId:'demo',cue:true,title:'All the Small Things',artist:'Blink 182',year:1999}
