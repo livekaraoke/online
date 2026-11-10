@@ -1,0 +1,81 @@
+/* Dedicated phone-first wrapper around the authoritative LyricView remote.
+   The original remote's command handling and Firestore path remain unchanged. */
+.phone-remote-page{background:#04111c;color:#e8f6ff}
+.phone-remote-page .phone-remote-main{min-width:0;max-width:1160px;box-sizing:border-box;padding:24px 24px 55px!important}
+.phone-remote-header{display:flex;align-items:start;justify-content:space-between;gap:14px;margin-bottom:23px}
+.phone-remote-heading h1{color:#e8f7ff;font-weight:850;font-size:clamp(25px,4vw,34px);margin:6px 0 8px}
+.phone-remote-heading p{color:#91b1c2;font-size:14px;line-height:1.5;margin:0}
+.phone-remote-eyebrow{color:#23c9ee;letter-spacing:.12em;font-weight:850;font-size:11px}
+.phone-remote-menu-toggle{display:none;background:#082a3b;color:#d9f6ff;border:1px solid #23536d;border-radius:9px;min-height:48px;padding:9px 15px;font:inherit;font-weight:850;touch-action:manipulation}
+.phone-remote-login{border:1px solid #2c5269;background:#092333;border-radius:12px;padding:20px;color:#f2da9d;font-size:14px;line-height:1.5}
+.phone-remote-login[hidden],.phone-remote-controller[hidden],.phone-remote-menu-backdrop[hidden]{display:none!important}
+.phone-remote-controller{max-width:780px;margin:0 auto;display:grid;gap:12px}
+.phone-remote-connection{display:flex;align-items:center;gap:12px;padding:15px 17px;border-radius:12px;background:linear-gradient(130deg,#072b3b,#051b2b);border:1px solid #296078}
+.phone-remote-connection strong,.phone-remote-connection small{display:block}
+.phone-remote-connection strong{color:#eefaff;font-size:16px}
+.phone-remote-connection small{color:#9cb9c6;font-size:12px;margin-top:3px}
+.phone-remote-indicator{width:12px;height:12px;flex:0 0 12px;border-radius:100%;background:#22d692;box-shadow:0 0 10px rgba(34,214,146,.5)}
+.phone-remote-mount{min-width:0}
+/* Embed the EXISTING floating controller as a full-width card rather than
+   repositioning/copying its controls or registering any new remote handlers. */
+.phone-remote-page #phonePrompterRemoteMount #ls26PrompterRemote{
+ position:relative!important;left:auto!important;right:auto!important;top:auto!important;bottom:auto!important;transform:none!important;
+ margin:0!important;width:100%!important;max-width:none!important;
+ padding:16px!important;box-sizing:border-box!important;z-index:auto!important;gap:15px!important;
+ border:1px solid #347e94!important;border-radius:15px!important;
+ background:linear-gradient(145deg,#052d40,#021c2d)!important;box-shadow:none!important;
+}
+.phone-remote-page #ls26PrompterRemote .ls26-prompter-remote-head{
+ min-height:35px;cursor:default!important;touch-action:auto!important;user-select:auto!important
+}
+.phone-remote-page #ls26PrompterRemote .ls26-prompter-remote-head strong{font-size:14px}
+.phone-remote-page #ls26PrompterRemoteStatus{max-width:180px!important;font-size:12px}
+.phone-remote-page #ls26PrompterRemote .ls26-prompter-remote-controls{
+ display:grid!important;grid-template-columns:repeat(6,minmax(0,1fr))!important;gap:10px!important
+}
+.phone-remote-page #ls26PrompterRemote .ls26-prompter-remote-controls>button:not(.ls26-prompter-remote-arrow){
+ grid-column:span 2!important;min-height:76px!important;font-size:32px!important
+}
+.phone-remote-page #ls26PrompterRemote .ls26-prompter-remote-controls>.ls26-prompter-remote-arrow{
+ grid-column:span 3!important;min-height:100px!important
+}
+.phone-remote-page #ls26PrompterRemote .ls26-prompter-remote-arrow svg{width:56px;height:56px}
+.phone-remote-page #ls26PrompterRemote .ls26-prompter-remote-stage-actions{gap:10px!important}
+.phone-remote-page #ls26PrompterRemote #ls26PrompterSongCue,
+.phone-remote-page #ls26PrompterRemote #ls26PrompterInstrumental{
+ min-height:90px!important;padding:13px 8px!important;font-size:15px!important;line-height:1.35!important
+}
+.phone-remote-guidance{margin:0;color:#b2cbd8;font-size:13px;line-height:1.55;padding:0 4px}
+.phone-remote-notice{color:#8cabbc;background:#051924;border:1px solid #213e51;border-radius:9px;padding:11px 13px;margin:0;font-size:12px;line-height:1.45}
+.phone-remote-footer{margin:26px auto 0;max-width:780px}
+.phone-remote-footer a{color:#5edaf8;font-weight:750;text-decoration:none;font-size:13px}
+.phone-remote-footer a:focus-visible{outline:2px solid #5edaf8;outline-offset:5px}
+@media(max-width:699px){
+ .phone-remote-page .admin-shell{display:block!important}
+ .phone-remote-page .phone-remote-main{width:100%!important;max-width:100%!important;margin-left:0!important;padding:14px 12px 35px!important}
+ .phone-remote-page .phone-remote-menu-toggle{display:block}
+ .phone-remote-page #sidebarContainer{display:none}
+ .phone-remote-page.phone-remote-menu-open #sidebarContainer{
+   display:block!important;position:fixed;z-index:3500;top:0;bottom:0;right:0;left:auto;
+   width:min(85vw,320px);overflow-y:auto;overscroll-behavior:contain;box-shadow:-12px 0 36px #000d;
+ }
+ .phone-remote-page #sidebarContainer .admin-sidebar{position:relative!important;min-height:100dvh;box-sizing:border-box}
+ .phone-remote-page .phone-remote-menu-backdrop:not([hidden]){
+   display:block;position:fixed;inset:0;z-index:3400;width:100%;height:100%;
+   background:rgba(0,0,0,.67);border:0;padding:0;
+ }
+ .phone-remote-page .phone-remote-heading h1{font-size:27px}
+ .phone-remote-page .phone-remote-controller{gap:11px}
+ .phone-remote-page #phonePrompterRemoteMount #ls26PrompterRemote{padding:11px!important;gap:13px!important}
+ .phone-remote-page #ls26PrompterRemote .ls26-prompter-remote-controls{gap:8px!important}
+ .phone-remote-page #ls26PrompterRemote .ls26-prompter-remote-controls>button:not(.ls26-prompter-remote-arrow){min-height:66px!important}
+ .phone-remote-page #ls26PrompterRemote .ls26-prompter-remote-controls>.ls26-prompter-remote-arrow{min-height:83px!important}
+ .phone-remote-page #ls26PrompterRemote .ls26-prompter-remote-stage-actions button{min-height:82px!important}
+}
+@media(max-width:360px){
+ .phone-remote-page .phone-remote-main{padding:12px 8px 28px!important}
+ .phone-remote-page #ls26PrompterRemote .ls26-prompter-remote-head strong{font-size:12px}
+ .phone-remote-page #ls26PrompterRemoteStatus{font-size:10px}
+ .phone-remote-page #ls26PrompterRemote #ls26PrompterSongCue,
+ .phone-remote-page #ls26PrompterRemote #ls26PrompterInstrumental{font-size:13px!important}
+}
