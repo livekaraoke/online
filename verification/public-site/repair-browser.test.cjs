@@ -45,7 +45,7 @@ if(window.parent===window){window.__publishFixture=()=>{const f=__firebaseFixtur
    assert.equal(await page.locator('.live-karaoke-event-card').count(),2,'special and other-venue events remain in cards');
    assert.match(await page.locator('#liveKaraokeEventsList').innerText(),/Other Venue/i);
    assert.equal(await page.locator('link[rel=canonical]').getAttribute('href'),'https://livekaraoke.eu/');
-   await page.evaluate(()=>{const f=__firebaseFixture;f.update('karaokeControl/currentSession',{...f.docs['karaokeControl/currentSession'],isTestSession:false});});
+   await page.evaluate(()=>{const f=__firebaseFixture;f.update('karaokeControl/currentSession',{...f.docs['karaokeControl/currentSession'],isTestSession:false});f.update('upcomingEvents/e',{...f.docs['upcomingEvents/e'],publicVisibility:'public'});});
    await page.locator('#liveNowRequestBtn').waitFor({state:'visible'});assert.equal(await page.locator('#heroLiveVenue').innerText(),'0 The Test Venue','venue name must not make active public session invisible');assert.equal(await page.locator('#songListBtn').getAttribute('aria-disabled'),null,'song browsing enabled for active public session');assert.match(await page.locator('#songListBtn').innerText(),/REQUEST A SONG/);
    assert.match(await page.locator('#heroCurrentSong').innerText(),/Wonderwall/);assert.doesNotMatch(await page.locator('#heroComingUp').innerText(),/Cancelled/);
    const list=await page.locator('#heroComingUp').boundingBox(),button=await page.locator('#liveNowRequestBtn').boundingBox();
