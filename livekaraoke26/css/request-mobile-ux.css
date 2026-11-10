@@ -1,0 +1,623 @@
+/* Live Karaoke requests: accessible, name-first mobile experience.
+   Scoped to the public request dialog; no changes to data or host workflows. */
+
+#requestDialog .request-bottom-tabs {
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;
+}
+#requestDialog .request-bottom-tabs button {
+  min-width:0!important;
+  min-height:60px!important;
+  padding:8px 4px!important;
+}
+#requestDialog .request-bottom-tabs button>span {
+  font-size:23px!important;
+}
+#requestDialog .request-bottom-tabs button small {
+  font-size:11px!important;
+  line-height:1.2!important;
+  letter-spacing:.02em!important;
+  white-space:nowrap!important;
+}
+#requestDialog .request-bottom-tabs[hidden],
+#requestDialog .request-name-gate[hidden],
+#requestDialog .request-tab-panel[hidden],
+#requestDialog .request-success[hidden] {
+  display:none!important;
+}
+#requestDialog .request-panel-heading p,
+#requestDialog .request-email-help,
+#requestDialog .request-info-list p {
+  color:#b5bec2!important;
+}
+#requestDialog .request-tab-panel,
+#requestDialog .request-success {
+  scroll-padding-top:16px;
+  overscroll-behavior-y:contain!important;
+}
+#requestDialog .request-profile-panel,
+#requestDialog .request-my-data-panel {
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+}
+#requestDialog .request-profile-heading p {
+  display:block!important;
+  font-size:14px!important;
+  line-height:1.45!important;
+  color:#bbc3c5!important;
+}
+#requestDialog .request-primary-profile-grid {
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr)!important;
+  margin-bottom:16px!important;
+}
+#requestDialog .request-primary-profile-grid .request-name-field {
+  grid-column:1/-1!important;
+}
+#requestDialog .request-name-control {
+  display:block!important;
+}
+#requestDialog .request-name-control input,
+#requestDialog .request-profile-options-grid input,
+#requestDialog .request-profile-options-grid select {
+  box-sizing:border-box!important;
+  width:100%!important;
+  min-height:48px!important;
+  height:auto!important;
+  font-size:17px!important;
+  line-height:1.3!important;
+  padding:10px 14px!important;
+}
+#requestDialog .request-primary-profile-grid .request-field>label,
+#requestDialog .request-profile-options-grid .request-field>label {
+  font-size:13px!important;
+}
+#requestDialog .request-profile-choose {
+  display:block!important;
+  width:100%!important;
+  min-height:54px!important;
+  height:auto!important;
+  padding:12px 16px!important;
+  margin:0 0 12px!important;
+  font-size:16px!important;
+  letter-spacing:.04em!important;
+}
+#requestDialog .request-profile-link {
+  display:flex!important;
+  width:100%!important;
+  justify-content:space-between!important;
+  align-items:center!important;
+  min-height:48px!important;
+  gap:10px!important;
+  margin:0 0 12px!important;
+  padding:11px 14px!important;
+  border:1px solid rgba(255,255,255,.21)!important;
+  border-radius:10px!important;
+  background:#141414!important;
+  color:#eee!important;
+  text-align:left!important;
+  font-size:14px!important;
+  font-weight:800!important;
+  letter-spacing:.025em!important;
+  cursor:pointer!important;
+}
+#requestDialog .request-profile-link span {font-size:24px!important;color:#ff7777!important}
+#requestDialog .request-simple-details {
+  display:block!important;
+  margin:0 0 12px!important;
+  border:1px solid rgba(255,255,255,.20)!important;
+  border-radius:10px!important;
+  background:#101010!important;
+  overflow:visible!important;
+}
+#requestDialog .request-simple-details>summary {
+  display:flex!important;
+  min-height:48px!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:12px!important;
+  padding:12px 14px!important;
+  list-style:none!important;
+  cursor:pointer!important;
+  color:#f2f2f2!important;
+  font-size:14px!important;
+  font-weight:800!important;
+  letter-spacing:.02em!important;
+}
+#requestDialog .request-simple-details>summary::-webkit-details-marker {display:none!important}
+#requestDialog .request-simple-details>summary::after {
+  content:"⌄";
+  color:#ff7373;
+  font-size:22px;
+  line-height:1;
+  transform:translateY(-3px);
+}
+#requestDialog .request-simple-details[open]>summary::after {content:"⌃";transform:translateY(2px)}
+#requestDialog .request-simple-details>summary small {
+  color:#b9b9b9!important;
+  font-size:11px!important;
+  font-weight:700!important;
+  letter-spacing:0!important;
+  text-align:right!important;
+}
+#requestDialog .request-profile-options-grid {
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:15px!important;
+  margin:0!important;
+  padding:14px!important;
+  border-top:1px solid rgba(255,255,255,.1)!important;
+}
+#requestDialog .request-profile-options-grid .request-email-field {
+  grid-column:1/-1!important;
+}
+#requestDialog .request-profile-options-grid .request-country-field,
+#requestDialog .request-profile-options-grid .request-age-field,
+#requestDialog .request-profile-options-grid .request-gender-field {
+  grid-column:auto!important;
+}
+#requestDialog .request-email-control {display:block!important}
+#requestDialog .request-email-control input{grid-column:auto!important}
+#requestDialog .request-email-help {font-size:12px!important;line-height:1.4!important}
+#requestDialog .request-forget-last {
+  display:block!important;
+  width:calc(100% - 28px)!important;
+  min-width:0!important;
+  max-width:none!important;
+  min-height:46px!important;
+  height:auto!important;
+  margin:0 14px 14px!important;
+  padding:10px 12px!important;
+  white-space:normal!important;
+  font-size:12px!important;
+  color:#f7b2b2!important;
+}
+#requestDialog #recoverRequestProfileBtn[hidden]{display:none!important}
+#requestDialog .request-review-details .request-review-card {
+  margin:0!important;
+  padding:14px!important;
+  border:0!important;
+  border-top:1px solid rgba(255,255,255,.1)!important;
+  border-radius:0 0 10px 10px!important;
+  background:#0c0c0c!important;
+}
+#requestDialog .request-review-details .request-review-heading h3 {
+  font-size:16px!important;
+  line-height:1.3!important;
+}
+#requestDialog .request-review-details .request-review-private strong{
+  font-size:15px!important;
+}
+#requestDialog .request-review-details .request-review-private small{
+  font-size:12px!important;
+  line-height:1.45!important;
+  color:#b4bdc1!important;
+}
+#requestDialog .request-review-details .request-review-text textarea {
+  min-height:100px!important;
+  max-height:none!important;
+  font-size:16px!important;
+}
+#requestDialog .request-review-details .request-star-row [data-review-rating] {
+  min-width:40px!important;
+  min-height:44px!important;
+  height:44px!important;
+  width:40px!important;
+  font-size:24px!important;
+}
+#requestDialog .request-review-details .clear-rating-btn {
+  min-height:44px!important;
+  height:44px!important;
+  font-size:12px!important;
+}
+#requestDialog .request-review-details .request-review-rating {
+  display:block!important;
+}
+#requestDialog .request-review-details .request-review-label {
+  display:block!important;
+  margin-bottom:8px!important;
+  font-size:13px!important;
+}
+#requestDialog .request-review-details .request-star-row {
+  display:flex!important;
+  flex-wrap:wrap!important;
+  gap:5px!important;
+}
+#requestDialog .request-review-details .request-review-private input {
+  min-width:23px!important;
+  min-height:23px!important;
+}
+#requestDialog .request-profile-actions {
+  display:flex!important;
+  flex-wrap:wrap!important;
+  gap:10px!important;
+  margin-top:8px!important;
+}
+#requestDialog .request-profile-actions .primary-btn {
+  width:auto!important;
+  min-width:160px!important;
+  min-height:48px!important;
+  height:auto!important;
+  font-size:14px!important;
+  padding:10px 16px!important;
+}
+#requestDialog .request-profile-status {
+  color:#95e7aa!important;
+  font-size:13px!important;
+  line-height:1.45!important;
+}
+#requestDialog .request-profile-back {
+  min-height:44px!important;
+  margin-bottom:14px!important;
+  font-size:13px!important;
+}
+#requestDialog .request-my-data-panel {
+  display:block!important;
+}
+#requestDialog .request-data-tabs button {
+  min-height:48px!important;
+  font-size:12px!important;
+  letter-spacing:0!important;
+}
+#requestDialog .request-data-body {
+  min-height:260px!important;
+  overflow-y:auto!important;
+}
+#requestDialog .request-browser .request-controls {
+  flex:0 0 auto!important;
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) auto!important;
+  margin-bottom:10px!important;
+}
+#requestDialog .request-browser .request-controls input {
+  min-height:52px!important;
+  height:52px!important;
+  width:100%!important;
+  font-size:17px!important;
+  padding:12px 15px!important;
+}
+#requestDialog .request-browser .request-filter-clear {
+  min-height:48px!important;
+  font-size:12px!important;
+}
+#requestDialog .request-alphabet-help {
+  flex:0 0 auto!important;
+  margin:0 0 6px!important;
+  color:#bfc4c6!important;
+  font-size:13px!important;
+}
+#requestDialog .request-browser .request-alphabet-row {
+  flex:0 0 46px!important;
+  height:46px!important;
+  min-height:46px!important;
+  max-height:46px!important;
+  margin:0 0 10px!important;
+  padding:2px!important;
+}
+#requestDialog .request-browser .request-alphabet-row button {
+  flex:0 0 42px!important;
+  width:42px!important;
+  height:42px!important;
+  min-height:42px!important;
+  font-size:16px!important;
+}
+#requestDialog .request-song-filters {
+  display:block!important;
+  flex:0 0 auto!important;
+  margin:0 0 8px!important;
+  border:1px solid rgba(255,255,255,.2)!important;
+  border-radius:8px!important;
+  background:#121212!important;
+}
+#requestDialog .request-song-filters>summary {
+  padding:9px 12px!important;
+  min-height:42px!important;
+  color:#eee!important;
+  font-size:12px!important;
+  font-weight:800!important;
+  cursor:pointer!important;
+  list-style:none!important;
+}
+#requestDialog .request-song-filters>summary::-webkit-details-marker{display:none!important}
+#requestDialog .request-song-filters>summary::before{content:"+ ";color:#ff7676}
+#requestDialog .request-song-filters[open]>summary::before{content:"− "}
+#requestDialog .request-song-filters .request-category-grid {
+  padding:8px!important;
+  margin:0!important;
+  border-top:1px solid rgba(255,255,255,.1)!important;
+}
+#requestDialog .request-browser .request-notice {
+  font-size:13px!important;
+  line-height:1.4!important;
+  color:#e3b5b5!important;
+  margin-bottom:8px!important;
+}
+#requestDialog .request-browser .song-results {
+  flex:1 1 auto!important;
+  min-height:0!important;
+  overflow-y:auto!important;
+  overscroll-behavior-y:contain!important;
+  scroll-padding-top:12px!important;
+}
+#requestDialog .request-browser .song-row {
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) auto!important;
+  align-items:center!important;
+  gap:12px!important;
+  min-height:84px!important;
+  padding:12px!important;
+}
+#requestDialog .request-browser .song-row-info {
+  min-width:0!important;
+  display:flex!important;
+  flex-direction:column!important;
+}
+#requestDialog .request-browser .song-row-info strong {
+  overflow-wrap:anywhere!important;
+  font-size:17px!important;
+  line-height:1.25!important;
+}
+#requestDialog .request-browser .song-row-info small {
+  font-size:14px!important;
+  line-height:1.25!important;
+  color:#bbc0c2!important;
+}
+#requestDialog .request-browser .song-row-actions {
+  display:flex!important;
+  align-items:center!important;
+  justify-content:flex-end!important;
+  gap:8px!important;
+}
+#requestDialog .request-browser .song-row-actions .request-favourite-btn {
+  min-width:44px!important;
+  width:44px!important;
+  min-height:48px!important;
+  height:48px!important;
+  color:#ff7777!important;
+}
+#requestDialog .request-browser .song-row .song-action {
+  display:grid!important;
+  place-items:center!important;
+  width:auto!important;
+  min-width:132px!important;
+  min-height:48px!important;
+  height:48px!important;
+  padding:8px 12px!important;
+  white-space:normal!important;
+  line-height:1.15!important;
+  font-size:13px!important;
+  font-weight:900!important;
+  letter-spacing:0!important;
+  border:1px solid #45e18a!important;
+  border-radius:9px!important;
+  color:#fff!important;
+  background:linear-gradient(180deg,#13864c,#086b39)!important;
+  box-shadow:none!important;
+}
+#requestDialog .request-browser .song-row .song-action:disabled {
+  min-width:132px!important;
+  border-color:#555!important;
+  background:#262626!important;
+  color:#bdbdbd!important;
+  cursor:not-allowed!important;
+  font-size:11px!important;
+}
+#requestDialog .request-confirm-panel .request-send-btn {
+  width:100%!important;
+  min-height:54px!important;
+  font-size:16px!important;
+  border:1px solid #45e18a!important;
+  color:#fff!important;
+  background:linear-gradient(180deg,#158a4c,#075d32)!important;
+  box-shadow:none!important;
+}
+#requestDialog .request-confirm-panel .request-note-label {
+  font-size:14px!important;
+}
+#requestDialog .request-confirm-panel #requestNote {
+  font-size:16px!important;
+}
+#requestDialog .request-success p {
+  font-size:16px!important;
+  line-height:1.5!important;
+}
+#requestDialog .request-my-panel .request-panel-heading p {
+  font-size:14px!important;
+  line-height:1.5!important;
+}
+#requestDialog .request-my-panel .my-request {
+  padding:14px!important;
+  gap:10px!important;
+}
+#requestDialog .request-my-panel .request-status,
+#requestDialog .request-my-panel .my-request-detail b {
+  font-size:12px!important;
+  line-height:1.35!important;
+}
+#requestDialog .request-my-panel .my-request-actions button {
+  min-height:44px!important;
+  font-size:12px!important;
+}
+#requestDialog .request-simple-steps {
+  margin:0 0 20px!important;
+  padding:14px 18px 14px 38px!important;
+  border:1px solid rgba(255,255,255,.18)!important;
+  border-radius:10px!important;
+  background:#151515!important;
+  color:#fff!important;
+  font-size:16px!important;
+  font-weight:700!important;
+  line-height:1.9!important;
+}
+#requestDialog .request-info-list summary {
+  display:list-item!important;
+  min-height:42px!important;
+  font-size:16px!important;
+  line-height:1.35!important;
+  padding:8px 0!important;
+}
+#requestDialog .request-info-list p {
+  font-size:15px!important;
+  line-height:1.55!important;
+}
+
+@media(max-width:640px) {
+  #requestDialog.request-modal {
+    box-sizing:border-box!important;
+    width:calc(100% - 16px)!important;
+    height:calc(100dvh - 24px)!important;
+    max-height:calc(100dvh - 24px)!important;
+    margin:auto!important;
+  }
+  #requestDialog .request-modal-top {
+    flex:0 0 auto!important;
+    padding:12px 54px 10px 14px!important;
+    min-height:0!important;
+  }
+  #requestDialog .request-header {
+    display:grid!important;
+    width:100%!important;
+    min-width:0!important;
+    grid-template-columns:minmax(0,1fr) auto!important;
+    grid-template-areas:"title title" "status name"!important;
+    align-items:center!important;
+    column-gap:9px!important;
+    row-gap:6px!important;
+  }
+  #requestDialog .request-header>.eyebrow {display:none!important}
+  #requestDialog .request-title-line {display:contents!important}
+  #requestDialog .request-title-line h2 {
+    grid-area:title!important;
+    margin:0!important;
+    font-size:22px!important;
+    line-height:1.2!important;
+    letter-spacing:.025em!important;
+  }
+  #requestDialog .requesting-as-inline {
+    grid-area:name!important;
+    justify-self:end!important;
+    max-width:120px!important;
+    min-height:30px!important;
+    height:auto!important;
+    padding:3px 7px!important;
+    margin:0!important;
+    gap:5px!important;
+  }
+  #requestDialog .requesting-as-inline span{display:none!important}
+  #requestDialog .requesting-as-inline strong {
+    max-width:90px!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+    white-space:nowrap!important;
+    font-size:13px!important;
+  }
+  #requestDialog .request-gate-status {
+    grid-area:status!important;
+    justify-self:start!important;
+    align-self:center!important;
+    width:auto!important;
+    max-width:100%!important;
+    min-height:30px!important;
+    margin:0!important;
+    padding:5px 9px!important;
+    font-size:11px!important;
+    line-height:1.3!important;
+    letter-spacing:0!important;
+  }
+  #requestDialog .request-modal-close {
+    top:12px!important;
+    right:12px!important;
+    width:44px!important;
+    height:44px!important;
+    font-size:30px!important;
+  }
+  #requestDialog .request-tab-panel,
+  #requestDialog .request-success {
+    padding:14px 14px 20px!important;
+  }
+  #requestDialog .request-profile-panel {
+    padding:17px 14px 20px!important;
+  }
+  #requestDialog .request-profile-heading h3 {font-size:23px!important;line-height:1.25!important}
+  #requestDialog .request-profile-heading p {font-size:14px!important}
+  #requestDialog .request-primary-profile-grid .request-name-field {grid-column:1/-1!important}
+  #requestDialog .request-profile-options-grid {grid-template-columns:minmax(0,1fr)!important}
+  #requestDialog .request-profile-options-grid .request-email-field,
+  #requestDialog .request-profile-options-grid .request-country-field,
+  #requestDialog .request-profile-options-grid .request-age-field,
+  #requestDialog .request-profile-options-grid .request-gender-field {grid-column:1/-1!important}
+  #requestDialog .request-profile-actions {
+    display:block!important;
+    margin-top:12px!important;
+  }
+  #requestDialog .request-profile-actions .primary-btn {
+    display:block!important;
+    min-width:0!important;
+    width:100%!important;
+    font-size:14px!important;
+  }
+  #requestDialog .request-profile-actions .request-profile-status{
+    display:block!important;
+    margin:8px 0 0!important;
+  }
+  #requestDialog .request-browser {
+    display:flex!important;
+    flex-direction:column!important;
+    min-height:0!important;
+    overflow:hidden!important;
+  }
+  #requestDialog .request-browser .request-panel-heading {
+    flex:0 0 auto!important;
+    margin-bottom:10px!important;
+  }
+  #requestDialog .request-browser .request-panel-heading h3{
+    font-size:22px!important;
+    line-height:1.3!important;
+  }
+  #requestDialog .request-browser .song-row {
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:stretch!important;
+    gap:9px!important;
+    padding:12px!important;
+    min-height:0!important;
+  }
+  #requestDialog .request-browser .song-row-info strong {font-size:18px!important}
+  #requestDialog .request-browser .song-row-info small {font-size:15px!important}
+  #requestDialog .request-browser .song-row-actions {
+    width:100%!important;
+    justify-content:stretch!important;
+    gap:10px!important;
+  }
+  #requestDialog .request-browser .song-row-actions .song-action {
+    flex:1 1 auto!important;
+    width:auto!important;
+    min-width:0!important;
+    min-height:48px!important;
+  }
+  #requestDialog .request-browser .song-row-actions .request-favourite-btn {
+    flex:0 0 48px!important;
+    width:48px!important;
+  }
+  #requestDialog .request-bottom-tabs button {
+    min-height:64px!important;
+    padding:8px 2px!important;
+  }
+  #requestDialog .request-my-data-panel {
+    display:flex!important;
+    flex-direction:column!important;
+    overflow-y:auto!important;
+  }
+  #requestDialog .request-data-tabs {
+    flex:0 0 auto!important;
+  }
+  #requestDialog .request-data-tabs button {font-size:11px!important;min-height:46px!important}
+  #requestDialog .request-data-body {min-height:260px!important}
+  #requestDialog .request-review-details .request-review-private small {font-size:12px!important}
+  #requestDialog .request-simple-details>summary small {font-size:10px!important}
+  #requestDialog .request-simple-steps {font-size:16px!important}
+}
+@media(max-width:365px) {
+  #requestDialog .request-title-line h2{font-size:19px!important}
+  #requestDialog .request-gate-status{font-size:10px!important}
+  #requestDialog .request-bottom-tabs button small{font-size:10px!important}
+}
