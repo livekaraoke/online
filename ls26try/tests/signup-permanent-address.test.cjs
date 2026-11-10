@@ -6,7 +6,7 @@ function run(responses,query=''){
  appendChild(x){if(x.fragment){while(x.children.length)this.appendChild(x.children.shift())}else this.children.push(x)},
  removeChild(x){this.children.splice(this.children.indexOf(x),1)},
  get firstChild(){return this.children[0]||null},
- setAttribute(name,value){this.attributes[name]=String(value)},blur(){},focus(){},getElementsByTagName(){return [node()]},clientHeight:768,
+ setAttribute(name,value){this.attributes[name]=String(value)},addEventListener(){},blur(){},focus(){},getElementsByTagName(){return [node()]},clientHeight:768,
  getBoundingClientRect(){return {top:0,bottom:200,height:200}},offsetHeight:140};}
  const document={getElementById(id){return nodes[id]||(nodes[id]=node());},createElement:node,createDocumentFragment(){const f=node();f.fragment=true;return f},addEventListener(){},documentElement:{clientHeight:768},hidden:false};
  document.getElementById('success').hidden=true;
