@@ -686,7 +686,9 @@
     if($("requestReviewRating"))$("requestReviewRating").value=profile.rating;
     if($("requestReviewText"))$("requestReviewText").value=profile.review;
     if($("requestReviewPrivate"))$("requestReviewPrivate").checked=profile.reviewPrivate;
-    if($("requestProfileStatus"))$("requestProfileStatus").textContent="";
+    if($("requestProfileStatus"))$("requestProfileStatus").textContent=profile.name?"Changes save automatically":"Enter your name to request a song.";
+    if($("requestEmailFeedback"))$("requestEmailFeedback").textContent="";
+    if($("requestReviewStatus"))$("requestReviewStatus").textContent="";
     paintReviewStars();
     syncRequesterUi();
   }
@@ -727,6 +729,7 @@
     });
     if(!confirmed)return;
     clearRequestListeners();
+    lastRecoverySyncSnapshot="";
     localStorage.removeItem(REQUEST_PROFILE_KEY);
     localStorage.removeItem("billylee26.requestName");
     localStorage.removeItem("billylee26.requestIds");
@@ -740,84 +743,107 @@
     $("singerName")?.focus();
   }
 
-  async function saveRequestProfile({goToSongs=true,submitReview=false}={}){
-    const name=String($("singerName")?.value||"").trim();
-    if(!name){
-      $("requestProfileStatus").textContent="Enter your name first.";
-      $("singerName")?.focus();
-      return false;
-    }
 
-    const email=String($("requestProfileEmail")?.value||"").trim();
-    if(email&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
-      $("requestProfileStatus").textContent="Enter a valid email address or leave it blank.";
-      $("requestProfileEmail")?.focus();
-      return false;
+  // Keep profile edits on this device immediately. Only explicit review submissions
+  // write reviews; optional recovery sync runs after a field is completed, not per key.
+  const editableProfileFields=["singerName","requestProfileEmail","requestProfileCountry","requestProfileAge","requestProfileGender"];
+  const validProfileEmail=value=>!value||/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(value);
+  let lastRecoverySyncSnapshot="";
+  function saveProfileFieldsLocally({validateEmail=false}={}){
+    const previous=requestProfile();
+    const enteredName=String($("singerName")?.value||"").trim();
+    const enteredEmail=String($("requestProfileEmail")?.value||"").trim();
+    const emailOk=validProfileEmail(enteredEmail);
+    const emailFeedback=$("requestEmailFeedback");
+    if(emailFeedback){
+      emailFeedback.textContent=validateEmail&&!emailOk?"Enter a valid email address to save it.":"";
+      emailFeedback.classList.toggle("error",validateEmail&&!emailOk);
     }
-
-    const profile={
-      name,
-      email,
+    const updated={
+      ...previous,
+      name:enteredName||previous.name,
+      email:emailOk?enteredEmail:previous.email,
       country:String($("requestProfileCountry")?.value||"").trim(),
       ageRange:String($("requestProfileAge")?.value||""),
-      gender:String($("requestProfileGender")?.value||""),
+      gender:String($("requestProfileGender")?.value||"")
+    };
+    const changed=JSON.stringify(updated)!==JSON.stringify(previous);
+    if(changed){
+      localStorage.setItem(REQUEST_PROFILE_KEY,JSON.stringify(updated));
+      if(updated.name)localStorage.setItem("billylee26.requestName",updated.name);
+      syncRequesterUi();
+    }
+    const status=$("requestProfileStatus");
+    if(status){
+      status.textContent=!enteredName?"Enter your name to continue.":changed?"Saved automatically":"Changes save automatically";
+    }
+    return !!enteredName;
+  }
+
+  function syncCompletedProfileFields(){
+    const profile=requestProfile();
+    const enteredEmail=String($("requestProfileEmail")?.value||"").trim();
+    // Never sync an incomplete/invalid email and never write on every keystroke.
+    if(!profile.name||!profile.email||enteredEmail!==profile.email||!validProfileEmail(profile.email))return;
+    const snapshot=JSON.stringify([profile.name,profile.email,profile.country,profile.ageRange,profile.gender]);
+    if(snapshot===lastRecoverySyncSnapshot)return;
+    lastRecoverySyncSnapshot=snapshot;
+    void syncRecoveryProfile(profile).catch(error=>{
+      if(lastRecoverySyncSnapshot===snapshot)lastRecoverySyncSnapshot="";
+      console.info("Recovery profile sync unavailable:",error?.code||error);
+    });
+  }
+
+  async function saveRequestReview(){
+    if(!saveProfileFieldsLocally({validateEmail:true}))return false;
+    const profile={
+      ...requestProfile(),
       rating:String($("requestReviewRating")?.value||""),
       review:String($("requestReviewText")?.value||"").trim(),
       reviewPrivate:$("requestReviewPrivate")?.checked===true
     };
-
-    if(submitReview && !profile.rating && !profile.review){
-      $("requestProfileStatus").textContent="Choose a star rating or write a review first.";
+    const status=$("requestReviewStatus");
+    if(!profile.rating&&!profile.review){
+      if(status)status.textContent="Choose a star rating or write a review first.";
       $("requestReviewDetails").open=true;
       return false;
     }
 
+    // Review content remains unpublished until SAVE REVIEW is explicitly tapped.
     localStorage.setItem(REQUEST_PROFILE_KEY,JSON.stringify(profile));
-    localStorage.setItem("billylee26.requestName",name);
-    syncRequesterUi();
-
-    const status=$("requestProfileStatus");
-    if(status)status.textContent="Profile saved on this device.";
-
-    if(submitReview && (profile.rating || profile.review)){
-      try{
-        const data={
-          source:"live-karaoke-website",
-          name:profile.name,
-          requesterEmailHash:profile.email?await requestEmailHash(profile.email):"",
-          country:profile.country,
-          ageRange:profile.ageRange,
-          gender:profile.gender,
-          rating:profile.rating?Number(profile.rating):null,
-          review:profile.review,
-          displayOptIn:!profile.reviewPrivate,
-          sessionId:requestSessionId()||"",
-          updatedAt:firebase.firestore.FieldValue.serverTimestamp()
-        };
-        const existingId=localStorage.getItem(REQUEST_REVIEW_ID_KEY)||"";
-        if(existingId){
-          await db.collection("websiteReviews").doc(existingId).set(data,{merge:true});
-        }else{
-          const ref=await db.collection("websiteReviews").add({
-            ...data,
-            createdAt:firebase.firestore.FieldValue.serverTimestamp()
-          });
-          localStorage.setItem(REQUEST_REVIEW_ID_KEY,ref.id);
-        }
-        if(status)status.textContent=profile.reviewPrivate
-          ?"Profile and private review saved."
-          :"Profile and review saved.";
-      }catch(error){
-        console.warn("Could not save website review:",error);
-        if(status)status.textContent="Profile saved. Review could not be submitted right now.";
+    try{
+      const data={
+        source:"live-karaoke-website",
+        name:profile.name,
+        requesterEmailHash:profile.email?await requestEmailHash(profile.email):"",
+        country:profile.country,
+        ageRange:profile.ageRange,
+        gender:profile.gender,
+        rating:profile.rating?Number(profile.rating):null,
+        review:profile.review,
+        displayOptIn:!profile.reviewPrivate,
+        sessionId:requestSessionId()||"",
+        updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+      };
+      const existingId=localStorage.getItem(REQUEST_REVIEW_ID_KEY)||"";
+      if(existingId){
+        await db.collection("websiteReviews").doc(existingId).set(data,{merge:true});
+      }else{
+        const ref=await db.collection("websiteReviews").add({
+          ...data,
+          createdAt:firebase.firestore.FieldValue.serverTimestamp()
+        });
+        localStorage.setItem(REQUEST_REVIEW_ID_KEY,ref.id);
       }
+      if(status)status.textContent="Review submitted. Thank you!";
+    }catch(error){
+      console.warn("Could not save website review:",error);
+      if(status)status.textContent="Review could not be submitted. Please try again.";
+      return false;
     }
-
     if(profile.email){
       try{await syncRecoveryProfile(profile);}catch(error){console.info("Recovery profile sync unavailable:",error?.code||error);}
     }
-
-    if(goToSongs) switchRequestTab("songs");
     return true;
   }
 
@@ -1178,8 +1204,10 @@
     renderRequestInfo();
   }
 
-  async function continueToSongs(){
-    await saveRequestProfile({goToSongs:true});
+  function continueToSongs(){
+    if(!saveProfileFieldsLocally({validateEmail:true}))return;
+    // Email is optional. A partially entered address must not block song selection.
+    switchRequestTab("songs");
   }
 
   function trackedRequestIds(){
@@ -1768,8 +1796,8 @@
     $("singerName")?.focus();
   }
 
-  async function saveRequesterName(){
-    await saveRequestProfile({goToSongs:true});
+  function saveRequesterName(){
+    continueToSongs();
   }
 
   async function showEventDetails(eventData, options={}){
@@ -2053,8 +2081,23 @@
   $("requestActionConfirmDialog").addEventListener("close",()=>{if(requestActionConfirmResolve)finishRequestActionConfirm(false);});
   $("requestNoteDialogInput").addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&e.key==="Enter")saveMyRequestNote();});
   $("continueRequestBtn").addEventListener("click",continueToSongs);
-  $("saveProfileOnlyBtn").addEventListener("click",()=>saveRequestProfile({goToSongs:false,submitReview:false}));
-  $("submitRequestReviewBtn").addEventListener("click",()=>saveRequestProfile({goToSongs:false,submitReview:true}));
+  $("submitRequestReviewBtn").addEventListener("click",()=>void saveRequestReview());
+  editableProfileFields.forEach(id=>{
+    const field=$(id);
+    if(!field)return;
+    if(field.tagName==="SELECT"){
+      field.addEventListener("change",()=>{
+        saveProfileFieldsLocally();
+        syncCompletedProfileFields();
+      });
+    }else{
+      field.addEventListener("input",()=>saveProfileFieldsLocally());
+      field.addEventListener("blur",()=>{
+        saveProfileFieldsLocally({validateEmail:true});
+        syncCompletedProfileFields();
+      });
+    }
+  });
   $("singerName").addEventListener("keydown",e=>{if(e.key==="Enter")continueToSongs();});
   $("editRequesterNameBtn").addEventListener("click",beginEditRequesterName);
   $("forgetRequestProfileBtn").addEventListener("click",forgetRequestProfile);
