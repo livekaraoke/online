@@ -24,7 +24,9 @@ if(window.parent===window){window.__publishFixture=()=>{const f=__firebaseFixtur
    const context=await browser.newContext({viewport:{width,height},isMobile:width<500,hasTouch:true,timezoneId:'Europe/Malta'}),page=await context.newPage();const errors=[];
    await page.clock.setFixedTime(new Date('2026-10-22T04:00:00Z'));
    page.on('pageerror',e=>errors.push(e.message));
-   await context.route('**/*',route=>{const url=route.request().url();if(projected&&url.includes('/js/public-data-config.js'))return route.fulfill({contentType:'text/javascript',body:fs.readFileSync(path.join(root,'js/public-data-config.js'),'utf8')+"\nwindow.LK_PUBLIC_LIVE_V1={'live-karaoke':true};window.LK_PUBLIC_CATALOGUE_V1={'live-karaoke':true};"});if(url.startsWith('http://127.0.0.1:8180/'))return route.continue();if(url.includes('firebase-app-compat.js'))return route.fulfill({contentType:'text/javascript',body:fixture});if(url.includes('www.gstatic.com/firebasejs/'))return route.fulfill({contentType:'text/javascript',body:''});return route.abort();});
+   await context.route('**/*',route=>{const url=route.request().url();if(projected&&url.includes('/js/public-data-config.js'))return route.fulfill({contentType:'text/javascript',body:fs.readFileSync(path.join(root,'js/public-data-config.js'),'utf8')+"\nwindow.LK_PUBLIC_LIVE_V1={'live-karaoke':true};window.LK_PUBLIC_CATALOGUE_V1={'live-karaoke':true};"});if(url.includes('/livekaraoke26/js/public-catalogue.js'))return route.fulfill({contentType:'text/javascript',body:fs.readFileSync(path.join(root,'livekaraoke26/js/public-catalogue.js'),'utf8')+
+     '\n// Simulate a slow catalogue so the request UI must repaint after it resolves.\nconst originalCatalogueLoad=window.LiveKaraokeCatalogue.load;window.LiveKaraokeCatalogue.load=async (...args)=>{await new Promise(resolve=>setTimeout(resolve,1200));return originalCatalogueLoad(...args);};'});
+   if(url.startsWith('http://127.0.0.1:8180/'))return route.continue();if(url.includes('firebase-app-compat.js'))return route.fulfill({contentType:'text/javascript',body:fixture});if(url.includes('www.gstatic.com/firebasejs/'))return route.fulfill({contentType:'text/javascript',body:''});return route.abort();});
    await page.goto('http://127.0.0.1:8180/online/',{waitUntil:'networkidle'});
    assert.equal(await page.locator('#heroLiveNow').isVisible(),false,'test session hidden');
    // The normal Wednesday at Whyte Harte is represented by the residency
@@ -79,6 +81,11 @@ if(window.parent===window){window.__publishFixture=()=>{const f=__firebaseFixtur
     const returningFrame=page.frameLocator('#liveKaraokeRequestFrame');
     await returningFrame.locator('#requestBrowser').waitFor({state:'visible'});
     assert.equal(await returningFrame.locator('#requestNameGate').isVisible(),false,'returning singer goes straight to song list');
+    // The initial placeholder may be "Loading songs…" or "No songs found"
+    // depending on when async catalogue loading starts. What matters is that
+    // the correct songs appear without clicking another tab.
+    await returningFrame.locator('.song-row').first().waitFor({state:'visible',timeout:12000});
+    assert.equal(await returningFrame.locator('.song-row').count(),3,'catalogue repaints automatically when loading finishes without switching tabs');
     await returningFrame.locator('[data-close="requestDialog"]').click();
     await page.locator('#liveKaraokeRequestFrame').waitFor({state:'detached'});
    await page.evaluate(()=>__firebaseFixture.update('performanceSessions/s',{...__firebaseFixture.docs['performanceSessions/s'],breakOpen:true}));assert.match(await page.locator('#heroCurrentSong').innerText(),/ON BREAK/);
