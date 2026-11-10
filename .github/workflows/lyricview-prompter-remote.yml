@@ -4,6 +4,13 @@ on:
     branches: [main]
     paths:
       - 'ls26try/host/js/lyricview-prompter-remote.js'
+      - 'ls26try/admin-new/prompter-remote.html'
+      - 'ls26try/admin-new/js/prompter-remote-phone.js'
+      - 'ls26try/admin-new/css/prompter-remote-phone.css'
+      - 'ls26try/admin-new/includes/sidebar.html'
+      - 'ls26try/admin-new/js/sidebar.js'
+      - 'ls26try/tests/phone-prompter-remote.test.cjs'
+      - 'ls26try/verification/prompter-phone.cjs'
       - 'ls26try/oldadmin/host/lyrics/prompter-remote-receiver.js'
       - 'ls26try/host/css/lyricview-prompter-remote.css'
       - 'ls26try/shared/performance.js'
@@ -30,7 +37,10 @@ jobs:
         run: |
           export LS26_TEST_NODE_MODULES="$RUNNER_TEMP/prompter-remote/node_modules"
           node --check ls26try/host/js/lyricview-prompter-remote.js
+          node --check ls26try/admin-new/js/prompter-remote-phone.js
+          node --test ls26try/tests/phone-prompter-remote.test.cjs
           node --check ls26try/oldadmin/host/lyrics/prompter-remote-receiver.js
           node --check ls26try/shared/performance.js
           node ls26try/verification/prompter-remote.cjs
           node ls26try/verification/prompter-remote-devices.cjs
+          node ls26try/verification/prompter-phone.cjs
