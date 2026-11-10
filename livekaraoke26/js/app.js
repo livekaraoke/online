@@ -740,7 +740,7 @@
     $("singerName")?.focus();
   }
 
-  async function saveRequestProfile({goToSongs=true}={}){
+  async function saveRequestProfile({goToSongs=true,submitReview=false}={}){
     const name=String($("singerName")?.value||"").trim();
     if(!name){
       $("requestProfileStatus").textContent="Enter your name first.";
@@ -773,7 +773,7 @@
     const status=$("requestProfileStatus");
     if(status)status.textContent="Profile saved on this device.";
 
-    if(profile.rating || profile.review){
+    if(submitReview && (profile.rating || profile.review)){
       try{
         const data={
           source:"live-karaoke-website",
@@ -829,19 +829,22 @@
     if($("requestSuccess"))$("requestSuccess").hidden=true;
 
     document.querySelectorAll("[data-request-tab]").forEach(button=>{
-      const active=button.dataset.requestTab===target;
+      const active=button.dataset.requestTab===(target==="data"?"profile":target);
       button.classList.toggle("active",active);
       button.setAttribute("aria-selected",String(active));
     });
 
+    // Opening a tab always reveals its heading rather than a stale scroll position.
+    const visiblePanel=document.querySelector('[data-request-panel="'+target+'"]');
+    if(visiblePanel)visiblePanel.scrollTop=0;
     if(target==="profile")populateProfileForm();
     if(target==="songs"){
       renderRequestCategoryCards();
       const selected=requestCategoryById(requestCategory);
       if($("requestNotice")){
-        if(requestCategory==="all")$("requestNotice").textContent="Choose a song. Tap + to continue.";
+        if(requestCategory==="all")$("requestNotice").textContent="Choose a song, then tap REQUEST SONG.";
         else if(requestCategory===ARTIST_BROWSE_CATEGORY)$("requestNotice").textContent="Browse by artist. Use the letters or search bar to jump through the list.";
-        else $("requestNotice").textContent=`${selected?.label||"Category"} · tap + to continue.`;
+        else $("requestNotice").textContent=`${selected?.label||"Category"} · tap REQUEST SONG to continue.`;
       }
       renderSongResults();
     }
@@ -979,19 +982,23 @@
     const selected=requestCategoryById(requestCategory);
     if($("requestNotice")){
       if(requestCategory==="all"){
-        $("requestNotice").textContent="Choose a song. Tap + to continue.";
+        $("requestNotice").textContent="Choose a song, then tap REQUEST SONG.";
       }else if(requestCategory===ARTIST_BROWSE_CATEGORY){
         $("requestNotice").textContent="Browse by artist. Use the letters or search bar to jump through the list.";
       }else{
-        $("requestNotice").textContent=`${selected?.label||"Category"} · tap + to continue.`;
+        $("requestNotice").textContent=`${selected?.label||"Category"} · tap REQUEST SONG to continue.`;
       }
     }
     renderSongResults();
+    const results=$("songResults");
+    if(results)results.scrollTop=0;
+    const filters=$("requestSongFilters");
+    if(filters)filters.open=false;
   }
 
   function renderSongResultRow(song,{artistGrouped=false}={}){
     const state=songSessionState(song);
-    let action="＋",disabled="",stateClass="";
+    let action="REQUEST SONG",disabled="",stateClass="";
     if(state==="playing"){action="NOW PLAYING";disabled=" disabled";stateClass=" is-playing";}
     else if(state==="played"){action="ALREADY PLAYED";disabled=" disabled";stateClass=" is-played";}
     else if(state==="requested"){action="ALREADY REQUESTED";disabled=" disabled";stateClass=" is-requested";}
@@ -1001,10 +1008,10 @@
     const alpha=alphabetKey(song.title||"");
     const favourite=isFavouriteSong(song.id);
     return `<div class="song-row${stateClass}" data-song-row-id="${escapeHTML(song.id)}" data-alpha="${alpha}">
-      <span><strong>${escapeHTML(song.title||"Untitled")}</strong>${meta?`<small>${escapeHTML(meta)}</small>`:""}</span>
+      <span class="song-row-info"><strong>${escapeHTML(song.title||"Untitled")}</strong>${meta?`<small>${escapeHTML(meta)}</small>`:""}</span>
       <div class="song-row-actions">
-        <button type="button" class="request-favourite-btn ${favourite?"is-favourite":""}" data-toggle-favourite="${escapeHTML(song.id)}" aria-label="${favourite?"Remove from":"Add to"} favourites">${favourite?"♥":"♡"}</button>
-        <button class="song-action" type="button" data-song-id="${escapeHTML(song.id)}"${disabled} aria-label="Choose ${escapeHTML(song.title||"song")}">${escapeHTML(action)}</button>
+        <button type="button" class="request-favourite-btn ${favourite?"is-favourite":""}" data-toggle-favourite="${escapeHTML(song.id)}" aria-pressed="${favourite}" title="${favourite?"Remove from":"Add to"} favourites" aria-label="${favourite?"Remove from":"Add to"} favourites">${favourite?"♥":"♡"}</button>
+        <button class="song-action" type="button" data-song-id="${escapeHTML(song.id)}"${disabled} aria-label="${disabled?escapeHTML(action):`Request ${escapeHTML(song.title||"song")} by ${escapeHTML(artist)}`}">${escapeHTML(action)}</button>
       </div>
     </div>`;
   }
@@ -1092,7 +1099,8 @@
     $("requestConfirmSongArtist").textContent=ArtistNames.display(song.artist||"");
     $("requestConfirmName").textContent=requestProfile().name||"Guest";
     $("requestNote").value="";
-    setTimeout(()=>$("requestNote")?.focus(),30);
+    $("requestConfirmPanel").scrollTop=0;
+    $("requestConfirmSongTitle")?.focus({preventScroll:true});
   }
 
   async function enterSongRequestStep(name){
@@ -1182,12 +1190,12 @@
 
   function statusLabel(status){
     const s=String(status||"active").toLowerCase();
-    if(s==="queued")return "ACCEPTED";
+    if(s==="queued")return "ACCEPTED - IN QUEUE";
     if(s==="playing")return "NOW PLAYING";
-    if(["completed","played","finished"].includes(s))return "PLAYED";
+    if(["completed","played","finished"].includes(s))return "COMPLETED";
     if(["declined","deleted","deletedbyhost","abandoned","left"].includes(s))return "REJECTED";
     if(s==="cancelled")return "CANCELLED";
-    return "PENDING";
+    return "SENT - PENDING";
   }
 
   function runOrderItemForRequest(requestId){
@@ -1231,7 +1239,7 @@
       return;
     }
     if(!ids.length){
-      box.innerHTML=`<p class="muted">Requests you make in this session will appear here.</p>`;
+      box.innerHTML=`<p class="muted">No requests yet. Open Songs to choose one.</p>`;
       return;
     }
 
@@ -1242,7 +1250,7 @@
         .filter(record=>record&&String(record.sessionId||"")===String(currentRequestSessionId));
 
       if(!current.length){
-        box.innerHTML=`<p class="muted">Requests you make in this session will appear here.</p>`;
+        box.innerHTML=`<p class="muted">No requests yet. Open Songs to choose one.</p>`;
         return;
       }
 
@@ -1257,7 +1265,7 @@
         const note=String(record.note||record.comment||"").trim();
         const queueText=position===-1
           ?"NOW PLAYING"
-          :(position>0?`QUEUE #${position}`:(effectiveStatus==="active"?"AWAITING APPROVAL":""));
+          :(position>0?`POSITION ${position} IN QUEUE`:(effectiveStatus==="active"?"AWAITING APPROVAL":""));
         const canCancel=requestCanCancel(effectiveStatus);
 
         return `<article class="my-request${playing?" is-playing":""}" data-my-request-id="${escapeHTML(id)}">
@@ -1273,8 +1281,8 @@
           <div class="my-request-state">
             <em class="request-status status-${escapeHTML(effectiveStatus)}">${statusLabel(effectiveStatus)}</em>
             <div class="my-request-actions">
-              <button type="button" data-edit-request-note="${escapeHTML(id)}">NOTE</button>
-              ${canCancel?`<button type="button" class="cancel-request" data-cancel-request="${escapeHTML(id)}">CANCEL</button>`:""}
+              <button type="button" data-edit-request-note="${escapeHTML(id)}">EDIT NOTE</button>
+              ${canCancel?`<button type="button" class="cancel-request" data-cancel-request="${escapeHTML(id)}">CANCEL REQUEST</button>`:""}
             </div>
           </div>
         </article>`;
@@ -1736,7 +1744,7 @@
       $("requestConfirmPanel").hidden=true;
       document.querySelectorAll("[data-request-panel]").forEach(panel=>panel.hidden=true);
       $("requestSuccess").hidden=false;
-      $("requestSuccessText").textContent=`Thank you ${name}! ${song.title||"Your song"} has been sent and is awaiting approval.`;
+      $("requestSuccessText").textContent=${song.title||"Your song"} has been sent to the host. Check Requests to see whether it has been accepted.`;
       await renderMyRequests();
     }catch(error){
       console.error(error);
@@ -2039,6 +2047,7 @@
   $("requestActionConfirmDialog").addEventListener("close",()=>{if(requestActionConfirmResolve)finishRequestActionConfirm(false);});
   $("requestNoteDialogInput").addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&e.key==="Enter")saveMyRequestNote();});
   $("continueRequestBtn").addEventListener("click",continueToSongs);
+  $("saveProfileOnlyBtn").addEventListener("click",()=>saveRequestProfile({goToSongs:false,submitReview:true}));
   $("singerName").addEventListener("keydown",e=>{if(e.key==="Enter")continueToSongs();});
   $("editRequesterNameBtn").addEventListener("click",beginEditRequesterName);
   $("forgetRequestProfileBtn").addEventListener("click",forgetRequestProfile);
