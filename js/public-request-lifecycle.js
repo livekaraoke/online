@@ -175,13 +175,16 @@
     const privateLabel = document.querySelector("#requestDialog .request-review-private");
     const privateStrong = privateLabel?.querySelector("strong");
     const privateSmall = privateLabel?.querySelector("small");
-    if (privateStrong) privateStrong.textContent = "Keep my name private";
-    if (privateSmall) privateSmall.textContent = "Only Name, Country, Review Rating and Review can be shown publicly. Tick this to hide your name and publish the review anonymously.";
+    if (privateStrong) privateStrong.textContent = isLiveKaraoke
+      ? "Publish my review anonymously" : "Keep my name private";
+    if (privateSmall) privateSmall.textContent = isLiveKaraoke
+      ? "Tick to hide your name. Reviews may show your country, rating and comments."
+      : "Only Name, Country, Review Rating and Review can be shown publicly. Tick this to hide your name and publish the review anonymously.";
 
     const myRequestsIntro = document.querySelector("#requestMyRequestsPanel .request-panel-heading p");
     if (myRequestsIntro) {
       myRequestsIntro.textContent = isLiveKaraoke
-        ? "Accepted requests are added to the next singer rotation."
+        ? "See whether your song has been received, accepted or played."
         : "Accepted requests are added to Billy's performance list for him to perform for you.";
     }
 
