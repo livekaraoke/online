@@ -90,12 +90,15 @@ let server,browser;let requestOpen=true,sessionActive=true;
     const image=document.querySelector('.idle-brand-art').getBoundingClientRect();
     const callToAction=document.querySelector('.idle-call-to-action').getBoundingClientRect();
     const queue=document.getElementById('idleQueue').getBoundingClientRect();
+    const instruction=document.querySelector('.idle-instructions').getBoundingClientRect();
     return {imageBottom:image.bottom,actionTop:callToAction.top,actionBottom:callToAction.bottom,
-      queueTop:queue.top,queueBottom:queue.bottom,
+      instructionBottom:instruction.bottom,queueTop:queue.top,queueBottom:queue.bottom,
       visibleHeight:Math.min(window.innerHeight,document.documentElement.clientHeight)};
   });
-  assert.ok(Math.abs(geometry.imageBottom-geometry.actionTop)<2,
-    'Signup action must follow the logo: '+JSON.stringify(geometry));
+  assert.ok(geometry.actionTop-geometry.imageBottom>=7&&geometry.actionTop-geometry.imageBottom<=28,
+    'More breathing room below original branding: '+JSON.stringify(geometry));
+  assert.ok(geometry.queueTop-geometry.instructionBottom>=8,
+    'More breathing room below Enter your name instruction: '+JSON.stringify(geometry));
   assert.ok(Math.abs(geometry.actionBottom-geometry.queueTop)<2,
     'Queue must follow the signup action: '+JSON.stringify(geometry));
   assert.ok(geometry.queueBottom<=geometry.visibleHeight+2,'Queue must fit viewport: '+JSON.stringify(geometry));
@@ -121,6 +124,8 @@ let server,browser;let requestOpen=true,sessionActive=true;
     'Original artwork must decode at full resolution: '+JSON.stringify(artworkLayout));
   assert.ok(artworkLayout.height>=120&&artworkLayout.width>=120,
     'Logo must reserve visible layout space on iPad: '+JSON.stringify(artworkLayout));
+  if(viewport.height>=1000)assert.ok(artworkLayout.height>=475,
+    'Tall tablet must render branding approximately 1.7x larger: '+JSON.stringify(artworkLayout));
   assert.ok(artworkLayout.actionTop>=artworkLayout.bottom-2,
     'Logo must be above WANT TO SING, not collapsed behind it: '+JSON.stringify(artworkLayout));
   const imageLoaded=await page.evaluate(()=>new Promise(resolve=>{
@@ -142,8 +147,12 @@ let server,browser;let requestOpen=true,sessionActive=true;
   assert.equal(await page.locator('#singerName').inputValue(),'');
   await page.locator('#singerName').fill('Jo');
   assert.ok(!await page.locator('#next').isEnabled(),'Two letters must not enable CHOOSE A SONG');
+  assert.ok(!await page.locator('#singerName').evaluate(el=>el.className.indexOf('valid-name')!==-1),
+    'Short name keeps the red field border');
   await page.locator('#singerName').fill('Test singer');
   assert.ok(await page.locator('#next').isEnabled(),'Three or more characters must enable CHOOSE A SONG');
+  assert.equal(await page.locator('#singerName').evaluate(el=>getComputedStyle(el).borderTopColor),
+    'rgb(57, 231, 138)','Valid name changes field border to green');
   await page.locator('#pageRefresh').click();
   await page.locator('#refreshDialog').waitFor({state:'visible'});
   assert.equal(await page.locator('#singerName').inputValue(),'Test singer','Custom refresh dialog retains unfinished data');
@@ -254,7 +263,8 @@ let server,browser;let requestOpen=true,sessionActive=true;
     await page.locator('#anotherSong').click();
     assert.ok(await page.locator('#success').isHidden(),'Repeat button closes confirmation');
     assert.ok(await page.locator('#nameStep').isVisible(),'Repeat must return to name entry');
-    assert.equal(await page.locator('#singerName').inputValue(),'','Repeat request must clear the old singer');
+    assert.equal(await page.locator('#singerName').inputValue(),'Test singer',
+      'Repeat request must prefill the previous singer while returning to name entry');
     assert.equal(await page.locator('#singerName').evaluate(el=>document.activeElement===el),true,'Repeat tap focuses name');
     await page.locator('#singerName').fill('Next singer');
     await page.locator('#next').click();
@@ -262,6 +272,27 @@ let server,browser;let requestOpen=true,sessionActive=true;
     await page.locator('#cancel').click();
     assert.ok(await page.locator('#idleScreen').isVisible(),'Cancel after repeat returns to landing');
     assert.equal(await page.locator('#singerName').evaluate(el=>document.activeElement===el),false,'Landing must not focus keyboard');
+  }
+  // A virtual clock verifies the 20-second countdown without waiting 40 real
+  // seconds. Only genuine form interaction extends the clock.
+  if(viewport.width===768&&!viewport.standalone){
+    await page.clock.install();
+    await page.locator('#idleScreen').click();
+    await page.locator('#singerName').fill('Joe');
+    await page.clock.fastForward(20050);
+    assert.ok(await page.locator('#idleScreen').isVisible(),'20s idle on name should return to logo');
+    assert.equal(await page.locator('#singerName').inputValue(),'','Inactivity clears unfinished name');
+    assert.equal(await page.locator('#singerName').evaluate(el=>document.activeElement===el),false,'Inactivity hides keyboard');
+    await page.locator('#idleScreen').click();
+    await page.locator('#singerName').fill('Joe');
+    await page.locator('#next').click();
+    await page.clock.fastForward(12000);
+    await page.locator('#songSearch').fill('Summer');
+    await page.clock.fastForward(10500);
+    assert.ok(await page.locator('#songStep').isVisible(),'Typing must extend inactivity window');
+    await page.clock.fastForward(10500);
+    assert.ok(await page.locator('#idleScreen').isVisible(),'20s idle on song screen should return to logo');
+    assert.equal(await page.locator('#singerName').inputValue(),'','Song inactivity clears singer');
   }
   if(viewport.width===1024){
     await page.locator('#idleScreen').waitFor({state:'visible',timeout:12000});
