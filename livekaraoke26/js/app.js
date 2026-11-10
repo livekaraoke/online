@@ -676,20 +676,22 @@
     paintReviewStars();
   }
 
-  function populateProfileForm(){
+  function populateProfileForm({includeReview=true}={}){
     const profile=requestProfile();
     if($("singerName"))$("singerName").value=profile.name;
     if($("requestProfileEmail"))$("requestProfileEmail").value=profile.email;
     if($("requestProfileCountry"))$("requestProfileCountry").value=profile.country;
     if($("requestProfileAge"))$("requestProfileAge").value=profile.ageRange;
     if($("requestProfileGender"))$("requestProfileGender").value=profile.gender;
-    if($("requestReviewRating"))$("requestReviewRating").value=profile.rating;
-    if($("requestReviewText"))$("requestReviewText").value=profile.review;
-    if($("requestReviewPrivate"))$("requestReviewPrivate").checked=profile.reviewPrivate;
+    if(includeReview){
+      if($("requestReviewRating"))$("requestReviewRating").value=profile.rating;
+      if($("requestReviewText"))$("requestReviewText").value=profile.review;
+      if($("requestReviewPrivate"))$("requestReviewPrivate").checked=profile.reviewPrivate;
+      paintReviewStars();
+    }
     if($("requestProfileStatus"))$("requestProfileStatus").textContent=profile.name?"Changes save automatically":"Enter your name to request a song.";
     if($("requestEmailFeedback"))$("requestEmailFeedback").textContent="";
-    if($("requestReviewStatus"))$("requestReviewStatus").textContent="";
-    paintReviewStars();
+    if(includeReview&&$("requestReviewStatus"))$("requestReviewStatus").textContent="";
     syncRequesterUi();
   }
 
@@ -808,11 +810,11 @@
     const status=$("requestReviewStatus");
     if(!profile.rating&&!profile.review){
       if(status)status.textContent="Choose a star rating or write a review first.";
-      $("requestReviewDetails").open=true;
+      document.querySelector('[data-review-rating="1"]')?.focus();
       return false;
     }
 
-    // Review content remains unpublished until SAVE REVIEW is explicitly tapped.
+    // Review content remains unpublished until SEND REVIEW is explicitly tapped.
     localStorage.setItem(REQUEST_PROFILE_KEY,JSON.stringify(profile));
     try{
       const data={
@@ -851,7 +853,7 @@
   }
 
   function switchRequestTab(tab){
-    const valid=new Set(["profile","songs","requests","data","info"]);
+    const valid=new Set(["profile","songs","requests","data","review","info"]);
     const target=valid.has(tab)?tab:"songs";
 
     if($("requestNameGate"))$("requestNameGate").hidden=true;
@@ -864,7 +866,7 @@
     if($("requestSuccess"))$("requestSuccess").hidden=true;
 
     document.querySelectorAll("[data-request-tab]").forEach(button=>{
-      const active=button.dataset.requestTab===(target==="data"?"profile":target);
+      const active=button.dataset.requestTab===((target==="data"||target==="review")?"profile":target);
       button.classList.toggle("active",active);
       button.setAttribute("aria-selected",String(active));
     });
@@ -872,7 +874,7 @@
     // Opening a tab always reveals its heading rather than a stale scroll position.
     const visiblePanel=document.querySelector('[data-request-panel="'+target+'"]');
     if(visiblePanel)visiblePanel.scrollTop=0;
-    if(target==="profile")populateProfileForm();
+    if(target==="profile")populateProfileForm({includeReview:false});
     if(target==="songs"){
       renderRequestCategoryCards();
       const selected=requestCategoryById(requestCategory);
@@ -1045,7 +1047,7 @@
     return `<div class="song-row${stateClass}" data-song-row-id="${escapeHTML(song.id)}" data-alpha="${alpha}">
       <span class="song-row-info"><strong>${escapeHTML(song.title||"Untitled")}</strong>${meta?`<small>${escapeHTML(meta)}</small>`:""}</span>
       <div class="song-row-actions">
-        <button type="button" class="request-favourite-btn ${favourite?"is-favourite":""}" data-toggle-favourite="${escapeHTML(song.id)}" aria-pressed="${favourite}" title="${favourite?"Remove from":"Add to"} favourites" aria-label="${favourite?"Remove from":"Add to"} favourites">${favourite?"♥":"♡"}</button>
+        <button type="button" class="request-favourite-btn ${favourite?"is-favourite":""}" data-toggle-favourite="${escapeHTML(song.id)}" aria-pressed="${favourite}" title="${favourite?"Remove from":"Add to"} favourites" aria-label="${favourite?"Remove from":"Add to"} favourites"><svg class="request-fav-heart" viewBox="0 0 24 24" width="26" height="26" aria-hidden="true" focusable="false"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" fill="currentColor" stroke="currentColor" stroke-width=".6" stroke-linejoin="round"/></svg></button>
         <button class="song-action" type="button" data-song-id="${escapeHTML(song.id)}"${disabled} aria-label="${disabled?escapeHTML(action):`Request ${escapeHTML(song.title||"song")} by ${escapeHTML(artist)}`}">${escapeHTML(action)}</button>
       </div>
     </div>`;
@@ -1717,7 +1719,7 @@
     if(songSessionState(song)!=="available")return;
     if(!requestProfile().name){
       switchRequestTab("profile");
-      $("requestProfileStatus").textContent="Save your name before sending a request.";
+      $("requestProfileStatus").textContent="Enter your name before requesting a song.";
       return;
     }
     selectedRequestSongId=songId;
@@ -2098,7 +2100,6 @@
   $("requestActionConfirmDialog").addEventListener("cancel",event=>{event.preventDefault();finishRequestActionConfirm(false);});
   $("requestActionConfirmDialog").addEventListener("close",()=>{if(requestActionConfirmResolve)finishRequestActionConfirm(false);});
   $("requestNoteDialogInput").addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&e.key==="Enter")saveMyRequestNote();});
-  $("continueRequestBtn").addEventListener("click",continueToSongs);
   $("submitRequestReviewBtn").addEventListener("click",()=>void saveRequestReview());
   editableProfileFields.forEach(id=>{
     const field=$(id);
