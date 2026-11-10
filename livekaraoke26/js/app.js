@@ -747,8 +747,11 @@
   // Keep profile edits on this device immediately. Only explicit review submissions
   // write reviews; optional recovery sync runs after a field is completed, not per key.
   const editableProfileFields=["singerName","requestProfileEmail","requestProfileCountry","requestProfileAge","requestProfileGender"];
-  const validProfileEmail=value=>!value||/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(value);
-  let lastRecoverySyncSnapshot="";
+  const validProfileEmail=value=>!value||/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+  let lastRecoverySyncSnapshot=(()=>{
+    const profile=requestProfile();
+    return JSON.stringify([profile.name,profile.email,profile.country,profile.ageRange,profile.gender]);
+  })();
   function saveProfileFieldsLocally({validateEmail=false}={}){
     const previous=requestProfile();
     const enteredName=String($("singerName")?.value||"").trim();
@@ -874,7 +877,7 @@
       renderRequestCategoryCards();
       const selected=requestCategoryById(requestCategory);
       if($("requestNotice")){
-        if(requestCategory==="all")$("requestNotice").textContent="Choose a song, then tap REQUEST SONG.";
+        if(requestCategory==="all")$("requestNotice").textContent="Scroll through the songs or search above."
         else if(requestCategory===ARTIST_BROWSE_CATEGORY)$("requestNotice").textContent="Browse by artist. Use the letters or search bar to jump through the list.";
         else $("requestNotice").textContent=`${selected?.label||"Category"} · tap REQUEST SONG to continue.`;
       }
@@ -1014,7 +1017,7 @@
     const selected=requestCategoryById(requestCategory);
     if($("requestNotice")){
       if(requestCategory==="all"){
-        $("requestNotice").textContent="Choose a song, then tap REQUEST SONG.";
+        $("requestNotice").textContent="Scroll through the songs or search above.";
       }else if(requestCategory===ARTIST_BROWSE_CATEGORY){
         $("requestNotice").textContent="Browse by artist. Use the letters or search bar to jump through the list.";
       }else{
@@ -2070,6 +2073,21 @@
       if(dialogId==="requestNoteDialog") editingRequestNoteId="";
     }
   });
+  // An embedded iframe may retain its layout height while the phone keyboard
+  // shrinks the visible viewport. Constrain the dialog to the smaller viewport.
+  function updateRequestVisualHeight(){
+    const heights=[window.innerHeight,window.visualViewport?.height].filter(value=>Number.isFinite(value)&&value>0);
+    try{
+      const parentHeight=window.parent?.visualViewport?.height;
+      if(Number.isFinite(parentHeight)&&parentHeight>0)heights.push(parentHeight);
+    }catch(_){}
+    if(heights.length)document.documentElement.style.setProperty("--request-visual-height",Math.floor(Math.min(...heights))+"px");
+  }
+  updateRequestVisualHeight();
+  window.addEventListener("resize",updateRequestVisualHeight,{passive:true});
+  window.visualViewport?.addEventListener("resize",updateRequestVisualHeight,{passive:true});
+  try{if(window.parent!==window)window.parent.visualViewport?.addEventListener("resize",updateRequestVisualHeight,{passive:true});}catch(_){}
+
   $("songSearch").addEventListener("input",renderSongResults);
   $("requestStartContinueBtn").addEventListener("click",continueFromRequestName);
   $("requestStartName").addEventListener("keydown",e=>{if(e.key==="Enter")continueFromRequestName();});
