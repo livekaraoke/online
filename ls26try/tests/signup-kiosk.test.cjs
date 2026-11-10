@@ -317,3 +317,28 @@ test('kiosk Run Order publisher is session-gated and does not clone the private 
   assert.match(pub,/tx\.update\(kioskRef,\{queueSessionId,kioskQueue:queue\}\)/);
   assert.doesNotMatch(pub,/collection\('lyrics'\)/);
 });
+
+test('landing has original user artwork, highly visible CTA and three readable public queue rows',()=>{
+ const html=fs.readFileSync(path.join(root,'signup/sign up.html'),'utf8');
+ const css=fs.readFileSync(path.join(root,'signup/signup.css'),'utf8');
+ const js=fs.readFileSync(path.join(root,'signup/signup.js'),'utf8');
+ const asset=path.join(root,'signup/assets/live-karaoke-landing-logo.jpg');
+ assert.ok(fs.statSync(asset).size>200000,'Use full-resolution supplied artwork, not a redesign or placeholder');
+ const banner=fs.readFileSync(asset);
+ assert.equal(banner[0],0xff); assert.equal(banner[1],0xd8);
+ assert.match(html,/class="idle-green-button"/);
+ assert.match(html,/TAP HERE TO SING/);
+ assert.match(html,/WANT TO SING\?/);
+ assert.match(html,/Enter your name, choose a song/);
+ assert.match(html,/COMING UP NEXT/);
+ assert.match(html,/id="queueNext3"/);
+ assert.doesNotMatch(html,/LIVE KARAOKE QUEUE/);
+ const cssOverride=css.slice(css.indexOf('2026-11-10: dedicated compact branded signup action'));
+ assert.match(cssOverride,/assets\/live-karaoke-landing-logo\.jpg/);
+ assert.match(cssOverride,/background-size: contain/);
+ assert.match(cssOverride,/border: 3px solid #43f293/);
+ assert.match(cssOverride,/\.idle-screen\.is-open \.idle-queue/);
+ assert.match(js,/el\('queueNow'\)\.hidden = !current/);
+ assert.doesNotMatch(html,/autofocus/);
+ assert.match(js,/el\('idleScreen'\)\.onclick = function/);
+});
