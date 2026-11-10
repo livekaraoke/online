@@ -11,6 +11,8 @@ on:
       - 'ls26try/admin-new/js/sidebar.js'
       - 'ls26try/tests/phone-prompter-remote.test.cjs'
       - 'ls26try/verification/prompter-phone.cjs'
+      - 'ls26try/verification/prompter-shared-state.cjs'
+      - 'ls26try/host/js/lyricview.js'
       - 'ls26try/oldadmin/host/lyrics/prompter-remote-receiver.js'
       - 'ls26try/host/css/lyricview-prompter-remote.css'
       - 'ls26try/shared/performance.js'
@@ -44,3 +46,4 @@ jobs:
           node ls26try/verification/prompter-remote.cjs
           node ls26try/verification/prompter-remote-devices.cjs
           node ls26try/verification/prompter-phone.cjs
+          node ls26try/verification/prompter-shared-state.cjs
