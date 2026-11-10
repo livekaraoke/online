@@ -288,6 +288,23 @@
       status.classList.toggle("is-closed", !open);
     }
 
+    // The mobile header intentionally hides the badge. Keep closed status visible
+    // in the song list instead, without changing the underlying request gate.
+    if (isLiveKaraoke) {
+      const notice = $("requestNotice");
+      if (notice) {
+        if (!canSubmit()) {
+          if (!notice.dataset.gateNotice || notice.dataset.gateNotice === "closed") {
+            notice.textContent = "Requests are closed right now. You can still browse the song list.";
+            notice.dataset.gateNotice = "closed";
+          }
+        } else if (notice.dataset.gateNotice === "closed") {
+          notice.textContent = "Scroll through the songs or search above.";
+          delete notice.dataset.gateNotice;
+        }
+      }
+    }
+
     const requestButton = $("requestSongBtn");
     if (requestButton) requestButton.disabled = isLiveKaraoke ? false : !canSubmit();
 
