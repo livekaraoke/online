@@ -71,6 +71,23 @@
         return LKEventTime.start(event);
       }
 
+      // A published Wednesday gig at Whyte Harte is already represented by
+      // the weekly residency card; don't repeat it among individual event cards.
+      // Use Malta's weekday, not the visitor's browser timezone.
+      const residencyWeekdayFormatter = new Intl.DateTimeFormat("en-GB", {
+        timeZone: LKEventTime.zone,
+        weekday: "long"
+      });
+      function isCoveredByWeeklyResidency(event) {
+        const venue = String(event?.venue || "")
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, " ")
+          .trim();
+        if (!/^(?:the )?whyte harte(?: bar)?$/.test(venue)) return false;
+        const date = LKEventTime.start(event);
+        return !!date && residencyWeekdayFormatter.format(date) === "Wednesday";
+      }
+
       function nextLiveKaraokeEvent() {
         return upcomingEvents
           .filter(event => isLiveKaraokeType(event.type))
@@ -178,23 +195,25 @@
         const container = document.getElementById("liveKaraokeEventsList");
         if (!container) return;
 
-        const events = upcomingEvents
+        const upcoming = upcomingEvents
           .filter(event => isLiveKaraokeType(event.type))
           .filter(eventStillUpcoming)
-          .sort(LKEventTime.compare)
+          .sort(LKEventTime.compare);
+        // Retain all scheduled gigs for public event metadata and the separate
+        // Next Event widget. Filter only the individual cards, before limiting
+        // to four so special dates and other venues are not pushed out.
+        const events = upcoming
+          .filter(event => !isCoveredByWeeklyResidency(event))
           .slice(0,4);
 
-        renderEventSchema(events);
+        renderEventSchema(upcoming.slice(0,4));
         if (!events.length) {
-          container.innerHTML = `
-            <div class="event-card live-event-empty">
-              <h3>NO UPCOMING LIVE KARAOKE EVENTS</h3>
-              <span class="event-subheading">New dates will appear here when announced.</span>
-            </div>
-          `;
+          container.replaceChildren();
+          container.hidden = true;
           return;
         }
 
+        container.hidden = false;
         container.innerHTML = events.map(event => {
           const date = eventDate(event);
           const day = date ? LKEventTime.day(date).toUpperCase() : "DATE TBC";
