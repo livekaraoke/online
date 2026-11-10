@@ -784,3 +784,160 @@
     font-size:20px!important;
   }
 }
+
+
+/* Mobile request refinement - standalone reviews, compact song actions,
+   and a single-line header. Profile/data remain intact on desktop. */
+#requestDialog .request-profile-back {
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  width:100%!important;
+  min-height:50px!important;
+  margin:0 0 16px!important;
+  padding:10px 14px!important;
+  border:1px solid #fa5860!important;
+  border-radius:9px!important;
+  background:linear-gradient(180deg,#e33138,#ae121b)!important;
+  box-shadow:0 5px 18px rgba(171,18,30,.2)!important;
+  color:#fff!important;
+  text-align:center!important;
+  font-size:15px!important;
+  font-weight:900!important;
+  letter-spacing:.02em!important;
+  cursor:pointer!important;
+}
+#requestDialog .request-review-panel {
+  display:block!important;
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+  padding-bottom:24px!important;
+}
+#requestDialog .request-review-panel[hidden] {
+  display:none!important;
+}
+#requestDialog .request-review-panel-heading {
+  margin-bottom:12px!important;
+}
+#requestDialog .request-review-panel-heading h3 {
+  color:#fff!important;
+  font-size:23px!important;
+  line-height:1.2!important;
+}
+#requestDialog .request-review-panel-heading p {
+  color:#b4bec0!important;
+  font-size:14px!important;
+  line-height:1.5!important;
+}
+#requestDialog .request-review-panel .request-review-card {
+  margin:0 0 12px!important;
+}
+#requestDialog .request-review-panel .request-review-submit {
+  width:100%!important;
+  margin:12px 0!important;
+}
+#requestDialog .request-review-panel .request-review-status {
+  margin:0!important;
+}
+#requestDialog .request-browser .request-fav-heart {
+  display:block!important;
+  flex:none!important;
+  width:25px!important;
+  height:25px!important;
+  fill:currentColor!important;
+  stroke:currentColor!important;
+  pointer-events:none!important;
+}
+#requestDialog .request-browser .request-favourite-btn {
+  color:#e27888!important;
+}
+#requestDialog .request-browser .request-favourite-btn.is-favourite {
+  color:#ff476c!important;
+  background:rgba(180,34,66,.25)!important;
+  border-color:#ff476c!important;
+  box-shadow:0 0 9px rgba(255,71,108,.15)!important;
+}
+@media(max-width:640px) {
+  /* Request state remains in the live data model and host queue. The public
+     mobile header only needs the page title and a close action. */
+  #requestDialog .requesting-as-inline,
+  #requestDialog #requestGateStatus {
+    display:none!important;
+  }
+  #requestDialog .request-modal-top {
+    min-height:0!important;
+    padding:11px 58px 11px 12px!important;
+  }
+  #requestDialog .request-header {
+    display:block!important;
+    width:100%!important;
+    min-width:0!important;
+  }
+  #requestDialog .request-title-line {
+    display:block!important;
+    margin:0!important;
+  }
+  #requestDialog .request-title-line h2 {
+    margin:0!important;
+    padding:0!important;
+    font-size:21px!important;
+    line-height:1.26!important;
+    letter-spacing:.02em!important;
+  }
+  #requestDialog .request-modal-close {
+    top:5px!important;
+    right:9px!important;
+    width:44px!important;
+    height:44px!important;
+  }
+  #requestDialog .request-profile-panel .request-profile-link {
+    margin-bottom:11px!important;
+  }
+  #requestDialog .request-review-panel {
+    padding:13px 14px 18px!important;
+  }
+  #requestDialog .request-profile-back {
+    min-height:48px!important;
+    margin-bottom:16px!important;
+    font-size:15px!important;
+  }
+  #requestDialog .request-review-panel-heading h3 {
+    font-size:22px!important;
+  }
+  #requestDialog .request-browser .song-row {
+    gap:4px!important;
+    padding:6px 9px!important;
+  }
+  #requestDialog .request-browser .song-row-info strong {
+    font-size:17px!important;
+    line-height:1.21!important;
+  }
+  #requestDialog .request-browser .song-row-info small {
+    margin-top:2px!important;
+    font-size:13px!important;
+    line-height:1.2!important;
+  }
+  #requestDialog .request-browser .song-row-actions {
+    min-height:42px!important;
+    gap:8px!important;
+  }
+  #requestDialog .request-browser .song-row-actions .request-favourite-btn {
+    flex:0 0 42px!important;
+    min-width:42px!important;
+    width:42px!important;
+    min-height:42px!important;
+    height:42px!important;
+  }
+  #requestDialog .request-browser .song-row-actions .song-action {
+    min-height:42px!important;
+    height:42px!important;
+    padding:6px 10px!important;
+    font-size:13px!important;
+    line-height:1.1!important;
+  }
+  #requestDialog .request-browser .song-row-actions .song-action:disabled {
+    min-height:42px!important;
+    height:42px!important;
+    font-size:12px!important;
+  }
+}
