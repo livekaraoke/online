@@ -434,3 +434,9 @@ header .cancel-button {
  .idle-queue-heading { padding-bottom: 3px; }
  .idle-next-row, .idle-current-row { min-height: 42px; margin-bottom: 4px; }
 }
+
+/* On very small phone viewports, preserve all three queue rows rather than
+ * hiding the last line under the physical browser controls. */
+@media (max-width: 500px) and (max-height: 750px) {
+ .idle-screen.is-open .idle-brand-art { height: 35vh; }
+}
