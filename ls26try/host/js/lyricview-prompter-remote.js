@@ -186,8 +186,15 @@
           const state=data.prompterRemoteState;
           if(state?.v===1&&state.kind==='state'&&
              ['idle','waiting','running','instrumental','ended'].includes(state.mode)){
-            // Ignore a previous song's stage when new lyrics were just sent.
-            if(!newCue || state.mode==='waiting')receive(state);
+            if(!loadedSong.songId&&state.songId)
+              syncSong({songId:String(state.songId),title:String(state.title||''),
+                artist:String(state.artist||''),year:''});
+            // A reopening remote must honour the current song's last state,
+            // not reset it merely because a different cue token was seen.
+            // Conversely, ignore stale stages belonging to another song.
+            const matchingSong=!state.songId||!loadedSong.songId||state.songId===loadedSong.songId;
+            if(matchingSong&&(!newCue||state.mode==='waiting'||Boolean(state.songId&&state.songId===loadedSong.songId)))
+              receive(state);
             else {setSingerMode('waiting');setPlayState(false);}
           }else if(newCue || (loadedSong.songId&&singerMode==='idle')){
             setSingerMode('waiting');setPlayState(false);
