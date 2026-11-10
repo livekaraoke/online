@@ -1997,6 +1997,7 @@
 
     if (button) button.disabled = true;
     setSlaveLyricsButtonFeedback(button, "pending");
+    const cueToken = `${Date.now()}_${Math.random().toString(36).slice(2,7)}`;
     try {
       if (useModern) {
         // Only the existing Prompter's Slave listener consumes these fields.
@@ -2007,7 +2008,12 @@
           prompterSongTitle: currentSong.title || "",
           prompterSongArtist: currentSong.artist || "",
           prompterSongYear: currentSong.year || currentSong.releaseYear || "",
-          prompterRequestToken: `${Date.now()}_${Math.random().toString(36).slice(2,7)}`,
+          prompterRequestToken: cueToken,
+          prompterRemoteState: {
+            v:1,kind:"state",origin:"host-cue",id:"cue-"+cueToken,at:Date.now(),
+            mode:"waiting",playing:false,songId:currentSongId,
+            title:currentSong.title||"",artist:currentSong.artist||""
+          },
           updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         }, { merge: true });
       } else {
@@ -2036,7 +2042,13 @@
           prompterSongTitle: previewSong?.title || legacyMatch.title || "",
           prompterSongArtist: previewSong?.artist || legacyMatch.artist || "",
           prompterSongYear: previewSong?.year || previewSong?.releaseYear || legacyMatch.year || "",
-          prompterRequestToken: `${Date.now()}_${Math.random().toString(36).slice(2,7)}`,
+          prompterRequestToken: cueToken,
+          prompterRemoteState: {
+            v:1,kind:"state",origin:"host-cue",id:"cue-"+cueToken,at:Date.now(),
+            mode:"waiting",playing:false,songId:id,
+            title:previewSong?.title||legacyMatch.title||"",
+            artist:previewSong?.artist||legacyMatch.artist||""
+          },
 
           reset: false,
           updatedAt: firebase.firestore.FieldValue.serverTimestamp()
