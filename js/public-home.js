@@ -284,6 +284,28 @@
         node.textContent = JSON.stringify({"@context":"https://schema.org","@graph":data});
       }
 
+      function renderSongAccess() {
+        const button = document.getElementById("songListBtn");
+        const description = document.getElementById("songListAccessMessage");
+        if (!button || !description) return;
+        const gate = LKPublicVisibility.gate(publicState,Object.fromEntries(new URLSearchParams(location.search)));
+        if (gate.active) {
+          button.classList.remove("disabled-button");
+          button.classList.add("main-button");
+          button.removeAttribute("aria-disabled");
+          button.textContent = gate.open ? "REQUEST A SONG" : "BROWSE SONG LIST";
+          description.textContent = gate.open
+            ? "Requests are open. Browse the song list and choose what you would like to sing."
+            : "Browse available songs. Requests may be closed or require the venue QR code.";
+        } else {
+          button.classList.remove("main-button");
+          button.classList.add("disabled-button");
+          button.setAttribute("aria-disabled","true");
+          button.textContent = "SONG LIST LOCKED";
+          description.textContent = "Song access becomes available during an active Live Karaoke session.";
+        }
+      }
+
       function renderPublicStatus() {
         const container = document.getElementById("liveStatus");
         if (!container) return;
@@ -328,6 +350,7 @@
         }
 
         renderLivePanel();
+        renderSongAccess();
 
       }
 
