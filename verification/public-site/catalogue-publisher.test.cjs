@@ -59,7 +59,7 @@ test('explicit kiosk publishes its own safe queue even when public website hides
     await f.publisher.enableLive();
     await settle();
     f.update('karaokeControl/signupKioskPublic',{schemaVersion:1,enabled:true,token:'a'.repeat(64)});
-    f.update('karaokeControl/currentSession',{active:true,sessionId:'gig',eventId:'event',type:'Live Karaoke',venue:'0 The Test Venue'});
+    f.update('karaokeControl/currentSession',{active:true,isTestSession:true,sessionId:'gig',eventId:'event',type:'Live Karaoke',venue:'0 The Test Venue'});
     f.update('karaokeControl/runOrder',{sessionId:'gig',items:[
       {id:'1',songTitle:'Playing song',singerName:'Anna',status:'playing',note:'PRIVATE'},
       {id:'2',songTitle:'First queued',singerName:'Bob',status:'queued',hostNote:'PRIVATE'},

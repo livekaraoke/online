@@ -4,7 +4,17 @@ const session={id:'s',status:'active',type:'Live Karaoke'};
 const event={id:'e',status:'Confirmed',type:'Live Karaoke',venue:'Whyte Harte'};
 const state={control,session,event,karaoke:{songsEnabled:true},loaded:true,error:false};
 test('public sessions require matching loaded source records',()=>{a.equal(P.sessionVisible(control,session,event),true);for(const s of [{},{...session,id:'old'},{...session,status:'ended'},{...session,endedAt:1}])a.equal(P.sessionVisible(control,s,event),false);a.equal(P.sessionVisible({...control,type:'Solo'},session,event),false);a.equal(P.sessionVisible(control,session,{}),false);});
-test('private and test flags and legacy test venues always hide',()=>{for(const change of [{isTest:true},{isTestSession:true},{publicVisibility:'test'},{publicVisibility:'private'},{publicVisible:false},{published:false},{venue:'0 The Test Venue'},{name:'Internal rehearsal'}]){a.equal(P.sessionVisible({...control,...change},session,event),false);a.equal(P.sessionVisible(control,session,{...event,...change}),false);}});
+test('explicit private and test flags always hide regardless of the venue name',()=>{for(const change of [{isTest:true},{isTestSession:true},{testMode:true},{requestTestMode:true},{publicVisibility:'test'},{publicVisibility:'private'},{publicVisible:false},{published:false},{publishToWebsite:false}]){a.equal(P.sessionVisible({...control,...change},session,event),false);a.equal(P.sessionVisible(control,session,{...event,...change}),false);}});
+test('0 The Test Venue can appear publicly during pre-show and take requests',()=>{
+  const c={...control,venue:'0 The Test Venue',title:'Live Karaoke @ 0 The Test Venue'};
+  const s={...session,venue:'0 The Test Venue',title:'Live Karaoke @ 0 The Test Venue',actualStartedAt:null};
+  const e={...event,venue:'0 The Test Venue',name:'Live Karaoke @ 0 The Test Venue'};
+  a.equal(P.eventVisible(e),true);
+  a.equal(P.sessionVisible(c,s,e),true);
+  a.deepEqual(P.gate({control:c,session:s,event:e,karaoke:{songsEnabled:true},loaded:true,error:false}),{open:true,active:true,phase:'preparing',sessionId:'s',accessRequired:false,wrongSession:false});
+  a.equal(P.sessionVisible({...c,publicVisibility:'test'},s,e),false);
+  a.equal(P.sessionVisible(c,s,{...e,publicVisibility:'private'}),false);
+});
 test('only published confirmed public events; cancellation always wins',()=>{a.equal(P.eventVisible(event),true);for(const change of [{status:'Tentative'},{status:'Cancelled'},{status:'completed'},{published:false},{type:'Roxanna'},{status:''}])a.equal(P.eventVisible({...event,...change}),false);a.equal(P.eventVisible({...event,status:'Tentative',publicVisibility:'public',publishUnconfirmed:true}),true);});
 test('run order is session-bound and removes every terminal entry',()=>{const items=[{id:'now',status:'playing'},{id:'next',status:'queued'},...[...P.terminal].map(status=>({status})),{status:'queued',sessionId:'wrong'}];a.equal(P.runItems({sessionId:'s',items},'s').length,2);a.equal(P.runItems({sessionId:'old',items},'s').length,0);a.equal(P.runItems({items},'s').length,0);});
 test('one gate handles closed, break, prep, loading, errors and venue QR',()=>{a.equal(P.gate(state).open,true);a.equal(P.gate(state).phase,'preparing');a.equal(P.gate({...state,session:{...session,breakOpen:true}}).phase,'break');for(const change of [{karaoke:{songsEnabled:false}},{loaded:false},{error:true},{event:{...event,publicVisibility:'test'}}])a.equal(P.gate({...state,...change}).open,false);const locked={...state,karaoke:{songsEnabled:true,venueAccessCode:'door'}};a.equal(P.gate(locked).open,false);a.equal(P.gate(locked,{vac:'door'}).open,true);a.equal(P.gate(locked,{vac:'door',sessionId:'old'}).open,false);});

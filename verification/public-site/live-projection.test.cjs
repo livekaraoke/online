@@ -22,12 +22,26 @@ test('other acts, tests, mismatched sessions, ended sessions and stale queues ca
     assert.equal(P.live(source,act).sessionId,'');
     assert.deepEqual(P.live(source,act).kioskQueue,{current:null,next:[]});
   }
-  for(const override of [{control:{...source.control,venue:'0 The Test Venue'}},{event:{...source.event,publicVisibility:'private'}},{session:{...source.session,endedAt:1}},{session:{...source.session,id:'old'}}]){
+  for(const override of [{control:{...source.control,isTestSession:true}},{event:{...source.event,publicVisibility:'private'}},{session:{...source.session,endedAt:1}},{session:{...source.session,id:'old'}}]){
     const result=P.live({...source,...override},'live-karaoke');assert.equal(result.control.active,false);assert.equal(result.run.items.length,0);assert.equal(result.availability.length,0);
   }
   assert.equal(P.live({...source,run:{...source.run,sessionId:'old'}},'live-karaoke').run.items.length,0);
   assert.equal(P.live({...source,run:{sessionId:'s',items:[{songId:'one',requestId:'cancelled',status:'queued'}]},requests:[{id:'cancelled',sessionId:'s',songId:'one',status:'cancelled'}]},'live-karaoke').run.items.length,0,'a cancelled request cannot linger in Coming Up');
   assert.equal(P.live({...source,session:{...source.session,breakOpen:true}},'live-karaoke').session.breakOpen,true);
+});
+test('test-named venue can publish live pre-show requests without leaking private data',()=>{
+  const input={...source,
+    control:{...source.control,venue:'0 The Test Venue'},
+    session:{...source.session,venue:'0 The Test Venue',actualStartedAt:null},
+    event:{...source.event,venue:'0 The Test Venue',name:'Live Karaoke @ 0 The Test Venue'},
+    karaoke:{songsEnabled:true}};
+  const v=P.live(input,'live-karaoke');
+  assert.equal(v.control.active,true);
+  assert.equal(v.control.venue,'0 The Test Venue');
+  assert.equal(v.session.actualStartedAt,false);
+  assert.equal(policy.gate({...v,loaded:true,error:false}).open,true);
+  assert.equal(policy.gate({...v,loaded:true,error:false}).phase,'preparing');
+  assert.equal(P.live({...input,event:{...input.event,publicVisibility:'test'}},'live-karaoke').control.active,false);
 });
 test('event/settings projection preserves Malta dates and explicitly approved fields only',()=>{
   const events=P.events([source.event,{...source.event,id:'private',publicVisibility:'private'},{...source.event,id:'old',date:'2025-01-01'},{...source.event,id:'cancelled',status:'Cancelled'},{...source.event,id:'other',type:'Roxanna'}],'live-karaoke',Date.parse('2026-10-22T04:00:00Z'));

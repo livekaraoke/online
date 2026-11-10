@@ -6,8 +6,7 @@
   const lower=v=>String(v||'').trim().toLowerCase();
   function act(d={}){const v=lower(d.act||d.sessionType||d.type||d.performerType);return ['live karaoke','live-karaoke','livekaraoke'].includes(v)?'live-karaoke':['solo','billy lee','billylee26'].includes(v)?'billy-lee':v==='roxanna'?'roxanna':'';}
   function hidden(d={}){
-    return d.isTest===true||d.isTestSession===true||d.testMode===true||d.requestTestMode===true||d.private===true||d.isPrivate===true||d.published===false||d.publicVisible===false||d.publishToWebsite===false||['private','test','internal','hidden','draft','unpublished'].includes(lower(d.publicVisibility||d.visibility))||
-      /(?:^|[\s_\-])(test|testing|rehearsal|demo)(?:$|[\s_\-])/i.test([d.name,d.title,d.venue,d.venueName].filter(Boolean).join(' '));
+    return d.isTest===true||d.isTestSession===true||d.testMode===true||d.requestTestMode===true||d.private===true||d.isPrivate===true||d.published===false||d.publicVisible===false||d.publishToWebsite===false||['private','test','internal','hidden','draft','unpublished'].includes(lower(d.publicVisibility||d.visibility));
   }
   function published(d={}){return !hidden(d)&&(lower(d.publicVisibility||d.visibility)==='public'||d.published===true||d.publicVisible===true||lower(d.status)==='confirmed');}
   function eventVisible(d={},expected='live-karaoke'){

@@ -2,7 +2,7 @@
 (() => {
   const inherited=window.parent!==window&&window.parent.__firebaseFixture;
   const docs=inherited?.docs||{
-    'karaokeControl/currentSession':{active:true,sessionId:'s',eventId:'e',type:'Live Karaoke',venue:'0 The Test Venue'},
+    'karaokeControl/currentSession':{active:true,isTestSession:true,sessionId:'s',eventId:'e',type:'Live Karaoke',venue:'0 The Test Venue'},
     'performanceSessions/s':{status:'active',type:'Live Karaoke',venue:'0 The Test Venue',actualStartedAt:1},
     'karaoke/state':{songsEnabled:true},
     'karaokeControl/runOrder':{sessionId:'s',items:[{id:'now',status:'playing',songId:'wonderwall',songTitle:'Wonderwall',artist:'Oasis'},{id:'next',status:'queued',songTitle:'Angels',artist:'Robbie Williams'},{id:'two',status:'queued',songTitle:'Let It Be',artist:'The Beatles'},{id:'three',status:'queued',songTitle:'All Summer Long',artist:'Kid Rock'},{id:'bad',status:'cancelled',songTitle:'Cancelled song'}]},
@@ -12,7 +12,7 @@
     'lyrics/wonderwall':{title:'Wonderwall',artist:'Oasis',year:1995},
     'lyrics/zombie':{title:'Zombie',artist:'Cranberries, The',year:1994},
     'lyrics/brightside':{title:'Mr Brightside',artist:'Killers, The',year:2004},
-    'upcomingEvents/e':{type:'Live Karaoke',venue:'0 The Test Venue',status:'Confirmed',date:'2026-10-22',startTime:'20:00'},
+    'upcomingEvents/e':{type:'Live Karaoke',venue:'0 The Test Venue',status:'Confirmed',publicVisibility:'test',date:'2026-10-22',startTime:'20:00'},
     'upcomingEvents/next':{type:'Live Karaoke',venue:'Whyte Harte',status:'Confirmed',date:'2026-11-04',startTime:'20:00'},
     'upcomingEvents/private':{type:'Live Karaoke',venue:'Private venue',status:'Confirmed',publicVisibility:'private',date:'2026-11-05'},
     'upcomingEvents/tentative':{type:'Live Karaoke',venue:'Tentative venue',status:'Tentative',date:'2026-11-06'},
