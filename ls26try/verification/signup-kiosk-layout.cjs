@@ -88,11 +88,16 @@ let server,browser;let requestOpen=true,sessionActive=true;
     'No automatic keyboard focus when landing appears after refresh');
   const geometry=await page.evaluate(()=>{
     const image=document.querySelector('.idle-brand-art').getBoundingClientRect();
+    const callToAction=document.querySelector('.idle-call-to-action').getBoundingClientRect();
     const queue=document.getElementById('idleQueue').getBoundingClientRect();
-    return {imageBottom:image.bottom,queueTop:queue.top,queueBottom:queue.bottom,
+    return {imageBottom:image.bottom,actionTop:callToAction.top,actionBottom:callToAction.bottom,
+      queueTop:queue.top,queueBottom:queue.bottom,
       visibleHeight:Math.min(window.innerHeight,document.documentElement.clientHeight)};
   });
-  assert.ok(Math.abs(geometry.imageBottom-geometry.queueTop)<2,'Queue must follow logo: '+JSON.stringify(geometry));
+  assert.ok(Math.abs(geometry.imageBottom-geometry.actionTop)<2,
+    'Signup action must follow the logo: '+JSON.stringify(geometry));
+  assert.ok(Math.abs(geometry.actionBottom-geometry.queueTop)<2,
+    'Queue must follow the signup action: '+JSON.stringify(geometry));
   assert.ok(geometry.queueBottom<=geometry.visibleHeight+2,'Queue must fit viewport: '+JSON.stringify(geometry));
   assert.equal(await page.locator('#idleScreen').getAttribute('aria-label'),'Click anywhere to sing');
   assert.ok(await page.locator('.idle-green-button').isVisible(),'Large TAP HERE TO SING action must be visible');
