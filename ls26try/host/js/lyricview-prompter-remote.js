@@ -262,7 +262,7 @@
     if(!status||!play)return;
     // State from a Firestore command is an intended state, not a singer-device
     // acknowledgement. Only the singer's direct state message confirms it.
-    if(packet.origin!=='remote'){
+    if(packet.origin==='prompter'||packet.origin==null){
       clearTimeout(timeout);
       lastRequest='';
       status.textContent='Connected';
