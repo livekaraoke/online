@@ -219,6 +219,10 @@
     }
     const packet={v:1,kind:'command',id,action,at:Date.now()};
     const projected=getCurrentState(id);
+    // Optional idempotent targets prevent two controllers starting or ending
+    // the same song twice when they tap at nearly the same moment.
+    if(action==='song'||action==='instrumental')packet.targetMode=projected.mode;
+    if(action==='toggle')packet.targetPlaying=projected.playing;
     post(packet);
     clearTimeout(timeout);
     const status=$('ls26PrompterRemoteStatus');
