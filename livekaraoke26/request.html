@@ -8,7 +8,7 @@
   <meta name="robots" content="noindex,follow">
   <script src="js/artist-names.js?v=20261022-public"></script>
   <link rel="stylesheet" href="css/style.css?v=20261006-live-karaoke-request-only">
-  <link rel="stylesheet" href="css/request-mobile-ux.css?v=20261110-autosave-list-1">
+  <link rel="stylesheet" href="css/request-mobile-ux.css?v=20261111-review-screen-1">
   <style>
     html,body{margin:0;min-height:100%;background:transparent!important}
     body{overflow:hidden}
@@ -101,8 +101,6 @@
               <small id="requestProfileStatus" class="request-profile-status" role="status" aria-live="polite">Changes save automatically</small>
             </div>
           </div>
-          <button id="continueRequestBtn" class="primary-btn request-profile-choose" type="button">CHOOSE A SONG</button>
-          <button id="requestProfileHistoryBtn" class="request-profile-link" type="button" data-request-tab="data">MY HISTORY &amp; FAVOURITES <span aria-hidden="true">›</span></button>
           <details id="requestProfileMore" class="request-simple-details">
             <summary>MORE PROFILE OPTIONS</summary>
             <div class="request-profile-grid request-profile-options-grid">
@@ -114,16 +112,21 @@
             <button id="recoverRequestProfileBtn" class="recover-profile-btn" type="button" disabled aria-disabled="true" title="Profile recovery is coming soon" hidden>RECOVER PROFILE</button>
             <button id="forgetRequestProfileBtn" class="forget-profile-btn request-forget-last" type="button">FORGET THIS USER ON THIS DEVICE</button>
           </details>
-          <details id="requestReviewDetails" class="request-simple-details request-review-details">
-            <summary>RATE YOUR EXPERIENCE <small>OPTIONAL · AFTER YOUR VISIT</small></summary>
+          <button id="requestProfileHistoryBtn" class="request-profile-link" type="button" data-request-tab="data">MY HISTORY &amp; FAVOURITES <span aria-hidden="true">›</span></button>
+          <button id="requestProfileReviewBtn" class="request-profile-link" type="button" data-request-tab="review">RATE YOUR EXPERIENCE <span aria-hidden="true">›</span></button>
+        </section>
+
+        <section id="requestReviewPanel" class="request-tab-panel request-review-panel request-review-details" data-request-panel="review" hidden>
+          <button type="button" class="request-back-btn request-profile-back" data-request-tab="profile">← BACK TO PROFILE</button>
+          <div class="request-panel-heading request-review-panel-heading"><span class="eyebrow">OPTIONAL · AFTER YOUR VISIT</span><h3>RATE YOUR EXPERIENCE</h3><p>Share how your Live Karaoke experience went.</p></div>
             <div class="request-review-card">
               <div class="request-review-heading"><h3>RATE / REVIEW YOUR EXPERIENCE</h3><span class="request-review-optional">OPTIONAL</span></div>
               <div class="request-review-rating"><span class="request-review-label">RATING</span><input id="requestReviewRating" type="hidden" value=""><div class="request-star-row" role="group" aria-label="Rating out of five"><button type="button" data-review-rating="1" aria-label="1 star">★</button><button type="button" data-review-rating="2" aria-label="2 stars">★</button><button type="button" data-review-rating="3" aria-label="3 stars">★</button><button type="button" data-review-rating="4" aria-label="4 stars">★</button><button type="button" data-review-rating="5" aria-label="5 stars">★</button><button id="clearReviewRatingBtn" class="clear-rating-btn" type="button">CLEAR</button></div></div>
               <label class="request-review-text" for="requestReviewText"><span>REVIEW</span><textarea id="requestReviewText" maxlength="1000" rows="3" placeholder="How was your experience?"></textarea></label>
               <label class="request-review-private"><input id="requestReviewPrivate" type="checkbox"><span><strong>Publish my review anonymously</strong><small>Tick to hide your name. Reviews may show your country, rating and comments.</small></span></label>
             </div>
-            <button id="submitRequestReviewBtn" class="primary-btn request-review-submit" type="button">SAVE REVIEW</button><small id="requestReviewStatus" class="request-review-status" role="status" aria-live="polite"></small>
-          </details>
+            <button id="submitRequestReviewBtn" class="primary-btn request-review-submit" type="button">SEND REVIEW</button><small id="requestReviewStatus" class="request-review-status" role="status" aria-live="polite"></small>
+
         </section>
 
 
@@ -177,7 +180,7 @@
   <script src="../js/public-request-lifecycle.js?v=20261110-live-review-copy-1"></script>
   <script src="js/public-catalogue.js?v=20261022-public"></script>
   <script src="../js/public-booking.js?v=20261022"></script>
-<script src="js/app.js?v=20261110-autosave-list-1"></script>
+<script src="js/app.js?v=20261111-review-screen-1"></script>
   <script src="js/request-ui-extras.js?v=20261006-favs-card-width"></script>
 </body>
 </html>
