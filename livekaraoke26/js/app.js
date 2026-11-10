@@ -1744,7 +1744,7 @@
       $("requestConfirmPanel").hidden=true;
       document.querySelectorAll("[data-request-panel]").forEach(panel=>panel.hidden=true);
       $("requestSuccess").hidden=false;
-      $("requestSuccessText").textContent=${song.title||"Your song"} has been sent to the host. Check Requests to see whether it has been accepted.`;
+      $("requestSuccessText").textContent=`${song.title||"Your song"} has been sent to the host. Check Requests to see whether it has been accepted.`;
       await renderMyRequests();
     }catch(error){
       console.error(error);
