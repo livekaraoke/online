@@ -328,6 +328,7 @@
     var i, row, item;
     el('queueNowSong').textContent = current && trim(current.songTitle) ? trim(current.songTitle) : 'Waiting for the next song';
     el('queueNowSinger').textContent = current && trim(current.singerName) ? 'Singer: ' + trim(current.singerName) : '';
+    el('queueCurrent').hidden = !current || !trim(current.songTitle);
     el('queueEmpty').hidden = next.length > 0;
     el('queueEmpty').textContent = queue ? 'No singers queued yet' : 'Live queue is updating...';
     for (i = 0; i < 3; i += 1) {

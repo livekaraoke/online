@@ -273,3 +273,85 @@ header .cancel-button {
   .note-toggle { min-height: 57px; font-size: 20px; }
   #note { font-size: 22px; }
 }
+
+/* 2026-11-10: Simple, immediately recognisable self-service landing.
+ * One native <button> covers the complete open display, including the obvious
+ * green call-to-action. No separate JS click handlers or touch listeners. */
+.idle-screen.is-open { background: #000; text-align: center; overflow: hidden; }
+.idle-screen .idle-call-to-action { display: none; }
+.idle-screen.is-open .idle-brand-art {
+ display: block; width: 100%; height: 31%; margin: 0;
+ background: #000 url("assets/signup-header-2026.jpg") no-repeat center center;
+ background-size: contain; -webkit-background-size: contain;
+}
+.idle-screen.is-open .idle-call-to-action {
+ display: block; height: 24%; width: 96%; max-width: 940px;
+ margin: 0 auto; padding: 2px 0 5px; color: #fff; text-align: center;
+}
+.idle-question { display: block; font-weight: bold; font-size: 34px; line-height: 1.12; margin-bottom: 9px; }
+.idle-green-button {
+ display: block; min-height: 68px; padding: 14px 12px;
+ background: #08783b; border: 3px solid #37e784; border-radius: 18px;
+ box-shadow: 0 0 13px rgba(36,229,116,.64), inset 0 0 12px rgba(255,255,255,.13);
+ color: #fff; font-size: 30px; font-weight: bold; line-height: 1.15;
+}
+.tap-mic { display: inline; font-size: 30px; vertical-align: middle; margin-right: 10px; }
+.idle-instruction { display: block; margin: 10px 0 0; color: #ddd; font-size: 20px; line-height: 1.2; }
+.idle-screen.is-open .idle-queue {
+ display: block; height: 45%; width: 96%; max-width: 940px;
+ margin: 0 auto; padding: 9px 0 0; overflow: hidden;
+ border-top: 1px solid #aa333c; background: #000; text-align: left;
+}
+.idle-queue-heading { padding: 4px 4px 11px; font-size: 23px; }
+.idle-queue-count { float: right; color: #f05d6c; font-size: 18px; font-weight: bold; letter-spacing: .3px; }
+.idle-current-row, .idle-next-row {
+ display: -webkit-flex; display: flex; -webkit-align-items: center; align-items: center;
+ width: 100%; margin: 0 0 7px; padding: 6px 12px;
+ min-height: 69px; border: 1px solid #353535;
+ border-radius: 9px; background: #1c1c1c;
+}
+.idle-current-row { background: #291519; border-color: #74313d; }
+.idle-row-number {
+ -webkit-flex: 0 0 45px; flex: 0 0 45px;
+ width: 45px; height: 45px; line-height: 43px;
+ border-radius: 9px; text-align: center; background: #a60d22;
+ color: #fff; font-size: 25px; font-weight: bold;
+}
+.idle-current-row .idle-row-number { font-size: 13px; }
+.idle-row-info {
+ -webkit-flex: 1 1 auto; flex: 1 1 auto;
+ min-width: 0; margin-left: 17px; padding-left: 13px;
+ border-left: 2px solid #914853; overflow: hidden;
+}
+.idle-row-info strong { font-size: 23px; line-height: 1.2; color: #fff; }
+.idle-row-info span { font-size: 17px; line-height: 1.25; color: #ccc; }
+.idle-queue-empty { font-size: 19px; padding: 12px; }
+@media (max-height: 840px) {
+ .idle-screen.is-open .idle-brand-art { height: 27%; }
+ .idle-screen.is-open .idle-call-to-action { height: 25%; }
+ .idle-screen.is-open .idle-queue { height: 48%; padding-top: 5px; }
+ .idle-question { font-size: 27px; margin-bottom: 7px; }
+ .idle-green-button { min-height: 55px; padding: 8px 10px; font-size: 25px; }
+ .tap-mic { font-size: 24px; }
+ .idle-instruction { font-size: 17px; margin-top: 7px; }
+ .idle-queue-heading { font-size: 19px; padding-bottom: 5px; }
+ .idle-queue-count { font-size: 14px; }
+ .idle-current-row, .idle-next-row { min-height: 55px; margin-bottom: 5px; padding: 3px 9px; }
+ .idle-row-number { width: 38px; height: 38px; line-height: 36px; -webkit-flex-basis: 38px; flex-basis: 38px; font-size: 19px; }
+ .idle-row-info { margin-left: 10px; padding-left: 10px; }
+ .idle-row-info strong { font-size: 18px; }
+ .idle-row-info span { font-size: 15px; }
+}
+@media (max-width: 600px) {
+ .idle-screen.is-open .idle-brand-art { height: 30%; }
+ .idle-screen.is-open .idle-call-to-action { height: 24%; }
+ .idle-screen.is-open .idle-queue { height: 46%; }
+ .idle-question { font-size: 23px; }
+ .idle-green-button { font-size: 20px; padding: 10px 6px; }
+ .tap-mic { font-size: 20px; margin-right: 3px; }
+ .idle-instruction { font-size: 15px; }
+ .idle-queue-heading { font-size: 16px; }
+ .idle-queue-count { font-size: 12px; }
+ .idle-row-info strong { font-size: 17px; }
+ .idle-row-info span { font-size: 13px; }
+}
