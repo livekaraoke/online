@@ -41,7 +41,7 @@ if(window.parent===window){window.__publishFixture=()=>{const f=__firebaseFixtur
      __firebaseFixture.update('upcomingEvents/specialWednesday',{type:'Live Karaoke',venue:'Other Venue',status:'Confirmed',date:'2026-11-11',startTime:'20:00'});
      __firebaseFixture.update('upcomingEvents/whyteFriday',{type:'Live Karaoke',venue:'Whyte Harte',status:'Confirmed',date:'2026-10-30',startTime:'20:00'});
    });
-   await page.locator('.live-karaoke-event-card').first().waitFor();
+   await page.waitForFunction(()=>document.querySelectorAll('.live-karaoke-event-card').length===2,null,{timeout:12000});
    assert.equal(await page.locator('.live-karaoke-event-card').count(),2,'special and other-venue events remain in cards');
    assert.match(await page.locator('#liveKaraokeEventsList').innerText(),/Other Venue/);
    assert.equal(await page.locator('link[rel=canonical]').getAttribute('href'),'https://livekaraoke.eu/');
