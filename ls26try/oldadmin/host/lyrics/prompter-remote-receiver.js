@@ -138,15 +138,27 @@
     try{
       switch(packet.action){
         case 'toggle':
-          if(mode==='running'&&typeof toggleAutoScroll==='function')toggleAutoScroll();
+          if(mode==='running'&&typeof toggleAutoScroll==='function'){
+            const playing=document.getElementById('scrollToggleBtn')?.textContent?.trim()==='⏸';
+            if(typeof packet.targetPlaying!=='boolean'||playing!==packet.targetPlaying)
+              toggleAutoScroll();
+          }
           break;
         case 'instrumental':
-          if(mode==='running')applyMode('instrumental');
-          else if(mode==='instrumental')applyMode('running');
+          if(packet.targetMode==='instrumental'&&mode==='running')applyMode('instrumental');
+          else if(packet.targetMode==='running'&&mode==='instrumental')applyMode('running');
+          else if(!packet.targetMode){
+            if(mode==='running')applyMode('instrumental');
+            else if(mode==='instrumental')applyMode('running');
+          }
           break;
         case 'song':
-          if(mode==='waiting'||mode==='ended')applyMode('running');
-          else if(mode==='running'||mode==='instrumental')applyMode('ended');
+          if(packet.targetMode==='ended'&&(mode==='running'||mode==='instrumental'))applyMode('ended');
+          else if(packet.targetMode==='running'&&(mode==='waiting'||mode==='ended'||mode==='idle'))applyMode('running');
+          else if(!packet.targetMode){
+            if(mode==='waiting'||mode==='ended')applyMode('running');
+            else if(mode==='running'||mode==='instrumental')applyMode('ended');
+          }
           break;
         case 'slower':
           if(typeof changeScrollSpeed==='function')changeScrollSpeed(-0.10);
