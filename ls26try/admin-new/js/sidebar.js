@@ -183,7 +183,7 @@
 
   function isLowReadSidebarPage() {
     const page = currentSidebarPage();
-    return page === "db-logs.html" || page === "analytics-reports.html";
+    return page === "db-logs.html" || page === "analytics-reports.html" || page === "prompter-remote.html";
   }
 
   function bindSidebarProfile() {
