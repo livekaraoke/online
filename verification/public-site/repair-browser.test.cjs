@@ -29,6 +29,8 @@ if(window.parent===window){window.__publishFixture=()=>{const f=__firebaseFixtur
    if(url.startsWith('http://127.0.0.1:8180/'))return route.continue();if(url.includes('firebase-app-compat.js'))return route.fulfill({contentType:'text/javascript',body:fixture});if(url.includes('www.gstatic.com/firebasejs/'))return route.fulfill({contentType:'text/javascript',body:''});return route.abort();});
    await page.goto('http://127.0.0.1:8180/online/',{waitUntil:'networkidle'});
    assert.equal(await page.locator('#heroLiveNow').isVisible(),false,'test session hidden');
+   assert.equal(await page.locator('#liveStatus').isVisible(),true,'inactive status area retains countdown');
+   assert.match(await page.locator('#liveStatus').innerText(),/NEXT LIVE KARAOKE EVENT/);
    // The normal Wednesday at Whyte Harte is represented by the residency
    // card rather than duplicated among individual event cards.
    assert.equal(await page.locator('.live-karaoke-event-card').count(),0,'weekly Whyte Harte dates excluded from event cards');
@@ -48,7 +50,11 @@ if(window.parent===window){window.__publishFixture=()=>{const f=__firebaseFixtur
    assert.match(await page.locator('#liveKaraokeEventsList').innerText(),/Other Venue/i);
    assert.equal(await page.locator('link[rel=canonical]').getAttribute('href'),'https://livekaraoke.eu/');
    await page.evaluate(()=>{const f=__firebaseFixture;f.update('karaokeControl/currentSession',{...f.docs['karaokeControl/currentSession'],isTestSession:false});f.update('upcomingEvents/e',{...f.docs['upcomingEvents/e'],publicVisibility:'public'});});
-   await page.locator('#liveNowRequestBtn').waitFor({state:'visible'});assert.equal(await page.locator('#heroLiveVenue').innerText(),'0 The Test Venue','venue name must not make active public session invisible');assert.equal(await page.locator('#songListBtn').getAttribute('aria-disabled'),null,'song browsing enabled for active public session');assert.match(await page.locator('#songListBtn').innerText(),/REQUEST A SONG/);
+   await page.locator('#liveNowRequestBtn').waitFor({state:'visible'});
+   assert.equal(await page.locator('.live-status-section > #heroLiveNow').count(),1,'live player replaces the status strip below the hero');
+   assert.equal(await page.locator('.hero #heroLiveNow').count(),0,'player is no longer nested in the banner hero');
+   assert.equal(await page.locator('#liveStatus').isVisible(),false,'duplicate live strip is hidden while playing');
+   assert.equal(await page.locator('#heroLiveVenue').innerText(),'0 The Test Venue','venue name must not make active public session invisible');assert.equal(await page.locator('#songListBtn').getAttribute('aria-disabled'),null,'song browsing enabled for active public session');assert.match(await page.locator('#songListBtn').innerText(),/REQUEST A SONG/);
    assert.match(await page.locator('#heroCurrentSong').innerText(),/Wonderwall/);assert.doesNotMatch(await page.locator('#heroComingUp').innerText(),/Cancelled/);
    const list=await page.locator('#heroComingUp').boundingBox(),button=await page.locator('#liveNowRequestBtn').boundingBox();
    assert.ok(button.height>=48);assert.ok(width>600?button.x>list.x+list.width-2:button.y>=list.y+list.height,'requested responsive placement');
@@ -89,7 +95,9 @@ if(window.parent===window){window.__publishFixture=()=>{const f=__firebaseFixtur
     await returningFrame.locator('[data-close="requestDialog"]').click();
     await page.locator('#liveKaraokeRequestFrame').waitFor({state:'detached'});
    await page.evaluate(()=>__firebaseFixture.update('performanceSessions/s',{...__firebaseFixture.docs['performanceSessions/s'],breakOpen:true}));assert.match(await page.locator('#heroCurrentSong').innerText(),/ON BREAK/);
-   await page.evaluate(()=>__firebaseFixture.update('karaokeControl/currentSession',{active:false}));assert.equal(await page.locator('#heroLiveNow').isVisible(),false);assert.equal(await page.locator('#heroCurrentSong').innerText(),'');assert.equal(await page.locator('#songListBtn').getAttribute('aria-disabled'),'true','song browsing locks after session ends');
+   await page.evaluate(()=>__firebaseFixture.update('karaokeControl/currentSession',{active:false}));assert.equal(await page.locator('#heroLiveNow').isVisible(),false);assert.equal(await page.locator('#heroCurrentSong').innerText(),'');
+   assert.equal(await page.locator('#liveStatus').isVisible(),true,'countdown restores when session ends');
+   assert.match(await page.locator('#liveStatus').innerText(),/NEXT LIVE KARAOKE EVENT/);assert.equal(await page.locator('#songListBtn').getAttribute('aria-disabled'),'true','song browsing locks after session ends');
    await page.locator('#liveKaraokeEnquiryOpen').click();await page.locator('#lkEnquiryName').fill('Fixture Visitor');await page.locator('#lkEnquiryEmail').fill('fixture@example.com');await page.locator('#lkEnquiryEventType').selectOption('Corporate Event');await page.locator('#lkEnquiryMessage').fill('Isolated fixture enquiry.');await page.locator('#lkEnquirySubmit').evaluate(el=>{el.click();el.click();});await page.locator('#liveKaraokeEnquirySuccess').waitFor({state:'visible'});
    const bookings=await page.evaluate(()=>__firebaseFixture.writes.filter(x=>x.path.startsWith('bookingEnquiries/')));assert.equal(bookings.length,1);assert.equal(bookings[0].data.pageUrl,'https://livekaraoke.eu/');assert.equal(bookings[0].data.sourceKey,'live-karaoke');assert.equal(await page.evaluate(()=>__firebaseFixture.writes.filter(x=>x.path==='publicBookingLimits/fixture@example.com').length),1,'atomic booking limit');
    assert.deepEqual(errors,[]);console.log(`PASS ${projected?'projected':'compatibility'} ${width}x${height}: layout, test exclusion, search, favourites, profile, request, duplicate prevention, closed gate, break/end, enquiry, shared listeners`);await context.close();

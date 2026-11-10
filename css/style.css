@@ -1715,3 +1715,28 @@ width: 100%;
     border-width: 1.5px;
   }
 }
+
+/* The existing live player occupies the single status area below the hero.
+   The inactive state keeps the existing next-event countdown unchanged. */
+.live-status-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.live-status-section.has-live-player {
+  background: #0b0b0b;
+  border-color: transparent;
+  box-shadow: none;
+}
+.live-status-section .hero-live-now {
+  box-sizing: border-box;
+  width: min(900px, 100%) !important;
+  max-width: 100%;
+  min-width: 0;
+  margin: 0 auto !important;
+}
+@media (max-width: 640px) {
+  .live-status-section .hero-live-now {
+    width: 100% !important;
+  }
+}
