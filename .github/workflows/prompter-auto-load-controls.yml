@@ -1,0 +1,33 @@
+name: LyricView Prompter strip and auto-send
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'ls26try/host/lyricview.html'
+      - 'ls26try/host/js/lyricview.js'
+      - 'ls26try/shared/performance.js'
+      - 'ls26try/shared/performance.css'
+      - 'ls26try/verification/karaoke-manual-send.cjs'
+      - 'ls26try/verification/prompter-auto-load-controls.cjs'
+      - '.github/workflows/prompter-auto-load-controls.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  prompter-controls:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Chromium dependency
+        run: npm install --prefix "$RUNNER_TEMP/ls26-prompter-auto" --no-audit --no-fund playwright@1.62.1
+      - name: Verify auto-send, independent toggles and manual singer workflow
+        run: |
+          export LS26_TEST_NODE_MODULES="$RUNNER_TEMP/ls26-prompter-auto/node_modules"
+          node --check ls26try/host/js/lyricview.js
+          node --check ls26try/shared/performance.js
+          node ls26try/verification/prompter-auto-load-controls.cjs
+          node ls26try/verification/karaoke-manual-send.cjs

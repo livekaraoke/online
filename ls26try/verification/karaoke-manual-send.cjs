@@ -41,7 +41,7 @@ const song={title:'Karaoke send regression',artist:'Regression Artist',year:2026
   await host.goto(base+'/ls26try/host/lyricview.html?id=send-song');
   await host.waitForFunction(()=>document.querySelector('#topbarSongTitle')?.textContent.includes('Karaoke send regression'));
   // Real host button, not a synthetic write. No Play/count-in beforehand.
-  await host.locator('#quickSendToKaraokeBtn').click();
+  await host.locator('#sendToKaraokeBtn').click();
   await host.waitForFunction(()=>__fixture.data['karaokeControl/liveLyrics']?.displayState==='song');
   // The memory-only Firebase fixture is tab-local; replicate the accepted
   // host write to the singer tab as Firestore's realtime listener would.
@@ -60,13 +60,13 @@ const song={title:'Karaoke send regression',artist:'Regression Artist',year:2026
   const firstToken=await host.evaluate(()=>__fixture.data['karaokeControl/liveLyrics']?.forceReloadToken);
   console.log('PASS SEND TO KARAOKE displays singer lyrics immediately without Play/count-in');
   await host.locator('#confirmOk').click();
-  await host.locator('#quickKaraokeMenuBtn').click();
-  await host.locator('#quickResetKaraokeBtn').click();
+  await host.locator('#karaokeMenuBtn').click();
+  await host.locator('#resetKaraokeBtn').click();
   await host.waitForFunction(()=>__fixture.data['karaokeControl/liveLyrics']?.reset===true);
   await mirror();
   await singer.waitForFunction(()=>document.querySelector('#ls26SingerV31Lyrics')?.hidden);
   console.log('PASS RESET KARAOKE returns singer screen to standby');
-  await host.locator('#quickSendToKaraokeBtn').click();
+  await host.locator('#sendToKaraokeBtn').click();
   await host.waitForFunction(()=>__fixture.data['karaokeControl/liveLyrics']?.displayState==='song');
   await mirror();
   await singer.waitForFunction(()=>!document.querySelector('#ls26SingerV31Lyrics')?.hidden&&document.querySelector('#ls26SingerV31Lyrics')?.textContent.includes('First line visible on singer screen'));
