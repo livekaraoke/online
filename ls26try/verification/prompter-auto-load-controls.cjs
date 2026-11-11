@@ -38,7 +38,7 @@ for(const id of ['quickPrompterToggle','quickSingerAutoScrollToggle','quickAutoS
     '\n__fixture.data["karaokeControl/liveLyrics"]={displayState:"idle"};'+
     '\n__fixture.data["karaokeControl/currentSession"]={active:false};'+
     '\n__fixture.data["karaokeControl/runOrder"]={items:[]};'+
-    '\nlocalStorage.setItem("ls26:autoSendPrompterOnLoad","false");'+
+    '\nif(localStorage.getItem("ls26:autoSendPrompterOnLoad")===null)localStorage.setItem("ls26:autoSendPrompterOnLoad","false");'+
     '\nlocalStorage.setItem("ls26:syncSingerScroll","true");'
   });
   const host=await context.newPage();
@@ -82,7 +82,7 @@ for(const id of ['quickPrompterToggle','quickSingerAutoScrollToggle','quickAutoS
   await host.reload();
   await host.waitForFunction(()=>document.getElementById('topbarSongTitle')?.textContent.includes('Prompter auto send regression'));
   const unchanged=await host.evaluate(()=>__fixture.data['karaokeControl/liveLyrics']?.prompterRequestToken);
-  assert.equal(unchanged,token,'Auto OFF must not re-send on next page load');
+  assert.equal(unchanged,undefined,'Auto OFF must not re-send on next page load');
   assert.equal(await host.locator('#quickAutoSendPrompterBtn').getAttribute('aria-pressed'),'false');
   assert.ok(!errors.length,'Browser errors: '+errors.join('; '));
   console.log('PASS: remote/singer/auto strip toggles mirror sidebar; auto SEND LYRICS on load, off by default, no singer display writes, no Play resend');
