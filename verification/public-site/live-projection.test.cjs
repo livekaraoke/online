@@ -11,7 +11,7 @@ test('live projection keeps public song identity while removing every private fi
   assert.deepEqual(value.run.items.map(x=>x.songId),['one','two']);
   assert.deepEqual(value.kioskQueue,{
     current:{songTitle:'One',singerName:'Stage Name'},
-    next:[{songTitle:'Two',singerName:''}]
+    next:[{songTitle:'Two',singerName:''}],waitingCount:1
   },'Only a current public stage name and queued names are exposed');
   assert.deepEqual(value.availability,[{songId:'one',status:'active'},{songId:'old',status:'played'}]);
   assert.equal(value.karaoke.venueCodeRequired,true);assert.equal(value.session.actualStartedAt,true);
@@ -20,7 +20,7 @@ test('live projection keeps public song identity while removing every private fi
 test('other acts, tests, mismatched sessions, ended sessions and stale queues cannot be published as live',()=>{
   for(const act of ['billy-lee','roxanna']){
     assert.equal(P.live(source,act).sessionId,'');
-    assert.deepEqual(P.live(source,act).kioskQueue,{current:null,next:[]});
+    assert.deepEqual(P.live(source,act).kioskQueue,{current:null,next:[],waitingCount:0});
   }
   for(const override of [{control:{...source.control,isTestSession:true}},{event:{...source.event,publicVisibility:'private'}},{session:{...source.session,endedAt:1}},{session:{...source.session,id:'old'}}]){
     const result=P.live({...source,...override},'live-karaoke');assert.equal(result.control.active,false);assert.equal(result.run.items.length,0);assert.equal(result.availability.length,0);
