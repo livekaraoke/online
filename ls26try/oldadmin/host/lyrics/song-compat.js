@@ -176,7 +176,7 @@
     const token = ++version;
     try {
       const snap = await firebase.firestore().collection('lyrics').doc(id).get();
-      if (token !== version || (enabled === false &&
+      if (token !== version || (enabled === false && !picker &&
           new URLSearchParams(location.search).get('source') !== 'modern')) return;
       if (!snap.exists) throw new Error('Modern lyrics not found for this song.');
       const song = snap.data() || {};
