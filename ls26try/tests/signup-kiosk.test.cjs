@@ -364,7 +364,7 @@ test('enlarged original artwork, green name, same-singer repeat, and stage inact
  assert.match(js,/function userActivity\(\) \{/);
  assert.match(js,/events = \['input', 'keydown', 'touchstart', 'touchmove', 'click', 'wheel'\]/);
  assert.match(js,/if \(document.hidden\) \{ clearTimeout\(timer\); clearTimeout\(gateTimer\); stopInactivity\(\); \}/);
- assert.match(html,/signup\.js\?v=20261110-size-idle-v3/);
+ assert.match(html,/signup\.js\?v=20261111-run-order-count-v1/);
 });
 
 test('REQUEST SENT uses actual Run Order waiting total, never just next-three preview',()=>{
