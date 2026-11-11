@@ -73,9 +73,10 @@ function gate({live=true,active=false,open=false,reserved='',test=false}={}) {
 
   assert.equal(gate().canSubmit,false);
   assert.equal(gate({open:true}).canSubmit,false); // Never invent a preview session.
-  assert.equal(gate({open:true,reserved:'upcoming'}).canSubmit,true);
+  assert.equal(gate({open:true,reserved:'upcoming'}).canSubmit,false); // Browsing only until a real session is active.
   assert.equal(gate({open:true,reserved:'upcoming'}).settings.requestTestSessionId,'upcoming');
   assert.equal(gate({active:true,open:true}).canSubmit,true);
+  assert.equal(gate({active:false,open:false}).canSubmit,false);
   assert.equal(gate({active:true,open:false}).canSubmit,false);
   assert.equal(gate({live:false,test:true}).canSubmit,true); // Billy test-mode contract preserved.
 
