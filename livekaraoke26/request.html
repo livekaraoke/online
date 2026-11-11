@@ -8,7 +8,7 @@
   <meta name="robots" content="noindex,follow">
   <script src="js/artist-names.js?v=20261022-public"></script>
   <link rel="stylesheet" href="css/style.css?v=20261006-live-karaoke-request-only">
-  <link rel="stylesheet" href="css/request-mobile-ux.css?v=20261111-request-scroll-favourites-1">
+  <link rel="stylesheet" href="css/request-mobile-ux.css?v=20261111-quick-ratings-1">
   <style>
     html,body{margin:0;min-height:100%;background:transparent!important}
     body{overflow:hidden}
@@ -159,7 +159,22 @@
 
         <section id="requestInfoPanel" class="request-tab-panel request-info-panel" data-request-panel="info" hidden><div class="request-panel-heading"><span class="eyebrow">HELP</span><h3>HOW TO REQUEST A SONG</h3></div><ol class="request-simple-steps"><li>Choose a song.</li><li>Send your request.</li><li>Wait for your turn.</li></ol><div id="requestInfoList" class="request-info-list"></div></section>
 
-        <section id="requestSuccess" class="request-success" hidden><div class="success-mark">✓</div><h3>REQUEST SENT</h3><p id="requestSuccessText">Your request has been sent to the host. Check Requests to see its status.</p><div class="request-success-actions"><button id="requestAnotherBtn" class="primary-btn" type="button">REQUEST ANOTHER SONG →</button><button id="viewMyRequestsBtn" class="primary-btn" type="button">VIEW MY REQUESTS →</button></div></section>
+        <section id="requestSuccess" class="request-success" hidden><div class="success-mark">✓</div><h3>REQUEST SENT</h3><p id="requestSuccessText">Your request has been sent to the host. Check Requests to see its status.</p>
+          <div id="requestQuickRating" class="request-quick-rating" hidden>
+            <strong>ENJOYING LIVE KARAOKE?</strong>
+            <span>Rate your experience</span>
+            <div class="request-quick-stars" role="group" aria-label="Quick review rating">
+              <button type="button" data-quick-review-rating="1" aria-label="Send a 1-star rating">★</button>
+              <button type="button" data-quick-review-rating="2" aria-label="Send a 2-star rating">★</button>
+              <button type="button" data-quick-review-rating="3" aria-label="Send a 3-star rating">★</button>
+              <button type="button" data-quick-review-rating="4" aria-label="Send a 4-star rating">★</button>
+              <button type="button" data-quick-review-rating="5" aria-label="Send a 5-star rating">★</button>
+            </div>
+            <small>Ratings are sent for approval and may appear publicly with your name.</small>
+            <p id="requestQuickRatingStatus" role="status" aria-live="polite"></p>
+            <button id="quickFullReviewBtn" class="request-quick-full-review" type="button">LEAVE A FULL REVIEW</button>
+          </div>
+          <div class="request-success-actions"><button id="requestAnotherBtn" class="primary-btn" type="button">REQUEST ANOTHER SONG →</button><button id="viewMyRequestsBtn" class="primary-btn" type="button">VIEW MY REQUESTS →</button></div></section>
         <div id="requestScrollRail" class="request-scroll-rail" aria-hidden="true" hidden><span id="requestScrollThumb" class="request-scroll-thumb"></span></div>
       </div>
 
@@ -185,7 +200,7 @@
   <script src="../js/public-request-lifecycle.js?v=20261111-next3-scroll-1"></script>
   <script src="js/public-catalogue.js?v=20261022-public"></script>
   <script src="../js/public-booking.js?v=20261022"></script>
-<script src="js/app.js?v=20261111-request-scroll-favourites-1"></script>
+<script src="js/app.js?v=20261111-quick-ratings-1"></script>
   <script src="js/request-ui-extras.js?v=20261006-favs-card-width"></script>
 </body>
 </html>
