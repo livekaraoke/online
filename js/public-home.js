@@ -293,21 +293,16 @@
         const button = document.getElementById("songListBtn");
         const description = document.getElementById("songListAccessMessage");
         if (!button || !description) return;
-        if (gate.active) {
-          button.classList.remove("disabled-button");
-          button.classList.add("main-button");
-          button.removeAttribute("aria-disabled");
-          button.textContent = gate.open ? "REQUEST A SONG" : "BROWSE SONG LIST";
-          description.textContent = gate.open
-            ? "Requests are open. Browse the song list and choose what you would like to sing."
-            : "Browse available songs. Requests may be closed or require the venue QR code.";
-        } else {
-          button.classList.remove("main-button");
-          button.classList.add("disabled-button");
-          button.setAttribute("aria-disabled","true");
-          button.textContent = "SONG LIST LOCKED";
-          description.textContent = "Song access becomes available during an active Live Karaoke session.";
-        }
+        // Song browsing is always public. Only submitting a request depends
+        // on a live session and its request gate.
+        button.classList.remove("disabled-button");
+        button.classList.add("main-button");
+        button.removeAttribute("aria-disabled");
+        const acceptingRequests = gate.active === true && gate.open === true;
+        button.textContent = acceptingRequests ? "REQUEST A SONG" : "BROWSE SONG LIST";
+        description.textContent = acceptingRequests
+          ? "Requests are open. Browse the songs and choose what you would like to sing."
+          : "Browse our songs anytime. You can send a request when a session is live and requests are open.";
       }
 
       function renderPublicStatus() {
