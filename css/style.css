@@ -1743,3 +1743,29 @@ width: 100%;
     width: 100% !important;
   }
 }
+
+
+/* HOW IT WORKS - request only while an active session accepts requests. */
+.how-it-works-request-button {
+  display:block;
+  width:max-content;
+  max-width:calc(100% - 32px);
+  min-height:52px;
+  margin:-20px auto 10px;
+  padding:14px 32px;
+  font-family:inherit;
+  font-size:clamp(1rem,2.2vw,1.13rem);
+  font-weight:800;
+  letter-spacing:.09em;
+  text-align:center;
+  cursor:pointer;
+}
+.how-it-works-request-button[hidden] {
+  display:none!important;
+}
+@media(max-width:640px) {
+  .how-it-works-request-button {
+    width:min(330px,calc(100% - 36px));
+    margin:-24px auto 10px;
+  }
+}
