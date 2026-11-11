@@ -503,6 +503,7 @@
   const REQUEST_DEVICE_ID_KEY="billylee26.requestDeviceId.v1";
   const REQUEST_FAVOURITES_KEY="billylee26.favouriteSongIds.v1";
   let requestCategory="all";
+  let showFavouriteSongsOnly=false;
   let currentHistoryRecords=[];
   let currentHistorySessions=new Map();
 
@@ -874,6 +875,37 @@
     }
   }
 
+
+  // A single, always visible-on-overflow indicator for the active mobile
+  // Profile/Requests panel. The Requests list itself never scrolls separately.
+  let requestScrollRaf=0;
+  function updateRequestScrollIndicator(){
+    const rail=$("requestScrollRail"),thumb=$("requestScrollThumb");
+    if(!rail||!thumb)return;
+    const panel=["profile","requests"].map(id=>document.querySelector('[data-request-panel="'+id+'"]'))
+      .find(node=>node&&!node.hidden);
+    if(!panel||window.innerWidth>640||!$("requestDialog")?.open){
+      rail.hidden=true;
+      return;
+    }
+    const available=panel.scrollHeight-panel.clientHeight;
+    if(available<=12){rail.hidden=true;return;}
+    rail.hidden=false;
+    const railHeight=rail.clientHeight;
+    if(railHeight<=0)return;
+    const height=Math.min(railHeight,Math.max(36,Math.round(railHeight*panel.clientHeight/panel.scrollHeight)));
+    const travel=Math.max(0,railHeight-height);
+    thumb.style.height=height+"px";
+    thumb.style.transform="translateY("+Math.round(travel*panel.scrollTop/available)+"px)";
+  }
+  function scheduleRequestScrollIndicator(){
+    if(requestScrollRaf)return;
+    requestScrollRaf=requestAnimationFrame(()=>{
+      requestScrollRaf=0;
+      updateRequestScrollIndicator();
+    });
+  }
+
   function switchRequestTab(tab){
     const valid=new Set(["profile","songs","requests","data","review","info"]);
     const target=valid.has(tab)?tab:"songs";
@@ -910,6 +942,7 @@
     }
     if(target==="requests")void renderMyRequests();
     if(target==="data")void openRequestHistory();
+    scheduleRequestScrollIndicator();
   }
 
   function songGenres(song){
@@ -1115,7 +1148,17 @@
       return;
     }
     const q=String($("songSearch")?.value||"").trim().toLowerCase();
+    const favourites=new Set(favouriteSongIds());
+    if(showFavouriteSongsOnly&&!favourites.size)showFavouriteSongsOnly=false;
+    const favButton=$("requestFavouriteOnlyBtn");
+    if(favButton){
+      favButton.hidden=favourites.size===0;
+      favButton.textContent=showFavouriteSongsOnly?"SHOW ALL SONGS":"FAVOURITES";
+      favButton.classList.toggle("is-active",showFavouriteSongsOnly);
+      favButton.setAttribute("aria-pressed",String(showFavouriteSongsOnly));
+    }
     const list=songs.filter(song=>
+      (!showFavouriteSongsOnly||favourites.has(String(song.id)))&&
       songMatchesCategory(song,requestCategory)&&(!q||ArtistNames.matchesSong(song,q))
     );
     if(debugCatalogue)console.info("Live Karaoke catalogue render", JSON.stringify({songs:songs.length,requestCategory,search:q,matches:list.length}));
@@ -1297,6 +1340,7 @@
     const ids=trackedRequestIds();
     const box=$("myRequests");
     if(!box)return;
+    scheduleRequestScrollIndicator();
     const currentRequestSessionId=requestSessionId();
     if(!currentRequestSessionId){
       box.innerHTML=`<p class="muted">Requests from previous sessions are hidden.</p>`;
@@ -1309,6 +1353,7 @@
 
     const records=new Map();
     const paint=()=>{
+      scheduleRequestScrollIndicator();
       const current=ids.slice().reverse()
         .map(id=>records.get(id))
         .filter(record=>record&&String(record.sessionId||"")===String(currentRequestSessionId));
@@ -1337,17 +1382,14 @@
             <strong>${escapeHTML(record.songTitle||"Song")}</strong>
             <small>${escapeHTML(ArtistNames.display(record.songArtist||record.artist||""))}</small>
           </div>
+          <div class="my-request-state">
+            <em class="request-status status-${escapeHTML(effectiveStatus)}">${statusLabel(effectiveStatus)}</em>
+            ${canCancel?`<button type="button" class="cancel-request" data-cancel-request="${escapeHTML(id)}">CANCEL REQUEST</button>`:""}
+          </div>
           <div class="my-request-detail">
             ${queueText?`<b>${escapeHTML(queueText)}</b>`:""}
             ${reason?`<span class="request-reason">${escapeHTML(reason)}</span>`:""}
             ${note?`<span class="request-user-note">Note: ${escapeHTML(note)}</span>`:""}
-          </div>
-          <div class="my-request-state">
-            <em class="request-status status-${escapeHTML(effectiveStatus)}">${statusLabel(effectiveStatus)}</em>
-            <div class="my-request-actions">
-              <button type="button" data-edit-request-note="${escapeHTML(id)}">EDIT NOTE</button>
-              ${canCancel?`<button type="button" class="cancel-request" data-cancel-request="${escapeHTML(id)}">CANCEL REQUEST</button>`:""}
-            </div>
           </div>
         </article>`;
       }).join("");
@@ -2151,6 +2193,24 @@
   }catch(_){}
 
   $("songSearch").addEventListener("input",renderSongResults);
+  $("requestFavouriteOnlyBtn").addEventListener("click",()=>{
+    showFavouriteSongsOnly=!showFavouriteSongsOnly;
+    if(showFavouriteSongsOnly&&requestCategory!=="all"){
+      requestCategory="all";
+      renderRequestCategoryCards();
+    }
+    renderSongResults();
+    $("songResults").scrollTop=0;
+    if(requestCategory==="all")$("requestNotice").textContent=showFavouriteSongsOnly
+      ?"Your saved favourite songs."
+      :"Scroll through the songs or search above.";
+  });
+  for(const id of ["requestProfilePanel","requestMyRequestsPanel"]){
+    $(id).addEventListener("scroll",updateRequestScrollIndicator,{passive:true});
+  }
+  $("requestProfileMore").addEventListener("toggle",scheduleRequestScrollIndicator);
+  document.addEventListener("public-request-queue-rendered",scheduleRequestScrollIndicator);
+  window.addEventListener("resize",scheduleRequestScrollIndicator,{passive:true});
   $("requestStartContinueBtn").addEventListener("click",continueFromRequestName);
   $("requestStartName").addEventListener("keydown",e=>{if(e.key==="Enter")continueFromRequestName();});
   $("requestNoteDialogSaveBtn").addEventListener("click",saveMyRequestNote);
