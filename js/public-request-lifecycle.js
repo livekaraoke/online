@@ -194,7 +194,7 @@
         const section = document.createElement("section");
         section.id = "requestPublicQueue";
         section.className = "request-public-queue";
-        section.innerHTML = '<div class="request-public-queue-head"><strong>QUEUE</strong><span>NEXT 5 SONGS</span></div><div id="requestPublicQueueList" class="request-public-queue-list"></div>';
+        section.innerHTML = '<div class="request-public-queue-head"><strong>QUEUE</strong><span>NEXT 3 SONGS</span></div><div id="requestPublicQueueList" class="request-public-queue-list"></div>';
         ownRequests.insertAdjacentElement("afterend", section);
       }
     }
@@ -342,10 +342,11 @@
     const next = runOrder.filter(item => {
       const status = String(item?.status || "queued").toLowerCase();
       return status !== "playing" && !terminalStatuses.has(status);
-    }).slice(0, 5);
+    }).slice(0, 3);
 
     if (!next.length) {
       box.innerHTML = '<p class="request-public-queue-empty">No songs are queued yet.</p>';
+      document.dispatchEvent(new Event("public-request-queue-rendered"));
       return;
     }
 
@@ -358,6 +359,7 @@
         ${yours ? '<em>YOUR REQUEST</em>' : ''}
       </div>`;
     }).join("");
+    document.dispatchEvent(new Event("public-request-queue-rendered"));
   }
 
   function correctReviewStatusCopy() {
