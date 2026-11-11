@@ -347,6 +347,17 @@
 
       }
 
+      // SING WITH US opens the request popup only for an active session.
+      // Outside a session it helps visitors find the next advertised events.
+      document.getElementById("heroSingWithUsBtn")?.addEventListener("click",()=>{
+        const gate=LKPublicVisibility.gate(publicState,Object.fromEntries(new URLSearchParams(location.search)));
+        if(gate.active===true&&typeof window.openLiveKaraokeRequestPopup==="function"){
+          window.openLiveKaraokeRequestPopup();
+        }else{
+          document.getElementById("events")?.scrollIntoView({behavior:"smooth",block:"start"});
+        }
+      });
+
       LKPublicStore.subscribe(state=>{
         publicState=state;upcomingEvents=state.events;currentSessionControl=state.control;
         currentPerformanceSession=state.session;karaokeState=state.karaoke;runOrder=state.run;
