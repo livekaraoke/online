@@ -30,7 +30,7 @@ for(const id of ['quickPrompterToggle','quickSingerAutoScrollToggle','quickAutoS
  const executable=['/usr/bin/chromium','/usr/bin/google-chrome','/usr/bin/google-chrome-stable'].find(fs.existsSync);
  const browser=await chromium.launch({headless:true,...(executable?{executablePath:executable}:{}),args:['--no-sandbox']});
  try{
-  const context=await browser.newContext({viewport:{width:1024,height:768}});
+  const context=await browser.newContext({viewport:{width:1024,height:1536}});
   const errors=[];
   await context.route('**/*',route=>new URL(route.request().url()).origin===base?route.continue():route.fulfill({status:200,body:'',contentType:'text/javascript'}));
   await context.addInitScript({content:fs.readFileSync(path.join(__dirname,'firebase-fixture.js'),'utf8')+
