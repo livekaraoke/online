@@ -20,7 +20,7 @@
   <meta name="twitter:image" content="https://livekaraoke.eu/img/banner.png">
   <meta name="twitter:image:alt" content="Live Karaoke — You Sing • I Play">
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","@id":"https://livekaraoke.eu/#brand","name":"Live Karaoke","url":"https://livekaraoke.eu/","logo":"https://livekaraoke.eu/img/banner.png","sameAs":["https://facebook.com/livekaraokemt","https://instagram.com/livekaraoke.mt"]}</script>
-  <link rel="stylesheet" href="css/style.css?v=20261111-how-it-works-match-songlist-3">
+  <link rel="stylesheet" href="css/style.css?v=20261111-public-review-hero-ux-1">
 
   <link rel="icon" href="favicon.ico" sizes="any">
   <link rel="icon" type="image/png" href="favicon-32x32.png" sizes="32x32">
@@ -40,18 +40,10 @@
       </picture>
       <h1 class="public-hero-title">LIVE KARAOKE IN MALTA</h1>
       <p class="public-hero-copy">Live guitar, looping and an interactive live-music experience.</p>
-      <!--<a href="list/index.html" class="main-button">
-        REQUEST A SONG
-      </a>
-
-      <a href="#about" class="main-button" onclick="smoothScroll(event)">
-        GET STARTED
-      </a>-->
-
-      
-      <a href="#about" class="main-button" onclick="smoothScroll(event)">
-        GET STARTED
-      </a>
+      <div class="hero-actions" aria-label="Join or book Live Karaoke">
+        <button id="heroSingWithUsBtn" class="hero-action hero-action-sing" type="button">SING WITH US</button>
+        <button id="heroBookUsBtn" class="hero-action hero-action-book" type="button" aria-haspopup="dialog">BOOK US</button>
+      </div>
 
 
     </div>
@@ -95,8 +87,31 @@
     <!-- HOW IT WORKS -->
   <section id="howitworks" class="section dark-section">
     <h2>HOW IT WORKS</h2>
-    <div class="instructions-container">
-      <img src="img/howitworks-1.png" alt="Pick a song, join the queue, grab the mic and perform live" loading="lazy" decoding="async">
+    <div class="instructions-container how-it-works-grid" aria-label="Four steps to join Live Karaoke">
+      <article class="how-step">
+        <span class="how-step-number">1</span>
+        <svg viewBox="0 0 48 48" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="10" y="6" width="28" height="36"/><path d="M16 14h16M16 22h16M16 30h10"/><circle cx="30" cy="30" r="4"/></svg>
+        <h3>PICK A SONG</h3>
+        <p>Browse the song list and choose what you want to sing.</p>
+      </article>
+      <article class="how-step">
+        <span class="how-step-number">2</span>
+        <svg viewBox="0 0 48 48" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="15" cy="18" r="6"/><circle cx="33" cy="18" r="6"/><path d="M3 40v-4c0-7 5-12 12-12s12 5 12 12v4M21 36c0-7 5-12 12-12s12 5 12 12v4M24 5v9M19.5 9.5h9"/></svg>
+        <h3>JOIN THE QUEUE</h3>
+        <p>Add yourself to the singer rotation and wait for your turn.</p>
+      </article>
+      <article class="how-step">
+        <span class="how-step-number">3</span>
+        <svg viewBox="0 0 48 48" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="17" y="4" width="14" height="26" rx="7"/><path d="M12 23v3c0 8 5 13 12 13s12-5 12-13v-3M24 39v6M15 45h18M21 11h6M21 17h6"/></svg>
+        <h3>GRAB THE MIC</h3>
+        <p>When your name is called, step up and take the microphone.</p>
+      </article>
+      <article class="how-step">
+        <span class="how-step-number">4</span>
+        <svg viewBox="0 0 48 48" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"><path d="m24 5 5.7 11.9 13.1 1.9-9.4 9.2 2.2 13-11.6-6.1L12.4 41l2.2-13-9.4-9.2 13.1-1.9L24 5Z"/></svg>
+        <h3>PERFORM LIVE!</h3>
+        <p>Sing with live guitar, looping and a real crowd.</p>
+      </article>
     </div>
     <button id="howItWorksRequestBtn" class="main-button how-it-works-request-button" type="button" aria-haspopup="dialog" hidden>REQUEST A SONG</button>
   </section>
@@ -114,37 +129,12 @@
   <script src="js/public-data-config.js?v=20261022-views"></script>
   <script src="js/public-live-store.js?v=20261022-views"></script>
 
-  <script defer src="js/public-home.js?v=20261111-how-it-works-request-1"></script>
+  <script defer src="js/public-home.js?v=20261111-public-review-hero-ux-1"></script>
   <script defer src="js/live-karaoke-request-popup.js?v=20261111-how-it-works-request-1"></script>
-
-  <!-- Authentic moments from past performances; intentionally non-clickable. -->
-  <section class="section lk-past-events-section" aria-labelledby="lkPastEventsTitle">
-    <h2 id="lkPastEventsTitle">PAST EVENTS</h2>
-    <p class="lk-past-events-intro">A few moments from previous Live Karaoke nights.</p>
-    <div class="lk-past-events-grid">
-      <figure class="lk-past-events-photo">
-        <img src="img/past-events/karaoke-singer-and-guitarist-bw.webp" alt="A guest sings beside the live guitarist at Live Karaoke" width="760" height="460" loading="lazy" decoding="async" draggable="false">
-      </figure>
-      <figure class="lk-past-events-photo">
-        <img src="img/past-events/karaoke-singer-passionate.webp" alt="A guest performs passionately into the microphone" width="760" height="460" loading="lazy" decoding="async" draggable="false">
-      </figure>
-      <figure class="lk-past-events-photo">
-        <img src="img/past-events/karaoke-singer-raising-hand.webp" alt="An enthusiastic singer raises her hand while singing with the live guitarist" width="760" height="460" loading="lazy" decoding="async" draggable="false">
-      </figure>
-      <figure class="lk-past-events-photo">
-        <img src="img/past-events/karaoke-duet-bw.webp" alt="Two guests enjoy singing together during a Live Karaoke night" width="760" height="460" loading="lazy" decoding="async" draggable="false">
-      </figure>
-      <figure class="lk-past-events-photo">
-        <img src="img/past-events/karaoke-rock-singer-guitarist.webp" alt="A guest sings energetically while the live guitarist accompanies him" width="760" height="460" loading="lazy" decoding="async" draggable="false">
-      </figure>
-      <figure class="lk-past-events-photo">
-        <img src="img/past-events/karaoke-smiling-duo.webp" alt="Two smiling guests enjoy a Live Karaoke performance together" width="760" height="460" loading="lazy" decoding="async" draggable="false">
-      </figure>
-    </div>
-  </section>
+  <script defer src="js/public-reviews.js?v=20261111-approved-reviews-1"></script>
 
   <!-- EVENTS -->
-  <section class="section dark-section">
+  <section id="events" class="section dark-section">
     <h2>EVENTS</h2>
     <p class="events-intro">Next Live Karaoke events</p>
 
@@ -190,6 +180,43 @@
   </section>
 
 
+  <!-- Authentic moments from past performances; intentionally non-clickable. -->
+  <section class="section lk-past-events-section" aria-labelledby="lkPastEventsTitle">
+    <h2 id="lkPastEventsTitle">PAST EVENTS</h2>
+    <p class="lk-past-events-intro">A few moments from previous Live Karaoke nights.</p>
+    <div class="lk-past-events-grid">
+      <figure class="lk-past-events-photo">
+        <img src="img/past-events/karaoke-singer-and-guitarist-bw.webp" alt="A guest sings beside the live guitarist at Live Karaoke" width="760" height="460" loading="lazy" decoding="async" draggable="false">
+      </figure>
+      <figure class="lk-past-events-photo">
+        <img src="img/past-events/karaoke-singer-passionate.webp" alt="A guest performs passionately into the microphone" width="760" height="460" loading="lazy" decoding="async" draggable="false">
+      </figure>
+      <figure class="lk-past-events-photo">
+        <img src="img/past-events/karaoke-singer-raising-hand.webp" alt="An enthusiastic singer raises her hand while singing with the live guitarist" width="760" height="460" loading="lazy" decoding="async" draggable="false">
+      </figure>
+      <figure class="lk-past-events-photo">
+        <img src="img/past-events/karaoke-duet-bw.webp" alt="Two guests enjoy singing together during a Live Karaoke night" width="760" height="460" loading="lazy" decoding="async" draggable="false">
+      </figure>
+      <figure class="lk-past-events-photo">
+        <img src="img/past-events/karaoke-rock-singer-guitarist.webp" alt="A guest sings energetically while the live guitarist accompanies him" width="760" height="460" loading="lazy" decoding="async" draggable="false">
+      </figure>
+      <figure class="lk-past-events-photo">
+        <img src="img/past-events/karaoke-smiling-duo.webp" alt="Two smiling guests enjoy a Live Karaoke performance together" width="760" height="460" loading="lazy" decoding="async" draggable="false">
+      </figure>
+    </div>
+    <div id="publicReviewSection" class="lk-public-reviews" hidden>
+      <div id="publicWrittenReviews" class="lk-written-reviews" aria-label="Guest testimonials" hidden>
+        <h3>WHAT OUR SINGERS SAY</h3>
+        <div id="publicWrittenReviewCards" class="lk-testimonial-list" aria-live="off"></div>
+      </div>
+      <div id="publicStarReviews" class="lk-star-review-section" aria-label="Guest star ratings" hidden>
+        <h3>MORE GUEST RATINGS</h3>
+        <div id="publicStarReviewCards" class="lk-star-review-grid"></div>
+      </div>
+    </div>
+  </section>
+
+
   <!-- ENQUIRE -->
   <section class="section dark-section enquiry-section" id="enquire">
     <h2>BOOK / ENQUIRE</h2>
@@ -206,10 +233,12 @@
       <details><summary>How long is a typical Live Karaoke performance?</summary><p>The length and breaks depend on the event. Include your preferred start and finish times in your enquiry so we can agree a suitable format.</p></details>
       <details><summary>How do song requests work?</summary><p>Browse the song list, choose a song and join the singer rotation. The host manages the running order during the session.</p></details>
       <details><summary>Do singers need experience?</summary><p>No. First-time singers are welcome. Pick a song you enjoy and join in at your own pace.</p></details>
+      <details class="booking-more-questions"><summary>MORE QUESTIONS</summary><div class="booking-more-questions-content">
       <details><summary>Can people who do not want to sing still take part?</summary><p>Yes. Enjoy the live music, support the singers and sing along from the audience.</p></details>
       <details><summary>Can Live Karaoke be booked for private events?</summary><p>Yes. Enquire about weddings, private parties, corporate events and other occasions using the booking form.</p></details>
       <details><summary>Do you travel to venues across Malta?</summary><p>Enquiries are welcome from venues across Malta. Share the location so we can confirm availability and arrangements.</p></details>
       <details><summary>How far in advance should we book?</summary><p>Get in touch as soon as you have a date in mind. Availability depends on existing bookings; you can also enquire about a last-minute event.</p></details>
+      </div></details>
     </div>
   </section>
 
@@ -350,6 +379,11 @@ function smoothScroll(e) {
   const success = document.getElementById("liveKaraokeEnquirySuccess");
   const successMessage = document.getElementById("liveKaraokeEnquirySuccessMessage");
   const successClose = document.getElementById("liveKaraokeEnquirySuccessClose");
+
+  document.getElementById("heroBookUsBtn")?.addEventListener("click", () => {
+    document.getElementById("enquire")?.scrollIntoView({behavior:"smooth",block:"start"});
+    openBtn.click();
+  });
 
   openBtn.addEventListener("click", () => {
     status.textContent = "";
