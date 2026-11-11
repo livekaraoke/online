@@ -31,7 +31,10 @@
   const preSessionOpen = () => isLiveKaraoke ? window.LKPublicVisibility?.gate(publicState,Object.fromEntries(params)).phase === "starting-soon" : !realSessionActive() && gateOpen() && !!preSessionId();
   const billyTestMode = () => !isLiveKaraoke && !realSessionActive() && rawWebsiteSettings.enableLiveRequestTestMode === true;
   const canSubmit = () => isLiveKaraoke
-    ? !!window.LKPublicVisibility?.gate(publicState,Object.fromEntries(params)).open
+    ? (() => {
+        const gate = window.LKPublicVisibility?.gate(publicState,Object.fromEntries(params));
+        return gate?.active === true && gate?.open === true;
+      })()
     : gateOpen() || billyTestMode();
   const requestButtonText = () => String(rawWebsiteSettings.requestButtonText || (isLiveKaraoke ? "REQUEST / SIGN UP" : "REQUEST A SONG")).trim() || (isLiveKaraoke ? "REQUEST / SIGN UP" : "REQUEST A SONG");
 
@@ -237,7 +240,7 @@
       label.classList.remove("is-test-mode", "is-playing");
       title.textContent = "- STARTING SOON -";
       title.classList.add("between-songs-title", "request-starting-title");
-      if ($("currentSongArtist")) $("currentSongArtist").textContent = "Requests are open before the performance starts.";
+      if ($("currentSongArtist")) $("currentSongArtist").textContent = isLiveKaraoke ? "Browse songs while the event is getting ready." : "Requests are open before the performance starts.";
       if ($("stateIcon")) $("stateIcon").textContent = "♪";
       return;
     }
@@ -275,7 +278,7 @@
       status.className = "live-label request-starting-soon-label";
       hero.prepend(status);
     }
-    status.textContent = "STARTING SOON · REQUESTS OPEN";
+    status.textContent = isLiveKaraoke ? "STARTING SOON · BROWSE SONGS" : "STARTING SOON · REQUESTS OPEN";
     status.classList.add("request-starting-soon-label");
   }
 
