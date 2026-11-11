@@ -436,7 +436,7 @@
   }
 
   function hardenRequestControls(root = document) {
-    root.querySelectorAll?.("#liveNowRequestBtn,#songListBtn").forEach(original => {
+    root.querySelectorAll?.("#liveNowRequestBtn,#songListBtn,#howItWorksRequestBtn").forEach(original => {
       const button = replaceAnchorWithButton(original);
       button.removeAttribute("href");
       button.removeAttribute("target");
@@ -446,7 +446,7 @@
   }
 
   document.addEventListener("pointerdown", event => {
-    const button = event.target.closest?.("#liveNowRequestBtn,#songListBtn");
+    const button = event.target.closest?.("#liveNowRequestBtn,#songListBtn,#howItWorksRequestBtn");
     if (!button) return;
     const disabled = button.getAttribute("aria-disabled") === "true" || button.classList.contains("disabled-button");
     if (disabled) return;
@@ -454,7 +454,7 @@
   }, true);
 
   document.addEventListener("click", event => {
-    const button = event.target.closest?.("#liveNowRequestBtn,#songListBtn");
+    const button = event.target.closest?.("#liveNowRequestBtn,#songListBtn,#howItWorksRequestBtn");
     if (!button) return;
 
     const disabled = button.getAttribute("aria-disabled") === "true" || button.classList.contains("disabled-button");
