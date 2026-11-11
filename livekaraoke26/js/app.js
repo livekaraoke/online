@@ -1316,7 +1316,9 @@
     // Loading must never replace it with the song list until the singer
     // explicitly continues with a non-empty name. Returning singers who
     // already saved a name can go straight to their songs.
-    if (requestProfile().name) switchRequestTab("songs");
+    // Browsing is always public, including for first-time visitors.
+    // Only ask for a singer name when someone can actually submit a request.
+    if (requestProfile().name || !window.LKRequestGate?.canSubmit()) switchRequestTab("songs");
     else showRequestNameGate();
 
     try{
