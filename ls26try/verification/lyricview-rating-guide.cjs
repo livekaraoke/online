@@ -9,7 +9,7 @@ const ratingJs=fs.readFileSync(path.join(root,'host/js/lyricview-end-rating.js')
 const appCss=fs.readFileSync(path.join(root,'shared/dialogs.css'),'utf8');
 const ratingCss=fs.readFileSync(path.join(root,'host/css/lyricview-completion.css'),'utf8');
 assert.match(pageHtml,/lyricview-end-rating\.js\?v=20261028-rating-guide-v1/);
-assert.match(pageHtml,/lyricview-completion\.css\?v=20261028-rating-guide-v1/);
+assert.match(pageHtml,/lyricview-completion\.css\?v=20261111-end-center-v1/);
 assert.match(pageHtml,/dialogs\.css\?v=20261028-modal-stationary-v1/);
 assert.match(pageHtml,/dialogs\.js\?v=20261028-modal-stationary-v1/);
 const rating=pageHtml.match(/<section id="endSongRating"[^]*?<\/section>/)?.[0];
