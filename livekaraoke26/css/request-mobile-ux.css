@@ -662,8 +662,9 @@
 @media(max-width:640px) {
   /* Avoid covering song results when Samsung/Android keyboard opens. */
   #requestDialog.request-modal {
-    height:min(calc(100dvh - 16px),calc(var(--request-visual-height,100dvh) - 16px))!important;
-    max-height:min(calc(100dvh - 16px),calc(var(--request-visual-height,100dvh) - 16px))!important;
+    /* Use the opening viewport, not the keyboard-shortened visual viewport. */
+    height:calc(var(--request-open-height,100svh) - 16px)!important;
+    max-height:calc(var(--request-open-height,100svh) - 16px)!important;
   }
   #requestDialog .request-modal-top {
     padding:9px 52px 8px 12px!important;
@@ -1000,5 +1001,44 @@
   #requestDialog .request-review-panel,
   #requestDialog .request-my-data-panel {
     padding-top:62px!important;
+  }
+}
+
+
+/* Keep the full-height dialog steady when the software keyboard appears.
+   The empty close-button strip does not overlap any scrollable content. */
+@media(max-width:640px) {
+  #requestDialog .request-modal-top {
+    position:relative!important;
+    top:auto!important;
+    left:auto!important;
+    right:auto!important;
+    flex:0 0 56px!important;
+    box-sizing:border-box!important;
+    width:100%!important;
+    height:56px!important;
+    min-height:56px!important;
+    max-height:56px!important;
+    margin:0!important;
+    padding:0!important;
+    border:0!important;
+    border-bottom:0!important;
+    box-shadow:none!important;
+    pointer-events:none!important;
+    overflow:visible!important;
+  }
+  #requestDialog .request-modal-top .request-header {
+    display:none!important;
+  }
+  #requestDialog .request-modal-top .request-modal-close {
+    top:6px!important;
+    right:10px!important;
+    width:44px!important;
+    height:44px!important;
+    pointer-events:auto!important;
+  }
+  #requestDialog .request-review-panel,
+  #requestDialog .request-my-data-panel {
+    padding-top:12px!important;
   }
 }
