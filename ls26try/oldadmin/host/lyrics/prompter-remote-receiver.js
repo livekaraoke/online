@@ -18,11 +18,11 @@
   stage.setAttribute('aria-live','polite');
   stage.innerHTML=`
     <nav class="ls26-singer-stage-actions" aria-label="Prompter standby controls">
-      <a id="ls26SingerLibraryLink" class="ls26-singer-stage-action" href="../venuekaraokelyricbook.html" target="_top" aria-label="Open song library" title="Song library">
+      <button id="ls26SingerLibraryLink" class="ls26-singer-stage-action" type="button" aria-label="Choose a song from the current session setlist" title="Session songs">
         <svg viewBox="0 0 36 36" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
           <path d="M12 9h18M12 18h18M12 27h18M5 9h1M5 18h1M5 27h1"/>
         </svg>
-      </a>
+      </button>
       <button id="ls26SingerFullscreenToggle" class="ls26-singer-stage-action" type="button" aria-label="Enter fullscreen" title="Enter fullscreen" aria-pressed="false">
         <svg class="ls26-singer-fullscreen-enter" viewBox="0 0 36 36" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
           <path d="M14 5H5v9M22 5h9v9M31 22v9h-9M5 22v9h9"/>
@@ -73,9 +73,6 @@
       Promise.resolve(operation).then(syncFullscreenButton)
         .catch(error=>console.warn('Prompter fullscreen unavailable:',error));
     }catch(error){console.warn('Prompter fullscreen unavailable:',error);}
-  });
-  stage.querySelector('#ls26SingerLibraryLink').addEventListener('click',event=>{
-    event.stopPropagation(); // Navigate to the library, not fullscreen on first tap.
   });
   fullscreenDoc.addEventListener('fullscreenchange',syncFullscreenButton);
   syncFullscreenButton();
@@ -152,6 +149,14 @@
 
   applyMode('idle');
   window.addEventListener('ls26:prompter-song-changed',event=>{
+    // Local session-picker selections load directly into lyrics without
+    // altering the host's SEND LYRICS command or starting autoscroll.
+    if(event.detail?.picker===true){
+      updateSong(event.detail||{});
+      applyMode('running');
+      state('picker-'+Date.now(),true);
+      return;
+    }
     // Preload/reload song data silently. Only a fresh SEND LYRICS cue
     // replaces the waiting-for-next-singer artwork.
     if(event.detail?.cue!==true)return;

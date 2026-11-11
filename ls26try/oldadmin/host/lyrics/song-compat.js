@@ -170,7 +170,7 @@
     return true;
   }
 
-  async function showModernSong(rawId, cue = false) {
+  async function showModernSong(rawId, cue = false, picker = false) {
     const id = String(rawId || '').trim();
     if (!id || !window.firebase?.firestore) return;
     const token = ++version;
@@ -192,8 +192,9 @@
       window.recalcSpeed?.();
       if (changed) window.scrollTo(0, 0);
       window.dispatchEvent(new CustomEvent('ls26:prompter-song-changed', {
-        detail: {songId:id, source:'modern', cue, title:song.title, artist:song.artist, year:song.year || song.releaseYear || ''}
+        detail: {songId:id, source:'modern', cue, picker, title:song.title, artist:song.artist, year:song.year || song.releaseYear || ''}
       }));
+      return true;
     } catch (error) {
       if (token !== version) return;
       console.warn('Modern Prompter lyrics unavailable:', error);
@@ -205,10 +206,11 @@
         container.replaceChildren(message);
       }
       // Failed requests never enter an automatic retry/navigation loop.
+      if(picker)throw error;
     }
   }
 
-  async function showSong(rawId, metadata = {}, cue = false) {
+  async function showSong(rawId, metadata = {}, cue = false, picker = false) {
     const raw = String(rawId || '').trim();
     if (!raw) return;
     const token = ++version;
@@ -222,11 +224,17 @@
     originalLoadSong();
     const item=entries().find(entry=>entry.id===id)||{};
     window.dispatchEvent(new CustomEvent('ls26:prompter-song-changed', {
-      detail: {songId:id, source:'legacy', cue, title:metadata.prompterSongTitle||item.title||metadata.songTitle||metadata.title,
+      detail: {songId:id, source:'legacy', cue, picker, title:metadata.prompterSongTitle||item.title||metadata.songTitle||metadata.title,
         artist:metadata.prompterSongArtist||item.artist||metadata.songArtist||metadata.artist,
         year:metadata.prompterSongYear||item.year||metadata.year||''}
     }));
+    return true;
   }
+
+  // Reuse the same in-place renderer, ID mapping and fullscreen-preserving URL
+  // update used for host-sent songs; selecting locally does not send a host cue.
+  window.LS26PrompterSelectSong = (id, format) =>
+    format==='modern' ? showModernSong(id,false,true) : showSong(id,{},false,true);
 
   // The original DOMContentLoaded callback will call this wrapper once.
   window.loadSong = function () {

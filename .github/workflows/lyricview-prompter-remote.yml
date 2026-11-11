@@ -14,6 +14,10 @@ on:
       - 'ls26try/verification/prompter-shared-state.cjs'
       - 'ls26try/host/js/lyricview.js'
       - 'ls26try/oldadmin/host/lyrics/prompter-remote-receiver.js'
+      - 'ls26try/oldadmin/host/lyrics/prompter-session-picker.js'
+      - 'ls26try/oldadmin/host/lyrics/song-compat.js'
+      - 'ls26try/oldadmin/host/lyrics/prompter-end-rating.css'
+      - 'ls26try/verification/prompter-session-picker.cjs'
       - 'ls26try/host/css/lyricview-prompter-remote.css'
       - 'ls26try/shared/performance.js'
       - 'ls26try/host/lyricview.html'
@@ -42,6 +46,9 @@ jobs:
           node --check ls26try/admin-new/js/prompter-remote-phone.js
           node --test ls26try/tests/phone-prompter-remote.test.cjs
           node --check ls26try/oldadmin/host/lyrics/prompter-remote-receiver.js
+          node --check ls26try/oldadmin/host/lyrics/prompter-session-picker.js
+          node --check ls26try/oldadmin/host/lyrics/song-compat.js
+          node ls26try/verification/prompter-session-picker.cjs
           node --check ls26try/shared/performance.js
           node ls26try/verification/prompter-remote.cjs
           node ls26try/verification/prompter-remote-devices.cjs

@@ -238,3 +238,60 @@ body[data-ls26-singer-stage="ended"] #lyrics-container{opacity:0}
 body[data-ls26-singer-stage="instrumental"] #lyrics-container{opacity:.08}
 body[data-ls26-singer-stage="idle"] #prompterEndMarker{opacity:0}
 body[data-ls26-singer-stage="idle"]{overflow:hidden!important;overscroll-behavior:none}
+
+
+/* On-demand current-session lyrics picker; the standby artwork stays untouched. */
+#ls26SessionSongPicker{
+  box-sizing:border-box;position:fixed;inset:0;margin:auto;
+  width:min(720px,calc(100vw - 28px));height:min(820px,calc(100dvh - 32px));
+  max-width:none;max-height:none;overflow:hidden;padding:0;
+  border:1px solid #50606c;border-radius:17px;background:#0c141b;
+  color:#f3f8fb;box-shadow:0 22px 65px #000;
+  font-family:Arial,Helvetica,sans-serif;overscroll-behavior:contain;
+}
+#ls26SessionSongPicker[open]{display:flex;flex-direction:column}
+#ls26SessionSongPicker::backdrop{background:rgba(0,0,0,.87)}
+#ls26SessionSongPicker .ls26-session-picker-header{
+  display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
+  padding:20px 20px 13px;border-bottom:1px solid #34434e;flex-shrink:0;
+}
+#ls26SessionSongPicker .ls26-session-picker-header small{
+  color:#e04b54;font-size:11px;font-weight:800;letter-spacing:.16em;
+}
+#ls26SessionSongPicker h2{font-size:clamp(21px,4vw,30px);margin:5px 0 4px;line-height:1.2;color:#fff}
+#ls26PickerSetlistName{font-size:14px;color:#b9c7d1;margin:0}
+#ls26PickerClose{
+  display:grid;place-items:center;min-width:50px;width:50px;height:50px;
+  border:1px solid #546473;border-radius:10px;background:#1c2b36;color:#fff;
+  font:700 32px/1 Arial,sans-serif;cursor:pointer;touch-action:manipulation;
+}
+#ls26SessionSongPicker .ls26-session-picker-search{
+  display:flex;align-items:center;gap:12px;padding:13px 20px;flex-shrink:0;
+}
+#ls26PickerSearch{
+  box-sizing:border-box;flex:1;min-width:0;height:50px;border-radius:10px;
+  border:2px solid #516d7d;padding:0 15px;background:#101e27;color:#fff;
+  font:600 17px Arial,sans-serif;outline-offset:2px;
+}
+#ls26PickerCount{white-space:nowrap;color:#acc3cf;font-size:13px;font-variant-numeric:tabular-nums}
+#ls26PickerRows{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:0 12px 6px}
+#ls26SessionSongPicker .ls26-session-picker-song{
+  display:flex;flex-direction:column;align-items:flex-start;gap:5px;
+  width:100%;min-height:65px;padding:11px 14px;border:1px solid #273b48;
+  border-radius:9px;background:#142531;color:#fff;text-align:left;
+  margin:0 0 7px;cursor:pointer;touch-action:manipulation;
+}
+#ls26SessionSongPicker .ls26-session-picker-song strong{font:750 17px/1.24 Arial,sans-serif}
+#ls26SessionSongPicker .ls26-session-picker-song span{font:14px/1.2 Arial,sans-serif;color:#adc0ce}
+#ls26SessionSongPicker .ls26-session-picker-song small{color:#eeb7b7;font-size:12px}
+#ls26SessionSongPicker .ls26-session-picker-song:active{background:#21516b}
+#ls26SessionSongPicker .ls26-session-picker-song:disabled{opacity:.55;cursor:default}
+#ls26SessionSongPicker button:focus-visible,#ls26PickerSearch:focus-visible{outline:3px solid #5bc9ef}
+#ls26PickerStatus{min-height:18px;margin:0;padding:10px 20px 15px;color:#e8c4c4;font-size:13px;flex-shrink:0}
+#ls26SessionSongPicker .ls26-session-picker-empty{padding:18px;color:#bdc6cd;text-align:center}
+@media(max-width:480px){
+ #ls26SessionSongPicker .ls26-session-picker-header{padding:14px}
+ #ls26SessionSongPicker .ls26-session-picker-search{padding:12px}
+ #ls26PickerRows{padding:0 8px}
+ #ls26PickerStatus{padding:9px 12px}
+}
