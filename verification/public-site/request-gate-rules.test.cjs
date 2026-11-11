@@ -24,17 +24,41 @@ const fs=require('node:fs'),path=require('node:path');
  for(const patch of [
   {'karaoke/state':{songsEnabled:false}},
   {'karaokeControl/currentSession':{...initial['karaokeControl/currentSession'],active:false}},
-  {'karaokeControl/currentSession':{...initial['karaokeControl/currentSession'],venue:'0 The Test Venue'}},
+  {'karaokeControl/currentSession':{...initial['karaokeControl/currentSession'],isTestSession:true}},
   {'performanceSessions/s':{status:'ended'}},
   {'performanceSessions/s':{status:'active',isTest:true}},
   {'upcomingEvents/e':{type:'Live Karaoke',status:'Tentative'}},
   {'upcomingEvents/e':{type:'Live Karaoke',status:'Cancelled',publicVisibility:'public'}},
   {'upcomingEvents/e':{type:'Live Karaoke',status:'Confirmed',publicVisibility:'private'}}
  ]){await seed(patch);await assertFails(send());}
+ // Venue names are labels, not private/test permission flags.
+ await seed({
+  'karaokeControl/currentSession':{...initial['karaokeControl/currentSession'],venue:'0 The Test Venue'},
+  'performanceSessions/s':{status:'active',venue:'0 The Test Venue'},
+  'upcomingEvents/e':{...initial['upcomingEvents/e'],venue:'0 The Test Venue',name:'Live Karaoke @ 0 The Test Venue'}
+ });await assertSucceeds(send());
+ // A published LiveSuite session without an event is valid; an unpublished
+ // ad-hoc session and any session explicitly marked test/private remain denied.
+ await seed({
+  'karaokeControl/currentSession':{active:true,sessionId:'s',type:'Live Karaoke',venue:'0 The Test Venue',publicVisibility:'public'},
+  'performanceSessions/s':{status:'active',venue:'0 The Test Venue',publicVisibility:'public'}
+ });await assertSucceeds(send());
+ await seed({
+  'karaokeControl/currentSession':{active:true,sessionId:'s',type:'Live Karaoke',venue:'0 The Test Venue'},
+  'performanceSessions/s':{status:'active',venue:'0 The Test Venue'}
+ });await assertFails(send());
+ await seed({
+  'karaokeControl/currentSession':{active:true,sessionId:'s',type:'Live Karaoke',venue:'0 The Test Venue',publicVisible:true},
+  'performanceSessions/s':{status:'active',venue:'0 The Test Venue',isTestSession:true}
+ });await assertFails(send());
+ await seed({
+  'karaokeControl/currentSession':{active:true,sessionId:'s',type:'Live Karaoke',venue:'0 The Test Venue',publicVisible:true,private:true},
+  'performanceSessions/s':{status:'active',venue:'0 The Test Venue'}
+ });await assertFails(send());
  await seed({'performanceSessions/s':{status:'active',breakOpen:true}});await assertSucceeds(send());
  await seed({'karaoke/state':{songsEnabled:true,venueAccessCode:'venue-code'}});await assertFails(send());await assertFails(send({},'wrong'));await assertSucceeds(send({},'venue-code'));
  await seed({'karaokeControl/currentSession':{active:false},'karaoke/state':{songsEnabled:true,preSessionRequestSessionId:'reserved',preSessionRequestEventId:'e'}});await assertSucceeds(send({sessionId:'reserved',songId:'b',publicSetlistId:'browse'}));await assertFails(send({sessionId:'reserved'}));
  for(const [type,source]of [['Solo','billylee26'],['Roxanna','roxanna26']]){await seed({'karaokeControl/currentSession':{...initial['karaokeControl/currentSession'],type},'upcomingEvents/e':{type,status:'Confirmed'}});await assertSucceeds(send({source}));await assertFails(send());}
  await seed({'karaoke/state':{songsEnabled:false}});await assertSucceeds(send({},'',env.authenticatedContext('owner',{email:'leeborg23@gmail.com'}).firestore()));await assertFails(send({},'',env.authenticatedContext('stranger',{email:'stranger@example.com'}).firestore()));
- console.log('PASS: authoritative request gate, act/source isolation, repertoire/session binding, private/test/tentative/cancelled/end denial, break, pre-session, venue QR, owner preview and stranger denial.');await env.cleanup();
+ console.log('PASS: authoritative request gate, act/source isolation, repertoire/session binding, explicit private/test/tentative/cancelled/end denial, named Test Venue, eventless published sessions, break, pre-session, venue QR, owner preview and stranger denial.');await env.cleanup();
 })().catch(e=>{console.error(e);process.exitCode=1;});
