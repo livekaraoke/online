@@ -184,7 +184,7 @@ body[data-ls26-singer-stage="waiting"] #ls26SingerRemoteStage .ls26-singer-stage
   outline:3px solid #52deff;outline-offset:3px;
 }
 #ls26SingerRemoteStage .ls26-singer-stage-action:active{background:rgba(50,65,81,.92)}
-#ls26SingerRemoteStage .ls26-singer-fullscreen-exit{display:none}
+#ls26SingerRemoteStage .ls26-singer-stage-action .ls26-singer-fullscreen-exit{display:none}
 #ls26SingerRemoteStage #ls26SingerFullscreenToggle[aria-pressed="true"] .ls26-singer-fullscreen-enter{display:none}
 #ls26SingerRemoteStage #ls26SingerFullscreenToggle[aria-pressed="true"] .ls26-singer-fullscreen-exit{display:block}
 #ls26SingerRemoteStage .ls26-singer-artwork{position:relative;display:none;flex:none;max-width:100%;max-height:100dvh}
