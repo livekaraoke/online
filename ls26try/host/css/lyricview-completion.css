@@ -219,3 +219,13 @@ body.host-lyric-view-page .host-audience-rating-hint{
   body.host-lyric-view-page .host-audience-rating-table th,
   body.host-lyric-view-page .host-audience-rating-table td{padding:10px 7px}
 }
+
+/* Before a performance is confirmed complete, leave enough scroll clearance to
+   position the COMPLETE button near the vertical centre of the viewport.
+   The clearance disappears when the existing completion panel is displayed. */
+body.host-lyric-view-page #hostLyricsStage:has(#endCompletionPanel[hidden])::after{
+  content:"";
+  display:block;
+  height:max(0px,calc(50dvh - var(--ls-dock-h,90px) - 165px));
+  pointer-events:none;
+}

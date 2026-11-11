@@ -1264,6 +1264,8 @@
     tick();
   }
 
+  let karaokeToolsPinned = false;
+
   function syncQuickToolsHeight() {
     const quick=$("performanceQuickInfo");
     const height=quick&&!quick.hidden
@@ -1275,7 +1277,7 @@
   function setQuickToolsReleased(released = false) {
     const quick=$("performanceQuickInfo");
     if (!quick) return;
-    quick.classList.toggle("past-karaoke-tools-window", Boolean(released));
+    quick.classList.toggle("past-karaoke-tools-window", Boolean(released) && !karaokeToolsPinned);
     syncQuickToolsHeight();
   }
 
@@ -2672,6 +2674,22 @@
     if ($("exitBtn")) $("exitBtn").onclick = () => location.href = LS26.url("library.html");
 
     const quickTools=$("performanceQuickInfo");
+    const pinTools=$("quickPinKaraokeToolsBtn");
+    if(quickTools && pinTools){
+      try{karaokeToolsPinned=localStorage.getItem("ls26:karaokeToolsPinned")==="true";}catch(_){}
+      const syncPinned=()=>{
+        pinTools.setAttribute("aria-pressed",String(karaokeToolsPinned));
+        pinTools.setAttribute("aria-label",karaokeToolsPinned?"Unpin Karaoke Tools":"Pin Karaoke Tools until the end of the song");
+        pinTools.title=karaokeToolsPinned?"Restore automatic hide after the first section":"Keep Karaoke Tools visible while scrolling";
+      };
+      pinTools.onclick=()=>{
+        karaokeToolsPinned=!karaokeToolsPinned;
+        try{localStorage.setItem("ls26:karaokeToolsPinned",String(karaokeToolsPinned));}catch(_){}
+        syncPinned();
+        updateQuickToolsStickyState();
+      };
+      syncPinned();
+    }
     if(quickTools && window.ResizeObserver){
       quickToolsResizeObserver?.disconnect?.();
       quickToolsResizeObserver=new ResizeObserver(syncQuickToolsHeight);

@@ -1218,3 +1218,11 @@ body.host-lyric-view-page #performanceQuickInfo .ls26-hide-karaoke{
   body.host-lyric-view-page #performanceQuickInfo .performance-quick-slave{grid-column:1 / -1!important;grid-row:2!important}
   body.host-lyric-view-page #performanceQuickInfo .ls26-hide-karaoke{grid-column:3!important;grid-row:1!important}
 }
+
+/* LyricView: add a stage-friendly PIN button next to AUTO without shrinking the send action. */
+body.host-lyric-view-page #performanceQuickInfo .performance-quick-slave{
+  grid-template-columns:minmax(0,1fr) minmax(112px,.8fr) 48px 48px!important;
+}
+body.host-lyric-view-page #performanceQuickInfo .ls26-quick-pin-toggle{
+  width:48px!important;min-width:48px!important;max-width:48px!important;
+}
