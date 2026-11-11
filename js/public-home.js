@@ -285,10 +285,14 @@
       }
 
       function renderSongAccess() {
+        // Use the same authoritative publication and request gate as the live
+        // player. A starting-soon reservation alone must NOT reveal this CTA.
+        const howButton = document.getElementById("howItWorksRequestBtn");
+        const gate = LKPublicVisibility.gate(publicState,Object.fromEntries(new URLSearchParams(location.search)));
+        if (howButton) howButton.hidden = !(gate.active === true && gate.open === true);
         const button = document.getElementById("songListBtn");
         const description = document.getElementById("songListAccessMessage");
         if (!button || !description) return;
-        const gate = LKPublicVisibility.gate(publicState,Object.fromEntries(new URLSearchParams(location.search)));
         if (gate.active) {
           button.classList.remove("disabled-button");
           button.classList.add("main-button");
