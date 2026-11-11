@@ -42,7 +42,6 @@ assert.match(receiver,/picker===true/);
             onSnapshot(){return()=>{};}
           }},
           where(field,operator,ids){
-            assert;
             return{async get(){
               window.__reads.push('lyrics:batch:'+ids.length);
               return{docs:ids.filter(id=>window.__fixture.songs[id]).map(id=>({
