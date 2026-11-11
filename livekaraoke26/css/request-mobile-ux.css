@@ -1322,3 +1322,92 @@
     margin-bottom:0!important;
   }
 }
+
+
+/* One-tap post-request rating (same moderated review flow as full reviews). */
+#requestDialog .request-success .request-quick-rating {
+  box-sizing:border-box!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  gap:8px!important;
+  width:min(100%,430px)!important;
+  margin:16px auto 2px!important;
+  padding:15px 14px!important;
+  border:1px solid rgba(237,76,92,.55)!important;
+  border-radius:12px!important;
+  background:rgba(34,11,15,.84)!important;
+}
+#requestDialog .request-success .request-quick-rating[hidden] {
+  display:none!important;
+}
+#requestDialog .request-quick-rating strong {
+  color:#fff;
+  font-size:15px;
+  letter-spacing:.07em;
+}
+#requestDialog .request-quick-rating span {
+  color:#d9bdbf;
+  font-size:14px;
+}
+#requestDialog .request-quick-stars {
+  display:flex;
+  justify-content:center;
+  gap:5px;
+  width:100%;
+}
+#requestDialog .request-quick-stars button {
+  display:grid;
+  place-items:center;
+  width:clamp(43px,11vw,57px);
+  height:52px;
+  padding:0;
+  border:1px solid rgba(255,188,88,.4);
+  border-radius:9px;
+  background:#1c1515;
+  color:#f9c76a;
+  font-size:clamp(28px,7vw,38px);
+  line-height:1;
+  cursor:pointer;
+}
+#requestDialog .request-quick-stars button.active,
+#requestDialog .request-quick-stars button:focus-visible {
+  color:#ffda83;
+  border-color:#ffe19c;
+  background:#4b3022;
+  outline:2px solid #dba04c;
+}
+#requestDialog .request-quick-stars button:disabled {opacity:.56;cursor:wait;}
+#requestDialog .request-quick-rating small {
+  color:#b3a2a5;
+  font-size:12px;
+  line-height:1.35;
+}
+#requestDialog .request-quick-rating #requestQuickRatingStatus {
+  min-height:0!important;
+  margin:2px auto!important;
+  font-size:13px!important;
+  font-weight:700!important;
+  color:#9ee2ae!important;
+}
+#requestDialog .request-quick-full-review {
+  min-height:40px;
+  margin-top:2px;
+  padding:8px 14px;
+  border:1px solid #dc5260;
+  border-radius:8px;
+  background:#160d10;
+  color:#ffb0ba;
+  font-size:12px;
+  font-weight:850;
+  letter-spacing:.035em;
+  cursor:pointer;
+}
+#requestDialog .request-quick-full-review:focus-visible {
+  outline:3px solid #ff7d8a;
+  outline-offset:2px;
+}
+#requestDialog .request-success-actions {
+  margin-top:14px!important;
+  padding-top:12px!important;
+}
