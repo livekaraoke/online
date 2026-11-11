@@ -8,7 +8,7 @@
 
   // Request-only Live Karaoke document. This is not /billylee26/ and does not
   // contain the Billy Lee website shell.
-  const FRAME_URL = "livekaraoke26/request.html?v=20261111-keyboard-stable-1#req";
+  const FRAME_URL = "livekaraoke26/request.html?v=20261111-toolbar-aligned-1#req";
   let overlay = null;
   let frame = null;
   let previousBodyOverflow = "";
