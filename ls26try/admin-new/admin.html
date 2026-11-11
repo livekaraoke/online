@@ -29,6 +29,7 @@
 <link rel="stylesheet" href="css/dashboard26.css?v=20260910-admin26">
 <link rel="stylesheet" href="css/admin-navigation.css?v=20260922-batch">
 <link rel="stylesheet" href="css/dashboard-polish.css?v=20261023-session-status">
+<link rel="stylesheet" href="css/dashboard-reminders.css?v=20261111-dashboard-alerts-v1">
 <script src="../shared/performance-intelligence.js?v=20261029-timing-v2"></script><script src="../shared/performance-lifecycle.js?v=20261018-smart-v1"></script><script src="../shared/gig-summary.js?v=20261018-smart-v1"></script></head>
 <body class="admin-body ls26-dashboard26">
 
@@ -183,6 +184,14 @@
         <div class="status-box"><span>Last Updated</span><strong id="statusUpdatedLabel">-</strong></div>
       </section>
 
+      <button id="dashboardOverdueRemindersStrip" class="dashboard-overdue-strip" type="button"
+        aria-controls="dashboardRemindersPanel" aria-label="View overdue reminders" hidden>
+        <span class="dashboard-overdue-icon" aria-hidden="true">!</span>
+        <span class="dashboard-overdue-copy"><strong id="dashboardOverdueReminderSummary">Overdue reminders</strong>
+          <small id="dashboardOverdueReminderPreview"></small></span>
+        <span class="dashboard-overdue-action" aria-hidden="true">VIEW REMINDERS ↓</span>
+      </button>
+
       <section id="sessionPanel" class="admin-card session-card">
         <div class="card-title-row"><h2 id="sessionPanelHeading">◉ PRE-SHOW</h2></div>
         <div class="session-layout">
@@ -257,6 +266,27 @@
               <div class="session-request-summary-title">SONG REQUESTS</div>
               <div id="sessionDashboard" class="session-dashboard"></div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="dashboardRemindersPanel" class="admin-card dashboard-reminders-card" aria-labelledby="dashboardRemindersHeading">
+        <div class="card-title-row split dashboard-reminders-heading">
+          <div>
+            <h2 id="dashboardRemindersHeading">REMINDERS <span id="dashboardReminderTotal"></span></h2>
+            <p>Overdue and due today</p>
+          </div>
+          <a class="dashboard-reminders-manage" href="reminders.html">MANAGE REMINDERS</a>
+        </div>
+        <p id="dashboardRemindersStatus" class="dashboard-reminders-status" role="status">Loading reminders…</p>
+        <div class="dashboard-reminders-columns">
+          <div class="dashboard-reminders-group">
+            <h3>OVERDUE <span id="dashboardOverdueCount">0</span></h3>
+            <div id="dashboardOverdueReminderList" class="dashboard-reminder-list"></div>
+          </div>
+          <div class="dashboard-reminders-group">
+            <h3>DUE TODAY <span id="dashboardTodayCount">0</span></h3>
+            <div id="dashboardTodayReminderList" class="dashboard-reminder-list"></div>
           </div>
         </div>
       </section>
@@ -479,6 +509,7 @@
 <script src="js/run-order.js?v=20260925-artist-names"></script>
 <script src="js/admin-session-lifecycle.js?v=20261029-preserve-musical-start"></script>
 <script src="js/admin-dashboard-enhancements.js?v=20261029-musical-history"></script>
+<script src="js/dashboard-reminders.js?v=20261111-dashboard-alerts-v1"></script>
 
 
 <script src="../shared/shell.js?v=20260929-planner-tools"></script><script src="../shared/inbox.js?v=20260925-artist-names"></script><script src="../shared/session-ui.js?v=20261018-smart-v1"></script><script src="../shared/performance.js?v=20260925-live-click"></script><script src="js/dashboard26.js?v=20260929-sidebar-accordion"></script><a href="public-publishing.html" class="ls26-button" style="margin:16px;display:inline-flex">Public catalogue publishing</a></body>
