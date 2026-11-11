@@ -80,6 +80,41 @@ function gate({live=true,active=false,open=false,reserved='',test=false}={}) {
   assert.equal(gate({active:true,open:false}).canSubmit,false);
   assert.equal(gate({live:false,test:true}).canSubmit,true); // Billy test-mode contract preserved.
 
+  // Public Song List Access must remain clickable even when no session exists.
+  const home=read('js/public-home.js');
+  const homeStart=home.indexOf('function renderSongAccess()');
+  const homeEnd=home.indexOf('function renderPublicStatus()',homeStart);
+  assert.ok(homeStart>=0&&homeEnd>homeStart,'song-access UI function must exist');
+  const button={textContent:'',attrs:new Map(),classList:{add(){},remove(){}},
+    removeAttribute(name){this.attrs.delete(name);},setAttribute(name,value){this.attrs.set(name,value);}};
+  const description={textContent:''};
+  const howBtn={hidden:true};
+  const elements={songListBtn:button,songListAccessMessage:description,howItWorksRequestBtn:howBtn};
+  const homeState={active:false,open:false};
+  const uiContext={
+    document:{getElementById:id=>elements[id]||null},
+    LKPublicVisibility:{gate:()=>({...homeState})},
+    publicState:{},location:{search:''},URLSearchParams
+  };
+  vm.createContext(uiContext);
+  vm.runInContext(home.slice(homeStart,homeEnd)+';checkSongAccess=renderSongAccess;',uiContext);
+  for(const [active,open,expectedLabel] of [
+    [false,false,'BROWSE SONG LIST'],
+    [false,true,'BROWSE SONG LIST'],
+    [true,false,'BROWSE SONG LIST'],
+    [true,true,'REQUEST A SONG']
+  ]){
+    homeState.active=active;homeState.open=open;
+    uiContext.checkSongAccess();
+    assert.equal(button.textContent,expectedLabel);
+    assert.equal(button.attrs.has('aria-disabled'),false);
+    assert.equal(howBtn.hidden,!(active&&open));
+  }
+  const homepage=read('index.html');
+  assert.match(homepage,/<button class="main-button" type="button" id="songListBtn"/);
+  assert.doesNotMatch(homepage,/id="songListBtn"[^>]*aria-disabled="true"/);
+  assert.match(app,/requestProfile\(\)\.name \|\| !window\.LKRequestGate\?\.canSubmit\(\)/);
+
   // Exercise the actual row renderer and artist/search helper, where the live crash occurred.
   const context={window:{},songs:active.songs,escapeHTML:v=>String(v),songSessionState:()=> 'available',alphabetKey:v=>v[0],isFavouriteSong:()=>false};
   vm.createContext(context);
