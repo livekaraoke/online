@@ -8,7 +8,7 @@
   <meta name="robots" content="noindex,follow">
   <script src="js/artist-names.js?v=20261022-public"></script>
   <link rel="stylesheet" href="css/style.css?v=20261006-live-karaoke-request-only">
-  <link rel="stylesheet" href="css/request-mobile-ux.css?v=20261111-toolbar-aligned-1">
+  <link rel="stylesheet" href="css/request-mobile-ux.css?v=20261111-request-scroll-favourites-1">
   <style>
     html,body{margin:0;min-height:100%;background:transparent!important}
     body{overflow:hidden}
@@ -135,6 +135,7 @@
 
         <section id="requestBrowser" class="request-tab-panel request-browser" data-request-panel="songs">
           <div class="request-panel-heading"><span class="eyebrow">SONG LIST</span><h3>CHOOSE A SONG</h3></div>
+          <div class="request-favourites-toggle-wrap"><button id="requestFavouriteOnlyBtn" class="request-favourites-toggle" type="button" aria-pressed="false" hidden>FAVOURITES</button></div>
           <div class="request-controls"><input id="songSearch" type="search" aria-label="Search song or artist" placeholder="Search song or artist…" autocomplete="off" inputmode="search"><button id="clearSongCategoryBtn" class="request-filter-clear" type="button" hidden>SHOW ALL</button></div>
           <p class="request-alphabet-help">Or browse by first letter</p>
           <div id="requestAlphabetRow" class="request-alphabet-row" aria-label="Jump by first letter"></div>
@@ -159,6 +160,7 @@
         <section id="requestInfoPanel" class="request-tab-panel request-info-panel" data-request-panel="info" hidden><div class="request-panel-heading"><span class="eyebrow">HELP</span><h3>HOW TO REQUEST A SONG</h3></div><ol class="request-simple-steps"><li>Choose a song.</li><li>Send your request.</li><li>Wait for your turn.</li></ol><div id="requestInfoList" class="request-info-list"></div></section>
 
         <section id="requestSuccess" class="request-success" hidden><div class="success-mark">✓</div><h3>REQUEST SENT</h3><p id="requestSuccessText">Your request has been sent to the host. Check Requests to see its status.</p><div class="request-success-actions"><button id="requestAnotherBtn" class="primary-btn" type="button">REQUEST ANOTHER SONG →</button><button id="viewMyRequestsBtn" class="primary-btn" type="button">VIEW MY REQUESTS →</button></div></section>
+        <div id="requestScrollRail" class="request-scroll-rail" aria-hidden="true" hidden><span id="requestScrollThumb" class="request-scroll-thumb"></span></div>
       </div>
 
       <nav class="request-bottom-tabs" aria-label="Live request sections">
@@ -183,7 +185,7 @@
   <script src="../js/public-request-lifecycle.js?v=20261111-compact-header-1"></script>
   <script src="js/public-catalogue.js?v=20261022-public"></script>
   <script src="../js/public-booking.js?v=20261022"></script>
-<script src="js/app.js?v=20261111-toolbar-aligned-1"></script>
+<script src="js/app.js?v=20261111-request-scroll-favourites-1"></script>
   <script src="js/request-ui-extras.js?v=20261006-favs-card-width"></script>
 </body>
 </html>
