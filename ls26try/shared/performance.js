@@ -20,7 +20,7 @@
     karaokePreferences.className='ls26-karaoke-preferences';
     karaokePreferences.innerHTML=`
       <button id="ls26AutoSendKaraoke" class="ls26-auto-send-karaoke" type="button" aria-pressed="true">
-        <span>AUTO SEND TO KARAOKE ON PLAY</span>
+        <span>AUTO SEND TO PROMPTER ON LOAD</span>
         <strong id="ls26AutoSendKaraokeState">ON</strong>
       </button>
       <label class="ls26-karaoke-toggle"><input type="checkbox" id="ls26SyncSingerScroll"> Sync singer auto-scroll with LyricView</label>
@@ -54,35 +54,65 @@
     }catch(_){}
     setRemoteVisibility(showRemote);
     if(remoteToggle)remoteToggle.onchange=e=>setRemoteVisibility(e.target.checked);
+    const quickRemote=$('quickPrompterToggle');
+    const syncQuickRemote=enabled=>{
+      if(!quickRemote)return;
+      quickRemote.setAttribute('aria-pressed',String(enabled===true));
+      quickRemote.classList.toggle('active',enabled===true);
+    };
+    syncQuickRemote(remoteToggle?.checked===true);
+    if(quickRemote)quickRemote.onclick=()=>remoteToggle?.click();
+    window.addEventListener('ls26:prompter-remote-visibility',event=>
+      syncQuickRemote(event.detail?.visible===true));
 
     const autoSendButton=$('ls26AutoSendKaraoke');
     const autoSendState=$('ls26AutoSendKaraokeState');
-    const autoSendKey='ls26:autoSendToKaraoke';
+    const autoSendKey='ls26:autoSendPrompterOnLoad';
+    const autoStrip=$('quickAutoSendPrompterBtn');
     function setAutoSend(enabled, notify=false){
-      const on=enabled!==false;
+      const on=enabled===true;
       autoSendButton?.setAttribute('aria-pressed',String(on));
       autoSendButton?.classList.toggle('active',on);
       if(autoSendState)autoSendState.textContent=on?'ON':'OFF';
-      try{localStorage.setItem(autoSendKey,String(on));}catch(_){}
-      if(notify){
-        window.dispatchEvent(new CustomEvent('ls26:auto-send-karaoke-changed',{detail:{enabled:on}}));
+      if(autoStrip){
+        autoStrip.setAttribute('aria-pressed',String(on));
+        autoStrip.classList.toggle('active',on);
       }
+      try{localStorage.setItem(autoSendKey,String(on));}catch(_){}
+      if(notify)window.dispatchEvent(new CustomEvent('ls26:auto-send-prompter-changed',{detail:{enabled:on}}));
     }
-    let autoSend=true;try{autoSend=localStorage.getItem(autoSendKey)!=='false';}catch(_){}setAutoSend(autoSend);
+    // New purpose, new preference. Do not migrate singer-screen auto Play.
+    // Start OFF so visiting the page never writes to the Prompter unexpectedly.
+    let autoSend=false;try{autoSend=localStorage.getItem(autoSendKey)==='true';}catch(_){}setAutoSend(autoSend);
     if(autoSendButton)autoSendButton.onclick=()=>setAutoSend(autoSendButton.getAttribute('aria-pressed')!=='true',true);
+    if(autoStrip)autoStrip.onclick=()=>autoSendButton?.click();
+    window.addEventListener('storage',event=>{
+      if(event.key===autoSendKey)setAutoSend(event.newValue==='true');
+    });
 
     const singerSyncToggle=$('ls26SyncSingerScroll');
     const singerSyncKey='ls26:syncSingerScroll';
+    const quickSinger=$('quickSingerAutoScrollToggle');
     function setSingerSync(enabled, notify=false){
       const on=enabled===true;
       if(singerSyncToggle)singerSyncToggle.checked=on;
-      try{localStorage.setItem(singerSyncKey,String(on));}catch(_){}
-      if(notify){
-        window.dispatchEvent(new CustomEvent('ls26:singer-scroll-sync-changed',{detail:{enabled:on}}));
+      if(quickSinger){
+        quickSinger.setAttribute('aria-pressed',String(on));
+        quickSinger.classList.toggle('active',on);
       }
+      try{localStorage.setItem(singerSyncKey,String(on));}catch(_){}
+      if(notify)window.dispatchEvent(new CustomEvent('ls26:singer-scroll-sync-changed',{detail:{enabled:on,source:'sidebar'}}));
     }
-    let singerSync=false;try{singerSync=localStorage.getItem(singerSyncKey)==='true';}catch(_){}setSingerSync(singerSync);
+    let singerSync=true;try{singerSync=localStorage.getItem(singerSyncKey)!=='false';}catch(_){}setSingerSync(singerSync);
     if(singerSyncToggle)singerSyncToggle.onchange=e=>setSingerSync(e.target.checked,true);
+    if(quickSinger)quickSinger.onclick=()=>singerSyncToggle?.click();
+    window.addEventListener('ls26:singer-scroll-sync-changed',event=>{
+      if(event.detail?.source!=='sidebar')setSingerSync(event.detail?.enabled!==false);
+    });
+    window.addEventListener('storage',event=>{
+      if(event.key===singerSyncKey)setSingerSync(event.newValue!=='false');
+      if(event.key===remoteVisibilityKey)setRemoteVisibility(event.newValue==='true');
+    });
 
     const panel=document.createElement('section');panel.className='song-info-card ls26-bpm-panel';panel.innerHTML=`
       <div class="ls26-bpm-panel-head">

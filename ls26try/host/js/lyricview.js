@@ -52,7 +52,7 @@
   let completingSong = false;
   let karaokeSendInFlightSongId = "";
   let autoKaraokeSentSongId = "";
-  const AUTO_SEND_KARAOKE_KEY = "ls26:autoSendToKaraoke";
+  const AUTO_SEND_PROMPTER_KEY = "ls26:autoSendPrompterOnLoad";
   const SINGER_SCROLL_SYNC_KEY = "ls26:syncSingerScroll";
   const SINGER_SYNC_INTERVAL_MS = 2000;
   let singerSyncLastWriteAt = 0;
@@ -1549,64 +1549,15 @@
     if ($("tabTransposeValue")) $("tabTransposeValue").textContent = String(tabShift);
   }
 
-  function autoSendToKaraokeEnabled() {
-    try {
-      return localStorage.getItem(AUTO_SEND_KARAOKE_KEY) !== "false";
-    } catch (_) {
-      return true;
-    }
-  }
-
-  async function publishAutoSendDisplayState(enabled) {
-    const on = enabled !== false;
-
-    try {
-      if (!on) {
-        await db.collection("karaokeControl").doc("liveLyrics").set({
-          currentLyricsSongId: "",
-          currentSongId: "",
-          songId: "",
-          song: null,
-          songTitle: "",
-          songArtist: "",
-          title: "",
-          artist: "",
-          displayState: "auto-send-off",
-          autoSendEnabled: false,
-          reset: false,
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        }, { merge:true });
-        autoKaraokeSentSongId = "";
-        return;
-      }
-
-      // Turning Auto Send back on leaves the singer on the ordinary
-      // waiting-for-next-singer screen until Play (or manual Send) occurs.
-      await db.collection("karaokeControl").doc("liveLyrics").set({
-        currentLyricsSongId: "",
-        currentSongId: "",
-        songId: "",
-        song: null,
-        songTitle: "",
-        songArtist: "",
-        title: "",
-        artist: "",
-        displayState: "idle",
-        autoSendEnabled: true,
-        reset: true,
-        resetAt: firebase.firestore.FieldValue.serverTimestamp(),
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-      }, { merge:true });
-      autoKaraokeSentSongId = "";
-    } catch (error) {
-      console.warn("Could not update singer Auto Send display state:", error);
-    }
+  function autoSendToPrompterOnLoadEnabled() {
+    try { return localStorage.getItem(AUTO_SEND_PROMPTER_KEY)==='true'; }
+    catch (_) { return false; }
   }
 
   async function publishSingerSongFinished() {
     // If Auto Send is off and this song was never manually sent, preserve the
     // black Auto-Send-Off idle screen instead of flashing a completion state.
-    if (!autoSendToKaraokeEnabled() && autoKaraokeSentSongId !== currentSongId) return;
+    if (autoKaraokeSentSongId !== currentSongId) return;
 
     try {
       await db.collection("karaokeControl").doc("liveLyrics").set({
@@ -1615,7 +1566,7 @@
         finishedSongId: currentSongId || "",
         finishedSongTitle: currentSong?.title || "",
         finishedAt: firebase.firestore.FieldValue.serverTimestamp(),
-        autoSendEnabled: autoSendToKaraokeEnabled(),
+        autoSendEnabled: true,
         singerSync: {
           enabled: false,
           playing: false,
@@ -1628,14 +1579,6 @@
     } catch (error) {
       console.warn("Could not show Song Finished on singer screen:", error);
     }
-  }
-
-  function autoSendCurrentSongToKaraoke() {
-    if (!autoSendToKaraokeEnabled()) return;
-    if (!currentSong || !currentSongId) return;
-    if (autoKaraokeSentSongId === currentSongId) return;
-    if (karaokeSendInFlightSongId === currentSongId) return;
-    void sendToKaraoke({ silent:true });
   }
 
   async function sendToKaraoke(options = {}) {
@@ -1681,7 +1624,7 @@
 
         song: currentSong,
         displayState: "song",
-        autoSendEnabled: autoSendToKaraokeEnabled(),
+        autoSendEnabled: true,
         reset: false,
         forceReloadToken: reloadToken,
         sentAt: firebase.firestore.FieldValue.serverTimestamp(),
@@ -1744,14 +1687,14 @@
         artist: "",
         chordTranspose: 0,
         transpose: 0,
-        displayState: autoSendToKaraokeEnabled() ? "idle" : "auto-send-off",
-        autoSendEnabled: autoSendToKaraokeEnabled(),
+        displayState: "idle",
+        autoSendEnabled: true,
         reset: true,
         resetAt: firebase.firestore.FieldValue.serverTimestamp(),
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       }, { merge:true });
 
-      // A deliberate reset means the next Play may auto-send this song again.
+      // Reset clears the manual singer-display selection for this song.
       autoKaraokeSentSongId = "";
       $("karaokeMenu")?.classList.add("hidden");
     } catch (error) {
@@ -2658,12 +2601,6 @@
         $("endNextSongDetailsCard").innerHTML = "";
       }
 
-      // When enabled, the first Play for this loaded song performs the same
-      // karaokeControl/liveLyrics write as SEND TO KARAOKE. It is intentionally
-      // silent and only runs once per song so pause/resume never resets the
-      // singer display back to the start.
-      autoSendCurrentSongToKaraoke();
-
       // PLAY marks the matching Run Order item as "playing", keeping it
       // visible and highlighted in the Top Status Bar.
       recordCurrentSongPlayed().catch(()=>{});
@@ -2867,17 +2804,6 @@
     };
     $("sendSlaveLyricsBtn").onclick = () => sendSlaveLyrics("slaveLyricsSelect");
 
-    // Duplicate performance tools above the first lyric section.
-    if ($("quickSendToKaraokeBtn")) $("quickSendToKaraokeBtn").onclick = sendToKaraoke;
-    if ($("quickKaraokeMenuBtn")) {
-      $("quickKaraokeMenuBtn").onclick = () => $("quickKaraokeMenu").classList.toggle("hidden");
-    }
-    if ($("quickResetKaraokeBtn")) {
-      $("quickResetKaraokeBtn").onclick = async () => {
-        await resetKaraoke();
-        $("quickKaraokeMenu")?.classList.add("hidden");
-      };
-    }
     if ($("quickEditSongBtn")) {
       $("quickEditSongBtn").onclick = async () => {
         clearTimeout(window.__ls26SpeedSave);
@@ -2935,9 +2861,6 @@
     window.addEventListener("resize",updateSectionProgress);
     window.addEventListener("ls26:settings-applied",() => requestAnimationFrame(updateSectionProgress));
     window.addEventListener("ls26:singer-scroll-sync-changed", () => queueSingerSync(true));
-    window.addEventListener("ls26:auto-send-karaoke-changed", event => {
-      void publishAutoSendDisplayState(event.detail?.enabled !== false);
-    });
     window.addEventListener("lk:session-updated",syncEndSessionActions);
     window.addEventListener("lk:runorder-updated",() => {
       if (!$("endCompletionPanel")?.hidden) void renderEndNextSongDetails();
@@ -2961,12 +2884,6 @@
   async function init() {
     await Promise.all([loadSectionTitleDefaultsForView(), loadActiveSessionType()]);
     bindUi();
-
-    // Auto Send is a host-device preference. When it is already OFF on entry,
-    // make sure the singer display reflects that state even before Play.
-    if (!autoSendToKaraokeEnabled()) {
-      void publishAutoSendDisplayState(false);
-    }
 
     if (!songId) {
       $("lyricsContent").innerHTML = `<div class="host-load-error">No song selected.</div>`;
@@ -3034,7 +2951,7 @@
       await loadRequesterCardsContext();
       renderGuitarTuning(currentSong);
       renderSections(currentSong);
-      loadSlaveLyricsOptions();
+      await loadSlaveLyricsOptions();
       window.LS26Performance = {
         song:()=>currentSong, sections:()=>sectionEls, isScrolling:()=>autoScrollOn,
         play:()=>{if(!autoScrollOn)startAutoScroll();},
@@ -3058,6 +2975,11 @@
         });
       }
       window.dispatchEvent(new Event("ls26:song-ready"));
+      // Same command and validation as pressing SEND LYRICS. One send per
+      // loaded page; never a Play/scroll event, never singer karaoke display.
+      if(autoSendToPrompterOnLoadEnabled()){
+        void sendSlaveLyrics("quickSlaveLyricsSelect");
+      }
     } catch (err) {
       console.error(err);
       $("lyricsContent").innerHTML = `<div class="host-load-error">${esc(err.message)}</div>`;
