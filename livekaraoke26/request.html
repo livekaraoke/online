@@ -8,7 +8,7 @@
   <meta name="robots" content="noindex,follow">
   <script src="js/artist-names.js?v=20261022-public"></script>
   <link rel="stylesheet" href="css/style.css?v=20261006-live-karaoke-request-only">
-  <link rel="stylesheet" href="css/request-mobile-ux.css?v=20261111-keyboard-stable-1">
+  <link rel="stylesheet" href="css/request-mobile-ux.css?v=20261111-toolbar-aligned-1">
   <style>
     html,body{margin:0;min-height:100%;background:transparent!important}
     body{overflow:hidden}
@@ -76,6 +76,10 @@
           </button>
         </div>
         <div id="requestGateStatus" class="request-gate-status" role="status" aria-live="polite">REQUESTS CLOSED · BROWSE THE SONG LIST</div>
+      </div>
+      <div class="request-mobile-toolbar" aria-label="Current request screen">
+        <span id="requestMobileHeading" class="request-mobile-heading" role="heading" aria-level="2">CHOOSE A SONG</span>
+        <button id="requestMobileBack" class="request-back-btn request-profile-back request-mobile-back" type="button" data-request-tab="profile" hidden>← BACK TO PROFILE</button>
       </div>
       <button class="modal-close request-modal-close" data-close="requestDialog" aria-label="Close">×</button>
     </div>
@@ -179,7 +183,7 @@
   <script src="../js/public-request-lifecycle.js?v=20261111-compact-header-1"></script>
   <script src="js/public-catalogue.js?v=20261022-public"></script>
   <script src="../js/public-booking.js?v=20261022"></script>
-<script src="js/app.js?v=20261111-keyboard-stable-1"></script>
+<script src="js/app.js?v=20261111-toolbar-aligned-1"></script>
   <script src="js/request-ui-extras.js?v=20261006-favs-card-width"></script>
 </body>
 </html>
