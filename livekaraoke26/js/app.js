@@ -852,9 +852,32 @@
     return true;
   }
 
+  // Align the mobile title or the Back to Profile action with the X button.
+  // The original panel headings and back buttons remain available on desktop.
+  function setRequestMobileToolbar(screen){
+    const title=$("requestMobileHeading"),back=$("requestMobileBack");
+    if(!title||!back)return;
+    const isBackScreen=screen==="review"||screen==="data";
+    back.hidden=!isBackScreen;
+    title.hidden=isBackScreen;
+    if(!isBackScreen){
+      const labels={
+        profile:"YOUR PROFILE",
+        songs:"CHOOSE A SONG",
+        requests:"MY REQUESTS",
+        info:"HELP",
+        name:"REQUEST A SONG",
+        confirm:"CONFIRM SONG",
+        success:"REQUEST SENT"
+      };
+      title.textContent=labels[screen]||"LIVE KARAOKE";
+    }
+  }
+
   function switchRequestTab(tab){
     const valid=new Set(["profile","songs","requests","data","review","info"]);
     const target=valid.has(tab)?tab:"songs";
+    setRequestMobileToolbar(target);
 
     if($("requestNameGate"))$("requestNameGate").hidden=true;
     const bottomTabs=document.querySelector(".request-bottom-tabs");
@@ -1131,6 +1154,7 @@
     document.querySelectorAll("[data-request-panel]").forEach(panel=>panel.hidden=true);
     document.querySelectorAll("[data-request-tab]").forEach(button=>button.classList.remove("active"));
     $("requestConfirmPanel").hidden=false;
+    setRequestMobileToolbar("confirm");
     $("requestSuccess").hidden=true;
     $("requestConfirmSongTitle").textContent=song.title||"Song";
     $("requestConfirmSongArtist").textContent=ArtistNames.display(song.artist||"");
@@ -1163,6 +1187,7 @@
     document.querySelectorAll("[data-request-tab]").forEach(button=>button.classList.remove("active"));
     const gate=$("requestNameGate");
     if(gate)gate.hidden=false;
+    setRequestMobileToolbar("name");
     const bottomTabs=document.querySelector(".request-bottom-tabs");
     if(bottomTabs)bottomTabs.hidden=true;
     const name=requestProfile().name||"";
@@ -1783,6 +1808,7 @@
       $("requestConfirmPanel").hidden=true;
       document.querySelectorAll("[data-request-panel]").forEach(panel=>panel.hidden=true);
       $("requestSuccess").hidden=false;
+      setRequestMobileToolbar("success");
       $("requestSuccessText").textContent=`${song.title||"Your song"} has been sent to the host. Check Requests to see whether it has been accepted.`;
       await renderMyRequests();
     }catch(error){
