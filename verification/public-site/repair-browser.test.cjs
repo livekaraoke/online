@@ -78,7 +78,7 @@ if(window.parent===window){window.__publishFixture=()=>{const f=__firebaseFixtur
    await page.evaluate(()=>__firebaseFixture.update('karaoke/state',{songsEnabled:false}));await frame.getByText('REQUESTS CLOSED · BROWSE THE SONG LIST',{exact:true}).waitFor();assert.equal(await frame.locator('.song-action:not(:disabled)').count(),0);
    await page.evaluate(()=>__firebaseFixture.update('karaoke/state',{songsEnabled:true}));await frame.getByText('REQUESTS OPEN',{exact:true}).waitFor();
    await frame.locator('#songSearch').fill('zombie');await frame.locator('#songResults [data-toggle-favourite]').click();assert.equal(await frame.locator('#songResults [data-toggle-favourite]').getAttribute('aria-label'),'Remove from favourites');
-   await frame.locator('#editRequesterNameBtn').click();await frame.locator('#singerName').fill('Fixture Singer');await frame.locator('#continueRequestBtn').click();await frame.locator('[data-request-tab="songs"]').click();await frame.locator('#songSearch').fill('zombie');await frame.locator('[data-song-id="zombie"]').click();await frame.locator('#requestNote').fill('Fixture note');
+   await frame.locator('#editRequesterNameBtn').click();await frame.locator('#singerName').fill('Fixture Singer');await frame.locator('#singerName').blur();await frame.locator('[data-request-tab="songs"]').click();await frame.locator('#songSearch').fill('zombie');await frame.locator('[data-song-id="zombie"]').click();await frame.locator('#requestNote').fill('Fixture note');
    await frame.locator('#sendRequestBtn').evaluate(el=>{el.click();el.click();});await frame.locator('#requestSuccess').waitFor({state:'visible'});
    const requests=await page.evaluate(()=>__firebaseFixture.writes.filter(x=>x.path.startsWith('publicSongRequests/')));assert.equal(requests.length,1,'double submit blocked');assert.equal(requests[0].data.source,'live-karaoke-website');assert.equal(requests[0].data.sessionId,'s');
    await frame.locator('[data-close="requestDialog"]').click();await page.locator('#liveKaraokeRequestFrame').waitFor({state:'detached'});
@@ -97,7 +97,17 @@ if(window.parent===window){window.__publishFixture=()=>{const f=__firebaseFixtur
    await page.evaluate(()=>__firebaseFixture.update('performanceSessions/s',{...__firebaseFixture.docs['performanceSessions/s'],breakOpen:true}));assert.match(await page.locator('#heroCurrentSong').innerText(),/ON BREAK/);
    await page.evaluate(()=>__firebaseFixture.update('karaokeControl/currentSession',{active:false}));assert.equal(await page.locator('#heroLiveNow').isVisible(),false);assert.equal(await page.locator('#heroCurrentSong').innerText(),'');
    assert.equal(await page.locator('#liveStatus').isVisible(),true,'countdown restores when session ends');
-   assert.match(await page.locator('#liveStatus').innerText(),/NEXT LIVE KARAOKE EVENT/);assert.equal(await page.locator('#songListBtn').getAttribute('aria-disabled'),'true','song browsing locks after session ends');
+   assert.match(await page.locator('#liveStatus').innerText(),/NEXT LIVE KARAOKE EVENT/);assert.equal(await page.locator('#songListBtn').getAttribute('aria-disabled'),null,'song browsing stays available after the session ends');
+   assert.match(await page.locator('#songListBtn').innerText(),/BROWSE SONG LIST/);
+   await page.locator('#songListBtn').click();
+   const browseFrame=page.frameLocator('#liveKaraokeRequestFrame');
+   await browseFrame.locator('#requestBrowser').waitFor({state:'visible'});
+   await browseFrame.locator('.song-row').first().waitFor({state:'visible'});
+   await browseFrame.locator('#songSearch').fill('zombie');
+   assert.match(await browseFrame.locator('#songResults').innerText(),/Zombie/);
+   assert.equal(await browseFrame.locator('#songResults .song-action:not(:disabled)').count(),0,'requests stay disabled when browsing after a gig');
+   await browseFrame.locator('[data-close="requestDialog"]').click();
+   await page.locator('#liveKaraokeRequestFrame').waitFor({state:'detached'});
    await page.locator('#liveKaraokeEnquiryOpen').click();await page.locator('#lkEnquiryName').fill('Fixture Visitor');await page.locator('#lkEnquiryEmail').fill('fixture@example.com');await page.locator('#lkEnquiryEventType').selectOption('Corporate Event');await page.locator('#lkEnquiryMessage').fill('Isolated fixture enquiry.');await page.locator('#lkEnquirySubmit').evaluate(el=>{el.click();el.click();});await page.locator('#liveKaraokeEnquirySuccess').waitFor({state:'visible'});
    const bookings=await page.evaluate(()=>__firebaseFixture.writes.filter(x=>x.path.startsWith('bookingEnquiries/')));assert.equal(bookings.length,1);assert.equal(bookings[0].data.pageUrl,'https://livekaraoke.eu/');assert.equal(bookings[0].data.sourceKey,'live-karaoke');assert.equal(await page.evaluate(()=>__firebaseFixture.writes.filter(x=>x.path==='publicBookingLimits/fixture@example.com').length),1,'atomic booking limit');
    assert.deepEqual(errors,[]);console.log(`PASS ${projected?'projected':'compatibility'} ${width}x${height}: layout, test exclusion, search, favourites, profile, request, duplicate prevention, closed gate, break/end, enquiry, shared listeners`);await context.close();
