@@ -1768,3 +1768,226 @@ width: 100%;
     margin-top:26px;
   }
 }
+
+
+/* November 2026 public-page refinements - preserve the existing identity. */
+.hero h1.public-hero-title {
+  color:#fff;
+  font-weight:900;
+  text-shadow:0 3px 8px rgba(0,0,0,1),0 0 18px rgba(0,0,0,.95),0 0 3px #fff;
+}
+.hero p.public-hero-copy {
+  color:#fff;
+  font-weight:650;
+  font-size:clamp(1.05rem,2.2vw,1.3rem);
+  text-shadow:0 2px 5px #000,0 0 14px #000;
+}
+.hero-actions {
+  display:flex;
+  align-items:stretch;
+  justify-content:center;
+  gap:12px;
+  width:min(580px,100%);
+  margin:0 auto;
+}
+.hero-actions .hero-action {
+  flex:1 1 0;
+  min-width:0;
+  min-height:58px;
+  padding:12px 18px;
+  border:2px solid;
+  border-radius:9px;
+  color:#fff;
+  font:800 clamp(.91rem,2vw,1.08rem)/1.25 Bahnschrift,Arial,sans-serif;
+  letter-spacing:.065em;
+  text-shadow:0 2px 5px rgba(0,0,0,.65);
+  cursor:pointer;
+  box-shadow:0 2px 15px rgba(0,0,0,.6);
+  transition:background-color .18s,border-color .18s;
+}
+.hero-actions .hero-action-sing {
+  background:rgba(6,107,55,.84);
+  border-color:#54e891;
+}
+.hero-actions .hero-action-book {
+  background:rgba(151,11,24,.85);
+  border-color:#ff555f;
+}
+.hero-actions .hero-action-sing:hover {background:rgba(11,142,75,.95);}
+.hero-actions .hero-action-book:hover {background:rgba(190,22,35,.96);}
+@media(max-width:480px) {
+  .hero-actions {gap:8px;}
+  .hero-actions .hero-action {padding:11px 8px;min-height:52px;letter-spacing:.03em;}
+}
+
+/* Real step cards replace the flattened illustration so copy and icons scale. */
+#howitworks .instructions-container.how-it-works-grid {
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:16px;
+  width:100%;
+  max-width:1050px;
+  margin:30px auto 0;
+  padding:0;
+  align-items:stretch;
+}
+#howitworks .how-step {
+  position:relative;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:10px;
+  min-width:0;
+  min-height:260px;
+  padding:24px 16px 22px;
+  border:1px solid rgba(227,66,81,.52);
+  border-radius:14px;
+  background:#101010;
+  box-shadow:0 3px 20px rgba(0,0,0,.22);
+}
+#howitworks .how-step-number {
+  align-self:flex-start;
+  display:grid;
+  place-items:center;
+  width:38px;
+  height:38px;
+  border:1.5px solid #ff5365;
+  border-radius:50%;
+  font-size:1.08rem;
+  font-weight:850;
+  color:#fff;
+}
+#howitworks .how-step svg {
+  width:62px;
+  height:62px;
+  flex:none;
+  margin:0 auto 4px;
+  color:#ff5260;
+}
+#howitworks .how-step h3 {
+  margin:10px 0 0;
+  color:#fff;
+  font-size:clamp(1rem,1.9vw,1.22rem);
+  line-height:1.25;
+  letter-spacing:.075em;
+  text-align:center;
+  text-shadow:none;
+}
+#howitworks .how-step p {
+  margin:0;
+  color:#ccc;
+  font-size:clamp(.92rem,1.45vw,1.04rem);
+  line-height:1.52;
+  text-align:center;
+}
+#howitworks .how-it-works-request-button {margin-top:30px;}
+@media(max-width:720px) {
+  #howitworks .instructions-container.how-it-works-grid {
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:12px;
+    margin-top:23px;
+  }
+  #howitworks .how-step {
+    min-height:254px;
+    padding:15px 10px 20px;
+    gap:10px;
+  }
+  #howitworks .how-step-number {width:35px;height:35px;font-size:1rem;}
+  #howitworks .how-step svg {width:58px;height:58px;}
+  #howitworks .how-step h3 {font-size:clamp(.96rem,3.8vw,1.08rem);letter-spacing:.045em;margin-top:9px;}
+  #howitworks .how-step p {font-size:clamp(.9rem,3.45vw,1rem);line-height:1.5;}
+  #howitworks .how-it-works-request-button {margin-top:28px;}
+}
+@media(max-width:365px) {
+  #howitworks .how-step {padding:13px 8px 16px;min-height:262px;}
+  #howitworks .how-step svg {width:54px;height:54px;}
+}
+
+/* Public live player - bring the actual venue forward and fill the CTA column. */
+.hero-live-now-head #heroLiveVenue {
+  color:#f6fff7;
+  font-size:clamp(14px,1.75vw,18px);
+  font-weight:900;
+  line-height:1.3;
+  text-align:right;
+  text-shadow:0 1px 5px rgba(0,0,0,.75);
+}
+.hero-coming-region .hero-live-action {
+  box-sizing:border-box;
+  width:100%;
+  min-width:0;
+}
+.hero-coming-region .live-now-request-button {
+  box-sizing:border-box;
+  display:block;
+  width:100%;
+  max-width:none;
+}
+@media(max-width:640px) {
+  .hero-live-now-head #heroLiveVenue {
+    max-width:65%;
+    white-space:normal;
+    overflow-wrap:anywhere;
+    text-overflow:clip;
+  }
+}
+
+/* The first five booking questions are visible; the rest stay accessible. */
+.booking-faq .booking-more-questions {
+  margin-top:7px;
+  border:1px solid rgba(245,77,88,.58);
+  border-radius:9px;
+  background:#160b0d;
+  overflow:hidden;
+}
+.booking-faq .booking-more-questions > summary {
+  padding:16px 18px;
+  color:#ffacb2;
+  font-weight:850;
+  letter-spacing:.065em;
+}
+.booking-faq .booking-more-questions[open] > summary {
+  border-bottom:1px solid rgba(245,77,88,.3);
+}
+.booking-faq .booking-more-questions-content {padding:0 9px 7px;}
+.booking-faq .booking-more-questions-content > details {background:transparent;}
+.booking-faq .booking-more-questions-content > details:last-child {border-bottom:0;}
+
+/* Approved reviews only - the owner's existing publicReviews projection. */
+.lk-public-reviews {display:grid;gap:23px;max-width:830px;margin:32px auto 0;}
+.lk-public-reviews[hidden],.lk-written-reviews[hidden],.lk-star-review-section[hidden] {display:none!important;}
+.section .lk-public-reviews h3 {
+  margin:0 0 14px;
+  font-size:clamp(1.06rem,2.6vw,1.3rem);
+  color:#fff;
+  text-shadow:none;
+  letter-spacing:.1em;
+}
+.lk-testimonial-list {display:grid;gap:12px;}
+.lk-testimonial {
+  margin:0;
+  padding:18px 21px;
+  border:1px solid rgba(240,90,99,.43);
+  border-radius:12px;
+  background:#130d0f;
+  text-align:left;
+}
+.lk-testimonial .lk-review-stars {display:block;color:#ffd171;font-size:1.2rem;letter-spacing:.13em;}
+.section .lk-testimonial p {margin:7px 0 12px;font-size:1.02rem;line-height:1.55;color:#f4ebeb;overflow-wrap:anywhere;}
+.lk-testimonial footer {font-weight:800;color:#ffc4c8;font-size:.92rem;}
+.lk-testimonial-list.is-changing {opacity:.15;transition:opacity .28s ease;}
+.lk-testimonial-list {opacity:1;transition:opacity .28s ease;}
+.lk-star-review-grid {display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;}
+.lk-star-review {
+  min-width:0;
+  padding:16px 10px;
+  border:1px solid rgba(236,93,108,.35);
+  border-radius:10px;
+  background:#121011;
+}
+.lk-star-review .lk-review-stars {display:block;color:#ffd171;font-size:clamp(.92rem,2vw,1.18rem);white-space:nowrap;letter-spacing:.01em;}
+.lk-star-review strong {display:block;margin-top:7px;color:#f4e5e6;font-size:.92rem;overflow-wrap:anywhere;}
+@media(max-width:720px){.lk-star-review-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
+@media(prefers-reduced-motion:reduce){
+  .hero-actions .hero-action,.lk-testimonial-list{transition:none;}
+}
