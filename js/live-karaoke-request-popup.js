@@ -13,6 +13,7 @@
   let frame = null;
   let previousBodyOverflow = "";
   let returnFocus = null;
+  let popupViewportWidth = 0;
 
   const REQUEST_THEME_CSS = `
     :root{
@@ -394,7 +395,11 @@
     overlay = document.createElement("div");
     overlay.id = "liveKaraokeRequestOverlay";
     overlay.setAttribute("role", "presentation");
-    overlay.style.cssText = "position:fixed;inset:0;z-index:2147483000;background:rgba(0,0,0,.42);backdrop-filter:blur(6px) brightness(.48) saturate(.78);-webkit-backdrop-filter:blur(6px) brightness(.48) saturate(.78);overflow:hidden;touch-action:none;";
+    // Lock the popup to the screen size when it opens. On Android the soft
+    // keyboard shrinks visualViewport, but should not shrink/recentre the iframe.
+    popupViewportWidth = window.innerWidth;
+    const openingHeight = Math.round(window.innerHeight);
+    overlay.style.cssText = "position:fixed;top:0;left:0;right:0;bottom:auto;height:"+openingHeight+"px;z-index:2147483000;background:rgba(0,0,0,.42);backdrop-filter:blur(6px) brightness(.48) saturate(.78);-webkit-backdrop-filter:blur(6px) brightness(.48) saturate(.78);overflow:hidden;touch-action:none;";
 
     returnFocus=document.activeElement;
     overlay.setAttribute("role","dialog");overlay.setAttribute("aria-modal","true");overlay.setAttribute("aria-label","Request a song");
@@ -473,6 +478,16 @@
     }
     if (event.data?.type === "live-karaoke-request-close") closePopup();
   });
+
+  // Real orientation changes alter width. Keyboard-open resizes usually do
+  // not, so preserve the original popup height while an input is focused.
+  window.addEventListener("resize", () => {
+    if (!overlay) return;
+    const nextWidth = window.innerWidth;
+    if (Math.abs(nextWidth - popupViewportWidth) < 48) return;
+    popupViewportWidth = nextWidth;
+    overlay.style.height = Math.round(window.innerHeight) + "px";
+  }, { passive:true });
 
   window.addEventListener("keydown", event => {
     if (event.key === "Escape" && overlay) closePopup();
