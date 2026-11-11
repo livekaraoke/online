@@ -2075,20 +2075,41 @@
       if(dialogId==="requestNoteDialog") editingRequestNoteId="";
     }
   });
-  // An embedded iframe may retain its layout height while the phone keyboard
-  // shrinks the visible viewport. Constrain the dialog to the smaller viewport.
-  function updateRequestVisualHeight(){
-    const heights=[window.innerHeight,window.visualViewport?.height].filter(value=>Number.isFinite(value)&&value>0);
-    try{
-      const parentHeight=window.parent?.visualViewport?.height;
-      if(Number.isFinite(parentHeight)&&parentHeight>0)heights.push(parentHeight);
-    }catch(_){}
-    if(heights.length)document.documentElement.style.setProperty("--request-visual-height",Math.floor(Math.min(...heights))+"px");
+  // Capture the popup height once, before any text field opens the keyboard.
+  // Keyboard resize events must never reduce the dialog's outer dimensions.
+  let capturedRequestWidth=window.innerWidth;
+  function captureRequestOpenHeight(){
+    const height=Math.round(window.innerHeight);
+    if(height>0)document.documentElement.style.setProperty("--request-open-height",height+"px");
   }
-  updateRequestVisualHeight();
-  window.addEventListener("resize",updateRequestVisualHeight,{passive:true});
-  window.visualViewport?.addEventListener("resize",updateRequestVisualHeight,{passive:true});
-  try{if(window.parent!==window)window.parent.visualViewport?.addEventListener("resize",updateRequestVisualHeight,{passive:true});}catch(_){}
+  captureRequestOpenHeight();
+  window.addEventListener("resize",()=>{
+    // Recalculate for a real orientation change, not soft-keyboard resizes.
+    if(Math.abs(window.innerWidth-capturedRequestWidth)<48)return;
+    capturedRequestWidth=window.innerWidth;
+    captureRequestOpenHeight();
+  },{passive:true});
+
+  // Keep the focused field within the visible area above the keyboard while
+  // scrolling only its panel. The popup/frame itself remains full-height.
+  function keepRequestFieldAboveKeyboard(){
+    if(!$("requestDialog")?.open)return;
+    const field=document.activeElement;
+    if(!field||!field.matches("input:not([type=hidden]),textarea"))return;
+    const panel=field.closest(".request-tab-panel,.request-name-gate");
+    if(!panel)return;
+    let visibleBottom=window.innerHeight;
+    try{
+      const viewport=window.parent?.visualViewport;
+      if(viewport&&viewport.height>0)visibleBottom=Math.min(visibleBottom,viewport.offsetTop+viewport.height);
+    }catch(_){}
+    const rect=field.getBoundingClientRect();
+    if(rect.bottom>visibleBottom-24)panel.scrollTop+=rect.bottom-(visibleBottom-44);
+  }
+  window.visualViewport?.addEventListener("resize",keepRequestFieldAboveKeyboard,{passive:true});
+  try{
+    if(window.parent!==window)window.parent.visualViewport?.addEventListener("resize",keepRequestFieldAboveKeyboard,{passive:true});
+  }catch(_){}
 
   $("songSearch").addEventListener("input",renderSongResults);
   $("requestStartContinueBtn").addEventListener("click",continueFromRequestName);
