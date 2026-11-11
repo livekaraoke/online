@@ -1005,11 +1005,13 @@
 }
 
 
-/* Keep the full-height dialog steady when the software keyboard appears.
-   The empty close-button strip does not overlap any scrollable content. */
+/* Keep the fixed-height keyboard-safe dialog, but use its reserved top strip
+   for the active mobile screen title or Back to Profile button beside the X. */
+#requestDialog .request-mobile-toolbar {
+  display:none!important;
+}
 @media(max-width:640px) {
   #requestDialog.request-modal {
-    /* Do not let native dialog centring follow the keyboard-shrunken viewport. */
     position:fixed!important;
     top:8px!important;
     bottom:auto!important;
@@ -1021,32 +1023,118 @@
     top:auto!important;
     left:auto!important;
     right:auto!important;
-    flex:0 0 56px!important;
+    z-index:40!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:space-between!important;
+    gap:10px!important;
+    flex:0 0 64px!important;
     box-sizing:border-box!important;
     width:100%!important;
-    height:56px!important;
-    min-height:56px!important;
-    max-height:56px!important;
+    height:64px!important;
+    min-height:64px!important;
+    max-height:64px!important;
     margin:0!important;
-    padding:0!important;
+    padding:10px 10px 10px 14px!important;
     border:0!important;
     border-bottom:0!important;
     box-shadow:none!important;
-    pointer-events:none!important;
     overflow:visible!important;
+    pointer-events:auto!important;
   }
   #requestDialog .request-modal-top .request-header {
     display:none!important;
   }
+  #requestDialog .request-modal-top .request-mobile-toolbar {
+    display:flex!important;
+    flex:1 1 auto!important;
+    min-width:0!important;
+    height:44px!important;
+    align-items:center!important;
+    justify-content:center!important;
+  }
+  #requestDialog .request-mobile-heading {
+    display:block!important;
+    max-width:100%!important;
+    margin:0!important;
+    color:#fff!important;
+    text-align:center!important;
+    font-size:clamp(17px,5vw,22px)!important;
+    line-height:1.2!important;
+    font-weight:900!important;
+    letter-spacing:.025em!important;
+  }
+  #requestDialog .request-mobile-heading[hidden] {
+    display:none!important;
+  }
+  #requestDialog button.request-mobile-back {
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    flex:1 1 auto!important;
+    width:100%!important;
+    height:44px!important;
+    min-height:44px!important;
+    max-height:44px!important;
+    margin:0!important;
+    padding:6px 9px!important;
+    white-space:nowrap!important;
+    font-size:clamp(12px,3.7vw,15px)!important;
+    letter-spacing:0!important;
+    cursor:pointer!important;
+  }
+  #requestDialog button.request-mobile-back[hidden] {
+    display:none!important;
+  }
   #requestDialog .request-modal-top .request-modal-close {
-    top:6px!important;
-    right:10px!important;
+    position:static!important;
+    top:auto!important;
+    right:auto!important;
+    z-index:41!important;
+    flex:0 0 44px!important;
     width:44px!important;
     height:44px!important;
+    min-height:44px!important;
+    margin:0!important;
+    padding:0!important;
+    border:2px solid #ad3039!important;
+    border-radius:50%!important;
+    background:#0b090a!important;
+    box-shadow:0 2px 12px rgba(0,0,0,.5)!important;
     pointer-events:auto!important;
+  }
+
+  /* These titles now live in the toolbar; keep subtitles and instructions
+     in their own panels rather than duplicating the headings. */
+  #requestDialog .request-profile-heading h3,
+  #requestDialog .request-browser .request-panel-heading,
+  #requestDialog .request-my-panel .request-panel-heading h3,
+  #requestDialog .request-info-panel .request-panel-heading h3 {
+    display:none!important;
+  }
+  #requestDialog .request-review-panel > .request-profile-back,
+  #requestDialog .request-my-data-panel > .request-profile-back {
+    display:none!important;
   }
   #requestDialog .request-review-panel,
   #requestDialog .request-my-data-panel {
     padding-top:12px!important;
+  }
+
+  #requestDialog .request-browser .request-controls input {
+    border:2px solid #b93c49!important;
+    border-radius:9px!important;
+    box-shadow:0 0 0 1px rgba(255,67,83,.15)!important;
+  }
+  #requestDialog .request-browser .request-controls input:focus {
+    outline:2px solid rgba(255,86,100,.45)!important;
+    outline-offset:0!important;
+    border-color:#ff5264!important;
+    box-shadow:0 0 0 2px rgba(255,82,100,.18)!important;
+  }
+  #requestDialog .request-browser .request-notice {
+    margin:9px 0 11px!important;
+    padding:0 1px!important;
+    line-height:1.4!important;
   }
 }
