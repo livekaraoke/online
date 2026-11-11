@@ -1991,3 +1991,50 @@ width: 100%;
 @media(prefers-reduced-motion:reduce){
   .hero-actions .hero-action,.lk-testimonial-list{transition:none;}
 }
+
+
+/* Weekly residency actions: paired, legible, and with a genuine disabled state. */
+.weekly-residency-actions {
+  grid-column:1/-1;
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px;
+  width:100%;
+  margin-top:3px;
+}
+.weekly-residency-action {
+  box-sizing:border-box;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-width:0;
+  min-height:50px;
+  padding:10px 12px;
+  border:1.5px solid #f64b5b;
+  border-radius:9px;
+  background:rgba(115,17,30,.55);
+  color:#fff;
+  font:800 clamp(.72rem,2.1vw,.95rem)/1.22 Bahnschrift,Arial,sans-serif;
+  letter-spacing:.04em;
+  text-align:center;
+  text-decoration:none;
+}
+.weekly-residency-action.weekly-residency-directions:hover {
+  border-color:#ff8490;
+  background:rgba(166,29,42,.72);
+}
+.weekly-residency-action.weekly-residency-directions:focus-visible {
+  outline:3px solid #fff;
+  outline-offset:3px;
+}
+.weekly-residency-action.weekly-residency-facebook:disabled {
+  opacity:.5;
+  background:#1d1416;
+  border-color:#655257;
+  color:#ccc;
+  cursor:not-allowed;
+}
+@media(max-width:480px) {
+  .weekly-residency-actions {gap:8px;}
+  .weekly-residency-action {padding:9px 5px;font-size:clamp(.68rem,2.8vw,.84rem);}
+}
