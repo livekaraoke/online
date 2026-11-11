@@ -92,6 +92,8 @@ assert.match(prompterHtml,/prompterScrollUp/);assert.match(prompterHtml,/prompte
   assert.equal(await library.isVisible(),true,'Library action is present on idle artwork');
   assert.equal(await fullscreen.isVisible(),true,'Fullscreen action is present on idle artwork');
   assert.equal(await fullscreen.getAttribute('aria-label'),'Enter fullscreen');
+  assert.equal(await fullscreen.locator('.ls26-singer-fullscreen-enter').evaluate(el=>getComputedStyle(el).display),'block');
+  assert.equal(await fullscreen.locator('.ls26-singer-fullscreen-exit').evaluate(el=>getComputedStyle(el).display),'none');
   const corners=await prompter.evaluate(()=>{
     const left=document.getElementById('ls26SingerLibraryLink').getBoundingClientRect();
     const right=document.getElementById('ls26SingerFullscreenToggle').getBoundingClientRect();
@@ -115,10 +117,11 @@ assert.match(prompterHtml,/prompterScrollUp/);assert.match(prompterHtml,/prompte
   await fullscreen.click();
   assert.equal(await fullscreen.getAttribute('aria-pressed'),'true');
   assert.equal(await fullscreen.getAttribute('aria-label'),'Exit fullscreen');
+  assert.equal(await fullscreen.locator('.ls26-singer-fullscreen-enter').evaluate(el=>getComputedStyle(el).display),'none');
+  assert.equal(await fullscreen.locator('.ls26-singer-fullscreen-exit').evaluate(el=>getComputedStyle(el).display),'block');
   await fullscreen.click();
   assert.equal(await fullscreen.getAttribute('aria-pressed'),'false');
   assert.equal(await fullscreen.getAttribute('aria-label'),'Enter fullscreen');
-  await prompter.locator('.ls26-singer-artwork-idle img').count();
   assert.equal(await prompter.locator('.ls26-singer-artwork-idle img').getAttribute('src'),'live-karaoke-artwork.jpg');
   assert.equal((await prompter.locator('.ls26-singer-message-idle').innerText()).replace(/\s+/g,' '),'WAITING FOR NEXT SINGER');
   assert.equal(await prompter.locator('.ls26-singer-artwork-preview img').getAttribute('src'),'live-karaoke-artwork.jpg');
