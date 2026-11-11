@@ -1008,6 +1008,14 @@
 /* Keep the full-height dialog steady when the software keyboard appears.
    The empty close-button strip does not overlap any scrollable content. */
 @media(max-width:640px) {
+  #requestDialog.request-modal {
+    /* Do not let native dialog centring follow the keyboard-shrunken viewport. */
+    position:fixed!important;
+    top:8px!important;
+    bottom:auto!important;
+    margin-top:0!important;
+    margin-bottom:0!important;
+  }
   #requestDialog .request-modal-top {
     position:relative!important;
     top:auto!important;
