@@ -440,3 +440,18 @@ header .cancel-button {
 @media (max-width: 500px) and (max-height: 750px) {
  .idle-screen.is-open .idle-brand-art { height: 35vh; }
 }
+
+/* A clear, session-scoped count of songs WAITING in LiveSuite Run Order.
+ * Not a count of the three visible queue preview rows or pending requests. */
+.success .success-queue-count {
+  margin: 28px auto 24px;
+  font-size: 33px;
+  line-height: 1.25;
+  font-weight: bold;
+  color: #89f2b1;
+}
+.success .success-queue-count + p { margin-top: 24px; }
+@media (max-height: 520px) {
+  .success .success-queue-count { font-size: 22px; margin: 12px auto 10px; }
+  .success .success-queue-count + p { margin-top: 10px; }
+}
