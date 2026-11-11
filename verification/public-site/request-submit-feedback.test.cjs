@@ -22,7 +22,7 @@ async function fixture({failure=null,statusRefreshFails=false}={}){
   };
   const panels=[{hidden:false},{hidden:true}];
   const switched=[],stored=[];
-  let writes=0,rendered=0,successTitle='';
+  let writes=0,rendered=0,successTitle='',quickRatingPrompts=0;
   const env={
     $:id=>elements[id],
     window:{LKRequestGate:{canSubmit:()=>true}},
@@ -36,6 +36,7 @@ async function fixture({failure=null,statusRefreshFails=false}={}){
     document:{querySelectorAll:selector=>{assert.equal(selector,'[data-request-panel]');return panels;}},
     switchRequestTab:tab=>{switched.push(tab);notice.textContent='Scroll through the songs or search above.';},
     setRequestMobileToolbar:value=>{successTitle=value;},
+    showQuickRatingIfEligible:()=>{quickRatingPrompts++;},
     trackedRequestIds:()=>stored.slice(),
     saveTrackedRequestIds:ids=>{stored.splice(0,stored.length,...ids);},
     renderMyRequests:async()=>{rendered++;if(statusRefreshFails)throw Error('read failure');},
@@ -50,12 +51,13 @@ async function fixture({failure=null,statusRefreshFails=false}={}){
       requestEmailHash=async()=>'',requestDeviceId=()=> 'device',favouriteSongIds=()=>[],
       trackedRequestIds=e.trackedRequestIds,saveTrackedRequestIds=e.saveTrackedRequestIds,
       setRequestMobileToolbar=e.setRequestMobileToolbar,
+      showQuickRatingIfEligible=e.showQuickRatingIfEligible,
       switchRequestTab=e.switchRequestTab,renderMyRequests=e.renderMyRequests;
     ${handler}
     return sendSelectedRequest;
   `)(env);
   await invoke();
-  return {notice,button,panels,switched,stored,writes,rendered,successTitle,elements};
+  return {notice,button,panels,switched,stored,writes,rendered,successTitle,quickRatingPrompts,elements};
 }
 
 test('a denied Firestore write stays visibly failed on Songs and does not mark song requested',async()=>{
@@ -65,6 +67,7 @@ test('a denied Firestore write stays visibly failed on Songs and does not mark s
   assert.equal(state.notice.attributes.role,'alert');
   assert.equal(state.writes,1);
   assert.deepEqual(state.stored,[]);
+  assert.equal(state.quickRatingPrompts,0);
   assert.equal(state.button.disabled,false);
 });
 
@@ -80,6 +83,7 @@ test('a completed write keeps confirmation even if request-history refresh fails
   assert.deepEqual(state.stored,['new-request-id']);
   assert.equal(state.elements.requestSuccess.hidden,false);
   assert.equal(state.successTitle,'success');
+  assert.equal(state.quickRatingPrompts,1);
   assert.deepEqual(state.switched,[]);
   assert.match(state.elements.requestSuccessText.textContent,/sent to the host/i);
 });
