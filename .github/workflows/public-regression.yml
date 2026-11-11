@@ -56,6 +56,7 @@ jobs:
         run: |
           node --test verification/public-site/public-policy.test.cjs verification/public-site/event-time.test.cjs verification/public-site/catalogue-projection.test.cjs verification/public-site/catalogue-publisher.test.cjs verification/public-site/live-projection.test.cjs
           node verification/public-site/live-karaoke-catalogue.test.cjs
+          node --test verification/public-site/request-submit-feedback.test.cjs
       - name: Full Firestore rules in the demo emulator
         env:
           LK_FULL_RULES: docs/public-site/firestore.production-views.rules
