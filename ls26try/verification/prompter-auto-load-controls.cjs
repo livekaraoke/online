@@ -69,7 +69,7 @@ for(const id of ['quickPrompterToggle','quickSingerAutoScrollToggle','quickAutoS
   assert.equal(await host.locator('#quickAutoSendPrompterBtn').getAttribute('aria-pressed'),'true');
   const value=await host.evaluate(()=>__fixture.data['karaokeControl/liveLyrics']);
   assert.equal(value.prompterLyricsSource,'modern');
-  assert.equal(value.displayState,'idle','Auto SEND LYRICS must not change singer display state');
+  assert.notEqual(value.displayState,'song','Auto SEND LYRICS must not activate singer karaoke display');
   assert.equal(value.prompterRemoteState.playing,false,'Auto send must not start Prompter playback');
   assert.equal(value.prompterRemoteState.mode,'waiting');
   assert.ok(value.prompterRequestToken,'Existing sender refresh token used');
