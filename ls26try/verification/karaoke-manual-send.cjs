@@ -40,7 +40,9 @@ const song={title:'Karaoke send regression',artist:'Regression Artist',year:2026
   host.on('pageerror',e=>errors.push('Host: '+e.message));
   await host.goto(base+'/ls26try/host/lyricview.html?id=send-song');
   await host.waitForFunction(()=>document.querySelector('#topbarSongTitle')?.textContent.includes('Karaoke send regression'));
-  // Real host button, not a synthetic write. No Play/count-in beforehand.
+  // Manual singer display action remains in INFO & TOOLS after removing it
+  // from the quick strip. Open the real drawer (not a synthetic Firestore write).
+  await host.locator('#songInfoBtn').click();
   await host.locator('#sendToKaraokeBtn').click();
   await host.waitForFunction(()=>__fixture.data['karaokeControl/liveLyrics']?.displayState==='song');
   // The memory-only Firebase fixture is tab-local; replicate the accepted
