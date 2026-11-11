@@ -265,14 +265,14 @@ test('public stage projection only includes the visible current and next three s
    current:{songTitle:'On stage',singerName:'Alice'},
    next:[{songTitle:'First up',singerName:'Bob'},
      {songTitle:'Second up',singerName:'Cara'},
-     {songTitle:'Third up',singerName:'Dan'}]
+     {songTitle:'Third up',singerName:'Dan'}],waitingCount:4
  });
  assert.ok(!JSON.stringify(publicView.kioskQueue).includes('Eve'));
  assert.ok(!JSON.stringify(publicView.kioskQueue).includes('SECRET'));
  assert.ok(!JSON.stringify(publicView.kioskQueue).includes('Frank'));
- assert.deepEqual(projection.live(input,'roxanna').kioskQueue,{current:null,next:[]});
+ assert.deepEqual(projection.live(input,'roxanna').kioskQueue,{current:null,next:[],waitingCount:0});
  input.karaoke.songsEnabled=false;
- assert.deepEqual(projection.live(input,'live-karaoke').kioskQueue,{current:null,next:[]});
+ assert.deepEqual(projection.live(input,'live-karaoke').kioskQueue,{current:null,next:[],waitingCount:0});
 });
 
 test('full artwork, large queue, visible Android SEND and readable note',()=>{
@@ -309,9 +309,9 @@ test('kiosk Run Order publisher is session-gated and does not clone the private 
   assert.deepEqual(queue,{current:{songTitle:'Currently on',singerName:'Anna'},
     next:[{songTitle:'Next',singerName:'Bob'},
       {songTitle:'Later',singerName:'Cara'},
-      {songTitle:'Fourth',singerName:'Dan'}]});
+      {songTitle:'Fourth',singerName:'Dan'}],waitingCount:4});
   assert.equal(JSON.stringify(queue).includes('PRIVATE'),false);
-  assert.deepEqual(projection.stageQueue(input,'wrong'),{current:null,next:[]});
+  assert.deepEqual(projection.stageQueue(input,'wrong'),{current:null,next:[],waitingCount:0});
   assert.match(pub,/LKPublicVisibility\.act\(input\.control\)==='live-karaoke'/);
   assert.match(pub,/queueSessionId/);
   assert.match(pub,/tx\.update\(kioskRef,\{queueSessionId,kioskQueue:queue\}\)/);
@@ -365,4 +365,39 @@ test('enlarged original artwork, green name, same-singer repeat, and stage inact
  assert.match(js,/events = \['input', 'keydown', 'touchstart', 'touchmove', 'click', 'wheel'\]/);
  assert.match(js,/if \(document.hidden\) \{ clearTimeout\(timer\); clearTimeout\(gateTimer\); stopInactivity\(\); \}/);
  assert.match(html,/signup\.js\?v=20261110-size-idle-v3/);
+});
+
+test('REQUEST SENT uses actual Run Order waiting total, never just next-three preview',()=>{
+  const html=fs.readFileSync(path.join(root,'signup/sign up.html'),'utf8');
+  const js=fs.readFileSync(path.join(root,'signup/signup.js'),'utf8');
+  const css=fs.readFileSync(path.join(root,'signup/signup.css'),'utf8');
+  const publisher=fs.readFileSync(path.join(root,'ls26try/shared/public-live-publisher.js'),'utf8');
+  assert.match(html,/id="successQueueCount" class="success-queue-count"/);
+  assert.match(js,/queue && queue\.waitingCount/);
+  assert.match(js,/lastWaitingCount === 1 \? ' SONG' : ' SONGS'/);
+  assert.match(js,/refreshSuccessQueueCount\(\);/);
+  assert.match(js,/doc\.queueSessionId === session && doc\.kioskQueue/);
+  assert.match(css,/\.success \.success-queue-count \{[\s\S]*?font-size: 33px/);
+  assert.match(publisher,/const queue=queueLive\?LKLiveProjection\.stageQueue\(input,sid\)/);
+  const projection=require('../../js/public-live-projection.js');
+  const rows=[
+    {id:'a',status:'playing',songTitle:'Now',singerName:'A'},
+    {id:'b',status:'queued',songTitle:'1',singerName:'B'},
+    {id:'c',status:'queued',songTitle:'2',singerName:'C'},
+    {id:'d',status:'queued',songTitle:'3',singerName:'D'},
+    {id:'e',status:'queued',songTitle:'4',singerName:'E'},
+    {id:'f',status:'queued',songTitle:'5',singerName:'F'},
+    {id:'g',status:'played',songTitle:'Past',singerName:'G'},
+    {id:'h',status:'cancelled',songTitle:'Cancelled',singerName:'H'},
+    {id:'i',status:'queued',songTitle:'Removed',singerName:'I',removed:true}
+  ];
+  const queue=projection.stageQueue({run:{sessionId:'s1',items:rows},requests:[]},'s1');
+  assert.equal(queue.waitingCount,5);
+  assert.equal(queue.next.length,3);
+  assert.equal(queue.current.songTitle,'Now');
+  assert.equal(queue.next.some(r=>r.songTitle==='Past'),false);
+  assert.equal(JSON.stringify(queue).includes('Removed'),false);
+  assert.deepEqual(projection.stageQueue({run:{sessionId:'s1',items:rows},requests:[]},'other'),{
+    current:null,next:[],waitingCount:0
+  });
 });
