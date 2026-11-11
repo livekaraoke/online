@@ -10,9 +10,17 @@ function publicMetadata(d) {
   return !(true in [d.get('isTest',false),d.get('isTestSession',false),
     d.get('testMode',false),d.get('requestTestMode',false),d.get('private',false),d.get('isPrivate',false)]) &&
     !(false in [d.get('published',true),d.get('publicVisible',true),d.get('publishToWebsite',true)]) &&
-    !(d.get('publicVisibility',d.get('visibility','')).lower() in ['private','test','internal','hidden','draft','unpublished']) &&
-    !((d.get('name','')+' '+d.get('title','')+' '+d.get('venue','')+' '+d.get('venueName','')).lower()
-      .matches('(^|.*[\\s_-])(test|testing|rehearsal|demo)([\\s_-].*|$)'));
+    !(d.get('publicVisibility',d.get('visibility','')).lower() in ['private','test','internal','hidden','draft','unpublished']);
+}
+// A venue name containing "Test" is not proof of a private or test session.
+// The explicit metadata above controls privacy; publication must still be
+// verified against the active session or its scheduled event.
+function publiclyPublished(d) {
+  return publicMetadata(d) &&
+    (d.get('publicVisibility',d.get('visibility','')).lower() == 'public' ||
+      d.get('published',false) == true ||
+      d.get('publicVisible',false) == true ||
+      d.get('status','').lower() == 'confirmed');
 }
 function publicEvent(d, expected) {
   let status = d.get('status','').lower();
@@ -25,13 +33,20 @@ function publicEvent(d, expected) {
 }
 function publishedLiveRequest(d, control, expected) {
   let session = get(/databases/$(database)/documents/performanceSessions/$(d.sessionId)).data;
-  let event = get(/databases/$(database)/documents/upcomingEvents/$(control.eventId)).data;
-  return control.sessionId == d.sessionId &&
+  let eventId = control.get('eventId','');
+  return control.get('active',false) == true &&
+    d.sessionId in [control.get('sessionId',''),control.get('activeSessionId','')] &&
     control.get('sessionType',control.get('type','')).lower() == expected &&
     publicMetadata(control) && publicMetadata(session) &&
     session.get('isActive',true) != false && session.get('endedAt',null) == null && session.get('closedAt',null) == null &&
     !(session.get('status','').lower() in ['ended','completed','finished','cancelled','canceled','done','closed']) &&
-    publicEvent(event,expected);
+    // With an event link, it must still point to a published valid event.
+    // Without one, match the public website's existing explicit publication gate.
+    (eventId != '' ?
+      publicEvent(get(/databases/$(database)/documents/upcomingEvents/$(eventId)).data,expected) :
+      (publiclyPublished(control) || publiclyPublished(session) ||
+        (control.get('eventSnapshot',{}) is map && publiclyPublished(control.get('eventSnapshot',{}))) ||
+        (session.get('eventSnapshot',{}) is map && publiclyPublished(session.get('eventSnapshot',{})))));
 }
 function publishedPreSessionRequest(d, control, state, expected) {
   return control.get('active',false) != true &&
