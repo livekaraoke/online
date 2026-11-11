@@ -25,7 +25,7 @@
       if(!record||record.status!=='pending')continue;
       const due=millis(record.dueAt);
       const dateKey=/^\d{4}-\d{2}-\d{2}$/.test(String(record.date||''))?record.date:(due?maltaDate(due):'');
-      if(due>0&&due<present)overdue.push(record);
+      if((due>0&&due<present)||(!due&&dateKey&&dateKey<todayKey))overdue.push(record);
       else if(dateKey===todayKey)today.push(record);
     }
     const sort=(a,b)=>(millis(a.dueAt)||Infinity)-(millis(b.dueAt)||Infinity)||
@@ -42,9 +42,10 @@
   if(!panel||!strip)return;
   let snapshot={uid:null,ready:false,error:'',reminders:[]};
   function dateLabel(note) {
-    if(!note.date)return 'Due date unavailable';
-    const [year,month,day]=String(note.date).split('-');
-    const dayText=year&&month&&day?day+'/'+month+'/'+year:String(note.date);
+    const key=note.date||maltaDate(millis(note.dueAt));
+    if(!key)return 'Due date unavailable';
+    const [year,month,day]=String(key).split('-');
+    const dayText=year&&month&&day?day+'/'+month+'/'+year:String(key);
     return dayText+(note.time?' · '+note.time:' · Any time');
   }
   function row(note,kind) {
