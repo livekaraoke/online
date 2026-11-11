@@ -800,6 +800,53 @@
     });
   }
 
+  let reviewSubmissionInProgress=false;
+  function localReviewSubmitted(){
+    return String(localStorage.getItem(REQUEST_REVIEW_ID_KEY)||"").startsWith("review_");
+  }
+
+  // Both the quick stars and the full review use the SAME moderated review
+  // documents consumed by LiveSuite. Never write to a second websiteReviews
+  // collection or publish feedback directly from this public page.
+  async function submitModeratedReview(profile){
+    if(reviewSubmissionInProgress)return false;
+    const rating=profile.rating?Number(profile.rating):null;
+    const review=String(profile.review||"").trim().slice(0,1200);
+    if((rating===null||!Number.isInteger(rating)||rating<1||rating>5)&&!review)return false;
+    if(!String(profile.name||"").trim())return false;
+    const reviewPrivate=profile.reviewPrivate===true;
+    const deviceId=requestDeviceId();
+    const reviewKey=deviceId.replace(/[^A-Za-z0-9_-]/g,"").slice(0,100);
+    const recordId="review_"+reviewKey;
+    const serverTime=firebase.firestore.FieldValue.serverTimestamp();
+    const data={
+      source:"livekaraoke26-request-popup",
+      reviewRecord:true,
+      reviewKey,
+      name:String(profile.name||"").trim().slice(0,80),
+      country:String(profile.country||"").trim().slice(0,80),
+      rating:Number.isInteger(rating)&&rating>=1&&rating<=5?rating:null,
+      review,
+      reviewPrivate,
+      reviewApproved:false,
+      reviewStatus:reviewPrivate?"private":"pending",
+      requesterDeviceId:deviceId,
+      submittedAt:serverTime,
+      updatedAt:serverTime
+    };
+    reviewSubmissionInProgress=true;
+    try{
+      await db.collection("websiteRequesterProfiles").doc(recordId).set(data,{merge:true});
+      localStorage.setItem(REQUEST_REVIEW_ID_KEY,recordId);
+      localStorage.setItem(REQUEST_PROFILE_KEY,JSON.stringify({
+        ...requestProfile(),rating:rating?String(rating):"",review,reviewPrivate
+      }));
+      return true;
+    }finally{
+      reviewSubmissionInProgress=false;
+    }
+  }
+
   async function saveRequestReview(){
     if(!saveProfileFieldsLocally({validateEmail:true}))return false;
     const profile={
@@ -814,44 +861,50 @@
       document.querySelector('[data-review-rating="1"]')?.focus();
       return false;
     }
-
-    // Review content remains unpublished until SEND REVIEW is explicitly tapped.
-    localStorage.setItem(REQUEST_PROFILE_KEY,JSON.stringify(profile));
+    if(status)status.textContent="Sending your review…";
     try{
-      const data={
-        source:"live-karaoke-website",
-        name:profile.name,
-        requesterEmailHash:profile.email?await requestEmailHash(profile.email):"",
-        country:profile.country,
-        ageRange:profile.ageRange,
-        gender:profile.gender,
-        rating:profile.rating?Number(profile.rating):null,
-        review:profile.review,
-        displayOptIn:!profile.reviewPrivate,
-        sessionId:requestSessionId()||"",
-        updatedAt:firebase.firestore.FieldValue.serverTimestamp()
-      };
-      const existingId=localStorage.getItem(REQUEST_REVIEW_ID_KEY)||"";
-      if(existingId){
-        await db.collection("websiteReviews").doc(existingId).set(data,{merge:true});
-      }else{
-        const ref=await db.collection("websiteReviews").add({
-          ...data,
-          createdAt:firebase.firestore.FieldValue.serverTimestamp()
-        });
-        localStorage.setItem(REQUEST_REVIEW_ID_KEY,ref.id);
-      }
-      if(status)status.textContent="Review submitted. Thank you!";
+      const saved=await submitModeratedReview(profile);
+      if(!saved){if(status)status.textContent="Please enter a name, rating or review first.";return false;}
+      if(status)status.textContent="Review sent for approval. Thank you!";
+      return true;
     }catch(error){
-      console.warn("Could not save website review:",error);
-      if(status)status.textContent="Review could not be submitted. Please try again.";
+      console.warn("Could not submit moderated review:",error);
+      if(status)status.textContent="Review could not be sent. Please try again.";
       return false;
     }
-    if(profile.email){
-      try{await syncRecoveryProfile(profile);}catch(error){console.info("Recovery profile sync unavailable:",error?.code||error);}
-    }
-    return true;
   }
+
+  function showQuickRatingIfEligible(){
+    const card=$("requestQuickRating");
+    if(!card)return;
+    card.hidden=localReviewSubmitted();
+    const status=$("requestQuickRatingStatus");
+    if(status)status.textContent="";
+  }
+
+  async function submitQuickRating(stars){
+    const rating=Number(stars);
+    const card=$("requestQuickRating");
+    const status=$("requestQuickRatingStatus");
+    if(!card||reviewSubmissionInProgress||!Number.isInteger(rating)||rating<1||rating>5)return;
+    const profile={...requestProfile(),rating:String(rating),review:""};
+    if(!profile.name){if(status)status.textContent="Enter your name in Profile to leave a rating.";return;}
+    const buttons=[...card.querySelectorAll("[data-quick-review-rating]")];
+    buttons.forEach(button=>button.disabled=true);
+    if(status)status.textContent="Sending your rating…";
+    try{
+      const saved=await submitModeratedReview(profile);
+      if(!saved)throw Error("Review not saved");
+      setReviewRating(rating);
+      if($("requestReviewText"))$("requestReviewText").value="";
+      if(status)status.textContent="Thank you! Your "+rating+"-star rating was sent for approval.";
+      buttons.forEach(button=>button.classList.toggle("active",Number(button.dataset.quickReviewRating)<=rating));
+    }catch(error){
+      console.warn("Quick rating could not be submitted:",error);
+      if(status)status.textContent="Could not send your rating. Please try again.";
+    }finally{buttons.forEach(button=>button.disabled=false);}
+  }
+
 
   // Align the mobile title or the Back to Profile action with the X button.
   // The original panel headings and back buttons remain available on desktop.
@@ -1851,6 +1904,7 @@
       document.querySelectorAll("[data-request-panel]").forEach(panel=>panel.hidden=true);
       $("requestSuccess").hidden=false;
       setRequestMobileToolbar("success");
+      showQuickRatingIfEligible();
       $("requestSuccessText").textContent=`${song.title||"Your song"} has been sent to the host. Check Requests to see whether it has been accepted.`;
       // The request is already committed. A later status-refresh failure must
       // not undo the success screen or make the customer resend the song.
@@ -2221,6 +2275,13 @@
   $("requestActionConfirmDialog").addEventListener("close",()=>{if(requestActionConfirmResolve)finishRequestActionConfirm(false);});
   $("requestNoteDialogInput").addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&e.key==="Enter")saveMyRequestNote();});
   $("submitRequestReviewBtn").addEventListener("click",()=>void saveRequestReview());
+  document.querySelectorAll("[data-quick-review-rating]").forEach(button=>{
+    button.addEventListener("click",()=>void submitQuickRating(button.dataset.quickReviewRating));
+  });
+  $("quickFullReviewBtn").addEventListener("click",()=>{
+    populateProfileForm({includeReview:true});
+    switchRequestTab("review");
+  });
   editableProfileFields.forEach(id=>{
     const field=$(id);
     if(!field)return;
