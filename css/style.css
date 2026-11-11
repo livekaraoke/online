@@ -1745,27 +1745,41 @@ width: 100%;
 }
 
 
-/* HOW IT WORKS - request only while an active session accepts requests. */
-.how-it-works-request-button {
+/* HOW IT WORKS - separate the real request CTA clearly from the four steps. */
+#howitworks .instructions-container {
+  margin-bottom:0;
+}
+#howitworks .how-it-works-request-button {
   display:block;
-  width:max-content;
-  max-width:calc(100% - 32px);
-  min-height:52px;
-  margin:-20px auto 10px;
-  padding:14px 32px;
+  width:min(320px,calc(100% - 32px));
+  min-height:56px;
+  margin:30px auto 0;
+  padding:13px 24px;
+  border:2px solid #ff4850;
+  border-radius:10px;
+  background:linear-gradient(180deg,#f23038 0%,#b70913 100%);
+  box-shadow:0 5px 17px rgba(220,0,23,.32);
+  color:#fff;
   font-family:inherit;
   font-size:clamp(1rem,2.2vw,1.13rem);
   font-weight:800;
-  letter-spacing:.09em;
+  line-height:1.25;
+  letter-spacing:.07em;
   text-align:center;
+  animation:none;
+  transform:none;
   cursor:pointer;
 }
-.how-it-works-request-button[hidden] {
+#howitworks .how-it-works-request-button[hidden] {
   display:none!important;
 }
+#howitworks .how-it-works-request-button:hover {
+  background:linear-gradient(180deg,#ff4049 0%,#c8101a 100%);
+  transform:none;
+}
 @media(max-width:640px) {
-  .how-it-works-request-button {
+  #howitworks .how-it-works-request-button {
     width:min(330px,calc(100% - 36px));
-    margin:-24px auto 10px;
+    margin-top:26px;
   }
 }
