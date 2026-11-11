@@ -1,0 +1,70 @@
+/* Only the Pending Requests and Run Order song lists scroll.
+   High-contrast, draggable rails stay visible even on tablet touch browsers. */
+#ls26StickyHeader #topStatusBar:not(.collapsed) > .host-status-expanded:has(#tsPendingPane:not([hidden])),
+#ls26StickyHeader #topStatusBar:not(.collapsed) > .host-status-expanded:has(#tsRunOrderPane:not([hidden])){
+  display:flex!important;flex-direction:column!important;
+  box-sizing:border-box!important;height:min(570px,65dvh)!important;
+  max-height:min(570px,65dvh)!important;min-height:0!important;
+  overflow:hidden!important;
+}
+#ls26StickyHeader #topStatusBar:not(.collapsed) .ls26-session-tabs{
+  flex:0 0 auto!important;
+}
+#ls26StickyHeader #topStatusBar .host-workflow-tabs-card:has(.host-workflow-pane:not([hidden])){
+  display:flex!important;flex-direction:column!important;
+  flex:1 1 auto!important;box-sizing:border-box!important;
+  height:auto!important;max-height:none!important;min-height:0!important;
+  overflow:hidden!important;margin:0!important;
+}
+#ls26StickyHeader #topStatusBar .host-workflow-pane:not([hidden]){
+  display:flex!important;flex-direction:column!important;
+  flex:1 1 auto!important;box-sizing:border-box!important;
+  height:auto!important;max-height:none!important;min-height:0!important;
+  min-width:0!important;overflow:hidden!important;
+}
+#ls26StickyHeader #topStatusBar .host-workflow-pane .workflow-pane-heading,
+#ls26StickyHeader #topStatusBar .host-workflow-pane .ls26-run-add-actions,
+#ls26StickyHeader #topStatusBar .host-workflow-pane #ls26AddSong,
+#ls26StickyHeader #topStatusBar .host-workflow-pane #ls26AddRequest,
+#ls26StickyHeader #topStatusBar .host-workflow-pane #tsRunOrderQuickRow,
+#ls26StickyHeader #topStatusBar .host-workflow-pane #smartSingerRotation{
+  flex:0 0 auto!important;
+}
+#ls26StickyHeader #topStatusBar .host-workflow-pane .ts-queue-scroll-shell{
+  display:flex!important;align-items:stretch!important;gap:7px!important;
+  flex:1 1 auto!important;height:0!important;min-height:0!important;
+  min-width:0!important;overflow:hidden!important;
+}
+#ls26StickyHeader #topStatusBar .host-workflow-pane .ts-queue-scroll-shell #tsPendingRequestsList,
+#ls26StickyHeader #topStatusBar .host-workflow-pane .ts-queue-scroll-shell #tsRunOrderList{
+  display:block!important;flex:1 1 auto!important;
+  box-sizing:border-box!important;min-width:0!important;min-height:0!important;
+  height:auto!important;max-height:none!important;
+  overflow-y:auto!important;overflow-x:hidden!important;
+  overscroll-behavior:contain!important;scrollbar-width:none!important;
+}
+#ls26StickyHeader #topStatusBar .ts-queue-scroll-shell #tsPendingRequestsList::-webkit-scrollbar,
+#ls26StickyHeader #topStatusBar .ts-queue-scroll-shell #tsRunOrderList::-webkit-scrollbar{
+  display:none!important;
+}
+#ls26StickyHeader #topStatusBar .ts-queue-scroll-rail{
+  position:relative!important;flex:0 0 23px!important;width:23px!important;
+  box-sizing:border-box!important;min-height:0!important;
+  border:1px solid #25576d!important;border-radius:12px!important;
+  background:linear-gradient(90deg,#041521,#0a3041,#041521)!important;
+  box-shadow:inset 0 0 0 1px #092333!important;
+  cursor:pointer!important;touch-action:none!important;user-select:none!important;
+}
+#ls26StickyHeader #topStatusBar .ts-queue-scroll-rail:focus-visible{
+  outline:2px solid #33ccff!important;outline-offset:2px!important;
+}
+#ls26StickyHeader #topStatusBar .ts-queue-scroll-thumb{
+  position:absolute!important;top:0!important;left:2px!important;right:2px!important;
+  min-height:0!important;box-sizing:border-box!important;
+  border:1px solid #69ddff!important;border-radius:10px!important;
+  background:linear-gradient(90deg,#137fa4,#29bbed,#137fa4)!important;
+  box-shadow:0 0 8px #22b9e75e!important;pointer-events:auto!important;
+}
+#ls26StickyHeader #topStatusBar .ts-queue-scroll-rail.no-overflow{
+  opacity:.38!important;cursor:default!important;
+}

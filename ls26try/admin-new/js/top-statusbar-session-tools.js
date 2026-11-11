@@ -1641,10 +1641,98 @@
     // top-statusbar.js remains the single writer for Break actions and Session Notes.
   }
 
+
+  // Presentation-only scrollbars. Queue data and actions stay with the existing
+  // session tools; only the song lists themselves scroll.
+  function initialiseQueueScrollbars(){
+    for(const [id,label] of [['tsPendingRequestsList','Pending requests'],['tsRunOrderList','Run Order']]){
+      const list=$(id);
+      if(!list||list.parentElement?.classList.contains('ts-queue-scroll-shell'))continue;
+      const shell=document.createElement('div');
+      shell.className='ts-queue-scroll-shell';
+      list.before(shell);shell.append(list);
+      const rail=document.createElement('div'),thumb=document.createElement('div');
+      rail.className='ts-queue-scroll-rail';
+      thumb.className='ts-queue-scroll-thumb';
+      rail.setAttribute('role','scrollbar');
+      rail.setAttribute('aria-label',label+' song list scrollbar');
+      rail.setAttribute('aria-orientation','vertical');
+      rail.setAttribute('aria-controls',id);
+      rail.setAttribute('aria-valuemin','0');
+      rail.tabIndex=0;
+      thumb.setAttribute('aria-hidden','true');
+      rail.append(thumb);shell.append(rail);
+      let frame=0,drag=null;
+      const maxScroll=()=>Math.max(0,list.scrollHeight-list.clientHeight);
+      const update=()=>{
+        frame=0;
+        const max=maxScroll(),height=rail.clientHeight;
+        const thumbHeight=max>1?Math.min(height,Math.max(44,height*list.clientHeight/Math.max(1,list.scrollHeight))):height;
+        const travel=Math.max(0,height-thumbHeight);
+        thumb.style.height=Math.max(0,thumbHeight)+'px';
+        thumb.style.transform='translateY('+(max>0?travel*list.scrollTop/max:0)+'px)';
+        rail.classList.toggle('no-overflow',max<=1);
+        rail.setAttribute('aria-disabled',String(max<=1));
+        rail.setAttribute('aria-valuemax',String(Math.round(max)));
+        rail.setAttribute('aria-valuenow',String(Math.round(list.scrollTop)));
+      };
+      const refresh=()=>{if(!frame)frame=requestAnimationFrame(update);};
+      const position=(clientY,offset)=>{
+        const max=maxScroll(),travel=rail.clientHeight-thumb.offsetHeight;
+        if(max<=0||travel<=0)return;
+        const ratio=(clientY-rail.getBoundingClientRect().top-offset)/travel;
+        list.scrollTop=Math.max(0,Math.min(max,ratio*max));
+        refresh();
+      };
+      rail.addEventListener('pointerdown',event=>{
+        if((event.pointerType==='mouse'&&event.button!==0)||maxScroll()<=1)return;
+        event.preventDefault();
+        const box=thumb.getBoundingClientRect();
+        const offset=event.target===thumb?event.clientY-box.top:thumb.offsetHeight/2;
+        drag={id:event.pointerId,offset};
+        rail.setPointerCapture?.(event.pointerId);
+        position(event.clientY,offset);
+      });
+      rail.addEventListener('pointermove',event=>{
+        if(drag?.id!==event.pointerId)return;
+        event.preventDefault();
+        position(event.clientY,drag.offset);
+      });
+      const finish=event=>{
+        if(drag?.id!==event.pointerId)return;
+        drag=null;
+        if(rail.hasPointerCapture?.(event.pointerId))rail.releasePointerCapture(event.pointerId);
+      };
+      rail.addEventListener('pointerup',finish);
+      rail.addEventListener('pointercancel',finish);
+      rail.addEventListener('keydown',event=>{
+        const max=maxScroll(),step=Math.max(56,Math.round(list.clientHeight*.25));
+        const target=event.key==='ArrowDown'?list.scrollTop+step:
+          event.key==='ArrowUp'?list.scrollTop-step:
+          event.key==='PageDown'?list.scrollTop+list.clientHeight:
+          event.key==='PageUp'?list.scrollTop-list.clientHeight:
+          event.key==='Home'?0:event.key==='End'?max:null;
+        if(target===null)return;
+        event.preventDefault();
+        list.scrollTop=Math.max(0,Math.min(max,target));
+        refresh();
+      });
+      list.addEventListener('scroll',refresh,{passive:true});
+      if(window.ResizeObserver){
+        const observer=new ResizeObserver(refresh);
+        observer.observe(list);observer.observe(rail);
+      }
+      new MutationObserver(refresh).observe(list,{childList:true,subtree:true});
+      window.addEventListener('resize',refresh,{passive:true});
+      refresh();
+    }
+  }
+
   function waitForInjectedMarkup() {
     if ($("topStatusBar")) {
       initialiseStatusToggle();
       initialiseInfoTabs();
+      initialiseQueueScrollbars();
       initialiseWorkflowTabs();
       bindUi();
       renderRemaining();
