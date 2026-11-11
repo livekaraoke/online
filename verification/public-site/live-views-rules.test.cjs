@@ -26,9 +26,13 @@ const fs=require('node:fs'),path=require('node:path');
   console.log('Emulator clock offset (ms)',serverNow-Date.now());
   const p='publicSites/live-karaoke/views/live',value={schemaVersion:1,act:'live-karaoke',sessionId:'s',expiresAt:Timestamp.fromMillis(serverNow+180000)};
   await put(p,value);await assertSucceeds(getDoc(doc(anon,p)));
-  for(const change of [{publicVisibility:'private'},{isTest:true},{venue:'0 The Test Venue'},{status:'Cancelled'},{status:'Tentative'},{type:'Solo'}]){
+  for(const change of [{publicVisibility:'private'},{isTest:true},{status:'Cancelled'},{status:'Tentative'},{type:'Solo'}]){
    await put('upcomingEvents/e',{...event,...change});await assertFails(getDoc(doc(anon,p)));
   }
+  // Venue names containing 'Test' are not private by themselves; explicit
+  // isTest/private metadata above is what denies public reads.
+  await put('upcomingEvents/e',{...event,venue:'0 The Test Venue'});
+  await assertSucceeds(getDoc(doc(anon,p)));
   await put('upcomingEvents/e',event);await put(p,{...value,expiresAt:Timestamp.fromMillis(serverNow-60000)});await assertFails(getDoc(doc(anon,p)));
   await put(p,value);await put('performanceSessions/s',{status:'ended'});await assertFails(getDoc(doc(anon,p)));
   await put('performanceSessions/s',{status:'active'});await put('karaokeControl/currentSession',{active:true,sessionId:'different',eventId:'e',type:'Live Karaoke'});await assertFails(getDoc(doc(anon,p)));

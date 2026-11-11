@@ -17,7 +17,7 @@ function fields(x){const out={};for(const k of Object.keys(x))out[k]=value(x[k])
 const queue={current:{songTitle:'Current song',singerName:'Alex'},
  next:[{songTitle:'Next song 1',singerName:'Ben'},
    {songTitle:'Next song 2',singerName:'Cara'},
-   {songTitle:'Next song 3',singerName:'Dan'}]};
+   {songTitle:'Next song 3',singerName:'Dan'}],waitingCount:5};
 const discovery=fields({schemaVersion:1,enabled:true,token,queueSessionId:'s1',kioskQueue:queue});
 const view=fields({schemaVersion:1,enabled:true,sessionId:'s1',revision:'r1',setlistId:'s1',setlistName:'Test',venue:'Test',songs});
 function publicLive(){
@@ -26,7 +26,7 @@ function publicLive(){
    kioskQueue:{current:{songTitle:'Current song',singerName:'Alex'},
     next:[{songTitle:'Next song 1',singerName:'Ben'},
       {songTitle:'Next song 2',singerName:'Cara'},
-      {songTitle:'Next song 3',singerName:'Dan'}]}});
+      {songTitle:'Next song 3',singerName:'Dan'}],waitingCount:5}});
 }
 let server,browser;let requestOpen=true,sessionActive=true;
 (async()=>{
@@ -243,6 +243,16 @@ let server,browser;let requestOpen=true,sessionActive=true;
   await page.locator('#send').click();
   await page.locator('#success').waitFor({state:'visible'});
   assert.ok(await page.locator('#idleScreen').isHidden(),'Success must temporarily replace landing');
+  await page.waitForFunction(()=>document.getElementById('successQueueCount').textContent==='5 SONGS IN THE QUEUE');
+  const queueLabel=await page.locator('#successQueueCount').evaluate(el=>{
+    const above=el.previousElementSibling.getBoundingClientRect();
+    const current=el.getBoundingClientRect();
+    const below=el.nextElementSibling.getBoundingClientRect();
+    return {fontSize:parseFloat(getComputedStyle(el).fontSize),
+      aboveGap:current.top-above.bottom,belowGap:below.top-current.bottom};
+  });
+  assert.ok(queueLabel.fontSize>=22&&queueLabel.aboveGap>=10&&queueLabel.belowGap>=10,
+    'Run Order count needs large legible type and spacing: '+JSON.stringify(queueLabel));
   const confirmation=await page.evaluate(()=>{
    const box=document.getElementById('success'),rect=box.getBoundingClientRect(),
      paragraphs=box.querySelectorAll('p'),h=box.querySelector('h2'),

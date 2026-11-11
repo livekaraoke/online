@@ -55,11 +55,11 @@
         const queueLive=kiosk.enabled===true&&input.control.active===true&&
           LKPublicVisibility.act(input.control)==='live-karaoke'&&input.karaoke.songsEnabled===true&&
           sid&&input.run.sessionId===sid;
-        const queue=queueLive?LKLiveProjection.stageQueue(input,sid):{current:null,next:[]};
+        const queue=queueLive?LKLiveProjection.stageQueue(input,sid):{current:null,next:[],waitingCount:0};
         const queueSessionId=queueLive?sid:'';
         const kioskNeedsUpdate=ready.has('kioskPublic')&&kiosk.schemaVersion===1&&
           (String(kiosk.queueSessionId||'')!==queueSessionId||
-            !LKCatalogueProjection.equal(kiosk.kioskQueue||{current:null,next:[]},queue));
+            !LKCatalogueProjection.equal(kiosk.kioskQueue||{current:null,next:[],waitingCount:0},queue));
         if(!values.length&&!kioskNeedsUpdate){report('');return;}
         let committed=[];
         await db.runTransaction(async tx=>{

@@ -45,13 +45,16 @@
   }
   function stageQueue(input,sessionId){
     const {run={},requests=[]}=input;
-    if(!sessionId||run.sessionId!==sessionId)return {current:null,next:[]};
+    if(!sessionId||run.sessionId!==sessionId)return {current:null,next:[],waitingCount:0};
     const states=new Map(list(requests,500).filter(r=>r.sessionId===sessionId&&r.id).map(r=>[r.id,String(r.status||'').toLowerCase()]));
     const eligible=policy.runItems(run,sessionId).filter(row=>!row.requestId||!policy.terminal.has(states.get(row.requestId)));
     const current=eligible.find(row=>String(row.status||'').toLowerCase()==='playing')||null;
+    const waiting=eligible.filter(row=>row!==current&&String(row.status||'').toLowerCase()!=='playing');
     const stageRow=row=>({songTitle:text(row.songTitle||row.title||'',120),singerName:text(row.singerName||'',80)});
+    // The kiosk receives a total for all waiting Run Order songs, not just
+    // the next three displayed, and never full private rows or host notes.
     return {current:current?stageRow(current):null,
-      next:eligible.filter(row=>row!==current&&String(row.status||'').toLowerCase()!=='playing').slice(0,3).map(stageRow)};
+      next:waiting.slice(0,3).map(stageRow),waitingCount:waiting.length};
   }
   function live(input,act){
     if(!acts.includes(act))throw Error('Unknown public act.');
@@ -67,7 +70,7 @@
     // Only a singer's public stage name and song title for NOW + next three.
     // Never publish notes, contact details, full run order or non-karaoke acts.
     const queueEnabled=act==='live-karaoke'&&active&&karaoke.songsEnabled===true;
-    const kioskQueue=queueEnabled?stageQueue(input,sessionId):{current:null,next:[]};
+    const kioskQueue=queueEnabled?stageQueue(input,sessionId):{current:null,next:[],waitingCount:0};
     const availability=[];
     // Public availability contains song/status only, never requester names, notes,
     // demographics, device IDs, email hashes, capability tokens or timing.

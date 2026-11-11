@@ -74,15 +74,28 @@ test('explicit kiosk publishes its own safe queue even when public website hides
       current:{songTitle:'Playing song',singerName:'Anna'},
       next:[{songTitle:'First queued',singerName:'Bob'},
         {songTitle:'Second queued',singerName:'Cara'},
-        {songTitle:'Third queued',singerName:'Dan'}]
+        {songTitle:'Third queued',singerName:'Dan'}],waitingCount:4
     });
     assert.equal(JSON.stringify(doc.kioskQueue).includes('PRIVATE'),false);
     assert.equal(JSON.stringify(doc.kioskQueue).includes('Eve'),false);
+    assert.equal(doc.kioskQueue.waitingCount,4,'Count includes undisplayed fourth waiting song');
     assert.equal(f.records['publicSites/live-karaoke/views/live'].sessionId,'','The general public website remains hidden for test gigs');
     assert.equal([...f.listeners].filter(l=>l.p==='karaokeControl/runOrder').length,1,'Kiosk reuses the host Run Order listener');
+    // Adding an item beyond the first three must publish the new total even
+    // though the visible three-slot preview is unchanged.
+    f.update('karaokeControl/runOrder',{sessionId:'gig',items:[
+      {id:'1',songTitle:'Playing song',singerName:'Anna',status:'playing'},
+      {id:'2',songTitle:'First queued',singerName:'Bob',status:'queued'},
+      {id:'3',songTitle:'Second queued',singerName:'Cara',status:'queued'},
+      {id:'4',songTitle:'Third queued',singerName:'Dan',status:'queued'},
+      {id:'5',songTitle:'Fourth queued',singerName:'Eve',status:'queued'},
+      {id:'6',songTitle:'Fifth queued',singerName:'Fin',status:'queued'}
+    ]});
+    await settle();
+    assert.equal(f.records['karaokeControl/signupKioskPublic'].kioskQueue.waitingCount,5);
     f.update('karaoke/state',{songsEnabled:false});await settle();
     assert.equal(f.records['karaokeControl/signupKioskPublic'].queueSessionId,'');
-    assert.deepEqual(JSON.parse(JSON.stringify(f.records['karaokeControl/signupKioskPublic'].kioskQueue)),{current:null,next:[]});
+    assert.deepEqual(JSON.parse(JSON.stringify(f.records['karaokeControl/signupKioskPublic'].kioskQueue)),{current:null,next:[],waitingCount:0});
   }finally{f.close();}
 });
 
@@ -105,7 +118,7 @@ test('enabled kiosk publishes next songs without optional public live publicatio
    unsubscribe();
    assert.deepEqual(JSON.parse(JSON.stringify(f.records[path].kioskQueue)),{
      current:{songTitle:'Now playing',singerName:'Ana'},
-     next:[{songTitle:'First next',singerName:'Ben'},{songTitle:'Second next',singerName:'Cara'}]});
+     next:[{songTitle:'First next',singerName:'Ben'},{songTitle:'Second next',singerName:'Cara'}],waitingCount:2});
    assert.equal(f.records[path].queueSessionId,'gig');
    assert.equal(f.records['publicSites/live-karaoke/views/live'],undefined,'Disabled public live website is not published');
    assert.equal([...f.listeners].filter(x=>x.p==='karaokeControl/runOrder').length,1,'One existing Run Order listener');
@@ -116,9 +129,9 @@ test('enabled kiosk publishes next songs without optional public live publicatio
      {id:'new',status:'queued',songTitle:'Changed next',singerName:'Dani'}]});
    await settle();
    assert.deepEqual(JSON.parse(JSON.stringify(f.records[path].kioskQueue)),{
-     current:null,next:[{songTitle:'Changed next',singerName:'Dani'}]});
+     current:null,next:[{songTitle:'Changed next',singerName:'Dani'}],waitingCount:1});
    f.update('karaoke/state',{songsEnabled:false});await settle();
-   assert.deepEqual(JSON.parse(JSON.stringify(f.records[path].kioskQueue)),{current:null,next:[]},'Closing requests clears public stage names');
+   assert.deepEqual(JSON.parse(JSON.stringify(f.records[path].kioskQueue)),{current:null,next:[],waitingCount:0},'Closing requests clears public stage names and count');
    f.update('karaokeControl/signupKioskPublic',{...f.records[path],enabled:false});await settle();
    assert.equal([...f.listeners].filter(x=>x.p==='karaokeControl/runOrder').length,0,'Disabling kiosk releases Run Order subscription');
  }finally{f.close();}

@@ -104,7 +104,7 @@
   var focusedName = false, dialogAction = null;
   var unavailable = {}, localBlocked = {}, availabilitySession = '', availabilityVersion = 0;
   var gateOpen = false, gateTimer = null, gateBusy = false;
-  var queueVersion = 0, repeatSinger = '';
+  var queueVersion = 0, repeatSinger = '', lastWaitingCount = null;
   var inactivityTimer = null, lastActivityAt = 0;
   var INACTIVITY_MS = 20000;
   var base = 'https://firestore.googleapis.com/v1/projects/' + policy.projectId + '/databases/(default)/documents';
@@ -354,7 +354,34 @@
     filterVisibleSongs();
     updateSongStates();
   }
+  function updateSuccessQueueCount(queue) {
+    // Only an owner-projected numeric count is authoritative. The three
+    // visible song titles are intentionally NOT the total Run Order count.
+    var count = queue && queue.waitingCount;
+    lastWaitingCount = typeof count === 'number' && isFinite(count) && count >= 0 &&
+      Math.floor(count) === count ? count : null;
+    el('successQueueCount').textContent = lastWaitingCount === null
+      ? 'CHECKING THE LIVE QUEUE...'
+      : lastWaitingCount + (lastWaitingCount === 1 ? ' SONG' : ' SONGS') + ' IN THE QUEUE';
+  }
+  function refreshSuccessQueueCount() {
+    // One existing public kiosk-status read after successful submission,
+    // guarded against stale sessions, tokens and cancelled success screens.
+    var session = view && view.sessionId, currentToken = token;
+    if (!session) { return; }
+    xhr('GET', base + '/karaokeControl/signupKioskPublic', null, function (error, result) {
+      var doc;
+      if (error || !result || !result.fields || el('success').hidden ||
+          !view || view.sessionId !== session || currentToken !== token || !gateOpen) { return; }
+      doc = decode({mapValue:{fields: result.fields}});
+      if (doc.enabled === true && doc.token === currentToken &&
+          doc.queueSessionId === session && doc.kioskQueue) {
+        updateSuccessQueueCount(doc.kioskQueue);
+      }
+    });
+  }
   function renderLandingQueue(queue) {
+    updateSuccessQueueCount(queue);
     var current = queue && queue.current, next = queue && queue.next instanceof Array ? queue.next : [];
     var i, row, item;
     el('queueNow').hidden = !current || !trim(current.songTitle);
@@ -543,6 +570,7 @@
       repeatSinger = trim(el('singerName').value);
       resetForm(); el('idleScreen').hidden = true; el('signupForm').hidden = true;
       el('success').hidden = false; notice('REQUEST SENT', true); window.scrollTo(0, 0);
+      refreshSuccessQueueCount();
       resetTimer = setTimeout(function () {
         if (!gateOpen) { showIdle('closed'); } else { showIdle('open'); }
         load();
