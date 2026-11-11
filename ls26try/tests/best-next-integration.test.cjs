@@ -53,6 +53,27 @@ for(const route of ['host/lyricview','host/lyricview.html'])test('Run Order owns
  f.setSession({id:'s1',venue:'Other'});assert.equal(d.querySelectorAll('#tsRunOrderBestNext').length,1);assert.equal(f.stats().reads,1);
 });
 
+test('BEST NEXT stays outside the custom Run Order scrollbar and all songs remain inside',async()=>{
+  const f=await setup('host/lyricview.html'),d=f.document;
+  const pane=d.getElementById('tsRunOrderPane'),list=d.getElementById('tsRunOrderList');
+  const row=d.getElementById('tsRunOrderQuickRow');
+  const scrollShell=d.createElement('div');scrollShell.className='ts-queue-scroll-shell';
+  list.before(scrollShell);scrollShell.append(list);
+  // Reproduce the old bug: recommendation was injected into the scroll shell.
+  scrollShell.prepend(row);
+  assert.equal(row.parentElement,scrollShell);
+  f.ctx.renderBestNextRunOrder();
+  assert.equal(row.parentElement,pane,'Recommendation must be a fixed sibling of the scroll area');
+  assert.equal(row.nextElementSibling,scrollShell,'Recommendation stays above the scrolling song list');
+  assert.equal(scrollShell.children.length,1,'Only the song list belongs inside the scrolling area');
+  assert.equal(scrollShell.firstElementChild,list);
+  assert.ok(row.querySelector('#tsRunOrderBestNext [data-show-best]'),'BEST NEXT retains its actions');
+  // Repeated renders must not reparent the card or create another one.
+  f.ctx.renderBestNextRunOrder();
+  assert.equal(d.querySelectorAll('#tsRunOrderQuickRow').length,1);
+  assert.equal(row.nextElementSibling,scrollShell);
+});
+
 test('Session context, deliberate override, source selection and act scope stay independent',async()=>{
  const f=await setup(),api=f.window.LS26BestNext,d=f.document;
  assert.equal(api.snapshot().context.venue,'Reflections');assert.equal(api.snapshot().context.poolIds.size,3);

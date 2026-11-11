@@ -846,8 +846,14 @@
   function renderBestNextRunOrder() {
     const list = $("tsRunOrderList");
     if (!list || !window.LS26BestNext) return;
+    // The native scrolling list is wrapped in .ts-queue-scroll-shell.
+    // BEST NEXT must sit BEFORE that shell, not inside the list's scroll area.
+    const anchor=list.parentElement?.classList.contains('ts-queue-scroll-shell')
+      ?list.parentElement:list;
     let row = $("tsRunOrderQuickRow");
-    if (!row) { row=document.createElement("div"); row.id="tsRunOrderQuickRow"; row.className="ts-run-order-quickrow"; list.before(row); }
+    if (!row) { row=document.createElement("div"); row.id="tsRunOrderQuickRow"; row.className="ts-run-order-quickrow"; }
+    // Also repair a previously misplaced card when switching tabs or refreshing.
+    if(row.nextElementSibling!==anchor || row.parentElement!==anchor.parentElement)anchor.before(row);
     let card = $("tsRunOrderBestNext");
     if (!card) { card=document.createElement("section"); card.id="tsRunOrderBestNext"; card.className="ts-best-next"; card.setAttribute("aria-label","Best Next song"); }
     if (card.parentElement!==row) row.prepend(card);
