@@ -161,6 +161,32 @@ body[data-ls26-singer-stage="ended"] #prompterEndRating{display:block}
   align-items:center;justify-content:center;background:#050000;
   opacity:0;pointer-events:none;transition:opacity .2s ease;touch-action:none;
 }
+/* Single touch-friendly toolbar shown only on the two pre-song artwork screens. */
+#ls26SingerRemoteStage .ls26-singer-stage-actions{
+  position:absolute;top:max(14px,env(safe-area-inset-top));
+  left:max(14px,env(safe-area-inset-left));
+  right:max(14px,env(safe-area-inset-right));z-index:4;
+  display:none;align-items:center;justify-content:space-between;
+  pointer-events:none;
+}
+body[data-ls26-singer-stage="idle"] #ls26SingerRemoteStage .ls26-singer-stage-actions,
+body[data-ls26-singer-stage="waiting"] #ls26SingerRemoteStage .ls26-singer-stage-actions{display:flex}
+#ls26SingerRemoteStage .ls26-singer-stage-action{
+  box-sizing:border-box;width:56px;height:56px;min-width:56px;min-height:56px;
+  padding:12px;display:grid;place-items:center;
+  background:rgba(19,23,30,.76);border:1px solid rgba(224,235,242,.55);
+  border-radius:12px;color:#f6f9fb;box-shadow:0 3px 14px rgba(0,0,0,.5);
+  text-decoration:none;cursor:pointer;pointer-events:auto;touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;
+}
+#ls26SingerRemoteStage .ls26-singer-stage-action svg{width:30px;height:30px;display:block}
+#ls26SingerRemoteStage .ls26-singer-stage-action:focus-visible{
+  outline:3px solid #52deff;outline-offset:3px;
+}
+#ls26SingerRemoteStage .ls26-singer-stage-action:active{background:rgba(50,65,81,.92)}
+#ls26SingerRemoteStage .ls26-singer-fullscreen-exit{display:none}
+#ls26SingerRemoteStage #ls26SingerFullscreenToggle[aria-pressed="true"] .ls26-singer-fullscreen-enter{display:none}
+#ls26SingerRemoteStage #ls26SingerFullscreenToggle[aria-pressed="true"] .ls26-singer-fullscreen-exit{display:block}
 #ls26SingerRemoteStage .ls26-singer-artwork{position:relative;display:none;flex:none;max-width:100%;max-height:100dvh}
 #ls26SingerRemoteStage .ls26-singer-artwork img{position:absolute;top:4%;left:0;z-index:0;display:block;width:100%;height:auto;object-fit:contain;user-select:none;-webkit-user-drag:none}
 #ls26SingerRemoteStage .ls26-singer-artwork-preview{width:min(100vw,calc(100dvh * 921 / 1536));aspect-ratio:921/1536}

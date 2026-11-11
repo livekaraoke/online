@@ -17,6 +17,21 @@
   stage.id='ls26SingerRemoteStage';
   stage.setAttribute('aria-live','polite');
   stage.innerHTML=`
+    <nav class="ls26-singer-stage-actions" aria-label="Prompter standby controls">
+      <a id="ls26SingerLibraryLink" class="ls26-singer-stage-action" href="../venuekaraokelyricbook.html" target="_top" aria-label="Open song library" title="Song library">
+        <svg viewBox="0 0 36 36" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+          <path d="M12 9h18M12 18h18M12 27h18M5 9h1M5 18h1M5 27h1"/>
+        </svg>
+      </a>
+      <button id="ls26SingerFullscreenToggle" class="ls26-singer-stage-action" type="button" aria-label="Enter fullscreen" title="Enter fullscreen" aria-pressed="false">
+        <svg class="ls26-singer-fullscreen-enter" viewBox="0 0 36 36" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+          <path d="M14 5H5v9M22 5h9v9M31 22v9h-9M5 22v9h9"/>
+        </svg>
+        <svg class="ls26-singer-fullscreen-exit" viewBox="0 0 36 36" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+          <path d="M5 14h9V5M31 14h-9V5M22 31v-9h9M14 31v-9H5"/>
+        </svg>
+      </button>
+    </nav>
     <div class="ls26-singer-artwork ls26-singer-artwork-preview">
       <img src="live-karaoke-artwork.jpg" alt="Live Karaoke - You Sing, I Play" draggable="false">
       <div class="ls26-singer-message ls26-singer-message-preview">PLEASE WAIT</div>
@@ -32,6 +47,38 @@
     </div>
     <div class="ls26-singer-stage-cue"><strong>INSTRUMENTAL</strong><span>(wait for signal)</span></div>`;
   document.body.appendChild(stage);
+
+  // Use the same fullscreen document as the existing Prompter controls:
+  // the outer document owns fullscreen when opened in the persistent viewer.
+  const fullscreenDoc=(()=>{
+    try{
+      if(window.parent!==window&&window.parent.__ls26PrompterShell===true)
+        return window.parent.document;
+    }catch(_){}
+    return document;
+  })();
+  const fullscreenButton=stage.querySelector('#ls26SingerFullscreenToggle');
+  const syncFullscreenButton=()=>{
+    const active=Boolean(fullscreenDoc.fullscreenElement);
+    fullscreenButton.setAttribute('aria-pressed',String(active));
+    fullscreenButton.setAttribute('aria-label',active?'Exit fullscreen':'Enter fullscreen');
+    fullscreenButton.title=active?'Exit fullscreen':'Enter fullscreen';
+  };
+  fullscreenButton.addEventListener('click',event=>{
+    event.stopPropagation(); // Don't also trigger the legacy first-click fullscreen handler.
+    try{
+      const operation=fullscreenDoc.fullscreenElement
+        ? fullscreenDoc.exitFullscreen()
+        : fullscreenDoc.documentElement.requestFullscreen();
+      Promise.resolve(operation).then(syncFullscreenButton)
+        .catch(error=>console.warn('Prompter fullscreen unavailable:',error));
+    }catch(error){console.warn('Prompter fullscreen unavailable:',error);}
+  });
+  stage.querySelector('#ls26SingerLibraryLink').addEventListener('click',event=>{
+    event.stopPropagation(); // Navigate to the library, not fullscreen on first tap.
+  });
+  fullscreenDoc.addEventListener('fullscreenchange',syncFullscreenButton);
+  syncFullscreenButton();
 
   const label=(id,text)=>{
     const element=document.getElementById(id);
@@ -199,6 +246,9 @@
         },error=>console.warn('Prompter cross-device listener failed:',error));
     }catch(error){console.warn('Prompter remote listener unavailable:',error);}
   }
-  window.addEventListener('pagehide',()=>{stopTimer();channel?.close();unsubscribeRemote?.();},{once:true});
+  window.addEventListener('pagehide',()=>{
+    stopTimer();channel?.close();unsubscribeRemote?.();
+    fullscreenDoc.removeEventListener('fullscreenchange',syncFullscreenButton);
+  },{once:true});
   state('ready-'+Date.now());
 })();

@@ -13,12 +13,12 @@ const prompterHtml=fs.readFileSync(path.join(root,'oldadmin/host/lyrics/song.htm
 const performance=fs.readFileSync(path.join(root,'shared/performance.js'),'utf8');
 assert.match(viewerHtml,/lyricview-prompter-remote\.js\?v=20261111-shared-stage-v1/);
 assert.match(viewerHtml,/lyricview-prompter-remote\.css\?v=20261103-remote-layout-v2/);
-assert.match(prompterHtml,/prompter-remote-receiver\.js\?v=20261111-logo-artwork-v1/);
+assert.match(prompterHtml,/prompter-remote-receiver\.js\?v=20261111-standby-actions-v1/);
 assert.match(performance,/ls26:karaoke-tools-visibility/);
 assert.match(performance,/id="ls26ShowKaraoke"> Show karaoke tools<\/label>\s*<label class="ls26-karaoke-toggle"><input type="checkbox" id="ls26ShowPrompterRemote"> Show Prompter Remote/);
 assert.match(performance,/ls26:prompter-remote-visibility/);
 assert.match(viewerHtml,/performance\.js\?v=20261103-tap-tempo-v1/);
-assert.match(prompterHtml,/prompter-end-rating\.css\?v=20261111-clean-artwork-v2/);
+assert.match(prompterHtml,/prompter-end-rating\.css\?v=20261111-standby-actions-v1/);
 assert.match(receiverScript,/live-karaoke-artwork\.jpg/);
 assert.doesNotMatch(singerCss,/#ls26SingerRemoteStage \.ls26-singer-artwork::(?:before|after)/,'Artwork has no added red borders');
 assert.doesNotMatch(receiverScript,/song-about-to-begin\.jpg|waiting-for-next-singer\.jpg/);
@@ -83,6 +83,42 @@ assert.match(prompterHtml,/prompterScrollUp/);assert.match(prompterHtml,/prompte
     await prompter.waitForFunction(expected);
   }
   assert.equal(await prompter.evaluate(()=>document.body.dataset.ls26SingerStage),'idle');
+  const library=prompter.locator('#ls26SingerLibraryLink');
+  const fullscreen=prompter.locator('#ls26SingerFullscreenToggle');
+  assert.equal(await library.getAttribute('href'),'../venuekaraokelyricbook.html');
+  assert.equal(await library.getAttribute('target'),'_top','Song library must open in the full browser tab, not inside the persistent iframe');
+  assert.equal(new URL(await library.getAttribute('href'),prompter.url()).pathname,
+    '/ls26try/oldadmin/host/venuekaraokelyricbook.html');
+  assert.equal(await library.isVisible(),true,'Library action is present on idle artwork');
+  assert.equal(await fullscreen.isVisible(),true,'Fullscreen action is present on idle artwork');
+  assert.equal(await fullscreen.getAttribute('aria-label'),'Enter fullscreen');
+  const corners=await prompter.evaluate(()=>{
+    const left=document.getElementById('ls26SingerLibraryLink').getBoundingClientRect();
+    const right=document.getElementById('ls26SingerFullscreenToggle').getBoundingClientRect();
+    return {left:left.left,right:right.right,topLeft:left.top,topRight:right.top,
+      leftSize:left.height,rightSize:right.height,viewport:window.innerWidth};
+  });
+  assert.ok(corners.left<=20&&corners.viewport-corners.right<=20&&corners.topLeft<=20&&corners.topRight<=20,
+    'Standby controls sit at the viewport top corners');
+  assert.ok(corners.leftSize>=48&&corners.rightSize>=48,'Standby controls have large touch targets');
+  // Deterministic fullscreen API mock: check enter, exit and external ESC changes.
+  await prompter.evaluate(()=>{
+    let active=false;
+    Object.defineProperty(document,'fullscreenElement',{configurable:true,get:()=>active?document.documentElement:null});
+    document.documentElement.requestFullscreen=()=>{
+      active=true;document.dispatchEvent(new Event('fullscreenchange'));return Promise.resolve();
+    };
+    document.exitFullscreen=()=>{
+      active=false;document.dispatchEvent(new Event('fullscreenchange'));return Promise.resolve();
+    };
+  });
+  await fullscreen.click();
+  assert.equal(await fullscreen.getAttribute('aria-pressed'),'true');
+  assert.equal(await fullscreen.getAttribute('aria-label'),'Exit fullscreen');
+  await fullscreen.click();
+  assert.equal(await fullscreen.getAttribute('aria-pressed'),'false');
+  assert.equal(await fullscreen.getAttribute('aria-label'),'Enter fullscreen');
+  await prompter.locator('.ls26-singer-artwork-idle img').count();
   assert.equal(await prompter.locator('.ls26-singer-artwork-idle img').getAttribute('src'),'live-karaoke-artwork.jpg');
   assert.equal((await prompter.locator('.ls26-singer-message-idle').innerText()).replace(/\s+/g,' '),'WAITING FOR NEXT SINGER');
   assert.equal(await prompter.locator('.ls26-singer-artwork-preview img').getAttribute('src'),'live-karaoke-artwork.jpg');
@@ -92,6 +128,8 @@ assert.match(prompterHtml,/prompterScrollUp/);assert.match(prompterHtml,/prompte
     detail:{songId:'demo',cue:true,title:'All the Small Things',artist:'Blink 182',year:1999}
   })));
   await prompter.waitForFunction(()=>document.body.dataset.ls26SingerStage==='waiting');
+  assert.equal(await library.isVisible(),true,'Library action also appears on PLEASE WAIT');
+  assert.equal(await fullscreen.isVisible(),true,'Fullscreen action also appears on PLEASE WAIT');
   assert.equal(await prompter.locator('#ls26SingerUpcomingTitle').textContent(),'All the Small Things');
   assert.equal(await prompter.locator('#ls26SingerUpcomingArtist').textContent(),'Blink 182');
   const previewStyle=await prompter.evaluate(()=>{
@@ -121,6 +159,8 @@ assert.match(prompterHtml,/prompterScrollUp/);assert.match(prompterHtml,/prompte
   assert.equal(await prompter.locator('#ls26SingerUpcomingYear').textContent(),'(1999)');
   await host.waitForFunction(()=>document.getElementById('ls26PrompterSongCue')?.disabled===false);
   await press('song',()=>document.body.dataset.ls26SingerStage==='running');
+  assert.equal(await library.isVisible(),false,'Standby library control is hidden during lyrics');
+  assert.equal(await fullscreen.isVisible(),false,'Standby fullscreen control is hidden during lyrics');
   assert.equal(await prompter.locator('#scrollToggleBtn').textContent(),'▶','START SONG reveals lyrics without auto-scrolling');
   assert.equal(await prompter.evaluate(()=>window.autoScrollActive),false);
   assert.deepEqual(await prompter.evaluate(()=>window.__actions),[],'No toggle action is caused by START SONG');
