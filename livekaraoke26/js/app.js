@@ -1810,12 +1810,25 @@
       $("requestSuccess").hidden=false;
       setRequestMobileToolbar("success");
       $("requestSuccessText").textContent=`${song.title||"Your song"} has been sent to the host. Check Requests to see whether it has been accepted.`;
-      await renderMyRequests();
+      // The request is already committed. A later status-refresh failure must
+      // not undo the success screen or make the customer resend the song.
+      try{await renderMyRequests();}
+      catch(error){console.warn("Request sent, but status refresh failed:",error);}
     }catch(error){
-      console.error(error);
+      console.error("Song request was not sent:",error);
+      // Tab switching overwrites the notice, so return first and THEN show
+      // the actual failure. Do not silently return to a green REQUEST SONG.
+      switchRequestTab("songs");
       const notice=$("requestNotice");
-      if(notice)notice.textContent=error.message==='Requests are closed.'?'Requests have closed. You can still browse songs.':error.code==='permission-denied'?'This request is no longer eligible. Check that requests are open and use the current venue QR code.':'Could not send your request. Check your connection and try again.';
-      switchRequestTab('songs');
+      if(notice){
+        const code=String(error?.code||"").toLowerCase();
+        notice.textContent=error?.message==="Requests are closed."
+          ?"Request not sent: requests are closed."
+          :(code==="permission-denied"||code==="firestore/permission-denied")
+            ?"Request not sent: the venue or session is not authorised for website requests. Please tell the host."
+            :"Request not sent. Check your connection and try again.";
+        notice.setAttribute("role","alert");
+      }
     }finally{
       requestSubmitting=false;
       if(button){button.disabled=!window.LKRequestGate?.canSubmit();button.textContent="SEND REQUEST";}
