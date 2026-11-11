@@ -1745,41 +1745,26 @@ width: 100%;
 }
 
 
-/* HOW IT WORKS - separate the real request CTA clearly from the four steps. */
+/* HOW IT WORKS - use the same .main-button design as SONG LIST ACCESS.
+   Keep only the layout gap and native <button> normalization here. */
 #howitworks .instructions-container {
   margin-bottom:0;
 }
 #howitworks .how-it-works-request-button {
-  display:block;
-  width:min(320px,calc(100% - 32px));
-  min-height:56px;
+  display:inline-block;
+  appearance:none;
+  -webkit-appearance:none;
   margin:30px auto 0;
-  padding:13px 24px;
-  border:2px solid #ff4850;
-  border-radius:10px;
-  background:linear-gradient(180deg,#f23038 0%,#b70913 100%);
-  box-shadow:0 5px 17px rgba(220,0,23,.32);
-  color:#fff;
   font-family:inherit;
-  font-size:clamp(1rem,2.2vw,1.13rem);
-  font-weight:800;
-  line-height:1.25;
-  letter-spacing:.07em;
-  text-align:center;
-  animation:none;
-  transform:none;
+  font-weight:400;
+  line-height:normal;
   cursor:pointer;
 }
 #howitworks .how-it-works-request-button[hidden] {
   display:none!important;
 }
-#howitworks .how-it-works-request-button:hover {
-  background:linear-gradient(180deg,#ff4049 0%,#c8101a 100%);
-  transform:none;
-}
 @media(max-width:640px) {
   #howitworks .how-it-works-request-button {
-    width:min(330px,calc(100% - 36px));
     margin-top:26px;
   }
 }
