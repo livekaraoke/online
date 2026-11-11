@@ -167,15 +167,6 @@ body[data-ls26-singer-stage="ended"] #prompterEndRating{display:block}
 #ls26SingerRemoteStage .ls26-singer-artwork-idle{width:min(100vw,calc(100dvh * 1024 / 1536));aspect-ratio:1024/1536}
 /* The clean square logo is shared by both pre-song screens. Keep status text
    outside the image so neither screen relies on text baked into old artwork. */
-#ls26SingerRemoteStage .ls26-singer-artwork::before,
-#ls26SingerRemoteStage .ls26-singer-artwork::after{
-  content:"";position:absolute;left:0;right:0;height:2px;z-index:1;
-  background:linear-gradient(90deg,transparent,#ff9a99 10%,#fff 50%,#ff9a99 90%,transparent);
-  box-shadow:0 0 6px #fa3030,0 0 17px #f00,0 0 28px rgba(240,0,0,.8);
-  pointer-events:none;
-}
-#ls26SingerRemoteStage .ls26-singer-artwork::before{top:2%}
-#ls26SingerRemoteStage .ls26-singer-artwork::after{bottom:2%}
 #ls26SingerRemoteStage .ls26-singer-message{
   position:absolute;left:4%;width:92%;top:69%;z-index:2;
   color:#fff;text-align:center;text-transform:uppercase;

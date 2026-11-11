@@ -18,8 +18,9 @@ assert.match(performance,/ls26:karaoke-tools-visibility/);
 assert.match(performance,/id="ls26ShowKaraoke"> Show karaoke tools<\/label>\s*<label class="ls26-karaoke-toggle"><input type="checkbox" id="ls26ShowPrompterRemote"> Show Prompter Remote/);
 assert.match(performance,/ls26:prompter-remote-visibility/);
 assert.match(viewerHtml,/performance\.js\?v=20261103-tap-tempo-v1/);
-assert.match(prompterHtml,/prompter-end-rating\.css\?v=20261111-logo-artwork-v1/);
+assert.match(prompterHtml,/prompter-end-rating\.css\?v=20261111-clean-artwork-v2/);
 assert.match(receiverScript,/live-karaoke-artwork\.jpg/);
+assert.doesNotMatch(singerCss,/#ls26SingerRemoteStage \.ls26-singer-artwork::(?:before|after)/,'Artwork has no added red borders');
 assert.doesNotMatch(receiverScript,/song-about-to-begin\.jpg|waiting-for-next-singer\.jpg/);
 assert.match(prompterHtml,/prompterScrollUp/);assert.match(prompterHtml,/prompterScrollDown/);
 (async()=>{
