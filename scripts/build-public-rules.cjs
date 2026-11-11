@@ -10,6 +10,18 @@ const a=rules.indexOf('match /publicSongRequestOwners/'),b=rules.indexOf('match 
 let owner=rules.slice(a,b),changed=owner.replace(/hasOnly\(\[\s*'token',\s*'createdAt',\s*'proofAt'\s*\]\)/,"hasOnly(['token','createdAt','proofAt','accessCode'])\n          && request.resource.data.get('accessCode','') is string\n          && request.resource.data.get('accessCode','').size() <= 128");
 if(owner===changed)throw Error('Unexpected request ownership baseline.');
 rules=rules.slice(0,a)+changed+rules.slice(b);
+// Regenerate the later owner-only gig-finance boundary as well as public gates.
+const venueMatch='    match /venues/{docId} {';
+if(!rules.includes(venueMatch))throw Error('Venue match not found.');
+rules=rules.replace(venueMatch,()=>[
+  '    // Admin-only gig income, payments and earnings. Never publish these fields',
+  '    // in upcomingEvents, which is intentionally publicly readable.',
+  '    match /gigFinances/{eventId} {',
+  '      allow read, create, update, delete: if isOwner();',
+  '    }',
+  '',
+  ''
+].join('\n')+venueMatch);
 const fallback='    match /{document=**} {';
 if(!rules.includes(fallback))throw Error('Default deny not found.');
 rules=rules.replace(fallback,()=>read('docs/public-site/public-catalogue.rules.fragment')+'\n'+fallback);
