@@ -92,11 +92,18 @@
     finally{setBusy(false);}
   }
   function badge() {
-    const el=$('sidebarReminderBadge');if(!el)return;
-    el.classList.toggle('hidden',!user);
-    el.textContent=pendingError?'!':pendingReady?String(pending.length):'…';
-    el.title=pendingError||`${pending.length} pending reminders`;
-    el.setAttribute('aria-label',pendingError?'Reminder count unavailable':`${pending.length} pending reminders`);
+    const el=$('sidebarReminderBadge');
+    if(el){
+      el.classList.toggle('hidden',!user);
+      el.textContent=pendingError?'!':pendingReady?String(pending.length):'…';
+      el.title=pendingError||`${pending.length} pending reminders`;
+      el.setAttribute('aria-label',pendingError?'Reminder count unavailable':`${pending.length} pending reminders`);
+    }
+    // Share the authoritative pending subscription with Dashboard; never
+    // install a second listener or copy reminders into another collection.
+    window.dispatchEvent(new CustomEvent('ls26:reminders-pending',{
+      detail:{uid:user?.uid||null,ready:pendingReady,error:pendingError,reminders:pending.slice()}
+    }));
   }
   function subscribePending() {
     if(!user||unsubscribe||(!$('sidebarReminderBadge')&&!manage)||location.pathname.endsWith('/db-logs.html')){badge();return;}
