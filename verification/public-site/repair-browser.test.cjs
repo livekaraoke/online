@@ -20,7 +20,7 @@ if(window.parent===window){window.__publishFixture=()=>{const f=__firebaseFixtur
  const launch={headless:true};if(process.env.LK_CHROMIUM_PATH)launch.executablePath=process.env.LK_CHROMIUM_PATH;if(process.env.LK_CHROMIUM_ARGS)launch.args=JSON.parse(process.env.LK_CHROMIUM_ARGS);
  const browser=await chromium.launch(launch);
  try{
-  for(const [width,height] of [[1440,900],[1280,800],[390,844],[360,800]]){
+  for(const [width,height] of [[1440,900],[1280,800],[960,1200],[768,1024],[390,844],[360,800]]){
    const context=await browser.newContext({viewport:{width,height},isMobile:width<500,hasTouch:true,timezoneId:'Europe/Malta'}),page=await context.newPage();const errors=[];
    await page.clock.setFixedTime(new Date('2026-10-22T04:00:00Z'));
    page.on('pageerror',e=>errors.push(e.message));
@@ -73,6 +73,18 @@ if(window.parent===window){window.__publishFixture=()=>{const f=__firebaseFixtur
     await frame.locator('#requestStartContinueBtn').click();
     await frame.locator('.song-row').first().waitFor({state:'visible'});
     assert.equal(await frame.locator('#requestNameGate').isVisible(),false,'name accepted and singer can browse');
+   assert.equal(await frame.locator('.request-header').isVisible(),false,'old REQUEST A SONG heading hidden');
+   assert.equal(await frame.locator('.request-mobile-toolbar').isVisible(),true,'single unified toolbar visible');
+   assert.equal((await frame.locator('#requestMobileHeading').innerText()).trim(),'CHOOSE A SONG');
+   assert.equal(await frame.locator('.request-browser .request-panel-heading').isVisible(),false,'no duplicate heading');
+   assert.equal(await frame.locator('#requestAlphabetRow').isVisible(),false,'no A-Z filter at any width');
+   assert.equal(await frame.locator('#requestSongFilters').isVisible(),false,'no legacy category filters');
+   assert.equal(await frame.locator('.request-alphabet-help').count(),0,'old alphabet help removed');
+   const searchBox=await frame.locator('#songSearch').boundingBox(),listBox=await frame.locator('#songResults').boundingBox();
+   assert.ok(searchBox&&listBox&&listBox.y>=searchBox.y+searchBox.height,'results follow search directly');
+   assert.ok(listBox.height>140,'list occupies remaining viewport space');
+   const titleBox=await frame.locator('#requestMobileHeading').boundingBox(),closeBox=await frame.locator('.request-modal-close').boundingBox();
+   assert.ok(titleBox&&closeBox&&Math.abs((titleBox.y+titleBox.height/2)-(closeBox.y+closeBox.height/2))<9,'title aligns with X');
    assert.equal(await frame.locator('.song-row').count(),3);await frame.locator('#songSearch').fill('cranberries');assert.match(await frame.locator('#songResults').innerText(),/Zombie/);await frame.locator('#songSearch').fill('');
    const counts=await page.evaluate(()=>__firebaseFixture.counts);for(const p of (projected?['publicSites/live-karaoke/views/live','publicSites/live-karaoke/views/events','publicSites/live-karaoke/views/settings']:['karaokeControl/currentSession','karaoke/state','karaokeControl/runOrder','karaokeControl/liveKaraokeWebsiteSettings']))assert.equal(counts[p],1,`one shared listener ${p}`);
    await page.evaluate(()=>__firebaseFixture.update('karaoke/state',{songsEnabled:false}));await page.waitForFunction(()=>document.querySelector('#liveKaraokeRequestFrame')?.contentDocument?.getElementById('requestGateStatus')?.textContent?.includes('REQUESTS CLOSED'),null,{timeout:12000});assert.equal(await frame.locator('.song-action:not(:disabled)').count(),0);
