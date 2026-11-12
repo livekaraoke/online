@@ -28,7 +28,27 @@ if(window.parent===window){window.__publishFixture=()=>{const f=__firebaseFixtur
      '\n// Simulate a slow catalogue so the request UI must repaint after it resolves.\nconst originalCatalogueLoad=window.LiveKaraokeCatalogue.load;window.LiveKaraokeCatalogue.load=async (...args)=>{await new Promise(resolve=>setTimeout(resolve,1200));return originalCatalogueLoad(...args);};'});
    if(url.startsWith('http://127.0.0.1:8180/'))return route.continue();if(url.includes('firebase-app-compat.js'))return route.fulfill({contentType:'text/javascript',body:fixture});if(url.includes('www.gstatic.com/firebasejs/'))return route.fulfill({contentType:'text/javascript',body:''});return route.abort();});
    await page.goto('http://127.0.0.1:8180/online/',{waitUntil:'networkidle'});
-   assert.equal(await page.locator('#heroLiveNow').isVisible(),false,'test session hidden');
+   // Guard the homepage changes requested alongside the simplified public request UI.
+   assert.equal(await page.locator('#heroSingWithUsBtn').isVisible(),true,'SING WITH US button');
+   assert.equal(await page.locator('#heroBookUsBtn').isVisible(),true,'BOOK US button');
+   assert.notEqual(await page.locator('.public-hero-title').evaluate(el=>getComputedStyle(el).textShadow),'none','hero title has high-contrast shadow');
+   assert.equal(await page.locator('#howitworks .how-step').count(),4,'four clear How It Works cards');
+   const howColumns=await page.locator('#howitworks .how-it-works-grid').evaluate(el=>getComputedStyle(el).gridTemplateColumns.trim().split(/\s+/).length);
+   assert.equal(howColumns,width<=720?2:4,'2x2 grid on phone and four columns on larger screens');
+   assert.equal(await page.locator('.booking-faq > details:not(.booking-more-questions)').count(),5,'five visible booking FAQs');
+   assert.equal(await page.locator('.booking-faq > details.booking-more-questions').count(),1,'remaining FAQs collapsed');
+   assert.equal(await page.locator('.booking-faq > details.booking-more-questions').evaluate(el=>el.open),false);
+   assert.equal(await page.locator('.weekly-residency-directions').count(),1,'Google Maps residency directions');
+   assert.match(await page.locator('.weekly-residency-directions').getAttribute('href'),/google\.com\/maps\/search/);
+   assert.equal(await page.locator('.weekly-residency-facebook').isDisabled(),true,'Facebook Event stays disabled');
+   assert.equal(await page.evaluate(()=>{
+     const song=document.querySelector('#songListBtn')?.closest('section');
+     const past=document.querySelector('.lk-past-events-section');
+     return !!song&&!!past&&!!(song.compareDocumentPosition(past)&Node.DOCUMENT_POSITION_FOLLOWING);
+   }),true,'Past Events follows Song List Access');
+   assert.equal(await page.locator('#publicWrittenReviews').count(),1,'written reviews module present');
+   assert.equal(await page.locator('#publicStarReviews').count(),1,'star-only reviews module present');
+      assert.equal(await page.locator('#heroLiveNow').isVisible(),false,'test session hidden');
    assert.equal(await page.locator('#liveStatus').isVisible(),true,'inactive status area retains countdown');
    assert.match(await page.locator('#liveStatus').innerText(),/NEXT LIVE KARAOKE EVENT/);
    // The normal Wednesday at Whyte Harte is represented by the residency
