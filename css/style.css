@@ -2038,3 +2038,25 @@ width: 100%;
   .weekly-residency-actions {gap:8px;}
   .weekly-residency-action {padding:9px 5px;font-size:clamp(.68rem,2.8vw,.84rem);}
 }
+
+
+/* Counteract the separately loaded legacy refresh CSS, whose
+   .instructions-container{display:block!important} otherwise collapses
+   the four approved direct step cards into a non-grid container. */
+#howitworks .instructions-container.how-it-works-grid {
+  display:grid!important;
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  align-items:stretch!important;
+}
+@media(max-width:720px) {
+  #howitworks .instructions-container.how-it-works-grid {
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+  #howitworks .how-step h3 {
+    font-size:clamp(.96rem,3.8vw,1.08rem)!important;
+  }
+  #howitworks .how-step p {
+    font-size:clamp(.9rem,3.45vw,1rem)!important;
+    line-height:1.5!important;
+  }
+}
