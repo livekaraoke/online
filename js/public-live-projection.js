@@ -40,7 +40,17 @@
         enabled:c.enabled!==false,mode:text(c.mode,40),rule:text(c.rule,80),songIds:list(c.songIds,500).map(id).filter(Boolean)})),
       faqs:list(d.faqs,20).map(f=>({id:text(f.id,80),question:text(f.question,120),answer:text(f.answer,800)})),
       instagramUrl:text(d.instagramUrl,500),facebookUrl:text(d.facebookUrl,500),
-      aboutShort:text(d.aboutShort,2000),aboutDetailed:text(d.aboutDetailed,12000)
+      aboutShort:text(d.aboutShort,2000),aboutDetailed:text(d.aboutDetailed,12000),
+      // Only owner-moderated reviews already published in settings are exposed.
+      // Do not publish requester profiles or any private review metadata.
+      publicReviews:act==='live-karaoke'
+        ?list(d.publicReviews,24).map(r=>({
+          name:text(r?.name,80),country:text(r?.country,80),
+          rating:Number.isInteger(Number(r?.rating))&&Number(r.rating)>=1&&Number(r.rating)<=5
+            ?Number(r.rating):null,
+          review:text(r?.review,1200)
+        })).filter(r=>r.rating!==null||r.review.trim().length>0)
+        :[]
     }};
   }
   function stageQueue(input,sessionId){
