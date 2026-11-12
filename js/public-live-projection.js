@@ -41,6 +41,14 @@
       faqs:list(d.faqs,20).map(f=>({id:text(f.id,80),question:text(f.question,120),answer:text(f.answer,800)})),
       instagramUrl:text(d.instagramUrl,500),facebookUrl:text(d.facebookUrl,500),
       aboutShort:text(d.aboutShort,2000),aboutDetailed:text(d.aboutDetailed,12000),
+      // Expose only the six approved About fields and visibility flag, not
+      // the whole owner settings object. Preserve missing vs empty values.
+      ...(act==='live-karaoke'?{publicPage:Object.fromEntries(
+        Object.entries({aboutTitle:100,aboutLead:220,aboutBody1:700,aboutBody2:700,aboutHighlight:220,aboutBooking:220}).
+          filter(([key])=>typeof d.publicPage?.[key]==='string').
+          map(([key,max])=>[key,text(d.publicPage[key],max)]).
+          concat(typeof d.publicPage?.showAbout==='boolean'?[['showAbout',d.publicPage.showAbout]]:[])
+      )}:{}),
       // Only owner-moderated reviews already published in settings are exposed.
       // Do not publish requester profiles or any private review metadata.
       publicReviews:act==='live-karaoke'

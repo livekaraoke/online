@@ -92,3 +92,14 @@ test('approved public ratings and written testimonials survive projected setting
   assert.deepEqual(P.settings({publicReviews:published},'roxanna').settings.publicReviews,[]);
   assert.deepEqual(P.settings({publicReviews:published},'billy-lee').settings.publicReviews,[]);
 });
+
+test('About publication preserves editable copy and explicit blanks without private settings',()=>{
+  const fields=["aboutTitle","aboutLead","aboutBody1","aboutBody2","aboutHighlight","aboutBooking"];
+  const page=Object.fromEntries(fields.map(key=>[key,'Edited '+key]));
+  page.aboutBooking='';page.showAbout=false;page.privateNote='PRIVATE';
+  const result=P.settings({publicPage:page},'live-karaoke').settings.publicPage;
+  assert.deepEqual(result,{...Object.fromEntries(fields.map(key=>[key,page[key]])),showAbout:false});
+  assert.equal(P.settings({},'live-karaoke').settings.publicPage.aboutLead,undefined);
+  assert.equal(P.settings({publicPage:page},'roxanna').settings.publicPage,undefined);
+  assert.equal(P.settings({publicPage:{aboutBody1:'x'.repeat(900)}},'live-karaoke').settings.publicPage.aboutBody1.length,700);
+});

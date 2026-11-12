@@ -284,6 +284,23 @@
         node.textContent = JSON.stringify({"@context":"https://schema.org","@graph":data});
       }
 
+      // The existing LiveSuite Website Settings document is authoritative.
+      // Keep the default markup for missing fields; an explicitly empty field
+      // removes only that line. Use textContent, never HTML from Firestore.
+      function renderAbout(settings={}) {
+        const section = document.getElementById("about");
+        if (!section) return;
+        const page = settings.publicPage || {};
+        section.hidden = page.showAbout === false;
+        for (const [key, fallback] of Object.entries({"aboutTitle":"WHAT IS LIVE KARAOKE?","aboutLead":"A live music experience where YOU become the singer.","aboutBody1":"Choose from 150+ rock, pop, indie, classics and party anthems, grab the mic and perform with live guitar and looping — no backing tracks.","aboutBody2":"We provide the lyrics, up to two microphones and the live accompaniment. Whether you're a first-timer or a confident performer, it's spontaneous, social and designed to get the whole room involved.","aboutHighlight":"More than karaoke. A real live performance experience.","aboutBooking":"Perfect for bars, venues, private parties and events."})) {
+          const node = section.querySelector('[data-about-field="'+key+'"]');
+          if (!node) continue;
+          const value = typeof page[key] === "string" ? page[key] : fallback;
+          (node.querySelector("strong") || node).textContent = value;
+          node.hidden = value.trim().length === 0;
+        }
+      }
+
       function renderSongAccess() {
         // Use the same authoritative publication and request gate as the live
         // player. A starting-soon reservation alone must NOT reveal this CTA.
@@ -356,6 +373,7 @@
       LKPublicStore.subscribe(state=>{
         publicState=state;upcomingEvents=state.events;currentSessionControl=state.control;
         currentPerformanceSession=state.session;karaokeState=state.karaoke;runOrder=state.run;
+        renderAbout(state.settings || {});
         renderUpcomingLiveKaraokeEvents();renderPublicStatus();
         if(state.error){document.getElementById('liveStatus').textContent='Live updates are temporarily unavailable. You can still browse songs.';}
       });

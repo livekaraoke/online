@@ -28,6 +28,23 @@ if(window.parent===window){window.__publishFixture=()=>{const f=__firebaseFixtur
      '\n// Simulate a slow catalogue so the request UI must repaint after it resolves.\nconst originalCatalogueLoad=window.LiveKaraokeCatalogue.load;window.LiveKaraokeCatalogue.load=async (...args)=>{await new Promise(resolve=>setTimeout(resolve,1200));return originalCatalogueLoad(...args);};'});
    if(url.startsWith('http://127.0.0.1:8180/'))return route.continue();if(url.includes('firebase-app-compat.js'))return route.fulfill({contentType:'text/javascript',body:fixture});if(url.includes('www.gstatic.com/firebasejs/'))return route.fulfill({contentType:'text/javascript',body:''});return route.abort();});
    await page.goto('http://127.0.0.1:8180/online/',{waitUntil:'networkidle'});
+   // LiveSuite controls every About field in both legacy and projected modes.
+   const aboutKeys=["aboutTitle","aboutLead","aboutBody1","aboutBody2","aboutHighlight","aboutBooking"];
+   await page.evaluate(keys=>{
+     const f=__firebaseFixture,key='karaokeControl/liveKaraokeWebsiteSettings';
+     f.update(key,{...f.docs[key],publicPage:{...Object.fromEntries(keys.map(k=>[k,'Edited '+k])),showAbout:true}});
+   },aboutKeys);
+   for(const key of aboutKeys){
+     const field=page.locator('#about [data-about-field="'+key+'"]');
+     await field.waitFor({state:'visible'});
+     assert.equal(await field.innerText(),'Edited '+key);
+   }
+   await page.evaluate(()=>{
+     const f=__firebaseFixture,key='karaokeControl/liveKaraokeWebsiteSettings';
+     f.update(key,{...f.docs[key],publicPage:{...f.docs[key].publicPage,aboutBooking:''}});
+   });
+   await page.locator('#about [data-about-field="aboutBooking"]').waitFor({state:'hidden'});
+   assert.equal(await page.locator('#about [data-about-field="aboutHighlight"]').isVisible(),true);
    // Guard the homepage changes requested alongside the simplified public request UI.
    assert.equal(await page.locator('#heroSingWithUsBtn').isVisible(),true,'SING WITH US button');
    assert.equal(await page.locator('#heroBookUsBtn').isVisible(),true,'BOOK US button');
