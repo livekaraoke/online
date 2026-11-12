@@ -73,3 +73,22 @@ test('projected store uses three shared view listeners, expires without polling 
   assert.equal(context.LKPublicStore.get().control.active,false);assert.equal(reads.length,3,'no private source fallback');
   events.pagehide();assert.equal(timers.size,0);
 });
+
+test('approved public ratings and written testimonials survive projected settings without private fields',()=>{
+  const published=[
+    {name:'Guest A',country:'Malta',rating:5,review:'A fantastic evening',requesterDeviceId:'DO_NOT_PUBLISH'},
+    {name:'',country:'Italy',rating:4,review:''},
+    {name:'Guest B',rating:0,review:'Great fun',hostNote:'DO_NOT_PUBLISH'},
+    {name:'Empty',rating:null,review:''}
+  ];
+  const live=P.settings({publicReviews:published,venueAccessCode:'SECRET'},'live-karaoke').settings;
+  assert.equal(live.publicReviews.length,3);
+  assert.deepEqual(live.publicReviews.map(r=>r.rating),[5,4,null]);
+  assert.equal(live.publicReviews[0].review,'A fantastic evening');
+  assert.equal(live.publicReviews[1].review,'');
+  assert.equal(live.publicReviews[1].name,'');
+  assert.equal(JSON.stringify(live).includes('DO_NOT_PUBLISH'),false);
+  assert.equal(JSON.stringify(live).includes('SECRET'),false);
+  assert.deepEqual(P.settings({publicReviews:published},'roxanna').settings.publicReviews,[]);
+  assert.deepEqual(P.settings({publicReviews:published},'billy-lee').settings.publicReviews,[]);
+});
