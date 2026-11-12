@@ -136,6 +136,19 @@ if(window.parent===window){window.__publishFixture=()=>{const f=__firebaseFixtur
    if(width<=640)await frame.locator('.request-bottom-tabs [data-request-tab="profile"]').click();else await frame.locator('#editRequesterNameBtn').click();await frame.locator('#singerName').fill('Fixture Singer');await frame.locator('#singerName').blur();await frame.locator('[data-request-tab="songs"]').click();await frame.locator('#songSearch').fill('zombie');await frame.locator('[data-song-id="zombie"]').click();await frame.locator('#requestNote').fill('Fixture note');
    await frame.locator('#sendRequestBtn').evaluate(el=>{el.click();el.click();});await frame.locator('#requestSuccess').waitFor({state:'visible'});
    const requests=await page.evaluate(()=>__firebaseFixture.writes.filter(x=>x.path.startsWith('publicSongRequests/')));assert.equal(requests.length,1,'double submit blocked');assert.equal(requests[0].data.source,'live-karaoke-website');assert.equal(requests[0].data.sessionId,'s');
+   await frame.locator('#requestQuickRating').waitFor({state:'visible'});
+   assert.equal(await frame.locator('[data-quick-review-rating]').count(),5,'five one-tap rating choices after successful send');
+   await frame.locator('[data-quick-review-rating="5"]').click();
+   await frame.locator('#requestQuickRatingStatus').getByText(/Thank you!/).waitFor({state:'visible'});
+   const reviewWrites=await page.evaluate(()=>__firebaseFixture.writes.filter(x=>x.path.startsWith('websiteRequesterProfiles/review_')));
+   assert.equal(reviewWrites.length,1,'rating-only review submitted once');
+   assert.equal(reviewWrites[0].data.rating,5);
+   assert.equal(reviewWrites[0].data.review,'');
+   assert.equal(reviewWrites[0].data.reviewApproved,false,'public rating requires moderation');
+   await frame.locator('#quickFullReviewBtn').click();
+   await frame.locator('#requestReviewPanel').waitFor({state:'visible'});
+   assert.equal(await frame.locator('#submitRequestReviewBtn').isVisible(),true,'full review opens from quick rating');
+   assert.equal(await frame.locator('#requestMobileBack').isVisible(),true,'review has visible Back to Profile beside close');
    await frame.locator('[data-close="requestDialog"]').click();await page.locator('#liveKaraokeRequestFrame').waitFor({state:'detached'});
     // The saved name should skip the initial gate on a fresh popup open.
     await page.locator('#liveNowRequestBtn').tap();
