@@ -38,7 +38,8 @@ if(window.parent===window){window.__publishFixture=()=>{const f=__firebaseFixtur
      visible:el.getBoundingClientRect().width>0&&getComputedStyle(el).display!=='none',
      snippet:el.outerHTML.slice(0,240)
    })));
-   console.log('HOW IT WORKS GRIDS:',JSON.stringify(howGrids));
+   assert.equal(howGrids.length,1,'one How It Works grid; legacy script must not nest another');
+   assert.equal(await page.locator('#howitworks .how-it-works-grid > .how-step').count(),4,'direct step cards retain layout');
    const howColumns=await page.locator('#howitworks .instructions-container.how-it-works-grid').evaluate(el=>getComputedStyle(el).gridTemplateColumns.trim().split(/\s+/).length);
    assert.equal(howColumns,width<=720?2:4,'2x2 grid on phone and four columns on larger screens');
    assert.equal(await page.locator('.booking-faq > details:not(.booking-more-questions)').count(),5,'five visible booking FAQs');
@@ -54,6 +55,10 @@ if(window.parent===window){window.__publishFixture=()=>{const f=__firebaseFixtur
    }),true,'Past Events follows Song List Access');
    assert.equal(await page.locator('#publicWrittenReviews').count(),1,'written reviews module present');
    assert.equal(await page.locator('#publicStarReviews').count(),1,'star-only reviews module present');
+   assert.equal(await page.locator('#liveKaraokeReviewsSection').count(),0,'no duplicate legacy reviews area after Events');
+   assert.equal(await page.locator('#about .about-booking').count(),0,'the removed venue line is never reintroduced');
+   assert.doesNotMatch(await page.locator('#about').innerText(),/Perfect for bars, venues/i);
+   assert.equal(await page.locator('script[src*="live-karaoke-request-popup.js"]').count(),1,'one request popup launcher');
    await page.evaluate(()=>{
      const f=__firebaseFixture, key='karaokeControl/liveKaraokeWebsiteSettings';
      f.update(key,{...f.docs[key],publicReviews:[
