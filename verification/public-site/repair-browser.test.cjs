@@ -48,6 +48,22 @@ if(window.parent===window){window.__publishFixture=()=>{const f=__firebaseFixtur
    }),true,'Past Events follows Song List Access');
    assert.equal(await page.locator('#publicWrittenReviews').count(),1,'written reviews module present');
    assert.equal(await page.locator('#publicStarReviews').count(),1,'star-only reviews module present');
+   await page.evaluate(()=>{
+     const f=__firebaseFixture, key='karaokeControl/liveKaraokeWebsiteSettings';
+     f.update(key,{...f.docs[key],publicReviews:[
+       {name:'Anna',country:'Malta',rating:5,review:'Loved the performance'},
+       {name:'Chris',country:'UK',rating:4,review:'Great experience'},
+       {name:'Maria',country:'Italy',rating:5,review:'Will sing again'},
+       {name:'A',rating:5,review:''},{name:'B',rating:4,review:''},
+       {name:'C',rating:5,review:''},{name:'D',rating:3,review:''},
+       {name:'E',rating:2,review:''}
+     ]});
+   });
+   await page.locator('#publicReviewSection').waitFor({state:'visible'});
+   assert.equal(await page.locator('#publicWrittenReviewCards .lk-testimonial').count(),2,'two published written testimonials');
+   assert.equal(await page.locator('#publicStarReviewCards .lk-star-review').count(),4,'four rating-only cards');
+   assert.match(await page.locator('#publicWrittenReviewCards').innerText(),/Loved the performance/);
+   assert.equal(await page.locator('#publicStarReviewCards').innerText().then(t=>t.includes('Will sing again')),false,'comments never leak into star cards');
       assert.equal(await page.locator('#heroLiveNow').isVisible(),false,'test session hidden');
    assert.equal(await page.locator('#liveStatus').isVisible(),true,'inactive status area retains countdown');
    assert.match(await page.locator('#liveStatus').innerText(),/NEXT LIVE KARAOKE EVENT/);
