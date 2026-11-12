@@ -8,7 +8,7 @@
   <meta name="robots" content="noindex,follow">
   <script src="js/artist-names.js?v=20261022-public"></script>
   <link rel="stylesheet" href="css/style.css?v=20261006-live-karaoke-request-only">
-  <link rel="stylesheet" href="css/request-mobile-ux.css?v=20261111-quick-ratings-1">
+  <link rel="stylesheet" href="css/request-mobile-ux.css?v=20261112-unified-requests-1">
   <style>
     html,body{margin:0;min-height:100%;background:transparent!important}
     body{overflow:hidden}
@@ -68,9 +68,9 @@
   <dialog id="requestDialog" class="modal request-modal">
     <div class="request-modal-top">
       <div class="request-header">
-        <span class="eyebrow">LIVE REQUESTS</span>
+        <span class="eyebrow" aria-hidden="true">LIVE REQUESTS</span>
         <div class="request-title-line">
-          <h2>REQUEST A SONG</h2>
+          <h2 aria-hidden="true"></h2>
           <button id="editRequesterNameBtn" class="requesting-as-inline" type="button" title="Open profile" aria-label="Open profile">
             <span>REQUESTING AS</span><strong id="requesterNameLabel">Guest</strong><i aria-hidden="true">✎</i>
           </button>
@@ -137,9 +137,9 @@
           <div class="request-panel-heading"><span class="eyebrow">SONG LIST</span><h3>CHOOSE A SONG</h3></div>
           <div class="request-favourites-toggle-wrap"><button id="requestFavouriteOnlyBtn" class="request-favourites-toggle" type="button" aria-pressed="false" hidden>FAVOURITES</button></div>
           <div class="request-controls"><input id="songSearch" type="search" aria-label="Search song or artist" placeholder="Search song or artist…" autocomplete="off" inputmode="search"><button id="clearSongCategoryBtn" class="request-filter-clear" type="button" hidden>SHOW ALL</button></div>
-          <p class="request-alphabet-help">Or browse by first letter</p>
-          <div id="requestAlphabetRow" class="request-alphabet-row" aria-label="Jump by first letter"></div>
-          <details id="requestSongFilters" class="request-song-filters"><summary>MORE WAYS TO FIND SONGS</summary><div id="requestCategoryGrid" class="request-category-grid" aria-label="Song categories"></div></details>
+          <!-- Legacy filter nodes are hidden for compatibility; browsing is search and A-Z list only. -->
+          <div id="requestAlphabetRow" class="request-alphabet-row" hidden aria-hidden="true"></div>
+          <details id="requestSongFilters" class="request-song-filters" hidden aria-hidden="true"><summary>Advanced filters</summary><div id="requestCategoryGrid" class="request-category-grid"></div></details>
           <div id="requestNotice" class="request-notice" role="status">Scroll through the songs or search above.</div>
           <div id="songResults" class="song-results"></div>
         </section>
