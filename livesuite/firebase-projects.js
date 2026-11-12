@@ -78,15 +78,12 @@
     document.head.appendChild(enquiryCss);
 
     const refreshScript = document.createElement("script");
-    refreshScript.src = new URL("../js/live-karaoke-public-refresh.js?v=20261022-public", base).href;
+    refreshScript.src = new URL("../js/live-karaoke-public-refresh.js?v=20261112-approved-sections-1", base).href;
     refreshScript.async = false;
     document.head.appendChild(refreshScript);
 
-    const script = document.createElement("script");
-    script.src = new URL("../js/live-karaoke-request-popup.js?v=20261022-public", base).href;
-    script.async = false;
-    document.head.appendChild(script);
-
+    // The public page already loads the current request launcher once from index.html.
+    // Do not insert a second stale copy with its own click handlers.
 
   }
 })();
