@@ -30,7 +30,7 @@
     {id:"pop",label:"POP",subtitle:"Pop songs",enabled:true,mode:"rule",rule:"pop",songIds:[]}
   ];
   const DEFAULT_REQUEST_FAQS = [
-    {id:"how-request",question:"How do I request a song?",answer:"Open SONG LIST, search or browse a category, tap + on a song, add an optional note, then press SEND REQUEST."},
+    {id:"how-request",question:"How do I request a song?",answer:"Open SONGS, search or scroll through the list, then tap REQUEST SONG. Add an optional note and tap SEND REQUEST. Browsing is available anytime, but requests require a live event."},
     {id:"after-send",question:"What happens after I send it?",answer:"Your request starts as pending. When accepted it appears in LiveSuite Run Order and MY REQUESTS shows your live queue position."},
     {id:"change-request",question:"Can I change my request?",answer:"You can edit your note while the request is still waiting or queued. You can also cancel your own request before it starts playing."},
     {id:"rejected",question:"Why was my request rejected?",answer:"If the host rejects or removes a request, MY REQUESTS shows REJECTED together with the reason supplied by the host."},
@@ -937,7 +937,7 @@
     if(!rail||!thumb)return;
     const panel=["profile","requests"].map(id=>document.querySelector('[data-request-panel="'+id+'"]'))
       .find(node=>node&&!node.hidden);
-    if(!panel||window.innerWidth>640||!$("requestDialog")?.open){
+    if(!panel||!$("requestDialog")?.open){
       rail.hidden=true;
       return;
     }
@@ -1036,7 +1036,7 @@
 
   function renderRequestCategoryCards(){
     const grid=$("requestCategoryGrid");
-    if(!grid)return;
+    if(!grid||grid.hidden)return;
     const categories=websiteRequestSettings.categories.filter(category=>category.enabled!==false);
     const showArtistCard=websiteRequestSettings.showArtistSearchCard!==false;
     const size=Math.max(60,Math.min(120,Number(websiteRequestSettings.categoryCardSize)||82));
@@ -1071,7 +1071,7 @@
 
   function renderAlphabetJump(containerId,list,{artistMode=false,attribute="data-alpha",scrollTargetId="songResults"}={}){
     const row=$(containerId);
-    if(!row)return;
+    if(!row||row.hidden)return;
     const present=new Set();
     list.forEach(song=>{
       const value=artistMode?artistBrowseDisplayName(ArtistNames.display(song.artist||"")):(song.title||"");
@@ -1216,11 +1216,7 @@
     );
     if(debugCatalogue)console.info("Live Karaoke catalogue render", JSON.stringify({songs:songs.length,requestCategory,search:q,matches:list.length}));
     const artistMode=requestCategory===ARTIST_BROWSE_CATEGORY;
-    renderAlphabetJump("requestAlphabetRow",list,{
-      artistMode,
-      attribute:artistMode?"data-artist-alpha":"data-alpha",
-      scrollTargetId:"songResults"
-    });
+    // No public A-Z jump row: the alphabetical song list is scrollable as-is.
 
     if(artistMode){
       $("songResults").classList.add("artist-browse-results");
