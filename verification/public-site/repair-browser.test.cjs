@@ -144,13 +144,14 @@ if(window.parent===window){window.__publishFixture=()=>{const f=__firebaseFixtur
    assert.equal(await frame.locator('.song-row').count(),1,'favourites displays only selected songs');
    await frame.locator('#requestFavouriteOnlyBtn').click();
    assert.match(await frame.locator('#requestFavouriteOnlyBtn').innerText(),/FAVOURITES/);
-   await frame.locator('.request-bottom-tabs [data-request-tab="profile"]').click(); // One universal Profile navigation, the old header edit control is hidden.await frame.locator('#singerName').fill('Fixture Singer');await frame.locator('#singerName').blur();await frame.locator('[data-request-tab="songs"]').click();await frame.locator('#songSearch').fill('zombie');await frame.locator('[data-song-id="zombie"]').click();await frame.locator('#requestNote').fill('Fixture note');
+   await frame.locator('.request-bottom-tabs [data-request-tab="profile"]').click();
+   await frame.locator('#singerName').fill('Fixture Singer');await frame.locator('#singerName').blur();await frame.locator('[data-request-tab="songs"]').click();await frame.locator('#songSearch').fill('zombie');await frame.locator('[data-song-id="zombie"]').click();await frame.locator('#requestNote').fill('Fixture note');
    await frame.locator('#sendRequestBtn').evaluate(el=>{el.click();el.click();});await frame.locator('#requestSuccess').waitFor({state:'visible'});
    const requests=await page.evaluate(()=>__firebaseFixture.writes.filter(x=>x.path.startsWith('publicSongRequests/')));assert.equal(requests.length,1,'double submit blocked');assert.equal(requests[0].data.source,'live-karaoke-website');assert.equal(requests[0].data.sessionId,'s');
    await frame.locator('#requestQuickRating').waitFor({state:'visible'});
    assert.equal(await frame.locator('[data-quick-review-rating]').count(),5,'five one-tap rating choices after successful send');
    await frame.locator('[data-quick-review-rating="5"]').click();
-   await frame.locator('#requestQuickRatingStatus').getByText(/Thank you!/).waitFor({state:'visible'});
+   await page.waitForFunction(()=>document.querySelector('#liveKaraokeRequestFrame')?.contentDocument?.getElementById('requestQuickRatingStatus')?.textContent?.includes('Thank you!'),null,{timeout:12000});
    const reviewWrites=await page.evaluate(()=>__firebaseFixture.writes.filter(x=>x.path.startsWith('websiteRequesterProfiles/review_')));
    assert.equal(reviewWrites.length,1,'rating-only review submitted once');
    assert.equal(reviewWrites[0].data.rating,5);
