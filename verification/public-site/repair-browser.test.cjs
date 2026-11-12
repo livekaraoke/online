@@ -33,7 +33,13 @@ if(window.parent===window){window.__publishFixture=()=>{const f=__firebaseFixtur
    assert.equal(await page.locator('#heroBookUsBtn').isVisible(),true,'BOOK US button');
    assert.notEqual(await page.locator('.public-hero-title').evaluate(el=>getComputedStyle(el).textShadow),'none','hero title has high-contrast shadow');
    assert.equal(await page.locator('#howitworks .how-step').count(),4,'four clear How It Works cards');
-   const howColumns=await page.locator('#howitworks .how-it-works-grid').evaluate(el=>getComputedStyle(el).gridTemplateColumns.trim().split(/\s+/).length);
+   const howGrids=await page.locator('#howitworks .how-it-works-grid').evaluateAll(elements=>elements.map(el=>({
+     role:el.getAttribute('role'),cls:el.className,display:getComputedStyle(el).display,
+     visible:el.getBoundingClientRect().width>0&&getComputedStyle(el).display!=='none',
+     snippet:el.outerHTML.slice(0,240)
+   })));
+   console.log('HOW IT WORKS GRIDS:',JSON.stringify(howGrids));
+   const howColumns=await page.locator('#howitworks .instructions-container.how-it-works-grid').evaluate(el=>getComputedStyle(el).gridTemplateColumns.trim().split(/\s+/).length);
    assert.equal(howColumns,width<=720?2:4,'2x2 grid on phone and four columns on larger screens');
    assert.equal(await page.locator('.booking-faq > details:not(.booking-more-questions)').count(),5,'five visible booking FAQs');
    assert.equal(await page.locator('.booking-faq > details.booking-more-questions').count(),1,'remaining FAQs collapsed');
