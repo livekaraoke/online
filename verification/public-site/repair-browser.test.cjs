@@ -45,6 +45,14 @@ if(window.parent===window){window.__publishFixture=()=>{const f=__firebaseFixtur
    });
    await page.locator('#about [data-about-field="aboutBooking"]').waitFor({state:'hidden'});
    assert.equal(await page.locator('#about [data-about-field="aboutHighlight"]').isVisible(),true);
+   assert.equal(await page.locator('#about > #aboutBookLiveKaraokeBtn').count(),1,'About booking CTA survives editable text updates');
+   assert.equal(await page.locator('#aboutBookLiveKaraokeBtn').isVisible(),true);
+   assert.equal(await page.locator('#aboutBookLiveKaraokeBtn').innerText(),'BOOK LIVE KARAOKE');
+   assert.equal(await page.locator('#aboutBookLiveKaraokeBtn').getAttribute('href'),'#enquire');
+   await page.locator('#aboutBookLiveKaraokeBtn').click();
+   await page.waitForFunction(()=>Math.abs(document.getElementById('enquire').getBoundingClientRect().top)<100);
+   assert.equal(await page.locator('#howitworks > #howItWorksRequestBtn').count(),1,'How It Works CTA is outside the grid');
+   assert.equal(await page.locator('#howItWorksRequestBtn').isVisible(),false,'no live session: no request CTA');
    // Guard the homepage changes requested alongside the simplified public request UI.
    assert.equal(await page.locator('#heroSingWithUsBtn').isVisible(),true,'SING WITH US button');
    assert.equal(await page.locator('#heroBookUsBtn').isVisible(),true,'BOOK US button');
@@ -115,6 +123,10 @@ if(window.parent===window){window.__publishFixture=()=>{const f=__firebaseFixtur
    assert.equal(await page.locator('link[rel=canonical]').getAttribute('href'),'https://livekaraoke.eu/');
    await page.evaluate(()=>{const f=__firebaseFixture;f.update('karaokeControl/currentSession',{...f.docs['karaokeControl/currentSession'],isTestSession:false});f.update('upcomingEvents/e',{...f.docs['upcomingEvents/e'],publicVisibility:'public'});});
    await page.locator('#liveNowRequestBtn').waitFor({state:'visible'});
+   await page.locator('#howItWorksRequestBtn').waitFor({state:'visible'});
+   assert.equal(await page.locator('#howItWorksRequestBtn').innerText(),'REQUEST A SONG');
+   const howGrid=await page.locator('#howitworks .how-it-works-grid').boundingBox(),howCta=await page.locator('#howItWorksRequestBtn').boundingBox();
+   assert.ok(howCta.y>=howGrid.y+howGrid.height,'request CTA remains below the steps');
    assert.equal(await page.locator('.live-status-section > #heroLiveNow').count(),1,'live player replaces the status strip below the hero');
    assert.equal(await page.locator('.hero #heroLiveNow').count(),0,'player is no longer nested in the banner hero');
    assert.equal(await page.locator('#liveStatus').isVisible(),false,'duplicate live strip is hidden while playing');
@@ -124,7 +136,7 @@ if(window.parent===window){window.__publishFixture=()=>{const f=__firebaseFixtur
    assert.ok(button.height>=48);assert.ok(width>600?button.x>list.x+list.width-2:button.y>=list.y+list.height,'requested responsive placement');
    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'no horizontal overflow');
    if(process.env.LK_SCREENSHOT_DIR){fs.mkdirSync(process.env.LK_SCREENSHOT_DIR,{recursive:true});await page.locator('#heroLiveNow').screenshot({path:path.join(process.env.LK_SCREENSHOT_DIR,`live-panel-${width}.png`)});}
-   await page.locator('#liveNowRequestBtn').tap();const frame=page.frameLocator('#liveKaraokeRequestFrame');
+   await page.locator(width<1000?'#howItWorksRequestBtn':'#liveNowRequestBtn').tap();const frame=page.frameLocator('#liveKaraokeRequestFrame');
     await frame.locator('#requestNameGate').waitFor({state:'visible'});
     // Async catalogue/request loading must not dismiss the first-time name prompt.
     await frame.locator('#requestNameGate').waitFor({state:'visible'}); // Catalogue may finish only after entering a singer name.
@@ -151,7 +163,7 @@ if(window.parent===window){window.__publishFixture=()=>{const f=__firebaseFixtur
    assert.ok(titleBox&&closeBox&&Math.abs((titleBox.y+titleBox.height/2)-(closeBox.y+closeBox.height/2))<9,'title aligns with X');
    assert.equal(await frame.locator('.song-row').count(),3);await frame.locator('#songSearch').fill('cranberries');assert.match(await frame.locator('#songResults').innerText(),/Zombie/);await frame.locator('#songSearch').fill('');
    const counts=await page.evaluate(()=>__firebaseFixture.counts);for(const p of (projected?['publicSites/live-karaoke/views/live','publicSites/live-karaoke/views/events','publicSites/live-karaoke/views/settings']:['karaokeControl/currentSession','karaoke/state','karaokeControl/runOrder','karaokeControl/liveKaraokeWebsiteSettings']))assert.equal(counts[p],1,`one shared listener ${p}`);
-   await page.evaluate(()=>__firebaseFixture.update('karaoke/state',{songsEnabled:false}));await page.waitForFunction(()=>document.querySelector('#liveKaraokeRequestFrame')?.contentDocument?.getElementById('requestGateStatus')?.textContent?.includes('REQUESTS CLOSED'),null,{timeout:12000});assert.equal(await frame.locator('.song-action:not(:disabled)').count(),0);
+   await page.evaluate(()=>__firebaseFixture.update('karaoke/state',{songsEnabled:false}));await page.waitForFunction(()=>document.querySelector('#liveKaraokeRequestFrame')?.contentDocument?.getElementById('requestGateStatus')?.textContent?.includes('REQUESTS CLOSED'),null,{timeout:12000});assert.equal(await frame.locator('.song-action:not(:disabled)').count(),0);assert.equal(await page.locator('#howItWorksRequestBtn').isVisible(),false,'closed requests hide How It Works CTA');
    await page.evaluate(()=>__firebaseFixture.update('karaoke/state',{songsEnabled:true}));await page.waitForFunction(()=>document.querySelector('#liveKaraokeRequestFrame')?.contentDocument?.getElementById('requestGateStatus')?.textContent?.includes('REQUESTS OPEN'),null,{timeout:12000});
    await frame.locator('#songSearch').fill('zombie');await frame.locator('#songResults [data-toggle-favourite]').click();assert.equal(await frame.locator('#songResults [data-toggle-favourite]').getAttribute('aria-label'),'Remove from favourites');
    await frame.locator('#requestFavouriteOnlyBtn').waitFor({state:'visible'});
@@ -196,6 +208,8 @@ if(window.parent===window){window.__publishFixture=()=>{const f=__firebaseFixtur
    assert.equal(await page.locator('#liveStatus').isVisible(),true,'countdown restores when session ends');
    assert.match(await page.locator('#liveStatus').innerText(),/NEXT LIVE KARAOKE EVENT/);assert.equal(await page.locator('#songListBtn').getAttribute('aria-disabled'),null,'song browsing stays available after the session ends');
    assert.match(await page.locator('#songListBtn').innerText(),/BROWSE SONG LIST/);
+   assert.equal(await page.locator('#howItWorksRequestBtn').isVisible(),false,'ended session hides How It Works CTA');
+   assert.equal(await page.locator('#aboutBookLiveKaraokeBtn').isVisible(),true,'booking remains available after session');
    await page.locator('#songListBtn').click();
    const browseFrame=page.frameLocator('#liveKaraokeRequestFrame');
    await browseFrame.locator('#requestBrowser').waitFor({state:'visible'});

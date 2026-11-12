@@ -359,6 +359,15 @@
 
       }
 
+      // Preserve the original About booking CTA: scroll to enquiries, do
+      // not open the popup. It is independent of the editable About fields.
+      document.getElementById("aboutBookLiveKaraokeBtn")?.addEventListener("click",event=>{
+        const target=document.getElementById("enquire");
+        if(!target)return;
+        event.preventDefault();
+        target.scrollIntoView({behavior:window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches?"auto":"smooth",block:"start"});
+      });
+
       // SING WITH US opens the request popup only for an active session.
       // Outside a session it helps visitors find the next advertised events.
       document.getElementById("heroSingWithUsBtn")?.addEventListener("click",()=>{

@@ -111,6 +111,8 @@ function gate({live=true,active=false,open=false,reserved='',test=false}={}) {
     assert.equal(howBtn.hidden,!(active&&open));
   }
   const homepage=read('index.html');
+  assert.match(homepage,/<a id="aboutBookLiveKaraokeBtn" class="main-button" href="#enquire">BOOK LIVE KARAOKE<\/a>/);
+  assert.match(homepage,/<button id="howItWorksRequestBtn"[^>]*hidden>REQUEST A SONG<\/button>/);
   assert.match(homepage,/<button class="main-button" type="button" id="songListBtn"/);
   assert.doesNotMatch(homepage,/id="songListBtn"[^>]*aria-disabled="true"/);
   assert.match(app,/requestProfile\(\)\.name \|\| !window\.LKRequestGate\?\.canSubmit\(\)/);
