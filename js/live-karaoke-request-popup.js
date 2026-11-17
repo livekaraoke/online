@@ -8,7 +8,7 @@
 
   // Request-only Live Karaoke document. This is not /billylee26/ and does not
   // contain the Billy Lee website shell.
-  const FRAME_URL = "livekaraoke26/request.html?v=20261112-unified-requests-1#req";
+  const FRAME_URL = "livekaraoke26/request.html?v=20261117-karaoke-session-setlist-1#req";
   let overlay = null;
   let frame = null;
   let previousBodyOverflow = "";

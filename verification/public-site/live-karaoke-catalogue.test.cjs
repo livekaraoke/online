@@ -9,7 +9,7 @@ const app = read('livekaraoke26/js/app.js');
 const lifecycle = read('js/public-request-lifecycle.js');
 const snapshot = (id, value) => ({id, exists:!!value, data:()=>value});
 
-function fixture({active=false, selected='public', browse='browse', fail=false}={}) {
+function fixture({active=false, selected='public', browse='browse', fail=false, type='Live Karaoke', sessionType, sessionId=active?'real-session':''}={}) {
   const records = {
     public:{name:'Public',songIds:['wonderwall','zombie']},
     browse:{name:'Browse',songIds:['wonderwall','brightside']}
@@ -19,7 +19,7 @@ function fixture({active=false, selected='public', browse='browse', fail=false}=
     zombie:{title:'Zombie',artist:'Cranberries, The',year:1994,publicSongListVisible:false},
     brightside:{title:'Mr Brightside',artist:'Killers, The',year:2004}
   };
-  const controls = {publicSongList:{setlistId:selected},liveKaraokeWebsiteSettings:{defaultBrowseSetlistId:browse},currentSession:{active,sessionId:active?'real-session':''}};
+  const controls = {publicSongList:{setlistId:selected},liveKaraokeWebsiteSettings:{defaultBrowseSetlistId:browse},currentSession:{active,sessionId,type,...(sessionType!==undefined?{sessionType}:{})}};
   const db = {collection(name){
     assert.ok(['karaokeControl','lyricsSetlists','lyrics'].includes(name), `Unexpected source: ${name}`);
     return {
@@ -31,7 +31,7 @@ function fixture({active=false, selected='public', browse='browse', fail=false}=
       get:async()=>({docs:Object.entries(songs).map(([id,song])=>snapshot(id,song))})
     };
   }};
-  const context = {window:{},firebase:{firestore:{FieldPath:{documentId:()=> '__name__'}}},console};
+  const context = {window:{LKPublicVisibility:require('../../js/public-visibility.js')},firebase:{firestore:{FieldPath:{documentId:()=> '__name__'}}},console};
   vm.runInNewContext(catalogue,context);
   return {load:()=>context.window.LiveKaraokeCatalogue.load(db)};
 }
@@ -67,6 +67,19 @@ function gate({live=true,active=false,open=false,reserved='',test=false}={}) {
   const active=await fixture({active:true}).load();
   assert.equal(active.setlist.id,'public');
   assert.equal(active.songs.length,2); // Explicit public setlist overrides per-song visibility.
+  for (const type of ['Roxanna','Solo','Billy Lee','Other','']) {
+    const result=await fixture({active:true,type}).load();
+    assert.equal(result.setlist.id,'browse','Active '+(type||'unknown')+' must not replace the Live Karaoke browse setlist');
+    assert.deepEqual(Array.from(result.songs,song=>song.title),['Wonderwall','Mr Brightside']);
+  }
+  for (const type of ['Live Karaoke','live-karaoke','livekaraoke',' LIVE KARAOKE ']) {
+    assert.equal((await fixture({active:true,type}).load()).setlist.id,'public');
+  }
+  assert.equal((await fixture({active:true,type:'Live Karaoke',sessionType:'Solo'}).load()).setlist.id,'browse');
+  assert.equal((await fixture({active:true,type:'Solo',sessionType:'Live Karaoke'}).load()).setlist.id,'public');
+  assert.equal((await fixture({active:true,sessionId:''}).load()).setlist.id,'browse');
+  assert.equal((await fixture({active:false,type:'Live Karaoke'}).load()).setlist.id,'browse');
+  assert.equal((await fixture({active:true,type:'Roxanna',browse:''}).load()).setlist.id,'public'); // Existing explicit default fallback.
   assert.equal((await fixture({selected:'',browse:''}).load()).songs.length,2);
   await assert.rejects(fixture({fail:true}).load(), /permission-denied/);
   await assert.rejects(fixture({browse:'missing'}).load(), /does not exist/);

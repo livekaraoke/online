@@ -12,8 +12,11 @@
     ]);
     const data = snap => snap.exists ? (snap.data() || {}) : {};
     const list = data(listSnap), settings = data(settingsSnap), session = data(sessionSnap);
-    const active = session.active === true && !!(session.sessionId || session.activeSessionId);
-    const setlistId = String((active ? list.setlistId : settings.defaultBrowseSetlistId) || list.setlistId || "").trim();
+    // Only a Live Karaoke session may override this website's browse setlist.
+    // Other acts use their own live setlists, even when they are performing now.
+    const activeKaraoke = session.active === true && !!(session.sessionId || session.activeSessionId)
+      && window.LKPublicVisibility.act(session) === "live-karaoke";
+    const setlistId = String((activeKaraoke ? list.setlistId : settings.defaultBrowseSetlistId) || list.setlistId || "").trim();
 
     if (setlistId) {
       const snapshot = await db.collection("lyricsSetlists").doc(setlistId).get();
