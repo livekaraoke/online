@@ -171,7 +171,7 @@
     website?.remove();
 
     const websiteGroup=makeGroup({id:"roxanna-website",label:"Website",icon:"lsi-globe",open:current==="roxanna-website-settings.html",children:[
-      makeLink(base,{file:"https://livekaraoke.github.io/online/roxanna/",label:"Open",icon:"lsi-globe",target:"_blank"}),
+      makeLink(base,{file:"https://roxanna.eu/",label:"Open",icon:"lsi-globe",target:"_blank"}),
       makeLink(base,{file:"roxanna-website-settings.html",key:"roxanna-website-settings",label:"Settings",icon:"lsi-settings"})
     ]});
     nav.appendChild(websiteGroup);

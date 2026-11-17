@@ -18,6 +18,27 @@
     .roxanna-site-card h2{margin:0 0 8px}
     .roxanna-site-card p{margin:0;color:var(--ls-muted,#91a0a8);line-height:1.55}
     .roxanna-site-open{display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:8px 14px;border:1px solid #f28a00;border-radius:8px;color:#ffd59d;text-decoration:none;background:rgba(242,138,0,.1);font-weight:800;white-space:nowrap}
+      .roxanna-site-form{display:grid;gap:10px;margin-top:16px;max-width:620px}
+    .roxanna-site-form label,.roxanna-copy-search-label,.roxanna-copy-field label{font-weight:700;display:block}
+    .roxanna-site-main input,.roxanna-site-main select,.roxanna-site-main textarea{width:100%;min-height:44px;padding:10px 12px;border:1px solid var(--ls-border,#264451);border-radius:7px;background:var(--ls-bg,#061016);color:var(--ls-text,#e6eef2);font:inherit;box-sizing:border-box}
+    .roxanna-site-main textarea{resize:vertical;min-height:72px}
+    .roxanna-site-main button{cursor:pointer;min-height:42px;padding:8px 12px;border:1px solid var(--ls-border,#264451);border-radius:7px;background:var(--ls-panel,#07151c);color:inherit;font:inherit}
+    .roxanna-site-main button[aria-pressed="true"],.roxanna-site-main button.roxanna-site-open{border-color:#f28a00;color:#ffd59d;background:rgba(242,138,0,.1);font-weight:800}
+    .roxanna-site-main button:disabled{opacity:.5;cursor:not-allowed}
+    .roxanna-site-tabs,.roxanna-copy-actions{display:flex;flex-wrap:wrap;gap:10px;margin:16px 0;align-items:center}
+    .roxanna-copy-actions{position:sticky;bottom:0;background:var(--ls-panel,#07151c);padding:12px 0;z-index:2}
+    .roxanna-copy-search-label{margin:12px 0 6px}
+    .roxanna-site-card .roxanna-site-hint{font-size:.85rem;margin:10px 0;color:var(--ls-muted,#91a0a8)}
+    .roxanna-copy-group{border:1px solid var(--ls-border,#264451);border-radius:8px;margin:10px 0;padding:10px 14px}
+    .roxanna-copy-group summary{font-weight:800;cursor:pointer;padding:6px 0}
+    .roxanna-copy-field{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 12px;border-top:1px solid var(--ls-border,#264451);padding:12px 0}
+    .roxanna-copy-field label{grid-column:1/-1;font-size:.85rem;line-height:1.4;overflow-wrap:anywhere}
+    .roxanna-copy-field small{grid-column:1/-1;color:var(--ls-muted,#91a0a8);overflow-wrap:anywhere}
+    .roxanna-copy-field button{align-self:start;font-size:.8rem}
+    #siteSettingsStatus{margin:16px 0;white-space:pre-wrap;line-height:1.5}
+    #siteSettingsStatus[data-error="true"]{color:#ff9b91}
+    [hidden]{display:none!important}
+    @media(max-width:600px){.roxanna-site-card{padding:14px}.roxanna-site-topbar{flex-wrap:wrap}.roxanna-copy-actions{position:static}.roxanna-copy-field{gap:6px}}
   </style>
 </head>
 <body class="admin-body enquiries-page">
@@ -28,15 +49,42 @@
         <div>
           <p class="enquiries-eyebrow">Roxanna</p>
           <h1>Website Settings</h1>
-          <p class="enquiries-subtitle">Roxanna website controls can be added here as the public site becomes configurable.</p>
+          <p class="enquiries-subtitle">Manage the default live-request repertoire and public website wording.</p>
         </div>
-        <a class="roxanna-site-open" href="https://livekaraoke.github.io/online/roxanna/" target="_blank" rel="noopener">Open website ↗</a>
+        <a class="roxanna-site-open" href="https://roxanna.eu/" target="_blank" rel="noopener">Open website ↗</a>
       </header>
 
-      <section class="roxanna-site-card">
-        <h2>Website</h2>
-        <p>The sidebar now keeps Roxanna website access together under Website → Open / Settings. No editable Roxanna website fields have been wired to Firestore yet.</p>
-      </section>
+      <p id="siteSettingsStatus" role="status" aria-live="polite">Checking owner sign-in…</p>
+      <div id="roxannaSettings" hidden>
+        <section class="roxanna-site-card">
+          <h2>Live request repertoire</h2>
+          <p>Choose the default Roxanna setlist used by the public request popup. Every song in the selected list is included; the list is still available only while requests are open.</p>
+          <form id="repertoireForm" class="roxanna-site-form">
+            <label for="roxannaSetlist">Default request setlist</label>
+            <select id="roxannaSetlist" required></select>
+            <p id="roxannaSetlistInfo" class="roxanna-site-hint"></p>
+            <button id="saveRoxannaSetlist" class="roxanna-site-open" type="submit">Save repertoire</button>
+          </form>
+          <p class="roxanna-site-hint">The current public request rules require the source setlist to be named Roxanna. Other acts' lists cannot be published through this control. Edit the chosen list in the LiveSuite setlist editor to add or remove songs.</p>
+        </section>
+        <section class="roxanna-site-card">
+          <h2>Website wording</h2>
+          <p>All fields start with the current website wording. Edit only the fields you want to change. Your changes are plain text and apply to the public website without a code deployment.</p>
+          <div class="roxanna-site-tabs" role="group" aria-label="Website page">
+            <button id="copyHomeTab" type="button" aria-pressed="true">Homepage</button>
+            <button id="copyEpkTab" type="button" aria-pressed="false">Venue EPK</button>
+            <a class="roxanna-site-open" href="https://roxanna.eu/venue-epk/" target="_blank" rel="noopener">Open EPK ↗</a>
+          </div>
+          <label class="roxanna-copy-search-label" for="copySearch">Find a field</label>
+          <input id="copySearch" type="search" placeholder="Search headings, copy, buttons, labels…">
+          <p id="copyFieldCount" class="roxanna-site-hint"></p>
+          <form id="copyForm">
+            <div id="copyFields"></div>
+            <div class="roxanna-copy-actions"><button class="roxanna-site-open" id="saveWebsiteCopy" type="submit">Save website wording</button><button id="resetPageCopy" type="button">Restore this page's defaults</button></div>
+          </form>
+          <p class="roxanna-site-hint">Keep placeholders such as {song}, {name} and {count} when editing messages. Changes affect text, not links, layout, bookings, gig data or song-request permissions.</p>
+        </section>
+      </div>
     </main>
   </div>
 
@@ -48,5 +96,7 @@
   <script src="js/sidebar.js?v=20260930-dynamic-version-v2"></script>
   <script src="js/profile.js?v=20260929-members-align"></script>
   <script src="js/auth.js?v=20260910-stage4"></script>
+  <script src="js/roxanna-copy-schema.js?v=20261117-copy1"></script>
+  <script src="js/roxanna-website-settings.js?v=20261117-copy1"></script>
 </body>
 </html>
