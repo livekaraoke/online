@@ -16,6 +16,7 @@ const fs=require('node:fs'),path=require('node:path');
   'karaoke/state':{songsEnabled:true},
   'karaokeControl/publicSongList':{setlistId:'list'},
   'karaokeControl/liveKaraokeWebsiteSettings':{defaultBrowseSetlistId:'browse'},
+  'karaokeControl/roxannaWebsiteSettings':{},
   'lyrics/a':{title:'Alpha'},'lyrics/b':{title:'Bravo'},'lyricsSetlists/list':{name:'Roxanna',songIds:['a']},'lyricsSetlists/browse':{songIds:['b']}
  };
  async function seed(patch={}){await env.withSecurityRulesDisabled(async c=>{const admin=c.firestore();for(const [p,d]of Object.entries({...initial,...patch}))await setDoc(doc(admin,p),d);});}
@@ -59,6 +60,19 @@ const fs=require('node:fs'),path=require('node:path');
  await seed({'karaoke/state':{songsEnabled:true,venueAccessCode:'venue-code'}});await assertFails(send());await assertFails(send({},'wrong'));await assertSucceeds(send({},'venue-code'));
  await seed({'karaokeControl/currentSession':{active:false},'karaoke/state':{songsEnabled:true,preSessionRequestSessionId:'reserved',preSessionRequestEventId:'e'}});await assertSucceeds(send({sessionId:'reserved',songId:'b',publicSetlistId:'browse'}));await assertFails(send({sessionId:'reserved'}));
  for(const [type,source]of [['Solo','billylee26'],['Roxanna','roxanna26']]){await seed({'karaokeControl/currentSession':{...initial['karaokeControl/currentSession'],type},'upcomingEvents/e':{type,status:'Confirmed'}});await assertSucceeds(send({source}));await assertFails(send());}
+ // Roxanna accepts arbitrary setlist names ONLY when explicitly selected by the owner.
+ const roxannaSession={'karaokeControl/currentSession':{...initial['karaokeControl/currentSession'],type:'Roxanna'},'upcomingEvents/e':{type:'Roxanna',status:'Confirmed'},'lyricsSetlists/alternate':{name:'Classic Rock / Covers',type:'Solo',songIds:['b']}};
+ await seed({...roxannaSession,'karaokeControl/roxannaWebsiteSettings':{defaultBrowseSetlistId:'alternate'}});
+ await assertSucceeds(send({source:'roxanna26',songId:'b',publicSetlistId:'alternate'}));
+ await assertFails(send({source:'roxanna26',songId:'a',publicSetlistId:'alternate'}));
+ await assertFails(send({source:'roxanna26',songId:'a',publicSetlistId:'list'}));
+ await assertFails(send({source:'roxanna26',songId:'b',publicSetlistId:''}));
+ await assertFails(send({source:'billylee26',songId:'b',publicSetlistId:'alternate'}));
+ await seed({...roxannaSession,'karaokeControl/roxannaWebsiteSettings':{defaultBrowseSetlistId:'',repertoireSetlistId:'alternate'}});
+ await assertSucceeds(send({source:'roxanna26',songId:'b',publicSetlistId:'alternate'}));
+ await seed(roxannaSession);
+ await assertSucceeds(send({source:'roxanna26'}));
+ await assertFails(send({source:'roxanna26',songId:'b',publicSetlistId:'alternate'}));
  await seed({'karaoke/state':{songsEnabled:false}});await assertSucceeds(send({},'',env.authenticatedContext('owner',{email:'leeborg23@gmail.com'}).firestore()));await assertFails(send({},'',env.authenticatedContext('stranger',{email:'stranger@example.com'}).firestore()));
  console.log('PASS: authoritative request gate, act/source isolation, repertoire/session binding, explicit private/test/tentative/cancelled/end denial, named Test Venue, eventless published sessions, break, pre-session, venue QR, owner preview and stranger denial.');await env.cleanup();
 })().catch(e=>{console.error(e);process.exitCode=1;});

@@ -6,13 +6,13 @@
   let page="home",values={home:{},epk:{}},original={home:{},epk:{}},lists=[],automaticList=null,ready=false,authEpoch=0;
   const norm=v=>String(v||"").trim().toLowerCase();
   const owner=()=>typeof isOwner==="function"&&isOwner();
-  const eligible=d=>norm(d.name)==="roxanna"&&[d.type,d.sessionType,d.performerType].filter(Boolean).every(x=>norm(x)==="roxanna");
+  const automaticEligible=d=>norm(d.name)==="roxanna"&&[d.type,d.sessionType,d.performerType].filter(Boolean).every(x=>norm(x)==="roxanna");
   const clean=v=>v&&typeof v==="object"?Object.fromEntries(Object.entries(v).filter(([,x])=>typeof x==="string")):{};
   const status=(message,error=false)=>{$("siteSettingsStatus").textContent=message;$("siteSettingsStatus").dataset.error=String(error);};
   const dirty=()=>JSON.stringify(values)!==JSON.stringify(original);
   function updateCount(){
     const selected=lists.find(row=>row.id===$("roxannaSetlist").value);
-    $("roxannaSetlistInfo").textContent=selected?String(new Set(selected.songIds||[]).size)+" songs in the selected source list.":automaticList?"Current automatic default: "+automaticList.name+" · "+new Set(automaticList.songIds||[]).size+" songs.":"Automatic selection could not identify a unique eligible Roxanna list. Choose a list explicitly.";
+    $("roxannaSetlistInfo").textContent=selected?String(new Set(selected.songIds||[]).size)+" songs in the selected source list.":automaticList?"Current automatic default: "+automaticList.name+" · "+new Set(automaticList.songIds||[]).size+" songs.":"Automatic selection could not identify a unique Roxanna list. Choose any setlist explicitly.";
   }
   function render(){
     const needle=norm($("copySearch").value),root=$("copyFields"),groups=new Map();
@@ -44,9 +44,9 @@
   $("repertoireForm").onsubmit=async e=>{
     e.preventDefault();if(!ready||!owner())return;
     const id=$("roxannaSetlist").value,selected=lists.find(row=>row.id===id);
-    if(id&&!selected){status("Choose an eligible Roxanna setlist.",true);return;}
+    if(id&&!selected){status("Choose an existing setlist.",true);return;}
     const button=$("saveRoxannaSetlist");button.disabled=true;
-    try{await ref.set({defaultBrowseSetlistId:id,repertoireSetlistId:id},{merge:true});status("Default Roxanna repertoire saved. Reopen the request popup to load it.");}catch(error){status(error.message,true);}finally{button.disabled=false;}
+    try{await ref.set({defaultBrowseSetlistId:id,repertoireSetlistId:id},{merge:true});status("Default request repertoire saved. Reopen the request popup to load it.");}catch(error){status(error.message,true);}finally{button.disabled=false;}
   };
   $("copyForm").onsubmit=async e=>{
     e.preventDefault();if(!ready||!owner())return;
@@ -74,17 +74,22 @@
     try{
       const [all,settings,liveList]=await Promise.all([db.collection("lyricsSetlists").get(),ref.get({source:"server"}),db.collection("karaokeControl").doc("publicSongList").get({source:"server"})]);
       if(epoch!==authEpoch||!owner())return;
-      lists=all.docs.map(d=>({...d.data(),id:d.id})).filter(eligible).sort((a,b)=>String(a.name).localeCompare(String(b.name))||a.id.localeCompare(b.id));
-      automaticList=lists.find(l=>l.id===liveList.data()?.setlistId)||(lists.length===1?lists[0]:null);
+      lists=all.docs.map(d=>({...d.data(),id:d.id})).sort((a,b)=>String(a.name||a.id).localeCompare(String(b.name||b.id),undefined,{sensitivity:"base"})||a.id.localeCompare(b.id));
+      const automaticLists=lists.filter(automaticEligible);
+      automaticList=automaticLists.find(l=>l.id===liveList.data()?.setlistId)||(automaticLists.length===1?automaticLists[0]:null);
       const cfg=settings.data()||{},select=$("roxannaSetlist");
       select.replaceChildren(new Option("Automatic (current or uniquely named Roxanna list)",""));
       select.required=false;
-      for(const list of lists)select.append(new Option((list.name||list.id)+" · "+new Set(list.songIds||[]).size+" songs"+(lists.length>1?" · "+list.id:""),list.id));
+      for(const list of lists){
+        const name=list.name||list.id,duplicate=lists.filter(l=>norm(l.name||l.id)===norm(name)).length>1;
+        const count=new Set(Array.isArray(list.songIds)?list.songIds:[]).size;
+        select.append(new Option(name+" · "+count+" "+(count===1?"song":"songs")+(duplicate?" · "+list.id:""),list.id));
+      }
       const selected=cfg.defaultBrowseSetlistId||cfg.repertoireSetlistId||"";
       select.value=selected&&lists.some(l=>l.id===selected)?selected:"";
       values={home:clean(cfg.websiteCopy?.home),epk:clean(cfg.websiteCopy?.epk)};original=JSON.parse(JSON.stringify(values));
       updateCount();render();ready=true;$("roxannaSettings").hidden=false;
-      status(selected&&!lists.some(l=>l.id===selected)?"The previous repertoire selection is no longer eligible. Select a Roxanna list and save.":"Website settings loaded.",!!selected&&!lists.some(l=>l.id===selected));
+      status(selected&&!lists.some(l=>l.id===selected)?"The previous repertoire selection no longer exists. Select a setlist and save.":"Website settings loaded.",!!selected&&!lists.some(l=>l.id===selected));
     }catch(error){status("Could not load website settings: "+error.message,true);}
   });
 })();
