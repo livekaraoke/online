@@ -3,7 +3,7 @@
   "use strict";
   const $=id=>document.getElementById(id),schema=window.ROXANNA_COPY_SCHEMA,db=LK.db;
   const ref=db.collection("karaokeControl").doc("roxannaWebsiteSettings");
-  let page="home",values={home:{},epk:{}},original={home:{},epk:{}},lists=[],ready=false,authEpoch=0;
+  let page="home",values={home:{},epk:{}},original={home:{},epk:{}},lists=[],automaticList=null,ready=false,authEpoch=0;
   const norm=v=>String(v||"").trim().toLowerCase();
   const owner=()=>typeof isOwner==="function"&&isOwner();
   const eligible=d=>norm(d.name)==="roxanna"&&[d.type,d.sessionType,d.performerType].filter(Boolean).every(x=>norm(x)==="roxanna");
@@ -12,7 +12,7 @@
   const dirty=()=>JSON.stringify(values)!==JSON.stringify(original);
   function updateCount(){
     const selected=lists.find(row=>row.id===$("roxannaSetlist").value);
-    $("roxannaSetlistInfo").textContent=selected?String(new Set(selected.songIds||[]).size)+" songs in the selected source list.":"Automatic selection uses the eligible live Roxanna list, otherwise the uniquely named Roxanna setlist.";
+    $("roxannaSetlistInfo").textContent=selected?String(new Set(selected.songIds||[]).size)+" songs in the selected source list.":automaticList?"Current automatic default: "+automaticList.name+" · "+new Set(automaticList.songIds||[]).size+" songs.":"Automatic selection could not identify a unique eligible Roxanna list. Choose a list explicitly.";
   }
   function render(){
     const needle=norm($("copySearch").value),root=$("copyFields"),groups=new Map();
@@ -72,9 +72,10 @@
     const epoch=++authEpoch;ready=false;$("roxannaSettings").hidden=true;
     if(!user||!owner()){status("Sign in as the owner through the LiveSuite Admin dashboard to edit public website settings.");return;}
     try{
-      const [all,settings]=await Promise.all([db.collection("lyricsSetlists").get(),ref.get({source:"server"})]);
+      const [all,settings,liveList]=await Promise.all([db.collection("lyricsSetlists").get(),ref.get({source:"server"}),db.collection("karaokeControl").doc("publicSongList").get({source:"server"})]);
       if(epoch!==authEpoch||!owner())return;
       lists=all.docs.map(d=>({...d.data(),id:d.id})).filter(eligible).sort((a,b)=>String(a.name).localeCompare(String(b.name))||a.id.localeCompare(b.id));
+      automaticList=lists.find(l=>l.id===liveList.data()?.setlistId)||(lists.length===1?lists[0]:null);
       const cfg=settings.data()||{},select=$("roxannaSetlist");
       select.replaceChildren(new Option("Automatic (current or uniquely named Roxanna list)",""));
       select.required=false;

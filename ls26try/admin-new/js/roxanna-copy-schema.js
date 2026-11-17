@@ -1188,6 +1188,24 @@
       "group": "Dynamic / booking",
       "default": "Could not send the enquiry. Please try again.",
       "kind": "dynamic"
+    },
+    {
+      "key": "media.video1",
+      "group": "Video titles",
+      "default": "Live Performance",
+      "kind": "dynamic"
+    },
+    {
+      "key": "media.video2",
+      "group": "Video titles",
+      "default": "Live Outdoors",
+      "kind": "dynamic"
+    },
+    {
+      "key": "media.video3",
+      "group": "Video titles",
+      "default": "Acoustic Special",
+      "kind": "dynamic"
     }
   ],
   "epk": [
@@ -2659,6 +2677,54 @@
       "key": "booking.shorten",
       "group": "Dynamic / booking",
       "default": "Please shorten your message.",
+      "kind": "dynamic"
+    },
+    {
+      "key": "media.video1",
+      "group": "Video titles",
+      "default": "Live Performance",
+      "kind": "dynamic"
+    },
+    {
+      "key": "media.video2",
+      "group": "Video titles",
+      "default": "Live Outdoors",
+      "kind": "dynamic"
+    },
+    {
+      "key": "media.video3",
+      "group": "Video titles",
+      "default": "Acoustic Special",
+      "kind": "dynamic"
+    },
+    {
+      "key": "media.moreClips",
+      "group": "Media & downloads",
+      "default": "More live performances and recent gig clips on our official social profiles.",
+      "kind": "dynamic"
+    },
+    {
+      "key": "media.playVideo",
+      "group": "Media & downloads",
+      "default": "▶ Play video",
+      "kind": "dynamic"
+    },
+    {
+      "key": "download.preparing",
+      "group": "Media & downloads",
+      "default": "Preparing your download…",
+      "kind": "dynamic"
+    },
+    {
+      "key": "download.ready",
+      "group": "Media & downloads",
+      "default": "Your download is ready.",
+      "kind": "dynamic"
+    },
+    {
+      "key": "download.error",
+      "group": "Media & downloads",
+      "default": "Could not prepare the download. Please try again or use the individual asset links.",
       "kind": "dynamic"
     }
   ]
