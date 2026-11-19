@@ -2,7 +2,7 @@
   "use strict";
   const $=id=>document.getElementById(id);
   const fields=[
-    "showTopStatusWhenInactive","statusStripHeight","statusValueFontSize","statusLabelFontSize",
+    "showTopStatusWhenInactive","mainNavHeight","lyricSongStripHeight","statusStripHeight","statusValueFontSize","statusLabelFontSize",
     "userBpmColor","originalBpmColor","keyColor","capoColor",
     "displayColourRed","displayColourCyan","displayColourBlue","displayColourGreen",
     "displayColourMagenta","displayColourYellow","displayColourBlack","displayColourWhite",
