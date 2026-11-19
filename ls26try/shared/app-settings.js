@@ -5,6 +5,8 @@
   const DOC_PATH = ["noteSettings","livesuiteAppSettings"];
   const DEFAULTS = Object.freeze({
     showTopStatusWhenInactive: true,
+    mainNavHeight: 70,
+    lyricSongStripHeight: 72,
     statusStripHeight: 70,
     statusValueFontSize: 22,
     statusLabelFontSize: 11,
@@ -82,6 +84,8 @@
   function normalise(raw={}){
     return {
       showTopStatusWhenInactive: raw.showTopStatusWhenInactive !== false,
+      mainNavHeight: clamp(raw.mainNavHeight,32,140,DEFAULTS.mainNavHeight),
+      lyricSongStripHeight: clamp(raw.lyricSongStripHeight,32,160,DEFAULTS.lyricSongStripHeight),
       statusStripHeight: clamp(raw.statusStripHeight,28,160,DEFAULTS.statusStripHeight),
       statusValueFontSize: clamp(raw.statusValueFontSize,1,34,DEFAULTS.statusValueFontSize),
       statusLabelFontSize: clamp(raw.statusLabelFontSize,1,18,DEFAULTS.statusLabelFontSize),
@@ -156,6 +160,8 @@
     const root=document.documentElement;
     root.style.setProperty("--ls26-chord-line-space-before",s.chordLineSpaceAbove+"px");
     root.style.setProperty("--ls26-chord-line-space-after",s.chordLineSpaceBelow+"px");
+    root.style.setProperty("--ls26-main-nav-height",s.mainNavHeight+"px");
+    root.style.setProperty("--ls26-lyric-song-strip-height",s.lyricSongStripHeight+"px");
     root.style.setProperty("--ls26-status-strip-height",s.statusStripHeight+"px");
     root.style.setProperty("--ls26-status-value-size",s.statusValueFontSize+"px");
     root.style.setProperty("--ls26-status-label-size",s.statusLabelFontSize+"px");
