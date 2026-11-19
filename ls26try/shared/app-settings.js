@@ -5,6 +5,7 @@
   const DOC_PATH = ["noteSettings","livesuiteAppSettings"];
   const DEFAULTS = Object.freeze({
     showTopStatusWhenInactive: true,
+    statusStripHeight: 70,
     statusValueFontSize: 22,
     statusLabelFontSize: 11,
     userBpmColor: "#00e88a",
@@ -81,8 +82,9 @@
   function normalise(raw={}){
     return {
       showTopStatusWhenInactive: raw.showTopStatusWhenInactive !== false,
-      statusValueFontSize: clamp(raw.statusValueFontSize,14,34,DEFAULTS.statusValueFontSize),
-      statusLabelFontSize: clamp(raw.statusLabelFontSize,8,18,DEFAULTS.statusLabelFontSize),
+      statusStripHeight: clamp(raw.statusStripHeight,28,160,DEFAULTS.statusStripHeight),
+      statusValueFontSize: clamp(raw.statusValueFontSize,1,34,DEFAULTS.statusValueFontSize),
+      statusLabelFontSize: clamp(raw.statusLabelFontSize,1,18,DEFAULTS.statusLabelFontSize),
       userBpmColor: colour(raw.userBpmColor,DEFAULTS.userBpmColor),
       originalBpmColor: colour(raw.originalBpmColor,DEFAULTS.originalBpmColor),
       keyColor: colour(raw.keyColor,DEFAULTS.keyColor),
@@ -154,6 +156,7 @@
     const root=document.documentElement;
     root.style.setProperty("--ls26-chord-line-space-before",s.chordLineSpaceAbove+"px");
     root.style.setProperty("--ls26-chord-line-space-after",s.chordLineSpaceBelow+"px");
+    root.style.setProperty("--ls26-status-strip-height",s.statusStripHeight+"px");
     root.style.setProperty("--ls26-status-value-size",s.statusValueFontSize+"px");
     root.style.setProperty("--ls26-status-label-size",s.statusLabelFontSize+"px");
     root.style.setProperty("--ls26-user-bpm-color",s.userBpmColor);
