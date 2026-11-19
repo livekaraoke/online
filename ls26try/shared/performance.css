@@ -1247,11 +1247,68 @@ html #topStatusBar .host-compact-strip .host-strip-metric:not(.requests-metric):
 }
 html #topStatusBar .host-compact-strip #tsCompactRequests,
 html #ls26StickyHeader #topStatusBar .host-compact-strip #tsCompactRequests {
-  --ls26-request-badge-size:max(36px,calc(var(--ls26-status-value-size,22px) * 1.5));
+  --ls26-request-badge-size:max(clamp(12px,calc(var(--ls26-status-strip-height,70px) - 34px),36px),calc(var(--ls26-status-value-size,22px) * 1.5));
   width:var(--ls26-request-badge-size)!important;
   min-width:var(--ls26-request-badge-size)!important;
   max-width:var(--ls26-request-badge-size)!important;
   height:var(--ls26-request-badge-size)!important;
   min-height:var(--ls26-request-badge-size)!important;
   line-height:var(--ls26-request-badge-size)!important;
+}
+
+/* Preferred compact strip height. Intrinsic content can grow rather than clip. */
+html #topStatusBar .host-compact-strip,
+html #ls26StickyHeader #topStatusBar .host-compact-strip {
+  --ls26-strip-pad-y:clamp(0px,calc((var(--ls26-status-strip-height,70px) - 28px) / 7),6px);
+  --ls26-metric-pad-y:clamp(0px,calc((var(--ls26-status-strip-height,70px) - 28px) / 10),4px);
+  --ls26-metric-gap:clamp(0px,calc((var(--ls26-status-strip-height,70px) - 28px) / 10),4px);
+  box-sizing:border-box!important;
+  height:auto!important;
+  min-height:var(--ls26-status-strip-height,70px)!important;
+  max-height:none!important;
+  padding-block:var(--ls26-strip-pad-y)!important;
+}
+html #topStatusBar .host-compact-strip .host-strip-metric,
+html #ls26StickyHeader #topStatusBar .host-compact-strip .host-strip-metric {
+  padding-block:var(--ls26-metric-pad-y)!important;
+  gap:var(--ls26-metric-gap)!important;
+  min-height:0!important;
+}
+html #topStatusBar .host-compact-strip .host-strip-metric small,
+html #ls26StickyHeader #topStatusBar .host-compact-strip .host-strip-metric small {
+  margin-block:0!important;
+}
+html #topStatusBar .host-compact-strip .host-strip-metric em,
+html #ls26StickyHeader #topStatusBar .host-compact-strip .host-strip-metric em {
+  margin-block:0!important;
+  font-size:min(12px,calc(var(--ls26-status-strip-height,70px) * .17))!important;
+  line-height:1.15!important;
+}
+html #ls26StickyHeader #topStatusBar .host-compact-strip #tsCompactType {
+  font-size:min(16px,calc(var(--ls26-status-strip-height,70px) * .23))!important;
+}
+html #ls26StickyHeader #topStatusBar .host-compact-strip #tsCompactScheduledEnd {
+  font-size:min(11px,calc(var(--ls26-status-strip-height,70px) * .16))!important;
+}
+html #ls26StickyHeader #topStatusBar .host-compact-strip .host-strip-live,
+html #topStatusBar .host-compact-strip .host-strip-live {
+  padding-block:var(--ls26-metric-pad-y)!important;
+  margin-block:0!important;
+}
+html #ls26StickyHeader #topStatusBar .host-compact-strip #ls26Clock,
+html #topStatusBar .host-compact-strip #ls26Clock {
+  font-size:min(clamp(22px,3vw,32px),calc(var(--ls26-status-strip-height,70px) * .72))!important;
+  line-height:1.1!important;
+}
+html #ls26StickyHeader #topStatusBar .host-compact-strip #tsToggleBtn,
+html #topStatusBar .host-compact-strip #tsToggleBtn {
+  min-height:0!important;
+  height:auto!important;
+  align-self:stretch!important;
+  line-height:1!important;
+}
+@media(max-width:700px){
+  html #ls26StickyHeader #topStatusBar .host-compact-strip {
+    row-gap:var(--ls26-strip-pad-y)!important;
+  }
 }
