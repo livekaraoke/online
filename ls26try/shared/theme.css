@@ -994,3 +994,42 @@ html body .ls26-nav > a.active[aria-current="page"]{
   box-shadow:inset 0 -3px 0 var(--ls-accent),inset 0 0 0 1px #00cafa24!important;
 }
 html body .ls26-nav > a.active[aria-current="page"] .ls26-nav-icon{color:var(--ls-accent)!important}
+
+/* App Settings: independently size the shared main navigation bar. */
+html body #ls26StickyHeader > .ls26-nav {
+  --ls26-nav-pad-y:clamp(1px,calc((var(--ls26-main-nav-height,70px) - 32px) / 8),5px);
+  --ls26-nav-cell-height:calc(var(--ls26-main-nav-height,70px) - 2 * var(--ls26-nav-pad-y) - 2px);
+  box-sizing:border-box!important;
+  height:var(--ls26-main-nav-height,70px)!important;
+  min-height:var(--ls26-main-nav-height,70px)!important;
+  max-height:var(--ls26-main-nav-height,70px)!important;
+  padding-block:var(--ls26-nav-pad-y)!important;
+  flex-shrink:0!important;
+  align-items:center!important;
+}
+html body #ls26StickyHeader > .ls26-nav > :is(a,button) {
+  box-sizing:border-box!important;
+  height:var(--ls26-nav-cell-height)!important;
+  min-height:0!important;
+  max-height:var(--ls26-nav-cell-height)!important;
+  padding-block:0!important;
+  line-height:1.05!important;
+}
+html body #ls26StickyHeader > .ls26-nav > a.ls26-brand.ls26-brand-icon svg {
+  width:min(78px,var(--ls26-nav-cell-height))!important;
+  height:var(--ls26-nav-cell-height)!important;
+  max-height:100%!important;
+}
+html body #ls26StickyHeader > .ls26-nav #ls26Fullscreen svg {
+  width:min(26px,calc(var(--ls26-nav-cell-height) - 4px))!important;
+  height:min(26px,calc(var(--ls26-nav-cell-height) - 4px))!important;
+}
+html body #ls26StickyHeader > .ls26-nav .ls26-nav-icon {
+  line-height:1!important;
+  font-size:min(28px,calc(var(--ls26-nav-cell-height) - 4px))!important;
+}
+html body #ls26StickyHeader > .ls26-nav .ls26-host small {
+  font-size:min(10px,calc(var(--ls26-nav-cell-height) * .25))!important;
+  line-height:1!important;
+  margin-top:clamp(0px,calc((var(--ls26-nav-cell-height) - 30px) / 8),4px)!important;
+}
