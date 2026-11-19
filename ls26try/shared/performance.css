@@ -14,11 +14,11 @@ body.host-lyric-view-page{overflow-x:clip!important;background:var(--ls-bg)!impo
 #topStatusBar .host-compact-strip{display:grid!important;grid-template-columns:1.1fr 1.9fr 1fr 1.2fr 1.2fr 1fr 1.35fr 28px!important;gap:0!important;padding:9px 5px!important;min-height:78px!important;background:var(--ls-bg)!important;align-items:center!important}
 #topStatusBar .host-strip-live{padding:5px!important;min-width:0!important;background:none!important;border:0!important;box-shadow:none!important;font-size:clamp(18px,2.7vw,30px)!important;color:var(--ls-success)}
 #topStatusBar .host-strip-metric{border-left:1px solid var(--ls-border)!important;padding:4px 8px!important;min-width:0!important;display:flex;flex-direction:column;justify-content:center;gap:4px}
-#topStatusBar .host-strip-metric small{font-size:clamp(9px,1.2vw,13px)!important;letter-spacing:0;color:var(--ls-muted)!important}
-#topStatusBar .host-strip-metric strong{font-size:clamp(16px,2.1vw,24px)!important;white-space:nowrap!important;overflow:hidden;text-overflow:ellipsis;color:var(--ls-text)}
+#topStatusBar .host-strip-metric small{font-size:var(--ls26-status-label-size,11px)!important;letter-spacing:0;color:var(--ls-muted)!important}
+#topStatusBar .host-strip-metric strong{font-size:var(--ls26-status-value-size,22px)!important;white-space:nowrap!important;overflow:hidden;text-overflow:ellipsis;color:var(--ls-text)}
 #topStatusBar .host-strip-metric em{font-size:12px!important;font-style:normal;color:var(--ls-muted)}
 #topStatusBar .host-strip-icon,#topStatusBar .venue-metric small{display:none!important}
-#topStatusBar #tsCompactRequests{color:var(--ls-danger)!important;font-size:24px!important;font-weight:900}
+#topStatusBar #tsCompactRequests{color:var(--ls-danger)!important;font-size:var(--ls26-status-value-size,22px)!important;font-weight:900}
 #ls26Clock{font-size:clamp(25px,3.5vw,39px);text-align:center;white-space:nowrap}#tsToggleBtn{background:transparent!important;border:0!important;font-size:20px!important;width:25px!important;padding:0!important}
 #topStatusBar .top-status-compatibility,#topStatusBar [hidden]{display:none!important}
 #topStatusBar .host-status-expanded{padding:10px!important;height:min(570px,65dvh)!important;min-height:0!important;max-height:65dvh!important;overflow:auto!important;background:var(--ls-bg)!important}
@@ -53,7 +53,7 @@ body.host-lyric-view-page{overflow-x:clip!important;background:var(--ls-bg)!impo
 #ls26StickyHeader #topStatusBar .host-tab-pane:not([hidden]){min-height:420px!important}#ls26StickyHeader .ls26-breaks{max-height:330px}#ls26StickyHeader #tsRunOrderList,#ls26StickyHeader #tsPendingRequestsList{max-height:430px!important}
 #ls26StickyHeader #topStatusBar .host-compact-strip{height:76px!important;max-height:none!important;border:0!important;border-radius:8px!important}
 #ls26StickyHeader .venue-metric>div{display:flex;flex-direction:column;gap:4px}#ls26StickyHeader #tsCompactType{font-size:17px!important;color:#d9e7f7!important}
-#ls26StickyHeader #tsLiveDot{width:22px!important;height:22px!important;flex-shrink:0}#ls26StickyHeader #tsCompactRequests{background:var(--ls-danger);color:white!important;border-radius:50%;width:34px;height:34px;display:grid;place-items:center;align-self:center;font-size:24px!important}
+#ls26StickyHeader #tsLiveDot{width:22px!important;height:22px!important;flex-shrink:0}#ls26StickyHeader #tsCompactRequests{background:var(--ls-danger);color:white!important;border-radius:50%;width:34px;height:34px;display:grid;place-items:center;align-self:center;font-size:var(--ls26-status-value-size,22px)!important}
 #hostStickyStack #songInfoBtn,.performance-quick-edit-cell{display:none!important}
 #hostStickyStack > .host-view-topbar{order:0!important}#hostStickyStack .ls26-actions{padding:0;gap:7px}#hostStickyStack .ls26-actions button{padding:9px 8px;font-size:12px;height:53px;white-space:nowrap}
 #hostStickyStack .ls26-actions #ls26Transpose{border-color:var(--ls-border);color:var(--ls-text);background:var(--ls-panel);box-shadow:none}#hostStickyStack .ls26-actions #ls26Transpose.active{border-color:var(--ls-accent);color:var(--ls-accent)}
@@ -65,12 +65,12 @@ body.host-lyric-view-page{overflow-x:clip!important;background:var(--ls-bg)!impo
 
 #songInfoDrawer .song-info-scroll{padding:0 16px 16px}#performanceQuickInfo .performance-quick-meta strong{font-size:27px!important}#performanceQuickInfo #quickKey{color:var(--ls-accent)!important}#performanceQuickInfo .bpm-suffix{font-size:17px!important}#performanceQuickInfo .performance-quick-meta>div{min-height:54px!important;height:54px!important;padding:5px!important;text-align:center!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:2px!important}#performanceQuickInfo .performance-quick-karaoke{flex-wrap:wrap!important}#performanceQuickInfo .performance-quick-label{display:block!important;width:100%;font-size:11px!important}#performanceQuickInfo .performance-quick-slave{min-width:0}#performanceQuickInfo .performance-quick-slave select{min-width:0;width:100%}#performanceQuickInfo .performance-quick-primary .quick-split-action{display:grid;grid-template-columns:1fr 42px;margin-bottom:0}
 
-#ls26StickyHeader #topStatusBar #tsLiveLabel{font-size:clamp(19px,2.8vw,30px)!important;line-height:1.1!important}#ls26StickyHeader #topStatusBar #tsCompactVenue{font-size:clamp(16px,2.1vw,23px)!important}#ls26StickyHeader #topStatusBar .host-strip-metric>small{font-size:clamp(10px,1.2vw,13px)!important}.host-bottom-dock #sectionProgress{display:flex!important}.host-nav-pad{transform:none!important}
+#ls26StickyHeader #topStatusBar #tsLiveLabel{font-size:clamp(19px,2.8vw,30px)!important;line-height:1.1!important}#ls26StickyHeader #topStatusBar #tsCompactVenue{font-size:var(--ls26-status-value-size,22px)!important}#ls26StickyHeader #topStatusBar .host-strip-metric>small{font-size:var(--ls26-status-label-size,11px)!important}.host-bottom-dock #sectionProgress{display:flex!important}.host-nav-pad{transform:none!important}
 
 /* Stage readability. IDs deliberately outrank the preserved compact legacy rules. */
 #ls26StickyHeader #topStatusBar #tsCompactRequests{width:36px!important;min-width:36px!important;max-width:36px!important;height:36px!important;min-height:36px!important;border-radius:50%!important;line-height:36px!important;padding:0!important;display:block!important;align-self:center!important;text-align:center!important;flex:none!important;letter-spacing:0!important}
 #ls26StickyHeader #topStatusBar #tsCompactRemaining{color:var(--ls-warning)!important}#ls26StickyHeader #topStatusBar #tsCompactRemaining.is-overdue{color:var(--ls-danger)!important}#ls26StickyHeader #topStatusBar #tsCompactScheduledEnd{display:block!important;color:var(--ls-warning)!important;font-size:12px!important;font-style:normal!important}
-#ls26StickyHeader #topStatusBar .host-strip-metric strong{overflow:visible!important;text-overflow:clip!important;font-size:clamp(15px,1.9vw,22px)!important}
+#ls26StickyHeader #topStatusBar .host-strip-metric strong{overflow:visible!important;text-overflow:clip!important;font-size:var(--ls26-status-value-size,22px)!important}
 #ls26StickyHeader #topStatusBar #tsSessionNotes{min-height:300px!important;height:38dvh!important;max-height:none!important;font-size:22px!important;line-height:1.5!important;padding:16px!important;width:100%!important;resize:vertical!important}#ls26StickyHeader #tsNotesSaveStatus{font-size:14px!important}
 #ls26StickyHeader #tsNotificationsList .top-status-live-notification{display:grid!important;grid-template-columns:64px 32px 1fr!important;gap:10px!important;padding:16px 8px!important;align-items:start!important}#ls26StickyHeader #tsNotificationsList .notification-text{font-size:20px!important;line-height:1.45!important}#ls26StickyHeader #tsNotificationsList .notification-time{font-size:16px!important}#ls26StickyHeader #tsNotificationsList .notification-icon{font-size:22px!important}
 #ls26StickyHeader #topStatusBar .ts-run-main,#ls26StickyHeader #topStatusBar .ts-pending-main,.ls26-mirror .ts-run-main,.ls26-mirror .ts-pending-main{display:block!important;flex:1!important;min-width:0!important;white-space:normal!important}#ls26StickyHeader #topStatusBar .ts-run-main strong,#ls26StickyHeader #topStatusBar .ts-pending-main strong,.ls26-mirror .ts-run-main strong,.ls26-mirror .ts-pending-main strong{display:block!important;font-size:24px!important;line-height:1.25!important;white-space:normal!important;overflow:visible!important}#ls26StickyHeader #topStatusBar .ts-run-main small,#ls26StickyHeader #topStatusBar .ts-pending-main small,.ls26-mirror .ts-run-main small,.ls26-mirror .ts-pending-main small{display:block!important;font-size:16px!important;line-height:1.4!important;margin-top:6px!important;white-space:normal!important}
@@ -421,7 +421,7 @@ html.ls26-reduce-glow .performance-quick-info{box-shadow:none!important;filter:n
 #ls26StickyHeader #topStatusBar #tsCompactStarted,
 #ls26StickyHeader #topStatusBar #tsCompactElapsed,
 #ls26StickyHeader #topStatusBar #tsCompactRemaining{
-  font-size:21px!important;
+  font-size:var(--ls26-status-value-size,22px)!important;
   line-height:1.05!important;
 }
 #ls26StickyHeader #topStatusBar #tsCompactType{
@@ -1225,4 +1225,33 @@ body.host-lyric-view-page #performanceQuickInfo .performance-quick-slave{
 }
 body.host-lyric-view-page #performanceQuickInfo .ls26-quick-pin-toggle{
   width:48px!important;min-width:48px!important;max-width:48px!important;
+}
+
+/* App Settings: metric typography in the compact performance strip. */
+html #topStatusBar .host-compact-strip .host-strip-metric small,
+html #ls26StickyHeader #topStatusBar .host-compact-strip .host-strip-metric small {
+  font-size:var(--ls26-status-label-size,11px)!important;
+  line-height:1.15!important;
+  white-space:normal!important;
+  overflow-wrap:anywhere;
+}
+html #topStatusBar .host-compact-strip .host-strip-metric strong,
+html #ls26StickyHeader #topStatusBar .host-compact-strip .host-strip-metric strong,
+html #ls26StickyHeader #topStatusBar .host-compact-strip :is(#tsCompactStarted,#tsCompactElapsed,#tsCompactRemaining,#tsCompactVenue,#tsCompactRequests,#tsCompactAlerts) {
+  font-size:var(--ls26-status-value-size,22px)!important;
+  line-height:1.1!important;
+}
+html #topStatusBar .host-compact-strip .host-strip-metric:not(.requests-metric):not(.alerts-metric) strong {
+  white-space:normal!important;
+  overflow-wrap:anywhere;
+}
+html #topStatusBar .host-compact-strip #tsCompactRequests,
+html #ls26StickyHeader #topStatusBar .host-compact-strip #tsCompactRequests {
+  --ls26-request-badge-size:max(36px,calc(var(--ls26-status-value-size,22px) * 1.5));
+  width:var(--ls26-request-badge-size)!important;
+  min-width:var(--ls26-request-badge-size)!important;
+  max-width:var(--ls26-request-badge-size)!important;
+  height:var(--ls26-request-badge-size)!important;
+  min-height:var(--ls26-request-badge-size)!important;
+  line-height:var(--ls26-request-badge-size)!important;
 }
