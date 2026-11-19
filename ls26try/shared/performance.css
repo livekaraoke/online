@@ -1312,3 +1312,43 @@ html #topStatusBar .host-compact-strip #tsToggleBtn {
     row-gap:var(--ls26-strip-pad-y)!important;
   }
 }
+
+/* App Settings: song information strip (not the separate karaoke tools). */
+html body.host-lyric-view-page :is(#ls26StickyHeader,#hostStickyStack) > .host-view-topbar {
+  --ls26-song-strip-pad:clamp(1px,calc((var(--ls26-lyric-song-strip-height,72px) - 32px) / 6),7px);
+  --ls26-song-strip-inner:calc(var(--ls26-lyric-song-strip-height,72px) - 2 * var(--ls26-song-strip-pad) - 2px);
+  box-sizing:border-box!important;
+  min-height:var(--ls26-lyric-song-strip-height,72px)!important;
+  height:auto!important;
+  max-height:none!important;
+  padding-block:var(--ls26-song-strip-pad)!important;
+  align-items:center!important;
+}
+html body.host-lyric-view-page :is(#ls26StickyHeader,#hostStickyStack) > .host-view-topbar .host-song-heading {
+  padding-block:0!important;
+  min-height:0!important;
+}
+html body.host-lyric-view-page :is(#ls26StickyHeader,#hostStickyStack) > .host-view-topbar .host-song-heading strong {
+  font-size:min(clamp(19px,2.5vw,28px),calc(var(--ls26-song-strip-inner) * .53))!important;
+  line-height:1.05!important;
+}
+html body.host-lyric-view-page :is(#ls26StickyHeader,#hostStickyStack) > .host-view-topbar .host-song-heading span {
+  font-size:min(15px,calc(var(--ls26-song-strip-inner) * .29))!important;
+  line-height:1.1!important;
+  margin-block:0!important;
+}
+html body.host-lyric-view-page :is(#ls26StickyHeader,#hostStickyStack) > .host-view-topbar .ls26-title-meta small {
+  font-size:min(10px,calc(var(--ls26-song-strip-inner) * .26))!important;
+  line-height:1.05!important;
+}
+html body.host-lyric-view-page :is(#ls26StickyHeader,#hostStickyStack) > .host-view-topbar .ls26-title-meta :is(strong,.bpm-number) {
+  font-size:min(var(--ls26-title-meta-value-size,21px),calc(var(--ls26-song-strip-inner) * .64))!important;
+  line-height:1.05!important;
+}
+html body.host-lyric-view-page :is(#ls26StickyHeader,#hostStickyStack) > .host-view-topbar :is(#quickEditSongBtn,#songInfoBtn,#songActionsBtn) {
+  height:min(44px,var(--ls26-song-strip-inner))!important;
+  min-height:0!important;
+  max-height:var(--ls26-song-strip-inner)!important;
+  padding-block:0!important;
+  line-height:1!important;
+}
