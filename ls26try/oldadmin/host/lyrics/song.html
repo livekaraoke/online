@@ -88,10 +88,10 @@ real-time typography control, and performance styling tools.
     .prompter-scroll-zone.prompter-scroll-pulse .prompter-scroll-arrow {
       animation: prompter-scroll-tap-pulse 1050ms cubic-bezier(.19,.68,.23,1) both;
     }
-    /* Anchor the Up arrow near the lower edge of its large clickable region. */
+    /* Move the Up arrow to the upper edge; retain the full touch zone. */
     .prompter-scroll-zone-up .prompter-scroll-arrow {
-      top: auto;
-      bottom: 12px;
+      top: 18px;
+      bottom: auto;
       transform: scale(1);
     }
     @keyframes prompter-scroll-up-tap-pulse {
