@@ -7,7 +7,7 @@
   const defaults = {
     theme: 'default', font: 'verdana', lineSpacing: '1.5', lineGap: 8,
     noteGapAbove: 48, noteGapBelow: 48,
-    charSpacing: '0px', fontSizeOffset: 0, scrollZones: true, showTouchZones: false, touchZoneSplit: 66, slaveLyrics: false,
+    charSpacing: '0px', fontSizeOffset: 0, scrollZones: true, showTouchZones: false, touchZoneSplit: 66, touchZoneWidth: 27, slaveLyrics: false,
     wideLyrics: false, arrowOpacity: 55, arrowSize: 100, devConsole: false
   };
   function readSaved() {
@@ -235,6 +235,20 @@
     document.body.classList.toggle('prompter-touch-zones-visible', visible);
     const toggle = byId('prompterTouchZonesToggle');
     if (toggle) toggle.checked = visible;
+    const info = byId('prompterTouchZonesInfo');
+    if (info) {
+      info.classList.toggle('is-active', visible);
+      info.setAttribute('aria-pressed', String(visible));
+      const label = visible ? 'Hide touch zones' : 'Show touch zones';
+      info.setAttribute('aria-label', label);
+      info.title = label;
+    }
+  }
+
+  function setTouchZonesVisible(visible) {
+    prefs.showTouchZones = Boolean(visible);
+    save();
+    updateTouchZones();
   }
 
   const clampPreference = (value, fallback, min, max, step) => {
@@ -261,14 +275,35 @@
     return { upTop, zoneTop, diameter, min, max, split: Math.min(max, Math.max(min, split)) };
   }
 
+  function touchZoneWidthLayout(width, diameter, requested) {
+    const w = Math.max(1, width);
+    // Both circular icons must remain wholly inside their actual touch boxes.
+    const max = Math.max(0, Math.min(80, Math.floor((w - diameter - 12) / w * 100)));
+    const min = Math.min(10, max);
+    const percent = clampPreference(requested, 27, min, max, 1);
+    return { min, max, percent: Math.max(min, Math.min(max, percent)) };
+  }
+
   function updateArrowAppearance() {
     const opacity = clampPreference(prefs.arrowOpacity, 55, 20, 100, 5);
     const size = clampPreference(prefs.arrowSize, 100, 70, 150, 10);
     const base = Math.max(124, Math.min(180,
       (Number(window.innerWidth) || document.documentElement.clientWidth || 1024) * .16));
     const height = Number(window.innerHeight) || document.documentElement.clientHeight || 768;
-    const layout = touchZoneLayout(height, Math.round(base * size / 100), prefs.touchZoneSplit);
+    const width = document.documentElement.clientWidth || window.innerWidth || 1024;
+    const requestedDiameter = Math.min(Math.round(base * size / 100), Math.max(1, width - 12));
+    const layout = touchZoneLayout(height, requestedDiameter, prefs.touchZoneSplit);
+    const horizontal = touchZoneWidthLayout(width, layout.diameter, prefs.touchZoneWidth);
     const rootStyle = document.documentElement.style;
+    rootStyle.setProperty('--prompter-scroll-strip-width', horizontal.percent + '%');
+    const widthInput = byId('prompterTouchZoneWidth');
+    const widthOutput = byId('prompterTouchZoneWidthValue');
+    if (widthInput) {
+      widthInput.min = String(horizontal.min);
+      widthInput.max = String(horizontal.max);
+      widthInput.value = String(horizontal.percent);
+    }
+    if (widthOutput) widthOutput.textContent = horizontal.percent + '%';
     rootStyle.setProperty('--prompter-arrow-opacity', String(opacity / 100));
     rootStyle.setProperty('--prompter-arrow-diameter', layout.diameter + 'px');
     rootStyle.setProperty('--prompter-up-arrow-top', layout.upTop + 'px');
@@ -497,12 +532,19 @@
   // Programmatic arrows and Auto Scroll remain unaffected.
   let manualTouchStartedInStrip = false;
   let manualTouchAutoScrollGesture = false;
-  const manualStripWidth = () =>
-    (document.documentElement.clientWidth || window.innerWidth || 0) * .26;
+  const manualStripWidth = () => {
+    // The visible guide is the real button box. Use its left edge for native
+    // swipe/wheel permission as well, avoiding a gap or overlapping regions.
+    const box = byId('prompterScrollUp')?.getBoundingClientRect?.();
+    if (box && box.width > 0) return box.left;
+    const width = document.documentElement.clientWidth || window.innerWidth || 0;
+    const percent = Number(byId('prompterTouchZoneWidth')?.value ?? 27);
+    return width * (Number.isFinite(percent) ? percent : 27) / 100;
+  };
   const inAllowedManualArea = (x, y) => {
     const bar = document.querySelector('.top-bar');
     const lowerBound = bar?.getBoundingClientRect?.().bottom || 116;
-    return x >= 0 && x <= manualStripWidth() && y >= lowerBound;
+    return x >= 0 && x < manualStripWidth() && y >= lowerBound;
   };
   const inSidebar = target => Boolean(target?.closest?.('#controlPanel'));
 
@@ -600,9 +642,10 @@
       updateScrollZones();
     });
     byId('prompterTouchZonesToggle')?.addEventListener('change', event => {
-      prefs.showTouchZones = Boolean(event.target.checked);
-      save();
-      updateTouchZones();
+      setTouchZonesVisible(event.target.checked);
+    });
+    byId('prompterTouchZonesInfo')?.addEventListener('click', () => {
+      setTouchZonesVisible(prefs.showTouchZones !== true);
     });
     byId('prompterLineGap')?.addEventListener('input', event => {
       prefs.lineGap = clampPreference(event.target.value, 8, 0, 28, 2);
@@ -623,6 +666,11 @@
       changeNoteGap('noteGapBelow', event));
     byId('prompterTouchZoneSplit')?.addEventListener('input', event => {
       prefs.touchZoneSplit = Number(event.target.value);
+      save();
+      updateArrowAppearance();
+    });
+    byId('prompterTouchZoneWidth')?.addEventListener('input', event => {
+      prefs.touchZoneWidth = Number(event.target.value);
       save();
       updateArrowAppearance();
     });
