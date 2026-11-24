@@ -7,7 +7,7 @@
   const defaults = {
     theme: 'default', font: 'verdana', lineSpacing: '1.5', lineGap: 8,
     noteGapAbove: 48, noteGapBelow: 48,
-    charSpacing: '0px', fontSizeOffset: 0, scrollZones: true, slaveLyrics: false,
+    charSpacing: '0px', fontSizeOffset: 0, scrollZones: true, showTouchZones: false, slaveLyrics: false,
     wideLyrics: false, arrowOpacity: 55, arrowSize: 100, devConsole: false
   };
   function readSaved() {
@@ -230,6 +230,13 @@
     if (toggle) toggle.checked = enabled;
   }
 
+  function updateTouchZones() {
+    const visible = prefs.showTouchZones === true;
+    document.body.classList.toggle('prompter-touch-zones-visible', visible);
+    const toggle = byId('prompterTouchZonesToggle');
+    if (toggle) toggle.checked = visible;
+  }
+
   const clampPreference = (value, fallback, min, max, step) => {
     const n = Number(value);
     return Number.isFinite(n) ? Math.min(max, Math.max(min,
@@ -307,6 +314,7 @@
     applyStyles();
     syncAutoScrollVisibility();
     updateScrollZones();
+    updateTouchZones();
     updateArrowAppearance();
     updateDevConsole();
     updateWidthButton();
@@ -558,6 +566,11 @@
       }
       save();
       updateScrollZones();
+    });
+    byId('prompterTouchZonesToggle')?.addEventListener('change', event => {
+      prefs.showTouchZones = Boolean(event.target.checked);
+      save();
+      updateTouchZones();
     });
     byId('prompterLineGap')?.addEventListener('input', event => {
       prefs.lineGap = clampPreference(event.target.value, 8, 0, 28, 2);
