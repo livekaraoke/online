@@ -86,6 +86,11 @@
       st.sourceUnsub=db.collection('lyricsSetlists').doc(id).onSnapshot({includeMetadataChanges:true},snap=>{
         if(closed||generation!==st.generation)return;
         if(snap.metadata?.fromCache||snap.metadata?.hasPendingWrites){st.groups=[];st.setlist=null;report(act,'Waiting for the repertoire connection.');return;}
+        const nextSetlist=snap.exists?{...snap.data(),id:snap.id}:null;
+        // An unchanged confirmed setlist does not need another song-query fanout.
+        // A disconnect still clears st.setlist and requires fresh source validation.
+        if(st.setlist&&nextSetlist&&String(st.setlist.name||'')===String(nextSetlist.name||'')&&
+          JSON.stringify(st.setlist.songIds||[])===JSON.stringify(nextSetlist.songIds||[]))return;
         st.listRevision++;const listRevision=st.listRevision;
         st.songUnsubs.forEach(fn=>fn());st.songUnsubs=[];st.groups=[];st.setlist=snap.exists?{...snap.data(),id:snap.id}:null;
         if(!st.setlist){report(act,'The selected setlist no longer exists.');return;}
@@ -142,7 +147,10 @@
       kioskFresh=false;kioskSnapshot=null;kioskExists=false;
       status.enabled=false;status.liveEnabled=false;status.kioskEnabled=false;stop();
       if(user?.email?.toLowerCase()!=='leeborg23@gmail.com'){emit();return;}
+      // Wait for both initial settings before starting the expensive publisher.
+      let configKnown=false,kioskKnown=false;
       function restartIfChanged(changed){
+        if(!configKnown||!kioskKnown)return;
         if(changed){restartRequested=leaderRequested;stop();}
         if(status.enabled||status.liveEnabled||status.kioskEnabled)void startLeader();
       }
@@ -156,21 +164,22 @@
             for(const observer of kioskObservers)observer.error(Error('Waiting for the kiosk control connection.'));
             return;
           }
-          kioskFresh=true;kioskExists=s.exists;
+          kioskKnown=true;kioskFresh=true;kioskExists=s.exists;
           kioskSnapshot=s.exists?s.data()||{}:{};
           const enabled=kioskSnapshot.enabled===true;
           const changed=enabled!==status.kioskEnabled;
           status.kioskEnabled=enabled;emit();
           for(const observer of kioskObservers)observer.fn(kioskSnapshot,kioskExists);
           restartIfChanged(changed);
-        },error=>{kioskFresh=false;status.error=error.message;emit();
-          for(const observer of kioskObservers)observer.error(error);});
+        },error=>{kioskKnown=true;kioskFresh=false;status.error=error.message;emit();
+          for(const observer of kioskObservers)observer.error(error);restartIfChanged(false);});
       configUnsub=db.collection('publicPublication').doc('config').onSnapshot(s=>{
+        configKnown=true;
         const enabled=s.exists&&s.data().cataloguesEnabled===true,liveEnabled=s.exists&&s.data().liveEnabled===true;
         const changed=enabled!==status.enabled||liveEnabled!==status.liveEnabled;
         status.enabled=enabled;status.liveEnabled=liveEnabled;emit();
         restartIfChanged(changed);
-      },error=>{status.error=error.message;emit();});
+      },error=>{configKnown=true;status.error=error.message;emit();restartIfChanged(false);});
     });
   }
   window.LS26CataloguePublisher=Object.freeze({
