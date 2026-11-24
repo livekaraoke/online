@@ -186,57 +186,63 @@ real-time typography control, and performance styling tools.
       font-size: 14px;
       font-weight: 600;
     }
-    /* Tablet-friendly top-bar controls, scoped to this Prompter only. */
-    .top-bar .fs-button {
-      min-width: 120px;
-      height: 46px;
-      font-size: 17px;
-      padding: 0 9px;
-    }
-    .top-bar .font-buttons button {
-      width: 57px;
-      height: 46px;
-      font-size: 20px;
-      padding: 0;
-    }
-    .top-bar .controls > .icon-btn {
-      width: 120px;
-      height: 46px;
-      font-size: 18px;
-    }
-    .top-bar .back-button,
-    .top-bar .fs-button,
-    .top-bar .font-buttons button {
-      opacity: .83;
-    }
-    /* Fade the header and its controls, but not the nested Controls sidebar. */
+    /* Three matching FIT-style controls; the sidebar stays outside the fade. */
     .top-bar {
       height: 116px;
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      gap: clamp(4px, 1.4vw, 15px);
+      padding: 0 clamp(6px, 1.7vw, 18px);
       transition: background-color 180ms ease, border-color 180ms ease;
     }
-    .top-bar > .left-controls > .back-button,
-    .top-bar > .left-controls > .fs-button,
-    .top-bar > .title,
-    .top-bar > .controls > .font-buttons > button,
-    .top-bar > .controls > .icon-btn {
-      transition: opacity 180ms ease;
+    .top-bar > .left-controls,
+    .top-bar > .controls {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      margin: 0;
+      gap: clamp(4px, 1vw, 10px);
     }
+    .top-bar > .title { margin: 0; overflow-wrap: anywhere; }
+    .top-bar > .left-controls > .prompter-header-button,
+    .top-bar > .controls > .prompter-header-button,
+    .top-bar > .title { transition: opacity 180ms ease; }
     .top-bar.prompter-over-lyrics {
       background-color: rgba(0,0,0,var(--prompter-header-opacity, .4));
       border-bottom-color: rgba(51,51,51,var(--prompter-header-opacity, .4));
     }
-    .top-bar.prompter-over-lyrics > .left-controls > .back-button,
-    .top-bar.prompter-over-lyrics > .left-controls > .fs-button,
-    .top-bar.prompter-over-lyrics > .title,
-    .top-bar.prompter-over-lyrics > .controls > .font-buttons > button,
-    .top-bar.prompter-over-lyrics > .controls > .icon-btn {
+    .top-bar.prompter-over-lyrics > .left-controls > .prompter-header-button,
+    .top-bar.prompter-over-lyrics > .controls > .prompter-header-button,
+    .top-bar.prompter-over-lyrics > .title {
       opacity: var(--prompter-header-opacity, .4);
     }
     @media (prefers-reduced-motion: reduce) {
-      .top-bar, .top-bar > .left-controls > .back-button,
-      .top-bar > .left-controls > .fs-button, .top-bar > .title,
-      .top-bar > .controls > .font-buttons > button,
-      .top-bar > .controls > .icon-btn { transition: none; }
+      .top-bar, .top-bar > .left-controls > .prompter-header-button,
+      .top-bar > .controls > .prompter-header-button,
+      .top-bar > .title { transition: none; }
+    }
+    .prompter-sidebar-font-size {
+      margin: 42px 0 12px;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+    .prompter-sidebar-font-size button {
+      min-height: 48px;
+      border: 1px solid #4c6471;
+      border-radius: 8px;
+      background: #1c3440;
+      color: #f1f5f9;
+      font: 700 20px Arial, sans-serif;
+    }
+    #prompterFullscreenViewerBtn { margin-top: 0; }
+    #prompterLibraryLink {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-sizing: border-box;
+      margin-top: 24px;
+      text-decoration: none;
     }
     /* Only the narrow left strip accepts manual native panning or wheel scroll. */
     html, body { scrollbar-width: none; }
@@ -301,7 +307,8 @@ real-time typography control, and performance styling tools.
       transform: none;
     }
     /* A distinct control above the right-hand hold-to-scroll areas. */
-    .prompter-width-toggle {
+    .prompter-width-toggle,
+    .top-bar .prompter-header-button {
       opacity: .415; /* half of the previous .83 opacity */
       position: fixed;
       top: 140px;
@@ -322,7 +329,23 @@ real-time typography control, and performance styling tools.
       touch-action: manipulation;
       -webkit-tap-highlight-color: transparent;
     }
-    /* INFO mirrors FIT at the top of the document, then scrolls with the lyrics. */
+    /* Header buttons reuse the existing FIT appearance, without fixed positioning. */
+    .top-bar .prompter-header-button {
+      position: static;
+      flex: none;
+      box-sizing: border-box;
+      width: clamp(56px, 12vw, 82px);
+      height: 76px;
+      padding: 3px;
+    }
+    .top-bar .prompter-header-button .prompter-width-caption {
+      font-size: clamp(8px, 1.6vw, 12px);
+    }
+    .top-bar .prompter-header-button svg { width: 37px; height: 37px; }
+    .prompter-header-button .prompter-fs-exit,
+    .prompter-header-button.is-active .prompter-fs-enter { display: none; }
+    .prompter-header-button.is-active .prompter-fs-exit { display: block; }
+    /* INFO remains non-sticky and scrolls with the lyrics. */
     .prompter-info-toggle { position: absolute; left: 18px; right: auto; }
     .prompter-width-toggle svg {
       width: 37px;
@@ -620,17 +643,24 @@ real-time typography control, and performance styling tools.
       e.target.classList.add("active");
     }
   }
+  function setPanelOpen(open) {
+    document.getElementById("controlPanel").classList.toggle("open", open);
+    const button = document.getElementById("prompterHeaderControls");
+    if (button) {
+      button.classList.toggle("is-active", open);
+      button.setAttribute("aria-expanded", String(open));
+      button.setAttribute("aria-label", open ? "Close controls" : "Open controls");
+      button.title = open ? "Close controls" : "Open controls";
+    }
+  }
+
   function togglePanel() {
-    document.getElementById("controlPanel").classList.toggle("open");
+    setPanelOpen(!document.getElementById("controlPanel").classList.contains("open"));
   }
 
-  function openPanel() {
-    document.getElementById("controlPanel").classList.add('open');
-  }
+  function openPanel() { setPanelOpen(true); }
 
-  function closePanel() {
-    document.getElementById("controlPanel").classList.remove('open');
-  }
+  function closePanel() { setPanelOpen(false); }
 
   /** Make background click close side panel **/
   document.addEventListener("click", function (e) {
@@ -639,11 +669,9 @@ real-time typography control, and performance styling tools.
     if (!panel.classList.contains("open")) return;
 
     const clickedInside = panel.contains(e.target);
-    const clickedToggle = e.target.closest(".icon-btn");
+    const clickedToggle = e.target.closest("#prompterHeaderControls");
 
-    if (!clickedInside && !clickedToggle) {
-      panel.classList.remove("open");
-    }
+    if (!clickedInside && !clickedToggle) closePanel();
   });
 
   /* ACTIVE STATE HELPERS */
@@ -853,24 +881,44 @@ function resetScrollSpeed() {
 }
 
 /* FULL SCREEN ENTER */
-function tryEnterFullscreenOnce() {
-  if (!document.fullscreenElement) {
-    document.documentElement.requestFullscreen().catch(() => {});
+function prompterFullscreenDocument() {
+  // Persistent viewer owns fullscreen across song changes.
+  try {
+    if (window.parent !== window && window.parent.__ls26PrompterShell === true)
+      return window.parent.document;
+  } catch (_) {}
+  return document;
+}
+
+function syncHeaderFullscreen() {
+  const button = document.getElementById("prompterHeaderFullscreen");
+  if (!button) return;
+  const active = Boolean(prompterFullscreenDocument().fullscreenElement);
+  button.classList.toggle("is-active", active);
+  button.setAttribute("aria-pressed", String(active));
+  button.setAttribute("aria-label", active ? "Exit fullscreen" : "Enter fullscreen");
+  button.title = active ? "Exit fullscreen" : "Enter fullscreen";
+  const caption = button.querySelector(".prompter-width-caption");
+  if (caption) caption.textContent = active ? "EXIT FS" : "FULLSCREEN";
+}
+
+function tryEnterFullscreenOnce(event) {
+  if (event?.target?.closest?.("#prompterHeaderFullscreen")) return;
+  const fullscreenDoc = prompterFullscreenDocument();
+  if (!fullscreenDoc.fullscreenElement) {
+    fullscreenDoc.documentElement.requestFullscreen().catch(() => {});
   }
 }
 
 function toggleSongFullscreen(btn) {
-  // In the persistent viewer, fullscreen the PARENT document, not this iframe.
-  // Replacing/reloading the iframe then cannot exit the parent's fullscreen.
-  const embedded = window.parent !== window && window.parent.__ls26PrompterShell === true;
-  const fullscreenDoc = embedded ? window.parent.document : document;
+  const fullscreenDoc = prompterFullscreenDocument();
   const target = fullscreenDoc.documentElement;
   const entering = !fullscreenDoc.fullscreenElement;
   try {
     const operation = entering ? target.requestFullscreen() : fullscreenDoc.exitFullscreen();
     Promise.resolve(operation).then(() => {
       try { localStorage.setItem(FS_KEY, entering ? "1" : "0"); } catch (_) {}
-      btn.textContent = entering ? "✖ Exit FS" : "⛶ Fullscreen";
+      syncHeaderFullscreen();
     }).catch(error => console.warn("Fullscreen request failed:", error));
   } catch (error) {
     console.warn("Fullscreen unavailable:", error);
@@ -903,11 +951,15 @@ function toggleAutoscrollVisibility() {
 <div class="top-bar">
 
   <div class="left-controls">
-    <!-- BACK BUTTON -->
-    <a href="../venuekaraokelyricbook.html" class="back-button">⬅ BACK</a>
-    <!-- FULLSCREEN BUTTON -->
-    <button class="fs-button" onclick="toggleSongFullscreen(this)">
-      ⛶ Fullscreen
+    <button type="button" id="prompterHeaderFullscreen" class="prompter-width-toggle prompter-header-button"
+      aria-label="Enter fullscreen" aria-pressed="false" title="Enter fullscreen" onclick="toggleSongFullscreen(this)">
+      <svg class="prompter-fs-enter" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+        <path d="M25 10 H10 V25 M39 10 H54 V25 M54 39 V54 H39 M25 54 H10 V39"/>
+      </svg>
+      <svg class="prompter-fs-exit" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+        <path d="M10 25 H25 V10 M39 10 V25 H54 M54 39 H39 V54 M25 54 V39 H10"/>
+      </svg>
+      <span class="prompter-width-caption">FULLSCREEN</span>
     </button>
   </div>
 
@@ -916,18 +968,30 @@ function toggleAutoscrollVisibility() {
 
   <!-- CONTROLS -->
   <div class="controls">
-    <div class="font-buttons">
-      <!----- Font Size ----->
-      <button onclick="changeFontSize(2)">A+</button>
-      <button onclick="changeFontSize(-2)">A-</button>
-    </div>
-    <!-- Menu Button -->
-    <button class="icon-btn" onclick="togglePanel()">⚙ Controls</button>
+    <button type="button" id="prompterFitWidthToggle" class="prompter-width-toggle prompter-header-button"
+      aria-label="Fit lyrics to screen width" aria-pressed="false" title="Enlarge lyrics to fit the screen without changing line breaks">
+      <svg viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+        <path d="M21 19 L9 32 L21 45 M9 32 H27 M43 19 L55 32 L43 45 M37 32 H55"/>
+      </svg>
+      <span class="prompter-width-caption">FIT</span>
+    </button>
+    <button type="button" id="prompterHeaderControls" class="prompter-width-toggle prompter-header-button"
+      aria-label="Open controls" aria-expanded="false" aria-controls="controlPanel" title="Open controls" onclick="togglePanel()">
+      <svg viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+        <path d="M27 8 H37 L39 15 L45 18 L52 16 L57 25 L52 30 V34 L57 39 L52 48 L45 46 L39 49 L37 56 H27 L25 49 L19 46 L12 48 L7 39 L12 34 V30 L7 25 L12 16 L19 18 L25 15 Z"/>
+        <circle cx="32" cy="32" r="9"/>
+      </svg>
+      <span class="prompter-width-caption">CONTROLS</span>
+    </button>
   </div>
 
   <!-- Slide Panel -->
   <div id="controlPanel" class="side-panel">
     <button class="close-btn" onclick="closePanel()">✖</button>
+    <div class="prompter-sidebar-font-size" role="group" aria-label="Lyric font size">
+      <button type="button" onclick="changeFontSize(2)" aria-label="Increase lyric font size">A+</button>
+      <button type="button" onclick="changeFontSize(-2)" aria-label="Decrease lyric font size">A-</button>
+    </div>
 
     <button type="button" id="prompterFullscreenViewerBtn" class="prompter-sidebar-action">⛶ Persistent Fullscreen Viewer</button>
     <div class="prompter-sidebar-note">Opens the Prompter in a fullscreen-capable iframe. Reloading the lyrics inside it keeps the outer viewer fullscreen.</div>
@@ -1021,6 +1085,7 @@ function toggleAutoscrollVisibility() {
 
 
 
+    <a id="prompterLibraryLink" class="prompter-sidebar-action" href="../venuekaraokelyricbook.html">LIBRARY</a>
   </div><!-- End Side Panel -->
 </div>
 <!-- END TOP BAR -->
@@ -1390,6 +1455,12 @@ function renderLyrics(blocks) {
 window.addEventListener("DOMContentLoaded", () => {
   loadSong();
 
+  const fullscreenDoc = prompterFullscreenDocument();
+  fullscreenDoc.addEventListener("fullscreenchange", syncHeaderFullscreen);
+  window.addEventListener("pagehide", () =>
+    fullscreenDoc.removeEventListener("fullscreenchange", syncHeaderFullscreen), { once: true });
+  syncHeaderFullscreen();
+
   const fsWanted = localStorage.getItem(FS_KEY) === "1";
 
   if (fsWanted) {
@@ -1508,13 +1579,7 @@ slaveLyricsToggle.addEventListener("change", function() {
   </svg>
   <span class="prompter-width-caption">INFO</span>
 </button>
-<button type="button" id="prompterFitWidthToggle" class="prompter-width-toggle"
-  aria-label="Fit lyrics to screen width" aria-pressed="false" title="Enlarge lyrics to fit the screen without changing line breaks">
-  <svg viewBox="0 0 64 64" aria-hidden="true" focusable="false">
-    <path d="M21 19 L9 32 L21 45 M9 32 H27 M43 19 L55 32 L43 45 M37 32 H55"/>
-  </svg>
-  <span class="prompter-width-caption">FIT</span>
-</button>
+
 <button type="button" id="prompterScrollUp" class="prompter-scroll-zone prompter-scroll-zone-up"
   aria-label="Scroll lyrics up" title="Tap to scroll up; hold to keep scrolling">
   <span class="prompter-scroll-arrow" aria-hidden="true"><svg viewBox="0 0 96 96" focusable="false"><path d="M16 62 L48 30 L80 62"/></svg></span>
