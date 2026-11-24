@@ -286,12 +286,13 @@
    * projection: only songId/status are fetched, never singer names/notes.
    * No new Firestore listeners, caches or writes. */
   function loadAvailability() {
-    var session = view && view.sessionId, version, next = {}, remaining = 2;
+    var session = view && view.sessionId, version, next = {}, remaining = 2, confirmed = false, localAtStart;
     if (!view || !view.enabled || !session) { return; }
     if (availabilitySession !== session) {
       unavailable = {}; localBlocked = {}; performanceBlocked = {}; availabilitySession = session;
     }
     version = ++availabilityVersion;
+    localAtStart = Object.keys(localBlocked);
     function record(id, status) {
       var label = statusLabel(status);
       if (!id || !label) { return; }
@@ -300,6 +301,9 @@
     function finish() {
       remaining -= 1;
       if (remaining || version !== availabilityVersion || !view || view.sessionId !== session) { return; }
+      // The local receipt only bridges the time until a fresh server request query.
+      // Once reconciled, cancelled/removed unplayed requests must be selectable again.
+      if (confirmed) { for (var j = 0; j < localAtStart.length; j += 1) { delete localBlocked[localAtStart[j]]; } }
       unavailable = next;
       updateSongStates();
     }
@@ -323,6 +327,7 @@
     }}, function (error, records) {
       var i, item;
       if (!error && Object.prototype.toString.call(records) === '[object Array]') {
+        confirmed = true;
         for (i = 0; i < records.length; i += 1) {
           if (!records[i].document) { continue; }
           item = decode({mapValue: {fields: records[i].document.fields || {}}});
