@@ -57,9 +57,12 @@
           sid&&input.run.sessionId===sid;
         const queue=queueLive?LKLiveProjection.stageQueue(input,sid):{current:null,next:[],waitingCount:0};
         const queueSessionId=queueLive?sid:'';
+         // Song IDs only: support this kiosk even in test/private gigs.
+         const playedSongIds=queueLive?[...new Set([...(input.control.requestBlockedSessionId===sid&&Array.isArray(input.control.requestBlockedSongIds)?input.control.requestBlockedSongIds:[]),...(input.run.items||[]).filter(row=>row&&(!row.sessionId||row.sessionId===sid)&&['playing','played','completed','finished'].includes(String(row.status||'').toLowerCase())).map(row=>row.songId).filter(Boolean)])].sort():[];
         const kioskNeedsUpdate=ready.has('kioskPublic')&&kiosk.schemaVersion===1&&
           (String(kiosk.queueSessionId||'')!==queueSessionId||
-            !LKCatalogueProjection.equal(kiosk.kioskQueue||{current:null,next:[],waitingCount:0},queue));
+            !LKCatalogueProjection.equal(kiosk.kioskQueue||{current:null,next:[],waitingCount:0},queue)||
+             !LKCatalogueProjection.equal(kiosk.playedSongIds||[],playedSongIds));
         if(!values.length&&!kioskNeedsUpdate){report('');return;}
         let committed=[];
         await db.runTransaction(async tx=>{
@@ -85,7 +88,7 @@
           // Do not overwrite its publication controls or setlist snapshot.
           if(kioskSnap?.exists&&kioskSnap.data()?.schemaVersion===1&&
               kioskSnap.data()?.token===kiosk.token&&kioskSnap.data()?.enabled===kiosk.enabled){
-            tx.update(kioskRef,{queueSessionId,kioskQueue:queue});
+            tx.update(kioskRef,{queueSessionId,kioskQueue:queue,playedSongIds});
           }
         });
         for(const [key,value]of committed)published.set(key,value);

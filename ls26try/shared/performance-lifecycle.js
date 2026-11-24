@@ -25,7 +25,7 @@ function create(db,stamp){
    // A song becomes unavailable to the public at START, not when lyrics are loaded.
    // Scope the retained IDs to this session, even if a later session merges control fields.
    const prior=c.requestBlockedSessionId===sessionId&&Array.isArray(c.requestBlockedSongIds)?c.requestBlockedSongIds:[];
-   const blocked=[...new Set([...prior,...items.filter(r=>['playing','played','completed','finished'].includes(String(r.status||'').toLowerCase())).map(r=>r.songId).filter(Boolean),song.id])];
+   const blocked=[...new Set([...prior,...(Array.isArray(s.requestBlockedSongIds)?s.requestBlockedSongIds:[]),...items.filter(r=>['playing','played','completed','finished'].includes(String(r.status||'').toLowerCase())).map(r=>r.songId).filter(Boolean),song.id])];
    const controlPatch={};
    if(c.requestBlockedSessionId!==sessionId||blocked.length!==prior.length)Object.assign(controlPatch,{requestBlockedSessionId:sessionId,requestBlockedSongIds:blocked});
    if(!s.actualStartedAt&&s.timingVersion===2){tx.set(sr,{actualStartedAt:time,actualStartSource:'first-song',updatedAt:stamp(now)},{merge:true});controlPatch.actualStartedAt=time;}
@@ -36,8 +36,8 @@ function create(db,stamp){
  async function finish({sessionId,itemId,now=Date.now(),outcome='',status='completed'}){
   if(!sessionId||!itemId)return {completed:false,next:null};
   return db.runTransaction(async tx=>{
-   const qr=ref('karaokeControl/runOrder'),sr=ref('performanceSessions/'+sessionId),qs=await tx.get(qr),ss=await tx.get(sr),q=qs.data()||{},s=ss.data()||{};
-   if(q.sessionId!==sessionId||s.status!=='active')throw Error('Session changed. No song was advanced.');
+   const qr=ref('karaokeControl/runOrder'),sr=ref('performanceSessions/'+sessionId),cr=ref('karaokeControl/currentSession'),qs=await tx.get(qr),ss=await tx.get(sr),cs=await tx.get(cr),q=qs.data()||{},s=ss.data()||{},c=cs.data()||{};
+   if(q.sessionId!==sessionId||s.status!=='active'||c.active!==true||(c.sessionId||c.activeSessionId)!==sessionId)throw Error('Session changed. No song was advanced.');
    const items=q.items||[],item=items.find(r=>r.id===itemId);if(!item||item.status!=='playing')return {completed:false,next:items.find(r=>!I.terminal(r.status)&&r.status!=='playing')||null};
    const start=I.ms(item.playingAtMs||item.playingAt),pid=item.performanceId||(start?`${item.songId}_${start}`:'');if(!pid)throw Error('Performance start is missing; cannot safely finish this song.');
    const pr=ref(`performanceSessions/${sessionId}/performedSongs/${pid}`),ps=await tx.get(pr),rr=item.requestId?ref('publicSongRequests/'+item.requestId):null,rs=rr?await tx.get(rr):null;
@@ -46,7 +46,12 @@ function create(db,stamp){
    const old=ps.data()||{songId:item.songId,songTitle:item.songTitle||'',artist:item.artist||'',sessionId,venue:s.venue||'',venueId:s.venueId||s.eventSnapshot?.venueId||'',act:s.sessionType||s.type||'unknown',requestId:item.requestId||'',singerName:item.singerName||'',startedAt:stamp(start),playedAt:stamp(start),playingAtMs:start,reconciledFromRunOrder:true};
    const end=I.ms(old.endedAt)||now,patch={...old,status,endedAt:stamp(end),durationMs:Math.max(0,end-start-I.breakMs(s.breaks,start,end)),elapsedMs:Math.max(0,end-start),...(outcome&&['great','good','average','weak'].includes(outcome)?{crowdResponse:outcome}:{})};
    tx.set(pr,patch,{merge:true});const updated=items.map(r=>r.id===itemId?{...r,status:status==='completed'?'played':status,playedAtMs:end,endedAt:stamp(end),performanceId:pid}:r);
-   tx.set(qr,{items:updated,updatedAt:stamp(now)},{merge:true});tx.set(sr,{lastPerformanceEndedAt:stamp(end)},{merge:true});if(rr)tx.set(rr,{status,playedAt:stamp(end),updatedAt:stamp(now)},{merge:true});
+   // Completion repairs missing start-side blocks, including older clients and manual performances.
+   const prior=c.requestBlockedSessionId===sessionId&&Array.isArray(c.requestBlockedSongIds)?c.requestBlockedSongIds:[];
+   const completed=Array.isArray(s.requestBlockedSongIds)?s.requestBlockedSongIds:[];
+   const blocked=[...new Set([...prior,...completed,...updated.filter(r=>['playing','played','completed','finished'].includes(String(r.status||'').toLowerCase())).map(r=>r.songId).filter(Boolean),item.songId].filter(Boolean))];
+   if(c.requestBlockedSessionId!==sessionId||blocked.some(id=>!prior.includes(id)))tx.set(cr,{requestBlockedSessionId:sessionId,requestBlockedSongIds:blocked},{merge:true});
+   tx.set(qr,{items:updated,updatedAt:stamp(now)},{merge:true});tx.set(sr,{lastPerformanceEndedAt:stamp(end),requestBlockedSongIds:blocked},{merge:true});if(rr)tx.set(rr,{status,playedAt:stamp(end),updatedAt:stamp(now)},{merge:true});
    return {completed:true,item,items:updated,next:updated.find(r=>!I.terminal(r.status)&&r.status!=='playing')||null};
   },{maxAttempts:3});
  }

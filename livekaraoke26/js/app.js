@@ -476,7 +476,8 @@
     if(runMatches.some(item=>playedStatuses.has(String(item.status||"").toLowerCase())))return "played";
     if(runMatches.some(item=>String(item.status||"").toLowerCase()==="playing"))return "playing";
     if(performedRunRows.some(item=>sameSong(item,song)))return "played";
-    if(controlData.requestBlockedSessionId===activeSessionId&&Array.isArray(controlData.requestBlockedSongIds)&&controlData.requestBlockedSongIds.includes(song.id))return "played";
+    if(activeSessionId&&controlData.requestBlockedSessionId===activeSessionId&&Array.isArray(controlData.requestBlockedSongIds)&&controlData.requestBlockedSongIds.includes(song.id))return "played";
+    if(activeSessionId&&Array.isArray(activeSession?.requestBlockedSongIds)&&activeSession.requestBlockedSongIds.includes(song.id))return "played";
 
     if(requestMatches.some(request=>{
       const status=String(request.status||"active").toLowerCase();

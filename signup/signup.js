@@ -504,6 +504,9 @@
           // projection from the SAME host Run Order publisher. Unlike the
           // public website, this also supports an explicitly enabled test gig.
           applyPerformanceBlocks(control, linked);
+          if (kiosk.queueSessionId === linked && Object.prototype.toString.call(kiosk.playedSongIds) === '[object Array]') {
+            applyPerformanceBlocks({requestBlockedSessionId: linked, requestBlockedSongIds: kiosk.playedSongIds}, linked);
+          }
           if (kiosk.queueSessionId === linked && kiosk.kioskQueue) {
             ++queueVersion;
             renderLandingQueue(kiosk.kioskQueue);
