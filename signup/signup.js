@@ -102,7 +102,7 @@
   var discover = !tokenValid(token);
   var busy = false, loading = false, uncertain = false, timer = null, resetTimer = null, pending = null, songButtons = [];
   var focusedName = false, dialogAction = null;
-  var unavailable = {}, localBlocked = {}, availabilitySession = '', availabilityVersion = 0;
+  var unavailable = {}, localBlocked = {}, performanceBlocked = {}, availabilitySession = '', availabilityVersion = 0;
   var gateOpen = false, gateTimer = null, gateBusy = false;
   var queueVersion = 0, repeatSinger = '', lastWaitingCount = null;
   var inactivityTimer = null, lastActivityAt = 0;
@@ -247,7 +247,17 @@
     return '';
   }
   function songUnavailable(id) {
-    return localBlocked[id] || unavailable[id] || '';
+    return (availabilitySession === (view && view.sessionId) && performanceBlocked[id]) || localBlocked[id] || unavailable[id] || '';
+  }
+  function applyPerformanceBlocks(control, session) {
+    var ids = control.requestBlockedSessionId === session ? control.requestBlockedSongIds : null, i;
+    if (availabilitySession !== session) {
+      unavailable = {}; localBlocked = {}; performanceBlocked = {}; availabilitySession = session;
+    }
+    if (Object.prototype.toString.call(ids) === '[object Array]') {
+      for (i = 0; i < ids.length; i += 1) { performanceBlocked[ids[i]] = 'PLAYED'; }
+    }
+    updateSongStates();
   }
   function showSelection() {
     el('selection').textContent = selected ? 'SELECTED: ' + selected.title + ' - ' + selected.artist : 'Select a song from the list';
@@ -279,7 +289,7 @@
     var session = view && view.sessionId, version, next = {}, remaining = 2;
     if (!view || !view.enabled || !session) { return; }
     if (availabilitySession !== session) {
-      unavailable = {}; localBlocked = {}; availabilitySession = session;
+      unavailable = {}; localBlocked = {}; performanceBlocked = {}; availabilitySession = session;
     }
     version = ++availabilityVersion;
     function record(id, status) {
@@ -493,6 +503,7 @@
           // The enabled physical kiosk receives a small, dedicated stage
           // projection from the SAME host Run Order publisher. Unlike the
           // public website, this also supports an explicitly enabled test gig.
+          applyPerformanceBlocks(control, linked);
           if (kiosk.queueSessionId === linked && kiosk.kioskQueue) {
             ++queueVersion;
             renderLandingQueue(kiosk.kioskQueue);
@@ -571,6 +582,17 @@
     try { pending = commitBody(policy.projectId, randomId(), token, view, selected, el('singerName').value, el('note').value); }
     catch (error) { notice(error.message); return; }
     busy = true; stopInactivity(); clearTimeout(timer); ready(); notice('SENDING REQUEST…');
+    // A fresh read at SEND catches songs started since the last 12-second gate check.
+    var submitSession = view.sessionId, submitSong = selected.id;
+    xhr('GET', base + '/karaokeControl/currentSession', null, function (checkError, result) {
+      var control = !checkError && result && result.fields ? decode({mapValue:{fields:result.fields}}) : null;
+      if (!control || control.active !== true || (control.sessionId || control.activeSessionId) !== submitSession || !view || view.sessionId !== submitSession) {
+        busy = false; pending = null; ready(); notice('SESSION NOT CONFIRMED. Please try again.'); refreshGate(); schedule(); return;
+      }
+      applyPerformanceBlocks(control, submitSession);
+      if (songUnavailable(submitSong)) {
+        busy = false; pending = null; ready(); notice('THIS SONG HAS ALREADY BEEN PLAYED OR IS CURRENTLY PLAYING. Choose another song.'); refreshGate(); schedule(); return;
+      }
     xhr('POST', base + ':commit', pending, function (error, data) {
       busy = false;
       if (error || !data || !data.writeResults || data.writeResults.length !== 2) {
@@ -588,6 +610,7 @@
         if (!gateOpen) { showIdle('closed'); } else { showIdle('open'); }
         load();
       }, 8000);
+    });
     });
   };
   el('anotherSong').onclick = function () {

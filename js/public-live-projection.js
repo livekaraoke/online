@@ -99,7 +99,10 @@
     }
     if(active&&run.sessionId===sessionId)for(const row of list(run.items,500)){
       if(row.sessionId&&row.sessionId!==sessionId)continue;
-      if(id(row.songId)&&['played','completed','finished'].includes(String(row.status).toLowerCase()))availability.push({songId:id(row.songId),status:'played'});
+      if(id(row.songId)&&['playing','played','completed','finished'].includes(String(row.status).toLowerCase()))availability.push({songId:id(row.songId),status:String(row.status).toLowerCase()==='playing'?'playing':'played'});
+    }
+    if(active&&control.requestBlockedSessionId===sessionId)for(const songId of list(control.requestBlockedSongIds,500)){
+      if(id(songId)&&!availability.some(row=>row.songId===songId&&['playing','played','completed','finished'].includes(row.status)))availability.push({songId:id(songId),status:'played'});
     }
     return {schemaVersion:1,act,sessionId,control:active?{active:true,sessionId,eventId:id(control.eventId),
       type:types[act],venue:text(control.venue||session.venue),publicVisibility:'public',actualStartedAt:started(control)}:{active:false},

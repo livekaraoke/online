@@ -7,6 +7,7 @@
   let activeSession = null;
   let controlData = {};
   let runOrder = [];
+  let performedRunRows = [];
   let sessionUnsub = null;
   let songs = [];
   let requestSubmitting = false;
@@ -406,6 +407,7 @@
       const changed=next!==activeSessionId;
       activeSessionId=next;activeSession=visible?state.session:null;
       runOrder=LKPublicVisibility.runItems(state.run,next);
+      performedRunRows=next&&state.run?.sessionId===next?(state.run.items||[]).filter(row=>row&&(!row.sessionId||row.sessionId===next)&&["played","completed","finished"].includes(String(row.status||"").toLowerCase())):[];
       if(state.projected)sessionRequests=Array.isArray(state.availability)?state.availability:[];
       applyWebsiteRequestSettings(state.settings);
       syncSessionRequestsWatcher();renderLive();
@@ -473,6 +475,8 @@
     const runMatches=runOrder.filter(item=>sameSong(item,song));
     if(runMatches.some(item=>playedStatuses.has(String(item.status||"").toLowerCase())))return "played";
     if(runMatches.some(item=>String(item.status||"").toLowerCase()==="playing"))return "playing";
+    if(performedRunRows.some(item=>sameSong(item,song)))return "played";
+    if(controlData.requestBlockedSessionId===activeSessionId&&Array.isArray(controlData.requestBlockedSongIds)&&controlData.requestBlockedSongIds.includes(song.id))return "played";
 
     if(requestMatches.some(request=>{
       const status=String(request.status||"active").toLowerCase();
@@ -1867,6 +1871,19 @@
     try{
       const note=String($("requestNote")?.value||"").trim();
       const requesterEmailHash=profile.email?await requestEmailHash(profile.email):"";
+      // Recheck the existing public session document immediately before sending.
+      // No additional live listeners or polling; this also catches stale confirmation screens.
+      if(activeSessionId===currentRequestSessionId){
+        const snapshot=await db.collection("karaokeControl").doc("currentSession").get({source:"server"});
+        const latest=snapshot.data()||{};
+        if(latest.active!==true||(latest.sessionId||latest.activeSessionId)!==currentRequestSessionId)throw Error("The session has changed. Please choose a song again.");
+        if(latest.requestBlockedSessionId===currentRequestSessionId&&Array.isArray(latest.requestBlockedSongIds)&&latest.requestBlockedSongIds.includes(song.id)){
+          controlData={...controlData,requestBlockedSessionId:latest.requestBlockedSessionId,requestBlockedSongIds:latest.requestBlockedSongIds};
+          selectedRequestSongId="";switchRequestTab("songs");renderSongResults();
+          $("requestNotice").textContent="That song has already been played or is currently playing.";return;
+        }
+      }
+      if(songSessionState(song)!=="available")throw Error("That song is no longer available in this session.");
       const ref=await db.collection("publicSongRequests").add({
         listId:publicSetlist?.id||"venue-main-public-song-list",
         publicSetlistId:publicSetlist?.id||"",

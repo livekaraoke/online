@@ -22,7 +22,14 @@ function create(db,stamp){
    const next=items.some(r=>r.id===item.id)?items.map(r=>r.id===item.id?item:r):[...items,item];
    tx.set(qr,{...q,sessionId,items:next,updatedAt:stamp(now)},{merge:true});if(!ps.exists)tx.set(pr,record);
    if(rr)tx.set(rr,{status:'playing',playingAtMs:started,playingAt:time,updatedAt:stamp(now)},{merge:true});
-   if(!s.actualStartedAt&&s.timingVersion===2){tx.set(sr,{actualStartedAt:time,actualStartSource:'first-song',updatedAt:stamp(now)},{merge:true});tx.set(cr,{actualStartedAt:time},{merge:true});}
+   // A song becomes unavailable to the public at START, not when lyrics are loaded.
+   // Scope the retained IDs to this session, even if a later session merges control fields.
+   const prior=c.requestBlockedSessionId===sessionId&&Array.isArray(c.requestBlockedSongIds)?c.requestBlockedSongIds:[];
+   const blocked=[...new Set([...prior,...items.filter(r=>['playing','played','completed','finished'].includes(String(r.status||'').toLowerCase())).map(r=>r.songId).filter(Boolean),song.id])];
+   const controlPatch={};
+   if(c.requestBlockedSessionId!==sessionId||blocked.length!==prior.length)Object.assign(controlPatch,{requestBlockedSessionId:sessionId,requestBlockedSongIds:blocked});
+   if(!s.actualStartedAt&&s.timingVersion===2){tx.set(sr,{actualStartedAt:time,actualStartSource:'first-song',updatedAt:stamp(now)},{merge:true});controlPatch.actualStartedAt=time;}
+   if(Object.keys(controlPatch).length)tx.set(cr,controlPatch,{merge:true});
    return {record,performanceId:pid,startedMs:started,ref:pr};
   },{maxAttempts:3});
  }
