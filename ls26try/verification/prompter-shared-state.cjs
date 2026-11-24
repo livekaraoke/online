@@ -1,5 +1,5 @@
 /* Separate devices: phone, LyricView and singer each have independent browser
- * storage. Firestore liveLyrics is the ONLY cross-device transport.
+ * storage. Firestore is the ONLY cross-device transport.
  */
 const assert=require("node:assert/strict"),fs=require("node:fs"),path=require("node:path");
 const {chromium}=require(require.resolve("playwright",{paths:[process.env.LS26_TEST_NODE_MODULES||process.cwd()]}));
@@ -48,26 +48,27 @@ const phoneCss=load("host/css/lyricview-prompter-remote.css")+"\n"+load("admin-n
    window.firebase={auth:()=>({currentUser:{uid:"owner"}})};
   });
   for(const page of clients){
-   await page.exposeFunction("__dbWrite",async changes=>{
+   await page.exposeFunction("__dbWrite",async (id,changes)=>{
     writes.push({...changes});
-    documentData={...documentData,...changes};
+    documentData[id]={...documentData[id],...changes};
     for(const target of clients)
-     await target.evaluate(data=>window.__dbDeliver?.(data),documentData);
+     await target.evaluate(({id,data})=>window.__dbDeliver?.[id]?.(data),{id,data:documentData[id]});
    });
    await page.evaluate(()=>{
-    const ref={
-     set:(data,options)=>{
-      if(options?.merge!==true)throw Error("Live remote must use merge writes");
-      return window.__dbWrite(data);
-     },
-     onSnapshot(fn){
-      window.__dbDeliver=data=>fn({exists:true,data:()=>data});
-      fn({exists:false,data:()=>({})});
-      return ()=>{window.__dbDeliver=null;};
-     }
-    };
     window.db={collection(name){if(name!=="karaokeControl")throw Error(name);return{doc(id){
-     if(id!=="liveLyrics")throw Error(id);return ref;
+     if(!["liveLyrics","prompterScroll"].includes(id))throw Error(id);
+     return {
+      set:(data,options)=>{
+       if(options?.merge!==true)throw Error("Live remote must use merge writes");
+       return window.__dbWrite(id,data);
+      },
+      onSnapshot(fn){
+       window.__dbDeliver ||= {};
+       window.__dbDeliver[id]=data=>fn({exists:true,data:()=>data});
+       fn({exists:false,data:()=>({})});
+       return ()=>{delete window.__dbDeliver[id];};
+      }
+     };
     }};}};
     window.LK={...(window.LK||{}),db:window.db};
    });
@@ -121,6 +122,11 @@ const phoneCss=load("host/css/lyricview-prompter-remote.css")+"\n"+load("admin-n
   await action(host,"song");await status(phone,"END SONG");
   await singer.waitForFunction(()=>document.body.dataset.ls26SingerStage==="running");
   await singer.locator("#scrollToggleBtn").click();
+  await play(host,"■");await play(phone,"■");
+  await action(host,"up");
+  await singer.waitForFunction(()=>window.__actions.includes("up"));
+  await action(phone,"down");
+  await singer.waitForFunction(()=>window.__actions.includes("down"));
   await play(host,"■");await play(phone,"■");
   assert.equal(await phone.locator("#phoneRemoteSongTitle").textContent(),"Wonderwall");
   assert.equal(await phone.locator("#phoneRemoteSongArtist").textContent(),"Oasis");
