@@ -8,7 +8,8 @@
     theme: 'default', font: 'verdana', lineSpacing: '1.5', lineGap: 8,
     noteGapAbove: 48, noteGapBelow: 48,
     charSpacing: '0px', fontSizeOffset: 0, scrollZones: true, showTouchZones: false, touchZoneSplit: 66, touchZoneWidth: 27, slaveLyrics: false,
-    wideLyrics: false, arrowOpacity: 55, arrowSize: 100, devConsole: false
+    wideLyrics: false, arrowOpacity: 55, arrowSize: 100, devConsole: false,
+    headerTransparency: 60, headerFadeThreshold: 100
   };
   function readSaved() {
     try {
@@ -386,7 +387,7 @@
     updateDevConsole();
     updateWidthButton();
     scheduleWideLyricsLayout();
-    scheduleHeaderOpacity();
+    updateHeaderFadeSettings();
     // Explicit ?slave=1 overrides a locally stored off setting on initial entry.
     const enableSlave = new URLSearchParams(location.search).get('slave') === '1' ||
       prefs.slaveLyrics === true;
@@ -606,16 +607,29 @@
     }, { capture: true });
   }
 
-  // Fade only the header background; keep the buttons readable on stage.
+  // The header fades after a configurable document scroll distance.
+  // Keep the nested Controls sidebar outside the opacity treatment.
   let headerFrame = null;
   function updateHeaderOpacity() {
     headerFrame = null;
     const bar = document.querySelector('.top-bar');
-    const lyrics = byId('lyrics-container');
-    const first = lyrics?.querySelector?.('.section,.verse,.chorus,.chorusrepeat,.bridge');
-    if (!bar || !first) return;
+    if (!bar) return;
+    const transparency = clampPreference(prefs.headerTransparency, 60, 0, 90, 5);
+    const threshold = clampPreference(prefs.headerFadeThreshold, 100, 0, 1000, 10);
+    bar.style.setProperty('--prompter-header-opacity', String((100 - transparency) / 100));
     bar.classList.toggle('prompter-over-lyrics',
-      first.getBoundingClientRect().top <= bar.getBoundingClientRect().bottom);
+      transparency > 0 && Math.max(0, window.scrollY || 0) > threshold);
+  }
+  function updateHeaderFadeSettings() {
+    const transparency = clampPreference(prefs.headerTransparency, 60, 0, 90, 5);
+    const threshold = clampPreference(prefs.headerFadeThreshold, 100, 0, 1000, 10);
+    const transparencyInput = byId('prompterHeaderTransparency');
+    const thresholdInput = byId('prompterHeaderFadeThreshold');
+    if (transparencyInput) transparencyInput.value = String(transparency);
+    if (thresholdInput) thresholdInput.value = String(threshold);
+    if (byId('prompterHeaderTransparencyValue')) byId('prompterHeaderTransparencyValue').textContent = transparency + '%';
+    if (byId('prompterHeaderFadeThresholdValue')) byId('prompterHeaderFadeThresholdValue').textContent = threshold + ' px';
+    scheduleHeaderOpacity();
   }
   function scheduleHeaderOpacity() {
     if (headerFrame !== null) return;
@@ -647,6 +661,17 @@
     byId('prompterTouchZonesInfo')?.addEventListener('click', () => {
       setTouchZonesVisible(prefs.showTouchZones !== true);
     });
+    byId('prompterHeaderTransparency')?.addEventListener('input', event => {
+      prefs.headerTransparency = clampPreference(event.target.value, 60, 0, 90, 5);
+      save();
+      updateHeaderFadeSettings();
+    });
+    byId('prompterHeaderFadeThreshold')?.addEventListener('input', event => {
+      prefs.headerFadeThreshold = clampPreference(event.target.value, 100, 0, 1000, 10);
+      save();
+      updateHeaderFadeSettings();
+    });
+    updateHeaderFadeSettings();
     byId('prompterLineGap')?.addEventListener('input', event => {
       prefs.lineGap = clampPreference(event.target.value, 8, 0, 28, 2);
       save();
