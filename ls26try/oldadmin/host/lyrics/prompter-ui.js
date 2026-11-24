@@ -9,7 +9,8 @@
     noteGapAbove: 48, noteGapBelow: 48,
     charSpacing: '0px', fontSizeOffset: 0, scrollZones: true, showTouchZones: false, touchZoneSplit: 66, touchZoneWidth: 27, slaveLyrics: false,
     wideLyrics: false, arrowOpacity: 55, arrowSize: 100, devConsole: false,
-    headerTransparency: 60, headerFadeThreshold: 100
+    headerTransparency: 60, headerFadeThreshold: 100,
+    upArrowX: 0, upArrowY: 0, downArrowX: 0, downArrowY: 0
   };
   function readSaved() {
     try {
@@ -258,22 +259,21 @@
       min + Math.round((n - min) / step) * step)) : fallback;
   };
 
-  function touchZoneLayout(height, requestedDiameter, requestedSplit) {
+  function touchZoneLayout(height, requestedDiameter, requestedSplit, headerBottom = 116) {
     const h = Math.max(1, height);
-    // FIT occupies y=140..216px; leave a small gap below it. On exceptionally
-    // short viewports make room for both arrows and an adjustable boundary.
-    const upTop = Math.min(228, Math.floor(h * .48));
-    const zoneTop = Math.min(h * .23, upTop);
-    const downCentre = h * .83;
-    // Preserve the chosen arrow diameter on normal tablets. Only constrain
-    // it on short screens where the icons and a movable split cannot fit.
-    const maxDiameter = Math.max(1, Math.floor(Math.min(
-      h * .34, (downCentre - upTop - h * .10) / 1.5)));
+    const zoneTop = Math.max(0, Math.min(h - 2, headerBottom));
+    // Allow the full 200% size whenever there is room for two circles and
+    // a useful movable divider. Only scale down on constrained screens.
+    const available = h - zoneTop;
+    const reserve = Math.min(available * .15, h * .08);
+    const maxDiameter = Math.max(1, Math.floor((available - reserve) / 2));
     const diameter = Math.min(requestedDiameter, maxDiameter);
-    const min = Math.max(35, Math.ceil((upTop + diameter) / h * 100));
-    const max = Math.max(min, Math.min(79, Math.floor((downCentre - diameter / 2) / h * 100)));
-    const split = clampPreference(requestedSplit, 66, min, max, 1);
-    return { upTop, zoneTop, diameter, min, max, split: Math.min(max, Math.max(min, split)) };
+    const min = Math.ceil((zoneTop + diameter) / h * 100);
+    const max = Math.max(min, Math.floor((h - diameter) / h * 100));
+    const split = Math.max(min, Math.min(max,
+      clampPreference(requestedSplit, 66, min, max, 1)));
+    const boundary = h * split / 100;
+    return { zoneTop, diameter, min, max, split, boundary };
   }
 
   function touchZoneWidthLayout(width, diameter, requested) {
@@ -285,16 +285,47 @@
     return { min, max, percent: Math.max(min, Math.min(max, percent)) };
   }
 
+  const arrowPositionControls = [
+    ['upArrowX', 'prompterUpArrowX'], ['upArrowY', 'prompterUpArrowY'],
+    ['downArrowX', 'prompterDownArrowX'], ['downArrowY', 'prompterDownArrowY']
+  ];
+  function arrowPositionLayout(width, height, layout, stripPercent, offsets) {
+    const diameter = layout.diameter;
+    const left = width * stripPercent / 100;
+    const rightBase = Math.min(10, Math.max(0, width - left - diameter));
+    const xMin = Math.ceil(left - (width - rightBase - diameter));
+    const xMax = Math.floor(rightBase);
+    const upBase = Math.max(layout.zoneTop, Math.min(228, layout.boundary - diameter));
+    const downBase = Math.max(layout.boundary, Math.min(height * .83 - diameter / 2, height - diameter));
+    const offset = (key, min, max) => {
+      min = Math.min(0, Math.ceil(min));
+      max = Math.max(0, Math.floor(max));
+      const value = Math.max(min, Math.min(max, clampPreference(offsets[key], 0, min, max, 1)));
+      return { min, max, value };
+    };
+    const upX = offset('upArrowX', xMin, xMax);
+    const downX = offset('downArrowX', xMin, xMax);
+    const upY = offset('upArrowY', layout.zoneTop - upBase, layout.boundary - diameter - upBase);
+    const downY = offset('downArrowY', layout.boundary - downBase, height - diameter - downBase);
+    return {
+      upTop: upBase + upY.value, downCentre: downBase + downY.value + diameter / 2,
+      upRight: rightBase - upX.value, downRight: rightBase - downX.value,
+      controls: { upArrowX: upX, upArrowY: upY, downArrowX: downX, downArrowY: downY }
+    };
+  }
+
   function updateArrowAppearance() {
     const opacity = clampPreference(prefs.arrowOpacity, 55, 20, 100, 5);
-    const size = clampPreference(prefs.arrowSize, 100, 70, 150, 10);
+    const size = clampPreference(prefs.arrowSize, 100, 70, 200, 10);
     const base = Math.max(124, Math.min(180,
       (Number(window.innerWidth) || document.documentElement.clientWidth || 1024) * .16));
     const height = Number(window.innerHeight) || document.documentElement.clientHeight || 768;
     const width = document.documentElement.clientWidth || window.innerWidth || 1024;
     const requestedDiameter = Math.min(Math.round(base * size / 100), Math.max(1, width - 12));
-    const layout = touchZoneLayout(height, requestedDiameter, prefs.touchZoneSplit);
+    const headerBottom = document.querySelector('.top-bar')?.getBoundingClientRect?.().bottom || 116;
+    const layout = touchZoneLayout(height, requestedDiameter, prefs.touchZoneSplit, headerBottom);
     const horizontal = touchZoneWidthLayout(width, layout.diameter, prefs.touchZoneWidth);
+    const positions = arrowPositionLayout(width, height, layout, horizontal.percent, prefs);
     const rootStyle = document.documentElement.style;
     rootStyle.setProperty('--prompter-scroll-strip-width', horizontal.percent + '%');
     const widthInput = byId('prompterTouchZoneWidth');
@@ -307,10 +338,23 @@
     if (widthOutput) widthOutput.textContent = horizontal.percent + '%';
     rootStyle.setProperty('--prompter-arrow-opacity', String(opacity / 100));
     rootStyle.setProperty('--prompter-arrow-diameter', layout.diameter + 'px');
-    rootStyle.setProperty('--prompter-up-arrow-top', layout.upTop + 'px');
+    rootStyle.setProperty('--prompter-up-arrow-top', positions.upTop + 'px');
     rootStyle.setProperty('--prompter-up-zone-top', layout.zoneTop + 'px');
-    rootStyle.setProperty('--prompter-down-arrow-centre', (height * .83) + 'px');
-    rootStyle.setProperty('--prompter-zone-split', (height * layout.split / 100) + 'px');
+    rootStyle.setProperty('--prompter-down-arrow-centre', positions.downCentre + 'px');
+    rootStyle.setProperty('--prompter-zone-split', layout.boundary + 'px');
+    rootStyle.setProperty('--prompter-up-arrow-right', positions.upRight + 'px');
+    rootStyle.setProperty('--prompter-down-arrow-right', positions.downRight + 'px');
+    for (const [key, id] of arrowPositionControls) {
+      const control = positions.controls[key];
+      const input = byId(id);
+      if (input) {
+        input.min = String(control.min);
+        input.max = String(control.max);
+        input.value = String(control.value);
+      }
+      const output = byId(id + 'Value');
+      if (output) output.textContent = control.value + ' px';
+    }
     const splitInput = byId('prompterTouchZoneSplit');
     const splitOutput = byId('prompterTouchZoneSplitValue');
     if (splitInput) {
@@ -705,10 +749,23 @@
       updateArrowAppearance();
     });
     byId('prompterArrowSize')?.addEventListener('input', event => {
-      prefs.arrowSize = clampPreference(event.target.value, 100, 70, 150, 10);
+      prefs.arrowSize = clampPreference(event.target.value, 100, 70, 200, 10);
       save();
       updateArrowAppearance();
     });
+    for (const [key, id] of arrowPositionControls) {
+      byId(id)?.addEventListener('input', event => {
+        prefs[key] = Number(event.target.value);
+        save();
+        updateArrowAppearance();
+      });
+    }
+    byId('prompterResetArrowPositions')?.addEventListener('click', () => {
+      for (const [key] of arrowPositionControls) prefs[key] = 0;
+      save();
+      updateArrowAppearance();
+    });
+    updateArrowAppearance();
     byId('prompterDevConsoleToggle')?.addEventListener('change', event => {
       setDevConsoleVisible(event.target.checked);
     });
