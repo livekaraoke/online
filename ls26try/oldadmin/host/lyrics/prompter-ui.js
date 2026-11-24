@@ -341,14 +341,16 @@
     if (arrowTapFrame !== null) cancelAnimationFrame(arrowTapFrame);
     arrowTapFrame = null;
     arrowTapTarget = targetY;
-    window.deferAutoScroll?.(1000);
     if (Math.abs(targetY - startY) < .5) {
       arrowTapTarget = null;
       return;
     }
     const duration = 560;
+    // Yield only during the manual animation; then resume from its new position.
+    window.deferAutoScroll?.(40);
     let startedAt = null;
     function animateStep(timestamp) {
+      window.deferAutoScroll?.(40);
       if (startedAt === null) startedAt = timestamp;
       const fraction = Math.min(1, Math.max(0, (timestamp - startedAt) / duration));
       const ease = fraction * fraction * (3 - 2 * fraction);
@@ -383,7 +385,7 @@
     });
 
     function stop() {
-      if (pointerId !== null) window.setAutoScrollManualGesture?.(false);
+      if (pointerId !== null) window.setAutoScrollManualGesture?.(false, 0);
       if (timer !== null) { clearTimeout(timer); timer = null; }
       if (frame !== null) { cancelAnimationFrame(frame); frame = null; }
       lastTime = null;

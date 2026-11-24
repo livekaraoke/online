@@ -679,6 +679,7 @@ let autoScrollActive = false;
 let autoScrollFrame = null;
 let lastTime = null;
 let scrollPosition = window.scrollY;
+let lastAppliedScrollY = window.scrollY;
 
 const BASE_BPM = 120;
 const BASE_SPEED = 13.5; // px/sec at 120 BPM, 1.0x (35% faster baseline)
@@ -693,10 +694,10 @@ function deferAutoScroll(milliseconds = 650) {
   if (!autoScrollActive) return;
   autoScrollResumeAt = Math.max(autoScrollResumeAt, performance.now() + milliseconds);
 }
-function setAutoScrollManualGesture(active) {
+function setAutoScrollManualGesture(active, resumeDelay = 850) {
   if (!autoScrollActive) return;
   autoScrollManualGesture = Boolean(active);
-  if (!active) deferAutoScroll(850);
+  if (!active && resumeDelay > 0) deferAutoScroll(resumeDelay);
 }
 window.deferAutoScroll = deferAutoScroll;
 window.setAutoScrollManualGesture = setAutoScrollManualGesture;
@@ -728,6 +729,7 @@ function startAutoScroll() {
   }
 
   lastTime = null;
+  scrollPosition = lastAppliedScrollY = window.scrollY;
 
   function step(timestamp) {
     if (!autoScrollActive) {
@@ -738,9 +740,19 @@ function startAutoScroll() {
     const delta = Math.min(0.05, Math.max(0, (timestamp - lastTime) / 1000));
     lastTime = timestamp;
 
-    // Always resume from the actual scroll position after manual input.
-    if (!autoScrollManualGesture && timestamp >= autoScrollResumeAt && delta > 0) {
-      window.scrollTo(0, window.scrollY + BASE_SPEED * scrollMultiplier * delta);
+    // Keep fractional progress between frames, even on integer-pixel browsers.
+    // Rebase from the actual position when a manual scroll intervenes.
+    const actualY = window.scrollY;
+    if (autoScrollManualGesture || timestamp < autoScrollResumeAt) {
+      scrollPosition = lastAppliedScrollY = actualY;
+    } else if (delta > 0) {
+      if (actualY !== lastAppliedScrollY) scrollPosition = actualY;
+      const scroller = document.scrollingElement || document.documentElement;
+      const maxY = Math.max(0, scroller.scrollHeight - scroller.clientHeight);
+      scrollPosition = Math.max(0, Math.min(maxY,
+        scrollPosition + BASE_SPEED * scrollMultiplier * delta));
+      window.scrollTo(0, scrollPosition);
+      lastAppliedScrollY = window.scrollY;
     }
     autoScrollFrame = requestAnimationFrame(step);
   }
@@ -1442,7 +1454,7 @@ slaveLyricsToggle.addEventListener("change", function() {
   aria-label="Scroll lyrics down" title="Tap to scroll down; hold to keep scrolling">
   <span class="prompter-scroll-arrow" aria-hidden="true"><svg viewBox="0 0 96 96" focusable="false"><path d="M16 34 L48 66 L80 34"/></svg></span>
 </button>
-<script src="prompter-ui.js?v=20261028-note-spacing-v1"></script>
+<script src="prompter-ui.js?v=20261124-autoscroll-resume-v1"></script>
 <script src="prompter-remote-receiver.js?v=20261111-session-picker-v1"></script>
 <script src="prompter-session-picker.js?v=20261111-session-picker-v1"></script>
 <!-- Reuse atomic session finish logic; rating uses the existing performedSongs record. -->
