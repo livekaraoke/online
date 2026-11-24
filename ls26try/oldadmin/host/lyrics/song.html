@@ -51,9 +51,15 @@ real-time typography control, and performance styling tools.
       -webkit-user-select: none;
       user-select: none;
     }
-    /* Full right-hand touch zones, covering the marked upper and lower areas. */
-    .prompter-scroll-zone-up { top: 23vh; height: 43vh; }
-    .prompter-scroll-zone-down { top: 66vh; height: 34vh; }
+    /* Both hit boxes share one adjustable boundary; no overlap or dead gap. */
+    .prompter-scroll-zone-up {
+      top: var(--prompter-up-zone-top, min(23vh, 228px));
+      height: calc(var(--prompter-zone-split, 66vh) - var(--prompter-up-zone-top, min(23vh, 228px)));
+    }
+    .prompter-scroll-zone-down {
+      top: var(--prompter-zone-split, 66vh);
+      bottom: 0;
+    }
     /* Optional visual guide uses the actual button boxes, never a new overlay. */
     body.prompter-touch-zones-visible .prompter-scroll-zone-up {
       background: rgba(0, 180, 255, .16);
@@ -97,11 +103,15 @@ real-time typography control, and performance styling tools.
     .prompter-scroll-zone.prompter-scroll-pulse .prompter-scroll-arrow {
       animation: prompter-scroll-tap-pulse 1050ms cubic-bezier(.19,.68,.23,1) both;
     }
-    /* Move the Up arrow to the upper edge; retain the full touch zone. */
+    /* Anchor the Up arrow just below FIT, independently of the shared split. */
     .prompter-scroll-zone-up .prompter-scroll-arrow {
-      top: 18px;
+      top: calc(var(--prompter-up-arrow-top, 228px) - var(--prompter-up-zone-top, min(23vh, 228px)));
       bottom: auto;
       transform: scale(1);
+    }
+    /* Keep the Down arrow centred at its original 83vh screen position. */
+    .prompter-scroll-zone-down .prompter-scroll-arrow {
+      top: calc(var(--prompter-down-arrow-centre, 83vh) - var(--prompter-zone-split, 66vh));
     }
     @keyframes prompter-scroll-up-tap-pulse {
       0% { transform: scale(1); }
@@ -910,6 +920,9 @@ function toggleAutoscrollVisibility() {
       <span>Show touch zones</span>
     </label>
     <div class="prompter-arrow-settings">
+      <label for="prompterTouchZoneSplit">Touch zone divider <output id="prompterTouchZoneSplitValue" for="prompterTouchZoneSplit">66%</output></label>
+      <input id="prompterTouchZoneSplit" type="range" min="35" max="79" step="1" value="66" aria-label="Touch zone boundary height; decrease for a larger Down zone">
+      <div class="prompter-sidebar-note">Move left to give Down more space, or right to give Up more space.</div>
       <label for="prompterArrowOpacity">Arrow transparency <output id="prompterArrowOpacityValue" for="prompterArrowOpacity">55%</output></label>
       <input id="prompterArrowOpacity" type="range" min="20" max="100" step="5" value="55" aria-label="Arrow opacity percentage">
       <label for="prompterArrowSize">Arrow size <output id="prompterArrowSizeValue" for="prompterArrowSize">100%</output></label>
@@ -1467,7 +1480,7 @@ slaveLyricsToggle.addEventListener("change", function() {
   aria-label="Scroll lyrics down" title="Tap to scroll down; hold to keep scrolling">
   <span class="prompter-scroll-arrow" aria-hidden="true"><svg viewBox="0 0 96 96" focusable="false"><path d="M16 34 L48 66 L80 34"/></svg></span>
 </button>
-<script src="prompter-ui.js?v=20261124-touch-zones-v1"></script>
+<script src="prompter-ui.js?v=20261125-adjustable-touch-zones-v1"></script>
 <script src="prompter-remote-receiver.js?v=20261124-isolated-scroll-v1"></script>
 <script src="prompter-session-picker.js?v=20261111-session-picker-v1"></script>
 <!-- Reuse atomic session finish logic; rating uses the existing performedSongs record. -->

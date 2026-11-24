@@ -7,7 +7,7 @@
   const defaults = {
     theme: 'default', font: 'verdana', lineSpacing: '1.5', lineGap: 8,
     noteGapAbove: 48, noteGapBelow: 48,
-    charSpacing: '0px', fontSizeOffset: 0, scrollZones: true, showTouchZones: false, slaveLyrics: false,
+    charSpacing: '0px', fontSizeOffset: 0, scrollZones: true, showTouchZones: false, touchZoneSplit: 66, slaveLyrics: false,
     wideLyrics: false, arrowOpacity: 55, arrowSize: 100, devConsole: false
   };
   function readSaved() {
@@ -243,14 +243,46 @@
       min + Math.round((n - min) / step) * step)) : fallback;
   };
 
+  function touchZoneLayout(height, requestedDiameter, requestedSplit) {
+    const h = Math.max(1, height);
+    // FIT occupies y=140..216px; leave a small gap below it. On exceptionally
+    // short viewports make room for both arrows and an adjustable boundary.
+    const upTop = Math.min(228, Math.floor(h * .48));
+    const zoneTop = Math.min(h * .23, upTop);
+    const downCentre = h * .83;
+    // Preserve the chosen arrow diameter on normal tablets. Only constrain
+    // it on short screens where the icons and a movable split cannot fit.
+    const maxDiameter = Math.max(1, Math.floor(Math.min(
+      h * .34, (downCentre - upTop - h * .10) / 1.5)));
+    const diameter = Math.min(requestedDiameter, maxDiameter);
+    const min = Math.max(35, Math.ceil((upTop + diameter) / h * 100));
+    const max = Math.max(min, Math.min(79, Math.floor((downCentre - diameter / 2) / h * 100)));
+    const split = clampPreference(requestedSplit, 66, min, max, 1);
+    return { upTop, zoneTop, diameter, min, max, split: Math.min(max, Math.max(min, split)) };
+  }
+
   function updateArrowAppearance() {
     const opacity = clampPreference(prefs.arrowOpacity, 55, 20, 100, 5);
     const size = clampPreference(prefs.arrowSize, 100, 70, 150, 10);
     const base = Math.max(124, Math.min(180,
       (Number(window.innerWidth) || document.documentElement.clientWidth || 1024) * .16));
-    document.documentElement.style.setProperty('--prompter-arrow-opacity', String(opacity / 100));
-    document.documentElement.style.setProperty('--prompter-arrow-diameter',
-      Math.round(base * size / 100) + 'px');
+    const height = Number(window.innerHeight) || document.documentElement.clientHeight || 768;
+    const layout = touchZoneLayout(height, Math.round(base * size / 100), prefs.touchZoneSplit);
+    const rootStyle = document.documentElement.style;
+    rootStyle.setProperty('--prompter-arrow-opacity', String(opacity / 100));
+    rootStyle.setProperty('--prompter-arrow-diameter', layout.diameter + 'px');
+    rootStyle.setProperty('--prompter-up-arrow-top', layout.upTop + 'px');
+    rootStyle.setProperty('--prompter-up-zone-top', layout.zoneTop + 'px');
+    rootStyle.setProperty('--prompter-down-arrow-centre', (height * .83) + 'px');
+    rootStyle.setProperty('--prompter-zone-split', (height * layout.split / 100) + 'px');
+    const splitInput = byId('prompterTouchZoneSplit');
+    const splitOutput = byId('prompterTouchZoneSplitValue');
+    if (splitInput) {
+      splitInput.min = String(layout.min);
+      splitInput.max = String(layout.max);
+      splitInput.value = String(layout.split);
+    }
+    if (splitOutput) splitOutput.textContent = layout.split + '%';
     const opacityInput = byId('prompterArrowOpacity');
     const sizeInput = byId('prompterArrowSize');
     if (opacityInput) opacityInput.value = String(opacity);
@@ -589,6 +621,11 @@
       changeNoteGap('noteGapAbove', event));
     byId('prompterNoteGapBelow')?.addEventListener('input', event =>
       changeNoteGap('noteGapBelow', event));
+    byId('prompterTouchZoneSplit')?.addEventListener('input', event => {
+      prefs.touchZoneSplit = Number(event.target.value);
+      save();
+      updateArrowAppearance();
+    });
     byId('prompterArrowOpacity')?.addEventListener('input', event => {
       prefs.arrowOpacity = clampPreference(event.target.value, 55, 20, 100, 5);
       save();
