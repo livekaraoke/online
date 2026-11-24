@@ -1950,6 +1950,9 @@
         await db.collection("karaokeControl").doc("liveLyrics").set({
           prompterLyricsSource: "modern",
           prompterSongId: currentSongId,
+          // Reuse the already loaded title palette in the existing cue write.
+          prompterSectionTitleDefaults: Object.fromEntries(Object.entries(sectionTitleDefaults)
+            .filter(([key, colour]) => /^[a-zA-Z]+$/.test(key) && /^#[0-9a-f]{6}$/i.test(String(colour)))),
           prompterSongTitle: currentSong.title || "",
           prompterSongArtist: currentSong.artist || "",
           prompterSongYear: currentSong.year || currentSong.releaseYear || "",

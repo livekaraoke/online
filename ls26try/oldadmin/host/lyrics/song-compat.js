@@ -94,7 +94,38 @@
   // The source is the same Firestore lyrics/{id} document consumed by the
   // existing Singer Screen. Reuse its section-visibility and line filtering
   // helpers rather than maintaining a second chord/lyrics parser.
-  function renderModernSong(song) {
+  const builtinSectionColours = Object.freeze({
+    verse:'#ffffff', preChorus:'#ffb45c', chorus:'#42f35c',
+    postChorus:'#ffffff', bridge:'#ffffff', intro:'#ffffff', outro:'#ffffff',
+    instrumental:'#ffffff', solo:'#ffffff', guitarTab:'#ffffff',
+    hostNote:'#ffffff', ending:'#ffd400', fallback:'#ffffff'
+  });
+  const validSectionColour = value => typeof value === 'string' &&
+    /^#[0-9a-f]{6}$/i.test(value) ? value : '';
+  function sectionColourKey(title) {
+    const clean = String(title || '').trim().toUpperCase().replace(/\s+/g, ' ');
+    if (/^VERSE(?: \d+)?$/.test(clean)) return 'verse';
+    if (/^PRE[- ]CHORUS$/.test(clean)) return 'preChorus';
+    if (/^CHORUS(?: \d+| REPEAT)?$/.test(clean)) return 'chorus';
+    if (/^POST[- ]CHORUS$/.test(clean)) return 'postChorus';
+    if (/^BRIDGE(?: \d+)?$/.test(clean)) return 'bridge';
+    if (clean === 'INTRO') return 'intro';
+    if (clean === 'OUTRO') return 'outro';
+    if (clean === 'INSTRUMENTAL' || clean === 'INSTRUMENTAL BREAK') return 'instrumental';
+    if (clean === 'SOLO' || clean === 'GUITAR SOLO') return 'solo';
+    if (clean === 'GUITAR TAB' || clean === 'TAB') return 'guitarTab';
+    if (clean === 'HOST NOTE' || clean === 'HOST NOTES') return 'hostNote';
+    if (clean === 'ENDING' || clean === 'END') return 'ending';
+    return 'fallback';
+  }
+  let lastSectionPalette = {};
+  function resolveSectionColour(section, palette) {
+    const key = sectionColourKey(section.title);
+    return validSectionColour(section.style?.titleColor) ||
+      validSectionColour(palette?.[key]) || builtinSectionColours[key] ||
+      validSectionColour(palette?.fallback) || builtinSectionColours.fallback;
+  }
+  function renderModernSong(song, palette = lastSectionPalette) {
     const container = document.getElementById('lyrics-container');
     const title = document.getElementById('songTitle');
     if (!container || !title) return false;
@@ -123,6 +154,7 @@
       if (!rows.some(row => row.kind !== 'blank')) continue;
       const group = document.createElement('div');
       group.className = 'verse modern-prompter-section';
+      const lyricColour = resolveSectionColour(section, palette);
       const isPerformanceNote = ['performancenote', 'performance-note']
         .includes(String(section.type || '').toLowerCase());
       // Dedicated class makes note spacing adjustable without changing the
@@ -148,6 +180,9 @@
         const line = document.createElement('div');
         line.className = row.kind === 'cue'
           ? 'modern-prompter-cue' : 'modern-prompter-line';
+        // Apply only to lyric rows: headings, performance cues and blanks retain
+        // their original presentation. Parent theme changes cannot override this.
+        if (row.kind === 'lyric') line.style.color = lyricColour;
         // The shared Singer Lines helper shortens performance notes to the
         // trailing parenthetical ("wait for signal"). LyricView, however,
         // shows the complete author-entered note stored in section.text.
@@ -170,7 +205,7 @@
     return true;
   }
 
-  async function showModernSong(rawId, cue = false, picker = false) {
+  async function showModernSong(rawId, cue = false, picker = false, palette) {
     const id = String(rawId || '').trim();
     if (!id || !window.firebase?.firestore) return;
     const token = ++version;
@@ -182,6 +217,9 @@
       const song = snap.data() || {};
       if (!Array.isArray(song.sections)) throw new Error('Song has no valid lyrics sections.');
       if (displayedId && displayedId !== 'modern:' + id) window.stopAutoScroll?.();
+      if (palette && typeof palette === 'object' && !Array.isArray(palette)) {
+        lastSectionPalette = palette;
+      }
       renderModernSong(song);
       replaceUrlId(id, 'modern');
       const changed = displayedId !== 'modern:' + id;
@@ -281,7 +319,7 @@
              value(meta, 'songArtist', 'artist')].join('|');
         if (signature === lastHostKey) return;
         lastHostKey = signature;
-        if (modern) void showModernSong(raw, cue);
+        if (modern) void showModernSong(raw, cue, false, data.prompterSectionTitleDefaults);
         else void showSong(raw, meta, cue);
       }, error => console.warn('Slave Lyrics sync failed:', error));
   };
