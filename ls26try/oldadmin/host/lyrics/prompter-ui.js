@@ -661,8 +661,12 @@
     const transparency = clampPreference(prefs.headerTransparency, 60, 0, 90, 5);
     const threshold = clampPreference(prefs.headerFadeThreshold, 100, 0, 1000, 10);
     bar.style.setProperty('--prompter-header-opacity', String((100 - transparency) / 100));
-    bar.classList.toggle('prompter-over-lyrics',
-      transparency > 0 && Math.max(0, window.scrollY || 0) > threshold);
+    const compact = transparency > 0 && Math.max(0, window.scrollY || 0) > threshold;
+    const wasCompact = bar.classList.contains('prompter-over-lyrics');
+    bar.classList.toggle('prompter-over-lyrics', compact);
+    // The height changes by 50px. Recalculate the actual touch zones only
+    // when crossing the threshold, not on every autoscroll animation frame.
+    if (wasCompact !== compact) updateArrowAppearance();
   }
   function updateHeaderFadeSettings() {
     const transparency = clampPreference(prefs.headerTransparency, 60, 0, 90, 5);

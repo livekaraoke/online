@@ -209,6 +209,7 @@ real-time typography control, and performance styling tools.
     .top-bar > .controls > .prompter-header-button,
     .top-bar > .title { transition: opacity 180ms ease; }
     .top-bar.prompter-over-lyrics {
+      height: 66px; /* 50px shorter than the normal 116px header */
       background-color: rgba(0,0,0,var(--prompter-header-opacity, .4));
       border-bottom-color: rgba(51,51,51,var(--prompter-header-opacity, .4));
     }
@@ -348,6 +349,36 @@ real-time typography control, and performance styling tools.
     .prompter-header-button.is-active .prompter-fs-exit { display: block; }
     .top-bar #prompterHeaderFullscreen,
     .top-bar #prompterHeaderControls { width: calc(clamp(56px, 12vw, 82px) + 5px); }
+    /* Icon-only performance header, restored automatically above the fade threshold. */
+    .top-bar.prompter-over-lyrics .prompter-header-button {
+      width: 48px;
+      height: 48px;
+      gap: 0;
+    }
+    .top-bar.prompter-over-lyrics #prompterHeaderFullscreen,
+    .top-bar.prompter-over-lyrics #prompterHeaderControls { width: 53px; }
+    .top-bar.prompter-over-lyrics .prompter-header-button .prompter-width-caption {
+      display: none;
+    }
+    .top-bar.prompter-over-lyrics .prompter-header-button svg {
+      width: 32px;
+      height: 32px;
+    }
+    .top-bar.prompter-over-lyrics > .title {
+      min-width: 0;
+      max-height: 60px;
+      overflow: hidden;
+      font-size: 16px;
+    }
+    .top-bar.prompter-over-lyrics > .title > .song-main-title,
+    .top-bar.prompter-over-lyrics > .title > .song-artist {
+      max-width: 100%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .top-bar.prompter-over-lyrics > .title > .song-main-title { font-size: 16px; }
+    .top-bar.prompter-over-lyrics > .title > .song-artist { font-size: 12px; }
     .prompter-width-toggle svg {
       width: 37px;
       height: 37px;
@@ -1603,7 +1634,7 @@ slaveLyricsToggle.addEventListener("change", function() {
   aria-label="Scroll lyrics down" title="Tap to scroll down; hold to keep scrolling">
   <span class="prompter-scroll-arrow" aria-hidden="true"><svg viewBox="0 0 96 96" focusable="false"><path d="M16 34 L48 66 L80 34"/></svg></span>
 </button>
-<script src="prompter-ui.js?v=20261125-arrow-positions-v1"></script>
+<script src="prompter-ui.js?v=20261125-compact-header-v1"></script>
 <script src="prompter-remote-receiver.js?v=20261124-isolated-scroll-v1"></script>
 <script src="prompter-session-picker.js?v=20261111-session-picker-v1"></script>
 <!-- Reuse atomic session finish logic; rating uses the existing performedSongs record. -->
