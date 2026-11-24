@@ -121,7 +121,7 @@ header .cancel-button {
 .send:not(:disabled) { background: #146b3b; border-color: #52df8a; }
 .song { position: relative; padding-right: 105px; }
 .song-symbol { position: absolute; top: 50%; right: 16px; width: 44px; height: 44px; margin-top: -22px; border: 2px solid #4de494; border-radius: 9px; color: #4de494; font-size: 32px; font-weight: bold; line-height: 39px; text-align: center; }
-.songs.has-selection .song:not(.selected) .song-symbol { color: #ffd34b; border-color: #ffd34b; }
+.song .song-symbol { color: #4de494; font-size: 32px; }
 .song.selected .song-symbol { color: #fff; border-color: #83f5ac; background: #147d48; }
 .song.unavailable:disabled { opacity: .72; background: #282828; }
 .song.unavailable strong { color: #aaa; }
@@ -455,3 +455,9 @@ header .cancel-button {
   .success .success-queue-count { font-size: 22px; margin: 12px auto 10px; }
   .success .success-queue-count + p { margin-top: 10px; }
 }
+
+/* Kiosk queue spacing and a real inline submit button, Safari 9 compatible. */
+.idle-current-row .idle-row-number { -webkit-flex-shrink: 0; flex-shrink: 0; margin-right: 14px; }
+.song-row { position: relative; }
+.song.selected { padding-right: 156px; }
+.song-inline-send { position: absolute; right: 12px; top: 50%; width: 132px; height: 48px; min-height: 48px; margin-top: -24px; padding: 4px 8px; background: #147d48; border: 2px solid #83f5ac; border-radius: 7px; color: #fff; font-size: 15px; line-height: 1.1; font-weight: bold; white-space: nowrap; }

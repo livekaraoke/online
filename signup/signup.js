@@ -233,6 +233,9 @@
     el('singerName').className = nameValid() ? 'valid-name' : '';
     el('send').disabled = !available || !validForm(el('singerName').value, selected, el('note').value) ||
       !!(selected && songUnavailable(selected.id));
+    for (var i = 0; i < songButtons.length; i += 1) {
+      if (!songButtons[i].inlineSend.hidden) { songButtons[i].inlineSend.disabled = el('send').disabled; }
+    }
     el('refresh').disabled = busy || loading;
     el('pageRefresh').disabled = busy;
   }
@@ -261,7 +264,9 @@
       row.button.className = 'song' + (active ? ' selected' : '') + (reason ? ' unavailable' : '');
       row.button.setAttribute('aria-pressed', active ? 'true' : 'false');
       row.button.setAttribute('aria-disabled', reason ? 'true' : 'false');
-      row.symbol.textContent = active ? '\u2713' : '+';
+      row.symbol.textContent = '+';
+      row.symbol.hidden = active;
+      row.inlineSend.hidden = !active;
       row.status.textContent = reason === 'PLAYED' ? 'ALREADY PLAYED' :
         reason === 'REQUESTED' ? 'ALREADY REQUESTED' : reason;
     }
@@ -322,7 +327,7 @@
     for (i = 0; i < songButtons.length; i += 1) {
       row = songButtons[i];
       match = (row.song.title + ' ' + row.song.artist).toLowerCase().indexOf(term) !== -1;
-      row.button.style.display = match ? 'block' : 'none';
+      row.wrapper.style.display = match ? 'block' : 'none';
       if (match) { count += 1; }
     }
     el('resultCount').textContent = count ? 'Showing all ' + count + ' matching songs. Tap one to select.' : 'No matching songs. Try another title or artist.';
@@ -334,7 +339,14 @@
     function add(song) {
       var button = document.createElement('button'), title = document.createElement('strong');
       var artist = document.createElement('span'), symbol = document.createElement('span');
-      var blocked = document.createElement('span');
+      var blocked = document.createElement('span'), wrapper = document.createElement('div');
+      var inlineSend = document.createElement('button');
+      wrapper.className = 'song-row';
+      inlineSend.type = 'submit';
+      inlineSend.className = 'song-inline-send';
+      inlineSend.textContent = 'SEND REQUEST';
+      inlineSend.setAttribute('aria-label', 'Send request for ' + song.title);
+      inlineSend.hidden = true; inlineSend.disabled = true;
       button.type = 'button';
       button.className = 'song';
       title.textContent = song.title; artist.textContent = song.artist;
@@ -345,8 +357,9 @@
         if (songUnavailable(song.id)) { return; }
         selected = song; showSelection(); updateSongStates();
       };
-      songButtons.push({song: song, button: button, symbol: symbol, status: blocked});
-      fragment.appendChild(button);
+      songButtons.push({song: song, button: button, symbol: symbol, status: blocked, wrapper: wrapper, inlineSend: inlineSend});
+      wrapper.appendChild(button); wrapper.appendChild(inlineSend);
+      fragment.appendChild(wrapper);
     }
     for (i = 0; i < songs.length; i += 1) { add(songs[i]); }
     container.appendChild(fragment);
