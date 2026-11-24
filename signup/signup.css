@@ -461,3 +461,31 @@ header .cancel-button {
 .song-row { position: relative; }
 .song.selected { padding-right: 156px; }
 .song-inline-send { position: absolute; right: 12px; top: 50%; width: 132px; height: 48px; min-height: 48px; margin-top: -24px; padding: 4px 8px; background: #147d48; border: 2px solid #83f5ac; border-radius: 7px; color: #fff; font-size: 15px; line-height: 1.1; font-weight: bold; white-space: nowrap; }
+
+/* Upcoming queue only: keep song titles on the left and singers on the right.
+ * Preserve the existing responsive Singer label font and iOS 9 flex syntax. */
+.idle-next-row .idle-row-info {
+  display: -webkit-flex;
+  display: flex;
+  -webkit-align-items: center;
+  align-items: center;
+}
+.idle-next-row .idle-row-info > strong {
+  -webkit-flex: 1 1 auto;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.idle-next-row .idle-row-info > span {
+  -webkit-flex: 0 1 auto;
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 46%;
+  margin-left: 12px;
+  text-align: right;
+}
+.idle-next-row .idle-row-info .idle-singer-name {
+  display: inline;
+  color: #5aa9ff;
+  font-size: 1.18em;
+  font-weight: bold;
+}

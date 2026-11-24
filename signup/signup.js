@@ -408,6 +408,19 @@
       }
     });
   }
+  function renderNextSinger(target, singerName) {
+    var name = trim(singerName), value;
+    target.textContent = '';
+    if (!name) {
+      target.textContent = 'Singer to be announced';
+      return;
+    }
+    target.appendChild(document.createTextNode('Singer: '));
+    value = document.createElement('span');
+    value.className = 'idle-singer-name';
+    value.textContent = name;
+    target.appendChild(value);
+  }
   function renderLandingQueue(queue) {
     updateSuccessQueueCount(queue);
     var current = queue && queue.current, next = queue && queue.next instanceof Array ? queue.next : [];
@@ -422,8 +435,7 @@
       item = next[i];
       row.hidden = !item || !trim(item.songTitle);
       el('queueNextSong' + (i + 1)).textContent = item ? trim(item.songTitle) : '';
-      el('queueNextSinger' + (i + 1)).textContent = item && trim(item.singerName)
-        ? 'Singer: ' + trim(item.singerName) : 'Singer to be announced';
+      renderNextSinger(el('queueNextSinger' + (i + 1)), item && item.singerName);
     }
   }
   /* Read only the existing owner-published public projection. Never fetch the
