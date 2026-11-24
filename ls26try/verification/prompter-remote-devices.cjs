@@ -1,5 +1,5 @@
 /* Separate Chromium browser contexts (independent tablets) sharing only a
- * simulated Firestore liveLyrics document. No BC/localStorage cross-context. */
+ * simulated Firestore control documents. No BC/localStorage cross-context. */
 const assert=require('node:assert/strict'),fs=require('fs'),path=require('path');
 const {chromium}=require(require.resolve('playwright',{paths:[process.env.LS26_TEST_NODE_MODULES||process.cwd()]}));
 const root=path.resolve(__dirname,'..');
@@ -40,29 +40,34 @@ const receiver=fs.readFileSync(path.join(root,'oldadmin/host/lyrics/prompter-rem
     window.db={collection(name){
       if(name!=='karaokeControl')throw Error(name);
       return{doc(id){
-        if(id!=='liveLyrics')throw Error(id);
+        if(!['liveLyrics','prompterScroll'].includes(id))throw Error(id);
         return{onSnapshot(fn){
-          window.__deliverRemote=p=>fn({exists:true,data:()=>({prompterRemoteCommand:p})});
+          window.__remoteListeners ||= {};
+          window.__remoteListeners[id]=p=>fn({exists:true,data:()=>({prompterRemoteCommand:p})});
+          window.__deliverRemote=(p,doc='liveLyrics')=>window.__remoteListeners[doc]?.(p);
           fn({exists:false}); // baseline, not a fresh command
-          return()=>{window.__deliverRemote=null};
+          return()=>{delete window.__remoteListeners[id]};
         }};
       }};
     }};
   });
   const writes=[];let deny=false;
-  await host.exposeFunction('__testRemoteWrite',async (packet,merge)=>{
+  await host.exposeFunction('__testRemoteWrite',async (packet,merge,doc,fields)=>{
     if(deny)throw Error('permission-denied');
     assert.equal(merge,true);
     assert.ok(['song','instrumental','toggle','slower','faster','up','down'].includes(packet.action));
+    const arrow=['up','down'].includes(packet.action);
+    assert.equal(doc,arrow?'prompterScroll':'liveLyrics');
+    assert.equal(Object.hasOwn(fields,'prompterRemoteState'),!arrow,'Arrow taps must not update shared song state');
     writes.push(packet);
-    await target.evaluate(p=>window.__deliverRemote(p),packet);
+    await target.evaluate(({p,doc})=>window.__deliverRemote(p,doc),{p:packet,doc});
   });
   await host.evaluate(()=>{
     window.db={collection(name){
       if(name!=='karaokeControl')throw Error(name);
       return{doc(id){
-        if(id!=='liveLyrics')throw Error(id);
-        return{set:(fields,opts)=>window.__testRemoteWrite(fields.prompterRemoteCommand,opts?.merge===true)};
+        if(!['liveLyrics','prompterScroll'].includes(id))throw Error(id);
+        return{set:(fields,opts)=>window.__testRemoteWrite(fields.prompterRemoteCommand,opts?.merge===true,id,fields)};
       }};
     }};
   });
@@ -94,6 +99,7 @@ const receiver=fs.readFileSync(path.join(root,'oldadmin/host/lyrics/prompter-rem
   assert.deepEqual(await target.evaluate(()=>window.__actions),executed);
   assert.deepEqual(writes.map(p=>p.action),expected,'One merged write per press');
   await target.evaluate(p=>window.__deliverRemote(p),writes.at(-1));
+  await target.evaluate(p=>window.__deliverRemote(p,'prompterScroll'),writes.findLast(p=>p.action==='down'));
   assert.equal((await target.evaluate(()=>window.__actions)).length,executed.length,'No duplicate execution');
   assert.equal(await host.locator('#ls26PrompterRemoteStatus').textContent(),'Sent via Firestore','Do not claim device acknowledgement');
   deny=true;

@@ -47,19 +47,23 @@ const css=load("host/css/lyricview-prompter-remote.css")+"\n"+load("admin-new/cs
    window.db={collection(name){
     if(name!=="karaokeControl")throw Error(name);
     return{doc(id){
-     if(id!=="liveLyrics")throw Error(id);
+     if(!["liveLyrics","prompterScroll"].includes(id))throw Error(id);
      return{onSnapshot(fn){
-      window.__deliverPhoneRemote=p=>fn({exists:true,data:()=>({prompterRemoteCommand:p})});
-      fn({exists:false});return()=>{window.__deliverPhoneRemote=null;};
+      window.__phoneRemoteListeners ||= {};
+      window.__phoneRemoteListeners[id]=p=>fn({exists:true,data:()=>({prompterRemoteCommand:p})});
+      window.__deliverPhoneRemote=(p,doc)=>window.__phoneRemoteListeners[doc]?.(p);
+      fn({exists:false});return()=>{delete window.__phoneRemoteListeners[id];};
      }};
     }};
    }};
   });
   await singer.addScriptTag({content:receiver});
   const writes=[];
-  await phone.exposeFunction("__submitPhoneRemote",async (packet,merge)=>{
-   assert.equal(merge,true);writes.push(packet);
-   await singer.evaluate(p=>window.__deliverPhoneRemote(p),packet);
+  await phone.exposeFunction("__submitPhoneRemote",async (packet,merge,doc)=>{
+   assert.equal(merge,true);
+   assert.equal(doc,["up","down"].includes(packet.action)?"prompterScroll":"liveLyrics");
+   writes.push(packet);
+   await singer.evaluate(({p,doc})=>window.__deliverPhoneRemote(p,doc),{p:packet,doc});
   });
   await phone.evaluate(()=>{
    window.__isOwner=false;window.isOwner=()=>window.__isOwner;
@@ -68,8 +72,8 @@ const css=load("host/css/lyricview-prompter-remote.css")+"\n"+load("admin-new/cs
     db:{collection(name){
      if(name!=="karaokeControl")throw Error(name);
      return{doc(id){
-      if(id!=="liveLyrics")throw Error(id);
-      return{set:(data,options)=>window.__submitPhoneRemote(data.prompterRemoteCommand,options?.merge===true)};
+      if(!["liveLyrics","prompterScroll"].includes(id))throw Error(id);
+      return{set:(data,options)=>window.__submitPhoneRemote(data.prompterRemoteCommand,options?.merge===true,id)};
      }};
     }}
    };

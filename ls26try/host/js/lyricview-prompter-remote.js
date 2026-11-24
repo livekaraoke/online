@@ -1,6 +1,7 @@
 /* LyricView -> legacy fullscreen Prompter remote.
  * Same-device fast path: BroadcastChannel/localStorage.
- * Cross-device: one merge write per press to existing karaokeControl/liveLyrics.
+ * Cross-device: stage controls use liveLyrics; scroll arrows use the isolated
+ * karaokeControl/prompterScroll document (one merge write per press).
  * Cloud writes confirm delivery to Firestore, not execution on another tablet.
  */
 (() => {
@@ -247,10 +248,25 @@
     }
     // Serialize taps to prevent ordered +/-/Play commands overtaking each other.
     // Never write on autoscroll frames or touch singer lyrics/scroll sync fields.
-    cloudWriteChain=cloudWriteChain.catch(()=>{}).then(()=>
-      sharedDb.collection('karaokeControl').doc('liveLyrics')
-        .set({prompterRemoteCommand:packet,prompterRemoteState:projected},{merge:true})
-    ).then(()=>{
+    const arrow=action==='up'||action==='down';
+    cloudWriteChain=cloudWriteChain.catch(()=>{}).then(async()=>{
+      const control=sharedDb.collection('karaokeControl');
+      if(arrow){
+        // Arrow taps change position only. Do not rewrite song/cue or play state
+        // and do not wake every liveLyrics subscriber on each adjustment.
+        try{
+          await control.doc('prompterScroll').set({prompterRemoteCommand:packet},{merge:true});
+          return;
+        }catch(error){
+          // A denied write cannot have delivered the command. Keep compatibility
+          // with a deployment using a narrower set of Firestore permissions.
+          if(error?.code!=='permission-denied'&&error?.code!=='firestore/permission-denied')throw error;
+          await control.doc('liveLyrics').set({prompterRemoteCommand:packet},{merge:true});
+          return;
+        }
+      }
+      await sharedDb.collection('karaokeControl').doc('liveLyrics').set({prompterRemoteCommand:packet,prompterRemoteState:projected},{merge:true});
+    }).then(()=>{
       if(lastRequest===id&&!status.textContent.startsWith('Connected'))
         status.textContent='Sent via Firestore';
     }).catch(error=>{

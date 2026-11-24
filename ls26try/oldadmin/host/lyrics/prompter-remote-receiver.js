@@ -9,7 +9,7 @@
   const CHANNEL='ls26-prompter-remote-v1', STORAGE='ls26:prompter-remote-command-v1';
   const valid=new Set(['status','toggle','slower','faster','up','down','instrumental','song']);
   const seen=new Set();
-  let channel=null, unsubscribeRemote=null, firstCloudSnapshot=true, lastCloudId='';
+  let channel=null, unsubscribeRemote=null, unsubscribeScroll=null;
   let mode='idle', feedbackTimer=null,cloudStateChain=Promise.resolve();
   let loadedSong={songId:'',title:'',artist:'',year:''};
 
@@ -239,20 +239,32 @@
     try{receive(JSON.parse(event.newValue));}catch(_){}
   });
   const sharedDb=window.db||(typeof db!=='undefined'?db:null);
+  // Each document has its own baseline and last-command ID. Both feed the
+  // same deduplicating receiver, including same-device BroadcastChannel.
+  const cloudHandler=(arrowsOnly=false)=>{
+    let first=true,lastId='';
+    return snapshot=>{
+      const packet=snapshot.exists?snapshot.data()?.prompterRemoteCommand:null;
+      const id=typeof packet?.id==='string'?packet.id:'';
+      if(first){first=false;lastId=id;return;}
+      if(!id||id===lastId)return;
+      lastId=id;
+      if(arrowsOnly&&packet.action!=='up'&&packet.action!=='down')return;
+      receive(packet);
+    };
+  };
   if(sharedDb?.collection){
     try{
       unsubscribeRemote=sharedDb.collection('karaokeControl').doc('liveLyrics')
-        .onSnapshot(snapshot=>{
-          const packet=snapshot.exists?snapshot.data()?.prompterRemoteCommand:null;
-          const id=typeof packet?.id==='string'?packet.id:'';
-          if(firstCloudSnapshot){firstCloudSnapshot=false;lastCloudId=id;return;}
-          if(!id||id===lastCloudId)return;
-          lastCloudId=id;receive(packet);
-        },error=>console.warn('Prompter cross-device listener failed:',error));
+        .onSnapshot(cloudHandler(),error=>console.warn('Prompter cross-device listener failed:',error));
     }catch(error){console.warn('Prompter remote listener unavailable:',error);}
+    try{
+      unsubscribeScroll=sharedDb.collection('karaokeControl').doc('prompterScroll')
+        .onSnapshot(cloudHandler(true),error=>console.warn('Prompter scroll listener failed:',error));
+    }catch(error){console.warn('Prompter scroll listener unavailable:',error);}
   }
   window.addEventListener('pagehide',()=>{
-    stopTimer();channel?.close();unsubscribeRemote?.();
+    stopTimer();channel?.close();unsubscribeRemote?.();unsubscribeScroll?.();
     fullscreenDoc.removeEventListener('fullscreenchange',syncFullscreenButton);
   },{once:true});
   state('ready-'+Date.now());
