@@ -407,3 +407,8 @@ body.setlist-page {
   width:42px;
   min-height:42px;
 }
+
+/* Per-setlist NEW marker, beside the remove control. */
+.setlist-page #selectedSongs .setlist-song-row{grid-template-columns:minmax(0,1fr) 34px 42px;gap:5px}
+.setlist-page #selectedSongs .setlist-new-toggle{width:34px;color:#8fa9b7;font-size:21px;background:transparent;border-color:#315d73}
+.setlist-page #selectedSongs .setlist-new-toggle[aria-pressed="true"]{color:#52baff;background:#0b3558;border-color:#379eff}
