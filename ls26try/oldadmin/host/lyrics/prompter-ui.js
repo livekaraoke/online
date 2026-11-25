@@ -12,7 +12,11 @@
     headerTransparency: 60, headerFadeThreshold: 100,
     upArrowX: 0, upArrowY: 0, downArrowX: 0, downArrowY: 0,
     outsideLyricOpacity: 50, showReadingGuide: false,
-    readingGuideColour: '#00d5bc', readingGuideOpacity: 9
+    readingGuideColour: '#00d5bc', readingGuideOpacity: 9,
+    readingTop: 27, readingBottom: 74, readingGradient: false,
+    tapDistance: 15, holdSpeed: 210, tapDuration: 560,
+    showHeadings: true, headingColour: '#666666', headingSize: 22,
+    headingOpacity: 100, sectionGap: 58, keepAwake: true
   };
   function readSaved() {
     try {
@@ -80,6 +84,7 @@
     });
     applyLineGap();
     applyNoteSpacing();
+    updateSectionAppearance();
     window.applyTextSizes?.();
     scheduleWideLyricsLayout();
     scheduleHeaderOpacity();
@@ -453,7 +458,7 @@
 
   function smoothArrowStep(direction) {
     const startY = window.scrollY;
-    const stepAmount = direction * Math.max(60, window.innerHeight * .15);
+    const stepAmount = direction * Math.max(1, window.innerHeight * clampPreference(prefs.tapDistance, 15, 5, 100, 1) / 100);
     const documentHeight = Math.max(document.documentElement.scrollHeight || 0,
       document.body.scrollHeight || 0);
     const previousTarget = arrowTapTarget === null ? startY : arrowTapTarget;
@@ -468,7 +473,12 @@
       arrowTapTarget = null;
       return;
     }
-    const duration = 560;
+    const duration = clampPreference(prefs.tapDuration, 560, 0, 1500, 20);
+    if (duration === 0) {
+      window.scrollTo(0, targetY);
+      arrowTapTarget = null;
+      return;
+    }
     // Yield only during the manual animation; then resume from its new position.
     window.deferAutoScroll?.(40);
     let startedAt = null;
@@ -493,6 +503,7 @@
     if (!button) return;
     let pointerId = null, timer = null, frame = null, lastTime = null, held = false;
     let startX = 0, startY = 0, moved = false;
+    let holdY = 0, lastHoldApplied = 0;
 
     function pulse() {
       // Restart the CSS animation on every press, including successive quick taps.
@@ -522,7 +533,14 @@
       if (!held) { frame = null; return; }
       if (lastTime !== null) {
         const delta = Math.min(0.05, (timestamp - lastTime) / 1000);
-        window.scrollBy(0, direction * 210 * delta);
+        const actual = window.scrollY;
+        if (actual !== lastHoldApplied) holdY = actual;
+        const scroller = document.scrollingElement || document.documentElement;
+        const maxY = Math.max(0, scroller.scrollHeight - scroller.clientHeight);
+        holdY = Math.max(0, Math.min(maxY, holdY + direction *
+          clampPreference(prefs.holdSpeed, 210, 30, 1000, 10) * delta));
+        window.scrollTo(0, holdY);
+        lastHoldApplied = window.scrollY;
       }
       lastTime = timestamp;
       frame = requestAnimationFrame(animate);
@@ -547,6 +565,7 @@
         if (pointerId === null) return;
         cancelArrowTapAnimation();
         held = true;
+        holdY = lastHoldApplied = window.scrollY;
         frame = requestAnimationFrame(animate);
       }, 220);
     });
@@ -679,6 +698,14 @@
   function updateReadingZone() {
     const opacity = clampPreference(prefs.outsideLyricOpacity, 50, 0, 100, 5);
     const guide = prefs.showReadingGuide === true;
+    const bounds = readingBounds(prefs.readingTop, prefs.readingBottom);
+    const root = document.documentElement.style;
+    root.setProperty('--prompter-reading-top', bounds.top + '%');
+    root.setProperty('--prompter-reading-bottom', bounds.bottom + '%');
+    document.body.classList.toggle('prompter-reading-gradient', prefs.readingGradient === true);
+    syncRange('prompterReadingTop', bounds.top, '%', 0, bounds.bottom - 10);
+    syncRange('prompterReadingBottom', bounds.bottom, '%', bounds.top + 10, 100);
+    if (byId('prompterReadingGradient')) byId('prompterReadingGradient').checked = prefs.readingGradient === true;
     const colour = validReadingGuideColour(prefs.readingGuideColour);
     const fillOpacity = clampPreference(prefs.readingGuideOpacity, 9, 0, 100, 1);
     const zone = byId('prompterReadingZone');
@@ -722,7 +749,222 @@
     headerFrame = requestAnimationFrame(updateHeaderOpacity);
   }
 
+  function syncRange(id, value, unit, min, max) {
+    const input = byId(id);
+    if (input) {
+      if (min !== undefined) input.min = String(min);
+      if (max !== undefined) input.max = String(max);
+      input.value = String(value);
+    }
+    const output = byId(id + 'Value');
+    if (output) output.textContent = value + unit;
+  }
+  function readingBounds(top, bottom) {
+    const t = clampPreference(top, 27, 0, 90, 1);
+    const b = clampPreference(bottom, 74, 10, 100, 1);
+    return { top: Math.min(t, b - 10), bottom: b };
+  }
+  function updateScrollBehaviour() {
+    syncRange('prompterTapDistance', clampPreference(prefs.tapDistance, 15, 5, 100, 1), '% of screen');
+    syncRange('prompterHoldSpeed', clampPreference(prefs.holdSpeed, 210, 30, 1000, 10), ' px/s');
+    syncRange('prompterTapDuration', clampPreference(prefs.tapDuration, 560, 0, 1500, 20), ' ms');
+  }
+  function updateSectionAppearance() {
+    const colour = typeof prefs.headingColour === 'string' && /^#[0-9a-f]{6}$/i.test(prefs.headingColour) ? prefs.headingColour : '#666666';
+    const size = clampPreference(prefs.headingSize, 22, 10, 60, 1);
+    const opacity = clampPreference(prefs.headingOpacity, 100, 0, 100, 1);
+    const gap = clampPreference(prefs.sectionGap, 58, 0, 160, 1);
+    const root = document.documentElement.style;
+    root.setProperty('--prompter-heading-colour', colour);
+    root.setProperty('--prompter-heading-size', size + 'px');
+    root.setProperty('--prompter-heading-opacity', String(opacity / 100));
+    root.setProperty('--prompter-section-gap', gap + 'px');
+    document.body.classList.toggle('prompter-hide-headings', prefs.showHeadings === false);
+    if (byId('prompterSectionHeadings')) byId('prompterSectionHeadings').checked = prefs.showHeadings !== false;
+    if (byId('prompterHeadingColour')) byId('prompterHeadingColour').value = colour;
+    syncRange('prompterHeadingSize', size, ' px');
+    syncRange('prompterHeadingOpacity', opacity, '%');
+    syncRange('prompterSectionGap', gap, ' px');
+    if (prefs.wideLyrics === true) scheduleWideLyricsLayout();
+  }
+
+  // This lock is local to the singer's UI. The existing remote can still
+  // start, pause, change speed, send songs, or end the performance.
+  let performanceLocked = false;
+  function setPerformanceLock(active) {
+    performanceLocked = Boolean(active);
+    document.body.classList.toggle('prompter-performance-locked', performanceLocked);
+    if (performanceLocked) {
+      window.closePanel?.();
+      if (manualTouchAutoScrollGesture) window.setAutoScrollManualGesture?.(false, 0);
+      manualTouchAutoScrollGesture = false;
+      manualTouchStartedInStrip = false;
+    }
+    for (const selector of ['.top-bar > .left-controls','.top-bar > .controls','#controlPanel','#autoScrollControls','#devPanel','#prompterEndRating']) {
+      const node = document.querySelector(selector);
+      if (node) node.inert = performanceLocked;
+    }
+    try {
+      if (window.parent !== window && window.parent.__ls26PrompterShell === true) {
+        const toolbar = window.parent.document.querySelector('.viewer-toolbar');
+        if (toolbar) toolbar.inert = performanceLocked;
+      }
+    } catch (_) {}
+  }
+  window.prompterSetPerformanceLock = setPerformanceLock;
+  function installPerformanceLock() {
+    const arrow = target => target?.closest?.('#prompterScrollUp,#prompterScrollDown');
+    const block = event => {
+      if (event.cancelable) event.preventDefault();
+      event.stopImmediatePropagation();
+    };
+    for (const name of ['click','pointerdown','touchstart','contextmenu','selectstart','dragstart']) {
+      window.addEventListener(name, event => {
+        if (performanceLocked && !arrow(event.target)) block(event);
+      }, {capture:true, passive:false});
+    }
+    for (const name of ['touchmove','wheel']) window.addEventListener(name, event => {
+      if (performanceLocked) block(event);
+    }, {capture:true, passive:false});
+    window.addEventListener('keydown', event => {
+      if (!performanceLocked) return;
+      const button = arrow(event.target);
+      if (button && (event.key === 'Enter' || event.key === ' ')) {
+        block(event);
+        if (!event.repeat) smoothArrowStep(button.id === 'prompterScrollUp' ? -1 : 1);
+      } else if (event.key !== 'Tab') block(event);
+    }, true);
+    window.addEventListener('pagehide', () => setPerformanceLock(false));
+  }
+
+  // Screen wake lock is independent of the song/stage. Browsers may revoke
+  // it when hidden or on low battery; reacquire on visibility and interaction.
+  let wakeSentinel = null, wakePending = false, wakeRetryAt = 0, wakeRetryTimer = null;
+  function wakeStatus(message) {
+    const el = byId('prompterWakeStatus');
+    if (el) el.textContent = message;
+  }
+  function scheduleWakeRetry(delay = 30000) {
+    if (wakeRetryTimer !== null || !prefs.keepAwake || document.visibilityState !== 'visible') return;
+    wakeRetryTimer = setTimeout(() => {
+      wakeRetryTimer = null;
+      void updateWakeLock();
+    }, delay);
+  }
+  async function updateWakeLock(force = false) {
+    const toggle = byId('prompterKeepAwake');
+    if (toggle) toggle.checked = prefs.keepAwake !== false;
+    if (prefs.keepAwake === false || document.visibilityState !== 'visible') {
+      if (wakeRetryTimer !== null) clearTimeout(wakeRetryTimer);
+      wakeRetryTimer = null;
+      const old = wakeSentinel;
+      wakeSentinel = null;
+      if (old && !old.released) try { await old.release(); } catch (_) {}
+      wakeStatus(prefs.keepAwake === false ? 'Screen wake lock off.' : 'Wake lock resumes when this page is visible.');
+      return;
+    }
+    if (!navigator.wakeLock?.request) {
+      wakeStatus('Wake lock is not supported by this browser. Use the device screen timeout setting.');
+      return;
+    }
+    if (wakeSentinel && !wakeSentinel.released) { wakeStatus('Screen wake lock active.'); return; }
+    if (wakePending || (!force && Date.now() < wakeRetryAt)) return;
+    wakePending = true;
+    try {
+      const lock = await navigator.wakeLock.request('screen');
+      if (prefs.keepAwake === false || document.visibilityState !== 'visible') {
+        await lock.release();
+        return;
+      }
+      wakeSentinel = lock;
+      wakeStatus('Screen wake lock active.');
+      lock.addEventListener('release', () => {
+        if (wakeSentinel !== lock) return;
+        wakeSentinel = null;
+        wakeStatus('Wake lock released by browser; retrying while visible.');
+        scheduleWakeRetry();
+      }, {once:true});
+    } catch (_) {
+      wakeRetryAt = Date.now() + 10000;
+      wakeStatus('Wake lock unavailable; will retry while visible.');
+      scheduleWakeRetry();
+    } finally { wakePending = false; }
+  }
+
+  const resetKeys = {
+    reading: ['outsideLyricOpacity','showReadingGuide','readingGuideColour','readingGuideOpacity','readingTop','readingBottom','readingGradient'],
+    touch: ['scrollZones','showTouchZones','touchZoneSplit','touchZoneWidth'],
+    scroll: ['tapDistance','holdSpeed','tapDuration'],
+    arrows: ['arrowOpacity','arrowSize','upArrowX','upArrowY','downArrowX','downArrowY'],
+    header: ['headerTransparency','headerFadeThreshold'],
+    typography: ['theme','font','lineSpacing','lineGap','noteGapAbove','noteGapBelow','charSpacing'],
+    sections: ['showHeadings','headingColour','headingSize','headingOpacity','sectionGap'],
+    playback: ['slaveLyrics'], screen: ['keepAwake'], developer: ['devConsole']
+  };
+  function resetSection(category) {
+    if (performanceLocked || !Object.prototype.hasOwnProperty.call(resetKeys, category)) return;
+    const slaveWasEnabled = prefs.slaveLyrics === true;
+    for (const key of resetKeys[category]) prefs[key] = defaults[key];
+    save();
+    switch (category) {
+      case 'reading': updateReadingZone(); break;
+      case 'touch': updateScrollZones(); updateTouchZones(); updateArrowAppearance(); break;
+      case 'scroll': cancelArrowTapAnimation(); updateScrollBehaviour(); break;
+      case 'arrows': updateArrowAppearance(); break;
+      case 'header': updateHeaderFadeSettings(); break;
+      case 'typography':
+        setActiveGroup('.theme-group button', 0, prefs.theme, setThemeOriginal);
+        setActiveGroup('.font-group button', 0, prefs.font, setFontOriginal);
+        setActiveGroup('.lspacing button', 0, prefs.lineSpacing, setLineOriginal);
+        setActiveGroup('.cspacing button', 0, prefs.charSpacing, setCharOriginal);
+        applyStyles(); break;
+      case 'sections': updateSectionAppearance(); break;
+      case 'playback':
+        if (slaveWasEnabled || new URLSearchParams(location.search).get('slave') === '1') updateSlaveLyrics(false, true);
+        else if (byId('slaveLyricsToggle')) byId('slaveLyricsToggle').checked = false;
+        try { localStorage.removeItem('karaoke_hide_autoscroll'); } catch (_) {}
+        syncAutoScrollVisibility(); break;
+      case 'screen': void updateWakeLock(true); break;
+      case 'developer': updateDevConsole(); break;
+    }
+  }
+  function installNewSettings() {
+    const bindRange = (id, key, min, max, step, apply) => byId(id)?.addEventListener('input', event => {
+      prefs[key] = clampPreference(event.target.value, defaults[key], min, max, step);
+      save(); apply();
+    });
+    const bindCheck = (id, key, apply) => byId(id)?.addEventListener('change', event => {
+      prefs[key] = Boolean(event.target.checked); save(); apply();
+    });
+    bindRange('prompterReadingTop','readingTop',0,90,1,updateReadingZone);
+    bindRange('prompterReadingBottom','readingBottom',10,100,1,updateReadingZone);
+    bindCheck('prompterReadingGradient','readingGradient',updateReadingZone);
+    bindRange('prompterTapDistance','tapDistance',5,100,1,updateScrollBehaviour);
+    bindRange('prompterHoldSpeed','holdSpeed',30,1000,10,updateScrollBehaviour);
+    bindRange('prompterTapDuration','tapDuration',0,1500,20,updateScrollBehaviour);
+    bindCheck('prompterSectionHeadings','showHeadings',updateSectionAppearance);
+    byId('prompterHeadingColour')?.addEventListener('input', event => {
+      prefs.headingColour = event.target.value; save(); updateSectionAppearance();
+    });
+    bindRange('prompterHeadingSize','headingSize',10,60,1,updateSectionAppearance);
+    bindRange('prompterHeadingOpacity','headingOpacity',0,100,1,updateSectionAppearance);
+    bindRange('prompterSectionGap','sectionGap',0,160,1,updateSectionAppearance);
+    bindCheck('prompterKeepAwake','keepAwake',() => void updateWakeLock(true));
+    document.querySelectorAll('[data-prompter-reset]').forEach(button =>
+      button.addEventListener('click', () => resetSection(button.dataset.prompterReset)));
+    document.addEventListener('visibilitychange', () => void updateWakeLock(true));
+    window.addEventListener('pageshow', () => void updateWakeLock(true));
+    window.addEventListener('pointerdown', () => void updateWakeLock(), {capture:true,passive:true});
+    updateReadingZone();
+    updateScrollBehaviour();
+    updateSectionAppearance();
+    void updateWakeLock(true);
+    installPerformanceLock();
+    setPerformanceLock(typeof autoScrollActive !== 'undefined' && autoScrollActive);
+  }
+
   function initialize() {
+    installNewSettings();
     installRestrictedManualScrolling();
     window.addEventListener('scroll', scheduleHeaderOpacity, { passive: true });
     byId('prompterFitWidthToggle')?.addEventListener('click', toggleWideLyrics);

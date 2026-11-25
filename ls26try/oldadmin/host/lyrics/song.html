@@ -312,7 +312,7 @@ real-time typography control, and performance styling tools.
     .prompter-settings-section > summary:focus-visible { outline: 2px solid #00d5bc; outline-offset: -2px; }
     .prompter-settings-body { padding: 8px; min-width: 0; }
     .prompter-settings-body > h3:first-child { margin-top: 4px; }
-    #prompterReadingGuideColour {
+    #prompterReadingGuideColour, #prompterHeadingColour {
       display: block;
       box-sizing: border-box;
       width: 100%;
@@ -522,10 +522,54 @@ real-time typography control, and performance styling tools.
     body[data-ls26-singer-stage="ended"] #prompterReadingZone {
       display: none;
     }
+    /* Gradient affects only the dimming overlay, not the background guide. */
+    body.prompter-reading-gradient #prompterReadingZone::before {
+      -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - min(8vh, 100%)), transparent);
+      mask-image: linear-gradient(to bottom, #000 calc(100% - min(8vh, 100%)), transparent);
+    }
+    body.prompter-reading-gradient #prompterReadingZone::after {
+      -webkit-mask-image: linear-gradient(to bottom, transparent, #000 min(8vh, 100%));
+      mask-image: linear-gradient(to bottom, transparent, #000 min(8vh, 100%));
+    }
+    #lyrics-container .section {
+      color: var(--prompter-heading-colour, #666666) !important;
+      font-size: var(--prompter-heading-size, 22px) !important;
+      opacity: var(--prompter-heading-opacity, 1);
+    }
+    #lyrics-container > .section,
+    #lyrics-container > .section-seperator {
+      margin-top: calc(var(--prompter-section-gap, 58px) + 2px);
+    }
+    body.prompter-hide-headings #lyrics-container .section {
+      visibility: hidden;
+      font-size: 0 !important;
+      line-height: 0 !important;
+      margin-bottom: 0;
+    }
+    body.prompter-hide-headings #lyrics-container .modern-prompter-heading { display: none; }
+    .prompter-reset-section {
+      width: 100%;
+      min-height: 42px;
+      margin: 10px 0 2px;
+      padding: 7px;
+      border: 1px solid #4c6471;
+      border-radius: 6px;
+      background: #202a30;
+      color: #c6d0d6;
+      font: 600 13px Arial, sans-serif;
+    }
+    body.prompter-performance-locked .top-bar > .left-controls,
+    body.prompter-performance-locked .top-bar > .controls,
+    body.prompter-performance-locked #autoScrollControls,
+    body.prompter-performance-locked #devPanel {
+      pointer-events: none;
+    }
+    body.prompter-performance-locked #lyrics-container { touch-action: none; user-select: none; }
+    body.prompter-performance-locked.prompter-scroll-zones-hidden .prompter-scroll-zone { display: block; }
     /* Modern fallback: reuse existing lyric scroll controls and typography,
        never show hidden sections, chord rows or editor-only markup. */
     #lyrics-container .modern-prompter-section {
-      margin-bottom: 58px;
+      margin-bottom: var(--prompter-section-gap, 58px);
       font-weight: 700;
     }
     #lyrics-container .modern-prompter-heading {
@@ -926,6 +970,7 @@ window.setAutoScrollManualGesture = setAutoScrollManualGesture;
 function updateAutoScrollButton() {
   const btn = document.getElementById("scrollToggleBtn");
   if (btn) btn.textContent = autoScrollActive ? "⏸" : "▶";
+  window.prompterSetPerformanceLock?.(autoScrollActive);
 }
 
 /* START / STOP */
@@ -1053,7 +1098,7 @@ function syncHeaderFullscreen() {
 }
 
 function tryEnterFullscreenOnce(event) {
-  if (event?.target?.closest?.("#prompterHeaderFullscreen")) return;
+  if (autoScrollActive || event?.target?.closest?.("#prompterHeaderFullscreen")) return;
   const fullscreenDoc = prompterFullscreenDocument();
   if (!fullscreenDoc.fullscreenElement) {
     fullscreenDoc.documentElement.requestFullscreen().catch(() => {});
@@ -1157,6 +1202,11 @@ function toggleAutoscrollVisibility() {
       <summary>Lyrics Reading Zone</summary>
       <div class="prompter-settings-body">
     <div class="prompter-arrow-settings">
+      <label for="prompterReadingTop">Upper boundary <output id="prompterReadingTopValue" for="prompterReadingTop">27%</output></label>
+      <input id="prompterReadingTop" type="range" min="0" max="90" step="1" value="27" aria-label="Upper boundary">
+      <label for="prompterReadingBottom">Lower boundary <output id="prompterReadingBottomValue" for="prompterReadingBottom">74%</output></label>
+      <input id="prompterReadingBottom" type="range" min="10" max="100" step="1" value="74" aria-label="Lower boundary">
+      <label class="prompter-sidebar-toggle"><input type="checkbox" id="prompterReadingGradient"><span>Gradient lyric fading</span></label>
       <label for="prompterOutsideLyricOpacity">Outside lyrics opacity <output id="prompterOutsideLyricOpacityValue" for="prompterOutsideLyricOpacity">50%</output></label>
       <input id="prompterOutsideLyricOpacity" type="range" min="0" max="100" step="5" value="50" aria-label="Lyric opacity outside the reading zone">
       <div class="prompter-sidebar-note">100% keeps outside lyrics fully visible; 0% hides them. Lyrics inside the reading zone retain full opacity.</div>
@@ -1169,6 +1219,7 @@ function toggleAutoscrollVisibility() {
       <label for="prompterReadingGuideOpacity">Reading zone fill opacity <output id="prompterReadingGuideOpacityValue" for="prompterReadingGuideOpacity">9%</output></label>
       <input id="prompterReadingGuideOpacity" type="range" min="0" max="100" step="1" value="9" aria-label="Reading zone fill opacity">
     </div>
+        <button type="button" class="prompter-reset-section" data-prompter-reset="reading">Reset section defaults</button>
       </div>
     </details>
     <details class="prompter-settings-section">
@@ -1190,7 +1241,21 @@ function toggleAutoscrollVisibility() {
       <input id="prompterTouchZoneWidth" type="range" min="10" max="80" step="1" value="27" aria-label="Left swipe scrolling width; increase for a wider manual scrolling area">
       <div class="prompter-sidebar-note">Move left for wider arrow touch zones, or right for more swipe scrolling space.</div>
     </div>
+        <button type="button" class="prompter-reset-section" data-prompter-reset="touch">Reset section defaults</button>
       </div>
+    </details>
+    <details class="prompter-settings-section">
+      <summary>Scroll Behaviour</summary>
+      <div class="prompter-settings-body"><div class="prompter-arrow-settings">
+      <label for="prompterTapDistance">Tap scroll distance <output id="prompterTapDistanceValue" for="prompterTapDistance">15% of screen</output></label>
+      <input id="prompterTapDistance" type="range" min="5" max="100" step="1" value="15" aria-label="Tap scroll distance">
+      <label for="prompterHoldSpeed">Hold scroll speed <output id="prompterHoldSpeedValue" for="prompterHoldSpeed">210 px/s</output></label>
+      <input id="prompterHoldSpeed" type="range" min="30" max="1000" step="10" value="210" aria-label="Hold scroll speed">
+      <label for="prompterTapDuration">Tap animation duration <output id="prompterTapDurationValue" for="prompterTapDuration">560 ms</output></label>
+      <input id="prompterTapDuration" type="range" min="0" max="1500" step="20" value="560" aria-label="Tap animation duration">
+      <div class="prompter-sidebar-note">0 ms moves instantly. These settings apply to the singer's arrow controls.</div>
+      </div>
+        <button type="button" class="prompter-reset-section" data-prompter-reset="scroll">Reset section defaults</button></div>
     </details>
     <details class="prompter-settings-section">
       <summary>Arrow Appearance & Positions</summary>
@@ -1213,6 +1278,7 @@ function toggleAutoscrollVisibility() {
       <div class="prompter-sidebar-note">Move left for left/up, right for right/down. Each arrow stays within its own touch zone.</div>
       <button type="button" id="prompterResetArrowPositions" class="prompter-sidebar-action" style="margin-top:0;box-sizing:border-box">Reset arrow positions</button>
     </div>
+        <button type="button" class="prompter-reset-section" data-prompter-reset="arrows">Reset section defaults</button>
       </div>
     </details>
     <details class="prompter-settings-section">
@@ -1224,6 +1290,7 @@ function toggleAutoscrollVisibility() {
       <label for="prompterHeaderFadeThreshold">Fade after scrolling <output id="prompterHeaderFadeThresholdValue" for="prompterHeaderFadeThreshold">100 px</output></label>
       <input id="prompterHeaderFadeThreshold" type="range" min="0" max="1000" step="10" value="100" aria-label="Scroll distance before top bar fades">
     </div>
+        <button type="button" class="prompter-reset-section" data-prompter-reset="header">Reset section defaults</button>
       </div>
     </details>
     <details class="prompter-settings-section">
@@ -1270,7 +1337,22 @@ function toggleAutoscrollVisibility() {
       <button onclick="setCharSpacing('0.5px', event)">Wide</button>
       <button onclick="setCharSpacing('1px', event)">Wider</button>
     </div>
+        <button type="button" class="prompter-reset-section" data-prompter-reset="typography">Reset section defaults</button>
       </div>
+    </details>
+    <details class="prompter-settings-section">
+      <summary>Section Headings & Spacing</summary>
+      <div class="prompter-settings-body"><div class="prompter-arrow-settings">
+      <label class="prompter-sidebar-toggle"><input type="checkbox" id="prompterSectionHeadings" checked><span>Show section headings</span></label>
+      <label for="prompterHeadingColour">Heading colour</label><input id="prompterHeadingColour" type="color" value="#666666" aria-label="Heading colour">
+      <label for="prompterHeadingSize">Heading font size <output id="prompterHeadingSizeValue" for="prompterHeadingSize">22 px</output></label>
+      <input id="prompterHeadingSize" type="range" min="10" max="60" step="1" value="22" aria-label="Heading font size">
+      <label for="prompterHeadingOpacity">Heading opacity <output id="prompterHeadingOpacityValue" for="prompterHeadingOpacity">100%</output></label>
+      <input id="prompterHeadingOpacity" type="range" min="0" max="100" step="1" value="100" aria-label="Heading opacity">
+      <label for="prompterSectionGap">Section spacing <output id="prompterSectionGapValue" for="prompterSectionGap">58 px</output></label>
+      <input id="prompterSectionGap" type="range" min="0" max="160" step="1" value="58" aria-label="Section spacing">
+      </div>
+        <button type="button" class="prompter-reset-section" data-prompter-reset="sections">Reset section defaults</button></div>
     </details>
     <details class="prompter-settings-section">
       <summary>Playback & Synchronisation</summary>
@@ -1287,7 +1369,17 @@ function toggleAutoscrollVisibility() {
         </button>
       </div>
     </div>
+        <button type="button" class="prompter-reset-section" data-prompter-reset="playback">Reset section defaults</button>
       </div>
+    </details>
+    <details class="prompter-settings-section">
+      <summary>Screen & Performance</summary>
+      <div class="prompter-settings-body"><div class="prompter-arrow-settings">
+      <label class="prompter-sidebar-toggle"><input type="checkbox" id="prompterKeepAwake" checked><span>Keep screen awake</span></label>
+      <div id="prompterWakeStatus" class="prompter-sidebar-note" role="status">Screen wake lock requested when available.</div>
+      <div class="prompter-sidebar-note">During autoscroll, only the Up and Down arrows can be used on the singer screen. Pause from the host remote to unlock.</div>
+      </div>
+        <button type="button" class="prompter-reset-section" data-prompter-reset="screen">Reset section defaults</button></div>
     </details>
     <details class="prompter-settings-section">
       <summary>Developer Tools</summary>
@@ -1296,6 +1388,7 @@ function toggleAutoscrollVisibility() {
       <input type="checkbox" id="prompterDevConsoleToggle">
       <span>Show DEV CONSOLE</span>
     </label>
+        <button type="button" class="prompter-reset-section" data-prompter-reset="developer">Reset section defaults</button>
       </div>
     </details>
 
@@ -1797,7 +1890,7 @@ slaveLyricsToggle.addEventListener("change", function() {
 </button>
 <div id="prompterReadingGuide" aria-hidden="true"></div>
 <div id="prompterReadingZone" aria-hidden="true"></div>
-<script src="prompter-ui.js?v=20261125-reading-zone-background-v3"></script>
+<script src="prompter-ui.js?v=20261125-performance-controls-v4"></script>
 <script src="prompter-remote-receiver.js?v=20261124-isolated-scroll-v1"></script>
 <script src="prompter-session-picker.js?v=20261111-session-picker-v1"></script>
 <!-- Reuse atomic session finish logic; rating uses the existing performedSongs record. -->
