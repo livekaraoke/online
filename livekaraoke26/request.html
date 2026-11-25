@@ -18,18 +18,20 @@
   <style>
     #requestDialog .song-row .song-new-badge{display:inline-block!important;width:auto!important;max-width:max-content!important;flex:none!important;vertical-align:middle;margin-left:5px;padding:2px 5px;border-radius:4px;background:#1265bb;color:#fff!important;font-size:10px!important;font-weight:900;line-height:1.2;letter-spacing:.03em;white-space:nowrap}
     #requestDialog .request-browser .request-favourites-toggle-wrap{gap:8px!important;flex-wrap:wrap!important}
+    #requestDialog .request-browser #requestFavouriteOnlyBtn{border-color:#a87412!important;color:#ffbf2f!important;background:#1f1604!important}
+    #requestDialog .request-browser #requestFavouriteOnlyBtn.is-active{border-color:#ffbf2f!important;color:#fff3c4!important;background:#5a3b00!important;box-shadow:0 0 12px rgba(255,191,47,.20)!important}
     #requestDialog .request-browser #requestNewOnlyBtn{border-color:#397fc4!important;color:#b9dfff!important;background:#0a1c30!important}
     #requestDialog .request-browser #requestNewOnlyBtn.is-active{border-color:#6db7ff!important;color:#fff!important;background:#125b9f!important}
     @media(max-width:360px){#requestDialog .request-browser .request-favourites-toggle-wrap .request-favourites-toggle{padding:8px 10px!important;font-size:12px!important}}
     /* Distinguish saved favourites from available hearts, including the popup theme. */
     #requestDialog .request-browser .song-row-actions .request-favourite-btn:not(.is-favourite){
-      color:#536d85!important;background:#0b1118!important;border-color:#293c4e!important;box-shadow:none!important;text-shadow:none!important;
+      color:#8a5b60!important;background:#120d0e!important;border-color:#4e3b3e!important;box-shadow:none!important;text-shadow:none!important;
     }
     #requestDialog .request-browser .song-row-actions .request-favourite-btn.is-favourite{
-      color:#ff3448!important;background:#361016!important;border-color:#ff3e4e!important;box-shadow:0 0 11px rgba(255,35,58,.34),inset 0 0 9px rgba(255,35,58,.09)!important;
+      color:#ffbf2f!important;background:#332100!important;border-color:#ffbf2f!important;box-shadow:0 0 11px rgba(255,191,47,.34),inset 0 0 9px rgba(255,191,47,.10)!important;
     }
     #requestDialog .request-browser .song-row-actions .request-favourite-btn .request-fav-heart path{fill:currentColor!important;stroke:currentColor!important}
-    #requestDialog .request-browser .song-row-actions .request-favourite-btn.is-favourite .request-fav-heart{filter:drop-shadow(0 0 3px rgba(255,40,55,.65))}
+    #requestDialog .request-browser .song-row-actions .request-favourite-btn.is-favourite .request-fav-heart{filter:drop-shadow(0 0 3px rgba(255,191,47,.65))}
     #requestDialog .request-browser .song-row-actions .request-favourite-btn:not(.is-favourite) .request-fav-heart{filter:none}
   </style>
 </head>
