@@ -306,11 +306,42 @@
       if(ownerEmail&&!await verifyOwner(auth?.currentUser))return false;
       const source=await model.buildSource(getSong(),document);
       if(source.fingerprint!==draft.source.fingerprint){message='The lyrics changed. Return to Lyrics & Chords, then reopen Chord Timing to review.';return false;}
-      const result=await store.save(songId,{timing:draft,base});
+      let result=await store.save(songId,{timing:draft,base});
+      // A rejected write may be caused by stale credentials. Refresh only on
+      // auth-related failures, then retry the same conflict-checked draft once.
+      const errorCode=value=>String(value?.code||'UNKNOWN').replace(/^firestore\//,'');
+      if(ownerEmail&&['permission-denied','unauthenticated'].includes(errorCode(result))){
+        const user=auth?.currentUser;
+        if(user){
+          try{
+            const refreshed=await user.getIdTokenResult(true);
+            if(auth.currentUser===user&&refreshed.claims?.email===ownerEmail){
+              result=await store.save(songId,{timing:draft,base});
+            }
+          }catch(error){
+            console.warn('Chord timing authentication refresh failed:',error?.code||'UNKNOWN');
+          }
+        }
+      }
       if(result.status==='SAVED'){draft=result.timing;base=result.base;clean=serial();manualBaseline=serial();inheritedManual=false;sourceUpdate=false;history=[];reconciled=false;savedEventIds=new Set(draft.events.map(e=>e.id));message='Timing saved.';return true;}
       if(result.status==='CONFLICT'){
         conflict=result.code;message=result.code==='TIMING_CHANGED'?'Newer timing was saved elsewhere. Your draft is still here. Reload latest timing to continue.':'The saved song changed or is no longer available. Your draft is still here. Save/reload the song before saving timing.';
-      }else{message='Timing was not saved. Your local changes are still here. Check access or connection and try again.';}
+      }else{
+        const code=errorCode(result);
+        const guidance={
+          'permission-denied':'Firebase refused the write. Check the owner account and the musicalTiming Firestore write rule.',
+          'unauthenticated':'Firebase sign-in is missing or expired. Sign in through LiveSuite Admin in another tab, then retry.',
+          'resource-exhausted':'Firebase quota or capacity was exceeded. Check Firebase Usage before retrying.',
+          'unavailable':'Firebase is temporarily unavailable or unreachable. Try again.',
+          'deadline-exceeded':'Firebase did not respond in time. Try again.',
+          'aborted':'The database transaction could not complete. Try saving again.',
+          'failed-precondition':'Firebase rejected a transaction precondition. Check the error details.',
+          'invalid-argument':'Firebase rejected the timing data. Check the error details.'
+        };
+        const detail=String(result.message||'').trim();
+        message='Timing was not saved. Your local changes are still here. '+(guidance[code]||(result.status==='INVALID'||result.status==='UNSUPPORTED'?'The timing data did not pass validation.':'The save failed.'))+' ['+code+']'+(detail?' '+detail:'');
+        console.warn('Chord timing save failed:',code,detail);
+      }
       return false;
     });}
     async function reload(){return run(async()=>{
