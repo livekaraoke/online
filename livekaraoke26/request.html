@@ -21,6 +21,16 @@
     #requestDialog .request-browser #requestNewOnlyBtn{border-color:#397fc4!important;color:#b9dfff!important;background:#0a1c30!important}
     #requestDialog .request-browser #requestNewOnlyBtn.is-active{border-color:#6db7ff!important;color:#fff!important;background:#125b9f!important}
     @media(max-width:360px){#requestDialog .request-browser .request-favourites-toggle-wrap .request-favourites-toggle{padding:8px 10px!important;font-size:12px!important}}
+    /* Distinguish saved favourites from available hearts, including the popup theme. */
+    #requestDialog .request-browser .song-row-actions .request-favourite-btn:not(.is-favourite){
+      color:#a92e3b!important;background:#10090a!important;border-color:#542029!important;box-shadow:none!important;text-shadow:none!important;
+    }
+    #requestDialog .request-browser .song-row-actions .request-favourite-btn.is-favourite{
+      color:#ff3448!important;background:#361016!important;border-color:#ff3e4e!important;box-shadow:0 0 11px rgba(255,35,58,.34),inset 0 0 9px rgba(255,35,58,.09)!important;
+    }
+    #requestDialog .request-browser .song-row-actions .request-favourite-btn .request-fav-heart path{fill:currentColor!important;stroke:currentColor!important}
+    #requestDialog .request-browser .song-row-actions .request-favourite-btn.is-favourite .request-fav-heart{filter:drop-shadow(0 0 3px rgba(255,40,55,.65))}
+    #requestDialog .request-browser .song-row-actions .request-favourite-btn:not(.is-favourite) .request-fav-heart{filter:none}
   </style>
 </head>
 <body>
