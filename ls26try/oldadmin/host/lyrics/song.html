@@ -461,13 +461,20 @@ real-time typography control, and performance styling tools.
     body.prompter-wide-lyrics { overflow-x: hidden; }
     /* Viewport-fixed reading band. Dimming is composited against the theme
        background and never intercepts scrolling or arrow/toolbar taps. */
+    :root {
+      --prompter-reading-top: 27%;
+      --prompter-reading-bottom: 74%;
+    }
+    /* Explicit stacking also works when FIT transforms the lyric container. */
+    #lyrics-container {
+      position: relative;
+      z-index: 2;
+    }
     #prompterReadingZone {
       position: fixed;
       inset: 0;
       z-index: 850;
       pointer-events: none;
-      --prompter-reading-top: 27%;
-      --prompter-reading-bottom: 74%;
     }
     #prompterReadingZone::before,
     #prompterReadingZone::after {
@@ -487,8 +494,10 @@ real-time typography control, and performance styling tools.
       top: var(--prompter-reading-bottom);
       bottom: 0;
     }
-    #prompterReadingZone > .prompter-reading-guide {
-      position: absolute;
+    /* The fill is behind the lyrics; outside dimming is a separate layer. */
+    #prompterReadingGuide {
+      position: fixed;
+      z-index: 1;
       top: var(--prompter-reading-top);
       bottom: calc(100% - var(--prompter-reading-bottom));
       left: 0;
@@ -500,9 +509,13 @@ real-time typography control, and performance styling tools.
                   inset 0 -1px var(--prompter-reading-guide-colour, #00d5bc);
       pointer-events: none;
     }
-    body.prompter-reading-guide-visible #prompterReadingZone > .prompter-reading-guide {
+    body.prompter-reading-guide-visible #prompterReadingGuide {
       display: block;
     }
+    body[data-ls26-singer-stage="idle"] #prompterReadingGuide,
+    body[data-ls26-singer-stage="waiting"] #prompterReadingGuide,
+    body[data-ls26-singer-stage="instrumental"] #prompterReadingGuide,
+    body[data-ls26-singer-stage="ended"] #prompterReadingGuide,
     body[data-ls26-singer-stage="idle"] #prompterReadingZone,
     body[data-ls26-singer-stage="waiting"] #prompterReadingZone,
     body[data-ls26-singer-stage="instrumental"] #prompterReadingZone,
@@ -1782,8 +1795,9 @@ slaveLyricsToggle.addEventListener("change", function() {
   aria-label="Scroll lyrics down" title="Tap to scroll down; hold to keep scrolling">
   <span class="prompter-scroll-arrow" aria-hidden="true"><svg viewBox="0 0 96 96" focusable="false"><path d="M16 34 L48 66 L80 34"/></svg></span>
 </button>
-<div id="prompterReadingZone" aria-hidden="true"><div class="prompter-reading-guide"></div></div>
-<script src="prompter-ui.js?v=20261125-reading-zone-settings-v2"></script>
+<div id="prompterReadingGuide" aria-hidden="true"></div>
+<div id="prompterReadingZone" aria-hidden="true"></div>
+<script src="prompter-ui.js?v=20261125-reading-zone-background-v3"></script>
 <script src="prompter-remote-receiver.js?v=20261124-isolated-scroll-v1"></script>
 <script src="prompter-session-picker.js?v=20261111-session-picker-v1"></script>
 <!-- Reuse atomic session finish logic; rating uses the existing performedSongs record. -->

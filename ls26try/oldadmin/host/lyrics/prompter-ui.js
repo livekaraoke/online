@@ -684,9 +684,12 @@
     const zone = byId('prompterReadingZone');
     if (zone) {
       zone.style.setProperty('--prompter-outside-dim', String((100 - opacity) / 100));
-      zone.style.setProperty('--prompter-reading-guide-colour', colour);
-      zone.style.setProperty('--prompter-reading-guide-opacity', String(fillOpacity / 100));
       zone.style.setProperty('--prompter-reading-background', (themes[prefs.theme] || themes.default).background);
+    }
+    const fill = byId('prompterReadingGuide');
+    if (fill) {
+      fill.style.setProperty('--prompter-reading-guide-colour', colour);
+      fill.style.setProperty('--prompter-reading-guide-opacity', String(fillOpacity / 100));
     }
     document.body.classList.toggle('prompter-reading-guide-visible', guide);
     const input = byId('prompterOutsideLyricOpacity');
