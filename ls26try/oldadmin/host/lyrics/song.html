@@ -404,6 +404,55 @@ real-time typography control, and performance styling tools.
       outline-offset: 3px;
     }
     body.prompter-wide-lyrics { overflow-x: hidden; }
+    /* Viewport-fixed reading band. Dimming is composited against the theme
+       background and never intercepts scrolling or arrow/toolbar taps. */
+    #prompterReadingZone {
+      position: fixed;
+      inset: 0;
+      z-index: 850;
+      pointer-events: none;
+      --prompter-reading-top: 27%;
+      --prompter-reading-bottom: 74%;
+    }
+    #prompterReadingZone::before,
+    #prompterReadingZone::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      background: var(--prompter-reading-background, #000);
+      opacity: var(--prompter-outside-dim, .5);
+      pointer-events: none;
+    }
+    #prompterReadingZone::before {
+      top: 0;
+      height: var(--prompter-reading-top);
+    }
+    #prompterReadingZone::after {
+      top: var(--prompter-reading-bottom);
+      bottom: 0;
+    }
+    #prompterReadingZone > .prompter-reading-guide {
+      position: absolute;
+      top: var(--prompter-reading-top);
+      bottom: calc(100% - var(--prompter-reading-bottom));
+      left: 0;
+      right: 0;
+      display: none;
+      background: rgba(0, 213, 188, .09);
+      box-shadow: inset 0 1px rgba(0, 213, 188, .35),
+                  inset 0 -1px rgba(0, 213, 188, .35);
+      pointer-events: none;
+    }
+    body.prompter-reading-guide-visible #prompterReadingZone > .prompter-reading-guide {
+      display: block;
+    }
+    body[data-ls26-singer-stage="idle"] #prompterReadingZone,
+    body[data-ls26-singer-stage="waiting"] #prompterReadingZone,
+    body[data-ls26-singer-stage="instrumental"] #prompterReadingZone,
+    body[data-ls26-singer-stage="ended"] #prompterReadingZone {
+      display: none;
+    }
     /* Modern fallback: reuse existing lyric scroll controls and typography,
        never show hidden sections, chord rows or editor-only markup. */
     #lyrics-container .modern-prompter-section {
@@ -1086,6 +1135,17 @@ function toggleAutoscrollVisibility() {
     </div>
     <h2>Settings</h2>
 
+    <h3>Lyrics Reading Zone</h3>
+    <div class="prompter-arrow-settings">
+      <label for="prompterOutsideLyricOpacity">Outside lyrics opacity <output id="prompterOutsideLyricOpacityValue" for="prompterOutsideLyricOpacity">50%</output></label>
+      <input id="prompterOutsideLyricOpacity" type="range" min="0" max="100" step="5" value="50" aria-label="Lyric opacity outside the reading zone">
+      <div class="prompter-sidebar-note">100% keeps outside lyrics fully visible; 0% hides them. Lyrics inside the reading zone retain full opacity.</div>
+      <label class="prompter-sidebar-toggle">
+        <input type="checkbox" id="prompterReadingGuideToggle">
+        <span>Show reading zone fill</span>
+      </label>
+    </div>
+
     <h3>Top Bar Fade</h3>
     <div class="prompter-arrow-settings">
       <label for="prompterHeaderTransparency">Top bar transparency <output id="prompterHeaderTransparencyValue" for="prompterHeaderTransparency">60%</output></label>
@@ -1634,7 +1694,8 @@ slaveLyricsToggle.addEventListener("change", function() {
   aria-label="Scroll lyrics down" title="Tap to scroll down; hold to keep scrolling">
   <span class="prompter-scroll-arrow" aria-hidden="true"><svg viewBox="0 0 96 96" focusable="false"><path d="M16 34 L48 66 L80 34"/></svg></span>
 </button>
-<script src="prompter-ui.js?v=20261125-compact-header-v1"></script>
+<div id="prompterReadingZone" aria-hidden="true"><div class="prompter-reading-guide"></div></div>
+<script src="prompter-ui.js?v=20261125-reading-zone-v1"></script>
 <script src="prompter-remote-receiver.js?v=20261124-isolated-scroll-v1"></script>
 <script src="prompter-session-picker.js?v=20261111-session-picker-v1"></script>
 <!-- Reuse atomic session finish logic; rating uses the existing performedSongs record. -->

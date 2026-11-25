@@ -10,7 +10,8 @@
     charSpacing: '0px', fontSizeOffset: 0, scrollZones: true, showTouchZones: false, touchZoneSplit: 66, touchZoneWidth: 27, slaveLyrics: false,
     wideLyrics: false, arrowOpacity: 55, arrowSize: 100, devConsole: false,
     headerTransparency: 60, headerFadeThreshold: 100,
-    upArrowX: 0, upArrowY: 0, downArrowX: 0, downArrowY: 0
+    upArrowX: 0, upArrowY: 0, downArrowX: 0, downArrowY: 0,
+    outsideLyricOpacity: 50, showReadingGuide: false
   };
   function readSaved() {
     try {
@@ -68,6 +69,7 @@
   function applyStyles() {
     const theme = themes[prefs.theme] || themes.default;
     document.body.style.background = theme.background;
+    updateReadingZone();
     document.querySelectorAll('.verse').forEach(el =>
       el.style.setProperty('color', theme.verse, 'important'));
     document.querySelectorAll(blocksSelector).forEach(el => {
@@ -668,6 +670,23 @@
     // when crossing the threshold, not on every autoscroll animation frame.
     if (wasCompact !== compact) updateArrowAppearance();
   }
+  function updateReadingZone() {
+    const opacity = clampPreference(prefs.outsideLyricOpacity, 50, 0, 100, 5);
+    const guide = prefs.showReadingGuide === true;
+    const zone = byId('prompterReadingZone');
+    if (zone) {
+      zone.style.setProperty('--prompter-outside-dim', String((100 - opacity) / 100));
+      zone.style.setProperty('--prompter-reading-background', (themes[prefs.theme] || themes.default).background);
+    }
+    document.body.classList.toggle('prompter-reading-guide-visible', guide);
+    const input = byId('prompterOutsideLyricOpacity');
+    const output = byId('prompterOutsideLyricOpacityValue');
+    const toggle = byId('prompterReadingGuideToggle');
+    if (input) input.value = String(opacity);
+    if (output) output.textContent = opacity + '%';
+    if (toggle) toggle.checked = guide;
+  }
+
   function updateHeaderFadeSettings() {
     const transparency = clampPreference(prefs.headerTransparency, 60, 0, 90, 5);
     const threshold = clampPreference(prefs.headerFadeThreshold, 100, 0, 1000, 10);
@@ -720,6 +739,17 @@
       updateHeaderFadeSettings();
     });
     updateHeaderFadeSettings();
+    byId('prompterOutsideLyricOpacity')?.addEventListener('input', event => {
+      prefs.outsideLyricOpacity = clampPreference(event.target.value, 50, 0, 100, 5);
+      save();
+      updateReadingZone();
+    });
+    byId('prompterReadingGuideToggle')?.addEventListener('change', event => {
+      prefs.showReadingGuide = Boolean(event.target.checked);
+      save();
+      updateReadingZone();
+    });
+    updateReadingZone();
     byId('prompterLineGap')?.addEventListener('input', event => {
       prefs.lineGap = clampPreference(event.target.value, 8, 0, 28, 2);
       save();
