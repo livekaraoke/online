@@ -11,7 +11,8 @@
     wideLyrics: false, arrowOpacity: 55, arrowSize: 100, devConsole: false,
     headerTransparency: 60, headerFadeThreshold: 100,
     upArrowX: 0, upArrowY: 0, downArrowX: 0, downArrowY: 0,
-    outsideLyricOpacity: 50, showReadingGuide: false
+    outsideLyricOpacity: 50, showReadingGuide: false,
+    readingGuideColour: '#00d5bc', readingGuideOpacity: 9
   };
   function readSaved() {
     try {
@@ -670,12 +671,21 @@
     // when crossing the threshold, not on every autoscroll animation frame.
     if (wasCompact !== compact) updateArrowAppearance();
   }
+  function validReadingGuideColour(value) {
+    return typeof value === 'string' && /^#[0-9a-f]{6}$/i.test(value)
+      ? value.toLowerCase() : '#00d5bc';
+  }
+
   function updateReadingZone() {
     const opacity = clampPreference(prefs.outsideLyricOpacity, 50, 0, 100, 5);
     const guide = prefs.showReadingGuide === true;
+    const colour = validReadingGuideColour(prefs.readingGuideColour);
+    const fillOpacity = clampPreference(prefs.readingGuideOpacity, 9, 0, 100, 1);
     const zone = byId('prompterReadingZone');
     if (zone) {
       zone.style.setProperty('--prompter-outside-dim', String((100 - opacity) / 100));
+      zone.style.setProperty('--prompter-reading-guide-colour', colour);
+      zone.style.setProperty('--prompter-reading-guide-opacity', String(fillOpacity / 100));
       zone.style.setProperty('--prompter-reading-background', (themes[prefs.theme] || themes.default).background);
     }
     document.body.classList.toggle('prompter-reading-guide-visible', guide);
@@ -685,6 +695,12 @@
     if (input) input.value = String(opacity);
     if (output) output.textContent = opacity + '%';
     if (toggle) toggle.checked = guide;
+    const colourInput = byId('prompterReadingGuideColour');
+    const opacityInput = byId('prompterReadingGuideOpacity');
+    const opacityOutput = byId('prompterReadingGuideOpacityValue');
+    if (colourInput) colourInput.value = colour;
+    if (opacityInput) opacityInput.value = String(fillOpacity);
+    if (opacityOutput) opacityOutput.textContent = fillOpacity + '%';
   }
 
   function updateHeaderFadeSettings() {
@@ -746,6 +762,16 @@
     });
     byId('prompterReadingGuideToggle')?.addEventListener('change', event => {
       prefs.showReadingGuide = Boolean(event.target.checked);
+      save();
+      updateReadingZone();
+    });
+    byId('prompterReadingGuideColour')?.addEventListener('input', event => {
+      prefs.readingGuideColour = validReadingGuideColour(event.target.value);
+      save();
+      updateReadingZone();
+    });
+    byId('prompterReadingGuideOpacity')?.addEventListener('input', event => {
+      prefs.readingGuideOpacity = clampPreference(event.target.value, 9, 0, 100, 1);
       save();
       updateReadingZone();
     });
