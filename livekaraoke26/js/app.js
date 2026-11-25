@@ -509,6 +509,8 @@
   const REQUEST_FAVOURITES_KEY="billylee26.favouriteSongIds.v1";
   let requestCategory="all";
   let showFavouriteSongsOnly=false;
+  let showNewSongsOnly=false;
+  function isNewSong(song){return Array.isArray(publicSetlist?.newSongIds)&&publicSetlist.newSongIds.includes(String(song.id));}
   let currentHistoryRecords=[];
   let currentHistorySessions=new Map();
 
@@ -1159,7 +1161,7 @@
     const alpha=alphabetKey(song.title||"");
     const favourite=isFavouriteSong(song.id);
     return `<div class="song-row${stateClass}" data-song-row-id="${escapeHTML(song.id)}" data-alpha="${alpha}">
-      <span class="song-row-info"><strong>${escapeHTML(song.title||"Untitled")}${Array.isArray(publicSetlist?.newSongIds)&&publicSetlist.newSongIds.includes(String(song.id))?' <span class="song-new-badge">NEW!</span>':""}</strong>${meta?`<small>${escapeHTML(meta)}</small>`:""}</span>
+      <span class="song-row-info"><strong>${escapeHTML(song.title||"Untitled")}${isNewSong(song)?' <span class="song-new-badge">NEW!</span>':""}</strong>${meta?`<small>${escapeHTML(meta)}</small>`:""}</span>
       <div class="song-row-actions">
         <button type="button" class="request-favourite-btn ${favourite?"is-favourite":""}" data-toggle-favourite="${escapeHTML(song.id)}" aria-pressed="${favourite}" title="${favourite?"Remove from":"Add to"} favourites" aria-label="${favourite?"Remove from":"Add to"} favourites"><svg class="request-fav-heart" viewBox="0 0 24 24" width="26" height="26" aria-hidden="true" focusable="false"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" fill="currentColor" stroke="currentColor" stroke-width=".6" stroke-linejoin="round"/></svg></button>
         <button class="song-action" type="button" data-song-id="${escapeHTML(song.id)}"${disabled} aria-label="${disabled?escapeHTML(action):`Request ${escapeHTML(song.title||"song")} by ${escapeHTML(artist)}`}">${escapeHTML(action)}</button>
@@ -1215,7 +1217,14 @@
       favButton.classList.toggle("is-active",showFavouriteSongsOnly);
       favButton.setAttribute("aria-pressed",String(showFavouriteSongsOnly));
     }
+    const newButton=$("requestNewOnlyBtn");
+    if(newButton){
+      newButton.classList.toggle("is-active",showNewSongsOnly);
+      newButton.setAttribute("aria-pressed",String(showNewSongsOnly));
+      newButton.textContent=showNewSongsOnly?"SHOW ALL SONGS":"NEW ADDED SONGS";
+    }
     const list=songs.filter(song=>
+      (!showNewSongsOnly||isNewSong(song))&&
       (!showFavouriteSongsOnly||favourites.has(String(song.id)))&&
       songMatchesCategory(song,requestCategory)&&(!q||ArtistNames.matchesSong(song,q))
     );
@@ -1232,7 +1241,7 @@
 
     $("songResults").classList.remove("artist-browse-results");
     const sorted=list.slice().sort((a,b)=>String(a.title||"").localeCompare(String(b.title||""),undefined,{sensitivity:"base"}));
-    $("songResults").innerHTML=sorted.map(song=>renderSongResultRow(song)).join("")||`<div class="empty-box">No songs found in this category.</div>`;
+    $("songResults").innerHTML=sorted.map(song=>renderSongResultRow(song)).join("")||`<div class="empty-box">${showNewSongsOnly?(q?"No new songs match your search.":"No newly added songs at the moment."):"No songs found in this category."}</div>`;
     document.dispatchEvent(new Event("public-request-rendered"));
   }
 
@@ -2265,6 +2274,7 @@
   $("songSearch").addEventListener("input",renderSongResults);
   $("requestFavouriteOnlyBtn").addEventListener("click",()=>{
     showFavouriteSongsOnly=!showFavouriteSongsOnly;
+    if(showFavouriteSongsOnly)showNewSongsOnly=false;
     if(showFavouriteSongsOnly&&requestCategory!=="all"){
       requestCategory="all";
       renderRequestCategoryCards();
@@ -2274,6 +2284,18 @@
     if(requestCategory==="all")$("requestNotice").textContent=showFavouriteSongsOnly
       ?"Your saved favourite songs."
       :"Scroll through the songs or search above.";
+  });
+  $("requestNewOnlyBtn")?.addEventListener("click",()=>{
+    showNewSongsOnly=!showNewSongsOnly;
+    if(showNewSongsOnly){
+      showFavouriteSongsOnly=false;
+      requestCategory="all";
+      renderRequestCategoryCards();
+      if($("clearSongCategoryBtn"))$("clearSongCategoryBtn").hidden=true;
+      $("songSearch").value="";
+    }
+    renderSongResults();
+    $("songResults").scrollTop=0;
   });
   for(const id of ["requestProfilePanel","requestMyRequestsPanel"]){
     $(id).addEventListener("scroll",updateRequestScrollIndicator,{passive:true});
