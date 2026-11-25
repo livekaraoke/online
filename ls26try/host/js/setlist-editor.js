@@ -11,6 +11,12 @@
   let setlists = [];
   let current = null;
   let songOrder = [];
+  let newSongIds = new Set();
+  let newFlagsDirty = false;
+  function resetNewFlags(setlist) {
+    newSongIds = new Set(Array.isArray(setlist?.newSongIds) ? setlist.newSongIds : []);
+    newFlagsDirty = false;
+  }
   let lyricsUnsubscribe = null;
   let setlistsUnsubscribe = null;
   let editorStarted = false;
@@ -117,7 +123,8 @@
 
       if (current) {
         current = setlists.find(item => item.id === current.id) || null;
-        if (!current) songOrder = [];
+        if (!current) { songOrder = []; resetNewFlags(null); }
+        else if (!newFlagsDirty) resetNewFlags(current);
       }
 
       renderList();
@@ -135,6 +142,7 @@
     setlists = [];
     current = null;
     songOrder = [];
+    resetNewFlags(null);
     renderList();
     renderEditor();
   }
@@ -194,6 +202,7 @@
             <strong>${esc(song.title)}</strong>
             <small>${esc(ArtistNames.display(song.artist))}${song.year ? ` · ${esc(song.year)}` : ""}</small>
           </div>
+          <button class="setlist-new-toggle" data-new-song="${esc(id)}" type="button" aria-pressed="${newSongIds.has(id)}" title="${newSongIds.has(id) ? "Unmark as new" : "Mark as new"}" aria-label="Mark ${esc(song.title)} as new">${newSongIds.has(id) ? "★" : "☆"}</button>
           <button data-remove="${esc(id)}" type="button" title="Remove from setlist" aria-label="Remove ${esc(song.title)} from setlist">×</button>
         </div>
       `;
@@ -253,6 +262,7 @@
         songIds: []
       };
       songOrder = [];
+      resetNewFlags(current);
       renderList();
       renderEditor();
       showEditorMessage("New setlist created. Rename it and press SAVE SETLIST.");
@@ -286,6 +296,7 @@
 
     const button = $("saveSetlistBtn");
     const sortedIds = alphabetizeSongIds(songOrder);
+    const savedNewIds = sortedIds.filter(id => newSongIds.has(id));
     setBusy(button, true, "SAVING...");
 
     try {
@@ -293,13 +304,15 @@
         name,
         notes: $("setlistNotesInput")?.value || "",
         songIds: sortedIds,
+        newSongIds: savedNewIds,
         updatedBy: auth.currentUser.uid,
         updatedByEmail: auth.currentUser.email || "",
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       }, { merge: true });
 
       songOrder = sortedIds;
-      current = { ...current, name, notes: $("setlistNotesInput")?.value || "", songIds: [...sortedIds] };
+      current = { ...current, name, notes: $("setlistNotesInput")?.value || "", songIds: [...sortedIds], newSongIds: savedNewIds };
+      resetNewFlags(current);
       showEditorMessage("Setlist saved in alphabetical order.");
     } catch (error) {
       console.error("Could not save setlist:", error);
@@ -320,6 +333,7 @@
       await db.collection("lyricsSetlists").doc(current.id).delete();
       current = null;
       songOrder = [];
+      resetNewFlags(null);
       renderEditor();
       showEditorMessage("");
     } catch (error) {
@@ -335,6 +349,7 @@
     if (select) {
       current = setlists.find(item => item.id === select.dataset.select) || null;
       songOrder = alphabetizeSongIds(current?.songIds || []);
+      resetNewFlags(current);
       renderList();
       renderEditor();
       showEditorMessage("");
@@ -350,9 +365,24 @@
       return;
     }
 
+    const mark = event.target.closest("[data-new-song]");
+    if (mark && current && !$("saveSetlistBtn")?.disabled) {
+      const id = mark.dataset.newSong;
+      if (!songOrder.includes(id)) return;
+      const marked = !newSongIds.has(id);
+      if (marked) newSongIds.add(id); else newSongIds.delete(id);
+      newFlagsDirty = true;
+      mark.setAttribute("aria-pressed", String(marked));
+      mark.textContent = marked ? "★" : "☆";
+      mark.title = marked ? "Unmark as new" : "Mark as new";
+      showEditorMessage("NEW status changed. Press SAVE SETLIST to publish.");
+      return;
+    }
+
     const remove = event.target.closest("[data-remove]");
     if (remove) {
       songOrder = songOrder.filter(id => id !== remove.dataset.remove);
+      if (newSongIds.delete(remove.dataset.remove)) newFlagsDirty = true;
       current = { ...current, songIds: [...songOrder] };
       renderEditor();
       return;
