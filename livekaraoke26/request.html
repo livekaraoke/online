@@ -15,7 +15,13 @@
     .request-support{display:none!important}
     dialog::backdrop{background:transparent!important}
   </style>
-  <style>.song-new-badge{display:inline-block;vertical-align:middle;margin-left:5px;padding:2px 5px;border-radius:4px;background:#1265bb;color:#fff!important;font-size:10px;font-weight:900;line-height:1.2;letter-spacing:.03em;white-space:nowrap}</style>
+  <style>
+    #requestDialog .song-row .song-new-badge{display:inline-block!important;width:auto!important;max-width:max-content!important;flex:none!important;vertical-align:middle;margin-left:5px;padding:2px 5px;border-radius:4px;background:#1265bb;color:#fff!important;font-size:10px!important;font-weight:900;line-height:1.2;letter-spacing:.03em;white-space:nowrap}
+    #requestDialog .request-browser .request-favourites-toggle-wrap{gap:8px!important;flex-wrap:wrap!important}
+    #requestDialog .request-browser #requestNewOnlyBtn{border-color:#397fc4!important;color:#b9dfff!important;background:#0a1c30!important}
+    #requestDialog .request-browser #requestNewOnlyBtn.is-active{border-color:#6db7ff!important;color:#fff!important;background:#125b9f!important}
+    @media(max-width:360px){#requestDialog .request-browser .request-favourites-toggle-wrap .request-favourites-toggle{padding:8px 10px!important;font-size:12px!important}}
+  </style>
 </head>
 <body>
   <div class="request-support" aria-hidden="true">
@@ -136,7 +142,7 @@
 
         <section id="requestBrowser" class="request-tab-panel request-browser" data-request-panel="songs">
           <div class="request-panel-heading"><span class="eyebrow">SONG LIST</span><h3>CHOOSE A SONG</h3></div>
-          <div class="request-favourites-toggle-wrap"><button id="requestFavouriteOnlyBtn" class="request-favourites-toggle" type="button" aria-pressed="false" hidden>FAVOURITES</button></div>
+          <div class="request-favourites-toggle-wrap"><button id="requestFavouriteOnlyBtn" class="request-favourites-toggle" type="button" aria-pressed="false" hidden>FAVOURITES</button><button id="requestNewOnlyBtn" class="request-favourites-toggle" type="button" aria-pressed="false">NEW ADDED SONGS</button></div>
           <div class="request-controls"><input id="songSearch" type="search" aria-label="Search song or artist" placeholder="Search song or artist…" autocomplete="off" inputmode="search"><button id="clearSongCategoryBtn" class="request-filter-clear" type="button" hidden>SHOW ALL</button></div>
           <!-- Legacy filter nodes are hidden for compatibility; browsing is search and A-Z list only. -->
           <div id="requestAlphabetRow" class="request-alphabet-row" hidden aria-hidden="true"></div>
@@ -201,7 +207,7 @@
   <script src="../js/public-request-lifecycle.js?v=20261111-always-browse-1"></script>
   <script src="js/public-catalogue.js?v=20261117-karaoke-session-setlist-1"></script>
   <script src="../js/public-booking.js?v=20261022"></script>
-<script src="js/app.js?v=20261125-new-song-v1"></script>
+<script src="js/app.js?v=20261125-new-song-v2"></script>
   <script src="js/request-ui-extras.js?v=20261006-favs-card-width"></script>
 </body>
 </html>
