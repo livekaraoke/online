@@ -776,8 +776,9 @@
           margin:0 0 10px!important;
         }
         html.direct-review-mode #requestReviewPanel .request-review-panel-heading h3{
-          margin:0 0 3px!important;
-          font-size:23px!important;
+          display:block!important;
+          margin:0 0 4px!important;
+          font-size:24px!important;
           line-height:1.18!important;
         }
         html.direct-review-mode #requestReviewPanel .request-review-panel-heading p{
@@ -796,7 +797,7 @@
           border-bottom-color:rgba(255,43,43,.22)!important;
         }
         html.direct-review-mode #requestReviewPanel .request-panel-heading .eyebrow{
-          font-size:12px!important;
+          font-size:13px!important;
           letter-spacing:.18em!important;
         }
         html.direct-review-mode #requestReviewPanel .request-panel-heading p{color:#d0d0d0!important}
@@ -826,6 +827,16 @@
         html.direct-review-mode #requestReviewPanel .request-review-label{
           margin-bottom:6px!important;
           font-size:15px!important;
+        }
+        html.direct-review-mode #requestReviewPanel .request-review-text>span{
+          font-size:14px!important;
+        }
+        html.direct-review-mode #requestReviewPanel .clear-rating-btn{
+          font-size:13px!important;
+        }
+        html.direct-review-mode #requestReviewStatus{
+          font-size:13px!important;
+          line-height:1.4!important;
         }
         html.direct-review-mode #requestReviewPanel .request-review-text textarea{
           min-height:88px!important;
@@ -907,16 +918,16 @@
           html.direct-review-mode #requestReviewPanel{
             padding:12px 12px max(14px,env(safe-area-inset-bottom))!important;
           }
-          html.direct-review-mode #requestReviewPanel .request-review-panel-heading h3{font-size:21px!important}
+          html.direct-review-mode #requestReviewPanel .request-review-panel-heading h3{font-size:23px!important}
           html.direct-review-mode #requestReviewPanel .request-review-card{padding:12px 13px!important}
           html.direct-review-mode #requestReviewPanel .request-review-text textarea{min-height:82px!important}
-          html.direct-review-mode .direct-review-thanks{font-size:13px!important;margin-top:18px!important}
+          html.direct-review-mode .direct-review-thanks{font-size:15px!important;margin-top:20px!important}
         }
         @media(max-height:720px){
           html.direct-review-mode #requestReviewPanel{padding-top:9px!important;padding-bottom:10px!important}
           html.direct-review-mode #requestReviewPanel .request-review-panel-heading{margin-bottom:6px!important}
-          html.direct-review-mode #requestReviewPanel .request-review-panel-heading .eyebrow{font-size:11px!important}
-          html.direct-review-mode #requestReviewPanel .request-review-panel-heading p{font-size:14px!important}
+          html.direct-review-mode #requestReviewPanel .request-review-panel-heading .eyebrow{font-size:12px!important}
+          html.direct-review-mode #requestReviewPanel .request-review-panel-heading p{font-size:16px!important}
           html.direct-review-mode #requestReviewPanel .request-review-card{padding:9px 11px!important}
           html.direct-review-mode #requestReviewPanel .request-primary-profile-grid{margin-bottom:7px!important;gap:7px!important}
           html.direct-review-mode #requestReviewPanel .request-field input{min-height:42px!important;padding:7px 10px!important}
