@@ -95,11 +95,13 @@ test("private rating-only reviews remain anonymous, written-only reviews also re
   ui.click("approve","r2");await ui.settle();
   const published=ui.writes.find(w=>w.path==="karaokeControl/liveKaraokeWebsiteSettings").patch.publicReviews;
   assert.equal(published.length,2);
-  assert.equal(published[0].name,"");
-  assert.equal(published[0].rating,4);
-  assert.equal(published[0].review,"");
-  assert.equal(published[1].name,"Guest");
-  assert.equal(published[1].review,"Great night!");
+  const anonymous=published.find(review=>review.name==="");
+  const written=published.find(review=>review.name==="Guest");
+  assert.ok(anonymous);
+  assert.equal(anonymous.rating,4);
+  assert.equal(anonymous.review,"");
+  assert.ok(written);
+  assert.equal(written.review,"Great night!");
 });
 
 test("empty rating and empty review cannot be approved",async()=>{
@@ -111,7 +113,7 @@ test("empty rating and empty review cannot be approved",async()=>{
 });
 
 test("review page cache-busts updated moderation script",()=>{
-  assert.match(html,/js\/live-karaoke-reviews\.js\?v=20261110-rating-only-approval/);
+  assert.match(html,/js\/live-karaoke-reviews\.js\?v=20261126-review-management-v1/);
   assert.match(html,/Approved feedback can be a star rating/);
   assert.match(html,/lkHomepageWrittenCount/);
   assert.match(html,/lkHomepageRatingCount/);
