@@ -135,6 +135,7 @@
   dialog.addEventListener("close", () => {
     dialog.style.removeProperty("--suggest-dialog-center");
     dialog.style.removeProperty("--suggest-dialog-max-height");
+    resetSuggestionDialog();
   });
 
   $("suggestSongForm").addEventListener("focusin", event => {
@@ -144,8 +145,20 @@
     }, 120);
   });
 
-  $("suggestSongBtn").addEventListener("click", () => {
+  function resetSuggestionDialog() {
+    dialog.classList.remove("is-success");
+    $("suggestSongSuccess").hidden = true;
+    $("suggestSongHeading").textContent = "SUGGEST A SONG";
     $("suggestSongStatus").textContent = "";
+  }
+
+  function closeSuggestionDialog() {
+    if (dialog.close) dialog.close();
+    else dialog.removeAttribute("open");
+  }
+
+  $("suggestSongBtn").addEventListener("click", () => {
+    resetSuggestionDialog();
     if (dialog.showModal) dialog.showModal();
     else dialog.setAttribute("open", "");
     fitDialogToVisibleViewport();
@@ -154,14 +167,11 @@
       $("suggestSongName")?.focus();
     }, 0);
   });
-  $("closeSuggestSongBtn").addEventListener("click", () => {
-    if (dialog.close) dialog.close();
-    else dialog.removeAttribute("open");
-  });
+  $("closeSuggestSongBtn").addEventListener("click", closeSuggestionDialog);
+  $("closeSuggestSongSuccessBtn").addEventListener("click", closeSuggestionDialog);
   dialog.addEventListener("click", event => {
     if (event.target !== dialog) return;
-    if (dialog.close) dialog.close();
-    else dialog.removeAttribute("open");
+    closeSuggestionDialog();
   });
 
   $("suggestSongForm").addEventListener("submit", async event => {
@@ -190,11 +200,13 @@
         source: "livekaraoke-homepage",
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
-      status.textContent = "Thanks - your song suggestion has been sent for approval.";
       form.reset();
-      setTimeout(() => {
-        if (dialog.open && dialog.close) dialog.close();
-      }, 1100);
+      document.activeElement?.blur?.();
+      status.textContent = "";
+      $("suggestSongHeading").textContent = "SUGGESTION SENT!";
+      $("suggestSongSuccess").hidden = false;
+      dialog.classList.add("is-success");
+      fitDialogToVisibleViewport();
     } catch (error) {
       console.error("Song suggestion failed", {
         code: error?.code || "",
