@@ -224,7 +224,8 @@
       currentRenderMode = 'modern';
       window.currentSongId = id;
       window.currentBPM = Number(song.userBpm || song.originalBpm) || 120;
-      window.recalcSpeed?.();
+      if (typeof window.resetScrollSpeed === 'function') window.resetScrollSpeed();
+      else window.recalcSpeed?.();
       if (changed) window.scrollTo(0, 0);
       window.dispatchEvent(new CustomEvent('ls26:prompter-song-changed', {
         detail: {songId:id, source:'modern', cue, picker, cueToken, title:song.title, artist:song.artist, year:song.year || song.releaseYear || ''}

@@ -1071,7 +1071,11 @@ document.addEventListener("keydown", (e) => {
 });
 
 function resetScrollSpeed() {
-  window.userSpeed = 0.8;
+  // The visible multiplier and actual scroll rate start at 0.80x,
+  // independent of the song's BPM. Retain the existing BPM-based controls.
+  const bpm = Number(window.currentBPM);
+  const bpmRatio = Number.isFinite(bpm) && bpm > 0 ? bpm / BASE_BPM : 1;
+  window.userSpeed = 0.8 / bpmRatio;
   recalcSpeed();
 }
 
@@ -1644,9 +1648,7 @@ function loadSong() {
   }
 
   window.currentBPM = bpm;
-  window.userSpeed = 0.8;
-
-  recalcSpeed();
+  resetScrollSpeed();
 
   // ---------------- LYRICS ----------------
   const version = ++lyricsLoadVersion;
@@ -1797,7 +1799,7 @@ slaveLyricsToggle.addEventListener("change", function() {
 <script src="../../../shared/chord-foundation.js?v=20261006-chord-settings"></script>
 <script src="../../../shared/singer-lines.js?v=20261126-full-karaoke-notes-v1"></script>
 <!-- One existing Slave listener now supports legacy files and modern Firestore songs. -->
-<script src="song-compat.js?v=20261126-full-karaoke-notes-v1"></script>
+<script src="song-compat.js?v=20261126-default-speed-v1"></script>
 <!-- ********************************************************* -->
 <!-- ==================== END OF JS CODE ===================== -->
 
@@ -1870,7 +1872,7 @@ slaveLyricsToggle.addEventListener("change", function() {
   </button>
 
   <div id="scrollSpeedDisplay" onclick="resetScrollSpeed()" title="Reset Speed">
-    1.00x
+    0.80x
   </div>
 
   <button onclick="changeScrollSpeed(0.05)">
@@ -1896,7 +1898,7 @@ slaveLyricsToggle.addEventListener("change", function() {
 <div id="prompterReadingGuide" aria-hidden="true"></div>
 <div id="prompterReadingZone" aria-hidden="true"></div>
 <script src="prompter-ui.js?v=20261125-performance-controls-v4"></script>
-<script src="prompter-remote-receiver.js?v=20261126-speed-increment-v1"></script>
+<script src="prompter-remote-receiver.js?v=20261126-default-speed-v1"></script>
 <script src="prompter-session-picker.js?v=20261111-session-picker-v1"></script>
 <!-- Reuse atomic session finish logic; rating uses the existing performedSongs record. -->
 <script src="../../../shared/performance-intelligence.js?v=20261018-smart-v1"></script>

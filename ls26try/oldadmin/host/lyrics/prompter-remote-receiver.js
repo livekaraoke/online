@@ -252,7 +252,10 @@
     if((next!=='running'||starting)&&typeof stopAutoScroll==='function')stopAutoScroll();
     mode=next;
     document.body.dataset.ls26SingerStage=next;
-    if(starting)window.scrollTo(0,0);
+    if(starting){
+      if(typeof resetScrollSpeed==='function')resetScrollSpeed();
+      window.scrollTo(0,0);
+    }
     // Keep the existing hold/resume behaviour for an instrumental section.
     if(next==='running'&&!starting&&typeof autoScrollActive!=='undefined'&&!autoScrollActive&&typeof toggleAutoScroll==='function')toggleAutoScroll();
     if(next==='ended')armTimer();
