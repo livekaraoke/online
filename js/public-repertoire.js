@@ -77,9 +77,11 @@
       const row = document.createElement("p");
       row.className = "lk-new-song-row";
       const artist = String(song.artist || song.songArtist || "").trim();
-      row.append(document.createTextNode(
-        '🎵 "' + String(song.title || "Untitled") + '"' + (artist ? " by " + artist : "")
-      ));
+      row.append(document.createTextNode('🎵 "'));
+      const title = document.createElement("strong");
+      title.className = "lk-new-song-title";
+      title.textContent = String(song.title || "Untitled");
+      row.append(title, document.createTextNode('"' + (artist ? " by " + artist : "")));
       const note = cleanNote(notes[String(song.id)]);
       if (note) {
         row.append(document.createTextNode(" ("));
