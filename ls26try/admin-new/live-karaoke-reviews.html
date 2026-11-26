@@ -34,10 +34,25 @@
     .lk-review-stars{color:#ffd464;letter-spacing:.14em;margin-bottom:10px}.lk-review-copy{margin:0;color:#e7edf0;line-height:1.58;white-space:pre-wrap}.lk-review-empty-copy{color:#718690;font-style:italic}
     .lk-review-meta{display:flex;gap:8px 16px;flex-wrap:wrap;margin-top:13px;color:#738994;font-size:.74rem}
     .lk-review-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:15px;padding-top:13px;border-top:1px solid rgba(125,157,173,.13)}
+    .lk-review-status.hidden{border-color:#725d8f;color:#e3c7ff;background:#24172f}
+    .lk-review-settings{margin:0 0 20px;padding:17px 18px;border:1px solid #2a4654;border-radius:12px;background:#08151c}
+    .lk-review-settings h2{margin:0 0 6px;color:#fff;font-size:1rem}
+    .lk-review-settings p{margin:0 0 14px;color:#8fa4ae;font-size:.82rem;line-height:1.5}
+    .lk-review-settings-grid{display:grid;grid-template-columns:repeat(2,minmax(0,220px));gap:12px;align-items:end}
+    .lk-review-settings label,.lk-review-editor label{display:grid;gap:6px;color:#a9bdc6;font-size:.75rem;font-weight:800}
+    .lk-review-settings input,.lk-review-editor input,.lk-review-editor textarea{width:100%;border:1px solid #31505e;border-radius:7px;background:#061018;color:#eef6f8;padding:9px 10px;font:inherit}
+    .lk-review-settings input{max-width:110px}
+    .lk-review-editor{display:grid;grid-template-columns:1fr 1fr 110px;gap:10px;margin-top:14px;padding:14px;border:1px solid #29434f;border-radius:9px;background:#061117}
+    .lk-review-editor[hidden]{display:none}
+    .lk-review-editor .wide{grid-column:1/-1}
+    .lk-review-editor textarea{min-height:105px;resize:vertical;line-height:1.45}
+    .lk-review-editor-private{display:flex!important;grid-column:1/-1;grid-template-columns:auto 1fr!important;align-items:center;justify-content:start;gap:8px!important}
+    .lk-review-editor-private input{width:auto}
+    .lk-review-editor-actions{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap}
     .lk-review-note{margin:0 0 18px;color:#91a5af;font-size:.87rem;line-height:1.55}
     .lk-reviews-empty{padding:36px 18px;text-align:center;border:1px dashed #2c4652;border-radius:12px;color:#8297a1}
     @media(max-width:850px){.lk-reviews-summary{grid-template-columns:repeat(2,minmax(0,1fr))}}
-    @media(max-width:560px){.lk-reviews-summary{grid-template-columns:1fr 1fr}.lk-review-head{display:block}.lk-review-status{display:inline-block;margin-top:9px}.lk-review-actions .lk-review-action{flex:1}}
+    @media(max-width:560px){.lk-reviews-summary{grid-template-columns:1fr 1fr}.lk-review-head{display:block}.lk-review-status{display:inline-block;margin-top:9px}.lk-review-actions .lk-review-action{flex:1}.lk-review-settings-grid{grid-template-columns:1fr 1fr}.lk-review-editor{grid-template-columns:1fr}.lk-review-editor .wide,.lk-review-editor-private,.lk-review-editor-actions{grid-column:1}}
   </style>
 </head>
 <body class="admin-body enquiries-page">
@@ -54,7 +69,23 @@
       </header>
 
       <p id="liveKaraokeReviewsStatus" class="billy-site-status" role="status">Loading reviews…</p>
-      <p class="lk-review-note">Approved feedback can be a star rating, a written review, or both. Only Name, Country, Review Rating and Review are published. If the reviewer chose to keep their name private, the Name field is hidden.</p>
+      <p class="lk-review-note">Approved feedback can be a star rating, a written review, or both. You can edit, reorder or hide published reviews here. Public users cannot edit an already-published review; a later submission is stored as a new review.</p>
+
+      <section class="lk-review-settings" aria-labelledby="lkReviewHomepageSettingsTitle">
+        <h2 id="lkReviewHomepageSettingsTitle">Homepage review display</h2>
+        <p>Choose how many cards are visible at once. Extra reviews automatically rotate with a fade. Set a value to 0 to hide that review type.</p>
+        <div class="lk-review-settings-grid">
+          <label>Written reviews visible
+            <input id="lkHomepageWrittenCount" type="number" min="0" max="6" step="1" value="2">
+          </label>
+          <label>Rating-only reviews visible
+            <input id="lkHomepageRatingCount" type="number" min="0" max="8" step="1" value="4">
+          </label>
+        </div>
+        <div class="lk-review-actions">
+          <button id="saveReviewDisplaySettingsBtn" class="lk-review-action primary" type="button">Save display settings</button>
+        </div>
+      </section>
 
       <section class="lk-reviews-summary" aria-label="Review summary">
         <article><span>Pending</span><strong id="lkReviewPendingCount">0</strong></article>
@@ -90,6 +121,6 @@
       window.LK?.sidebar?.loadSidebar?.();
     }, { once:true });
   </script>
-  <script src="js/live-karaoke-reviews.js?v=20261110-rating-only-approval"></script>
+  <script src="js/live-karaoke-reviews.js?v=20261126-review-management-v1"></script>
 </body>
 </html>
