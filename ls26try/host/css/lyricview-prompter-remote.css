@@ -53,3 +53,80 @@
 #ls26PrompterRemote #ls26PrompterSongCue{border-color:#10a879;background:#064438;color:#7fffd1}
 #ls26PrompterRemote button:disabled{opacity:.45;cursor:default}
 @media(max-width:720px){#ls26PrompterRemote{width:min(500px,calc(100vw - 30px))}}
+
+/* LyricView floating remote only: three small controls + START on the left,
+   and one full two-row HOLD button on the right. Phone layout is untouched. */
+#ls26PrompterRemote.ls26-lyricview-remote{
+ display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) minmax(0,2.8fr);
+ grid-template-rows:auto minmax(58px,auto) minmax(58px,auto);
+ gap:7px;
+}
+#ls26PrompterRemote.ls26-lyricview-remote .ls26-prompter-remote-head{
+ grid-column:1/-1;position:relative;flex-wrap:wrap;justify-content:flex-start;
+ padding-right:32px;min-width:0;gap:5px 8px;
+}
+#ls26PrompterRemote.ls26-lyricview-remote #ls26PrompterRemoteStatus{
+ margin-left:auto;max-width:100px;
+}
+#ls26PrompterRemote.ls26-lyricview-remote .ls26-prompter-remote-controls,
+#ls26PrompterRemote.ls26-lyricview-remote .ls26-prompter-remote-stage-actions{display:contents}
+#ls26PrompterRemote.ls26-lyricview-remote .ls26-prompter-remote-controls>button{
+ grid-row:2;grid-column:auto;min-height:58px;height:100%;
+}
+#ls26PrompterRemote.ls26-lyricview-remote #ls26PrompterRemotePlay{grid-column:1}
+#ls26PrompterRemote.ls26-lyricview-remote [data-remote="slower"]{grid-column:2}
+#ls26PrompterRemote.ls26-lyricview-remote [data-remote="faster"]{grid-column:3}
+#ls26PrompterRemote.ls26-lyricview-remote #ls26PrompterSongCue{grid-row:3;grid-column:1/4;height:100%}
+#ls26PrompterRemote.ls26-lyricview-remote #ls26PrompterInstrumental{
+ grid-row:2/4;grid-column:4;height:100%;min-height:0;line-height:1.35;
+}
+#ls26PrompterRemote .ls26-prompter-arrows-toggle{
+ display:inline-flex;align-items:center;gap:4px;color:#9dd8e8;
+ font:750 10px/1.2 Arial,sans-serif;white-space:nowrap;cursor:pointer;
+ touch-action:manipulation;
+}
+#ls26PrompterRemote .ls26-prompter-arrows-toggle input{
+ appearance:auto;width:17px;height:17px;margin:0;accent-color:#23d5eb;cursor:pointer;
+}
+#ls26PrompterRemote #ls26PrompterRemoteClose{
+ position:absolute;top:0;right:0;width:28px;height:28px;min-height:28px;
+ padding:0;display:grid;place-items:center;font-size:21px;line-height:1;
+ border-color:#39758a;background:#0c2735;color:#d5edf5;
+}
+#ls26PrompterFloatingArrows{
+ position:fixed;inset:0;z-index:2401;pointer-events:none;
+}
+#ls26PrompterFloatingArrows[hidden]{display:none!important}
+#ls26PrompterFloatingArrows .ls26-prompter-remote-arrow{
+ position:absolute;right:clamp(12px,3.3vw,32px);
+ transform:translateY(-50%);
+ display:flex;align-items:center;justify-content:center;
+ width:clamp(64px,18vw,148px);height:clamp(48px,10dvh,100px);
+ border:1px solid rgba(92,199,228,.58);border-radius:14px;
+ background:rgba(7,48,66,.52);color:rgba(198,241,255,.88);
+ box-shadow:0 3px 12px rgba(0,0,0,.18);
+ pointer-events:auto;touch-action:manipulation;cursor:pointer;
+ -webkit-tap-highlight-color:transparent;
+}
+#ls26PrompterFloatingArrows [data-remote="up"]{top:33%}
+#ls26PrompterFloatingArrows [data-remote="down"]{top:47%}
+#ls26PrompterFloatingArrows .ls26-prompter-remote-arrow svg{
+ width:clamp(32px,6vw,54px);height:clamp(32px,6vw,54px);
+ fill:none;stroke:currentColor;stroke-width:3.5;stroke-linecap:round;stroke-linejoin:round;
+}
+#ls26PrompterFloatingArrows .ls26-prompter-remote-arrow:active{
+ background:rgba(18,103,129,.88);color:#fff;
+}
+#ls26PrompterFloatingArrows .ls26-prompter-remote-arrow:focus-visible{outline:2px solid #22d5ff;outline-offset:2px}
+@media(max-width:480px){
+ #ls26PrompterRemote.ls26-lyricview-remote .ls26-prompter-remote-head{gap:4px 6px}
+ #ls26PrompterRemote.ls26-lyricview-remote #ls26PrompterRemoteStatus{margin-left:0;max-width:none}
+ #ls26PrompterRemote.ls26-lyricview-remote #ls26PrompterInstrumental{padding:5px;font-size:11px}
+}
+@media(max-height:500px){
+ #ls26PrompterRemote.ls26-lyricview-remote{grid-template-rows:auto minmax(52px,auto) minmax(52px,auto)}
+ #ls26PrompterRemote.ls26-lyricview-remote .ls26-prompter-remote-controls>button,
+ #ls26PrompterRemote.ls26-lyricview-remote #ls26PrompterSongCue{min-height:52px}
+ #ls26PrompterFloatingArrows [data-remote="up"]{top:31%}
+ #ls26PrompterFloatingArrows [data-remote="down"]{top:49%}
+}

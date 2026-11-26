@@ -77,6 +77,58 @@
       <button type="button" data-remote="song" id="ls26PrompterSongCue">START SONG</button>
       <button type="button" data-remote="instrumental" id="ls26PrompterInstrumental" aria-pressed="false" disabled>INSTRUMENTAL / HOLD</button>
     </div>`;
+  // LyricView only: move the existing arrow buttons, keeping their command path.
+  const FLOATING_ARROWS_KEY='ls26:showPrompterFloatingArrows';
+  let floatingArrows=null,arrowsToggle=null,arrowsVisible=true;
+  try{arrowsVisible=localStorage.getItem(FLOATING_ARROWS_KEY)!=='false';}catch(_){}
+  const syncFloatingArrows=()=>{
+    if(floatingArrows)floatingArrows.hidden=panel.hidden||!arrowsVisible;
+    if(arrowsToggle)arrowsToggle.checked=arrowsVisible;
+  };
+  const setFloatingArrows=visible=>{
+    arrowsVisible=Boolean(visible);
+    try{localStorage.setItem(FLOATING_ARROWS_KEY,String(arrowsVisible));}catch(_){}
+    syncFloatingArrows();
+  };
+  const closeFloatingRemote=()=>{
+    // Use the same preference and visibility event as TOOLS and the quick strip.
+    const toggle=$('ls26ShowPrompterRemote');
+    if(toggle?.checked){toggle.click();return;}
+    if(toggle)toggle.checked=false;
+    try{localStorage.setItem('ls26:showPrompterRemote','false');}catch(_){}
+    window.dispatchEvent(new CustomEvent('ls26:prompter-remote-visibility',{detail:{visible:false}}));
+  };
+  const setupFloatingControls=()=>{
+    panel.classList.add('ls26-lyricview-remote');
+    floatingArrows=document.createElement('div');
+    floatingArrows.id='ls26PrompterFloatingArrows';
+    floatingArrows.setAttribute('role','group');
+    floatingArrows.setAttribute('aria-label','Singer Prompter scroll controls');
+    floatingArrows.hidden=true;
+    panel.querySelectorAll('.ls26-prompter-remote-arrow').forEach(button=>floatingArrows.append(button));
+    document.body.append(floatingArrows);
+    floatingArrows.addEventListener('click',event=>{
+      const action=event.target.closest('button[data-remote]')?.dataset.remote;
+      if(action==='up'||action==='down')send(action);
+    });
+    const head=panel.querySelector('.ls26-prompter-remote-head');
+    const options=document.createElement('label');
+    options.className='ls26-prompter-arrows-toggle';
+    options.innerHTML='<input type="checkbox" id="ls26PrompterShowFloatingArrows" aria-label="Show floating Prompter scroll buttons"><span>ARROWS</span>';
+    head.append(options);
+    arrowsToggle=options.querySelector('input');
+    arrowsToggle.addEventListener('change',()=>setFloatingArrows(arrowsToggle.checked));
+    const close=document.createElement('button');
+    close.type='button';close.id='ls26PrompterRemoteClose';close.textContent='×';
+    close.title='Close Prompter Remote and floating scroll buttons';
+    close.setAttribute('aria-label',close.title);
+    close.addEventListener('click',closeFloatingRemote);
+    head.append(close);
+    window.addEventListener('storage',event=>{
+      if(event.key===FLOATING_ARROWS_KEY){arrowsVisible=event.newValue!=='false';syncFloatingArrows();}
+    });
+    syncFloatingArrows();
+  };
   let singerMode='waiting';
   const setScrollSpeed=speed=>{
     const label=$('ls26PrompterRemoteSpeed');
@@ -162,7 +214,7 @@
     const bar=panel.querySelector('.ls26-prompter-remote-head');
     bar.addEventListener('pointerdown',e=>{
       // The title is draggable; stage controls are independent touch actions.
-      if(e.target.closest('button'))return;
+      if(e.target.closest('button,input,label'))return;
       if(e.pointerType==='mouse'&&e.button!==0)return;
       const r=panel.getBoundingClientRect();
       drag={id:e.pointerId,startX:e.clientX,startY:e.clientY,left:r.left,bottom:viewportBottom(r)};
@@ -189,6 +241,7 @@
   };
   const show=visible=>{
     panel.hidden=!visible;
+    syncFloatingArrows();
     if(visible)restorePosition();
     if(visible){$('ls26PrompterRemoteStatus').textContent='Cross-tablet ready';observeCloud();send('status');}
     else if(unsubscribeCloud){unsubscribeCloud();unsubscribeCloud=null;}
@@ -380,7 +433,7 @@
     // maintaining a duplicate set of Firestore command handlers.
     const phoneMount=document.getElementById('phonePrompterRemoteMount');
     (phoneMount||document.body).append(panel);
-    if(!phoneMount)enableDragging();
+    if(!phoneMount){setupFloatingControls();enableDragging();}
     window.addEventListener('resize',()=>{
       const width=window.innerWidth;
       // Ignore height-only browser UI changes, including Chrome on Android
