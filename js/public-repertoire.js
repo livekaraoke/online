@@ -3,26 +3,14 @@
   const $ = id => document.getElementById(id);
   if (!window.firebase || !$("newSongsToggle")) return;
 
-  const productionConfig =
-    window.LKFirebaseProjects?.PROJECTS?.LIVEKARAOKESUITE ||
-    window.LK_FIREBASE_CONFIG;
+  const config = window.LKFirebaseProjects?.getSelectedConfig?.() || window.LK_FIREBASE_CONFIG;
+  if (!firebase.apps.length) firebase.initializeApp(config);
+  const productionApp = firebase.app();
+  const db = firebase.firestore();
 
-  if (!productionConfig || productionConfig.projectId !== "livekaraokesuite") {
-    console.error("Live Karaoke production Firebase configuration is unavailable.");
+  if (productionApp.options.projectId !== "livekaraokesuite") {
+    console.error("Unexpected public Firebase project:", productionApp.options.projectId);
   }
-
-  let productionApp = firebase.apps.find(app =>
-    app?.options?.projectId === "livekaraokesuite"
-  );
-
-  if (!productionApp) {
-    productionApp = firebase.initializeApp(
-      productionConfig,
-      firebase.apps.length ? "liveKaraokePublicProduction" : undefined
-    );
-  }
-
-  const db = productionApp.firestore();
 
   function cleanNote(value) {
     return String(value || "").trim().slice(0, 200);
@@ -128,11 +116,43 @@
   });
 
   const dialog = $("suggestSongDialog");
+
+  function fitDialogToVisibleViewport() {
+    if (!dialog) return;
+    const vv = window.visualViewport;
+    if (!vv) {
+      dialog.style.removeProperty("--suggest-dialog-center");
+      dialog.style.removeProperty("--suggest-dialog-max-height");
+      return;
+    }
+    dialog.style.setProperty("--suggest-dialog-center", (vv.offsetTop + vv.height / 2) + "px");
+    dialog.style.setProperty("--suggest-dialog-max-height", Math.max(280, vv.height - 20) + "px");
+  }
+
+  window.visualViewport?.addEventListener("resize", fitDialogToVisibleViewport);
+  window.visualViewport?.addEventListener("scroll", fitDialogToVisibleViewport);
+
+  dialog.addEventListener("close", () => {
+    dialog.style.removeProperty("--suggest-dialog-center");
+    dialog.style.removeProperty("--suggest-dialog-max-height");
+  });
+
+  $("suggestSongForm").addEventListener("focusin", event => {
+    fitDialogToVisibleViewport();
+    setTimeout(() => {
+      event.target?.scrollIntoView?.({ block: "nearest", behavior: "smooth" });
+    }, 120);
+  });
+
   $("suggestSongBtn").addEventListener("click", () => {
     $("suggestSongStatus").textContent = "";
     if (dialog.showModal) dialog.showModal();
     else dialog.setAttribute("open", "");
-    setTimeout(() => $("suggestSongName")?.focus(), 0);
+    fitDialogToVisibleViewport();
+    setTimeout(() => {
+      fitDialogToVisibleViewport();
+      $("suggestSongName")?.focus();
+    }, 0);
   });
   $("closeSuggestSongBtn").addEventListener("click", () => {
     if (dialog.close) dialog.close();
@@ -182,8 +202,15 @@
       });
 
       const code = String(error?.code || "unknown").replace(/^firestore\//, "");
+      const detail = String(error?.message || "")
+        .replace(/^FirebaseError:\s*/i, "")
+        .replace(/\s+/g, " ")
+        .trim()
+        .slice(0, 180);
       status.textContent =
-        "Could not send your suggestion (" + code + "). Please try again.";
+        "Could not send your suggestion (" + code + ")" +
+        (detail ? ": " + detail : ".") +
+        " Please try again.";
     } finally {
       button.disabled = false;
     }
