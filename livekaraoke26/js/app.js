@@ -507,6 +507,7 @@
   const REQUEST_REVIEW_ID_KEY="billylee26.reviewId";
   const REQUEST_DEVICE_ID_KEY="billylee26.requestDeviceId.v1";
   const REQUEST_FAVOURITES_KEY="billylee26.favouriteSongIds.v1";
+  const DIRECT_REVIEW_MODE=new URLSearchParams(location.search).get("directReview")==="1";
   let requestCategory="all";
   let showFavouriteSongsOnly=false;
   let showNewSongsOnly=false;
@@ -684,6 +685,57 @@
     paintReviewStars();
   }
 
+  function prepareDirectReviewMode(){
+    if(!DIRECT_REVIEW_MODE)return;
+    document.documentElement.classList.add("direct-review-mode");
+    document.title="Rate Your Experience | Live Karaoke";
+
+    const reviewCard=document.querySelector("#requestReviewPanel .request-review-card");
+    if(reviewCard&&!$("directReviewIdentity")){
+      const identity=document.createElement("div");
+      identity.id="directReviewIdentity";
+      identity.className="request-profile-grid request-primary-profile-grid direct-review-identity";
+      identity.innerHTML=`
+        <div class="request-field request-name-field">
+          <label for="directReviewName">YOUR NAME</label>
+          <div class="request-name-control"><input id="directReviewName" type="text" maxlength="60" placeholder="Your name" autocomplete="name"></div>
+        </div>
+        <label class="request-field request-country-field">COUNTRY <small>OPTIONAL</small>
+          <input id="directReviewCountry" type="text" maxlength="80" placeholder="e.g. Malta" autocomplete="country-name">
+        </label>
+      `;
+      reviewCard.insertBefore(identity,reviewCard.firstChild);
+    }
+
+    const profile=requestProfile();
+    if($("directReviewName"))$("directReviewName").value=profile.name||"";
+    if($("directReviewCountry"))$("directReviewCountry").value=profile.country||"";
+
+    if(!$("directReviewModeStyles")){
+      const style=document.createElement("style");
+      style.id="directReviewModeStyles";
+      style.textContent=`
+        html.direct-review-mode,html.direct-review-mode body{background:#02080d!important}
+        html.direct-review-mode #requestDialog [data-close="requestDialog"],
+        html.direct-review-mode #requestMobileBack,
+        html.direct-review-mode #requestMobileHeading,
+        html.direct-review-mode #requestReviewPanel>.request-profile-back,
+        html.direct-review-mode .request-bottom-tabs{display:none!important}
+        html.direct-review-mode #requestReviewPanel{padding-bottom:max(24px,env(safe-area-inset-bottom))!important}
+        html.direct-review-mode .direct-review-identity{margin-bottom:16px}
+        html.direct-review-mode .direct-review-identity .request-field{margin:0}
+        html.direct-review-mode .direct-review-identity input{width:100%;box-sizing:border-box}
+      `;
+      document.head.appendChild(style);
+    }
+
+    const bottomTabs=document.querySelector(".request-bottom-tabs");
+    if(bottomTabs)bottomTabs.hidden=true;
+    if($("requestMobileBack"))$("requestMobileBack").hidden=true;
+    if($("requestMobileHeading"))$("requestMobileHeading").hidden=true;
+    document.querySelectorAll("#requestReviewPanel>.request-profile-back").forEach(button=>button.hidden=true);
+  }
+
   function populateProfileForm({includeReview=true}={}){
     const profile=requestProfile();
     if($("singerName"))$("singerName").value=profile.name;
@@ -855,14 +907,28 @@
   }
 
   async function saveRequestReview(){
-    if(!saveProfileFieldsLocally({validateEmail:true}))return false;
+    const status=$("requestReviewStatus");
+    if(DIRECT_REVIEW_MODE){
+      const directName=String($("directReviewName")?.value||"").trim();
+      const directCountry=String($("directReviewCountry")?.value||"").trim();
+      if(!directName){
+        if(status)status.textContent="Enter your name before sending your review.";
+        $("directReviewName")?.focus();
+        return false;
+      }
+      if($("singerName"))$("singerName").value=directName;
+      if($("requestProfileCountry"))$("requestProfileCountry").value=directCountry;
+    }
+    if(!saveProfileFieldsLocally({validateEmail:true})){
+      if(status)status.textContent="Enter your name before sending your review.";
+      return false;
+    }
     const profile={
       ...requestProfile(),
       rating:String($("requestReviewRating")?.value||""),
       review:String($("requestReviewText")?.value||"").trim(),
       reviewPrivate:$("requestReviewPrivate")?.checked===true
     };
-    const status=$("requestReviewStatus");
     if(!profile.rating&&!profile.review){
       if(status)status.textContent="Choose a star rating or write a review first.";
       document.querySelector('[data-review-rating="1"]')?.focus();
@@ -1321,6 +1387,12 @@
     $("requestDialog").showModal();
     window.parent?.postMessage({type:"live-karaoke-request-ready"},location.origin);
     populateProfileForm();
+
+    if(DIRECT_REVIEW_MODE){
+      switchRequestTab("review");
+      prepareDirectReviewMode();
+      return;
+    }
 
     // Show the name gate before any asynchronous song/request loading.
     // Loading must never replace it with the song list until the singer
@@ -2375,6 +2447,8 @@
   $("shareBtn").addEventListener("click",async()=>{try{if(navigator.share)await navigator.share({title:document.title,url:location.href});else{await navigator.clipboard.writeText(location.href);alert("Link copied.");}}catch{}});
 
   window.addEventListener("pagehide",()=>{try{sessionRequestsUnsub?.();}catch{}});
-  listenLiveState(); renderRequestCategoryCards(); renderRequestInfo(); renderLive();
+  if(!DIRECT_REVIEW_MODE){
+    listenLiveState(); renderRequestCategoryCards(); renderRequestInfo(); renderLive();
+  }
   window.addEventListener("DOMContentLoaded",openRequestDialog,{once:true});
 })();
