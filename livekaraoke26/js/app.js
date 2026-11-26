@@ -689,6 +689,8 @@
     if(!DIRECT_REVIEW_MODE)return;
     document.documentElement.classList.add("direct-review-mode");
     document.title="Rate Your Experience | Live Karaoke";
+    const directEyebrow=document.querySelector("#requestReviewPanel .request-review-panel-heading .eyebrow");
+    if(directEyebrow)directEyebrow.textContent="AFTER YOUR VISIT";
 
     const reviewCard=document.querySelector("#requestReviewPanel .request-review-card");
     if(reviewCard&&!$("directReviewIdentity")){
@@ -710,6 +712,8 @@
     const profile=requestProfile();
     if($("directReviewName"))$("directReviewName").value=profile.name||"";
     if($("directReviewCountry"))$("directReviewCountry").value=profile.country||"";
+    if($("requestReviewPrivate"))$("requestReviewPrivate").checked=false;
+    document.querySelector("#requestReviewPanel .request-review-private")?.remove();
 
     if(!$("directReviewModeStyles")){
       const style=document.createElement("style");
@@ -735,8 +739,8 @@
         html.direct-review-mode #requestDialog{
           box-sizing:border-box!important;
           width:min(920px,calc(100% - 28px))!important;
-          height:100dvh!important;
-          max-height:100dvh!important;
+          height:auto!important;
+          max-height:100%!important;
           margin:0 auto!important;
           background:linear-gradient(180deg,rgba(13,13,13,.99),rgba(4,4,4,.995))!important;
           border:1px solid rgba(255,43,43,.48)!important;
@@ -752,8 +756,8 @@
         html.direct-review-mode #requestDialog .request-song-step,
         html.direct-review-mode #requestDialog .request-tab-stage{
           min-height:0!important;
-          height:100%!important;
-          flex:1 1 auto!important;
+          height:auto!important;
+          flex:0 1 auto!important;
         }
         html.direct-review-mode #requestDialog [data-close="requestDialog"],
         html.direct-review-mode #requestMobileBack,
@@ -762,8 +766,9 @@
         html.direct-review-mode .request-bottom-tabs{display:none!important}
         html.direct-review-mode #requestReviewPanel{
           box-sizing:border-box!important;
-          height:100%!important;
-          padding:14px 18px max(18px,env(safe-area-inset-bottom))!important;
+          height:auto!important;
+          max-height:100%!important;
+          padding:16px 20px max(20px,env(safe-area-inset-bottom))!important;
           overflow-y:auto!important;
           overscroll-behavior-y:contain!important;
         }
@@ -772,12 +777,12 @@
         }
         html.direct-review-mode #requestReviewPanel .request-review-panel-heading h3{
           margin:0 0 3px!important;
-          font-size:20px!important;
-          line-height:1.15!important;
+          font-size:23px!important;
+          line-height:1.18!important;
         }
         html.direct-review-mode #requestReviewPanel .request-review-panel-heading p{
-          font-size:12px!important;
-          line-height:1.35!important;
+          font-size:16px!important;
+          line-height:1.45!important;
         }
         html.direct-review-mode #requestReviewPanel .eyebrow,
         html.direct-review-mode #requestReviewPanel .request-field,
@@ -790,39 +795,45 @@
         html.direct-review-mode #requestReviewPanel .request-panel-heading{
           border-bottom-color:rgba(255,43,43,.22)!important;
         }
-        html.direct-review-mode #requestReviewPanel .request-panel-heading p{color:#b6b6b6!important}
+        html.direct-review-mode #requestReviewPanel .request-panel-heading .eyebrow{
+          font-size:12px!important;
+          letter-spacing:.18em!important;
+        }
+        html.direct-review-mode #requestReviewPanel .request-panel-heading p{color:#d0d0d0!important}
         html.direct-review-mode #requestReviewPanel .request-review-card{
           margin:0!important;
-          padding:12px 14px!important;
+          padding:14px 16px!important;
           background:#0a0a0a!important;
           border:1px solid rgba(255,43,43,.30)!important;
           border-radius:10px!important;
           box-shadow:inset 0 0 24px rgba(255,0,0,.025)!important;
         }
         html.direct-review-mode #requestReviewPanel .request-primary-profile-grid{
-          margin-bottom:10px!important;
-          gap:10px!important;
+          margin-bottom:12px!important;
+          gap:12px!important;
         }
-        html.direct-review-mode #requestReviewPanel .request-field{gap:4px!important}
+        html.direct-review-mode #requestReviewPanel .request-field{
+          gap:5px!important;
+          font-size:12px!important;
+        }
+        html.direct-review-mode #requestReviewPanel .request-field small{font-size:10px!important}
         html.direct-review-mode #requestReviewPanel .request-field input{
-          min-height:42px!important;
-          padding:8px 12px!important;
-          font-size:15px!important;
+          min-height:46px!important;
+          padding:9px 12px!important;
+          font-size:16px!important;
         }
         html.direct-review-mode #requestReviewPanel .request-review-rating{margin:0 0 8px!important}
-        html.direct-review-mode #requestReviewPanel .request-review-label{margin-bottom:5px!important}
-        html.direct-review-mode #requestReviewPanel .request-review-text textarea{
-          min-height:78px!important;
-          max-height:120px!important;
-          padding:9px 12px!important;
+        html.direct-review-mode #requestReviewPanel .request-review-label{
+          margin-bottom:6px!important;
           font-size:15px!important;
         }
-        html.direct-review-mode #requestReviewPanel .request-review-private{
-          margin-top:8px!important;
+        html.direct-review-mode #requestReviewPanel .request-review-text textarea{
+          min-height:88px!important;
+          max-height:140px!important;
           padding:10px 12px!important;
+          font-size:16px!important;
         }
-        html.direct-review-mode #requestReviewPanel .request-review-private strong{font-size:13px!important}
-        html.direct-review-mode #requestReviewPanel .request-review-private small{font-size:11px!important;line-height:1.3!important}
+        html.direct-review-mode #requestReviewPanel .request-review-private{display:none!important}
         html.direct-review-mode #requestReviewPanel input,
         html.direct-review-mode #requestReviewPanel textarea,
         html.direct-review-mode #requestReviewPanel select{
@@ -854,9 +865,10 @@
         }
         html.direct-review-mode #submitRequestReviewBtn{
           width:100%!important;
-          min-height:46px!important;
-          margin:10px 0 0!important;
-          padding:9px 14px!important;
+          min-height:50px!important;
+          margin:12px 0 0!important;
+          padding:10px 14px!important;
+          font-size:15px!important;
           background:linear-gradient(180deg,#ff3b3b,#b90000)!important;
           color:#fff!important;
           border:1px solid #ff4a4a!important;
@@ -872,10 +884,10 @@
         html.direct-review-mode .direct-review-identity .request-field{margin:0}
         html.direct-review-mode .direct-review-identity input{width:100%;box-sizing:border-box}
         html.direct-review-mode .direct-review-thanks{
-          margin:20px 0 4px!important;
+          margin:22px 0 4px!important;
           text-align:center!important;
           color:#d7d7d7!important;
-          font-size:14px!important;
+          font-size:15px!important;
           font-weight:700!important;
           letter-spacing:.02em!important;
         }
@@ -895,22 +907,22 @@
           html.direct-review-mode #requestReviewPanel{
             padding:12px 12px max(14px,env(safe-area-inset-bottom))!important;
           }
-          html.direct-review-mode #requestReviewPanel .request-review-panel-heading h3{font-size:18px!important}
-          html.direct-review-mode #requestReviewPanel .request-review-card{padding:10px 11px!important}
-          html.direct-review-mode #requestReviewPanel .request-review-text textarea{min-height:72px!important}
+          html.direct-review-mode #requestReviewPanel .request-review-panel-heading h3{font-size:21px!important}
+          html.direct-review-mode #requestReviewPanel .request-review-card{padding:12px 13px!important}
+          html.direct-review-mode #requestReviewPanel .request-review-text textarea{min-height:82px!important}
           html.direct-review-mode .direct-review-thanks{font-size:13px!important;margin-top:18px!important}
         }
         @media(max-height:720px){
           html.direct-review-mode #requestReviewPanel{padding-top:9px!important;padding-bottom:10px!important}
           html.direct-review-mode #requestReviewPanel .request-review-panel-heading{margin-bottom:6px!important}
-          html.direct-review-mode #requestReviewPanel .request-review-panel-heading .eyebrow{font-size:9px!important}
-          html.direct-review-mode #requestReviewPanel .request-review-panel-heading p{font-size:11px!important}
+          html.direct-review-mode #requestReviewPanel .request-review-panel-heading .eyebrow{font-size:11px!important}
+          html.direct-review-mode #requestReviewPanel .request-review-panel-heading p{font-size:14px!important}
           html.direct-review-mode #requestReviewPanel .request-review-card{padding:9px 11px!important}
           html.direct-review-mode #requestReviewPanel .request-primary-profile-grid{margin-bottom:7px!important;gap:7px!important}
-          html.direct-review-mode #requestReviewPanel .request-field input{min-height:38px!important;padding:6px 10px!important}
+          html.direct-review-mode #requestReviewPanel .request-field input{min-height:42px!important;padding:7px 10px!important}
           html.direct-review-mode #requestReviewPanel .request-review-details .request-star-row [data-review-rating],
           html.direct-review-mode #requestReviewPanel .request-review-details .clear-rating-btn{min-height:38px!important;height:38px!important}
-          html.direct-review-mode #requestReviewPanel .request-review-text textarea{min-height:62px!important}
+          html.direct-review-mode #requestReviewPanel .request-review-text textarea{min-height:72px!important}
           html.direct-review-mode #submitRequestReviewBtn{min-height:42px!important;margin-top:8px!important}
           html.direct-review-mode .direct-review-thanks{margin-top:14px!important}
         }
@@ -1149,7 +1161,7 @@
       ...requestProfile(),
       rating:String($("requestReviewRating")?.value||""),
       review:String($("requestReviewText")?.value||"").trim(),
-      reviewPrivate:$("requestReviewPrivate")?.checked===true
+      reviewPrivate:DIRECT_REVIEW_MODE?false:($("requestReviewPrivate")?.checked===true)
     };
     if(!profile.rating&&!profile.review){
       if(status)status.textContent="Choose a star rating or write a review first.";
