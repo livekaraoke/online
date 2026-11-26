@@ -660,10 +660,10 @@
     selectedId=visibleSongs[selectedIndex].firebaseId;updateSelected();
   }
 
-  function exportCSV() {
+  function exportCSV(list) {
     const rows = [
       ["Title", "Artist", "Key", "BPM", "Year", "Public Song List"],
-      ...visibleSongs.map(song => [
+      ...list.map(song => [
         song.title,
         song.artist,
         song.key,
@@ -688,6 +688,77 @@
     link.download = "lyrics-song-list.csv";
     link.click();
     URL.revokeObjectURL(link.href);
+  }
+
+  function openExportDialog() {
+    // Snapshot the rendered list: retain filters and ordering, without fetching data.
+    const list = visibleSongs.slice();
+    const clean = value => String(value ?? "").replace(/[\r\n]+/g, " ").trim();
+    const plainText = list.map(song => {
+      const title = clean(song.title);
+      const artist = clean(ArtistNames.display(song.artist));
+      return artist ? title + " - " + artist : title;
+    }).join("\n");
+
+    const dialog = document.createElement("dialog");
+    dialog.className = "ls26-dialog";
+    dialog.setAttribute("aria-labelledby", "libraryExportTitle");
+    dialog.innerHTML = '<h2 id="libraryExportTitle">Export song list</h2>' +
+      '<p class="ls26-dialog-message"></p>' +
+      '<div class="ls26-dialog-actions">' +
+      '<button type="button" data-export="download">Download CSV</button>' +
+      '<button type="button" class="primary" data-export="copy">Copy to clipboard</button>' +
+      '<button type="button" data-export="cancel">Close</button></div>' +
+      '<p role="status" aria-live="polite"></p>' +
+      '<textarea aria-label="Song list to copy manually" rows="6" readonly hidden></textarea>';
+    dialog.querySelector(".ls26-dialog-message").textContent =
+      list.length.toLocaleString() + (list.length === 1 ? " song" : " songs") +
+      " in the displayed list. Current filters and sort order will be preserved.";
+    const download = dialog.querySelector('[data-export="download"]');
+    const copy = dialog.querySelector('[data-export="copy"]');
+    const status = dialog.querySelector('[role="status"]');
+    const manual = dialog.querySelector("textarea");
+    download.disabled = copy.disabled = !list.length;
+    download.onclick = () => exportCSV(list);
+    copy.onclick = async () => {
+      copy.disabled = true;
+      status.textContent = "";
+      try {
+        let copied = false;
+        if (navigator.clipboard?.writeText) {
+          try {
+            await navigator.clipboard.writeText(plainText);
+            copied = true;
+          } catch (_) { /* Try the selection-based fallback. */ }
+        }
+        if (!dialog.isConnected || !dialog.open) return;
+        if (!copied) {
+          manual.hidden = false;
+          manual.value = plainText;
+          manual.focus();
+          manual.select();
+          manual.setSelectionRange(0, manual.value.length);
+          try { copied = document.execCommand("copy"); } catch (_) {}
+        }
+        if (copied) {
+          manual.hidden = true;
+          copy.focus({ preventScroll: true });
+          status.textContent = list.length.toLocaleString() +
+            (list.length === 1 ? " song copied" : " songs copied") + " to clipboard.";
+        } else {
+          status.textContent = "Clipboard access is unavailable. Copy the selected text below manually.";
+        }
+      } finally {
+        copy.disabled = false;
+      }
+    };
+    dialog.querySelector('[data-export="cancel"]').onclick = () => dialog.close();
+    dialog.addEventListener("close", () => {
+      dialog.remove();
+      $("exportBtn").focus({ preventScroll: true });
+    }, { once: true });
+    document.body.append(dialog);
+    dialog.showModal();
   }
 
   function syncSidebarButton(){const open=!$("libraryFilterPanel").hidden;$("sidebarToggleBtn").setAttribute('aria-expanded',String(open));}
@@ -802,7 +873,7 @@
   };
 
   $("refreshBtn").onclick = ()=>{LS26Data.invalidate("lyrics");LS26Data.invalidate("lyricsSetlists");loadData();};
-  $("exportBtn").onclick = exportCSV;
+  $("exportBtn").onclick = openExportDialog;
   $("playSelectedBtn").onclick = () => {
     if (!nextRunOrderItem?.songId) return;
 
