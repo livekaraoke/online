@@ -9,12 +9,20 @@
   <meta name="description" content="Rate and review your Live Karaoke experience.">
   <style>
     html,body{margin:0;width:100%;height:100%;background:#050505;overflow:hidden}
-    iframe{display:block;width:100%;height:100vh;height:100dvh;border:0;background:#050505}
+    body{display:flex;flex-direction:column;min-height:100vh;min-height:100dvh}
+    .review-hero{display:block;width:100%;flex:0 0 auto;background:#000}
+    .review-hero img{display:block;width:100%;height:auto}
+    iframe{display:block;width:100%;flex:1 1 auto;min-height:0;border:0;background:#050505}
   </style>
 </head>
 <body>
+  <picture class="review-hero" aria-label="Live Karaoke">
+    <source srcset="/img/banner.avif" type="image/avif">
+    <source srcset="/img/banner.webp" type="image/webp">
+    <img src="/img/banner.png" alt="Live Karaoke - You Sing, I Play" decoding="async" fetchpriority="high">
+  </picture>
   <iframe
-    src="/livekaraoke26/request.html?directReview=1&v=20261126-banner-1"
+    src="/livekaraoke26/request.html?directReview=1&v=20261126-fullwidth-banner-1"
     title="Rate your Live Karaoke experience"
     allow="clipboard-write"
   ></iframe>
