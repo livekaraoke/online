@@ -2157,17 +2157,17 @@ width: 100%;
 .section .lk-song-access-intro{max-width:760px;margin:0 auto 26px;font-size:1.04rem;line-height:1.65}
 .lk-song-access-shell{width:min(760px,100%);margin:0 auto;display:grid;gap:20px;justify-items:center}
 
-#songListBtn{width:min(310px,100%);min-height:56px;margin:0 auto!important;background:linear-gradient(180deg,#168047,#0b5f33)!important;border-color:#48dd8a!important;color:#fff!important;box-shadow:0 3px 16px rgba(0,0,0,.42),0 0 12px rgba(35,194,103,.12)!important}
+#songListBtn{width:min(520px,100%);min-height:56px;margin:0 auto!important;background:linear-gradient(180deg,#168047,#0b5f33)!important;border-color:#48dd8a!important;color:#fff!important;box-shadow:0 3px 16px rgba(0,0,0,.42),0 0 12px rgba(35,194,103,.12)!important}
 #songListBtn:hover,#songListBtn:focus-visible{background:linear-gradient(180deg,#1b9b57,#0d7440)!important;border-color:#7af0aa!important}
 
-.lk-repertoire-community{width:100%;margin:0;display:grid;justify-items:center;gap:0}
-.lk-new-songs-toggle{width:min(350px,100%);min-height:52px;padding:12px 16px;border:1.5px solid #348cf0;border-radius:9px;background:linear-gradient(180deg,#10233b,#0a1626);color:#f7fbff;display:flex;align-items:center;justify-content:space-between;gap:18px;font:850 clamp(.9rem,2.5vw,1.02rem)/1.2 Bahnschrift,Arial,sans-serif;letter-spacing:.055em;cursor:pointer;box-shadow:0 4px 18px rgba(0,0,0,.28)}
+.lk-repertoire-community{width:min(520px,100%);margin:0 auto;display:grid;justify-items:stretch;gap:0}
+.lk-new-songs-toggle{width:100%;min-height:52px;padding:12px 16px;border:1.5px solid #348cf0;border-radius:9px;background:linear-gradient(180deg,#10233b,#0a1626);color:#f7fbff;display:flex;align-items:center;justify-content:space-between;gap:18px;font:850 clamp(.9rem,2.5vw,1.02rem)/1.2 Bahnschrift,Arial,sans-serif;letter-spacing:.055em;cursor:pointer;box-shadow:0 4px 18px rgba(0,0,0,.28)}
 .lk-new-songs-toggle:hover,.lk-new-songs-toggle:focus-visible{border-color:#75b6ff;background:linear-gradient(180deg,#173252,#0c1d32);outline:none}
 .lk-new-songs-toggle strong{color:#65b2ff;font-weight:900}
 .lk-new-songs-chevron{font-size:1.3rem;line-height:1;transition:transform .18s ease}
 .lk-new-songs-toggle[aria-expanded="true"] .lk-new-songs-chevron{transform:rotate(180deg)}
 
-.lk-new-songs-panel{width:100%;margin-top:10px;padding:0 4px;border:0;border-radius:0;background:transparent}
+.lk-new-songs-panel{box-sizing:border-box;width:100%;margin-top:10px;padding:0 4px;border:0;border-radius:0;background:transparent}
 .lk-new-songs-panel[hidden]{display:none!important}
 .lk-new-songs-list{display:grid;gap:0;text-align:left}
 
@@ -2191,7 +2191,7 @@ width: 100%;
   .section .lk-song-access-intro{margin-bottom:22px;font-size:.98rem}
   .lk-song-access-shell{gap:16px}
   #songListBtn{min-height:54px}
-  .lk-new-songs-toggle{width:min(330px,100%)}
+  .lk-new-songs-toggle{width:100%}
 }
 
 @media(max-width:480px){
