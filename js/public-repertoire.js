@@ -3,11 +3,26 @@
   const $ = id => document.getElementById(id);
   if (!window.firebase || !$("newSongsToggle")) return;
 
-  const config = window.LKFirebaseProjects
-    ? window.LKFirebaseProjects.getSelectedConfig()
-    : window.LK_FIREBASE_CONFIG;
-  if (!firebase.apps.length) firebase.initializeApp(config);
-  const db = firebase.firestore();
+  const productionConfig =
+    window.LKFirebaseProjects?.PROJECTS?.LIVEKARAOKESUITE ||
+    window.LK_FIREBASE_CONFIG;
+
+  if (!productionConfig || productionConfig.projectId !== "livekaraokesuite") {
+    console.error("Live Karaoke production Firebase configuration is unavailable.");
+  }
+
+  let productionApp = firebase.apps.find(app =>
+    app?.options?.projectId === "livekaraokesuite"
+  );
+
+  if (!productionApp) {
+    productionApp = firebase.initializeApp(
+      productionConfig,
+      firebase.apps.length ? "liveKaraokePublicProduction" : undefined
+    );
+  }
+
+  const db = productionApp.firestore();
 
   function cleanNote(value) {
     return String(value || "").trim().slice(0, 200);
@@ -160,10 +175,15 @@
         if (dialog.open && dialog.close) dialog.close();
       }, 1100);
     } catch (error) {
-      console.error("Song suggestion failed", error);
-      status.textContent = String(error?.code || "").includes("permission")
-        ? "Song suggestions are temporarily unavailable."
-        : "Could not send your suggestion. Please try again.";
+      console.error("Song suggestion failed", {
+        code: error?.code || "",
+        message: error?.message || "",
+        projectId: productionApp?.options?.projectId || ""
+      });
+
+      const code = String(error?.code || "unknown").replace(/^firestore\//, "");
+      status.textContent =
+        "Could not send your suggestion (" + code + "). Please try again.";
     } finally {
       button.disabled = false;
     }
