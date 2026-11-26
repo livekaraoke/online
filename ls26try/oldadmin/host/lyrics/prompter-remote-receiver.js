@@ -14,13 +14,15 @@
   let loadedSong={songId:'',title:'',artist:'',year:''};
   let activeCueToken='', pendingCue=false, automaticEnd=false, automaticEndId='';
   let endingTimer=null, endingDeadline=0, endingFrame=null, endingNumber=0;
+  let manualEndingId='';
+  const MANUAL_END_MS=4000;
   const marker=document.getElementById('prompterEndMarker');
   const countdown=document.getElementById('prompterEndingCountdown');
   const number=document.getElementById('prompterEndingCountdownNumber');
   const cancelEnding=()=>{
     if(endingTimer!==null)clearTimeout(endingTimer);
-    endingTimer=null;endingDeadline=0;endingNumber=0;
-    if(countdown)countdown.hidden=true;
+    endingTimer=null;endingDeadline=0;endingNumber=0;manualEndingId='';
+    if(countdown){countdown.hidden=true;countdown.classList.remove('is-manual-ending');}
   };
   const atEnd=()=>{
     if(mode!=='running'||pendingCue||!marker||!loadedSong.songId||document.visibilityState==='hidden')return false;
@@ -31,25 +33,48 @@
   };
   const tickEnding=()=>{
     endingTimer=null;
-    if(!atEnd()){cancelEnding();return;}
+    const manualId=manualEndingId;
+    if(manualId ? (pendingCue||!['running','instrumental'].includes(mode)) : !atEnd()){
+      cancelEnding();return;
+    }
     const remaining=Math.max(0,endingDeadline-performance.now());
     if(remaining===0){
       cancelEnding();
-      automaticEnd=true;
-      automaticEndId='auto-end-'+Date.now();
-      applyMode('ended');
-      state(automaticEndId,true);
+      if(manualId){
+        // The host already published the END SONG command and projected state.
+        // Use the same rating transition without another cloud write.
+        applyMode('ended');
+        state(manualId);
+      }else{
+        automaticEnd=true;
+        automaticEndId='auto-end-'+Date.now();
+        applyMode('ended');
+        state(automaticEndId,true);
+      }
       return;
     }
-    const seconds=Math.ceil(remaining/1000);
+    // Five visible numerals across the requested four seconds.
+    const interval=manualId?MANUAL_END_MS/5:1000;
+    const seconds=Math.ceil(remaining/interval);
     if(seconds!==endingNumber){
       endingNumber=seconds;
       if(number)number.textContent=String(seconds);
     }
-    endingTimer=setTimeout(tickEnding,Math.min(remaining,Math.max(20,remaining-(seconds-1)*1000)));
+    endingTimer=setTimeout(tickEnding,Math.min(remaining,Math.max(20,remaining-(seconds-1)*interval)));
+  };
+  const beginManualEnding=id=>{
+    if(manualEndingId||pendingCue||!['running','instrumental'].includes(mode))return;
+    // Manual END overrides an automatic marker countdown. Leave the current
+    // lyrics/hold screen visible until this explicit countdown completes.
+    cancelEnding();
+    manualEndingId=id;
+    endingDeadline=performance.now()+MANUAL_END_MS;
+    if(countdown){countdown.classList.add('is-manual-ending');countdown.hidden=false;}
+    tickEnding();
   };
   const checkEnding=()=>{
     endingFrame=null;
+    if(manualEndingId)return;
     if(!atEnd()){cancelEnding();return;}
     if(endingDeadline!==0)return;
     endingDeadline=performance.now()+5000;
@@ -163,7 +188,8 @@
     const speed=document.getElementById('scrollSpeedDisplay')?.textContent?.trim()||'';
     const packet={
       v:1,kind:'state',origin:'prompter',id,
-      playing:mode==='running'&&label==='⏸',speed,mode,at:Date.now(),
+      playing:!manualEndingId&&mode==='running'&&label==='⏸',speed,
+      mode:manualEndingId?'ended':mode,at:Date.now(),
       songId:loadedSong.songId,title:loadedSong.title,artist:loadedSong.artist,
       cueToken:activeCueToken
     };
@@ -220,8 +246,12 @@
   window.addEventListener('scroll',scheduleEnding,{passive:true});
   window.addEventListener('resize',scheduleEnding,{passive:true});
   document.addEventListener('visibilitychange',()=>{
-    if(document.visibilityState==='hidden')cancelEnding();
-    else scheduleEnding();
+    if(document.visibilityState==='hidden'){
+      if(!manualEndingId)cancelEnding();
+    }else if(manualEndingId){
+      if(endingTimer!==null)clearTimeout(endingTimer);
+      tickEnding();
+    }else scheduleEnding();
   });
   window.addEventListener('ls26:prompter-song-changed',event=>{
     cancelEnding();
@@ -265,6 +295,9 @@
     if(!packet||packet.v!==1||packet.kind!=='command'||!valid.has(packet.action)||typeof packet.id!=='string'||packet.id.length>80)return;
     if(seen.has(packet.id))return;
     seen.add(packet.id);if(seen.size>60)seen.clear();
+    // Keep the remote's ended projection stable during its short delay.
+    // An explicit START AGAIN is still an intentional restart.
+    if(manualEndingId&&['toggle','instrumental'].includes(packet.action)){state(packet.id);return;}
     try{
       switch(packet.action){
         case 'toggle':
@@ -283,11 +316,15 @@
           }
           break;
         case 'song':
-          if(packet.targetMode==='ended'&&(mode==='running'||mode==='instrumental'))applyMode('ended');
+          if(packet.targetMode==='running'&&manualEndingId){
+            cancelEnding();
+            mode='waiting';
+            applyMode('running');
+          }else if(packet.targetMode==='ended'&&(mode==='running'||mode==='instrumental'))beginManualEnding(packet.id);
           else if(packet.targetMode==='running'&&(mode==='waiting'||mode==='ended'||mode==='idle'))applyMode('running');
           else if(!packet.targetMode){
             if(mode==='waiting'||mode==='ended')applyMode('running');
-            else if(mode==='running'||mode==='instrumental')applyMode('ended');
+            else if(mode==='running'||mode==='instrumental')beginManualEnding(packet.id);
           }
           break;
         case 'slower':

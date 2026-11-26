@@ -26,6 +26,24 @@
   font: 800 clamp(22px, 4vw, 38px)/1.25 Arial, sans-serif;
   box-shadow: 0 10px 40px #000;
 }
+/* Manual END SONG is a compact bottom notice, not the central auto-end card.
+   Above the instrumental overlay, below the existing rating screen. */
+#prompterEndingCountdown.is-manual-ending {
+  z-index: 2950;
+  top: auto;
+  bottom: max(12px, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  width: min(560px, calc(100% - 28px));
+  padding: clamp(10px, 2vw, 18px) 16px;
+  font-size: clamp(17px, 3.2vw, 28px);
+}
+#prompterEndingCountdown.is-manual-ending #prompterEndingCountdownNumber {
+  display: inline-block;
+  min-width: 1.2em;
+  margin: 0 0 0 8px;
+  font-size: 1.35em;
+  vertical-align: baseline;
+}
 #prompterEndingCountdown[hidden] { display: none !important; }
 #prompterEndingCountdownNumber {
   display: block; color: #05ddb0;
