@@ -36,10 +36,21 @@
   function writtenCard(item){
     const card=document.createElement("blockquote");
     card.className="lk-testimonial";
-    if(item.rating)card.appendChild(starLine(item.rating));
-    card.appendChild(text("p","",item.review));
-    const byline=item.country?author(item)+" · "+item.country:author(item);
-    card.appendChild(text("footer","",byline));
+
+    const body=document.createElement("div");
+    body.className="lk-testimonial-body";
+    if(item.rating)body.appendChild(starLine(item.rating));
+    body.appendChild(text("p","",item.review));
+    card.appendChild(body);
+
+    const reviewer=document.createElement("footer");
+    reviewer.className="lk-testimonial-reviewer";
+    const icon=text("span","lk-reviewer-icon","");
+    icon.setAttribute("aria-hidden","true");
+    reviewer.appendChild(icon);
+    reviewer.appendChild(text("strong","lk-reviewer-name",author(item)));
+    if(item.country)reviewer.appendChild(text("span","lk-reviewer-country",item.country));
+    card.appendChild(reviewer);
     return card;
   }
   function starCard(item){
