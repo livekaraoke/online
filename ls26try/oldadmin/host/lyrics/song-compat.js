@@ -205,7 +205,7 @@
     return true;
   }
 
-  async function showModernSong(rawId, cue = false, picker = false, palette) {
+  async function showModernSong(rawId, cue = false, picker = false, palette, cueToken = '') {
     const id = String(rawId || '').trim();
     if (!id || !window.firebase?.firestore) return;
     const token = ++version;
@@ -230,7 +230,7 @@
       window.recalcSpeed?.();
       if (changed) window.scrollTo(0, 0);
       window.dispatchEvent(new CustomEvent('ls26:prompter-song-changed', {
-        detail: {songId:id, source:'modern', cue, picker, title:song.title, artist:song.artist, year:song.year || song.releaseYear || ''}
+        detail: {songId:id, source:'modern', cue, picker, cueToken, title:song.title, artist:song.artist, year:song.year || song.releaseYear || ''}
       }));
       return true;
     } catch (error) {
@@ -262,7 +262,7 @@
     originalLoadSong();
     const item=entries().find(entry=>entry.id===id)||{};
     window.dispatchEvent(new CustomEvent('ls26:prompter-song-changed', {
-      detail: {songId:id, source:'legacy', cue, picker, title:metadata.prompterSongTitle||item.title||metadata.songTitle||metadata.title,
+      detail: {songId:id, source:'legacy', cue, picker, cueToken:String(metadata.prompterRequestToken||''), title:metadata.prompterSongTitle||item.title||metadata.songTitle||metadata.title,
         artist:metadata.prompterSongArtist||item.artist||metadata.songArtist||metadata.artist,
         year:metadata.prompterSongYear||item.year||metadata.year||''}
     }));
@@ -319,7 +319,7 @@
              value(meta, 'songArtist', 'artist')].join('|');
         if (signature === lastHostKey) return;
         lastHostKey = signature;
-        if (modern) void showModernSong(raw, cue, false, data.prompterSectionTitleDefaults);
+        if (modern) void showModernSong(raw, cue, false, data.prompterSectionTitleDefaults, String(data.prompterRequestToken||''));
         else void showSong(raw, meta, cue);
       }, error => console.warn('Slave Lyrics sync failed:', error));
   };

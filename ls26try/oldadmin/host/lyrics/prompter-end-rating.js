@@ -250,7 +250,7 @@
   guide?.addEventListener('click',event=>{if(event.target===guide)guide.close();});
 
   window.addEventListener('ls26:prompter-stage-changed',event=>{
-    // Only a host END SONG command presents rating, never reaching lyric bottom.
+    // Manual END SONG and the automatic countdown share this stage event.
     reachedEnd=event.detail?.mode==='ended';
     if(reachedEnd)void refresh();
   });

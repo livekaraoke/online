@@ -12,6 +12,53 @@
   let channel=null, unsubscribeRemote=null, unsubscribeScroll=null;
   let mode='idle', feedbackTimer=null,cloudStateChain=Promise.resolve();
   let loadedSong={songId:'',title:'',artist:'',year:''};
+  let activeCueToken='', pendingCue=false, automaticEnd=false, automaticEndId='';
+  let endingTimer=null, endingDeadline=0, endingFrame=null, endingNumber=0;
+  const marker=document.getElementById('prompterEndMarker');
+  const countdown=document.getElementById('prompterEndingCountdown');
+  const number=document.getElementById('prompterEndingCountdownNumber');
+  const cancelEnding=()=>{
+    if(endingTimer!==null)clearTimeout(endingTimer);
+    endingTimer=null;endingDeadline=0;endingNumber=0;
+    if(countdown)countdown.hidden=true;
+  };
+  const atEnd=()=>{
+    if(mode!=='running'||pendingCue||!marker||!loadedSong.songId||document.visibilityState==='hidden')return false;
+    const lyrics=document.getElementById('lyrics-container');
+    if(!lyrics||!lyrics.textContent.trim()||lyrics.querySelector('.modern-prompter-empty'))return false;
+    const rect=marker.getBoundingClientRect();
+    return rect.height>0&&rect.top+rect.height/2<=window.innerHeight/2;
+  };
+  const tickEnding=()=>{
+    endingTimer=null;
+    if(!atEnd()){cancelEnding();return;}
+    const remaining=Math.max(0,endingDeadline-performance.now());
+    if(remaining===0){
+      cancelEnding();
+      automaticEnd=true;
+      automaticEndId='auto-end-'+Date.now();
+      applyMode('ended');
+      state(automaticEndId,true);
+      return;
+    }
+    const seconds=Math.ceil(remaining/1000);
+    if(seconds!==endingNumber){
+      endingNumber=seconds;
+      if(number)number.textContent=String(seconds);
+    }
+    endingTimer=setTimeout(tickEnding,Math.min(remaining,Math.max(20,remaining-(seconds-1)*1000)));
+  };
+  const checkEnding=()=>{
+    endingFrame=null;
+    if(!atEnd()){cancelEnding();return;}
+    if(endingDeadline!==0)return;
+    endingDeadline=performance.now()+5000;
+    if(countdown)countdown.hidden=false;
+    tickEnding();
+  };
+  const scheduleEnding=()=>{
+    if(endingFrame===null)endingFrame=requestAnimationFrame(checkEnding);
+  };
 
   const stage=document.createElement('div');
   stage.id='ls26SingerRemoteStage';
@@ -93,6 +140,9 @@
     label('ls26SingerUpcomingArtist',detail.artist||current?.querySelector('.song-artist')?.textContent||catalog.artist||'');
     const year=String(detail.year||catalog.year||'').trim().replace(/[()]/g,'');
     label('ls26SingerUpcomingYear',/^(18|19|20|21)\d{2}$/.test(year)?'('+year+')':'');
+    activeCueToken=String(detail.cueToken||'');
+    pendingCue=false;
+    automaticEnd=false;automaticEndId='';
     loadedSong={
       songId:id,
       title:document.getElementById('ls26SingerUpcomingTitle')?.textContent?.trim()||'',
@@ -114,7 +164,8 @@
     const packet={
       v:1,kind:'state',origin:'prompter',id,
       playing:mode==='running'&&label==='⏸',speed,mode,at:Date.now(),
-      songId:loadedSong.songId,title:loadedSong.title,artist:loadedSong.artist
+      songId:loadedSong.songId,title:loadedSong.title,artist:loadedSong.artist,
+      cueToken:activeCueToken
     };
     try{channel?.postMessage(packet);}catch(_){}
     try{localStorage.setItem(STORAGE,JSON.stringify(packet));}catch(_){}
@@ -124,16 +175,33 @@
     let signedIn=false;
     try{signedIn=Boolean(window.firebase?.auth?.().currentUser);}catch(_){}
     if(publishCloud&&signedIn&&sharedDb?.collection){
-      cloudStateChain=cloudStateChain.catch(()=>{}).then(()=>
-        sharedDb.collection('karaokeControl').doc('liveLyrics')
-          .set({prompterRemoteState:packet},{merge:true})
-      ).catch(error=>console.warn('Prompter state sync failed:',error));
+      const guarded=automaticEnd&&(packet.mode==='ended'||packet.mode==='idle');
+      const endId=automaticEndId;
+      cloudStateChain=cloudStateChain.catch(()=>{}).then(()=>{
+        const ref=sharedDb.collection('karaokeControl').doc('liveLyrics');
+        if(!guarded)return ref.set({prompterRemoteState:packet},{merge:true});
+        // The old countdown must never overwrite a newly sent song, or
+        // a host START AGAIN on the same cue. No per-frame/countdown writes.
+        if(!packet.cueToken||typeof sharedDb.runTransaction!=='function')return;
+        return sharedDb.runTransaction(async tx=>{
+          const snap=await tx.get(ref);
+          const data=snap.data()||{};
+          if(String(data.prompterRequestToken||'')!==packet.cueToken)return;
+          const current=data.prompterRemoteState||{};
+          if(packet.mode==='ended'&&current.mode!=='running')return;
+          if(packet.mode==='idle'&&!(current.mode==='ended'&&current.id===endId))return;
+          if(Number(current.at||0)>packet.at)return;
+          tx.set(ref,{prompterRemoteState:packet},{merge:true});
+        });
+      }).catch(error=>console.warn('Prompter state sync failed:',error));
     }
     return packet;
   };
   const applyMode=next=>{
     if(!['idle','waiting','running','instrumental','ended'].includes(next))return;
     stopTimer();
+    cancelEnding();
+    if(next==='running'||next==='waiting'||next==='instrumental')automaticEnd=false;
     const starting=next==='running'&&(mode==='waiting'||mode==='ended'||mode==='idle');
     // START SONG only reveals the lyrics. The separate Play control owns
     // autoscroll; keep the Prompter paused until it is pressed explicitly.
@@ -145,10 +213,18 @@
     if(next==='running'&&!starting&&typeof autoScrollActive!=='undefined'&&!autoScrollActive&&typeof toggleAutoScroll==='function')toggleAutoScroll();
     if(next==='ended')armTimer();
     window.dispatchEvent(new CustomEvent('ls26:prompter-stage-changed',{detail:{mode:next}}));
+    if(next==='running')scheduleEnding();
   };
 
   applyMode('idle');
+  window.addEventListener('scroll',scheduleEnding,{passive:true});
+  window.addEventListener('resize',scheduleEnding,{passive:true});
+  document.addEventListener('visibilitychange',()=>{
+    if(document.visibilityState==='hidden')cancelEnding();
+    else scheduleEnding();
+  });
   window.addEventListener('ls26:prompter-song-changed',event=>{
+    cancelEnding();
     // Local session-picker selections load directly into lyrics without
     // altering the host's SEND LYRICS command or starting autoscroll.
     if(event.detail?.picker===true){
@@ -244,7 +320,11 @@
   const cloudHandler=(arrowsOnly=false)=>{
     let first=true,lastId='';
     return snapshot=>{
-      const packet=snapshot.exists?snapshot.data()?.prompterRemoteCommand:null;
+      const data=snapshot.exists?snapshot.data():null;
+      if(!arrowsOnly&&activeCueToken&&data?.prompterRequestToken&&String(data.prompterRequestToken)!==activeCueToken){
+        pendingCue=true;cancelEnding();
+      }
+      const packet=data?.prompterRemoteCommand;
       const id=typeof packet?.id==='string'?packet.id:'';
       if(first){first=false;lastId=id;return;}
       if(!id||id===lastId)return;
@@ -264,7 +344,9 @@
     }catch(error){console.warn('Prompter scroll listener unavailable:',error);}
   }
   window.addEventListener('pagehide',()=>{
-    stopTimer();channel?.close();unsubscribeRemote?.();unsubscribeScroll?.();
+    stopTimer();cancelEnding();
+    if(endingFrame!==null)cancelAnimationFrame(endingFrame);
+    channel?.close();unsubscribeRemote?.();unsubscribeScroll?.();
     fullscreenDoc.removeEventListener('fullscreenchange',syncFullscreenButton);
   },{once:true});
   state('ready-'+Date.now());

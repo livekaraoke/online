@@ -43,7 +43,7 @@
     singerMode=mode;
     const hold=$('ls26PrompterInstrumental'),song=$('ls26PrompterSongCue');
     if(hold){
-      hold.disabled=mode==='waiting'||mode==='ended';
+      hold.disabled=mode==='idle'||mode==='waiting'||mode==='ended';
       hold.setAttribute('aria-pressed',String(mode==='instrumental'));
       hold.textContent=mode==='instrumental'?'RESUME LYRICS':'INSTRUMENTAL / HOLD';
     }
@@ -280,6 +280,8 @@
   };
   const receive=packet=>{
     if(!packet||packet.v!==1||packet.kind!=='state'||!packet.id)return;
+    // A singer countdown from a previous cue cannot reset the new remote.
+    if(packet.cueToken&&lastCueToken&&packet.cueToken!==lastCueToken)return;
     // The Prompter also broadcasts a ready status with no matching request.
     const status=$('ls26PrompterRemoteStatus'),play=$('ls26PrompterRemotePlay');
     if(!status||!play)return;

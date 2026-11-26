@@ -27,7 +27,7 @@ real-time typography control, and performance styling tools.
   <meta charset="UTF-8">
   <title>Song Lyric Viewer</title>
   <link rel="stylesheet" href="../../css/styleLyrics.css?v=20261016-native-touch-v3">
-  <link rel="stylesheet" href="prompter-end-rating.css?v=20261126-preview-fit-v1">
+  <link rel="stylesheet" href="prompter-end-rating.css?v=20261126-auto-end-v1">
   <style>
     html, body, #lyrics-container { touch-action: pan-y; }
     .autoscroll-controls {
@@ -1797,7 +1797,7 @@ slaveLyricsToggle.addEventListener("change", function() {
 <script src="../../../shared/chord-foundation.js?v=20261006-chord-settings"></script>
 <script src="../../../shared/singer-lines.js?v=20261028-prompter-blank-v1"></script>
 <!-- One existing Slave listener now supports legacy files and modern Firestore songs. -->
-<script src="song-compat.js?v=20261124-section-colours-v1"></script>
+<script src="song-compat.js?v=20261126-auto-end-v1"></script>
 <!-- ********************************************************* -->
 <!-- ==================== END OF JS CODE ===================== -->
 
@@ -1809,6 +1809,11 @@ slaveLyricsToggle.addEventListener("change", function() {
 <!-- The visual end-of-lyrics marker belongs after the dynamic lyrics
      container so song loads and Slave updates never remove it. -->
 <div id="prompterEndMarker" aria-label="End of song">[ END ]</div>
+<div id="prompterEndSpacer" aria-hidden="true"></div>
+<div id="prompterEndingCountdown" role="status" aria-live="polite" hidden>
+  Song ending in...
+  <strong id="prompterEndingCountdownNumber">5</strong>
+</div>
 
 <!-- Singer feedback belongs to a recorded performance but cannot complete
      songs or modify the host's separate audience-response rating. -->
@@ -1891,12 +1896,12 @@ slaveLyricsToggle.addEventListener("change", function() {
 <div id="prompterReadingGuide" aria-hidden="true"></div>
 <div id="prompterReadingZone" aria-hidden="true"></div>
 <script src="prompter-ui.js?v=20261125-performance-controls-v4"></script>
-<script src="prompter-remote-receiver.js?v=20261124-isolated-scroll-v1"></script>
+<script src="prompter-remote-receiver.js?v=20261126-auto-end-v1"></script>
 <script src="prompter-session-picker.js?v=20261111-session-picker-v1"></script>
 <!-- Reuse atomic session finish logic; rating uses the existing performedSongs record. -->
 <script src="../../../shared/performance-intelligence.js?v=20261018-smart-v1"></script>
 <script src="../../../shared/performance-lifecycle.js?v=20261018-smart-v1"></script>
-<script src="prompter-end-rating.js?v=20261103-prompter-artwork-v1"></script>
+<script src="prompter-end-rating.js?v=20261126-auto-end-v1"></script>
 </body>
 </html>
 
