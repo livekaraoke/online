@@ -316,6 +316,10 @@
     // Keep the remote's ended projection stable during its short delay.
     // An explicit START AGAIN is still an intentional restart.
     if(manualEndingId&&['toggle','instrumental'].includes(packet.action)){state(packet.id);return;}
+    // Older controllers omit the increment: preserve the established 0.10 step.
+    const requestedIncrement=packet.speedIncrement;
+    const speedIncrement=typeof requestedIncrement==='number'&&Number.isFinite(requestedIncrement)&&requestedIncrement>=0.01&&requestedIncrement<=1
+      ? Math.round(requestedIncrement*100)/100 : 0.10;
     try{
       switch(packet.action){
         case 'toggle':
@@ -346,10 +350,10 @@
           }
           break;
         case 'slower':
-          if(typeof changeScrollSpeed==='function')changeScrollSpeed(-0.10);
+          if(typeof changeScrollSpeed==='function')changeScrollSpeed(-speedIncrement);
           break;
         case 'faster':
-          if(typeof changeScrollSpeed==='function')changeScrollSpeed(0.10);
+          if(typeof changeScrollSpeed==='function')changeScrollSpeed(speedIncrement);
           break;
         case 'up':
           if(mode==='running')document.getElementById('prompterScrollUp')?.click();

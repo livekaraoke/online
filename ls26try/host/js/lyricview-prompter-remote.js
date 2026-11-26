@@ -12,6 +12,37 @@
   const PAGE_POSITION_KEY='ls26:prompter-remote-page-position-v2';
   const OLD_POSITION_KEY='ls26:prompter-remote-position-v1';
   const $=id=>document.getElementById(id);
+  const SPEED_INCREMENT_KEY='ls26:prompterRemoteSpeedIncrement';
+  const DEFAULT_SPEED_INCREMENT=0.10;
+  const validSpeedIncrement=value=>Number.isFinite(value)&&value>=0.01&&value<=1;
+  const normalizeSpeedIncrement=value=>Math.round(value*100)/100;
+  let speedIncrement=DEFAULT_SPEED_INCREMENT;
+  try{
+    const saved=Number(localStorage.getItem(SPEED_INCREMENT_KEY));
+    if(validSpeedIncrement(saved))speedIncrement=normalizeSpeedIncrement(saved);
+  }catch(_){}
+  function bindSpeedIncrement(){
+    const input=$('ls26PrompterSpeedIncrement');
+    if(!input)return;
+    const show=()=>{input.value=speedIncrement.toFixed(2);};
+    const save=()=>{
+      const value=Number(input.value);
+      if(!validSpeedIncrement(value))return;
+      speedIncrement=normalizeSpeedIncrement(value);
+      try{localStorage.setItem(SPEED_INCREMENT_KEY,String(speedIncrement));}catch(_){}
+    };
+    show();
+    input.addEventListener('input',save);
+    input.addEventListener('change',()=>{save();show();});
+    input.addEventListener('blur',show);
+  }
+  window.addEventListener('storage',event=>{
+    if(event.key!==SPEED_INCREMENT_KEY)return;
+    const value=Number(event.newValue);
+    speedIncrement=validSpeedIncrement(value)?normalizeSpeedIncrement(value):DEFAULT_SPEED_INCREMENT;
+    const input=$('ls26PrompterSpeedIncrement');
+    if(input)input.value=speedIncrement.toFixed(2);
+  });
   let channel=null,lastRequest='',timeout=null,cloudWriteChain=Promise.resolve(),unsubscribeCloud=null;
   let loadedSong={songId:'',title:'',artist:'',year:''},lastSongSignature='',lastCueToken='';
   let drag=null,customPosition=false,positionRestored=false,userMoved=false;
@@ -238,6 +269,9 @@
       setSingerMode(next);setPlayState(next==='running');
     }
     const packet={v:1,kind:'command',id,action,at:Date.now()};
+    // Carry the sender's saved increment to the singer tablet; no settings
+    // document, extra read or write is needed for a remote speed adjustment.
+    if(action==='slower'||action==='faster')packet.speedIncrement=speedIncrement;
     const projected=getCurrentState(id);
     // Optional idempotent targets prevent two controllers starting or ending
     // the same song twice when they tap at nearly the same moment.
@@ -311,6 +345,7 @@
     window.dispatchEvent(new CustomEvent('ls26:prompter-remote-state',{detail:{...packet}}));
   };
   function start(){
+    bindSpeedIncrement();
     // Standalone Admin phone controller embeds this exact remote rather than
     // maintaining a duplicate set of Firestore command handlers.
     const phoneMount=document.getElementById('phonePrompterRemoteMount');
