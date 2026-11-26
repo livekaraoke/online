@@ -113,4 +113,6 @@ test("empty rating and empty review cannot be approved",async()=>{
 test("review page cache-busts updated moderation script",()=>{
   assert.match(html,/js\/live-karaoke-reviews\.js\?v=20261110-rating-only-approval/);
   assert.match(html,/Approved feedback can be a star rating/);
+  assert.match(html,/lkHomepageWrittenCount/);
+  assert.match(html,/lkHomepageRatingCount/);
 });
