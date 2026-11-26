@@ -709,10 +709,14 @@
       reviewCard.insertBefore(identity,reviewCard.firstChild);
     }
 
-    const profile=requestProfile();
-    if($("directReviewName"))$("directReviewName").value=profile.name||"";
-    if($("directReviewCountry"))$("directReviewCountry").value=profile.country||"";
+    if($("directReviewName"))$("directReviewName").value="";
+    if($("directReviewCountry"))$("directReviewCountry").value="";
+    if($("singerName"))$("singerName").value="";
+    if($("requestProfileCountry"))$("requestProfileCountry").value="";
+    if($("requestReviewRating"))$("requestReviewRating").value="";
+    if($("requestReviewText"))$("requestReviewText").value="";
     if($("requestReviewPrivate"))$("requestReviewPrivate").checked=false;
+    paintReviewStars();
     document.querySelector("#requestReviewPanel .request-review-private")?.remove();
 
     if(!$("directReviewModeStyles")){
@@ -960,6 +964,21 @@
   }
 
   function populateProfileForm({includeReview=true}={}){
+    if(DIRECT_REVIEW_MODE){
+      if($("singerName"))$("singerName").value="";
+      if($("requestProfileEmail"))$("requestProfileEmail").value="";
+      if($("requestProfileCountry"))$("requestProfileCountry").value="";
+      if($("requestProfileAge"))$("requestProfileAge").value="";
+      if($("requestProfileGender"))$("requestProfileGender").value="";
+      if(includeReview){
+        if($("requestReviewRating"))$("requestReviewRating").value="";
+        if($("requestReviewText"))$("requestReviewText").value="";
+        if($("requestReviewPrivate"))$("requestReviewPrivate").checked=false;
+        paintReviewStars();
+      }
+      if($("requestReviewStatus"))$("requestReviewStatus").textContent="";
+      return;
+    }
     const profile=requestProfile();
     if($("singerName"))$("singerName").value=profile.name;
     if($("requestProfileEmail"))$("requestProfileEmail").value=profile.email;
@@ -1142,9 +1161,11 @@
         recordId=await writeReview(reviewKey);
       }
       localStorage.setItem(REQUEST_REVIEW_ID_KEY,recordId);
-      localStorage.setItem(REQUEST_PROFILE_KEY,JSON.stringify({
-        ...requestProfile(),rating:rating?String(rating):"",review,reviewPrivate
-      }));
+      if(!DIRECT_REVIEW_MODE){
+        localStorage.setItem(REQUEST_PROFILE_KEY,JSON.stringify({
+          ...requestProfile(),rating:rating?String(rating):"",review,reviewPrivate
+        }));
+      }
       return true;
     }finally{
       reviewSubmissionInProgress=false;
@@ -1153,6 +1174,7 @@
 
   async function saveRequestReview(){
     const status=$("requestReviewStatus");
+    let profile;
     if(DIRECT_REVIEW_MODE){
       const directName=String($("directReviewName")?.value||"").trim();
       const directCountry=String($("directReviewCountry")?.value||"").trim();
@@ -1161,19 +1183,28 @@
         $("directReviewName")?.focus();
         return false;
       }
-      if($("singerName"))$("singerName").value=directName;
-      if($("requestProfileCountry"))$("requestProfileCountry").value=directCountry;
+      profile={
+        name:directName,
+        email:"",
+        country:directCountry,
+        ageRange:"",
+        gender:"",
+        rating:String($("requestReviewRating")?.value||""),
+        review:String($("requestReviewText")?.value||"").trim(),
+        reviewPrivate:false
+      };
+    }else{
+      if(!saveProfileFieldsLocally({validateEmail:true})){
+        if(status)status.textContent="Enter your name before sending your review.";
+        return false;
+      }
+      profile={
+        ...requestProfile(),
+        rating:String($("requestReviewRating")?.value||""),
+        review:String($("requestReviewText")?.value||"").trim(),
+        reviewPrivate:$("requestReviewPrivate")?.checked===true
+      };
     }
-    if(!saveProfileFieldsLocally({validateEmail:true})){
-      if(status)status.textContent="Enter your name before sending your review.";
-      return false;
-    }
-    const profile={
-      ...requestProfile(),
-      rating:String($("requestReviewRating")?.value||""),
-      review:String($("requestReviewText")?.value||"").trim(),
-      reviewPrivate:DIRECT_REVIEW_MODE?false:($("requestReviewPrivate")?.checked===true)
-    };
     if(!profile.rating&&!profile.review){
       if(status)status.textContent="Choose a star rating or write a review first.";
       document.querySelector('[data-review-rating="1"]')?.focus();
