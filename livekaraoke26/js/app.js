@@ -690,20 +690,6 @@
     document.documentElement.classList.add("direct-review-mode");
     document.title="Rate Your Experience | Live Karaoke";
 
-    const reviewPanel=$("requestReviewPanel");
-    const reviewHeading=reviewPanel?.querySelector(".request-review-panel-heading");
-    if(reviewPanel&&reviewHeading&&!$("directReviewBanner")){
-      const banner=document.createElement("picture");
-      banner.id="directReviewBanner";
-      banner.className="direct-review-banner";
-      banner.innerHTML=`
-        <source srcset="/img/banner.avif" type="image/avif">
-        <source srcset="/img/banner.webp" type="image/webp">
-        <img src="/img/banner.png" alt="Live Karaoke - You Sing, I Play" decoding="async">
-      `;
-      reviewPanel.insertBefore(banner,reviewHeading);
-    }
-
     const reviewCard=document.querySelector("#requestReviewPanel .request-review-card");
     if(reviewCard&&!$("directReviewIdentity")){
       const identity=document.createElement("div");
@@ -815,25 +801,11 @@
           background:linear-gradient(180deg,#ff5050,#d10000)!important;
           box-shadow:0 0 18px rgba(255,0,0,.34)!important;
         }
-        html.direct-review-mode .direct-review-banner{
-          display:block!important;
-          width:min(100%,680px)!important;
-          margin:0 auto 18px!important;
-          text-align:center!important;
-        }
-        html.direct-review-mode .direct-review-banner img{
-          display:block!important;
-          width:100%!important;
-          max-height:210px!important;
-          object-fit:contain!important;
-          object-position:center!important;
-          filter:drop-shadow(0 8px 18px rgba(0,0,0,.45))!important;
-        }
         html.direct-review-mode .direct-review-identity{margin-bottom:16px}
         html.direct-review-mode .direct-review-identity .request-field{margin:0}
         html.direct-review-mode .direct-review-identity input{width:100%;box-sizing:border-box}
         html.direct-review-mode .direct-review-thanks{
-          margin:12px 0 0!important;
+          margin:28px 0 0!important;
           text-align:center!important;
           color:#d7d7d7!important;
           font-size:14px!important;
@@ -841,9 +813,7 @@
           letter-spacing:.02em!important;
         }
         @media(max-width:600px){
-          html.direct-review-mode .direct-review-banner{margin-bottom:12px!important}
-          html.direct-review-mode .direct-review-banner img{max-height:150px!important}
-          html.direct-review-mode .direct-review-thanks{font-size:13px!important}
+          html.direct-review-mode .direct-review-thanks{font-size:13px!important;margin-top:24px!important}
         }
         html.direct-review-mode ::selection{background:#9d0000!important;color:#fff!important}
         html.direct-review-mode *{scrollbar-color:#8d1717 #080808}
@@ -856,7 +826,7 @@
       const thanks=document.createElement("p");
       thanks.id="directReviewThanks";
       thanks.className="direct-review-thanks";
-      thanks.textContent="Thank you for the support! ❤️";
+      thanks.textContent="Thank you for your support! 💛";
       submitButton.insertAdjacentElement("afterend",thanks);
     }
 
