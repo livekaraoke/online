@@ -166,6 +166,7 @@
 
   $("suggestSongForm").addEventListener("submit", async event => {
     event.preventDefault();
+    const form = event.currentTarget;
     const title = String($("suggestSongName").value || "").trim();
     const artist = String($("suggestSongArtist").value || "").trim();
     const note = String($("suggestSongNote").value || "").trim();
@@ -190,7 +191,7 @@
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
       status.textContent = "Thanks - your song suggestion has been sent for approval.";
-      event.currentTarget.reset();
+      form.reset();
       setTimeout(() => {
         if (dialog.open && dialog.close) dialog.close();
       }, 1100);
