@@ -1811,9 +1811,7 @@
     select.dataset.ls26SlaveCurrentMatch = currentSongMatched ? "true" : "false";
     const placeholder = select.querySelector('option[value=""]');
     if (placeholder) {
-      placeholder.textContent = currentSongMatched
-        ? "Choose lyrics to send…"
-        : "Send to New UI";
+      placeholder.textContent = "Send to New UI";
     }
     const update = () => {
       const unavailable = select.dataset.ls26SlaveCurrentMatch === "false" && !select.value;
@@ -1851,9 +1849,7 @@
       selects.forEach(select => {
         select.disabled = false;
         const validLegacyList = Array.isArray(window.songs);
-        select.innerHTML = validLegacyList
-          ? `<option value="">Send to New UI</option>`
-          : `<option value="">No karaoke lyric songs found</option>`;
+        select.innerHTML = `<option value="">Send to New UI</option>`;
         // A missing song-data.js is a load failure, not evidence that the
         // current song has no legacy match. Keep the diagnostic label intact.
         if (validLegacyList) {
@@ -1869,7 +1865,7 @@
     }
 
     const options =
-      `<option value="">Choose lyrics to send…</option>` +
+      `<option value="">Send to New UI</option>` +
       entries.map(song => {
         const artist = song.artist ? ` — ${ArtistNames.display(song.artist)}` : "";
 
@@ -1930,12 +1926,11 @@
     const button = $(selectId === "quickSlaveLyricsSelect" ? "quickSendSlaveLyricsBtn" : "sendSlaveLyricsBtn");
     if (button?.disabled) return false;
     const id = String(select?.value || "").trim();
-    // The empty option is an intentional modern-song fallback ONLY if the
-    // current song has no matching legacy lyrics file. A load failure or an
-    // ordinary unselected dropdown must never silently send another song.
-    const useModern = !id && select?.dataset.ls26SlaveCurrentMatch === "false" &&
-      Array.isArray(window.songs) && Boolean(currentSongId && currentSong);
-    if (!id && !useModern) {
+    // The first option explicitly selects the current LyricView song,
+    // regardless of whether a matching legacy lyrics file exists.
+    const wantsModern = select?.selectedOptions?.[0]?.textContent.trim() === "Send to New UI";
+    const useModern = wantsModern && Boolean(currentSongId && currentSong);
+    if ((!id || wantsModern) && !useModern) {
       setSlaveLyricsButtonFeedback(button, "missing", "Select lyrics from the dropdown first.");
       return false;
     }

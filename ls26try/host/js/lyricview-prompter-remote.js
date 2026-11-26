@@ -24,6 +24,7 @@
   panel.hidden=true;
   panel.innerHTML=`
     <div class="ls26-prompter-remote-head" title="Drag to move Prompter Remote"><strong>PROMPTER REMOTE</strong>
+      <span id="ls26PrompterRemoteSpeed" aria-label="Current singer scroll speed" aria-live="polite" style="font-size:12px;font-weight:800;color:#e3f8ff;white-space:nowrap;font-variant-numeric:tabular-nums">Speed: —</span>
       <span id="ls26PrompterRemoteStatus" role="status">Open Prompter tab</span>
     </div>
     <div class="ls26-prompter-remote-controls">
@@ -38,6 +39,13 @@
       <button type="button" data-remote="instrumental" id="ls26PrompterInstrumental" aria-pressed="false" disabled>INSTRUMENTAL / HOLD</button>
     </div>`;
   let singerMode='waiting';
+  const setScrollSpeed=speed=>{
+    const label=$('ls26PrompterRemoteSpeed');
+    if(!label)return;
+    const value=String(speed||'').trim();
+    const next=/^\d+(?:\.\d+)?[x×]$/.test(value)?'Speed: '+value.replace(/x$/,'×'):'Speed: —';
+    if(label.textContent!==next)label.textContent=next;
+  };
   const setSingerMode=mode=>{
     if(!['idle','waiting','running','instrumental','ended'].includes(mode))return;
     singerMode=mode;
@@ -184,6 +192,7 @@
           const cueToken=String(data.prompterRequestToken||'');
           const newCue=Boolean(cueToken&&lastCueToken&&cueToken!==lastCueToken);
           lastCueToken=cueToken;
+          if(newCue)setScrollSpeed('');
           const state=data.prompterRemoteState;
           if(state?.v===1&&state.kind==='state'&&
              ['idle','waiting','running','instrumental','ended'].includes(state.mode)){
@@ -200,6 +209,9 @@
           }else if(newCue || (loadedSong.songId&&singerMode==='idle')){
             setSingerMode('waiting');setPlayState(false);
           }
+          // The receiver publishes its measured speed separately from stage commands.
+          const speed=data.prompterScrollSpeed;
+          if(speed&&String(speed.cueToken||'')===cueToken)setScrollSpeed(speed.value);
         },error=>{console.warn('Prompter remote state subscription failed:',error);
           const status=$('ls26PrompterRemoteStatus');if(status)status.textContent='Sync unavailable';});
     }catch(error){console.warn('Prompter remote state unavailable:',error);}
@@ -292,6 +304,7 @@
       lastRequest='';
       status.textContent='Connected';
     }
+    if(packet.speed&&packet.origin==='prompter')setScrollSpeed(packet.speed);
     setPlayState(Boolean(packet.playing));
     if(packet.mode)setSingerMode(packet.mode);
     window.LS26PrompterRemoteCurrentState={...packet};
@@ -331,7 +344,7 @@
     });
     window.addEventListener('ls26:prompter-remote-visibility',event=>show(event.detail?.visible===true));
     window.addEventListener('ls26:prompter-lyrics-sent',event=>{
-      setSingerMode('waiting');setPlayState(false);
+      setSingerMode('waiting');setPlayState(false);setScrollSpeed('');
       // The sender's liveLyrics SEND LYRICS write is the authoritative cue.
       // This local reset is immediate while the Firestore snapshot arrives.
     });

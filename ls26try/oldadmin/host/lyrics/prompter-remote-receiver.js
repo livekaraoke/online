@@ -183,6 +183,23 @@
       state('idle-'+Date.now(),true);
     },20000);
   };
+  // Reuse the existing liveLyrics listener; publish only a distinct displayed
+  // speed (or a new cue). Never write on scrolling frames or arrow taps.
+  let lastSpeedSignature='',speedWriteChain=Promise.resolve();
+  const publishSpeed=packet=>{
+    if(!packet.speed||!sharedDb?.collection)return;
+    let signedIn=false;
+    try{signedIn=Boolean(window.firebase?.auth?.().currentUser);}catch(_){}
+    if(!signedIn)return;
+    const speed={value:packet.speed,cueToken:packet.cueToken||''};
+    const signature=JSON.stringify(speed);
+    if(signature===lastSpeedSignature)return;
+    lastSpeedSignature=signature;
+    speedWriteChain=speedWriteChain.catch(()=>{}).then(()=>sharedDb.collection('karaokeControl').doc('liveLyrics').set({prompterScrollSpeed:speed},{merge:true})).catch(error=>{
+      if(lastSpeedSignature===signature)lastSpeedSignature='';
+      console.warn('Prompter speed sync failed:',error);
+    });
+  };
   const state=(id,publishCloud=false)=>{
     const label=document.getElementById('scrollToggleBtn')?.textContent?.trim()||'';
     const speed=document.getElementById('scrollSpeedDisplay')?.textContent?.trim()||'';
@@ -195,6 +212,7 @@
     };
     try{channel?.postMessage(packet);}catch(_){}
     try{localStorage.setItem(STORAGE,JSON.stringify(packet));}catch(_){}
+    publishSpeed(packet);
     // The singer screen may be unsigned-in/public. Never open an anonymous
     // Firestore write path merely for remote feedback. If owner authenticated,
     // publish ONLY deliberate state transitions, not scroll frames or beats.
@@ -380,7 +398,21 @@
         .onSnapshot(cloudHandler(true),error=>console.warn('Prompter scroll listener failed:',error));
     }catch(error){console.warn('Prompter scroll listener unavailable:',error);}
   }
+  // The displayed value also changes when BPM changes or the singer resets speed.
+  // Observe only this text node, not the lyrics, scroll position or animation.
+  const speedDisplay=document.getElementById('scrollSpeedDisplay');
+  let observedSpeed=speedDisplay?.textContent?.trim()||'';
+  const speedObserver=speedDisplay&&typeof MutationObserver==='function'?new MutationObserver(()=>{
+    const value=speedDisplay.textContent.trim();
+    if(value===observedSpeed)return;
+    observedSpeed=value;
+    state('speed-'+Date.now());
+  }):null;
+  speedObserver?.observe(speedDisplay,{childList:true,characterData:true,subtree:true});
+  let unsubscribeSpeedAuth=null;
+  try{unsubscribeSpeedAuth=window.firebase?.auth?.().onAuthStateChanged(user=>{if(user)state('speed-auth-'+Date.now());});}catch(_){}
   window.addEventListener('pagehide',()=>{
+    speedObserver?.disconnect();unsubscribeSpeedAuth?.();
     stopTimer();cancelEnding();
     if(endingFrame!==null)cancelAnimationFrame(endingFrame);
     channel?.close();unsubscribeRemote?.();unsubscribeScroll?.();
