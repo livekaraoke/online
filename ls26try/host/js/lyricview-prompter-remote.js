@@ -14,6 +14,14 @@
   const $=id=>document.getElementById(id);
   const SPEED_INCREMENT_KEY='ls26:prompterRemoteSpeedIncrement';
   const DEFAULT_SPEED_INCREMENT=0.10;
+  const START_SPEED='0.80x';
+  let speedStartId='',speedStartAt=0;
+  const matchesSpeedStart=report=>!speedStartId||report?.speedStartId===speedStartId;
+  const rememberSpeedStart=(id,at)=>{
+    if(!id||Number(at||0)<speedStartAt)return;
+    if(id!==speedStartId){speedStartId=id;setScrollSpeed(START_SPEED);}
+    speedStartAt=Number(at||0);
+  };
   const validSpeedIncrement=value=>Number.isFinite(value)&&value>=0.01&&value<=1;
   const normalizeSpeedIncrement=value=>Math.round(value*100)/100;
   let speedIncrement=DEFAULT_SPEED_INCREMENT;
@@ -223,7 +231,9 @@
           const cueToken=String(data.prompterRequestToken||'');
           const newCue=Boolean(cueToken&&lastCueToken&&cueToken!==lastCueToken);
           lastCueToken=cueToken;
-          if(newCue)setScrollSpeed('');
+          if(newCue){speedStartId='';speedStartAt=0;setScrollSpeed('');}
+          const start=data.prompterSpeedStart;
+          if(start&&String(start.cueToken||'')===cueToken)rememberSpeedStart(start.id,start.at);
           const state=data.prompterRemoteState;
           if(state?.v===1&&state.kind==='state'&&
              ['idle','waiting','running','instrumental','ended'].includes(state.mode)){
@@ -242,7 +252,7 @@
           }
           // The receiver publishes its measured speed separately from stage commands.
           const speed=data.prompterScrollSpeed;
-          if(speed&&String(speed.cueToken||'')===cueToken)setScrollSpeed(speed.value);
+          if(speed&&String(speed.cueToken||'')===cueToken&&matchesSpeedStart(speed))setScrollSpeed(speed.value);
         },error=>{console.warn('Prompter remote state subscription failed:',error);
           const status=$('ls26PrompterRemoteStatus');if(status)status.textContent='Sync unavailable';});
     }catch(error){console.warn('Prompter remote state unavailable:',error);}
@@ -257,6 +267,12 @@
     lastRequest=id;
     const wasPlaying=$('ls26PrompterRemotePlay')?.getAttribute('aria-pressed')==='true';
     const previousMode=singerMode;
+    const previousSpeedStart={id:speedStartId,at:speedStartAt,label:$('ls26PrompterRemoteSpeed')?.textContent||''};
+    const restoreStart=()=>{
+      if(speedStartId!==id)return;
+      speedStartId=previousSpeedStart.id;speedStartAt=previousSpeedStart.at;
+      const label=$('ls26PrompterRemoteSpeed');if(label)label.textContent=previousSpeedStart.label;
+    };
     if(action==='toggle'&&singerMode==='running')setPlayState(!wasPlaying);
     if(action==='song'){
       const next=singerMode==='running'||singerMode==='instrumental'?'ended':'running';
@@ -276,6 +292,18 @@
     // Optional idempotent targets prevent two controllers starting or ending
     // the same song twice when they tap at nearly the same moment.
     if(action==='song'||action==='instrumental')packet.targetMode=projected.mode;
+    const starting=action==='song'&&packet.targetMode==='running';
+    if(starting){
+      packet.resetSpeed=true;
+      packet.speedStartId=id;
+      rememberSpeedStart(id,packet.at);
+      projected.speed=START_SPEED;
+      projected.speedStartId=id;
+    }
+    const startUpdate=starting?{
+      prompterSpeedStart:{id,at:packet.at,cueToken:lastCueToken},
+      prompterScrollSpeed:{value:START_SPEED,cueToken:lastCueToken,speedStartId:id,origin:'remote'}
+    }:{};
     if(action==='toggle')packet.targetPlaying=projected.playing;
     post(packet);
     clearTimeout(timeout);
@@ -290,6 +318,7 @@
     if(!sharedDb?.collection){
       if(['toggle','song','instrumental'].includes(action))setPlayState(wasPlaying);
       setSingerMode(previousMode);
+      if(starting)restoreStart();
       status.textContent='Cloud sync unavailable';return;
     }
     // Serialize taps to prevent ordered +/-/Play commands overtaking each other.
@@ -311,7 +340,7 @@
           return;
         }
       }
-      await sharedDb.collection('karaokeControl').doc('liveLyrics').set({prompterRemoteCommand:packet,prompterRemoteState:projected},{merge:true});
+      await sharedDb.collection('karaokeControl').doc('liveLyrics').set({prompterRemoteCommand:packet,prompterRemoteState:projected,...startUpdate},{merge:true});
     }).then(()=>{
       if(lastRequest===id&&!status.textContent.startsWith('Connected'))
         status.textContent='Sent via Firestore';
@@ -320,6 +349,7 @@
       if(lastRequest===id&&!status.textContent.startsWith('Connected')){
         if(['toggle','song','instrumental'].includes(action))setPlayState(wasPlaying);
         setSingerMode(previousMode);
+        if(starting)restoreStart();
         status.textContent='Sync failed — check sign-in';
       }
     });
@@ -338,7 +368,7 @@
       lastRequest='';
       status.textContent='Connected';
     }
-    if(packet.speed&&packet.origin==='prompter')setScrollSpeed(packet.speed);
+    if(packet.speed&&packet.origin==='prompter'&&matchesSpeedStart(packet))setScrollSpeed(packet.speed);
     setPlayState(Boolean(packet.playing));
     if(packet.mode)setSingerMode(packet.mode);
     window.LS26PrompterRemoteCurrentState={...packet};
@@ -379,6 +409,7 @@
     });
     window.addEventListener('ls26:prompter-remote-visibility',event=>show(event.detail?.visible===true));
     window.addEventListener('ls26:prompter-lyrics-sent',event=>{
+      speedStartId='';speedStartAt=0;
       setSingerMode('waiting');setPlayState(false);setScrollSpeed('');
       // The sender's liveLyrics SEND LYRICS write is the authoritative cue.
       // This local reset is immediate while the Firestore snapshot arrives.

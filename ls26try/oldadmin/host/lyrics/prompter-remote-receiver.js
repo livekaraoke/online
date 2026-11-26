@@ -12,7 +12,7 @@
   let channel=null, unsubscribeRemote=null, unsubscribeScroll=null;
   let mode='idle', feedbackTimer=null,cloudStateChain=Promise.resolve();
   let loadedSong={songId:'',title:'',artist:'',year:''};
-  let activeCueToken='', pendingCue=false, automaticEnd=false, automaticEndId='';
+  let activeCueToken='', pendingCue=false, automaticEnd=false, automaticEndId='',speedStartId='';
   let endingTimer=null, endingDeadline=0, endingFrame=null, endingNumber=0;
   let manualEndingId='';
   const MANUAL_END_MS=4000;
@@ -165,7 +165,7 @@
     label('ls26SingerUpcomingArtist',detail.artist||current?.querySelector('.song-artist')?.textContent||catalog.artist||'');
     const year=String(detail.year||catalog.year||'').trim().replace(/[()]/g,'');
     label('ls26SingerUpcomingYear',/^(18|19|20|21)\d{2}$/.test(year)?'('+year+')':'');
-    activeCueToken=String(detail.cueToken||'');
+    activeCueToken=String(detail.cueToken||'');speedStartId='';
     pendingCue=false;
     automaticEnd=false;automaticEndId='';
     loadedSong={
@@ -191,7 +191,7 @@
     let signedIn=false;
     try{signedIn=Boolean(window.firebase?.auth?.().currentUser);}catch(_){}
     if(!signedIn)return;
-    const speed={value:packet.speed,cueToken:packet.cueToken||''};
+    const speed={value:packet.speed,cueToken:packet.cueToken||'',speedStartId:packet.speedStartId||'',origin:'prompter'};
     const signature=JSON.stringify(speed);
     if(signature===lastSpeedSignature)return;
     lastSpeedSignature=signature;
@@ -208,7 +208,7 @@
       playing:!manualEndingId&&mode==='running'&&label==='⏸',speed,
       mode:manualEndingId?'ended':mode,at:Date.now(),
       songId:loadedSong.songId,title:loadedSong.title,artist:loadedSong.artist,
-      cueToken:activeCueToken
+      cueToken:activeCueToken,speedStartId
     };
     try{channel?.postMessage(packet);}catch(_){}
     try{localStorage.setItem(STORAGE,JSON.stringify(packet));}catch(_){}
@@ -341,6 +341,12 @@
           }
           break;
         case 'song':
+          // A fresh explicit START command owns the reset even if a stale
+          // stage projection already says running. Duplicate IDs are ignored.
+          if(packet.targetMode==='running'&&packet.resetSpeed===true){
+            speedStartId=packet.speedStartId||packet.id;
+            if(typeof resetScrollSpeed==='function')resetScrollSpeed();
+          }
           if(packet.targetMode==='running'&&manualEndingId){
             cancelEnding();
             mode='waiting';
