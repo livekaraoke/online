@@ -715,16 +715,97 @@
       const style=document.createElement("style");
       style.id="directReviewModeStyles";
       style.textContent=`
-        html.direct-review-mode,html.direct-review-mode body{background:#02080d!important}
+        html.direct-review-mode{
+          --bg:#050505!important;
+          --panel:#090909!important;
+          --panel2:#111111!important;
+          --cyan:#ff2b2b!important;
+          --cyan2:#ff5a5a!important;
+          --line:rgba(255,43,43,.58)!important;
+          --text:#fff!important;
+          --muted:#bdbdbd!important;
+          --warm:#ffb1b1!important;
+          color-scheme:dark!important;
+          background:#050505!important;
+        }
+        html.direct-review-mode body{
+          background:radial-gradient(circle at 50% 0,rgba(115,0,0,.16),transparent 34%),#050505!important;
+          color:#fff!important;
+        }
+        html.direct-review-mode #requestDialog{
+          background:linear-gradient(180deg,rgba(13,13,13,.99),rgba(4,4,4,.995))!important;
+          border-color:rgba(255,43,43,.68)!important;
+          box-shadow:0 24px 80px rgba(0,0,0,.88),0 0 28px rgba(255,0,0,.16)!important;
+        }
         html.direct-review-mode #requestDialog [data-close="requestDialog"],
         html.direct-review-mode #requestMobileBack,
         html.direct-review-mode #requestMobileHeading,
         html.direct-review-mode #requestReviewPanel>.request-profile-back,
         html.direct-review-mode .request-bottom-tabs{display:none!important}
         html.direct-review-mode #requestReviewPanel{padding-bottom:max(24px,env(safe-area-inset-bottom))!important}
+        html.direct-review-mode #requestReviewPanel .eyebrow,
+        html.direct-review-mode #requestReviewPanel .request-field,
+        html.direct-review-mode #requestReviewPanel .request-field>label,
+        html.direct-review-mode #requestReviewPanel .request-review-label,
+        html.direct-review-mode #requestReviewPanel .request-review-text>span{
+          color:#ff3434!important;
+          text-shadow:0 0 10px rgba(255,0,0,.22)!important;
+        }
+        html.direct-review-mode #requestReviewPanel .request-panel-heading{
+          border-bottom-color:rgba(255,43,43,.22)!important;
+        }
+        html.direct-review-mode #requestReviewPanel .request-panel-heading p{color:#b6b6b6!important}
+        html.direct-review-mode #requestReviewPanel .request-review-card{
+          background:#0a0a0a!important;
+          border-color:rgba(255,43,43,.30)!important;
+          box-shadow:inset 0 0 24px rgba(255,0,0,.025)!important;
+        }
+        html.direct-review-mode #requestReviewPanel input,
+        html.direct-review-mode #requestReviewPanel textarea,
+        html.direct-review-mode #requestReviewPanel select{
+          background:#050505!important;
+          color:#fff!important;
+          border-color:rgba(255,43,43,.38)!important;
+          caret-color:#ff3434!important;
+        }
+        html.direct-review-mode #requestReviewPanel input:focus,
+        html.direct-review-mode #requestReviewPanel textarea:focus,
+        html.direct-review-mode #requestReviewPanel select:focus{
+          outline:none!important;
+          border-color:#ff3434!important;
+          box-shadow:0 0 0 1px rgba(255,43,43,.30),0 0 15px rgba(255,0,0,.10)!important;
+        }
+        html.direct-review-mode #requestReviewPanel input[type="checkbox"]{accent-color:#ff2b2b!important}
+        html.direct-review-mode #requestReviewPanel .request-review-private{
+          background:#0b0b0b!important;
+          border-color:rgba(255,43,43,.20)!important;
+        }
+        html.direct-review-mode #requestReviewPanel .request-star-row button{
+          border-color:rgba(255,190,47,.55)!important;
+          background:#17120a!important;
+        }
+        html.direct-review-mode #requestReviewPanel .request-star-row button.active{
+          border-color:#ffbf2f!important;
+          background:#2a1c05!important;
+          box-shadow:0 0 12px rgba(255,191,47,.22)!important;
+        }
+        html.direct-review-mode #submitRequestReviewBtn{
+          background:linear-gradient(180deg,#ff3b3b,#b90000)!important;
+          color:#fff!important;
+          border:1px solid #ff4a4a!important;
+          box-shadow:0 0 12px rgba(255,0,0,.22)!important;
+          text-shadow:0 1px 0 rgba(0,0,0,.35)!important;
+        }
+        html.direct-review-mode #submitRequestReviewBtn:hover,
+        html.direct-review-mode #submitRequestReviewBtn:focus-visible{
+          background:linear-gradient(180deg,#ff5050,#d10000)!important;
+          box-shadow:0 0 18px rgba(255,0,0,.34)!important;
+        }
         html.direct-review-mode .direct-review-identity{margin-bottom:16px}
         html.direct-review-mode .direct-review-identity .request-field{margin:0}
         html.direct-review-mode .direct-review-identity input{width:100%;box-sizing:border-box}
+        html.direct-review-mode ::selection{background:#9d0000!important;color:#fff!important}
+        html.direct-review-mode *{scrollbar-color:#8d1717 #080808}
       `;
       document.head.appendChild(style);
     }
