@@ -30,7 +30,14 @@
     return PROJECTS[value] ? value : DEFAULT_PROJECT;
   }
 
+  function isPublicLiveKaraokePage() {
+    return /\/online\/(?:index\.html)?$/i.test(location.pathname) ||
+      (/^(?:www\.)?livekaraoke\.eu$/i.test(location.hostname) &&
+        /^\/(?:index\.html)?$/i.test(location.pathname));
+  }
+
   function getSelectedKey() {
+    if (isPublicLiveKaraokePage()) return DEFAULT_PROJECT;
     try {
       return normalizeKey(localStorage.getItem(STORAGE_KEY) || DEFAULT_PROJECT);
     } catch (_) {
@@ -61,9 +68,7 @@
   window.LK_FIREBASE_CONFIG = getSelectedConfig();
   window.LK_FIREBASE_PROJECT = getSelectedKey();
 
-  const isPublicLiveKaraokeSite =
-    /\/online\/(?:index\.html)?$/i.test(location.pathname) ||
-    (/^(?:www\.)?livekaraoke\.eu$/i.test(location.hostname) && /^\/(?:index\.html)?$/i.test(location.pathname));
+  const isPublicLiveKaraokeSite = isPublicLiveKaraokePage();
 
   if (isPublicLiveKaraokeSite) {
     const base = document.currentScript?.src || location.href;
