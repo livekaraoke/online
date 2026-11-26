@@ -23,7 +23,7 @@
   <meta name="twitter:image" content="https://livekaraoke.eu/img/banner.png">
   <meta name="twitter:image:alt" content="Live Karaoke — You Sing • I Play">
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","@id":"https://livekaraoke.eu/#brand","name":"Live Karaoke","url":"https://livekaraoke.eu/","logo":"https://livekaraoke.eu/img/banner.png","sameAs":["https://facebook.com/livekaraokemt","https://instagram.com/livekaraoke.mt"]}</script>
-  <link rel="stylesheet" href="css/style.css?v=20261126-suggestion-success-v8">
+  <link rel="stylesheet" href="css/style.css?v=20261126-success-heart-fix-v9">
 
   <link rel="icon" href="favicon.ico" sizes="any">
   <link rel="icon" type="image/png" href="favicon-32x32.png" sizes="32x32">
@@ -218,9 +218,13 @@
         <button id="submitSuggestSongBtn" class="lk-suggest-song-submit" type="submit">SEND SUGGESTION</button>
         <section id="suggestSongSuccess" class="lk-suggest-song-success" hidden aria-live="polite">
           <h4>Thank you!</h4>
+          <div class="lk-suggest-song-success-heart" aria-hidden="true">
+            <svg viewBox="0 0 24 24" role="presentation" focusable="false">
+              <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+            </svg>
+          </div>
           <p>Your song suggestion has been sent successfully and is waiting for approval.</p>
           <button id="closeSuggestSongSuccessBtn" class="lk-suggest-song-success-close" type="button">CLOSE</button>
-          <div class="lk-suggest-song-success-heart" aria-hidden="true">♥</div>
         </section>
       </form>
     </dialog>
