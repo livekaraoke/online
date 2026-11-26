@@ -23,7 +23,7 @@
   <meta name="twitter:image" content="https://livekaraoke.eu/img/banner.png">
   <meta name="twitter:image:alt" content="Live Karaoke — You Sing • I Play">
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","@id":"https://livekaraoke.eu/#brand","name":"Live Karaoke","url":"https://livekaraoke.eu/","logo":"https://livekaraoke.eu/img/banner.png","sameAs":["https://facebook.com/livekaraokemt","https://instagram.com/livekaraoke.mt"]}</script>
-  <link rel="stylesheet" href="css/style.css?v=20261126-success-heart-fix-v9">
+  <link rel="stylesheet" href="css/style.css?v=20261126-song-access-layout-v10">
 
   <link rel="icon" href="favicon.ico" sizes="any">
   <link rel="icon" type="image/png" href="favicon-32x32.png" sizes="32x32">
@@ -130,7 +130,7 @@
   <script src="js/public-live-store.js?v=20261022-views"></script>
 
   <script defer src="js/public-home.js?v=20261112-about-cta-1"></script>
-  <script defer src="js/public-repertoire.js?v=20261126-suggestion-success-v8"></script>
+  <script defer src="js/public-repertoire.js?v=20261126-song-access-layout-v10"></script>
   <script defer src="js/live-karaoke-request-popup.js?v=20261125-favourite-gold-v1"></script>
   <script defer src="js/public-reviews.js?v=20261126-review-slideshow-v1"></script>
 
@@ -173,29 +173,34 @@
   </section>
 
   <!-- SONG ACCESS -->
-  <section class="section">
+  <section class="section lk-song-access-section">
     <h2>SONG LIST ACCESS</h2>
-    <p id="songListAccessMessage">
+    <p id="songListAccessMessage" class="lk-song-access-intro">
       Browse our songs anytime. You can send a request when a session is live and requests are open.
     </p>
 
-    <button class="main-button" type="button" id="songListBtn" aria-haspopup="dialog">
-      BROWSE SONG LIST
-    </button>
+    <div class="lk-song-access-shell">
+      <div class="lk-song-access-actions">
+        <button class="main-button" type="button" id="songListBtn" aria-haspopup="dialog">
+          BROWSE SONG LIST
+        </button>
 
-    <div class="lk-repertoire-community" id="lkRepertoireCommunity">
-      <button id="newSongsToggle" class="lk-new-songs-toggle" type="button" aria-expanded="false" aria-controls="newSongsPanel">
-        <span>NEW SONGS <strong id="newSongsCount">• 0</strong></span>
-        <span class="lk-new-songs-chevron" aria-hidden="true">⌄</span>
-      </button>
-      <div id="newSongsPanel" class="lk-new-songs-panel" hidden>
-        <div id="newSongsList" class="lk-new-songs-list" aria-live="polite">
-          <p class="lk-new-songs-loading">Loading new songs…</p>
+        <div class="lk-suggest-song-block">
+          <span>Can't find your song?</span>
+          <button id="suggestSongBtn" class="lk-suggest-song-btn" type="button">+ SUGGEST A SONG</button>
         </div>
       </div>
-      <div class="lk-suggest-song-block">
-        <span>Can't find your song?</span>
-        <button id="suggestSongBtn" class="lk-suggest-song-btn" type="button">+ SUGGEST A SONG</button>
+
+      <div class="lk-repertoire-community" id="lkRepertoireCommunity">
+        <button id="newSongsToggle" class="lk-new-songs-toggle" type="button" aria-expanded="false" aria-controls="newSongsPanel">
+          <span>NEW SONGS <strong id="newSongsCount">• 0</strong></span>
+          <span class="lk-new-songs-chevron" aria-hidden="true">⌄</span>
+        </button>
+        <div id="newSongsPanel" class="lk-new-songs-panel" hidden>
+          <div id="newSongsList" class="lk-new-songs-list" aria-live="polite">
+            <p class="lk-new-songs-loading">Loading new songs…</p>
+          </div>
+        </div>
       </div>
     </div>
 
