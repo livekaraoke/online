@@ -123,7 +123,7 @@
     const websiteOpen=["live-karaoke-reviews.html","live-karaoke-website-settings.html"].includes(current);
 
     const prompterGroup=makeGroup({id:"live-karaoke-prompter",label:"Prompter",icon:"lsi-mic",open:prompterOpen,children:[
-      makeLink(base,{file:"../oldadmin/host/venuekaraokelyricbook.html",label:"Open Prompter",icon:"lsi-monitor",target:"_blank"}),
+      makeLink(base,{file:"https://livesuite.livekaraoke.eu/singerprompter",label:"Open Prompter",icon:"lsi-monitor",target:"_blank"}),
       makeLink(base,{file:"prompter-settings.html",key:"prompter-settings",label:"Settings",icon:"lsi-settings"})
     ]});
 

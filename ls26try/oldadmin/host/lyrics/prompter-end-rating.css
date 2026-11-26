@@ -240,6 +240,66 @@ body[data-ls26-singer-stage="idle"] #prompterEndMarker{opacity:0}
 body[data-ls26-singer-stage="idle"]{overflow:hidden!important;overscroll-behavior:none}
 
 
+/* The preview must fit the entire song card in the available viewport.
+   Keep logo, status and metadata in flow rather than absolute percentages.
+   This leaves the idle artwork and all other singer stages unchanged. */
+body[data-ls26-singer-stage="waiting"] #ls26SingerRemoteStage .ls26-singer-artwork-preview {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto auto;
+  align-items: center;
+  justify-items: center;
+  gap: clamp(6px, 1.5dvh, 18px);
+  box-sizing: border-box;
+  width: min(calc(100vw - 32px), 640px, 88dvh);
+  height: min(calc(100dvh - 2 * clamp(12px, 3dvh, 32px)), 1100px);
+  max-height: calc(100% - 24px);
+  aspect-ratio: auto;
+}
+#ls26SingerRemoteStage .ls26-singer-artwork-preview img {
+  position: static;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  max-height: 100%;
+  object-fit: contain;
+}
+#ls26SingerRemoteStage .ls26-singer-artwork-preview .ls26-singer-message-preview {
+  position: static;
+  width: 100%;
+  font-size: clamp(16px, min(4.5vw, 3.4dvh), 36px);
+  line-height: 1.15;
+}
+#ls26SingerRemoteStage .ls26-singer-artwork-preview .ls26-singer-song-info {
+  position: static;
+  width: 100%;
+  padding: clamp(6px, 1.6dvh, 20px) clamp(10px, 3vw, 24px);
+  gap: clamp(3px, .8dvh, 8px);
+  min-width: 0;
+}
+#ls26SingerRemoteStage #ls26SingerUpcomingTitle {
+  font-size: clamp(18px, min(5vw, 5dvh), 44px);
+  line-height: 1.12;
+}
+#ls26SingerRemoteStage #ls26SingerUpcomingArtist {
+  font-size: clamp(14px, min(3.5vw, 3.2dvh), 28px);
+  line-height: 1.15;
+}
+#ls26SingerRemoteStage #ls26SingerUpcomingYear {
+  font-size: clamp(12px, min(2.8vw, 2.6dvh), 21px);
+  line-height: 1.15;
+}
+#ls26SingerRemoteStage #ls26SingerUpcomingYear:empty { display: none; }
+@media (max-height: 400px) {
+  body[data-ls26-singer-stage="waiting"] #ls26SingerRemoteStage .ls26-singer-artwork-preview {
+    width: min(calc(100vw - 130px), 640px);
+    gap: 5px;
+  }
+  #ls26SingerRemoteStage .ls26-singer-artwork-preview .ls26-singer-song-info {
+    padding: 5px 10px;
+    gap: 2px;
+  }
+}
+
 /* On-demand current-session lyrics picker; the standby artwork stays untouched. */
 #ls26SessionSongPicker{
   box-sizing:border-box;position:fixed;inset:0;margin:auto;
