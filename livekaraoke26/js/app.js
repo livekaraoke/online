@@ -892,16 +892,16 @@
           margin:12px 0 0!important;
           padding:10px 14px!important;
           font-size:15px!important;
-          background:linear-gradient(180deg,#42c8ff,#1479cc)!important;
-          color:#fff!important;
-          border:1px solid #61d4ff!important;
-          box-shadow:0 0 14px rgba(35,157,255,.24)!important;
+          background:linear-gradient(180deg,#ffd95a,#e0a900)!important;
+          color:#17100a!important;
+          border:1px solid #ffe27a!important;
+          box-shadow:0 0 14px rgba(255,198,41,.24)!important;
           text-shadow:0 1px 0 rgba(0,0,0,.35)!important;
         }
         html.direct-review-mode #submitRequestReviewBtn:hover,
         html.direct-review-mode #submitRequestReviewBtn:focus-visible{
-          background:linear-gradient(180deg,#69d6ff,#1d8ddd)!important;
-          box-shadow:0 0 18px rgba(35,157,255,.34)!important;
+          background:linear-gradient(180deg,#ffe477,#efb900)!important;
+          box-shadow:0 0 18px rgba(255,198,41,.34)!important;
         }
         html.direct-review-mode #requestReviewPanel .direct-review-identity{
           display:grid!important;
