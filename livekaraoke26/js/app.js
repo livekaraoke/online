@@ -689,8 +689,10 @@
     if(!DIRECT_REVIEW_MODE)return;
     document.documentElement.classList.add("direct-review-mode");
     document.title="Rate Your Experience | Live Karaoke";
-    const directEyebrow=document.querySelector("#requestReviewPanel .request-review-panel-heading .eyebrow");
+    const directHeading=document.querySelector("#requestReviewPanel .request-review-panel-heading");
+    const directEyebrow=directHeading?.querySelector(".eyebrow");
     if(directEyebrow)directEyebrow.textContent="AFTER YOUR VISIT";
+    directHeading?.querySelector("p")?.remove();
 
     const reviewCard=document.querySelector("#requestReviewPanel .request-review-card");
     if(reviewCard&&!$("directReviewIdentity")){
@@ -699,11 +701,12 @@
       identity.className="request-profile-grid request-primary-profile-grid direct-review-identity";
       identity.innerHTML=`
         <div class="request-field request-name-field">
-          <label for="directReviewName">YOUR NAME</label>
-          <div class="request-name-control"><input id="directReviewName" type="text" maxlength="60" placeholder="Your name" autocomplete="name"></div>
+          <label for="directReviewName" class="direct-review-field-label">YOUR NAME</label>
+          <div class="request-name-control"><input id="directReviewName" type="text" maxlength="60" placeholder="Your name" autocomplete="name" required></div>
         </div>
-        <label class="request-field request-country-field">COUNTRY <small>OPTIONAL</small>
-          <input id="directReviewCountry" type="text" maxlength="80" placeholder="e.g. Malta" autocomplete="country-name">
+        <label class="request-field request-country-field">
+          <span class="direct-review-field-label">COUNTRY</span>
+          <input id="directReviewCountry" type="text" maxlength="80" placeholder="e.g. Malta" autocomplete="country-name" required>
         </label>
       `;
       reviewCard.insertBefore(identity,reviewCard.firstChild);
@@ -785,10 +788,6 @@
           font-size:24px!important;
           line-height:1.18!important;
         }
-        html.direct-review-mode #requestReviewPanel .request-review-panel-heading p{
-          font-size:16px!important;
-          line-height:1.45!important;
-        }
         html.direct-review-mode #requestReviewPanel .eyebrow,
         html.direct-review-mode #requestReviewPanel .request-field,
         html.direct-review-mode #requestReviewPanel .request-field>label,
@@ -804,7 +803,6 @@
           font-size:13px!important;
           letter-spacing:.18em!important;
         }
-        html.direct-review-mode #requestReviewPanel .request-panel-heading p{color:#d0d0d0!important}
         html.direct-review-mode #requestReviewPanel .request-review-card{
           margin:0!important;
           padding:14px 16px!important;
@@ -818,10 +816,20 @@
           gap:12px!important;
         }
         html.direct-review-mode #requestReviewPanel .request-field{
-          gap:5px!important;
-          font-size:12px!important;
+          gap:6px!important;
+          font-size:13px!important;
         }
-        html.direct-review-mode #requestReviewPanel .request-field small{font-size:10px!important}
+        html.direct-review-mode #requestReviewPanel .direct-review-field-label{
+          display:block!important;
+          min-height:18px!important;
+          margin:0!important;
+          color:#ff3434!important;
+          font-size:14px!important;
+          font-weight:900!important;
+          line-height:18px!important;
+          letter-spacing:.12em!important;
+          text-shadow:0 0 10px rgba(255,0,0,.22)!important;
+        }
         html.direct-review-mode #requestReviewPanel .request-field input{
           min-height:46px!important;
           padding:9px 12px!important;
@@ -884,16 +892,16 @@
           margin:12px 0 0!important;
           padding:10px 14px!important;
           font-size:15px!important;
-          background:linear-gradient(180deg,#ff3b3b,#b90000)!important;
+          background:linear-gradient(180deg,#42c8ff,#1479cc)!important;
           color:#fff!important;
-          border:1px solid #ff4a4a!important;
-          box-shadow:0 0 12px rgba(255,0,0,.22)!important;
+          border:1px solid #61d4ff!important;
+          box-shadow:0 0 14px rgba(35,157,255,.24)!important;
           text-shadow:0 1px 0 rgba(0,0,0,.35)!important;
         }
         html.direct-review-mode #submitRequestReviewBtn:hover,
         html.direct-review-mode #submitRequestReviewBtn:focus-visible{
-          background:linear-gradient(180deg,#ff5050,#d10000)!important;
-          box-shadow:0 0 18px rgba(255,0,0,.34)!important;
+          background:linear-gradient(180deg,#69d6ff,#1d8ddd)!important;
+          box-shadow:0 0 18px rgba(35,157,255,.34)!important;
         }
         html.direct-review-mode #requestReviewPanel .direct-review-identity{
           display:grid!important;
@@ -942,7 +950,6 @@
           html.direct-review-mode #requestReviewPanel{padding-top:9px!important;padding-bottom:10px!important}
           html.direct-review-mode #requestReviewPanel .request-review-panel-heading{margin-bottom:6px!important}
           html.direct-review-mode #requestReviewPanel .request-review-panel-heading .eyebrow{font-size:12px!important}
-          html.direct-review-mode #requestReviewPanel .request-review-panel-heading p{font-size:16px!important}
           html.direct-review-mode #requestReviewPanel .request-review-card{padding:9px 11px!important}
           html.direct-review-mode #requestReviewPanel .request-primary-profile-grid{margin-bottom:7px!important;gap:7px!important}
           html.direct-review-mode #requestReviewPanel .request-field input{min-height:42px!important;padding:7px 10px!important}
@@ -951,6 +958,61 @@
           html.direct-review-mode #requestReviewPanel .request-review-text textarea{min-height:72px!important}
           html.direct-review-mode #submitRequestReviewBtn{min-height:42px!important;margin-top:8px!important}
           html.direct-review-mode .direct-review-thanks{margin-top:14px!important}
+        }
+        html.direct-review-mode .direct-review-success{
+          padding:34px 24px 28px!important;
+          text-align:center!important;
+        }
+        html.direct-review-mode .direct-review-success[hidden]{display:none!important}
+        html.direct-review-mode .direct-review-success-heart{
+          font-size:48px!important;
+          line-height:1!important;
+          margin-bottom:12px!important;
+          filter:drop-shadow(0 0 12px rgba(255,201,70,.22))!important;
+        }
+        html.direct-review-mode .direct-review-success h2{
+          margin:0 0 12px!important;
+          color:#fff!important;
+          font-size:30px!important;
+          letter-spacing:.08em!important;
+        }
+        html.direct-review-mode .direct-review-success p{
+          width:min(100%,650px)!important;
+          margin:0 auto 14px!important;
+          color:#d7d7d7!important;
+          font-size:17px!important;
+          line-height:1.55!important;
+        }
+        html.direct-review-mode .direct-review-success strong{
+          display:block!important;
+          color:#ffd45e!important;
+          font-size:16px!important;
+          margin-bottom:24px!important;
+        }
+        html.direct-review-mode .direct-review-success-actions{
+          display:flex!important;
+          flex-wrap:wrap!important;
+          justify-content:center!important;
+          gap:10px!important;
+        }
+        html.direct-review-mode .direct-review-success-actions a{
+          display:inline-flex!important;
+          align-items:center!important;
+          justify-content:center!important;
+          min-height:44px!important;
+          padding:10px 18px!important;
+          border:1px solid rgba(255,255,255,.18)!important;
+          border-radius:8px!important;
+          background:#111!important;
+          color:#fff!important;
+          text-decoration:none!important;
+          font-size:13px!important;
+          font-weight:900!important;
+          letter-spacing:.04em!important;
+        }
+        html.direct-review-mode .direct-review-success-actions .direct-review-home{
+          background:linear-gradient(180deg,#42c8ff,#1479cc)!important;
+          border-color:#61d4ff!important;
         }
         html.direct-review-mode ::selection{background:#9d0000!important;color:#fff!important}
         html.direct-review-mode *{scrollbar-color:#8d1717 #080808}
@@ -965,6 +1027,24 @@
       thanks.className="direct-review-thanks";
       thanks.textContent="Thanks for supporting Live Music! 💛";
       submitButton.insertAdjacentElement("afterend",thanks);
+    }
+    if(!$("directReviewSuccess")&&$("requestReviewPanel")){
+      const success=document.createElement("section");
+      success.id="directReviewSuccess";
+      success.className="direct-review-success";
+      success.hidden=true;
+      success.innerHTML=`
+        <div class="direct-review-success-heart" aria-hidden="true">💛</div>
+        <h2>THANK YOU</h2>
+        <p>Thank you for taking a moment to share your experience. Your support genuinely means a lot and helps Live Karaoke keep growing - more songs, more singers and more live music.</p>
+        <strong>Hope to see you singing with us again soon.</strong>
+        <div class="direct-review-success-actions">
+          <a class="direct-review-home" href="https://livekaraoke.eu/">BACK TO LIVE KARAOKE</a>
+          <a href="https://livekaraoke.eu/facebook">FACEBOOK</a>
+          <a href="https://livekaraoke.eu/instagram">INSTAGRAM</a>
+        </div>
+      `;
+      $("requestReviewPanel").appendChild(success);
     }
 
     const bottomTabs=document.querySelector(".request-bottom-tabs");
@@ -1189,9 +1269,26 @@
     if(DIRECT_REVIEW_MODE){
       const directName=String($("directReviewName")?.value||"").trim();
       const directCountry=String($("directReviewCountry")?.value||"").trim();
+      const directRating=String($("requestReviewRating")?.value||"");
+      const directReview=String($("requestReviewText")?.value||"").trim();
       if(!directName){
-        if(status)status.textContent="Enter your name before sending your review.";
+        if(status)status.textContent="Please enter your name.";
         $("directReviewName")?.focus();
+        return false;
+      }
+      if(!directCountry){
+        if(status)status.textContent="Please enter your country.";
+        $("directReviewCountry")?.focus();
+        return false;
+      }
+      if(!directRating){
+        if(status)status.textContent="Please choose a star rating.";
+        document.querySelector('[data-review-rating="1"]')?.focus();
+        return false;
+      }
+      if(!directReview){
+        if(status)status.textContent="Please write a short review.";
+        $("requestReviewText")?.focus();
         return false;
       }
       profile={
@@ -1200,8 +1297,8 @@
         country:directCountry,
         ageRange:"",
         gender:"",
-        rating:String($("requestReviewRating")?.value||""),
-        review:String($("requestReviewText")?.value||"").trim(),
+        rating:directRating,
+        review:directReview,
         reviewPrivate:false
       };
     }else{
@@ -1224,8 +1321,19 @@
     if(status)status.textContent="Sending your review…";
     try{
       const saved=await submitModeratedReview(profile);
-      if(!saved){if(status)status.textContent="Please enter a name, rating or review first.";return false;}
-      if(status)status.textContent="Review sent for approval. Thank you!";
+      if(!saved){if(status)status.textContent="Please complete all required fields.";return false;}
+      if(DIRECT_REVIEW_MODE){
+        const panel=$("requestReviewPanel");
+        const success=$("directReviewSuccess");
+        panel?.querySelector(".request-review-panel-heading")?.setAttribute("hidden","");
+        panel?.querySelector(".request-review-card")?.setAttribute("hidden","");
+        $("submitRequestReviewBtn")?.setAttribute("hidden","");
+        $("directReviewThanks")?.setAttribute("hidden","");
+        if(status){status.textContent="";status.setAttribute("hidden","");}
+        if(success){success.hidden=false;success.scrollIntoView({block:"start",behavior:"smooth"});}
+      }else if(status){
+        status.textContent="Review sent for approval. Thank you!";
+      }
       return true;
     }catch(error){
       console.warn("Could not submit moderated review:",error);
