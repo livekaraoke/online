@@ -130,6 +130,7 @@
   <script src="js/public-live-store.js?v=20261022-views"></script>
 
   <script defer src="js/public-home.js?v=20261112-about-cta-1"></script>
+  <script defer src="js/public-repertoire.js?v=20261126-repertoire-community-v1"></script>
   <script defer src="js/live-karaoke-request-popup.js?v=20261125-favourite-gold-v1"></script>
   <script defer src="js/public-reviews.js?v=20261126-review-slideshow-v1"></script>
 
@@ -181,6 +182,42 @@
     <button class="main-button" type="button" id="songListBtn" aria-haspopup="dialog">
       BROWSE SONG LIST
     </button>
+
+    <div class="lk-repertoire-community" id="lkRepertoireCommunity">
+      <button id="newSongsToggle" class="lk-new-songs-toggle" type="button" aria-expanded="false" aria-controls="newSongsPanel">
+        <span>NEW SONGS <strong id="newSongsCount">• 0</strong></span>
+        <span class="lk-new-songs-chevron" aria-hidden="true">⌄</span>
+      </button>
+      <div id="newSongsPanel" class="lk-new-songs-panel" hidden>
+        <div id="newSongsList" class="lk-new-songs-list" aria-live="polite">
+          <p class="lk-new-songs-loading">Loading new songs…</p>
+        </div>
+      </div>
+      <div class="lk-suggest-song-block">
+        <span>Can't find your song?</span>
+        <button id="suggestSongBtn" class="lk-suggest-song-btn" type="button">+ SUGGEST A SONG</button>
+      </div>
+    </div>
+
+    <dialog id="suggestSongDialog" class="lk-suggest-song-dialog">
+      <form id="suggestSongForm" class="lk-suggest-song-form" method="dialog">
+        <div class="lk-suggest-song-head">
+          <div><span>LIVE KARAOKE</span><h3>SUGGEST A SONG</h3></div>
+          <button id="closeSuggestSongBtn" class="lk-suggest-song-close" type="button" aria-label="Close">×</button>
+        </div>
+        <label>Song Name
+          <input id="suggestSongName" name="songName" type="text" maxlength="160" required autocomplete="off">
+        </label>
+        <label>Artist
+          <input id="suggestSongArtist" name="artist" type="text" maxlength="160" autocomplete="off">
+        </label>
+        <label>Optional note
+          <textarea id="suggestSongNote" name="note" rows="3" maxlength="500" placeholder="Anything useful about the version or arrangement"></textarea>
+        </label>
+        <p id="suggestSongStatus" class="lk-suggest-song-status" role="status" aria-live="polite"></p>
+        <button id="submitSuggestSongBtn" class="lk-suggest-song-submit" type="submit">SEND SUGGESTION</button>
+      </form>
+    </dialog>
   </section>
 
 
