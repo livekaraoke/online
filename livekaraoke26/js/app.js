@@ -895,9 +895,25 @@
           background:linear-gradient(180deg,#ff5050,#d10000)!important;
           box-shadow:0 0 18px rgba(255,0,0,.34)!important;
         }
-        html.direct-review-mode .direct-review-identity{margin-bottom:16px}
-        html.direct-review-mode .direct-review-identity .request-field{margin:0}
-        html.direct-review-mode .direct-review-identity input{width:100%;box-sizing:border-box}
+        html.direct-review-mode #requestReviewPanel .direct-review-identity{
+          display:grid!important;
+          grid-template-columns:repeat(2,minmax(0,1fr))!important;
+          gap:12px!important;
+          margin-bottom:16px!important;
+        }
+        html.direct-review-mode #requestReviewPanel .direct-review-identity .request-field{
+          grid-column:auto!important;
+          min-width:0!important;
+          margin:0!important;
+        }
+        html.direct-review-mode #requestReviewPanel .direct-review-identity .request-name-field{
+          grid-column:auto!important;
+        }
+        html.direct-review-mode #requestReviewPanel .direct-review-identity input{
+          width:100%!important;
+          min-width:0!important;
+          box-sizing:border-box!important;
+        }
         html.direct-review-mode .direct-review-thanks{
           margin:22px 0 4px!important;
           text-align:center!important;
@@ -905,14 +921,6 @@
           font-size:15px!important;
           font-weight:700!important;
           letter-spacing:.02em!important;
-        }
-        @media(min-width:700px){
-          html.direct-review-mode #requestReviewPanel .direct-review-identity{
-            grid-template-columns:repeat(2,minmax(0,1fr))!important;
-          }
-          html.direct-review-mode #requestReviewPanel .direct-review-identity .request-name-field{
-            grid-column:auto!important;
-          }
         }
         @media(max-width:699px){
           html.direct-review-mode #requestDialog{
@@ -923,6 +931,9 @@
             padding:12px 12px max(14px,env(safe-area-inset-bottom))!important;
           }
           html.direct-review-mode #requestReviewPanel .request-review-panel-heading h3{font-size:23px!important}
+          html.direct-review-mode #requestReviewPanel .direct-review-identity{gap:8px!important}
+          html.direct-review-mode #requestReviewPanel .direct-review-identity .request-field{font-size:11px!important}
+          html.direct-review-mode #requestReviewPanel .direct-review-identity input{font-size:15px!important;padding-left:10px!important;padding-right:10px!important}
           html.direct-review-mode #requestReviewPanel .request-review-card{padding:12px 13px!important}
           html.direct-review-mode #requestReviewPanel .request-review-text textarea{min-height:82px!important}
           html.direct-review-mode .direct-review-thanks{font-size:15px!important;margin-top:20px!important}
