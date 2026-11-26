@@ -112,6 +112,7 @@
     const existing=[...nav.children];
     const lyric=[...nav.querySelectorAll("a")].find(a=>a.querySelector(".suite-nav-label")?.textContent.trim().toLowerCase()==="lyric prompter");
     const website=[...nav.querySelectorAll("a")].find(a=>a.querySelector(".suite-nav-label")?.textContent.trim().toLowerCase()==="website");
+    const kiosk=[...nav.querySelectorAll("a")].find(a=>a.dataset.sidebarNav==="signup-kiosk"||a.querySelector(".suite-nav-label")?.textContent.trim().toLowerCase()==="ipad signup kiosk");
     const venue=[...nav.querySelectorAll("a")].find(a=>a.querySelector(".suite-nav-label")?.textContent.trim().toLowerCase()==="venue display");
     const facebook=[...nav.querySelectorAll("a")].find(a=>a.querySelector(".suite-nav-label")?.textContent.trim().toLowerCase()==="facebook");
     const instagram=[...nav.querySelectorAll("a")].find(a=>a.querySelector(".suite-nav-label")?.textContent.trim().toLowerCase()==="instagram");
@@ -134,13 +135,14 @@
     ]});
 
     nav.replaceChildren(prompterGroup);
+    nav.appendChild(kiosk||makeLink(base,{file:"https://livekaraoke.eu/signupkiosk",key:"signup-kiosk",label:"iPad Signup Kiosk",icon:"lsi-users",target:"_blank"}));
     if(venue)nav.appendChild(venue);
     if(facebook)nav.appendChild(facebook);
     if(instagram)nav.appendChild(instagram);
     nav.appendChild(websiteGroup);
 
     existing.forEach(node=>{
-      if(node.isConnected||node===lyric||node===website||node===venue||node===facebook||node===instagram)return;
+      if(node.isConnected||node===lyric||node===website||node===kiosk||node===venue||node===facebook||node===instagram)return;
       nav.appendChild(node);
     });
   }
