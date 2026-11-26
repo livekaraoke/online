@@ -23,7 +23,7 @@
   <meta name="twitter:image" content="https://livekaraoke.eu/img/banner.png">
   <meta name="twitter:image:alt" content="Live Karaoke — You Sing • I Play">
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","@id":"https://livekaraoke.eu/#brand","name":"Live Karaoke","url":"https://livekaraoke.eu/","logo":"https://livekaraoke.eu/img/banner.png","sameAs":["https://facebook.com/livekaraokemt","https://instagram.com/livekaraoke.mt"]}</script>
-  <link rel="stylesheet" href="css/style.css?v=20261126-keyboard-firebase-v5">
+  <link rel="stylesheet" href="css/style.css?v=20261126-suggestion-success-v7">
 
   <link rel="icon" href="favicon.ico" sizes="any">
   <link rel="icon" type="image/png" href="favicon-32x32.png" sizes="32x32">
@@ -130,7 +130,7 @@
   <script src="js/public-live-store.js?v=20261022-views"></script>
 
   <script defer src="js/public-home.js?v=20261112-about-cta-1"></script>
-  <script defer src="js/public-repertoire.js?v=20261126-suggestion-reset-fix-v6"></script>
+  <script defer src="js/public-repertoire.js?v=20261126-suggestion-success-v7"></script>
   <script defer src="js/live-karaoke-request-popup.js?v=20261125-favourite-gold-v1"></script>
   <script defer src="js/public-reviews.js?v=20261126-review-slideshow-v1"></script>
 
@@ -202,7 +202,7 @@
     <dialog id="suggestSongDialog" class="lk-suggest-song-dialog">
       <form id="suggestSongForm" class="lk-suggest-song-form" method="dialog">
         <div class="lk-suggest-song-head">
-          <div><h3>SUGGEST A SONG</h3></div>
+          <div><h3 id="suggestSongHeading">SUGGEST A SONG</h3></div>
           <button id="closeSuggestSongBtn" class="lk-suggest-song-close" type="button" aria-label="Close">×</button>
         </div>
         <label>Song Name
@@ -216,6 +216,12 @@
         </label>
         <p id="suggestSongStatus" class="lk-suggest-song-status" role="status" aria-live="polite"></p>
         <button id="submitSuggestSongBtn" class="lk-suggest-song-submit" type="submit">SEND SUGGESTION</button>
+        <section id="suggestSongSuccess" class="lk-suggest-song-success" hidden aria-live="polite">
+          <h4>Thank you!</h4>
+          <p>Your song suggestion has been sent successfully and is waiting for approval.</p>
+          <button id="closeSuggestSongSuccessBtn" class="lk-suggest-song-success-close" type="button">CLOSE</button>
+          <div class="lk-suggest-song-success-heart" aria-hidden="true">♥</div>
+        </section>
       </form>
     </dialog>
   </section>
