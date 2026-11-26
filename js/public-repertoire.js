@@ -77,22 +77,44 @@
     }
 
     songs.forEach(song => {
-      const row = document.createElement("p");
+      const row = document.createElement("article");
       row.className = "lk-new-song-row";
-      const artist = String(song.artist || song.songArtist || "").trim();
-      row.append(document.createTextNode('🎵 "'));
+
+      const icon = document.createElement("span");
+      icon.className = "lk-new-song-icon";
+      icon.setAttribute("aria-hidden", "true");
+      icon.textContent = "♫";
+
+      const details = document.createElement("div");
+      details.className = "lk-new-song-details";
+
+      const line = document.createElement("div");
+      line.className = "lk-new-song-mainline";
+
       const title = document.createElement("strong");
       title.className = "lk-new-song-title";
-      title.textContent = String(song.title || "Untitled");
-      row.append(title, document.createTextNode('"' + (artist ? " by " + artist : "")));
+      title.textContent = '"' + String(song.title || "Untitled") + '"';
+      line.appendChild(title);
+
+      const artist = String(song.artist || song.songArtist || "").trim();
+      if (artist) {
+        const artistEl = document.createElement("span");
+        artistEl.className = "lk-new-song-artist";
+        artistEl.textContent = "by " + artist;
+        line.appendChild(artistEl);
+      }
+
+      details.appendChild(line);
+
       const note = cleanNote(notes[String(song.id)]);
       if (note) {
-        row.append(document.createTextNode(" ("));
-        const italic = document.createElement("span");
-        italic.className = "lk-new-song-note";
-        italic.textContent = note;
-        row.append(italic, document.createTextNode(")"));
+        const noteEl = document.createElement("div");
+        noteEl.className = "lk-new-song-note";
+        noteEl.textContent = "(" + note + ")";
+        details.appendChild(noteEl);
       }
+
+      row.append(icon, details);
       list.appendChild(row);
     });
   }
