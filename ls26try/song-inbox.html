@@ -15,6 +15,23 @@
   <link rel="stylesheet" href="shared/performance.css?v=20260925-live-click">
   <link rel="stylesheet" href="admin-new/css/admin-navigation.css?v=20260922-batch">
   <script src="shared/data.js?v=20260910-stage4"></script>
+  <style>
+    .website-suggestions-card{margin-bottom:14px;border-color:#7b5922;background:#171207}
+    .website-suggestions-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px}
+    .website-suggestions-head h2{margin:0;color:#ffe0a0;font-size:16px}
+    .website-suggestions-head p{margin:4px 0 0;color:#a99778;font-size:11px}
+    .website-suggestions-head>strong{display:grid;place-items:center;min-width:34px;height:28px;border-radius:999px;background:#6d4b13;color:#fff}
+    .website-suggestion-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;padding:11px 0;border-top:1px solid rgba(255,220,160,.13)}
+    .website-suggestion-row:first-child{border-top:0}
+    .website-suggestion-row strong{display:block;color:#fff}
+    .website-suggestion-row small{display:block;margin-top:3px;color:#ad9e86}
+    .website-suggestion-note{margin:6px 0 0;color:#dfcfb7;font-style:italic}
+    .website-suggestion-actions{display:flex;gap:6px;align-items:center}
+    .website-suggestion-actions button{min-height:36px;padding:6px 10px;border-radius:6px;font-weight:850;cursor:pointer}
+    .website-suggestion-approve{border:1px solid #4a9d67;background:#153e22;color:#baf5ca}
+    .website-suggestion-decline{border:1px solid #8a454b;background:#3e171b;color:#ffc2c6}
+    @media(max-width:650px){.website-suggestion-row{grid-template-columns:1fr}.website-suggestion-actions button{flex:1}}
+  </style>
 </head>
 <body class="admin-body enquiries-page ls26-inbox-page">
   <div class="admin-shell">
@@ -24,6 +41,14 @@
         <div><h1>Song Inbox</h1><p>Missing songs to prepare for future gigs.</p></div>
         <button class="ls26-button" id="inboxCapture">＋ Capture song</button>
       </header>
+
+      <section class="ls26-card website-suggestions-card" aria-labelledby="pendingSuggestionsTitle">
+        <div class="website-suggestions-head">
+          <div><h2 id="pendingSuggestionsTitle">Pending website suggestions</h2><p>Approve a suggestion to move it into the normal Song Inbox list.</p></div>
+          <strong id="pendingSuggestionCount">0</strong>
+        </div>
+        <div id="pendingSuggestionRows">Loading pending suggestions…</div>
+      </section>
       <div class="ls26-toolbar song-inbox-toolbar">
         <input id="inboxSearch" placeholder="Search loaded entries" aria-label="Search Song Inbox">
         <select id="inboxStatus" aria-label="Filter status"><option value="">All statuses</option><option>New</option><option>To Learn</option><option>Added</option><option>Skip</option></select>
