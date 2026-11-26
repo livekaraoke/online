@@ -18,12 +18,25 @@
       position:sticky;
       top:0;
       z-index:10;
+      display:flex;
+      align-items:center;
+      justify-content:center;
       width:100%;
-      height:clamp(118px,20vh,220px);
+      height:clamp(180px,42vw,400px);
       flex:0 0 auto;
-      background:#000 url("/img/banner.png") center center / contain no-repeat;
+      overflow:hidden;
+      background:#000;
       border-bottom:1px solid rgba(255,43,43,.32);
       box-shadow:0 8px 24px rgba(0,0,0,.5);
+    }
+    .review-hero img{
+      display:block;
+      width:min(94vw,1100px);
+      max-width:94vw;
+      height:auto;
+      max-height:100%;
+      object-fit:contain;
+      object-position:center;
     }
     iframe{
       display:block;
@@ -34,15 +47,18 @@
       background:#050505;
     }
     @media(max-width:699px){
-      .review-hero{height:clamp(105px,17vh,165px)}
+      .review-hero{height:clamp(155px,48vw,240px)}
+      .review-hero img{width:96vw;max-width:96vw}
     }
     @media(max-height:720px){
-      .review-hero{height:clamp(92px,15vh,125px)}
+      .review-hero{height:clamp(130px,34vh,210px)}
     }
   </style>
 </head>
 <body>
-  <div class="review-hero" role="img" aria-label="Live Karaoke - You Sing, I Play"></div>
+  <div class="review-hero">
+    <img src="/img/banner.png" alt="Live Karaoke - You Sing, I Play" decoding="async" fetchpriority="high">
+  </div>
   <iframe
     id="reviewFrame"
     title="Rate your Live Karaoke experience"
