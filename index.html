@@ -23,7 +23,7 @@
   <meta name="twitter:image" content="https://livekaraoke.eu/img/banner.png">
   <meta name="twitter:image:alt" content="Live Karaoke — You Sing • I Play">
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","@id":"https://livekaraoke.eu/#brand","name":"Live Karaoke","url":"https://livekaraoke.eu/","logo":"https://livekaraoke.eu/img/banner.png","sameAs":["https://facebook.com/livekaraokemt","https://instagram.com/livekaraoke.mt"]}</script>
-  <link rel="stylesheet" href="css/style.css?v=20261126-song-access-layout-v10">
+  <link rel="stylesheet" href="css/style.css?v=20261126-song-access-layout-v11">
 
   <link rel="icon" href="favicon.ico" sizes="any">
   <link rel="icon" type="image/png" href="favicon-32x32.png" sizes="32x32">
@@ -180,16 +180,9 @@
     </p>
 
     <div class="lk-song-access-shell">
-      <div class="lk-song-access-actions">
-        <button class="main-button" type="button" id="songListBtn" aria-haspopup="dialog">
-          BROWSE SONG LIST
-        </button>
-
-        <div class="lk-suggest-song-block">
-          <span>Can't find your song?</span>
-          <button id="suggestSongBtn" class="lk-suggest-song-btn" type="button">+ SUGGEST A SONG</button>
-        </div>
-      </div>
+      <button class="main-button" type="button" id="songListBtn" aria-haspopup="dialog">
+        BROWSE SONG LIST
+      </button>
 
       <div class="lk-repertoire-community" id="lkRepertoireCommunity">
         <button id="newSongsToggle" class="lk-new-songs-toggle" type="button" aria-expanded="false" aria-controls="newSongsPanel">
@@ -201,6 +194,11 @@
             <p class="lk-new-songs-loading">Loading new songs…</p>
           </div>
         </div>
+      </div>
+
+      <div class="lk-suggest-song-block">
+        <span>Can't find your song?</span>
+        <button id="suggestSongBtn" class="lk-suggest-song-btn" type="button">+ SUGGEST A SONG</button>
       </div>
     </div>
 
