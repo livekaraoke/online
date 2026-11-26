@@ -26,7 +26,11 @@
     const byId=new Map(records.map(x=>[x.id,x]));
     const missing=ids.filter(id=>!byId.has(id));
     if(missing.length)throw Error(`${missing.length} selected song(s) are missing. Fix the source setlist before publishing.`);
-    return {schemaVersion:1,act,setlist:{id:setlist.id,name:text(setlist.name),songIds:ids},
+    const newSongIds=[...new Set((Array.isArray(setlist.newSongIds)?setlist.newSongIds:[])
+      .filter(id=>typeof id==='string'&&ids.includes(id)))];
+    const sourceNotes=setlist.newSongNotes&&typeof setlist.newSongNotes==='object'?setlist.newSongNotes:{};
+    const newSongNotes=Object.fromEntries(newSongIds.map(id=>[id,text(sourceNotes[id],200)]).filter(([,note])=>note));
+    return {schemaVersion:1,act,setlist:{id:setlist.id,name:text(setlist.name),songIds:ids,newSongIds,newSongNotes},
       songs:ids.map(id=>song(id,byId.get(id)))};
   }
   return Object.freeze({song,catalogue,equal});
