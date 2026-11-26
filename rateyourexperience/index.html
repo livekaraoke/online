@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#050505">
   <meta name="robots" content="noindex,follow">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <title>Rate Your Experience | Live Karaoke</title>
   <meta name="description" content="Rate and review your Live Karaoke experience.">
   <style>
@@ -15,22 +18,12 @@
       position:sticky;
       top:0;
       z-index:10;
-      display:grid;
-      place-items:center;
       width:100%;
-      height:clamp(150px,24vh,280px);
+      height:clamp(118px,20vh,220px);
       flex:0 0 auto;
-      overflow:hidden;
-      background:#000;
+      background:#000 url("/img/banner.png") center center / contain no-repeat;
       border-bottom:1px solid rgba(255,43,43,.32);
       box-shadow:0 8px 24px rgba(0,0,0,.5);
-    }
-    .review-hero img{
-      display:block;
-      width:100%;
-      height:100%;
-      object-fit:contain;
-      object-position:center;
     }
     iframe{
       display:block;
@@ -41,23 +34,25 @@
       background:#050505;
     }
     @media(max-width:699px){
-      .review-hero{height:clamp(125px,20vh,210px)}
+      .review-hero{height:clamp(105px,17vh,165px)}
     }
     @media(max-height:720px){
-      .review-hero{height:clamp(105px,18vh,145px)}
+      .review-hero{height:clamp(92px,15vh,125px)}
     }
   </style>
 </head>
 <body>
-  <picture class="review-hero" aria-label="Live Karaoke">
-    <source srcset="/img/banner.avif" type="image/avif">
-    <source srcset="/img/banner.webp" type="image/webp">
-    <img src="/img/banner.png" alt="Live Karaoke - You Sing, I Play" decoding="async" fetchpriority="high">
-  </picture>
+  <div class="review-hero" role="img" aria-label="Live Karaoke - You Sing, I Play"></div>
   <iframe
-    src="/livekaraoke26/request.html?directReview=1&v=20261126-compact-sticky-1"
+    id="reviewFrame"
     title="Rate your Live Karaoke experience"
     allow="clipboard-write"
   ></iframe>
+  <script>
+    (function(){
+      var frame=document.getElementById("reviewFrame");
+      frame.src="/livekaraoke26/request.html?directReview=1&fresh="+Date.now();
+    })();
+  </script>
 </body>
 </html>
