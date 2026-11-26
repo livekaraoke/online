@@ -147,7 +147,7 @@
       // Explicitly hidden sections must not leak chords, lyrics, or cues.
       if (!window.LyricsCommon.sectionVisibleOnSingerScreen(section)) continue;
       const rows = window.LS26SingerLines.section(section, document,
-        { includeBlankLines: true })
+        { includeBlankLines: true, preservePerformanceNoteText: true })
         .filter(row => row.kind === 'lyric' || row.kind === 'cue' ||
           row.kind === 'blank');
       // Empty sections should not introduce a heading by themselves.
@@ -183,12 +183,9 @@
         // Apply only to lyric rows: headings, performance cues and blanks retain
         // their original presentation. Parent theme changes cannot override this.
         if (row.kind === 'lyric') line.style.color = lyricColour;
-        // The shared Singer Lines helper shortens performance notes to the
-        // trailing parenthetical ("wait for signal"). LyricView, however,
-        // shows the complete author-entered note stored in section.text.
-        // Preserve that exact text for the dedicated Prompter only.
-        line.textContent = isPerformanceNote && row.kind === 'cue'
-          ? (section.text || section.note || row.text) : row.text;
+        // Singer Lines now supplies the exact individual cue text, including
+        // inline notes, parentheses, and multiline standalone note content.
+        line.textContent = row.text;
         group.appendChild(line);
         visibleLines++;
       }

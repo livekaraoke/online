@@ -16,12 +16,24 @@
   const tail=text.match(/\(([^()]*)\)\s*$/);
   return tail&&tail[1].trim()?tail[1].trim():text;
  }
- function performanceCues(source,rows,section){
+ // The dedicated Prompter must show the original cue, not the common
+ // parenthetical suffix used by the compact singer-line display.
+ function noteText(section,document){
+  if(section.text!=null&&section.text!=='')return String(section.text);
+  if(section.html){
+   const holder=document.createElement('div');holder.innerHTML=section.html;
+   holder.querySelectorAll(hidden).forEach(node=>node.remove());
+   holder.querySelectorAll('br').forEach(node=>node.replaceWith(document.createTextNode('\n')));
+   const text=holder.textContent||'';if(text.trim())return text;
+  }
+  return String(section.note||'');
+ }
+ function performanceCues(source,rows,section,preserveText=false){
   const title=String(section?.title||'').trim();
   const result=[];
   const cues=[...source.querySelectorAll('[data-performance-note]')].filter(n=>!n.closest('[data-host-note],.host-note'));
   for(const cue of cues){
-   const text=displayPerformanceNote(cue.dataset.performanceNote);if(!text)continue;
+   const text=preserveText?String(cue.dataset.performanceNote||''):displayPerformanceNote(cue.dataset.performanceNote);if(!text.trim())continue;
    const index=rows.findIndex(row=>row.segments.some(s=>s.node&&(cue.compareDocumentPosition(s.node)&4)));
    const at=index<0?rows.length:index;
    result.push({sourceLineIndex:at,kind:'cue',performance:true,sectionTitle:title,text,size:Math.max(10,Math.min(40,Number(cue.dataset.performanceNoteSize)||18)),colour:/^#[0-9a-f]{6}$/i.test(cue.dataset.performanceNoteColor||'')?cue.dataset.performanceNoteColor:'#75F2A0'});
@@ -34,11 +46,15 @@
   const includeBlankLines=options.includeBlankLines===true;
   const type=String(section?.type||'lyrics').toLowerCase();
   if(['hostnote','host-note','tab','separator'].includes(type))return [];
-  if(['performancenote','performance-note'].includes(type))return [{kind:'cue',performance:true,sectionTitle:String(section.title||'').trim(),text:displayPerformanceNote(section.text||section.note||section.title||''),sourceLineIndex:-1,size:18,colour:'#75F2A0'}];
+  const preserveText=options.preservePerformanceNoteText===true;
+  if(['performancenote','performance-note'].includes(type)){
+   const text=preserveText?noteText(section,document):displayPerformanceNote(section.text||section.note||section.title||'');
+   return preserveText&&!text.trim()?[]:[{kind:'cue',performance:true,sectionTitle:String(section.title||'').trim(),text,sourceLineIndex:-1,size:18,colour:'#75F2A0'}];
+  }
   const source=document.createElement('div');
   if(section.html)source.innerHTML=section.html;else source.textContent=section.text||'';
   const rows=chords.logicalLines(source,{locations:true});
-  const cueRows=performanceCues(source,rows,section);
+  const cueRows=performanceCues(source,rows,section,preserveText);
   // A hidden Singer Screen section still exposes its explicit PERFORMANCE NOTE.
   // This keeps stage directions visible without showing that section's lyrics.
   if(section?.visibleOnSingerScreen===false)return cueRows;
@@ -81,7 +97,8 @@
   });
   result.push(...cueRows);
   return result.filter(row=>row.text||(includeBlankLines&&row.kind==='blank'))
-   .sort((a,b)=>a.sourceLineIndex-b.sourceLineIndex||(a.kind==='cue'?-1:1));
+   .sort((a,b)=>a.sourceLineIndex-b.sourceLineIndex||(preserveText
+    ? Number(b.kind==='cue')-Number(a.kind==='cue') : (a.kind==='cue'?-1:1)));
  }
  function target(rows,chordLineIndex){
   const index=Number(chordLineIndex);if(!Number.isInteger(index)||index<0)return null;
