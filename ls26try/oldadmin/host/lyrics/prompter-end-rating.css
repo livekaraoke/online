@@ -22,19 +22,19 @@
   bottom: calc(10px + env(safe-area-inset-bottom, 0px));
   transform: translateX(-50%);
   box-sizing: border-box;
-  display: flex; align-items: center; justify-content: center; gap: 8px;
+  display: flex; align-items: center; justify-content: center; gap: 12px;
   width: max-content; max-width: calc(100% - 24px);
-  padding: 7px 14px;
+  padding: 12px 22px;
   border: 1px solid rgba(5, 221, 176, .28); border-radius: 9px;
   background: rgba(3, 22, 24, .86); color: #c4d8d5;
   text-align: center; pointer-events: none;
-  font: 600 clamp(13px, 1.8vw, 17px)/1.25 Arial, sans-serif;
+  font: 650 clamp(20px, 3vw, 28px)/1.25 Arial, sans-serif;
 }
 #prompterEndingCountdown[hidden] { display: none !important; }
 #prompterEndingCountdownNumber {
   display: inline-block; color: #75dfc6;
   min-width: 1.2em; margin: 0;
-  font-size: 1.15em; line-height: 1.1; font-variant-numeric: tabular-nums;
+  font-size: 1.3em; line-height: 1.1; font-variant-numeric: tabular-nums;
 }
 /* Keep the card's existing layout. */
 #prompterEndSpacer + #prompterEndRating { margin-top:0; }
