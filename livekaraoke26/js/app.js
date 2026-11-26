@@ -976,13 +976,15 @@
     if(!String(profile.name||"").trim())return false;
     const reviewPrivate=profile.reviewPrivate===true;
     const deviceId=requestDeviceId();
-    const reviewKey=deviceId.replace(/[^A-Za-z0-9_-]/g,"").slice(0,100);
-    const recordId="review_"+reviewKey;
+    const safeDeviceKey=deviceId.replace(/[^A-Za-z0-9_-]/g,"").slice(0,72)||"guest";
+    const storedRecordId=String(localStorage.getItem(REQUEST_REVIEW_ID_KEY)||"");
+    let reviewKey=storedRecordId.startsWith("review_")?storedRecordId.slice(7,127):safeDeviceKey;
     const serverTime=firebase.firestore.FieldValue.serverTimestamp();
-    const data={
+
+    const makeData=key=>({
       source:"livekaraoke26-request-popup",
       reviewRecord:true,
-      reviewKey,
+      reviewKey:key,
       name:String(profile.name||"").trim().slice(0,80),
       country:String(profile.country||"").trim().slice(0,80),
       rating:Number.isInteger(rating)&&rating>=1&&rating<=5?rating:null,
@@ -993,10 +995,30 @@
       requesterDeviceId:deviceId,
       submittedAt:serverTime,
       updatedAt:serverTime
+    });
+    const writeReview=async key=>{
+      const recordId="review_"+key;
+      await db.collection("websiteRequesterProfiles").doc(recordId).set(makeData(key),{merge:true});
+      return recordId;
     };
+    const freshKey=()=>(
+      safeDeviceKey+"_"+Date.now().toString(36)+"_"+Math.random().toString(36).slice(2,9)
+    ).slice(0,120);
+
     reviewSubmissionInProgress=true;
     try{
-      await db.collection("websiteRequesterProfiles").doc(recordId).set(data,{merge:true});
+      let recordId;
+      try{
+        recordId=await writeReview(reviewKey);
+      }catch(error){
+        const denied=/permission-denied/i.test(String(error?.code||""))||/permission/i.test(String(error?.message||""));
+        if(!denied)throw error;
+        // Published reviews are immutable to public users in Firestore. If the
+        // previous local review has since been published, start a new moderated
+        // review instead of overwriting the approved one.
+        reviewKey=freshKey();
+        recordId=await writeReview(reviewKey);
+      }
       localStorage.setItem(REQUEST_REVIEW_ID_KEY,recordId);
       localStorage.setItem(REQUEST_PROFILE_KEY,JSON.stringify({
         ...requestProfile(),rating:rating?String(rating):"",review,reviewPrivate
