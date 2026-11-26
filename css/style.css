@@ -2185,5 +2185,19 @@ width: 100%;
 .lk-suggest-song-status{min-height:20px;margin:0;color:#b8d8ff;font-size:.9rem;text-align:left}
 .lk-suggest-song-submit{position:sticky;bottom:0;z-index:2;min-height:48px;border:1px solid #ff6573;border-radius:8px;background:linear-gradient(180deg,#c82434,#8e101c);color:#fff;font:900 .95rem/1.2 Bahnschrift,Arial,sans-serif;letter-spacing:.06em;cursor:pointer;box-shadow:0 -10px 18px rgba(10,10,11,.9)}
 .lk-suggest-song-submit:disabled{opacity:.55;cursor:wait}
+.lk-suggest-song-success{display:grid;gap:14px;text-align:center;padding:10px 4px 0}
+.lk-suggest-song-success[hidden]{display:none}
+.lk-suggest-song-success h4{margin:4px 0 0;color:#70e69a;font-size:1.45rem;letter-spacing:.035em}
+.lk-suggest-song-success p{margin:0 auto;max-width:390px;color:#dcefe3;font-size:1rem;line-height:1.5}
+.lk-suggest-song-success-close{justify-self:center;min-width:180px;min-height:46px;padding:10px 22px;border:1.5px solid #61db8b;border-radius:8px;background:linear-gradient(180deg,#168047,#0b5f33);color:#fff;font:900 .93rem/1.2 Bahnschrift,Arial,sans-serif;letter-spacing:.06em;cursor:pointer}
+.lk-suggest-song-success-close:hover,.lk-suggest-song-success-close:focus-visible{background:linear-gradient(180deg,#1b9b57,#0d7440);border-color:#91f4b5;outline:none}
+.lk-suggest-song-success-heart{margin:2px auto 0;color:#48dc7d;font-size:2.35rem;line-height:1;text-shadow:0 0 16px rgba(72,220,125,.48)}
+.lk-suggest-song-dialog.is-success{border-color:#36c96e;background:linear-gradient(180deg,#08150d,#07110b);box-shadow:0 24px 80px rgba(0,0,0,.82),0 0 30px rgba(54,201,110,.2)}
+.lk-suggest-song-dialog.is-success .lk-suggest-song-head{border-bottom-color:rgba(83,220,132,.25)}
+.lk-suggest-song-dialog.is-success .lk-suggest-song-head h3{color:#70e69a}
+.lk-suggest-song-dialog.is-success .lk-suggest-song-close{border-color:#397e51;color:#baf6cf;background:#0d2114}
+.lk-suggest-song-dialog.is-success .lk-suggest-song-form>label,
+.lk-suggest-song-dialog.is-success .lk-suggest-song-status,
+.lk-suggest-song-dialog.is-success .lk-suggest-song-submit{display:none}
 @media(max-width:560px){.lk-suggest-song-btn{width:min(100%,320px)}.lk-suggest-song-form{padding:15px 14px 14px;gap:11px}.lk-suggest-song-head{padding-bottom:9px}.lk-suggest-song-head h3{font-size:1.18rem}.lk-suggest-song-form input,.lk-suggest-song-form textarea{padding:10px 11px}.lk-suggest-song-form textarea{min-height:82px;max-height:120px}}
 @media(prefers-reduced-motion:reduce){.lk-new-songs-chevron{transition:none}}
