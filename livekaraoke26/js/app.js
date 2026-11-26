@@ -826,7 +826,7 @@
       const thanks=document.createElement("p");
       thanks.id="directReviewThanks";
       thanks.className="direct-review-thanks";
-      thanks.textContent="Thank you for your support! 💛";
+      thanks.textContent="Thanks for supporting Live Music! 💛";
       submitButton.insertAdjacentElement("afterend",thanks);
     }
 
