@@ -34,7 +34,7 @@
   const stars=rating=>{const n=Math.max(0,Math.min(5,Math.round(Number(rating)||0)));return n?`${"★".repeat(n)}${"☆".repeat(5-n)}`:"No rating";};
   const reviewerKey=item=>String(item.reviewKey||item.requesterDeviceId||item.id||"");
   const state=item=>item.reviewApproved===true?"approved":(["rejected","withdrawn"].includes(String(item.reviewStatus||"").toLowerCase())?String(item.reviewStatus).toLowerCase():"pending");
-  const orderValue=item=>Number.isFinite(Number(item.reviewOrder))?Number(item.reviewOrder):Number.MAX_SAFE_INTEGER;
+  const orderValue=item=>item.reviewOrder!==null&&item.reviewOrder!==undefined&&Number.isFinite(Number(item.reviewOrder))?Number(item.reviewOrder):Number.MAX_SAFE_INTEGER;
 
   function setStatus(message,error=false){
     status.textContent=message||"";
@@ -183,7 +183,7 @@
   }
 
   function nextReviewOrder(){
-    const values=publishedSorted().map(item=>Number(item.reviewOrder)).filter(Number.isFinite);
+    const values=publishedSorted().filter(item=>item.reviewOrder!==null&&item.reviewOrder!==undefined).map(item=>Number(item.reviewOrder)).filter(Number.isFinite);
     return values.length?Math.max(...values)+1:publishedSorted().length;
   }
 
