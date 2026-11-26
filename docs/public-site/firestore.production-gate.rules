@@ -1210,6 +1210,38 @@ match /bookingEnquiries/{enquiryId} {
 
 
 
+
+    /*
+     * PUBLIC LIVE KARAOKE SONG SUGGESTIONS
+     * Public clients may create one pending record only. They cannot read,
+     * approve, edit or delete suggestions; those actions stay owner-only.
+     */
+    match /websiteSongSuggestions/{suggestionId} {
+      allow read, update, delete: if isOwner();
+
+      allow create:
+        if request.resource.data.keys().hasOnly([
+          'title',
+          'artist',
+          'note',
+          'status',
+          'source',
+          'createdAt'
+        ])
+        && request.resource.data.title is string
+        && request.resource.data.title.size() >= 1
+        && request.resource.data.title.size() <= 160
+        && request.resource.data.artist is string
+        && request.resource.data.artist.size() <= 160
+        && request.resource.data.note is string
+        && request.resource.data.note.size() <= 500
+        && request.resource.data.status == 'pending'
+        && request.resource.data.source == 'livekaraoke-homepage'
+        && request.resource.data.createdAt is timestamp
+        && request.resource.data.createdAt == request.time;
+    }
+
+
     /*
      * LIVE KARAOKE REVIEW SUBMISSIONS
      */
