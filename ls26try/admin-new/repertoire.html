@@ -1,0 +1,65 @@
+<!doctype html>
+<!-- Copyright © 2026 LiveSuite. All rights reserved. -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Live Karaoke Repertoire · LiveSuite</title>
+  <link rel="stylesheet" href="css/admin.css?v=20260910-stage4">
+  <link rel="stylesheet" href="css/sidebar.css?v=20260910-stage4">
+  <link rel="stylesheet" href="css/sidebar-suite.css?v=20260910-stage4">
+  <link rel="stylesheet" href="../shared/theme.css?v=20260929-nav-fit">
+  <style>
+    .repertoire-main{max-width:1180px}
+    .repertoire-topbar{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;margin-bottom:18px}
+    .repertoire-topbar h1{margin:0}.repertoire-topbar p{margin:4px 0 0;color:#8ea0ad}
+    .repertoire-card{padding:18px;border:1px solid var(--ls-line,#294050);border-radius:12px;background:var(--ls-panel,#10202c)}
+    .repertoire-meta{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+    .repertoire-meta strong{display:block;color:#fff}.repertoire-meta span{color:#8ea0ad;font-size:12px}
+    .repertoire-list{display:grid;gap:7px}
+    .repertoire-row{display:grid;grid-template-columns:42px minmax(210px,1fr) minmax(220px,.8fr) auto;gap:10px;align-items:center;padding:9px 10px;border:1px solid #2b4352;border-radius:8px;background:#0b1821}
+    .repertoire-position{color:#7f94a3;font-weight:900;text-align:center}
+    .repertoire-song{min-width:0}.repertoire-song strong{display:block;color:#eef7fb;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.repertoire-song small{display:block;margin-top:2px;color:#8da0ad}
+    .repertoire-new{display:inline-block;margin-left:7px;padding:2px 6px;border-radius:5px;background:#1666c5;color:#fff;font-size:9px;vertical-align:2px}
+    .repertoire-note{width:100%;box-sizing:border-box;padding:8px 9px;border:1px solid #365162;border-radius:6px;background:#071117;color:#fff}
+    .repertoire-note-wrap.is-disabled{color:#667681;font-size:11px}
+    .repertoire-actions{display:flex;gap:5px}.repertoire-actions button{min-width:34px;min-height:34px;border:1px solid #3a5668;border-radius:6px;background:#122735;color:#dcecf5;cursor:pointer}.repertoire-actions button:disabled{opacity:.35;cursor:default}
+    .repertoire-savebar{position:sticky;bottom:10px;display:flex;align-items:center;justify-content:flex-end;gap:12px;margin-top:16px;padding:11px;border:1px solid #315163;border-radius:9px;background:rgba(8,20,28,.96);backdrop-filter:blur(7px)}
+    #repertoireStatus{margin-right:auto;color:#9eb1bd;font-size:12px}.repertoire-save{min-height:40px;padding:8px 16px;border:1px solid #58a9e8;border-radius:7px;background:#145b91;color:#fff;font-weight:900;cursor:pointer}
+    @media(max-width:760px){.repertoire-row{grid-template-columns:34px minmax(0,1fr) auto}.repertoire-note-wrap{grid-column:2/-1}.repertoire-topbar{align-items:flex-start;flex-direction:column}}
+  </style>
+</head>
+<body class="admin-body">
+  <div class="admin-shell">
+    <div id="sidebarContainer"></div>
+    <main class="admin-main repertoire-main">
+      <header class="repertoire-topbar">
+        <div><h1>REPERTOIRE</h1><p>Manage the Live Karaoke default website setlist, its order and homepage notes for songs marked NEW.</p></div>
+        <a class="ls26-button" href="../host/setlist-editor.html">Open full Setlist Editor</a>
+      </header>
+      <section class="repertoire-card">
+        <div class="repertoire-meta">
+          <div><strong id="repertoireSetlistName">Loading default setlist…</strong><span id="repertoireCount"></span></div>
+          <span>Use ↑ / ↓ to change the public order.</span>
+        </div>
+        <div id="repertoireRows" class="repertoire-list">Loading…</div>
+        <div class="repertoire-savebar">
+          <span id="repertoireStatus" role="status" aria-live="polite"></span>
+          <button id="saveRepertoireBtn" class="repertoire-save" type="button">SAVE CHANGES</button>
+        </div>
+      </section>
+    </main>
+  </div>
+  <script src="../firebase-projects.js?v=20261126-repertoire-v1"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="js/firebase.js?v=20260910-stage4"></script>
+  <script src="js/sidebar.js?v=20261126-repertoire-v1"></script>
+  <script src="js/profile.js?v=20260929-members-align"></script>
+  <script src="js/auth.js?v=20260910-stage4"></script>
+  <script data-ls26-settings="1" src="../shared/app-settings.js?v=20260930-app-version"></script>
+  <script src="../shared/shell.js?v=20260930-release-preview-v3"></script>
+  <script src="js/repertoire.js?v=20261126-repertoire-v1"></script>
+</body>
+</html>
