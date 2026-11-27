@@ -235,7 +235,7 @@
 
     if (compactEnd) {
       const late=actualStart&&schedule.start?Math.max(0,Math.round((actualStart-schedule.start)/60000)):0;
-      const value=target?`+${late}mins late`:'No scheduled end';if(compactEnd.textContent!==value)compactEnd.textContent=value;
+      const value=target?`+${late}m`:'No scheduled end';if(compactEnd.textContent!==value)compactEnd.textContent=value;
     }
 
     if (adjustedEnd) {
