@@ -17,7 +17,7 @@ function saveContext(){try{sessionStorage.setItem(contextKey(),JSON.stringify(Ob
 function restoreContext(){Object.assign(state,{venue:'',venueOverride:false,source:'auto',actScope:'session',preset:'balanced',intent:'best'});try{const saved=JSON.parse(sessionStorage.getItem(contextKey())||'{}');for(const k of ['venue','venueOverride','source','actScope','preset','intent'])if(saved[k]!==undefined)state[k]=saved[k];}catch(_){}}
 function context(){
  session=tools()?.getSession?.();const control=tools()?.getControl?.()||{};
- const automatic=session||control,autoKey=R.venueKey(automatic),key=state.venueOverride?state.venue:autoKey||state.venue;
+ const activeId=tools()?.getSessionId?.()||'',automatic=session||(activeId?control:{}),autoKey=R.venueKey(automatic),key=state.venueOverride?state.venue:autoKey;
  const known=state.history.find(s=>R.venueKey(s)===key),venue=state.venueOverride?(known?.venue||state.index?.venues.get(key)?.name||key):automatic.venue||known?.venue||'';
  const active=!!tools()?.getSessionId?.(),sessionList=session?.setlistId||session?.publicSetlistId||tools()?.getPublicList?.()?.setlistId;
  let working=document.getElementById('setlistFilter')?.value||'';
@@ -25,7 +25,7 @@ function context(){
  // A setlist explicitly selected in the Library takes precedence over the active session pool.
  const selected=state.source==='auto'?(working||(active?sessionList:'')):state.source==='all'?'':state.source;
  const list=state.lists.find(l=>l.id===selected),ids=state.source==='auto'&&active&&!working?(session?.setlistSongIds||list?.songIds||[]):list?.songIds;
- return {venue,venueKey:key,act:state.actScope==='all'?'all':state.actScope==='session'?R.act(automatic):state.actScope,currentSongId,runOrder:tools()?.getRunOrder?.()||[],performed:state.performed,historyReady:state.ready,historyTruncated:state.historyTruncated,intent:state.intent,poolIds:state.source==='all'?null:ids?new Set(ids):state.source!=='auto'||active?new Set():null,sourceName:list?.name||(state.source!=='auto'&&state.source!=='all'?'Selected setlist unavailable':active&&state.source==='auto'?'Session setlist (not assigned)':'All songs')};
+ return {venue,venueKey:key,act:state.actScope==='all'?'all':state.actScope==='session'?(active?R.act(automatic):'all'):state.actScope,currentSongId,runOrder:tools()?.getRunOrder?.()||[],performed:state.performed,historyReady:state.ready,historyTruncated:state.historyTruncated,intent:state.intent,poolIds:state.source==='all'?null:ids?new Set(ids):state.source!=='auto'||active?new Set():null,sourceName:list?.name||(state.source!=='auto'&&state.source!=='all'?'Selected setlist unavailable':active&&state.source==='auto'?'Session setlist (not assigned)':'All songs')};
 }
 function recalculate(){
  const ctx=context();state.index=R.buildIndex(state.songs,state.history,state.sessionId||'',ctx);
@@ -49,7 +49,8 @@ async function loadHistory(force=false){
  });return inflight;
 }
 function syncSession(){
- if(!state.uid||!tools()?.getControl?.())return;
+ // Offline planning must load history even before the control document arrives.
+ if(!state.uid)return;
  const sid=tools()?.getSessionId?.()||'';
  if(sid!==state.sessionId){generation++;state.sessionId=sid;state.venueOverride=false;state.source='auto';state.actScope='session';restoreContext();state.performed=[];state.liveReady=!sid;state.ready=false;state.history=[];inflight=null;stopPerformed?.();stopPerformed=null;
   const token=generation;
@@ -67,7 +68,17 @@ function render(){
  const rows=document.getElementById('bestNextRows');if(rows)rows.innerHTML=top.length?top.map(rowMarkup).join(''):'<p>No eligible songs. Change filters or check the song library.</p>';
 
  const venueSelect=document.getElementById('bestNextVenueSelect');
- if(venueSelect){const venues=new Map(state.history.filter(s=>s.venue||s.venueId).map(s=>[R.venueKey(s),s.venue]));if(ctx.venueKey)venues.set(ctx.venueKey,ctx.venue);venueSelect.innerHTML='<option value="">Choose recorded venue</option>'+[...venues].map(([k,v])=>`<option value="${esc(k)}">${esc(v)}${k.startsWith('id:')?' · '+esc(k.slice(3)):''}</option>`).join('');venueSelect.value=ctx.venueKey;venueSelect.disabled=false;}
+ if(venueSelect){
+  const venues=new Map();
+  for(const s of state.history){const key=R.venueKey(s);if(key)venues.set(key,s.venue||venues.get(key)||key.replace(/^id:/,''));}
+  if(ctx.venueKey)venues.set(ctx.venueKey,ctx.venue||venues.get(ctx.venueKey)||ctx.venueKey);
+  const normalize=v=>String(v||'').normalize('NFKC').toLowerCase().trim().replace(/\s+/g,' ');
+  for(const [key,name] of [...venues])if(!key.startsWith('id:')&&key!==ctx.venueKey&&[...venues].filter(([k,v])=>k.startsWith('id:')&&normalize(v)===normalize(name)).length===1)venues.delete(key);
+  const options=[...venues].sort((a,b)=>String(a[1]).localeCompare(String(b[1])));
+  const placeholder=options.length?'Choose recorded venue':state.error?'History unavailable — retry':state.ready?'No recorded venues found':!state.uid?'Sign in as host':'Loading venues…';
+  venueSelect.innerHTML='<option value="">'+esc(placeholder)+'</option>'+options.map(([k,v])=>'<option value="'+esc(k)+'">'+esc(v)+'</option>').join('');
+  venueSelect.value=ctx.venueKey||'';venueSelect.disabled=!options.length;
+ }
  const source=document.getElementById('bestNextSource');if(source){source.innerHTML='<option value="auto">SESSION / WORKING SETLIST</option><option value="all">ALL SONGS</option>'+state.lists.map(l=>`<option value="${esc(l.id)}">${esc(l.name)}</option>`).join('');source.value=state.source;}
  const acts=document.getElementById('bestNextAct');if(acts){const known=[...new Set(state.history.map(R.act).concat([R.act(session||{})]))];acts.innerHTML='<option value="session">CURRENT SESSION ACT</option><option value="all">ALL ACTS</option>'+known.map(a=>`<option value="${esc(a)}">${esc(a)}</option>`).join('');acts.value=state.actScope;}
  for(const [id,value]of [['bestNextIntent',state.intent],['bestNextPreset',state.preset]]){const select=document.getElementById(id);if(select)select.value=value;}
@@ -75,15 +86,15 @@ function render(){
  const history=document.getElementById('bestNextSongHistory'),r=state.map.get(currentSongId);
  if(history)history.innerHTML=`<h3>VENUE HISTORY — ${esc(ctx.venue||'No venue')}</h3>`+(r?`<p><span class="rotation-badge" data-rotation="${r.badge}">${r.badge}</span></p><p>${esc(r.reasons[0])}</p><p>Recorded plays here: ${r.stat.count}<br>Last date: ${r.stat.lastDate?esc(new Date(r.stat.lastDate).toLocaleDateString()):'—'}<br>Requests: ${r.stat.requests}<br>Completed requests: ${r.stat.completedRequests}<br>Abandoned requests: ${r.stat.abandonedRequests}<br>Global recorded plays: ${r.global.count}<br>Global last date: ${r.global.lastDate?esc(new Date(r.global.lastDate).toLocaleDateString()):'—'}</p><small>Historical archives only. ${r.partial?'Some venue archives are incomplete.':''}</small>`:'<p>History not loaded.</p>');
 }
-function open(invoker){panelInvoker=invoker||document.activeElement;const panel=document.getElementById('bestNextPanel');panel.hidden=false;document.getElementById('bestNextOpen')?.setAttribute('aria-expanded','true');document.getElementById('bestNextClose').focus();}
+function open(invoker){if(state.uid&&state.sessionId===null)syncSession();panelInvoker=invoker||document.activeElement;const panel=document.getElementById('bestNextPanel');panel.hidden=false;document.getElementById('bestNextOpen')?.setAttribute('aria-expanded','true');document.getElementById('bestNextClose').focus();}
 function close(){document.getElementById('bestNextPanel').hidden=true;document.getElementById('bestNextOpen')?.setAttribute('aria-expanded','false');panelInvoker?.focus();}
 function mount(){
  if(document.getElementById('bestNextPanel'))return;
  const target=document.getElementById('libraryRecommendationTools');
  if(target){const button=document.createElement('button');button.id='bestNextOpen';button.type='button';button.textContent='BEST NEXT';button.setAttribute('aria-controls','bestNextPanel');button.setAttribute('aria-expanded','false');button.onclick=()=>open(button);target.prepend(button);}
- const panel=document.createElement('aside');panel.id='bestNextPanel';panel.hidden=true;panel.setAttribute('aria-label','Best Next recommendations');panel.innerHTML=`<header><strong>BEST NEXT</strong><button id="bestNextClose" type="button" aria-label="Close recommendations">✕</button></header><h3 id="bestNextVenue"></h3><p id="bestNextStatus" role="status"></p><div class="best-next-settings"><label>Recommendation venue<select id="bestNextVenueSelect"></select><button type="button" id="bestNextSessionVenue">USE SESSION VENUE</button></label><label>Song source<select id="bestNextSource"></select></label><label>Act history<select id="bestNextAct"></select></label><label>Priority<select id="bestNextPreset"><option value="balanced">Balanced</option><option value="freshness">Freshness</option><option value="energy">Energy</option><option value="requests">Requests</option><option value="variety">Variety</option><option value="reliable">Reliability</option></select></label><label>Intent<select id="bestNextIntent"><option value="best">BEST NEXT</option><option value="energy-up">BUILD ENERGY</option><option value="energy-keep">KEEP ENERGY</option><option value="chill">CHILL</option><option value="singalong">SINGALONG</option><option value="closer">BIG FINISH</option><option value="tempo-up">TEMPO ↑</option><option value="tempo-keep">KEEP TEMPO</option><option value="tempo-down">TEMPO ↓</option></select></label><label>Fresh after<select id="bestNextFresh"><option value="3">3 venue gigs</option><option value="5" selected>5 venue gigs</option><option value="8">8 venue gigs</option></select></label></div><small>Energy, singalong and reliability require explicit host tags. Missing metadata is neutral.</small><div id="bestNextRows"></div><button id="bestNextRefresh" type="button">REFRESH / RETRY HISTORY</button>`;document.body.append(panel);
+ const panel=document.createElement('aside');panel.id='bestNextPanel';panel.hidden=true;panel.setAttribute('aria-label','Best Next recommendations');panel.innerHTML=`<header><strong>BEST NEXT</strong><button id="bestNextClose" type="button" aria-label="Close recommendations">✕</button></header><h3 id="bestNextVenue"></h3><p id="bestNextStatus" role="status"></p><button id="bestNextRefresh" type="button">REFRESH / RETRY HISTORY</button><div class="best-next-settings"><label>Recommendation venue<select id="bestNextVenueSelect"></select><button type="button" id="bestNextSessionVenue">USE SESSION VENUE</button></label><label>Song source<select id="bestNextSource"></select></label><label>Act history<select id="bestNextAct"></select></label><label>Priority<select id="bestNextPreset"><option value="balanced">Balanced</option><option value="freshness">Freshness</option><option value="energy">Energy</option><option value="requests">Requests</option><option value="variety">Variety</option><option value="reliable">Reliability</option></select></label><label>Intent<select id="bestNextIntent"><option value="best">BEST NEXT</option><option value="energy-up">BUILD ENERGY</option><option value="energy-keep">KEEP ENERGY</option><option value="chill">CHILL</option><option value="singalong">SINGALONG</option><option value="closer">BIG FINISH</option><option value="tempo-up">TEMPO ↑</option><option value="tempo-keep">KEEP TEMPO</option><option value="tempo-down">TEMPO ↓</option></select></label><label>Fresh after<select id="bestNextFresh"><option value="3">3 venue gigs</option><option value="5" selected>5 venue gigs</option><option value="8">8 venue gigs</option></select></label></div><small>Energy, singalong and reliability require explicit host tags. Missing metadata is neutral.</small><div id="bestNextRows"></div>`;document.body.append(panel);
  document.getElementById('bestNextClose').onclick=close;panel.addEventListener('keydown',e=>{if(e.key==='Escape')close();});
- document.getElementById('bestNextVenueSelect').onchange=e=>{state.venue=e.target.value;state.venueOverride=true;saveContext();recalculate();};
+ document.getElementById('bestNextVenueSelect').onchange=e=>{state.venue=e.target.value;state.venueOverride=!!state.venue;saveContext();recalculate();};
  document.getElementById('bestNextSessionVenue').onclick=()=>{state.venueOverride=false;saveContext();recalculate();};
  document.getElementById('bestNextSource').onchange=e=>{state.source=e.target.value;saveContext();recalculate();};
  document.getElementById('bestNextAct').onchange=e=>{state.actScope=e.target.value;saveContext();recalculate();};
