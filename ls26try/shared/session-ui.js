@@ -30,11 +30,77 @@
     const summary = $('ls26BreakSummary');
     if (summary) summary.textContent = `${breaks.length} ${breaks.length === 1 ? 'break' : 'breaks'} · ${breakDurationText(breaks.reduce((sum,b)=>sum+breakDurationMs(b,now),0))} total`;
   }
+  // Demo is a separate read-only DOM view. Never replace real session state,
+  // reuse real action selectors, or store the demo preference.
+  let demo=null;
+  function demoData(now=Date.now()){
+    const minute=60000,start=now-47*minute,end=start+150*minute;
+    return {start,end,scheduled:start-2*minute,breakStart:start+25*minute,breakEnd:start+30*minute,venue:'Example Venue',act:'Live Karaoke',setlist:'Live Karaoke · 150 songs',
+      requests:[['Wonderwall','Oasis','Alex','Birthday dedication'],['Valerie','Amy Winehouse','Sam',''],['Come Together','The Beatles','Jamie','First time singing']],
+      queue:[['Sweet Home Alabama','Lynyrd Skynyrd','Taylor','PLAYING'],['Mr. Brightside','The Killers','Morgan','QUEUED'],['Summer of 69','Bryan Adams','Host choice','QUEUED'],['Wish You Were Here','Pink Floyd','Casey','QUEUED']],
+      notices:[[start,'Session started'],[start+3*minute,'Public song requests opened'],[start+25*minute,'Break started'],[start+30*minute,'Session resumed'],[now-2*minute,'New request: Come Together']]};
+  }
+  function demoMarkup(d){
+    const clockAt=ms=>clock(new Date(ms));
+    const tabs=[['session','⌛ SESSION STATUS',''],['notifications','🔔 NOTIFICATIONS',' (5)'],['notes','📝 SESSION NOTES',''],['pending','🎤 PENDING REQUESTS',' (3)'],['runorder','♫ RUN ORDER',' (4)']];
+    const disabled=label=>'<button type="button" disabled>'+esc(label)+'</button>';
+    const row=(title,artist,singer,extra,actions)=>'<div class="ls26-demo-row"><div><strong>'+esc(title)+'</strong><small>'+esc(artist)+'</small></div><div><strong>'+esc(singer)+'</strong><small>'+esc(extra||'')+'</small></div><div class="ls26-demo-actions">'+actions+'</div></div>';
+    return '<div class="ls26-demo-strip">'+
+      '<div class="ls26-demo-live"><i></i><div><strong>ONLINE</strong><small>(DEMO)</small></div></div>'+
+      '<div class="ls26-demo-metric ls26-demo-venue"><strong>'+esc(d.venue)+'</strong><em>'+clockAt(d.scheduled)+' – '+clockAt(d.end)+'</em></div>'+
+      '<div class="ls26-demo-metric"><small>STARTED</small><strong>'+clockAt(d.start)+'</strong></div>'+
+      '<div class="ls26-demo-metric"><small>ELAPSED</small><strong class="ls26-demo-green" data-demo-elapsed></strong></div>'+
+      '<div class="ls26-demo-metric"><small>REMAINING</small><strong class="ls26-demo-yellow" data-demo-remaining></strong><em>Ends '+clockAt(d.end)+'</em></div>'+
+      '<div class="ls26-demo-metric"><small>REQUESTS</small><strong class="ls26-demo-request-count">'+d.requests.length+'</strong></div>'+
+      '<strong class="ls26-demo-clock" data-demo-clock></strong><button type="button" data-demo-collapse aria-label="Collapse demo dashboard" aria-expanded="true">▲</button></div>'+
+      '<div class="ls26-demo-expanded"><div class="ls26-session-tabs" role="tablist" aria-label="Demo session tabs">'+tabs.map(([id,label,count],i)=>'<button type="button" role="tab" id="ls26-demo-tab-'+id+'" aria-controls="ls26-demo-pane-'+id+'" aria-selected="'+(i===0)+'" class="host-card-tab'+(i===0?' active':'')+'" data-demo-tab="'+id+'">'+label+count+'</button>').join('')+'</div>'+
+      '<div class="ls26-demo-banner"><small>DEMONSTRATION ONLY · Sample data, no live actions</small><button type="button" data-demo-exit>HIDE DEMO</button></div>'+
+      '<section class="ls26-demo-pane" id="ls26-demo-pane-session" role="tabpanel" aria-labelledby="ls26-demo-tab-session" data-demo-pane="session"><div class="ls26-demo-grid">'+
+      '<section class="ls26-session-card"><small class="ls26-eyebrow">PERFORMANCE SESSION</small><p>'+esc(new Date(d.start).toLocaleDateString())+'</p><strong>'+esc(d.venue)+'</strong><small>'+esc(d.act)+'</small><div class="ls26-session-schedule"><div><small>SCHEDULED START</small><strong>'+clockAt(d.scheduled)+'</strong></div><div><small>PROJECTED END</small><strong>'+clockAt(d.end)+'</strong></div></div><p class="ls26-muted">Planned duration · 2h 32m</p></section>'+
+      '<section class="ls26-session-card"><small class="ls26-eyebrow">PUBLIC SONG LIST</small><strong class="ls26-public-list-name">'+esc(d.setlist)+'</strong>'+disabled('☷ Change song list')+'<p class="ls26-requests-state">● Requests OPEN — guests can submit songs</p>'+disabled('🔒 Close requests')+'<div class="ls26-session-lifecycle">'+disabled('☕ Start break')+disabled('■ SESSION')+'</div></section>'+
+      '<section class="ls26-session-card ls26-demo-break"><div class="ls26-break-heading"><strong>Break history</strong><span>1 break · 5m total</span></div><table><thead><tr><th>#</th><th>Start</th><th>End</th><th>Time</th></tr></thead><tbody><tr><td>1</td><td>'+clockAt(d.breakStart)+'</td><td>'+clockAt(d.breakEnd)+'</td><td>5m 00s</td></tr></tbody></table></section></div></section>'+
+      '<section class="ls26-demo-pane" id="ls26-demo-pane-notifications" role="tabpanel" aria-labelledby="ls26-demo-tab-notifications" data-demo-pane="notifications" hidden><h3>Notifications</h3>'+[...d.notices].reverse().map(([time,label])=>'<div class="ls26-demo-notice"><i></i><span>'+esc(label)+'</span><time>'+clockAt(time)+'</time></div>').join('')+'</section>'+
+      '<section class="ls26-demo-pane" id="ls26-demo-pane-notes" role="tabpanel" aria-labelledby="ls26-demo-tab-notes" data-demo-pane="notes" hidden><h3>Session notes</h3><textarea readonly aria-label="Example session notes">Good audience response to upbeat songs.\n\nRemember the birthday dedication for Alex.\n\nTake a short break after the next few songs.</textarea><small class="ls26-muted">Example notes · not saved</small></section>'+
+      '<section class="ls26-demo-pane" id="ls26-demo-pane-pending" role="tabpanel" aria-labelledby="ls26-demo-tab-pending" data-demo-pane="pending" hidden><h3>Pending Requests ('+d.requests.length+')</h3>'+d.requests.map(x=>row(...x,disabled('ACCEPT')+disabled('DECLINE'))).join('')+'</section>'+
+      '<section class="ls26-demo-pane" id="ls26-demo-pane-runorder" role="tabpanel" aria-labelledby="ls26-demo-tab-runorder" data-demo-pane="runorder" hidden><h3>Run Order ('+d.queue.length+')</h3>'+disabled('＋ ADD A SONG')+d.queue.map(x=>row(...x,disabled('PLAY')+disabled('↑')+disabled('↓'))).join('')+'</section></div>';
+  }
+  function refreshDemo(){
+    if(!demo)return;
+    if(tools()?.getSessionId?.()||tools()?.getSession?.()){stopDemo(false);return;}
+    const now=Date.now(),duration=ms=>{const m=Math.max(0,Math.floor(ms/60000));return (m>=60?Math.floor(m/60)+'h ':'')+m%60+'m';};
+    for(const [selector,value] of [['[data-demo-elapsed]',duration(now-demo.data.start)],['[data-demo-remaining]',duration(demo.data.end-now)],['[data-demo-clock]',clock(new Date(now))]]){
+      const node=demo.root.querySelector(selector);if(node&&node.textContent!==value)node.textContent=value;
+    }
+  }
+  function stopDemo(focus=true){
+    if(!demo)return;
+    const {root,real}=demo;demo=null;root.remove();real.classList.remove('ls26-demo-hidden');
+    if(focus)$('ls26ShowDemo')?.focus({preventScroll:true});
+  }
+  function startDemo(){
+    if(demo||tools()?.getSessionId?.()||tools()?.getSession?.())return;
+    const real=$('topStatusBar');if(!real?.parentNode)return;
+    const root=document.createElement('div');root.id='ls26SessionDemo';
+    const data=demoData();root.innerHTML=demoMarkup(data);
+    demo={root,real,data};real.after(root);real.classList.add('ls26-demo-hidden');
+    root.addEventListener('click',event=>{
+      if(event.target.closest('[data-demo-exit]')){stopDemo();return;}
+      const tab=event.target.closest('[data-demo-tab]');
+      if(tab){
+        root.querySelectorAll('[data-demo-tab]').forEach(x=>{const selected=x===tab;x.classList.toggle('active',selected);x.setAttribute('aria-selected',String(selected));});
+        root.querySelectorAll('[data-demo-pane]').forEach(x=>x.hidden=x.dataset.demoPane!==tab.dataset.demoTab);return;
+      }
+      const toggle=event.target.closest('[data-demo-collapse]');
+      if(toggle){const expanded=root.querySelector('.ls26-demo-expanded');expanded.hidden=!expanded.hidden;toggle.textContent=expanded.hidden?'▼':'▲';toggle.setAttribute('aria-expanded',String(!expanded.hidden));toggle.setAttribute('aria-label',expanded.hidden?'Expand demo dashboard':'Collapse demo dashboard');}
+    });
+    refreshDemo();root.querySelector('[data-demo-exit]').focus({preventScroll:true});
+  }
   function renderSession(){
     const pane=$('tsSessionStatusPane');if(!pane||!tools())return;
     const session=tools().getSession(),publicList=tools().getPublicList?.()||{};
+    if(demo&&(session||tools()?.getSessionId?.()))stopDemo(false);
     let grid=$('ls26SessionGrid');if(!grid){grid=document.createElement('div');grid.id='ls26SessionGrid';grid.className='ls26-session-grid';pane.prepend(grid);}
-    if(!session){grid.innerHTML=`<p>No active session. <a href="${LS26.url('admin-new/admin.html')}">Start a session in Admin</a></p>`;return;}
+    if(!session){grid.innerHTML=`<div class="ls26-offline-demo-row"><p>No active session. <a href="${LS26.url('admin-new/admin.html')}">Start a session in Admin</a></p><button type="button" id="ls26ShowDemo" ${tools()?.getSessionId?.()?'disabled':''}>SHOW DEMO</button></div>`;grid.querySelector('#ls26ShowDemo').onclick=startDemo;return;}
     const start=date(session.scheduledStartAt),end=date(session.projectedEndAt||session.scheduledEndAt),duration=start&&end?Math.round((end-start)/60000):0;
     const requestsOpen=LK.topStatus?.getRequestsEnabled?.();
     const breaks=session.breaks||[],open=session.breakOpen||breaks.some(x=>(x.start||x.startedAt)&&!(x.end||x.endedAt));
@@ -160,6 +226,7 @@
   }
   function init(){
     setInterval(refreshBreakTimers,1000);
+    setInterval(refreshDemo,1000);
     document.addEventListener('visibilitychange',refreshBreakTimers);
     if(!ready()){const observer=new MutationObserver(()=>{if(ready())observer.disconnect();});observer.observe(document.body,{childList:true,subtree:true});}
     window.addEventListener('lk:session-updated',renderSession);window.addEventListener('ls26:public-list',renderSession);window.addEventListener('ls26:requests-gate',renderSession);
