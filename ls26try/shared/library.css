@@ -335,3 +335,32 @@ body.library-page{height:100dvh;overflow:hidden;display:flex;flex-direction:colu
 .library-page .song-table-row.is-played .played-song-label{
  flex:none;font-size:.66em;font-weight:750;white-space:nowrap;color:inherit;
 }
+
+/* Song library analytics: native modal and responsive, zero-dependency charts. */
+.library-page .library-new-tools #libraryAnalysisBtn{display:grid;place-items:center;min-width:44px;padding:5px 8px;color:#00cafa;border-color:#1683a4;background:#073146}
+#libraryAnalysisBtn svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:2.3;stroke-linecap:round;stroke-linejoin:round}
+.ls26-dialog.library-analysis-dialog{box-sizing:border-box;width:min(970px,94vw);max-height:90dvh;padding:0 16px 18px;font-size:14px;overscroll-behavior:contain}
+.library-analysis-header{position:sticky;top:0;z-index:2;background:var(--ls-panel,#051925);display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 0 10px;border-bottom:1px solid #24536b}
+.library-analysis-header h2{margin:0;font-size:22px;line-height:1.15}
+.library-analysis-header p{margin:5px 0 0;color:var(--ls-muted,#9db8c8)}
+.library-analysis-header [data-analysis-close]{font-size:26px;line-height:1;padding:4px;min-width:44px}
+.library-analysis-bpm{display:flex;align-items:center;gap:10px;margin:10px 0}
+.library-analysis-bpm label{margin:0;white-space:nowrap;font-weight:700}
+.library-analysis-bpm select{width:auto;max-width:100%;min-width:0;padding:8px;min-height:42px;font-size:14px}
+.library-analysis-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+.library-analysis-metrics>div{padding:10px;border:1px solid #24536b;border-radius:8px;background:#072738}
+.library-analysis-metrics small{display:block;color:#9db8c8;font-size:12px;margin-bottom:4px}
+.library-analysis-metrics strong{display:block;color:#00cafa;font-size:clamp(17px,2.5vw,25px);overflow-wrap:anywhere}
+.library-analysis-note,.library-analysis-chart p{color:#9db8c8;font-size:12px;line-height:1.4}
+.library-analysis-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;align-items:start}
+.library-analysis-chart{min-width:0;padding:12px;border:1px solid #24536b;border-radius:8px;background:#061e2d}
+.library-analysis-chart h3{margin:0 0 4px;font-size:16px;color:#e6f7ff}
+.library-analysis-chart p{margin:4px 0 10px}
+.library-analysis-bar-row{display:grid;grid-template-columns:minmax(52px,32%) minmax(0,1fr) auto;align-items:center;gap:7px;min-height:26px}
+.library-analysis-bar-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px}
+.library-analysis-track{height:10px;background:#123545;border-radius:3px;overflow:hidden}
+.library-analysis-track>span{display:block;height:100%;background:#00b7db;border-radius:3px}
+.library-analysis-chart:nth-child(2n) .library-analysis-track>span{background:#00c980}
+.library-analysis-bar-row strong{font-size:12px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.library-analysis-bar-row strong small{color:#9db8c8;font-size:10px;font-weight:400}
+@media(max-width:580px){.library-analysis-grid{grid-template-columns:1fr}.library-analysis-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.library-analysis-header h2{font-size:19px}}

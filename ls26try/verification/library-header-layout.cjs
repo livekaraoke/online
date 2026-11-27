@@ -48,8 +48,9 @@ const chrome=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin
     const metadataWidths=await page.locator('.song-table-head > span').evaluateAll(els=>els.map(el=>el.getBoundingClientRect().width));
     assert.equal(metadataWidths.length,8);
     assert.ok(Math.abs(metadataWidths[2]-metadataWidths[3])<1,width+': placeholder and KEY widths differ');
-    assert.deepEqual(await page.locator('.library-new-tools button').allTextContents(),['NEW 1','NEW 2','NEW 3']);
-    assert.equal(await page.locator('.library-new-tools button:disabled').count(),3);
+    assert.equal(await page.locator('#libraryAnalysisBtn').count(),1);
+    assert.equal(await page.locator('#libraryAnalysisBtn').isEnabled(),true);
+    assert.deepEqual(await page.locator('.library-new-tools button:disabled').allTextContents(),['NEW 2','NEW 3']);
     assert.ok(boxes.scrollWidth<=boxes.innerWidth+2,width+': unexpected horizontal overflow '+boxes.scrollWidth);
     console.log('PASS: Library heading and browsing controls align without overflow at '+width+' CSS px');
    }finally{await page.close();}

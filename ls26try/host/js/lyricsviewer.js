@@ -726,6 +726,87 @@
     }).join("\n");
   }
 
+  // Analytics is computed solely from the rendered list; never query Firebase.
+  function analyseLibrary(list, bpmMode = "effective") {
+    const entries=list.filter(song=>!personalNote(song));
+    const total=entries.length;
+    const numeric=value=>{const n=Number(value);return Number.isFinite(n)&&n>0&&n<=400?n:null;};
+    const counts=()=>new Map();
+    const increment=(map,label)=>map.set(label,(map.get(label)||0)+1);
+    const ordered=map=>[...map].sort((a,b)=>b[1]-a[1]||String(a[0]).localeCompare(String(b[0])));
+    const keys=counts(),modes=counts(),decades=counts(),years=counts(),genreCounts=counts(),artists=counts();
+    const bpmValues=[],bpmBins=[["<60",0],["60–79",0],["80–99",0],["100–119",0],["120–139",0],["140–159",0],["160–179",0],["180+",0]];
+    let userCount=0,originalCount=0,keyCount=0,yearCount=0,genreCount=0,artistCount=0;
+    for(const song of entries){
+      const user=numeric(song.userBpm),original=numeric(song.originalBpm);
+      if(user!==null)userCount++;
+      if(original!==null)originalCount++;
+      const bpm=bpmMode==="user"?user:bpmMode==="original"?original:user??original;
+      if(bpm!==null){bpmValues.push(bpm);const bucket=bpm<60?0:Math.min(7,1+Math.floor((bpm-60)/20));bpmBins[bucket][1]++;}
+      const rawKey=String(song.key??"").trim().replace(/♯/g,"#").replace(/♭/g,"b");
+      if(rawKey&&!/^[-—–?]+$|^(unknown|n\/a|none)$/i.test(rawKey)){
+        keyCount++;
+        const match=rawKey.match(/^([A-Ga-g])([#b]?)[\s]*(major|maj|minor|min|m)?$/i);
+        const minor=match&&/^(minor|min|m)$/i.test(match[3]||"")&&match[3]!=="M";
+        const key=match?match[1].toUpperCase()+match[2]+(minor?"m":""):rawKey;
+        increment(keys,key);increment(modes,match?(minor?"Minor":"Major"):"Other / unspecified");
+      }
+      const year=Number(song.year);
+      if(Number.isInteger(year)&&year>=1000&&year<=2100){yearCount++;increment(years,year);increment(decades,Math.floor(year/10)*10);}
+      const tags=[...new Set(genres(song).map(tag=>tag.trim()).filter(Boolean))];
+      if(tags.length){genreCount++;tags.forEach(tag=>increment(genreCounts,tag));}
+      const artist=String(ArtistNames.display(song.artist)||"").trim();
+      if(artist&&!/^[-—–?]+$|^(unknown|n\/a|none)$/i.test(artist)){artistCount++;increment(artists,artist);}
+    }
+    bpmValues.sort((a,b)=>a-b);const n=bpmValues.length,mid=Math.floor(n/2);
+    const mean=n?bpmValues.reduce((sum,value)=>sum+value,0)/n:null;
+    const median=n?(n%2?bpmValues[mid]:(bpmValues[mid-1]+bpmValues[mid])/2):null;
+    const sortedYears=[...years.keys()].sort((a,b)=>a-b);
+    return {total,excluded:list.length-total,bpmCount:n,userCount,originalCount,keyCount,yearCount,genreCount,artistCount,
+      mean,median,min:n?bpmValues[0]:null,max:n?bpmValues[n-1]:null,bpmBins,keys:ordered(keys),modes:ordered(modes),
+      decades:[...decades].sort((a,b)=>a[0]-b[0]).map(([year,count])=>[year+"s",count]),years:sortedYears,
+      genres:ordered(genreCounts),artists:ordered(artists)};
+  }
+
+  function openLibraryAnalysis() {
+    const list=visibleSongs.slice();
+    const chosen=setlists.find(item=>item.id===filters.setlist.value);
+    const scopeLabel=chosen?.name||(scope==="favourites"?"Favourites":scope==="session"?"Session setlist":"All songs");
+    const dialog=document.createElement("dialog");
+    dialog.className="ls26-dialog library-analysis-dialog";
+    dialog.setAttribute("aria-labelledby","libraryAnalysisTitle");
+    dialog.innerHTML='<header class="library-analysis-header"><div><h2 id="libraryAnalysisTitle">Song Library Analysis</h2><p class="library-analysis-scope"></p></div><button type="button" data-analysis-close aria-label="Close analysis">×</button></header><div class="library-analysis-bpm"><label for="libraryAnalysisBpm">Tempo source</label><select id="libraryAnalysisBpm"><option value="effective">User BPM, otherwise original</option><option value="user">User BPM only</option><option value="original">Original BPM only</option></select></div><div class="library-analysis-content"></div>';
+    dialog.querySelector(".library-analysis-scope").textContent=scopeLabel+" · current filtered list";
+    const content=dialog.querySelector(".library-analysis-content"),selector=dialog.querySelector("select");
+    const esc=value=>LyricsCommon.escapeHTML(String(value));
+    const fmt=value=>value===null?"–":Number(value.toFixed(1)).toLocaleString();
+    const percent=(count,total)=>total?Math.round(count/total*100):0;
+    function bars(title,rows,denominator,detail,limit=Infinity){
+      const shown=rows.slice(0,limit),max=Math.max(1,...shown.map(row=>row[1]));
+      const markup=shown.map(([name,count])=>'<div class="library-analysis-bar-row"><span class="library-analysis-bar-label" title="'+esc(name)+'">'+esc(name)+'</span><span class="library-analysis-track" aria-hidden="true"><span style="width:'+count/max*100+'%"></span></span><strong>'+count+' <small>'+percent(count,denominator)+'%</small></strong></div>').join("");
+      return '<section class="library-analysis-chart"><h3>'+esc(title)+'</h3><p>'+esc(detail)+'</p>'+(shown.length?markup:'<p class="library-analysis-empty">No recorded data</p>')+(rows.length>limit?'<p>Showing top '+limit+' of '+rows.length+'</p>':'')+'</section>';
+    }
+    function draw(){
+      const a=analyseLibrary(list,selector.value);
+      const metrics=[["Songs",a.total],["Average BPM",fmt(a.mean)],["Median BPM",fmt(a.median)],["BPM range",a.min===null?"–":fmt(a.min)+"–"+fmt(a.max)],["Most common key",a.keys[0]?.[0]||"–"],["Release years",a.years.length?a.years[0]+"–"+a.years[a.years.length-1]:"–"]];
+      content.innerHTML='<div class="library-analysis-metrics">'+metrics.map(([name,value])=>'<div><small>'+esc(name)+'</small><strong>'+esc(value)+'</strong></div>').join("")+'</div>'+
+        '<p class="library-analysis-note">'+a.total+' songs analysed'+(a.excluded?' · '+a.excluded+' personal notes excluded':'')+'. Unknown values are excluded from distributions; coverage below shows missing data.</p>'+
+        '<div class="library-analysis-grid">'+
+        bars("Tempo distribution",a.bpmCount?a.bpmBins:[],a.bpmCount,a.bpmCount+" songs with usable BPM")+
+        bars("Musical keys",a.keys,a.keyCount,a.keyCount+" songs with a recorded key")+
+        bars("Release decades",a.decades,a.yearCount,a.yearCount+" songs with a release year")+
+        bars("Major / minor",a.modes,a.keyCount,"Based on the saved key notation")+
+        bars("Genres",a.genres,a.total,"Share of songs; songs can have multiple genres",12)+
+        bars("Most represented artists",a.artists,a.total,"Grouped by stored artist credit",12)+
+        bars("Data completeness",[["User BPM",a.userCount],["Original BPM",a.originalCount],["Key",a.keyCount],["Release year",a.yearCount],["Genre",a.genreCount],["Artist",a.artistCount]],a.total,"Recorded values out of "+a.total+" songs")+
+        '</div>';
+    }
+    selector.addEventListener("change",draw);
+    dialog.querySelector("[data-analysis-close]").onclick=()=>dialog.close();
+    dialog.addEventListener("close",()=>{dialog.remove();$("libraryAnalysisBtn")?.focus({preventScroll:true});},{once:true});
+    draw();document.body.append(dialog);dialog.showModal();
+  }
+
   function openExportDialog() {
     // Snapshot the rendered list: retain filters and ordering, without fetching data.
     const list = visibleSongs.slice();
@@ -1015,6 +1096,7 @@
 
   $("refreshBtn").onclick = ()=>{LS26Data.invalidate("lyrics");LS26Data.invalidate("lyricsSetlists");loadData();};
   $("exportBtn").onclick = openExportDialog;
+  if ($("libraryAnalysisBtn")) $("libraryAnalysisBtn").onclick = openLibraryAnalysis;
   $("playSelectedBtn").onclick = () => {
     if (!nextRunOrderItem?.songId) return;
 
