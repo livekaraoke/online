@@ -364,3 +364,11 @@ body.library-page{height:100dvh;overflow:hidden;display:flex;flex-direction:colu
 .library-analysis-bar-row strong{font-size:12px;white-space:nowrap;font-variant-numeric:tabular-nums}
 .library-analysis-bar-row strong small{color:#9db8c8;font-size:10px;font-weight:400}
 @media(max-width:580px){.library-analysis-grid{grid-template-columns:1fr}.library-analysis-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.library-analysis-header h2{font-size:19px}}
+
+/* Slightly more search space on tablets without compromising inline counts. */
+@media(min-width:851px){
+ .library-page .library-heading{grid-template-columns:minmax(0,1fr) minmax(0,41%) auto}
+}
+@media(min-width:761px) and (max-width:850px){
+ .library-page .library-heading{grid-template-columns:minmax(0,1fr) minmax(0,39%) auto}
+}
