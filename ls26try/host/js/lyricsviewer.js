@@ -690,15 +690,25 @@
     URL.revokeObjectURL(link.href);
   }
 
+  function formatExportText(list, includeDetails = false) {
+    const clean = value => String(value ?? "").replace(/[\r\n]+/g, " ").trim();
+    return list.map(song => {
+      const title = clean(song.title);
+      const artist = clean(ArtistNames.display(song.artist));
+      const basic = artist ? title + " - " + artist : title;
+      if (!includeDetails) return basic;
+      const key = clean(song.key) || "Unknown key";
+      const bpm = [song.userBpm, song.originalBpm].map(clean)
+        .find(value => Number.isFinite(Number(value)) && Number(value) > 0);
+      return basic + " - " + key + " - " + (bpm ? bpm + "BPM" : "Unknown BPM");
+    }).join("\n");
+  }
+
   function openExportDialog() {
     // Snapshot the rendered list: retain filters and ordering, without fetching data.
     const list = visibleSongs.slice();
-    const clean = value => String(value ?? "").replace(/[\r\n]+/g, " ").trim();
-    const plainText = list.map(song => {
-      const title = clean(song.title);
-      const artist = clean(ArtistNames.display(song.artist));
-      return artist ? title + " - " + artist : title;
-    }).join("\n");
+    const plainText = formatExportText(list);
+    const detailedText = formatExportText(list, true);
 
     const dialog = document.createElement("dialog");
     dialog.className = "ls26-dialog";
@@ -708,6 +718,7 @@
       '<div class="ls26-dialog-actions">' +
       '<button type="button" data-export="download">Download CSV</button>' +
       '<button type="button" class="primary" data-export="copy">Copy to clipboard</button>' +
+      '<button type="button" class="primary" data-export="copy-details">Copy with key &amp; BPM</button>' +
       '<button type="button" data-export="cancel">Close</button></div>' +
       '<p role="status" aria-live="polite"></p>' +
       '<textarea aria-label="Song list to copy manually" rows="6" readonly hidden></textarea>';
@@ -716,25 +727,26 @@
       " in the displayed list. Current filters and sort order will be preserved.";
     const download = dialog.querySelector('[data-export="download"]');
     const copy = dialog.querySelector('[data-export="copy"]');
+    const copyDetails = dialog.querySelector('[data-export="copy-details"]');
     const status = dialog.querySelector('[role="status"]');
     const manual = dialog.querySelector("textarea");
-    download.disabled = copy.disabled = !list.length;
+    download.disabled = copy.disabled = copyDetails.disabled = !list.length;
     download.onclick = () => exportCSV(list);
-    copy.onclick = async () => {
-      copy.disabled = true;
+    const copyText = async (text, button) => {
+      copy.disabled = copyDetails.disabled = true;
       status.textContent = "";
       try {
         let copied = false;
         if (navigator.clipboard?.writeText) {
           try {
-            await navigator.clipboard.writeText(plainText);
+            await navigator.clipboard.writeText(text);
             copied = true;
           } catch (_) { /* Try the selection-based fallback. */ }
         }
         if (!dialog.isConnected || !dialog.open) return;
         if (!copied) {
           manual.hidden = false;
-          manual.value = plainText;
+          manual.value = text;
           manual.focus();
           manual.select();
           manual.setSelectionRange(0, manual.value.length);
@@ -742,16 +754,19 @@
         }
         if (copied) {
           manual.hidden = true;
-          copy.focus({ preventScroll: true });
+          copy.disabled = copyDetails.disabled = false;
+          button.focus({ preventScroll: true });
           status.textContent = list.length.toLocaleString() +
             (list.length === 1 ? " song copied" : " songs copied") + " to clipboard.";
         } else {
           status.textContent = "Clipboard access is unavailable. Copy the selected text below manually.";
         }
       } finally {
-        copy.disabled = false;
+        copy.disabled = copyDetails.disabled = false;
       }
     };
+    copy.onclick = () => copyText(plainText, copy);
+    copyDetails.onclick = () => copyText(detailedText, copyDetails);
     dialog.querySelector('[data-export="cancel"]').onclick = () => dialog.close();
     dialog.addEventListener("close", () => {
       dialog.remove();
