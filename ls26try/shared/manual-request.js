@@ -133,6 +133,8 @@
         margin-top:2px;
         color:#8199a5;
       }
+      .ls26-manual-request-dialog .ls26-unnamed-requester-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+      .ls26-manual-request-dialog .ls26-unnamed-requester-row button{justify-content:center;min-width:0;text-align:center;font-size:16px;font-weight:800;color:#8ceaff;background:#103346;border-color:#38849a}
       .ls26-manual-request-dialog .ls26-manual-requester-list .is-new{
         border-color:#2c8051;
         color:#aaf3c2;
@@ -185,12 +187,13 @@
     document.head.appendChild(style);
   }
 
+  const unnamedRequesters=['Unknown male','Unknown female'];
   function currentRequesterNames() {
     const seen = new Set();
     const names = [];
     (tools()?.getRequests?.() || []).forEach(request => {
       const name = String(request?.singerName || request?.requesterName || request?.name || '').trim();
-      if (!name) return;
+      if (!name || unnamedRequesters.some(value=>value.toLowerCase()===name.toLowerCase())) return;
       const key = name.toLocaleLowerCase();
       if (seen.has(key)) return;
       seen.add(key);
@@ -398,6 +401,7 @@
       selectedSongBox.innerHTML = `<small>SELECTED SONG</small><strong>${esc(song.title || song.id)}${song.artist ? ` — ${esc(window.ArtistNames?.display?.(song.artist) || song.artist)}` : ''}</strong>`;
       const names = currentRequesterNames();
       requesterList.innerHTML = `
+        <div class="ls26-unnamed-requester-row">${unnamedRequesters.map(name=>`<button type="button" class="ls26-unnamed-requester" data-manual-requester="${esc(name)}">${esc(name)}</button>`).join('')}</div>
         <button type="button" class="is-new" data-manual-new-requester><span>＋ NEW…</span><span>ENTER NAME</span></button>
         ${names.map(name => `<button type="button" data-manual-requester="${esc(name)}"><span>${esc(name)}</span><span>CHOOSE ›</span></button>`).join('')}
       `;

@@ -75,7 +75,7 @@
   function loadFocusedHelpers(){
     const path=String(location.pathname||'');
     if(window.firebase?.auth&&firebase.apps?.length)loadSharedHelper('public-catalogue-publisher.js?v=20261124-request-block-v2','ls26PublicCataloguePublisherLoader');
-    if(document.getElementById('topStatusContainer')){loadSharedHelper('manual-request.js?v=20261006-manual-request-v2','ls26ManualRequestLoader');loadSharedHelper('manual-request-button-layout.js?v=20261006-manual-request-layout-v1','ls26ManualRequestLayoutLoader');}
+    if(document.getElementById('topStatusContainer')){loadSharedHelper('manual-request.js?v=20261127-run-order-compact-v18','ls26ManualRequestLoader');loadSharedHelper('manual-request-button-layout.js?v=20261006-manual-request-layout-v1','ls26ManualRequestLayoutLoader');}
     if(/\/admin-new\/performance-sessions\.html$/i.test(path))loadSharedHelper('session-history-fixes.js?v=20261006-request-history-fix-v1','ls26SessionHistoryFixLoader');
     // LyricView receives the helper here; Singer Screen loads it directly so it
     // is available before the first Guitaroke render without a duplicate fetch.

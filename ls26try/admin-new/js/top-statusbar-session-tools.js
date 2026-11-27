@@ -945,6 +945,9 @@
       items.map((item,index) => {
         const status = String(item?.status || "").toLowerCase();
         const isPlaying = status === "playing" || status === "played";
+        const request=requestForRunItem(item,view);
+        const requester=request?.singerName||request?.requesterName||request?.name||item.singerName||"Host choice";
+        const note=request?.note||item.requesterNote||item.note||"";
 
         return `
           <div
@@ -957,12 +960,12 @@
             <div class="ts-run-main">
               <small class="ts-sequence-label">${isPlaying?"CURRENT / PLAYING":movable.indexOf(item)===0?"NEXT":"FOLLOWING"}</small><strong>${esc(item.songTitle || item.title || item.songId || "Untitled Song")}</strong>
               <small>
-                ${esc(ArtistNames.display(item.artist || ""))} · ${esc(item.singerName || "Host choice")} · ${esc(requestForRunItem(item,view)?.location || "")}
+                ${esc(ArtistNames.display(item.artist || ""))}
                 ${isPlaying ? `<em class="ts-playing-label">${status === "played" ? "FINISHED" : "PLAYING"}</em>` : ""}
               </small>
             </div>
 
-            ${(requestForRunItem(item,view)?.note||item.note)?`<div class="ls26-request-note">${esc(requestForRunItem(item,view)?.note||item.note)}</div>`:''}
+            <div class="ts-run-requester"><strong class="ts-run-requester-name">${esc(requester)}</strong>${note?`<div class="ts-run-requester-note">${esc(note)}</div>`:''}</div>
             <div class="ts-run-actions">
               ${
                 showPlayButtons && !isPlaying

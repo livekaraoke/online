@@ -1360,3 +1360,28 @@ html body.host-lyric-view-page :is(#ls26StickyHeader,#hostStickyStack) > .host-v
 #topStatusBar.is-session-demo #tsLiveLabel{color:#00e88a!important;white-space:nowrap!important;text-align:center}
 #topStatusBar.is-session-demo #tsLiveLabel::after{content:"(DEMO)";display:block;color:#ffdb58;font-size:10px;font-weight:600;line-height:1.2}
 #topStatusBar.is-session-demo .ls26-offline-demo-row small{color:#ffdb58}
+
+/* Compact shared Run Order: remove recommendation/energy rows from view,
+   but retain Finish & Next wherever it is normally mounted. */
+#topStatusBar #tsRunOrderPane #smartRunFlow,
+#topStatusBar #tsRunOrderPane #tsRunOrderBestNext{display:none!important}
+#topStatusBar #tsRunOrderPane #tsRunOrderQuickRow:not(:has(#smartRunTools)){display:none!important}
+#topStatusBar #tsRunOrderPane #tsRunOrderQuickRow:has(#smartRunTools){grid-template-columns:minmax(0,1fr)!important;margin:4px 0!important}
+#ls26StickyHeader #topStatusBar .ts-run-order-row:not(.ts-current-break-row),
+#topStatusBar .ts-run-order-row:not(.ts-current-break-row),
+.ls26-mirror .ts-run-order-row:not(.ts-current-break-row){
+ min-height:86px!important;padding:8px 10px!important;gap:9px!important;box-sizing:border-box;
+}
+#ls26StickyHeader #topStatusBar .ts-run-order-row .ts-run-main small,
+#topStatusBar .ts-run-order-row .ts-run-main small,
+.ls26-mirror .ts-run-order-row .ts-run-main small{margin-top:2px!important;line-height:1.2!important}
+.ts-run-requester{flex:0 1 19%;min-width:85px;max-width:230px;display:flex;flex-direction:column;gap:3px;overflow-wrap:anywhere}
+.ts-run-requester .ts-run-requester-name{display:block;font-size:clamp(16px,2vw,22px);font-weight:800;color:#b5f4ff;line-height:1.15}
+.ts-run-requester-note{font-size:clamp(12px,1.5vw,16px);color:#c3d4df;line-height:1.25;white-space:pre-wrap}
+.ts-run-order-row.is-playing .ts-run-requester-name{color:#a7f9cb}
+@media(max-width:650px){
+ #ls26StickyHeader #topStatusBar .ts-run-order-row:not(.ts-current-break-row),#topStatusBar .ts-run-order-row:not(.ts-current-break-row),.ls26-mirror .ts-run-order-row:not(.ts-current-break-row){flex-wrap:wrap;gap:5px!important}
+ #topStatusBar .ts-run-order-row .ts-run-main,.ls26-mirror .ts-run-order-row .ts-run-main{flex:1 1 45%!important}
+ .ts-run-requester{flex:0 1 33%;min-width:70px}
+ #topStatusBar .ts-run-order-row .ts-run-actions,.ls26-mirror .ts-run-order-row .ts-run-actions{margin-left:auto}
+}

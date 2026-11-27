@@ -21,9 +21,9 @@ test('sidebar pending badge follows current session and ignores stale snapshots'
 test('active Run Order excludes terminal songs without deleting history',()=>{
  const source=read('admin-new/js/top-statusbar-session-tools.js');const code=source.slice(source.indexOf('  function renderRunOrder()'),source.indexOf('  function renderSongSelect()'));
  const nodes=Object.fromEntries(['tsRunOrderList','tsRunOrderCount','tsRunOrderTabCount'].map(id=>[id,element()]));
- const items=['queued','played','completed','finished','abandoned','declined','playing'].map((status,i)=>({id:String(i),songTitle:status,status}));
+ const items=['queued','played','completed','finished','abandoned','declined','playing'].map((status,i)=>({id:String(i),songTitle:status,status,singerName:'Example singer',requesterNote:'Example note'}));
  const c={$:id=>nodes[id],renderBestNextRunOrder:()=>{},ArtistNames:{display:x=>x},state:{sessionId:'s'},displayState:()=>({sessionId:'s'}),queueItems:()=>items,getBreakState:()=>({open:false}),runOrderPlayingItem:rows=>rows.find(x=>x.status==='playing'),requestForRunItem:()=>null,esc:x=>x,window:{matchMedia:()=>({matches:true})}};
- vm.createContext(c);vm.runInContext(code,c);c.renderRunOrder();assert.equal(nodes.tsRunOrderCount.textContent,'(2)');assert.match(nodes.tsRunOrderList.innerHTML,/data-ts-run-details="6"/);assert.doesNotMatch(nodes.tsRunOrderList.innerHTML,/data-ts-run-details="[12345]"/);assert.equal(items.length,7);
+ vm.createContext(c);vm.runInContext(code,c);c.renderRunOrder();assert.equal(nodes.tsRunOrderCount.textContent,'(2)');assert.match(nodes.tsRunOrderList.innerHTML,/data-ts-run-details="6"/);assert.doesNotMatch(nodes.tsRunOrderList.innerHTML,/data-ts-run-details="[12345]"/);assert.equal(items.length,7);assert.match(nodes.tsRunOrderList.innerHTML,/class="ts-run-requester-name">Example singer/);assert.match(nodes.tsRunOrderList.innerHTML,/class="ts-run-requester-note">Example note/);
  items.splice(0,items.length,{id:'done',status:'played'});c.renderRunOrder();assert.equal(nodes.tsRunOrderCount.textContent,'(0)');assert.match(nodes.tsRunOrderList.innerHTML,/Run Order is empty/);
 });
 test('open break timer advances locally while completed break duration remains fixed',()=>{
@@ -52,4 +52,12 @@ test('native demo uses mock presentation records without replacing live session 
  assert.match(controller,/getSessionId = \(\) => state.sessionId/);assert.match(controller,/getRequests = \(\) => state.requests/);
  c.stopDemo(false);assert.equal(view,null);assert.equal(document.getElementById('topStatusBar').classList.contains('is-session-demo'),false);
  c.startDemo();active='real-session';c.refreshDemo();assert.equal(view,null);c.startDemo();assert.equal(view,null);
+});
+
+test('manual request picker includes two unnamed requester shortcuts above new names',()=>{
+ const source=read('shared/manual-request.js');
+ assert.match(source,/unnamedRequesters=\['Unknown male','Unknown female'\]/);
+ assert.match(source,/ls26-unnamed-requester-row\">\$\{unnamedRequesters\.map/);
+ assert.ok(source.indexOf('class="ls26-unnamed-requester-row"')<source.indexOf('class="is-new" data-manual-new-requester'));
+ assert.match(source,/grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
 });
