@@ -211,7 +211,7 @@
       setValueState(compactRemaining, NaN);
       setValueState(adjustedRemaining, NaN);
       setValueState(legacyRemaining, NaN);
-      if (compactEnd) compactEnd.textContent = "No scheduled end";
+      if (compactEnd) compactEnd.textContent = "";
       if (adjustedEnd) adjustedEnd.textContent = "Adjusted end —";
       if (adjustedHint) adjustedHint.textContent = "No active session";
       if (legacyWindow) legacyWindow.textContent = "No active session";

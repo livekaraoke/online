@@ -1442,3 +1442,9 @@ html #ls26StickyHeader #topStatusBar .host-compact-strip .remaining-metric #tsCo
  font-size:min(11px,clamp(7px,9cqi,11px),calc(var(--ls26-status-strip-height,70px) * .16))!important;
  line-height:1.1!important;white-space:normal!important;overflow-wrap:normal!important;text-align:left!important;
 }
+
+/* Offline remaining metric: centre the dash and remove the empty schedule hint. */
+html #topStatusBar .host-compact-strip .remaining-metric #tsCompactScheduledEnd:empty,
+html #ls26StickyHeader #topStatusBar .host-compact-strip .remaining-metric #tsCompactScheduledEnd:empty{display:none!important}
+html #topStatusBar .host-compact-strip .remaining-metric:has(#tsCompactScheduledEnd:empty) #tsCompactRemaining,
+html #ls26StickyHeader #topStatusBar .host-compact-strip .remaining-metric:has(#tsCompactScheduledEnd:empty) #tsCompactRemaining{grid-column:1/-1;text-align:center!important;justify-self:center}
