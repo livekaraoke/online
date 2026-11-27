@@ -70,6 +70,7 @@
     if(!target?.closest?.('#topStatusBar'))return;
     if(target.closest('#ls26HideDemo')){if(event.type==='click'){event.preventDefault();event.stopImmediatePropagation();stopDemo();}return;}
     if(target.closest('[data-ts-info-tab],[data-ts-workflow-tab],[data-ts-toggle-strip],summary')&&!target.closest('[data-session]'))return;
+    if(event.type==='keydown'&&event.key==='Tab')return;
     if(target.closest('button,a,input,select,textarea,[data-ls-request],[data-ts-run-details]')){
       event.preventDefault();event.stopImmediatePropagation();
     }

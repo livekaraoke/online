@@ -869,7 +869,7 @@
     const panel=$("endCompletionPanel"),slot=$("endCompletionFinishSlot");
     const destination=slot||row;
     if(finish&&finish.parentElement!==destination)destination.append(finish);
-    window.LS26BestNext.renderRunOrder(card,demoView?.best);
+    window.LS26BestNext.renderRunOrder(card,window.LK?.sessionTools?.getDemoView?.()?.best);
   }
   window.addEventListener("ls26:rotation-updated", renderBestNextRunOrder);
 
