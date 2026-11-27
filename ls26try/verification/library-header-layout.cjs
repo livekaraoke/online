@@ -39,7 +39,7 @@ const chrome=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin
     assert.ok(aligned('setlist','best')&&aligned('best','rotation'),width+': recommendation row stacked unexpectedly');
     assert.ok(b.title.right<=b.search.left+2&&b.search.right<=b.filters.left+2&&b.filters.right<=b.add.left+2&&b.add.right<=b.export.left+2,width+': heading overlap');
     assert.ok(b.setlist.right<=b.best.left+2&&b.best.right<=b.rotation.left+2,width+': browse row overlap');
-    assert.ok(b.search.width>=100&&b.setlist.width>=65&&b.best.width>=80,width+': touch layout too compressed');
+    assert.ok(b.search.width>=100&&b.setlist.width>=65&&b.best.width>=70,width+': touch layout too compressed');
     assert.ok(b.heading.right<=b.counts.left+2&&aligned('heading','counts'),width+': counts must be beside heading');
     assert.ok(aligned('rotation','new1')&&aligned('new1','new2')&&aligned('new2','new3')&&b.rotation.right<=b.new1.left+2&&b.new3.right<=boxes.innerWidth,width+': placeholder tools overlap or wrap');
     assert.deepEqual(await page.locator('.library-new-tools button').allTextContents(),['NEW 1','NEW 2','NEW 3']);

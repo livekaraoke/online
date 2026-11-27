@@ -247,3 +247,54 @@ body.library-page{height:100dvh;overflow:hidden;display:flex;flex-direction:colu
   .library-page .library-browse-row{grid-template-columns:minmax(0,1fr);gap:5px}
   .library-page .library-new-tools button{flex:1}
 }
+
+/* 2026-11-27: toolbar refinement and four independent song actions. */
+.library-page .library-heading-copy{gap:5px}
+.library-page .library-heading-subline{display:flex;flex-wrap:nowrap;gap:5px;white-space:nowrap}
+.library-page .library-browse-row .library-scope button{box-sizing:border-box;width:100%;padding-inline:4px}
+.library-page .library-browse-row [data-scope="favourites"]{font-size:23px;line-height:1;color:#ffdb58}
+.library-page .library-browse-row [data-scope="favourites"].active{color:#ffdb58!important}
+@media(min-width:691px){
+ .library-page .library-heading{grid-template-columns:minmax(0,1fr) minmax(0,38%) auto}
+ .library-page .library-heading-subline{flex-shrink:0}
+ .library-page .library-heading-copy h1{font-size:clamp(20px,2.45vw,29px)!important}
+ .library-page .library-heading-subline .library-total-count,.library-page .library-heading-subline #libraryShowingCount{font-size:clamp(10px,1.4vw,12px)!important}
+ .library-page .library-browse-row .library-scope{grid-template-columns:repeat(3,clamp(65px,8.8vw,92px)) clamp(120px,21.33vw,273px)}
+}
+@media(min-width:691px) and (max-width:760px){
+ .library-page .library-heading-copy h1{font-size:19px!important}
+ .library-page .library-browse-row .library-scope{grid-template-columns:repeat(3,64px) clamp(112px,19vw,145px)}
+}
+@media(max-width:690px){
+ .library-page .library-heading-copy{flex-wrap:wrap}
+ .library-page .library-browse-row .library-scope{grid-template-columns:repeat(3,minmax(0,1fr)) minmax(0,1.8fr)}
+ .library-page .library-browse-row #setlistFilter{grid-column:auto}
+}
+@media(max-width:390px){
+ .library-page .library-browse-row .library-scope{grid-template-columns:repeat(3,minmax(0,1fr))}
+ .library-page .library-browse-row #setlistFilter{grid-column:1/-1}
+}
+.library-page .song-table-head,.library-page .song-table-row{grid-template-columns:36px minmax(70px,1fr) 54px 64px 54px 48px 199px}
+.library-page .row-actions .row-setlist-btn{color:#c8a7ff;border:1px solid #8466b9;background:#261b3d;width:46px}
+.library-page .row-actions .row-setlist-btn:hover{background:#39275c;border-color:#c8a7ff}
+.library-page .row-actions .row-setlist-btn svg{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.library-page .song-table-row.is-selected{background:#07364c;outline:1px solid #00cafa;outline-offset:-1px}
+.library-page .song-table-row.is-armed{background:linear-gradient(100deg,#064b35,#003020);outline:2px solid #00e88a;outline-offset:-2px}
+.library-page .song-table-row.is-armed .song-title-cell{background:transparent}
+.library-page .song-table-row.is-armed .row-play-btn{background:#00e88a;color:#002319;border-color:#00e88a;font-size:12px;font-weight:900}
+.library-page .row-play-label{display:none}
+.library-page .song-table-row.is-armed .row-play-btn svg{display:none}
+.library-page .song-table-row.is-armed .row-play-label{display:block}
+.library-setlist-options{display:grid;gap:6px;max-height:45vh;overflow:auto;margin:12px 0}
+.library-setlist-options button{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px;text-align:left;padding:9px 12px;border:1px solid #386575;border-radius:6px;background:#092b40;color:#eefaff;font:inherit}
+.library-setlist-options button:disabled{opacity:.6}
+.library-setlist-options button small{color:#9db8c8;white-space:nowrap}
+@media(min-width:521px) and (max-width:760px){
+ .library-page .song-table-head,.library-page .song-table-row{grid-template-columns:28px minmax(60px,1fr) 38px 48px 42px 34px 182px}
+ .library-page .row-actions .row-setlist-btn,.library-page .row-actions .row-queue-btn{width:44px}
+}
+@media(max-width:520px){
+ .library-page .song-table-head,.library-page .song-table-row{grid-template-columns:24px minmax(60px,1fr) 33px 38px 33px 28px 44px}
+ .library-page .row-actions .row-setlist-btn,.library-page .row-actions .row-queue-btn{width:44px}
+ .library-page .song-table-row{min-height:196px!important}
+}

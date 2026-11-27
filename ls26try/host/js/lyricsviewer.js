@@ -11,6 +11,7 @@
   let selectedIndex = -1;
   let nextRunOrderItem = null;
   let selectedId = "";
+  let selectedStage = 0;
   let scope = new URLSearchParams(location.search).get("view")==="setlist" ? "session" : "all";
   let songsUnsub = null;
   let setlistsUnsub = null;
@@ -236,8 +237,7 @@
     `;
   }
 
-  function populateSetlists() {
-    const current = filters.setlist.value || restoredState?.setlist || "";
+  function populateSetlists(current = filters.setlist.value || restoredState?.setlist || "") {
 
     const ordered = [...setlists].sort((a, b) =>
       String(a.name || "").localeCompare(String(b.name || ""))
@@ -404,6 +404,7 @@
   function render() {
     syncNotesControls();
     visibleSongs = filteredSongs();
+    if (!visibleSongs.some(song => song.firebaseId === selectedId)) selectedStage = 0;
 
     $("resultCount").textContent = visibleSongs.length.toLocaleString();
     $("statTotal").textContent = songs.length.toLocaleString();
@@ -471,10 +472,10 @@
             data-open="${song.firebaseId}"
             type="button"
             title="Play / Open song">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3 21 12 7 21Z"/></svg>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3 21 12 7 21Z"/></svg><span class="row-play-label" aria-hidden="true">PLAY</span>
           </button>
 
-          <button class="row-edit-btn" data-edit="${song.firebaseId}" type="button" aria-label="Edit song" title="Edit song"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 16-1 5 5-1L21 7l-4-4Z" fill="none" stroke="currentColor" stroke-width="2"/></svg></button><button class="row-queue-btn" data-queue="${song.firebaseId}" type="button" title="Add to Run Order" aria-label="Add to Run Order"><svg viewBox="0 0 28 24" aria-hidden="true"><path d="M2 12h8M6 8v8M15 5h2m3 0h6M15 12h2m3 0h6M15 19h2m3 0h6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button>
+          <button class="row-edit-btn" data-edit="${song.firebaseId}" type="button" aria-label="Edit song" title="Edit song"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 16-1 5 5-1L21 7l-4-4Z" fill="none" stroke="currentColor" stroke-width="2"/></svg></button><button class="row-queue-btn" data-queue="${song.firebaseId}" type="button" title="Add to Run Order" aria-label="Add to Run Order"><svg viewBox="0 0 28 24" aria-hidden="true"><path d="M2 12h8M6 8v8M15 5h2m3 0h6M15 12h2m3 0h6M15 19h2m3 0h6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button><button class="row-setlist-btn" data-add-setlist="${song.firebaseId}" type="button" title="Add to setlist" aria-label="Add to setlist"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h12M3 10h12M3 15h7M18 12v8M14 16h8"/></svg></button>
         </span>
       `;
 
@@ -657,7 +658,7 @@
       )
     );
 
-    selectedId=visibleSongs[selectedIndex].firebaseId;updateSelected();
+    selectedId=visibleSongs[selectedIndex].firebaseId;selectedStage=1;updateSelected();
   }
 
   function exportCSV(list) {
@@ -777,7 +778,108 @@
   }
 
   function syncSidebarButton(){const open=!$("libraryFilterPanel").hidden;$("sidebarToggleBtn").setAttribute('aria-expanded',String(open));}
-  function updateSelected(){document.querySelectorAll('.song-table-row').forEach(x=>x.classList.toggle('is-selected',x.dataset.id===selectedId));}
+  function updateSelected(){
+    document.querySelectorAll('.song-table-row').forEach(row => {
+      const selected = row.dataset.id === selectedId;
+      row.classList.toggle('is-selected', selected);
+      row.classList.toggle('is-armed', selected && selectedStage === 2);
+      row.querySelector('[data-select]')?.setAttribute('aria-pressed', String(selected));
+    });
+  }
+  function selectSongRow(id) {
+    if (selectedId !== id || selectedStage === 0) { selectedId = id; selectedStage = 1; }
+    else if (selectedStage === 1) selectedStage = 2;
+    else { selectedStage = 1; openSong(id); return; }
+    selectedIndex = visibleSongs.findIndex(song => song.firebaseId === id);
+    updateSelected();
+    saveViewState();
+  }
+  function insertSetlistSong(ids, id) {
+    const lookup = new Map(songs.map(song => [song.firebaseId, song]));
+    const collator = new Intl.Collator(undefined, { sensitivity: 'base', numeric: true });
+    if (ids.includes(id)) return [...ids];
+    return [...ids, id].sort((a,b) => {
+      const x=lookup.get(a), y=lookup.get(b);
+      if (!x || !y) return x ? -1 : y ? 1 : 0;
+      return collator.compare(x.title,y.title) || collator.compare(ArtistNames.display(x.artist),ArtistNames.display(y.artist)) || collator.compare(a,b);
+    });
+  }
+  async function addSongToSetlist(id, setlistId) {
+    const db = window.db || window.LK?.db;
+    const user = firebase.auth().currentUser;
+    if (!db || !user) throw Error('Sign in as host to add songs to setlists.');
+    const ref = db.collection('lyricsSetlists').doc(setlistId);
+    const result = await db.runTransaction(async transaction => {
+      const snapshot = await transaction.get(ref);
+      if (!snapshot.exists) throw Error('This setlist no longer exists.');
+      const data = snapshot.data() || {};
+      const ids = Array.isArray(data.songIds) ? data.songIds : [];
+      const added = !ids.includes(id);
+      const songIds = insertSetlistSong(ids,id);
+      if (added) transaction.update(ref, {songIds,updatedBy:user.uid,updatedByEmail:user.email||'',updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
+      return {data,songIds,added};
+    });
+    const current = filters.setlist.value;
+    const local = { ...result.data,id:setlistId,songIds:result.songIds };
+    setlists = setlists.map(item=>item.id===setlistId?local:item);
+    LS26Data.invalidate('lyricsSetlists');
+    populateSetlists(current);
+    const top = $('songRows').scrollTop;
+    render();
+    $('songRows').scrollTop = top;
+    window.dispatchEvent(new Event('ls26:working-setlist'));
+    return result;
+  }
+  function openSetlistPicker(id, opener) {
+    const song = songs.find(item=>item.firebaseId===id);
+    if (!song) return;
+    const dialog = document.createElement('dialog');
+    dialog.className='ls26-dialog';
+    dialog.setAttribute('aria-labelledby','librarySetlistPickerTitle');
+    dialog.innerHTML='<h2 id="librarySetlistPickerTitle">Add to setlist</h2><p class="ls26-dialog-message"></p><div class="library-setlist-options"></div><p role="status" aria-live="polite"></p><div class="ls26-dialog-actions"><button type="button" data-picker-close>Close</button></div>';
+    dialog.querySelector('.ls26-dialog-message').textContent=song.title+' - '+ArtistNames.display(song.artist);
+    const options=dialog.querySelector('.library-setlist-options');
+    const status=dialog.querySelector('[role="status"]');
+    const close=dialog.querySelector('[data-picker-close]');
+    let busy=false;
+    const ordered=[...setlists].sort((a,b)=>String(a.name||'').localeCompare(String(b.name||'')));
+    if (!ordered.length) status.textContent='No saved setlists. Create one in Setlists first.';
+    for (const setlist of ordered) {
+      const button=document.createElement('button');
+      button.type='button';
+      const name=document.createElement('span'); name.textContent=setlist.name||'Untitled Setlist';
+      const meta=document.createElement('small');
+      const already=setlist.songIds.includes(id);
+      meta.textContent=already?'Already added':setlist.songIds.length+' songs  +';
+      button.disabled=already;
+      button.append(name,meta);
+      options.appendChild(button);
+      button.onclick=async()=>{
+        if(busy)return;
+        busy=true;close.disabled=true;
+        const enabled=[...options.querySelectorAll('button:not(:disabled)')];
+        enabled.forEach(item=>item.disabled=true);
+        status.textContent='Saving…';
+        try{
+          const result=await addSongToSetlist(id,setlist.id);
+          window.LS26.toast(result.added?'Added to '+name.textContent:'Already in '+name.textContent);
+          dialog.close();
+        }catch(error){
+          status.textContent=error?.message||'Could not add song.';
+          enabled.forEach(item=>item.disabled=false);
+        }finally{busy=false;close.disabled=false;}
+      };
+    }
+    close.onclick=()=>dialog.close();
+    dialog.addEventListener('cancel',event=>{if(busy)event.preventDefault();});
+    dialog.addEventListener('close',()=>{
+      dialog.remove();
+      if(opener?.isConnected)opener.focus({preventScroll:true});
+      else [...document.querySelectorAll('[data-add-setlist]')].find(item=>item.dataset.addSetlist===id)?.focus({preventScroll:true});
+    },{once:true});
+    document.body.append(dialog);
+    dialog.showModal();
+  }
   async function queueSong(id,button){
     const song=songs.find(x=>x.firebaseId===id);
     if(!song)return;
@@ -799,7 +901,7 @@
   document.addEventListener("click", event => {
     const edit=event.target.closest('[data-edit]');if(edit){location.href=LS26.url('host/lyricscreator.html?firebaseId='+encodeURIComponent(edit.dataset.edit)+($('missingDataFilter')?.value?'&missing='+encodeURIComponent($('missingDataFilter').value):''));return;}
     const queue=event.target.closest('[data-queue]');if(queue){queueSong(queue.dataset.queue,queue);return;}
-    const select=event.target.closest('[data-select]');if(select){selectedId=select.dataset.select;updateSelected();saveViewState();return;}
+    const addSetlist=event.target.closest('[data-add-setlist]');if(addSetlist){openSetlistPicker(addSetlist.dataset.addSetlist,addSetlist);return;}
     const open = event.target.closest("[data-open]");
     if (open) {
       openSong(open.dataset.open);
@@ -818,6 +920,9 @@
       render();
       return;
     }
+
+    const row = event.target.closest(".song-table-row");
+    if (row) { selectSongRow(row.dataset.id); return; }
 
     const letter = event.target.closest("[data-letter]");
     if (letter && !letter.disabled) {

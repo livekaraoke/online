@@ -36,3 +36,10 @@
 @media(min-width:1250px){
   .library-page #libraryRecommendationTools #bestNextOpen small{display:block;max-width:65px}
 }
+
+/* BEST NEXT occupies roughly one third of its previous tablet width. */
+.library-page #libraryRecommendationTools #bestNextOpen{flex:0 0 clamp(73px,9.5vw,105px);width:clamp(73px,9.5vw,105px);max-width:none;min-width:0;flex-direction:column;justify-content:center;gap:0;padding:3px 4px;font-size:11px}
+.library-page #libraryRecommendationTools #bestNextOpen .best-next-title,.library-page #libraryRecommendationTools #bestNextOpen small{display:none}
+.library-page #libraryRecommendationTools #bestNextOpen b{font-size:11px;line-height:1.1}
+.library-page #libraryRecommendationTools .library-rotation-filter{flex:1 1 0;width:auto;min-width:0;max-width:none}
+@media(max-width:690px){.library-page #libraryRecommendationTools #bestNextOpen{flex:0 0 95px}}
