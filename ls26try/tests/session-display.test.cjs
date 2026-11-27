@@ -44,7 +44,7 @@ test('native demo uses mock presentation records without replacing live session 
  const {document}=parseHTML('<html><body><div id="topStatusBar"><strong id="tsLiveLabel">OFFLINE</strong><span id="tsLiveDot" class="dot blue"></span></div></body></html>');
  let active='',view=null;const c={document,Date,tools:()=>({getSessionId:()=>active,getSession:()=>null,setDemoView:v=>{view=v}}),$:id=>document.getElementById(id),renderSession:()=>{},mirror:()=>{},console};
  vm.createContext(c);vm.runInContext(code,c);
- c.startDemo();assert.ok(view);assert.equal(view.session.venue,'Example Venue');assert.equal(view.requests.length,3);assert.equal(view.runOrder.items.length,4);assert.equal(view.notifications.length,5);
+ c.startDemo();assert.ok(view);assert.equal(view.session.venue,'Example Venue');assert.equal(view.requests.length,5);assert.equal(view.runOrder.items.length,6);assert.equal(new Set([...view.requests,...view.runOrder.items].map(r=>r.songId)).size,11);assert.ok(view.requests.every(r=>r.createdAt<Date.now()));assert.equal(view.runOrder.items.filter(r=>r.status==='playing').length,1);assert.equal(view.notifications.length,5);
  assert.equal(document.querySelectorAll('#topStatusBar').length,1);assert.equal(document.getElementById('tsLiveLabel').textContent,'ONLINE');assert.equal(document.getElementById('topStatusBar').classList.contains('is-session-demo'),true);
  let blocked=false;c.guardDemoAction({target:document.getElementById('tsLiveLabel'),type:'click',preventDefault(){blocked=true},stopImmediatePropagation(){}});
  const button=document.createElement('button');button.setAttribute('data-ts-accept','demo-request-0');document.getElementById('topStatusBar').append(button);
