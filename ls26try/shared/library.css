@@ -217,3 +217,33 @@ body.library-page{height:100dvh;overflow:hidden;display:flex;flex-direction:colu
   .library-page .library-browse-row .library-scope{grid-template-columns:repeat(3,minmax(0,1fr))}
   .library-page .library-browse-row #setlistFilter{grid-column:1/-1}
 }
+
+/* 2026-11-27: compact search, inline library counts, and reserved browse tools. */
+.library-page .library-heading-copy{display:flex;align-items:center;gap:10px;min-width:0}
+.library-page .library-heading-copy h1{flex:none}
+.library-page .library-heading-subline{flex-wrap:wrap;gap:2px 8px;margin:0;min-height:0;font-size:12px;line-height:1.25}
+.library-page .library-heading-subline .library-total-count,.library-page .library-heading-subline #libraryShowingCount{white-space:nowrap;font-size:12px!important}
+.library-page .library-browse-row .library-scope button{font-size:15px;font-weight:750;padding:5px 8px}
+.library-page .library-browse-row #setlistFilter{font-size:13px;padding:5px 6px}
+.library-page .library-new-tools{display:flex;align-items:stretch;gap:4px;min-width:0}
+.library-page .library-new-tools button{box-sizing:border-box;min-height:46px;height:46px;padding:5px 7px;font-size:12px;font-weight:700;white-space:nowrap}
+.library-page .library-new-tools button:disabled{opacity:.65;cursor:default}
+@media(min-width:691px){
+  .library-page .library-heading{grid-template-columns:minmax(0,1fr) minmax(0,34%) auto;gap:6px!important}
+  .library-page .library-heading-copy h1{font-size:clamp(21px,2.5vw,29px)!important}
+  .library-page .library-heading-subline{min-width:0}
+  .library-page .library-browse-row{grid-template-columns:auto minmax(0,1fr) auto;gap:5px}
+  .library-page .library-browse-row .library-scope{grid-template-columns:auto auto auto clamp(90px,16vw,205px);gap:4px}
+  .library-page .library-browse-row .library-scope button{padding-inline:7px}
+}
+@media(min-width:691px) and (max-width:850px){
+  .library-page .library-heading-copy{gap:7px}
+  .library-page .library-heading-subline{display:grid;gap:1px}
+  .library-page .library-browse-row .library-scope button{padding-inline:5px}
+  .library-page .library-new-tools button{font-size:11px;padding-inline:5px}
+}
+@media(max-width:690px){
+  .library-page .library-heading-copy{flex-wrap:wrap;gap:3px 8px}
+  .library-page .library-browse-row{grid-template-columns:minmax(0,1fr);gap:5px}
+  .library-page .library-new-tools button{flex:1}
+}

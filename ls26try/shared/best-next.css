@@ -22,3 +22,17 @@
 .library-page #libraryRecommendationTools .library-rotation-filter{flex:0 0 158px;width:158px;max-width:158px;height:46px;min-height:46px;font-size:12px}
 @media(min-width:851px) and (max-width:1100px){.library-page #libraryRecommendationTools .library-rotation-filter{flex-basis:138px;width:138px;max-width:138px}.library-page #libraryRecommendationTools #bestNextOpen small{max-width:68px}}
 @media(max-width:550px){.library-page #libraryRecommendationTools #bestNextOpen .best-next-title{display:block}.library-page #libraryRecommendationTools #bestNextOpen small{display:none}.library-page #libraryRecommendationTools .library-rotation-filter{flex-basis:138px;width:138px;max-width:138px}}
+
+/* Compact recommendation controls leave room for the three reserved actions. */
+.library-page #libraryRecommendationTools{gap:4px}
+.library-page #libraryRecommendationTools #bestNextOpen{flex:1 1 0;min-width:0;padding:5px 6px;gap:5px;font-size:12px;justify-content:center}
+.library-page #libraryRecommendationTools #bestNextOpen strong{white-space:nowrap}
+.library-page #libraryRecommendationTools #bestNextOpen b{font-size:12px;color:#b5f4d6}
+.library-page #libraryRecommendationTools #bestNextOpen small{display:none}
+.library-page #libraryRecommendationTools .library-rotation-filter{flex:0 0 clamp(94px,13vw,145px);width:clamp(94px,13vw,145px);max-width:none;font-size:11px;padding:5px 4px;text-overflow:ellipsis}
+@media(min-width:691px) and (max-width:900px){
+  .library-page #libraryRecommendationTools #bestNextOpen .best-next-title{display:none}
+}
+@media(min-width:1250px){
+  .library-page #libraryRecommendationTools #bestNextOpen small{display:block;max-width:65px}
+}

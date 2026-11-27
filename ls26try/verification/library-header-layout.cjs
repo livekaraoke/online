@@ -29,7 +29,7 @@ const chrome=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin
    try{
     await page.setContent(html);
     const boxes=await page.evaluate(()=>{
-     const names={title:'.library-heading-copy',search:'#searchInput',filters:'#sidebarToggleBtn',add:'.library-heading-actions .library-button',export:'#exportBtn',setlist:'#setlistFilter',best:'#bestNextOpen',rotation:'#rotationFilter'};
+     const names={title:'.library-heading-copy',heading:'h1',counts:'.library-heading-subline',new1:'.library-new-tools button:nth-child(1)',new2:'.library-new-tools button:nth-child(2)',new3:'.library-new-tools button:nth-child(3)',search:'#searchInput',filters:'#sidebarToggleBtn',add:'.library-heading-actions .library-button',export:'#exportBtn',setlist:'#setlistFilter',best:'#bestNextOpen',rotation:'#rotationFilter'};
      const rect={};for(const [name,sel]of Object.entries(names)){const el=document.querySelector(sel);if(!el)throw Error('Missing '+sel);const b=el.getBoundingClientRect();rect[name]={left:b.left,right:b.right,top:b.top,width:b.width,height:b.height};}
      return {rect,scrollWidth:document.documentElement.scrollWidth,innerWidth:window.innerWidth};
     });
@@ -39,7 +39,11 @@ const chrome=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin
     assert.ok(aligned('setlist','best')&&aligned('best','rotation'),width+': recommendation row stacked unexpectedly');
     assert.ok(b.title.right<=b.search.left+2&&b.search.right<=b.filters.left+2&&b.filters.right<=b.add.left+2&&b.add.right<=b.export.left+2,width+': heading overlap');
     assert.ok(b.setlist.right<=b.best.left+2&&b.best.right<=b.rotation.left+2,width+': browse row overlap');
-    assert.ok(b.search.width>=100&&b.setlist.width>=65&&b.best.width>=100,width+': touch layout too compressed');
+    assert.ok(b.search.width>=100&&b.setlist.width>=65&&b.best.width>=80,width+': touch layout too compressed');
+    assert.ok(b.heading.right<=b.counts.left+2&&aligned('heading','counts'),width+': counts must be beside heading');
+    assert.ok(aligned('rotation','new1')&&aligned('new1','new2')&&aligned('new2','new3')&&b.rotation.right<=b.new1.left+2&&b.new3.right<=boxes.innerWidth,width+': placeholder tools overlap or wrap');
+    assert.deepEqual(await page.locator('.library-new-tools button').allTextContents(),['NEW 1','NEW 2','NEW 3']);
+    assert.equal(await page.locator('.library-new-tools button:disabled').count(),3);
     assert.ok(boxes.scrollWidth<=boxes.innerWidth+2,width+': unexpected horizontal overflow '+boxes.scrollWidth);
     console.log('PASS: Library heading and browsing controls align without overflow at '+width+' CSS px');
    }finally{await page.close();}
