@@ -81,16 +81,20 @@
     category.value = noteCategory;
   }
 
-  // BEST NEXT is a temporary ranked view, not a persisted sort preference.
+  // Rotation is a visual overlay; only the explicit sort changes order.
   function recommendationOrder() {
-    return $("rotationFilter")?.value === "best" || filters.sort.value === "recommended";
+    return filters.sort.value === "recommended";
+  }
+  function rotationHighlight(song) {
+    const mode=$("rotationFilter")?.value||"all";
+    if(mode==="all"||personalNote(song)||!window.LS26BestNext?.matches(song))return "";
+    return mode==="best"||mode==="fresh"?" rotation-highlight-yellow":" rotation-highlight-blue";
   }
   function changeRotation(value) {
     if($("rotationFilter"))$("rotationFilter").value=value;
     window.LS26BestNext?.filter(value);
   }
   function changeSort() {
-    if($("rotationFilter")?.value === "best")changeRotation("all");
     if(filters.sort.value === "title")$("stickyFavToggle").checked=false;
   }
 
@@ -345,7 +349,7 @@
         (!filters.decade.value||Math.floor(Number(song.year)/10)*10===Number(filters.decade.value)) &&
         (!filters.bpmMin.value||bpm>=Number(filters.bpmMin.value)) && (!filters.bpmMax.value||(bpm>0&&bpm<=Number(filters.bpmMax.value))) &&
         (scope!=='favourites'||favourites.has(song.firebaseId));
-      return (window.LS26BestNext?.matches(song) ?? true) && extra && matchesSearch &&
+      return extra && matchesSearch &&
         matchesArtist &&
         matchesKey &&
         matchesVisibility &&
@@ -454,7 +458,7 @@
       const row = document.createElement("div");
       const note = personalNote(song);
       const played = playedIds.has(String(song.firebaseId));
-      row.className = "song-table-row"+(song.firebaseId===selectedId?" is-selected":"")+(note?" personal-note-row":"")+(played?" is-played":"");
+      row.className = "song-table-row"+(song.firebaseId===selectedId?" is-selected":"")+(note?" personal-note-row":"")+(played?" is-played":"")+rotationHighlight(song);
       row.dataset.id = song.firebaseId;
 
       row.innerHTML = `
@@ -1030,7 +1034,7 @@
     finally{button.disabled=false;}
   }
   $("libraryScrollTop").onclick=()=>$("songRows").scrollTo({top:0,behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"instant":"smooth"});
-  document.querySelectorAll('[data-scope]').forEach(button=>button.onclick=()=>{scope=button.dataset.scope;if(scope==='all' && $('rotationFilter')?.value==='best')changeRotation('all');filters.setlist.value='';window.dispatchEvent(new Event('ls26:working-setlist'));render();saveViewState();});
+  document.querySelectorAll('[data-scope]').forEach(button=>button.onclick=()=>{scope=button.dataset.scope;filters.setlist.value='';window.dispatchEvent(new Event('ls26:working-setlist'));render();saveViewState();});
   filters.setlist.addEventListener('change',()=>{scope='all';render();saveViewState();});
   document.querySelectorAll('[data-bpm]').forEach(button=>button.onclick=()=>{const [id,delta]=button.dataset.bpm.split(':');const input=$(id);input.value=Math.max(0,Math.min(400,(Number(input.value)||100)+Number(delta)));input.dispatchEvent(new Event('input'));});
   $("songRows").addEventListener('scroll',saveViewState,{passive:true});
@@ -1108,7 +1112,8 @@
   $('setlistFilter')?.addEventListener('change',()=>window.dispatchEvent(new Event('ls26:working-setlist')));
   $('rotationFilter')?.addEventListener('change',event=>{
     changeRotation(event.target.value);
-    render();saveViewState();
+    const rows=$("songRows"),top=rows.scrollTop;
+    render();rows.scrollTop=top;saveViewState();
   });
   $("clearFiltersBtn").onclick = () => {
     if($('rotationFilter'))$('rotationFilter').value='all';

@@ -396,3 +396,11 @@ body.library-page{height:100dvh;overflow:hidden;display:flex;flex-direction:colu
 .library-analysis-song>span{max-width:44%;text-align:right;font-weight:700;color:#00e88a;overflow-wrap:anywhere}
 .library-analysis-song-group>p{padding:0 12px;color:#9db8c8}
 @media(max-width:460px){.library-analysis-detail-header{align-items:flex-start;flex-direction:column}}
+
+/* Rotation highlights never replace selection, ready-to-play, or completed styling. */
+.library-page .song-table-row.rotation-highlight-yellow{--rotation-highlight:#ffdb58;--rotation-fill:#332b13}
+.library-page .song-table-row.rotation-highlight-blue{--rotation-highlight:#40c9ff;--rotation-fill:#092f48}
+.library-page .song-table-row:is(.rotation-highlight-yellow,.rotation-highlight-blue){border-left:3px solid var(--rotation-highlight);padding-left:4px}
+.library-page .song-table-row:is(.rotation-highlight-yellow,.rotation-highlight-blue):not(.is-selected):not(.is-armed){background:linear-gradient(90deg,var(--rotation-fill),#011725 75%)}
+.library-page .song-table-row:is(.rotation-highlight-yellow,.rotation-highlight-blue):not(.is-played):not(.is-armed) .song-title-cell strong{color:var(--rotation-highlight)}
+.library-page .song-table-row:is(.rotation-highlight-yellow,.rotation-highlight-blue) .rotation-badge{border-color:var(--rotation-highlight)}
