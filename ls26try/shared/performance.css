@@ -1453,3 +1453,51 @@ html #ls26StickyHeader #topStatusBar .host-compact-strip .remaining-metric:has(#
 @media(min-width:701px){
  html #ls26StickyHeader #topStatusBar .host-compact-strip #ls26Clock{padding-inline:10px!important;box-sizing:border-box;min-width:0}
 }
+
+/* Session tools: one compact, aligned tab row; counts are inline, not a second row. */
+html #topStatusBar .ls26-session-tabs,
+html #ls26StickyHeader #topStatusBar .ls26-session-tabs{
+ display:grid!important;
+ grid-template-columns:minmax(0,1fr) minmax(0,1.08fr) minmax(0,1fr) minmax(0,1.26fr) minmax(0,.9fr);
+ align-items:stretch!important;gap:0!important;
+ min-height:0!important;max-height:none!important;height:auto!important;
+ margin:0 0 8px!important;padding:0!important;
+ border:1px solid var(--ls-border)!important;border-radius:6px!important;
+ overflow:hidden;
+}
+html #topStatusBar .ls26-session-tabs>.host-card-tab,
+html #ls26StickyHeader #topStatusBar .ls26-session-tabs>.host-card-tab{
+ display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:center!important;
+ box-sizing:border-box!important;min-width:0!important;width:100%!important;
+ height:36px!important;min-height:36px!important;max-height:36px!important;
+ padding:0 3px!important;gap:4px!important;margin:0!important;
+ font-size:clamp(9px,1.24vw,13px)!important;font-weight:800!important;
+ line-height:1!important;letter-spacing:0!important;white-space:nowrap!important;
+ border:0!important;border-right:1px solid var(--ls-border)!important;
+ border-bottom:2px solid transparent!important;border-radius:0!important;
+ background:transparent!important;color:var(--ls-muted)!important;box-shadow:none!important;
+}
+html #topStatusBar .ls26-session-tabs>.host-card-tab:last-child,
+html #ls26StickyHeader #topStatusBar .ls26-session-tabs>.host-card-tab:last-child{border-right:0!important}
+html #topStatusBar .ls26-session-tabs>.host-card-tab.active,
+html #ls26StickyHeader #topStatusBar .ls26-session-tabs>.host-card-tab.active{
+ color:var(--ls-accent)!important;background:var(--ls-soft)!important;border-bottom-color:var(--ls-accent)!important;
+}
+html #topStatusBar .ls26-session-tabs .host-card-tab .ts-tab-count,
+html #ls26StickyHeader #topStatusBar .ls26-session-tabs .host-card-tab .ts-tab-count{
+ display:inline-block!important;flex:none!important;margin:0!important;padding:0!important;
+ font-size:inherit!important;line-height:1!important;font-weight:850!important;
+ color:var(--ls-danger)!important;white-space:nowrap!important;
+}
+html #topStatusBar .ls26-session-tabs .host-card-tab .ts-tab-count.hidden,
+html #ls26StickyHeader #topStatusBar .ls26-session-tabs .host-card-tab .ts-tab-count.hidden{display:none!important}
+@media(max-width:620px){
+ html #topStatusBar .ls26-session-tabs,
+ html #ls26StickyHeader #topStatusBar .ls26-session-tabs{
+  grid-template-columns:repeat(2,minmax(110px,1fr)) minmax(106px,1fr) minmax(136px,1.26fr) minmax(94px,.9fr);
+  overflow-x:auto;overflow-y:hidden;scrollbar-width:none;
+ }
+ html #topStatusBar .ls26-session-tabs::-webkit-scrollbar{display:none}
+ html #topStatusBar .ls26-session-tabs>.host-card-tab,
+ html #ls26StickyHeader #topStatusBar .ls26-session-tabs>.host-card-tab{font-size:10px!important;gap:3px!important}
+}
