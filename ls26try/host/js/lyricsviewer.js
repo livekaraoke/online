@@ -732,6 +732,8 @@
     const total=entries.length;
     const numeric=value=>{const n=Number(value);return Number.isFinite(n)&&n>0&&n<=400?n:null;};
     const counts=()=>new Map();
+    const groups={tempo:new Map(),keys:new Map(),decades:new Map(),modes:new Map(),genres:new Map(),artists:new Map(),coverage:new Map()};
+    const addGroup=(type,label,song,value)=>{const group=groups[type];if(!group.has(label))group.set(label,[]);group.get(label).push({song,value});};
     const increment=(map,label)=>map.set(label,(map.get(label)||0)+1);
     const ordered=map=>[...map].sort((a,b)=>b[1]-a[1]||String(a[0]).localeCompare(String(b[0])));
     const keys=counts(),modes=counts(),decades=counts(),years=counts(),genreCounts=counts(),artists=counts();
@@ -739,30 +741,31 @@
     let userCount=0,originalCount=0,keyCount=0,yearCount=0,genreCount=0,artistCount=0;
     for(const song of entries){
       const user=numeric(song.userBpm),original=numeric(song.originalBpm);
-      if(user!==null)userCount++;
-      if(original!==null)originalCount++;
+      if(user!==null){userCount++;addGroup("coverage","User BPM",song,user+" BPM");}
+      if(original!==null){originalCount++;addGroup("coverage","Original BPM",song,original+" BPM");}
       const bpm=bpmMode==="user"?user:bpmMode==="original"?original:user??original;
-      if(bpm!==null){bpmValues.push(bpm);const bucket=bpm<60?0:Math.min(7,1+Math.floor((bpm-60)/20));bpmBins[bucket][1]++;}
+      if(bpm!==null){bpmValues.push(bpm);const bucket=bpm<60?0:Math.min(7,1+Math.floor((bpm-60)/20));bpmBins[bucket][1]++;addGroup("tempo",bpmBins[bucket][0],song,bpm+" BPM");}
       const rawKey=String(song.key??"").trim().replace(/♯/g,"#").replace(/♭/g,"b");
       if(rawKey&&!/^[-—–?]+$|^(unknown|n\/a|none)$/i.test(rawKey)){
         keyCount++;
         const match=rawKey.match(/^([A-Ga-g])([#b]?)[\s]*(major|maj|minor|min|m)?$/i);
         const minor=match&&/^(minor|min|m)$/i.test(match[3]||"")&&match[3]!=="M";
         const key=match?match[1].toUpperCase()+match[2]+(minor?"m":""):rawKey;
-        increment(keys,key);increment(modes,match?(minor?"Minor":"Major"):"Other / unspecified");
+        const mode=match?(minor?"Minor":"Major"):"Other / unspecified";
+        increment(keys,key);increment(modes,mode);addGroup("keys",key,song,key);addGroup("modes",mode,song,key);addGroup("coverage","Key",song,key);
       }
       const year=Number(song.year);
-      if(Number.isInteger(year)&&year>=1000&&year<=2100){yearCount++;increment(years,year);increment(decades,Math.floor(year/10)*10);}
+      if(Number.isInteger(year)&&year>=1000&&year<=2100){yearCount++;increment(years,year);const decade=Math.floor(year/10)*10;increment(decades,decade);addGroup("decades",decade+"s",song,String(year));addGroup("coverage","Release year",song,String(year));}
       const tags=[...new Set(genres(song).map(tag=>tag.trim()).filter(Boolean))];
-      if(tags.length){genreCount++;tags.forEach(tag=>increment(genreCounts,tag));}
+      if(tags.length){genreCount++;tags.forEach(tag=>{increment(genreCounts,tag);addGroup("genres",tag,song,tag);});addGroup("coverage","Genre",song,tags.join(", "));}
       const artist=String(ArtistNames.display(song.artist)||"").trim();
-      if(artist&&!/^[-—–?]+$|^(unknown|n\/a|none)$/i.test(artist)){artistCount++;increment(artists,artist);}
+      if(artist&&!/^[-—–?]+$|^(unknown|n\/a|none)$/i.test(artist)){artistCount++;increment(artists,artist);addGroup("artists",artist,song,artist);addGroup("coverage","Artist",song,artist);}
     }
     bpmValues.sort((a,b)=>a-b);const n=bpmValues.length,mid=Math.floor(n/2);
     const mean=n?bpmValues.reduce((sum,value)=>sum+value,0)/n:null;
     const median=n?(n%2?bpmValues[mid]:(bpmValues[mid-1]+bpmValues[mid])/2):null;
     const sortedYears=[...years.keys()].sort((a,b)=>a-b);
-    return {total,excluded:list.length-total,bpmCount:n,userCount,originalCount,keyCount,yearCount,genreCount,artistCount,
+    return {groups,total,excluded:list.length-total,bpmCount:n,userCount,originalCount,keyCount,yearCount,genreCount,artistCount,
       mean,median,min:n?bpmValues[0]:null,max:n?bpmValues[n-1]:null,bpmBins,keys:ordered(keys),modes:ordered(modes),
       decades:[...decades].sort((a,b)=>a[0]-b[0]).map(([year,count])=>[year+"s",count]),years:sortedYears,
       genres:ordered(genreCounts),artists:ordered(artists)};
@@ -781,27 +784,59 @@
     const esc=value=>LyricsCommon.escapeHTML(String(value));
     const fmt=value=>value===null?"–":Number(value.toFixed(1)).toLocaleString();
     const percent=(count,total)=>total?Math.round(count/total*100):0;
-    function bars(title,rows,denominator,detail,limit=Infinity){
+    let analysis=null;
+    const charts=new Map();
+    let detailView=null,overviewScroll=0,returnFocus=null;
+    function bars(title,rows,denominator,detail,limit=Infinity,type){
+      charts.set(type,{title,rows,denominator,detail});
       const shown=rows.slice(0,limit),max=Math.max(1,...shown.map(row=>row[1]));
-      const markup=shown.map(([name,count])=>'<div class="library-analysis-bar-row"><span class="library-analysis-bar-label" title="'+esc(name)+'">'+esc(name)+'</span><span class="library-analysis-track" aria-hidden="true"><span style="width:'+count/max*100+'%"></span></span><strong>'+count+' <small>'+percent(count,denominator)+'%</small></strong></div>').join("");
-      return '<section class="library-analysis-chart"><h3>'+esc(title)+'</h3><p>'+esc(detail)+'</p>'+(shown.length?markup:'<p class="library-analysis-empty">No recorded data</p>')+(rows.length>limit?'<p>Showing top '+limit+' of '+rows.length+'</p>':'')+'</section>';
+      const markup=shown.map(([name,count],index)=>'<button type="button" class="library-analysis-bar-row" data-analysis-group="'+index+'" aria-label="'+esc(name)+': '+count+' songs. View songs"><span class="library-analysis-bar-label" title="'+esc(name)+'">'+esc(name)+'</span><span class="library-analysis-track" aria-hidden="true"><span style="width:'+count/max*100+'%"></span></span><strong>'+count+' <small>'+percent(count,denominator)+'%</small></strong></button>').join("");
+      return '<section class="library-analysis-chart" data-analysis-chart="'+type+'"><h3><button type="button" data-analysis-all>'+esc(title)+'<span aria-hidden="true">›</span></button></h3><p>'+esc(detail)+'</p>'+(shown.length?markup:'<p class="library-analysis-empty">No recorded data</p>')+(rows.length>limit?'<p>Showing top '+limit+' of '+rows.length+' · open card for all</p>':'')+'<button type="button" class="library-analysis-view-songs" data-analysis-all>View songs by group ›</button></section>';
     }
     function draw(){
-      const a=analyseLibrary(list,selector.value);
+      const a=analysis=analyseLibrary(list,selector.value);charts.clear();detailView=null;
       const metrics=[["Songs",a.total],["Average BPM",fmt(a.mean)],["Median BPM",fmt(a.median)],["BPM range",a.min===null?"–":fmt(a.min)+"–"+fmt(a.max)],["Most common key",a.keys[0]?.[0]||"–"],["Release years",a.years.length?a.years[0]+"–"+a.years[a.years.length-1]:"–"]];
       content.innerHTML='<div class="library-analysis-metrics">'+metrics.map(([name,value])=>'<div><small>'+esc(name)+'</small><strong>'+esc(value)+'</strong></div>').join("")+'</div>'+
         '<p class="library-analysis-note">'+a.total+' songs analysed'+(a.excluded?' · '+a.excluded+' personal notes excluded':'')+'. Unknown values are excluded from distributions; coverage below shows missing data.</p>'+
         '<div class="library-analysis-grid">'+
-        bars("Tempo distribution",a.bpmCount?a.bpmBins:[],a.bpmCount,a.bpmCount+" songs with usable BPM")+
-        bars("Musical keys",a.keys,a.keyCount,a.keyCount+" songs with a recorded key")+
-        bars("Release decades",a.decades,a.yearCount,a.yearCount+" songs with a release year")+
-        bars("Major / minor",a.modes,a.keyCount,"Based on the saved key notation")+
-        bars("Genres",a.genres,a.total,"Share of songs; songs can have multiple genres",12)+
-        bars("Most represented artists",a.artists,a.total,"Grouped by stored artist credit",12)+
-        bars("Data completeness",[["User BPM",a.userCount],["Original BPM",a.originalCount],["Key",a.keyCount],["Release year",a.yearCount],["Genre",a.genreCount],["Artist",a.artistCount]],a.total,"Recorded values out of "+a.total+" songs")+
+        bars("Tempo distribution",a.bpmCount?a.bpmBins:[],a.bpmCount,a.bpmCount+" songs with usable BPM",Infinity,"tempo")+
+        bars("Musical keys",a.keys,a.keyCount,a.keyCount+" songs with a recorded key",Infinity,"keys")+
+        bars("Release decades",a.decades,a.yearCount,a.yearCount+" songs with a release year",Infinity,"decades")+
+        bars("Major / minor",a.modes,a.keyCount,"Based on the saved key notation",Infinity,"modes")+
+        bars("Genres",a.genres,a.total,"Share of songs; songs can have multiple genres",12,"genres")+
+        bars("Most represented artists",a.artists,a.total,"Grouped by stored artist credit",12,"artists")+
+        bars("Data completeness",[["User BPM",a.userCount],["Original BPM",a.originalCount],["Key",a.keyCount],["Release year",a.yearCount],["Genre",a.genreCount],["Artist",a.artistCount]],a.total,"Recorded values out of "+a.total+" songs",Infinity,"coverage")+
         '</div>';
     }
-    selector.addEventListener("change",draw);
+    function showDetails(type,index=null,restore=false){
+      const chart=charts.get(type);
+      if(!chart)return;
+      if(!restore){overviewScroll=dialog.scrollTop;returnFocus={type,index};}
+      const selected=index===null?chart.rows:chart.rows.slice(index,index+1);
+      const groupMap=analysis.groups[type];
+      detailView={type,index};
+      const songMarkup=(entries)=>entries.map(({song,value})=>'<div class="library-analysis-song"><div><strong>'+esc(song.title||"Untitled")+'</strong><small>'+esc(ArtistNames.display(song.artist)||"Unknown artist")+'</small></div><span>'+esc(value)+'</span></div>').join("");
+      const groupMarkup=selected.map(([name,count])=>{
+        const entries=[...(groupMap.get(name)||[])].sort((a,b)=>type==="tempo"?parseFloat(a.value)-parseFloat(b.value)||String(a.song.title).localeCompare(String(b.song.title)):type==="decades"?Number(a.value)-Number(b.value)||String(a.song.title).localeCompare(String(b.song.title)):String(a.song.title).localeCompare(String(b.song.title)));
+        return '<section class="library-analysis-song-group"><h3>'+esc(name)+' <small>'+count+' '+(count===1?'song':'songs')+'</small></h3>'+(entries.length?songMarkup(entries):'<p>No songs in this group.</p>')+'</section>';
+      }).join("");
+      content.innerHTML='<div class="library-analysis-detail-header"><button type="button" data-analysis-back>‹ Back to charts</button><div><h3>'+esc(chart.title)+'</h3><p>'+esc(index===null?chart.detail:String(selected[0]?.[0]||""))+'</p></div></div>'+(index!==null?'<button type="button" data-analysis-full>View all groups ›</button>':'')+'<div class="library-analysis-song-groups">'+(groupMarkup||'<p>No recorded data.</p>')+'</div>';
+      dialog.scrollTop=0;content.querySelector('[data-analysis-back]').focus({preventScroll:true});
+    }
+    content.addEventListener("click",event=>{
+      if(event.target.closest('[data-analysis-back]')){
+        const previous=returnFocus;draw();dialog.scrollTop=overviewScroll;
+        const card=previous&&content.querySelector('[data-analysis-chart="'+previous.type+'"]');
+        const target=card?.querySelector(previous.index===null?'[data-analysis-all]':'[data-analysis-group="'+previous.index+'"]');
+        target?.focus({preventScroll:true});return;
+      }
+      if(event.target.closest('[data-analysis-full]')&&detailView){showDetails(detailView.type,null,true);return;}
+      const card=event.target.closest('[data-analysis-chart]');
+      if(!card)return;
+      const group=event.target.closest('[data-analysis-group]');
+      showDetails(card.dataset.analysisChart,group?Number(group.dataset.analysisGroup):null);
+    });
+    selector.addEventListener("change",()=>{const previous=detailView;draw();if(previous)showDetails(previous.type,null,true);});
     dialog.querySelector("[data-analysis-close]").onclick=()=>dialog.close();
     dialog.addEventListener("close",()=>{dialog.remove();$("libraryAnalysisBtn")?.focus({preventScroll:true});},{once:true});
     draw();document.body.append(dialog);dialog.showModal();

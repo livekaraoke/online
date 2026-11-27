@@ -31,3 +31,14 @@ assert.equal(analysis.total,3);assert.equal(analysis.excluded,1);assert.equal(an
 const tempoSample=[{title:'Alpha',userBpm:87,originalBpm:100},{title:'Beta',originalBpm:120}];
 assert.equal(t.analyse(tempoSample,'user').bpmCount,1);assert.equal(t.analyse(tempoSample,'original').mean,110);assert.equal(t.analyse([]).median,null);
 console.log('PASS: current-list analytics, tempo sources, missing data, notes, key normalization, decades, and multi-genre counts.');
+
+assert.equal(analysis.groups.tempo.get('80–99')[0].song.title,'Alpha');
+assert.equal(analysis.groups.tempo.get('120–139')[0].song.title,'Beta');
+assert.equal(analysis.groups.keys.get('F#m')[0].song.title,'Alpha');
+assert.equal(analysis.groups.decades.get('1990s')[0].value,'1998');
+assert.equal(analysis.groups.genres.get('Rock').length,2);
+assert.equal(analysis.groups.modes.get('Minor').length,1);
+assert.equal(analysis.groups.coverage.get('Original BPM').length,2);
+assert.equal(t.analyse(tempoSample,'original').groups.tempo.get('100–119')[0].value,'100 BPM');
+assert.equal(t.analyse(tempoSample,'user').groups.tempo.has('120–139'),false);
+console.log('PASS: drill-down song membership matches chart groups and selected tempo source.');
