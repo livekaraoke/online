@@ -43,3 +43,18 @@
 .library-page #libraryRecommendationTools #bestNextOpen b{font-size:11px;line-height:1.1}
 .library-page #libraryRecommendationTools .library-rotation-filter{flex:1 1 0;width:auto;min-width:0;max-width:none}
 @media(max-width:690px){.library-page #libraryRecommendationTools #bestNextOpen{flex:0 0 95px}}
+
+/* Reduce the rotation selector to two-thirds of its former flexible width.
+   Keep BEST NEXT and the adjacent tools at their current widths. */
+.library-page #libraryRecommendationTools .library-rotation-filter{
+  --rotation-available:calc(100% - clamp(73px,9.5vw,105px) - 4px);
+  flex:0 0 calc(var(--rotation-available) * 0.666667);
+  width:calc(var(--rotation-available) * 0.666667);
+  min-width:0;
+  max-width:100%;
+}
+@media(max-width:690px){
+  .library-page #libraryRecommendationTools .library-rotation-filter{
+    --rotation-available:calc(100% - 95px - 4px);
+  }
+}
