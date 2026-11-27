@@ -1033,3 +1033,64 @@ html body #ls26StickyHeader > .ls26-nav .ls26-host small {
   line-height:1!important;
   margin-top:clamp(0px,calc((var(--ls26-nav-cell-height) - 30px) / 8),4px)!important;
 }
+
+/* Compact shared performance navigation. Existing setting controls expanded height;
+   collapsed state is per-device and independent of the session status strip. */
+html body #ls26StickyHeader > .ls26-nav.ls26-compact-nav{
+ --nav-actual-height:var(--ls26-main-nav-height,44px);
+ --ls26-nav-pad-y:2px;
+ --ls26-nav-cell-height:calc(var(--nav-actual-height) - 6px);
+ display:flex!important;align-items:center!important;justify-content:initial!important;
+ gap:3px!important;padding:2px 5px!important;
+ height:var(--nav-actual-height)!important;min-height:var(--nav-actual-height)!important;max-height:var(--nav-actual-height)!important;
+ border:1px solid #173c4c!important;border-radius:6px!important;overflow:hidden!important;
+}
+html body #ls26StickyHeader > .ls26-nav.ls26-compact-nav > :is(a,button){
+ box-sizing:border-box!important;min-height:0!important;height:var(--ls26-nav-cell-height)!important;
+ max-height:var(--ls26-nav-cell-height)!important;min-width:0!important;
+ border:0!important;border-radius:5px!important;padding:0 6px!important;
+ font-size:15px!important;font-weight:600!important;line-height:1!important;gap:5px!important;
+ text-decoration:none!important;box-shadow:none!important;
+}
+html body #ls26StickyHeader > .ls26-nav.ls26-compact-nav > a:not(.ls26-brand):not(.ls26-admin-nav){
+ flex:1 1 0!important;width:auto!important;max-width:none!important;
+}
+html body #ls26StickyHeader > .ls26-nav.ls26-compact-nav > a.active[aria-current="page"]{
+ border:1px solid #00cafa!important;background:#07364a!important;
+ box-shadow:inset 0 -2px 0 #00cafa!important;color:#f3f7fc!important;
+}
+html body #ls26StickyHeader > .ls26-nav.ls26-compact-nav > a.ls26-brand.ls26-brand-icon{
+ flex:0 0 38px!important;width:38px!important;min-width:38px!important;max-width:38px!important;
+ padding:0!important;margin:0!important;display:grid!important;place-items:center!important;
+}
+html body #ls26StickyHeader > .ls26-nav.ls26-compact-nav > a.ls26-brand.ls26-brand-icon svg{
+ width:min(34px,var(--ls26-nav-cell-height))!important;height:min(34px,var(--ls26-nav-cell-height))!important;
+ max-width:none!important;max-height:none!important;transform:none!important;margin:0!important;
+}
+html body #ls26StickyHeader > .ls26-nav.ls26-compact-nav .ls26-nav-icon{font-size:17px!important;line-height:1!important}
+html body #ls26StickyHeader > .ls26-nav.ls26-compact-nav > :is(.ls26-admin-nav,#ls26Fullscreen,#ls26More,#ls26NavCollapse){
+ flex:0 0 38px!important;width:38px!important;min-width:38px!important;max-width:38px!important;
+ padding:0!important;font-size:20px!important;
+}
+html body #ls26StickyHeader > .ls26-nav.ls26-compact-nav #ls26Fullscreen svg{width:20px!important;height:20px!important}
+.ls26-compact-nav .ls26-collapsed-label{display:none}
+.ls26-compact-nav .ls26-collapse-icon{font-size:20px;line-height:1}
+html body #ls26StickyHeader > .ls26-nav.ls26-compact-nav.is-nav-collapsed{--nav-actual-height:26px}
+html body #ls26StickyHeader > .ls26-nav.ls26-compact-nav.is-nav-collapsed > :not(.ls26-brand):not(#ls26NavCollapse){display:none!important}
+html body #ls26StickyHeader > .ls26-nav.ls26-compact-nav.is-nav-collapsed > a.ls26-brand.ls26-brand-icon{
+ flex:0 0 25px!important;width:25px!important;min-width:25px!important;max-width:25px!important;
+}
+html body #ls26StickyHeader > .ls26-nav.ls26-compact-nav.is-nav-collapsed > #ls26NavCollapse{
+ flex:1 1 auto!important;width:auto!important;max-width:none!important;justify-content:space-between!important;padding:0 5px!important;
+}
+.ls26-compact-nav.is-nav-collapsed .ls26-collapsed-label{display:inline;font-size:12px;font-weight:750;color:#00cafa}
+#ls26HostMenu #ls26HostModeOpen{font-weight:750;border-bottom:1px solid var(--ls-border);border-radius:0}
+@media(max-width:600px){
+ html body #ls26StickyHeader > .ls26-nav.ls26-compact-nav{gap:1px!important;padding-inline:2px!important}
+ html body #ls26StickyHeader > .ls26-nav.ls26-compact-nav > a:not(.ls26-brand):not(.ls26-admin-nav){font-size:12px!important;padding-inline:3px!important;gap:2px!important}
+ html body #ls26StickyHeader > .ls26-nav.ls26-compact-nav > :is(.ls26-admin-nav,#ls26Fullscreen,#ls26More,#ls26NavCollapse){flex-basis:32px!important;width:32px!important;min-width:32px!important;max-width:32px!important}
+ html body #ls26StickyHeader > .ls26-nav.ls26-compact-nav > a:not(.ls26-brand):not(.ls26-admin-nav) .ls26-nav-icon{display:none}
+}
+@media(max-width:360px){
+ html body #ls26StickyHeader > .ls26-nav.ls26-compact-nav > a:not(.ls26-brand):not(.ls26-admin-nav){font-size:10px!important}
+}

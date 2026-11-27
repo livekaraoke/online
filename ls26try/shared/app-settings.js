@@ -5,7 +5,8 @@
   const DOC_PATH = ["noteSettings","livesuiteAppSettings"];
   const DEFAULTS = Object.freeze({
     showTopStatusWhenInactive: true,
-    mainNavHeight: 70,
+    mainNavHeight: 44,
+    mainNavLayoutVersion: 2,
     lyricSongStripHeight: 72,
     statusStripHeight: 70,
     statusValueFontSize: 22,
@@ -85,6 +86,7 @@
     return {
       showTopStatusWhenInactive: raw.showTopStatusWhenInactive !== false,
       mainNavHeight: clamp(raw.mainNavHeight,32,140,DEFAULTS.mainNavHeight),
+      mainNavLayoutVersion: 2,
       lyricSongStripHeight: clamp(raw.lyricSongStripHeight,32,160,DEFAULTS.lyricSongStripHeight),
       statusStripHeight: clamp(raw.statusStripHeight,28,160,DEFAULTS.statusStripHeight),
       statusValueFontSize: clamp(raw.statusValueFontSize,1,34,DEFAULTS.statusValueFontSize),
@@ -148,8 +150,12 @@
       reduceGlow: raw.reduceGlow === true
     };
   }
+  function upgradeNav(raw={}){
+    return raw.mainNavLayoutVersion!==2&&Number(raw.mainNavHeight)===70
+      ? {...raw,mainNavHeight:44,mainNavLayoutVersion:2}:raw;
+  }
   function readLocal(){
-    try{return normalise({...DEFAULTS,...JSON.parse(localStorage.getItem(STORAGE_KEY)||"{}")});}
+    try{return normalise({...DEFAULTS,...upgradeNav(JSON.parse(localStorage.getItem(STORAGE_KEY)||"{}"))});}
     catch(_){return {...DEFAULTS};}
   }
   function writeLocal(settings){
@@ -232,7 +238,7 @@
     try{
       const snap=await db.collection(DOC_PATH[0]).doc(DOC_PATH[1]).get();
       if(snap.exists){
-        current=apply({...current,...(snap.data()||{})});
+        current=apply({...current,...upgradeNav(snap.data()||{})});
         writeLocal(current);
       }
     }catch(error){console.warn("LiveSuite settings remote load skipped:",error);}

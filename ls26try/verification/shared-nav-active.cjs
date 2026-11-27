@@ -10,7 +10,7 @@ const setlist=read('host/setlist-editor.html'),setlistCss=read('host/css/setlist
 assert.ok(!setlist.includes('‹ LYRICS VIEWER'),'Redundant Lyrics Viewer button remains');
 assert.ok(!setlist.includes('href="lyricsviewer.html"'),'Redundant Lyrics Viewer link remains');
 for(const source of ['library.html','host/lyricsviewer.html','host/lyricview.html','host/setlist-editor.html']){
- assert.match(read(source),/shared\/shell\.js\?v=20261022-nav-route-v2/,'Navigation cache version mismatch in '+source);
+ assert.match(read(source),/shared\/shell\.js\?v=20261127-compact-nav-v13/,'Navigation cache version mismatch in '+source);
 }
 const cases=[
  ['/ls26try/library','Library'],['/ls26try/library.html','Library'],['/ls26try/library/','Library'],
@@ -20,7 +20,7 @@ const cases=[
  ['/ls26try/host/setlist-editor','Setlists'],['/ls26try/host/setlist-editor.html','Setlists'],['/ls26try/host/setlist-editor/','Setlists'],
  ['/ls26try/requests','Requests'],['/ls26try/requests.html','Requests']
 ];
-const html='<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>'+sharedTheme+'</style></head><body><div id="topStatusContainer"></div><script>window.LS26Data={invalidate(){}};window.ArtistNames={display:v=>v};</script><script src="/ls26try/shared/shell.js?v=20261022-nav-route-v2"></script></body></html>';
+const html='<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>'+sharedTheme+'</style></head><body><div id="topStatusContainer"></div><script>window.LS26Data={invalidate(){}};window.ArtistNames={display:v=>v};</script><script src="/ls26try/shared/shell.js?v=20261127-compact-nav-v13"></script></body></html>';
 const browserExe=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(fs.existsSync);
 (async()=>{
  const browser=await chromium.launch({headless:true,...(browserExe?{executablePath:browserExe}:{}),args:['--no-sandbox']});
@@ -46,6 +46,26 @@ const browserExe=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr
    assert.equal(nav.border,'rgb(0, 202, 250)',url+': missing cyan border');
    assert.equal(nav.background,'rgb(7, 54, 74)',url+': missing navy/cyan highlight');
    console.log('PASS navigation '+url+' => '+label);
+  }
+  // Compact navigation persists across navigation and preserves the status strip.
+  await page.goto('https://livesuite.test/ls26try/library');
+  const navBox=()=>page.locator('.ls26-nav').boundingBox();
+  assert.equal(Math.round((await navBox()).height),44);
+  await page.locator('#ls26NavCollapse').click();
+  assert.equal(Math.round((await navBox()).height),26);
+  assert.equal(await page.locator('#ls26Fullscreen').isVisible(),false);
+  assert.equal(await page.locator('#topStatusContainer').count(),1);
+  await page.goto('https://livesuite.test/ls26try/requests');
+  assert.equal(await page.locator('.ls26-collapsed-label').textContent(),'Requests');
+  assert.equal(Math.round((await navBox()).height),26);
+  await page.locator('#ls26NavCollapse').click();
+  assert.equal(Math.round((await navBox()).height),44);
+  await page.locator('#ls26More').click();
+  assert.equal(await page.locator('#ls26HostModeOpen').isVisible(),true);
+  await page.keyboard.press('Escape');
+  for(const width of [390,760,960,1280]){
+    await page.setViewportSize({width,height:850});
+    assert.ok(await page.locator('.ls26-nav').evaluate(el=>el.scrollWidth<=el.clientWidth+2),'Navigation overflow at '+width);
   }
   // Use actual Setlist Editor header CSS and markup to check the removed button did not leave an empty grid column.
   const {parseHTML}=require(require.resolve('linkedom',{paths:[process.env.LS26_TEST_NODE_MODULES||process.cwd()]}));

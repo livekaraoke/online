@@ -16,7 +16,7 @@
   if(!document.querySelector('script[data-ls26-settings]')){
     const settingsScript=document.createElement('script');
     settingsScript.dataset.ls26Settings='1';
-    settingsScript.src=url('shared/app-settings.js?v=20261119-header-heights-v3');
+    settingsScript.src=url('shared/app-settings.js?v=20261127-compact-nav-v13');
     document.head.append(settingsScript);
   }
   // Call synchronously from the initiating tap, before playback's async work.
@@ -81,47 +81,32 @@
     const isLibrary=pagePath.endsWith('/library')||pagePath.endsWith('/host/lyricsviewer');
     const tab=pagePath.endsWith('/host/setlist-editor')?'Setlists':isLibrary?'Library':isLyric?'LyricView':pagePath.endsWith('/requests')?'Requests':'';
     const nav=document.createElement('nav');nav.className='ls26-nav';nav.setAttribute('aria-label','LiveSuite navigation');
-    nav.innerHTML=`<a class="ls26-brand ls26-brand-icon" href="${url('library.html')}" aria-label="LiveSuite Library"><svg viewBox="0 20 480 600" preserveAspectRatio="xMidYMid meet" aria-hidden="true"><defs><clipPath id="ls26HeaderIconClip"><rect x="0" y="20" width="480" height="600"/></clipPath></defs><image clip-path="url(#ls26HeaderIconClip)" href="${url('assets/livesuite-logo-transparent.png')}" width="2048" height="683"/></svg></a>${[['Library','library.html','♫'],['LyricView','host/lyricview.html','▣'],['Setlists','host/setlist-editor.html','☷'],['Requests','requests.html','♟']].map(([label,path,icon])=>`<a ${label==='LyricView'?'id="ls26LyricLink"':''} ${label===tab?'aria-current="page"':''} class="${label===tab?'active':''} ${['Library','LyricView'].includes(label)?'ls26-primary-nav':''}" href="${url(path)}"><span class="ls26-nav-icon" aria-hidden="true">${icon}</span>${label}</a>`).join('')}<a class="ls26-admin-nav" href="${url('admin-new/admin.html')}" aria-label="Admin dashboard"><span class="ls26-nav-icon" aria-hidden="true">⚙</span></a><button id="ls26Fullscreen" type="button" aria-label="Enter fullscreen" aria-pressed="false" title="Enter fullscreen"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M8 3H3v5M16 3h5v5M21 16v5h-5M8 21H3v-5"/></svg></button><a class="ls26-host" href="${url('admin-new/admin.html')}"><span class="ls26-user-icon" aria-hidden="true"><svg viewBox="0 0 32 32"><circle cx="16" cy="10" r="6"/><path d="M5 29v-4a11 11 0 0 1 22 0v4Z"/></svg></span><span>Host Mode<small>Sing. Play. Repeat.</small></span></a><button id="ls26More" type="button" aria-label="Host menu" aria-expanded="false" aria-controls="ls26HostMenu">▼</button>`;
+    nav.innerHTML=`<a class="ls26-brand ls26-brand-icon" href="${url('library.html')}" aria-label="LiveSuite Library"><svg viewBox="0 20 480 600" preserveAspectRatio="xMidYMid meet" aria-hidden="true"><defs><clipPath id="ls26HeaderIconClip"><rect x="0" y="20" width="480" height="600"/></clipPath></defs><image clip-path="url(#ls26HeaderIconClip)" href="${url('assets/livesuite-logo-transparent.png')}" width="2048" height="683"/></svg></a>${[['Library','library.html','♫'],['LyricView','host/lyricview.html','▣'],['Setlists','host/setlist-editor.html','☷'],['Requests','requests.html','♟']].map(([label,path,icon])=>`<a ${label==='LyricView'?'id="ls26LyricLink"':''} ${label===tab?'aria-current="page"':''} class="${label===tab?'active':''} ${['Library','LyricView'].includes(label)?'ls26-primary-nav':''}" href="${url(path)}"><span class="ls26-nav-icon" aria-hidden="true">${icon}</span>${label}</a>`).join('')}<a class="ls26-admin-nav" href="${url('admin-new/admin.html')}" aria-label="Admin dashboard"><span class="ls26-nav-icon" aria-hidden="true">⚙</span></a><button id="ls26Fullscreen" type="button" aria-label="Enter fullscreen" aria-pressed="false" title="Enter fullscreen"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M8 3H3v5M16 3h5v5M21 16v5h-5M8 21H3v-5"/></svg></button><button id="ls26More" type="button" aria-label="Host menu" aria-expanded="false" aria-controls="ls26HostMenu">▾</button><button id="ls26NavCollapse" type="button" aria-label="Collapse navigation" aria-expanded="true"><span class="ls26-collapsed-label"></span><span class="ls26-collapse-icon" aria-hidden="true">⌃</span></button>`;
 
-    // Force the requested topbar sizing at runtime so older responsive CSS
-    // or cached stylesheet rules cannot override these exact dimensions.
-    if(window.innerWidth>=700){
-      nav.querySelectorAll('.ls26-primary-nav').forEach(el=>el.style.setProperty('font-size','18px','important'));
-      [nav.children[3],nav.children[4]].forEach(el=>el&&el.style.setProperty('font-size','15px','important'));
-
-      const admin=nav.querySelector('.ls26-admin-nav');
-      const fullscreen=nav.querySelector('#ls26Fullscreen');
-      const more=nav.querySelector('#ls26More');
-      const host=nav.querySelector('.ls26-host');
-      [admin,fullscreen].forEach(el=>{
-        if(!el)return;
-        el.style.setProperty('flex','0 0 61px','important');
-        el.style.setProperty('width','61px','important');
-        el.style.setProperty('min-width','61px','important');
-        el.style.setProperty('max-width','61px','important');
-      });
-      if(more){
-        more.style.setProperty('flex','0 0 51px','important');
-        more.style.setProperty('width','51px','important');
-        more.style.setProperty('min-width','51px','important');
-        more.style.setProperty('max-width','51px','important');
-      }
-      if(host){
-        host.style.setProperty('flex','0 0 111px','important');
-        host.style.setProperty('width','111px','important');
-        host.style.setProperty('min-width','111px','important');
-        host.style.setProperty('max-width','111px','important');
-      }
-      const logoSvg=nav.querySelector('.ls26-brand-icon svg');
-      if(logoSvg)logoSvg.style.setProperty('transform','translate(-4px,-5px)','important');
+    nav.classList.add('ls26-compact-nav');
+    nav.querySelector('.ls26-collapsed-label').textContent=tab||'LiveSuite';
+    const collapse=nav.querySelector('#ls26NavCollapse');
+    const navPreference='ls26:navCollapsed:v1';
+    function setCollapsed(collapsed,remember=false){
+      nav.classList.toggle('is-nav-collapsed',collapsed);
+      collapse.setAttribute('aria-expanded',String(!collapsed));
+      collapse.setAttribute('aria-label',collapsed?'Expand navigation':'Collapse navigation');
+      collapse.title=collapsed?'Expand navigation':'Collapse navigation';
+      collapse.querySelector('.ls26-collapse-icon').textContent=collapsed?'⌄':'⌃';
+      if(remember)try{localStorage.setItem(navPreference,collapsed?'1':'0');}catch(_){}
     }
+    let collapsed=false;
+    try{collapsed=localStorage.getItem(navPreference)==='1';}catch(_){}
+    setCollapsed(collapsed);
+    collapse.onclick=()=>{closeMenu();setCollapsed(!nav.classList.contains('is-nav-collapsed'),true);};
     let stack=$('ls26StickyHeader');
     if(!stack){stack=document.createElement('div');stack.id='ls26StickyHeader';document.body.prepend(stack);}
     stack.append(nav);const status=$('topStatusContainer');if(status)stack.append(status);
     new ResizeObserver(()=>document.documentElement.style.setProperty('--ls-header-h',stack.getBoundingClientRect().height+'px')).observe(stack);
-    const menu=document.createElement('div');menu.id='ls26HostMenu';menu.hidden=true;menu.innerHTML='<button id="ls26InboxOpen" type="button">▣ Inbox</button><button id="ls26UpdatesOpen" type="button">✎ App Updates</button><button id="ls26ReminderOpen" type="button">☑ Add Reminder</button><button id="ls26SettingsOpen" type="button">⚙ App Settings</button>';document.body.append(menu);
+    const menu=document.createElement('div');menu.id='ls26HostMenu';menu.hidden=true;menu.innerHTML='<button id="ls26HostModeOpen" type="button">Host Mode · Admin dashboard</button><button id="ls26InboxOpen" type="button">▣ Inbox</button><button id="ls26UpdatesOpen" type="button">✎ App Updates</button><button id="ls26ReminderOpen" type="button">☑ Add Reminder</button><button id="ls26SettingsOpen" type="button">⚙ App Settings</button>';document.body.append(menu);
     function closeMenu(){menu.hidden=true;$('ls26More').setAttribute('aria-expanded','false');}
     $('ls26More').onclick=()=>{menu.hidden=!menu.hidden;$('ls26More').setAttribute('aria-expanded',String(!menu.hidden));const rect=nav.getBoundingClientRect();menu.style.top=(rect.bottom+4)+'px';if(!menu.hidden)menu.querySelector('button').focus();};
+    $('ls26HostModeOpen').onclick=()=>{closeMenu();location.href=url('admin-new/admin.html');};
     $('ls26InboxOpen').onclick=()=>{closeMenu();openInbox();};
     $('ls26UpdatesOpen').onclick=()=>{closeMenu();window.LS26.openAppUpdates();};
     $('ls26ReminderOpen').onclick=()=>{closeMenu();window.LS26.openReminder();};
