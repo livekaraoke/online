@@ -404,3 +404,22 @@ body.library-page{height:100dvh;overflow:hidden;display:flex;flex-direction:colu
 .library-page .song-table-row:is(.rotation-highlight-yellow,.rotation-highlight-blue):not(.is-selected):not(.is-armed){background:linear-gradient(90deg,var(--rotation-fill),#011725 75%)}
 .library-page .song-table-row:is(.rotation-highlight-yellow,.rotation-highlight-blue):not(.is-played):not(.is-armed) .song-title-cell strong{color:var(--rotation-highlight)}
 .library-page .song-table-row:is(.rotation-highlight-yellow,.rotation-highlight-blue) .rotation-badge{border-color:var(--rotation-highlight)}
+
+/* Grow the search input by about one third, yielding only when the
+   inline heading/counts and fixed action buttons need the space. */
+@media(min-width:691px){
+ .library-page .library-heading:has(.library-heading-copy){
+  display:flex!important;
+  flex-wrap:nowrap!important;
+  --search-expanded:calc(50.6667% - 25px);
+ }
+ .library-page .library-heading .library-heading-copy{flex:1 0 auto!important}
+ .library-page .library-heading .library-controls{flex:0 1 var(--search-expanded)!important;width:var(--search-expanded);min-width:0}
+ .library-page .library-heading .library-heading-actions{flex:0 0 auto!important}
+}
+@media(min-width:761px) and (max-width:850px){
+ .library-page .library-heading:has(.library-heading-copy){--search-expanded:calc(52% - 25px)}
+}
+@media(min-width:851px){
+ .library-page .library-heading:has(.library-heading-copy){--search-expanded:calc(54.6667% - 28px)}
+}
