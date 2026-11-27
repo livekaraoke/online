@@ -456,6 +456,7 @@
           <small>${LyricsCommon.escapeHTML(ArtistNames.display(song.artist))}${song.year ? " · "+LyricsCommon.escapeHTML(song.year) : ""}${note ? ` <span class="personal-note-badge" title="${LyricsCommon.escapeHTML(note.label)}">Note · ${LyricsCommon.escapeHTML(note.label)}</span>` : ""}</small>
         </button>
 
+        <span class="library-placeholder-cell">-</span>
         <strong class="key-cell">
           ${LyricsCommon.escapeHTML(song.key || "—")}
         </strong>

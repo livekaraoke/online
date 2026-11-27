@@ -298,3 +298,29 @@ body.library-page{height:100dvh;overflow:hidden;display:flex;flex-direction:colu
  .library-page .row-actions .row-setlist-btn,.library-page .row-actions .row-queue-btn{width:44px}
  .library-page .song-table-row{min-height:196px!important}
 }
+
+/* 2026-11-27: reserve a metadata column without widening the action strip. */
+.library-page .song-table-head,.library-page .song-table-row{
+ grid-template-columns:36px minmax(70px,1fr) 42px 42px 48px 43px 34px 199px;
+ column-gap:3px;
+}
+.library-page .song-table-head>span:nth-child(n+3):nth-child(-n+7),
+.library-page .song-table-row .library-placeholder-cell{
+ display:flex;align-items:center;justify-content:center;text-align:center;min-width:0;
+}
+.library-page .song-table-row .library-placeholder-cell{font-size:18px;color:var(--ls-muted)}
+.library-page .song-table-head .library-placeholder-heading{color:var(--ls-muted)}
+@media(min-width:521px) and (max-width:760px){
+ .library-page .song-table-head,.library-page .song-table-row{
+  grid-template-columns:28px minmax(60px,1fr) 32px 32px 39px 34px 28px 182px;
+  column-gap:2px;
+ }
+}
+@media(max-width:520px){
+ .library-page .song-table-head,.library-page .song-table-row{
+  grid-template-columns:24px minmax(45px,1fr) 28px 28px 33px 30px 25px 44px;
+  column-gap:2px;
+ }
+ .library-page .song-table-row .key-cell{font-size:16px!important}
+ .library-page .song-table-row .library-placeholder-cell{font-size:16px}
+}

@@ -10,6 +10,9 @@ const root=path.join(__dirname,'..');
 const read=file=>fs.readFileSync(path.join(root,file),'utf8');
 const document=parseHTML(read('library.html')).document;
 const mount=document.querySelector('#libraryRecommendationTools');
+const tableHead=document.querySelector('.song-table-head');
+assert.deepEqual([...tableHead.children].map(el=>el.textContent),['','SONG / ARTIST','■','KEY','uBPM','BPM','CAPO','ACTIONS']);
+assert.ok(read('host/js/lyricsviewer.js').includes('<span class="library-placeholder-cell">-</span>'));
 assert.ok(mount,'recommendation tools missing');
 const preview=document.createElement('button');
 preview.id='bestNextOpen';
@@ -19,7 +22,7 @@ const html='<!DOCTYPE html><html><head><meta name="viewport" content="width=devi
  '<style>:root{--ls-bg:#00131e;--ls-panel:#052536;--ls-text:#eefaff;--ls-muted:#9db8c8;--ls-accent:#00cafa;--ls-success:#00e88a;--ls-border:#24536b;--ls-soft:#153042}'+
  read('shared/library.css')+'\n'+read('shared/best-next.css')+'</style></head>'+
  '<body class="library-page"><main class="library-shell">'+document.querySelector('.library-heading').outerHTML+
- document.querySelector('.library-browse-row').outerHTML+'</main></body></html>';
+ document.querySelector('.library-browse-row').outerHTML+tableHead.outerHTML+'</main></body></html>';
 const chrome=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(fs.existsSync);
 (async()=>{
  const browser=await chromium.launch({headless:true,...(chrome?{executablePath:chrome}:{}),args:['--no-sandbox']});
@@ -42,6 +45,9 @@ const chrome=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin
     assert.ok(b.search.width>=100&&b.setlist.width>=65&&b.best.width>=70,width+': touch layout too compressed');
     assert.ok(b.heading.right<=b.counts.left+2&&aligned('heading','counts'),width+': counts must be beside heading');
     assert.ok(aligned('rotation','new1')&&aligned('new1','new2')&&aligned('new2','new3')&&b.rotation.right<=b.new1.left+2&&b.new3.right<=boxes.innerWidth,width+': placeholder tools overlap or wrap');
+    const metadataWidths=await page.locator('.song-table-head > span').evaluateAll(els=>els.map(el=>el.getBoundingClientRect().width));
+    assert.equal(metadataWidths.length,8);
+    assert.ok(Math.abs(metadataWidths[2]-metadataWidths[3])<1,width+': placeholder and KEY widths differ');
     assert.deepEqual(await page.locator('.library-new-tools button').allTextContents(),['NEW 1','NEW 2','NEW 3']);
     assert.equal(await page.locator('.library-new-tools button:disabled').count(),3);
     assert.ok(boxes.scrollWidth<=boxes.innerWidth+2,width+': unexpected horizontal overflow '+boxes.scrollWidth);
