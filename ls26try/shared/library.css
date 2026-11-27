@@ -324,3 +324,14 @@ body.library-page{height:100dvh;overflow:hidden;display:flex;flex-direction:colu
  .library-page .song-table-row .key-cell{font-size:16px!important}
  .library-page .song-table-row .library-placeholder-cell{font-size:16px}
 }
+
+/* Active-session completed songs: only title and suffix are muted. */
+.library-page .song-table-row.is-played .song-title-cell strong{
+ display:flex;align-items:baseline;gap:5px;color:#64717a!important;
+}
+.library-page .song-table-row.is-played .played-song-title{
+ min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.library-page .song-table-row.is-played .played-song-label{
+ flex:none;font-size:.66em;font-weight:750;white-space:nowrap;color:inherit;
+}

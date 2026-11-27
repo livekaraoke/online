@@ -401,7 +401,26 @@
       .join("");
   }
 
+  // Use only completed performances belonging to the active session.
+  // Both sources are already subscribed elsewhere; no additional Firestore reads.
+  function playedSongIds(session, sessionId, performances, runOrder) {
+    const ids = new Set();
+    if (!sessionId || session?.status !== "active" || session.id !== sessionId) return ids;
+    const completed = record => ["played","completed","finished"].includes(String(record?.status || "").toLowerCase());
+    const records = performances?.sessionId === sessionId ? (performances.records || []) : [];
+    for (const record of [...records, ...(runOrder || [])]) {
+      if (record?.songId && (!record.sessionId || record.sessionId === sessionId) && completed(record)) ids.add(String(record.songId));
+    }
+    return ids;
+  }
+
+  function currentPlayedSongIds() {
+    const tools = window.LK?.sessionTools;
+    return playedSongIds(tools?.getSession?.(), tools?.getSessionId?.(), window.LS26BestNext?.getSessionPerformances?.(), tools?.getRunOrder?.());
+  }
+
   function render() {
+    const playedIds = currentPlayedSongIds();
     syncNotesControls();
     visibleSongs = filteredSongs();
     if (!visibleSongs.some(song => song.firebaseId === selectedId)) selectedStage = 0;
@@ -434,7 +453,8 @@
 
       const row = document.createElement("div");
       const note = personalNote(song);
-      row.className = "song-table-row"+(song.firebaseId===selectedId?" is-selected":"")+(note?" personal-note-row":"");
+      const played = playedIds.has(String(song.firebaseId));
+      row.className = "song-table-row"+(song.firebaseId===selectedId?" is-selected":"")+(note?" personal-note-row":"")+(played?" is-played":"");
       row.dataset.id = song.firebaseId;
 
       row.innerHTML = `
@@ -452,7 +472,7 @@
           class="song-title-cell"
           data-select="${song.firebaseId}"
           type="button">
-          <strong>${LyricsCommon.escapeHTML(song.title)}</strong>${note?"":(window.LS26BestNext?.badge(song)||"")}
+          <strong>${played?`<span class="played-song-title">${LyricsCommon.escapeHTML(song.title)}</span><span class="played-song-label">(PLAYED)</span>`:LyricsCommon.escapeHTML(song.title)}</strong>${note?"":(window.LS26BestNext?.badge(song)||"")}
           <small>${LyricsCommon.escapeHTML(ArtistNames.display(song.artist))}${song.year ? " · "+LyricsCommon.escapeHTML(song.year) : ""}${note ? ` <span class="personal-note-badge" title="${LyricsCommon.escapeHTML(note.label)}">Note · ${LyricsCommon.escapeHTML(note.label)}</span>` : ""}</small>
         </button>
 
