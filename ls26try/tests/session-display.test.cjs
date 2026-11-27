@@ -22,7 +22,7 @@ test('active Run Order excludes terminal songs without deleting history',()=>{
  const source=read('admin-new/js/top-statusbar-session-tools.js');const code=source.slice(source.indexOf('  function renderRunOrder()'),source.indexOf('  function renderSongSelect()'));
  const nodes=Object.fromEntries(['tsRunOrderList','tsRunOrderCount','tsRunOrderTabCount'].map(id=>[id,element()]));
  const items=['queued','played','completed','finished','abandoned','declined','playing'].map((status,i)=>({id:String(i),songTitle:status,status}));
- const c={$:id=>nodes[id],renderBestNextRunOrder:()=>{},ArtistNames:{display:x=>x},state:{sessionId:'s'},queueItems:()=>items,getBreakState:()=>({open:false}),runOrderPlayingItem:rows=>rows.find(x=>x.status==='playing'),requestForRunItem:()=>null,esc:x=>x,window:{matchMedia:()=>({matches:true})}};
+ const c={$:id=>nodes[id],renderBestNextRunOrder:()=>{},ArtistNames:{display:x=>x},state:{sessionId:'s'},displayState:()=>({sessionId:'s'}),queueItems:()=>items,getBreakState:()=>({open:false}),runOrderPlayingItem:rows=>rows.find(x=>x.status==='playing'),requestForRunItem:()=>null,esc:x=>x,window:{matchMedia:()=>({matches:true})}};
  vm.createContext(c);vm.runInContext(code,c);c.renderRunOrder();assert.equal(nodes.tsRunOrderCount.textContent,'(2)');assert.match(nodes.tsRunOrderList.innerHTML,/data-ts-run-details="6"/);assert.doesNotMatch(nodes.tsRunOrderList.innerHTML,/data-ts-run-details="[12345]"/);assert.equal(items.length,7);
  items.splice(0,items.length,{id:'done',status:'played'});c.renderRunOrder();assert.equal(nodes.tsRunOrderCount.textContent,'(0)');assert.match(nodes.tsRunOrderList.innerHTML,/Run Order is empty/);
 });
@@ -37,22 +37,19 @@ test('open break timer advances locally while completed break duration remains f
  breaks[0].end=new Date(now);now+=10000;c.refreshBreakTimers();assert.equal(cells[0].textContent,'3m 05s');
 });
 
-test('demo is separate, read-only and not persisted; all five panes have sample data',()=>{
- const source=read('shared/session-ui.js');
+test('native demo uses mock presentation records without replacing live session state',()=>{
+ const source=read('shared/session-ui.js'),controller=read('admin-new/js/top-statusbar-session-tools.js');
  const code=source.slice(source.indexOf('  let demo=null;'),source.indexOf('  function renderSession(){'));
  const {parseHTML}=require(require.resolve('linkedom',{paths:[process.env.LS26_TEST_NODE_MODULES||process.cwd()]}));
- const {document}=parseHTML('<html><body><div id="topStatusContainer"><div id="topStatusBar"><strong id="tsLiveLabel">OFFLINE</strong></div></div></body></html>');
- let active='';const c={document,Date,tools:()=>({getSessionId:()=>active,getSession:()=>null}),$:id=>document.getElementById(id),clock:d=>d.toISOString().slice(11,16),esc:x=>String(x),console};
+ const {document}=parseHTML('<html><body><div id="topStatusBar"><strong id="tsLiveLabel">OFFLINE</strong><span id="tsLiveDot" class="dot blue"></span></div></body></html>');
+ let active='',view=null;const c={document,Date,tools:()=>({getSessionId:()=>active,getSession:()=>null,setDemoView:v=>{view=v}}),$:id=>document.getElementById(id),renderSession:()=>{},mirror:()=>{},console};
  vm.createContext(c);vm.runInContext(code,c);
- // linkedom does not provide focus on every element; use no-op for this fixture.
- const proto=Object.getPrototypeOf(document.createElement('button'));if(!proto.focus)proto.focus=()=>{};
- c.startDemo();const root=document.getElementById('ls26SessionDemo');
- assert.ok(root);assert.match(root.textContent,/ONLINE\(DEMO\)/);assert.equal(root.querySelectorAll('[data-demo-pane]').length,5);
- assert.equal(document.getElementById('tsLiveLabel').textContent,'OFFLINE');
- assert.equal(document.getElementById('topStatusBar').classList.contains('ls26-demo-hidden'),true);
- assert.equal(root.querySelectorAll('[data-session],[data-ts-play],[data-ts-accept]').length,0);
- assert.ok([...root.querySelectorAll('.ls26-demo-pane button')].every(b=>b.disabled));
- c.stopDemo(false);assert.equal(document.getElementById('ls26SessionDemo'),null);assert.equal(document.getElementById('topStatusBar').classList.contains('ls26-demo-hidden'),false);
- c.startDemo();active='real-session';c.refreshDemo();assert.equal(document.getElementById('ls26SessionDemo'),null);
- c.startDemo();assert.equal(document.getElementById('ls26SessionDemo'),null);
+ c.startDemo();assert.ok(view);assert.equal(view.session.venue,'Example Venue');assert.equal(view.requests.length,3);assert.equal(view.runOrder.items.length,4);assert.equal(view.notifications.length,5);
+ assert.equal(document.querySelectorAll('#topStatusBar').length,1);assert.equal(document.getElementById('tsLiveLabel').textContent,'ONLINE');assert.equal(document.getElementById('topStatusBar').classList.contains('is-session-demo'),true);
+ let blocked=false;c.guardDemoAction({target:document.getElementById('tsLiveLabel'),type:'click',preventDefault(){blocked=true},stopImmediatePropagation(){}});
+ const button=document.createElement('button');button.setAttribute('data-ts-accept','demo-request-0');document.getElementById('topStatusBar').append(button);
+ c.guardDemoAction({target:button,type:'click',preventDefault(){blocked=true},stopImmediatePropagation(){}});assert.equal(blocked,true);
+ assert.match(controller,/getSessionId = \(\) => state.sessionId/);assert.match(controller,/getRequests = \(\) => state.requests/);
+ c.stopDemo(false);assert.equal(view,null);assert.equal(document.getElementById('topStatusBar').classList.contains('is-session-demo'),false);
+ c.startDemo();active='real-session';c.refreshDemo();assert.equal(view,null);c.startDemo();assert.equal(view,null);
 });

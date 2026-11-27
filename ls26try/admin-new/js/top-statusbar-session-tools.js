@@ -35,6 +35,8 @@
   };
 
   const $ = id => document.getElementById(id);
+  let demoView=null;
+  const displayState=()=>demoView||state;
 
   function publishSharedSession() {
     window.LK = window.LK || {};
@@ -121,11 +123,11 @@
     return null;
   }
 
-  function actualStartDate() {
+  function actualStartDate(view=state) {
     // performanceSessions.startedAt is the authoritative start used by Admin.
     // Prefer it over addon/legacy fields so ELAPSED cannot jump to a stale time.
     return tsDate(
-      state.session?.actualStartedAt || (state.session?.timingVersion===2 ? null : state.session?.startedAt || state.currentControl?.startedAt)
+      view.session?.actualStartedAt || (view.session?.timingVersion===2 ? null : view.session?.startedAt || view.currentControl?.startedAt)
     );
   }
 
@@ -142,12 +144,12 @@
     return date;
   }
 
-  function eventScheduleFallback() {
+  function eventScheduleFallback(view=state) {
     const event =
-      state.linkedEvent ||
-      state.session?.eventSnapshot ||
-      state.currentControl?.eventSnapshot ||
-      inferLinkedEvent() ||
+      view.linkedEvent ||
+      view.session?.eventSnapshot ||
+      view.currentControl?.eventSnapshot ||
+      (view===state?inferLinkedEvent():null) ||
       null;
 
     if (!event) return { start:null, end:null };
@@ -161,18 +163,18 @@
     return { start, end };
   }
 
-  function resolvedSchedule() {
+  function resolvedSchedule(view=state) {
     let start = tsDate(
-      state.session?.scheduledStartAt ||
-      state.currentControl?.scheduledStartAt
+      view.session?.scheduledStartAt ||
+      view.currentControl?.scheduledStartAt
     );
 
     let end = tsDate(
-      state.session?.scheduledEndAt ||
-      state.currentControl?.scheduledEndAt
+      view.session?.scheduledEndAt ||
+      view.currentControl?.scheduledEndAt
     );
 
-    const fallback = eventScheduleFallback();
+    const fallback = eventScheduleFallback(view);
 
     if (!start) start = fallback.start;
     if (!end) end = fallback.end;
@@ -181,6 +183,7 @@
   }
 
   function renderRemaining() {
+    const view=displayState();
     const compactRemaining = $("tsCompactRemaining");
     const compactEnd = $("tsCompactScheduledEnd");
     const adjustedRemaining = $("tsAdjustedRemainingTime");
@@ -204,7 +207,7 @@
       el.classList.toggle("is-ending-soon", endingSoon);
     };
 
-    if (!state.sessionId || !state.session) {
+    if (!view.sessionId || !view.session) {
       setValueState(compactRemaining, NaN);
       setValueState(adjustedRemaining, NaN);
       setValueState(legacyRemaining, NaN);
@@ -215,13 +218,13 @@
       return;
     }
 
-    const actualStart = actualStartDate();
-    const schedule = resolvedSchedule();
+    const actualStart = actualStartDate(view);
+    const schedule = resolvedSchedule(view);
     // Only an explicit host edit supplies projectedEndAt. Otherwise preserve
     // the scheduled finish plus the actual late-start delay (without rounding).
     const lateMs = actualStart && schedule.start
       ? Math.max(0, actualStart.getTime() - schedule.start.getTime()) : 0;
-    const projectedEnd = tsDate(state.session?.projectedEndAt);
+    const projectedEnd = tsDate(view.session?.projectedEndAt);
     const target = projectedEnd || (schedule.end
       ? new Date(schedule.end.getTime() + lateMs) : null);
 
@@ -271,8 +274,8 @@
     return tsDate(br?.endedAt || br?.end || null);
   }
 
-  function getBreakState() {
-    const breaks = Array.isArray(state.session?.breaks) ? state.session.breaks : [];
+  function getBreakState(view=state) {
+    const breaks = Array.isArray(view.session?.breaks) ? view.session.breaks : [];
     const last = breaks[breaks.length - 1] || null;
     const start = breakStartDate(last);
     const end = breakEndDate(last);
@@ -392,14 +395,15 @@
   }
 
   function renderNotifications() {
+    const view=displayState();
     const list = $("tsNotificationsList");
     const badge = $("tsNotificationBadge");
     const label = $("tsNotificationLabel");
     const alerts = $("tsCompactAlerts");
     const tabCount = $("tsNotificationTabCount");
 
-    const count = state.notifications.length;
-    const unread = state.notificationUnread;
+    const count = view.notifications.length;
+    const unread = view.notificationUnread;
 
     if (badge) {
       badge.textContent = String(unread);
@@ -422,7 +426,7 @@
     if (!list) return;
 
     list.innerHTML = count
-      ? state.notifications.map(entry => {
+      ? view.notifications.map(entry => {
           const date = activityDate(entry) || new Date();
           const time = formatClock(date);
           const icon = entry.icon || activityIcon(entry.type);
@@ -549,7 +553,8 @@
 
 
   function renderBreakControls() {
-    const b = getBreakState();
+    const view=displayState();
+    const b = getBreakState(view);
     const btn = $("tsBreakActionBtn");
     const status = $("tsBreakStatusLabel");
     const details = $("tsBreakDetails");
@@ -560,7 +565,7 @@
     const current = $("tsCurrentBreakDuration");
     const message = $("tsBreakActionMessage");
 
-    const active = !!state.sessionId && !!state.session && String(state.session.status || "active").toLowerCase() !== "ended";
+    const active = !!view.sessionId && !!view.session && String(view.session.status || "active").toLowerCase() !== "ended";
     if (btn) {
       btn.disabled = !active;
       btn.textContent = b.open ? "▶ End Break" : "☕ Start Break";
@@ -583,15 +588,16 @@
   function compactText(id,value){const el=$(id);if(!el)return;if(el.textContent!==String(value))el.textContent=String(value);if(id==='tsCompactRequests')el.classList.toggle('has-requests',Number(value)>0);}
   function shortDuration(ms){const mins=Math.floor(Math.abs(ms)/60000);return (ms<0?'−':'')+(mins>=60?Math.floor(mins/60)+'h ':'')+(mins%60)+'m';}
   function renderCompactHostStrip() {
-    const session=state.session, control=state.currentControl||{};
-    if(!state.sessionId||!session){Object.entries({tsCompactVenue:'No active session',tsCompactType:'—',tsCompactStarted:'--:--',tsCompactElapsed:'0m',tsCompactRequests:'0',tsCompactAlerts:'0'}).forEach(([id,v])=>compactText(id,v));return;}
-    const actual=actualStartDate(),schedule=resolvedSchedule();
+    const view=displayState();
+    const session=view.session, control=view.currentControl||{};
+    if(!view.sessionId||!session){Object.entries({tsCompactVenue:'No active session',tsCompactType:'—',tsCompactStarted:'--:--',tsCompactElapsed:'0m',tsCompactRequests:'0',tsCompactAlerts:'0'}).forEach(([id,v])=>compactText(id,v));return;}
+    const actual=actualStartDate(view),schedule=resolvedSchedule(view);
     compactText('tsCompactVenue',session.venue||control.venue||session.eventSnapshot?.venue||'Venue TBC');
     compactText('tsCompactType',schedule.start&&schedule.end?formatClock(schedule.start)+' – '+formatClock(schedule.end):'Time not set');
     compactText('tsCompactStarted',actual?formatClock(actual):'WAITING');
     compactText('tsCompactElapsed',actual?shortDuration(Math.max(0,Date.now()-actual.getTime())):'0m');
-    compactText('tsCompactRequests',state.requests.filter(isPendingDisplayRequest).length);
-    compactText('tsCompactAlerts',Math.max(state.requests.filter(isPendingDisplayRequest).length,state.notifications.length));
+    compactText('tsCompactRequests',view.requests.filter(isPendingDisplayRequest).length);
+    compactText('tsCompactAlerts',Math.max(view.requests.filter(isPendingDisplayRequest).length,view.notifications.length));
   }
 
   function isPendingRequest(request) {
@@ -619,12 +625,13 @@
   }
 
   function renderPending() {
+    const view=displayState();
     const list = $("tsPendingRequestsList");
     const countEl = $("tsPendingCount");
     const tabCount = $("tsPendingTabCount");
     // Oldest request stays at the top; every newer request is appended below it.
     // This makes the host accept requests in the order they were submitted.
-    const pending = state.requests
+    const pending = view.requests
       .filter(isPendingDisplayRequest)
       .slice()
       .sort(sortPendingRequestsOldestFirst);
@@ -639,7 +646,7 @@
 
     if (!list) return;
 
-    if (!state.sessionId) {
+    if (!view.sessionId) {
       list.innerHTML = `<div class="top-status-queue-empty">No active session.</div>`;
       return;
     }
@@ -676,11 +683,11 @@
   }
 
 
-  function queueItems() {
-    const expectedSessionId=state.sessionId||"";
-    const runSessionId=state.runOrder?.sessionId||"";
+  function queueItems(view=state) {
+    const expectedSessionId=view.sessionId||"";
+    const runSessionId=view.runOrder?.sessionId||"";
     if(runSessionId!==expectedSessionId)return [];
-    return Array.isArray(state.runOrder?.items) ? state.runOrder.items : [];
+    return Array.isArray(view.runOrder?.items) ? view.runOrder.items : [];
   }
 
   function runOrderPlayingItem(items = queueItems()) {
@@ -689,9 +696,9 @@
     ) || null;
   }
 
-  function requestForRunItem(item) {
+  function requestForRunItem(item, view=state) {
     if (!item?.requestId) return null;
-    return state.requests.find(request => request.id === item.requestId) || null;
+    return view.requests.find(request => request.id === item.requestId) || null;
   }
 
   function canLaunchRunOrderSong(items = queueItems()) {
@@ -862,11 +869,12 @@
     const panel=$("endCompletionPanel"),slot=$("endCompletionFinishSlot");
     const destination=slot||row;
     if(finish&&finish.parentElement!==destination)destination.append(finish);
-    window.LS26BestNext.renderRunOrder(card);
+    window.LS26BestNext.renderRunOrder(card,demoView?.best);
   }
   window.addEventListener("ls26:rotation-updated", renderBestNextRunOrder);
 
   function renderRunOrder() {
+    const view=displayState();
     renderBestNextRunOrder();
     const list = $("tsRunOrderList");
     if (!list) return;
@@ -884,7 +892,7 @@
     ]);
 
     const previousPositions=new Map([...list.querySelectorAll('[data-ts-run-details]')].map(row=>[row.dataset.tsRunDetails,row.getBoundingClientRect().top]));
-    const all=queueItems();
+    const all=queueItems(view);
     const current=all.find(x=>String(x.status||'').toLowerCase()==='playing');
     const items=[...(current?[current]:[]),...all.filter(item => item!==current && !terminalStatuses.has(String(item?.status || '').toLowerCase()))];
 
@@ -899,13 +907,13 @@
       tabCount.classList.toggle("hidden", items.length === 0);
     }
 
-    const preSessionNotice=!state.sessionId
+    const preSessionNotice=!view.sessionId
       ? `<div class="top-status-queue-empty pre-session-runorder-note">PRE-SESSION RUN ORDER · Add and arrange songs now; choose what to do with this list when the session starts.</div>`
       : "";
 
-    const breakState = getBreakState();
+    const breakState = getBreakState(view);
     const hasPlayingSong = !!runOrderPlayingItem(items);
-    const showPlayButtons = !!state.sessionId && !breakState.open;
+    const showPlayButtons = !!view.sessionId && !breakState.open;
 
     const breakRow = breakState.open
       ? `
@@ -949,12 +957,12 @@
             <div class="ts-run-main">
               <small class="ts-sequence-label">${isPlaying?"CURRENT / PLAYING":movable.indexOf(item)===0?"NEXT":"FOLLOWING"}</small><strong>${esc(item.songTitle || item.title || item.songId || "Untitled Song")}</strong>
               <small>
-                ${esc(ArtistNames.display(item.artist || ""))} · ${esc(item.singerName || "Host choice")} · ${esc(requestForRunItem(item)?.location || "")}
+                ${esc(ArtistNames.display(item.artist || ""))} · ${esc(item.singerName || "Host choice")} · ${esc(requestForRunItem(item,view)?.location || "")}
                 ${isPlaying ? `<em class="ts-playing-label">${status === "played" ? "FINISHED" : "PLAYING"}</em>` : ""}
               </small>
             </div>
 
-            ${(requestForRunItem(item)?.note||item.note)?`<div class="ls26-request-note">${esc(requestForRunItem(item)?.note||item.note)}</div>`:''}
+            ${(requestForRunItem(item,view)?.note||item.note)?`<div class="ls26-request-note">${esc(requestForRunItem(item,view)?.note||item.note)}</div>`:''}
             <div class="ts-run-actions">
               ${
                 showPlayButtons && !isPlaying
@@ -1208,7 +1216,7 @@
 
   function renderPublicSetlistName(data) {
     const el = $("tsDashPublicSetlist");
-    if (el) el.textContent = data?.setlistName || "Not selected";
+    if (el) el.textContent = (demoView?.publicList||data)?.setlistName || "Not selected";
   }
 
   function clearLinkedEventSubscription() {
@@ -1551,6 +1559,7 @@
       if($(pane)){$(pane).hidden=name!==tab;$(pane).classList.toggle('active',name===tab);}
     });
     try{localStorage.setItem('ls26:sessionTab',tab);}catch(_){}
+    if(demoView){if(tab==='notifications'){demoView.notificationUnread=0;renderNotifications();}return;}
     if(tab==='notifications')markNotificationsRead();
     if(tab==='runorder')ensureSongs();
   }
@@ -1814,6 +1823,13 @@
       return result;
     }).finally(()=>{finishPending=null;});
     return finishPending;
+  };
+  LK.sessionTools.getDemoView = () => demoView;
+  LK.sessionTools.setDemoView = value => {
+    demoView=value&&!state.sessionId&&!state.session?value:null;
+    renderRemaining();renderCompactHostStrip();renderNotifications();renderPending();renderRunOrder();renderBreakControls();
+    renderPublicSetlistName(displayState().publicList);
+    window.dispatchEvent(new Event('ls26:demo-view'));
   };
   LK.sessionTools.getControl = () => state.currentControl;
   LK.sessionTools.getRunOrderSnapshot = () => state.runOrderSnapshotReady ? state.runOrder : null;

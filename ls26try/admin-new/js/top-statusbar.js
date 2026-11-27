@@ -8,6 +8,9 @@
   const scriptElement = document.currentScript;
 
   let currentSession = null;
+  let lastLive=false;
+  const demoView=()=>window.LK?.sessionTools?.getDemoView?.();
+  function paintLive(){const demo=demoView();setText('tsLiveLabel',demo?'ONLINE':lastLive?'LIVE NOW!':'Offline');const dot=$('tsLiveDot');if(dot)dot.className='dot '+(demo||lastLive?'green':'blue');}
   let requestsEnabled = null;
   let currentRequests = [];
   let notifications = [];
@@ -257,21 +260,14 @@
           const songsEnabled = data.songsEnabled === true;
           if(requestsEnabled!==songsEnabled){requestsEnabled=songsEnabled;window.dispatchEvent(new Event('ls26:requests-gate'));}
 
-          setText(
-            "tsLiveLabel",
-            isLive ? "LIVE NOW!" : "Offline"
-          );
+          lastLive=isLive;paintLive();
 
           setText(
             "tsDashSongs",
             songsEnabled ? "Unlocked" : "Locked"
           );
 
-          const dot = $("tsLiveDot");
 
-          if (dot) {
-            dot.className = `dot ${isLive ? "green" : "blue"}`;
-          }
 
           const songsLabel = $("tsDashSongs");
 
@@ -867,6 +863,8 @@
       return;
     }
   
+    if(demoView()){notesInput.disabled=false;notesInput.readOnly=true;notesInput.value=demoView().session.notes;if(status)status.innerText='Example notes · not saved';return;}
+    notesInput.readOnly=false;
     if (!currentSession?.id) {
       notesInput.disabled = true;
       notesInput.value = "";
@@ -897,7 +895,7 @@
     const notesInput = $("tsSessionNotes");
     const status = $("tsNotesSaveStatus");
   
-    if (!notesInput || !currentSession?.id) {
+    if (demoView() || !notesInput || !currentSession?.id) {
       return;
     }
   
@@ -980,6 +978,7 @@
    ************************************************************/
   
   function renderSession() {
+    if(demoView()){renderSessionNotes();return;}
     if (!currentSession) {
       setText("tsSessionLabel", "No active session");
       setText("tsDashVenue", "-");
@@ -1101,6 +1100,7 @@
       .replace(/'/g, "&#039;");
   }
 
+  window.addEventListener('ls26:demo-view',()=>{paintLive();renderSession();});
   setInterval(() => {
     renderSession();
   }, 1000);
