@@ -1385,3 +1385,32 @@ html body.host-lyric-view-page :is(#ls26StickyHeader,#hostStickyStack) > .host-v
  .ts-run-requester{flex:0 1 33%;min-width:70px}
  #topStatusBar .ts-run-order-row .ts-run-actions,.ls26-mirror .ts-run-order-row .ts-run-actions{margin-left:auto}
 }
+
+/* Pending requests: aligned priority, singer, note and actions. */
+#ls26StickyHeader #topStatusBar .ts-pending-request-row,
+#topStatusBar .ts-pending-request-row,.ls26-mirror .ts-pending-request-row{
+ gap:9px!important;padding:10px!important;min-height:94px!important;
+}
+#ls26StickyHeader #topStatusBar .ts-pending-main,#topStatusBar .ts-pending-main,.ls26-mirror .ts-pending-main{flex:1 1 34%!important;min-width:0!important}
+.ts-pending-singer{display:flex;align-items:center;gap:8px;flex:0 1 23%;min-width:95px;overflow-wrap:anywhere}
+.ts-pending-rank{display:grid;place-items:center;flex:0 0 30px;height:30px;box-sizing:border-box;border:1px solid #365365;border-radius:50%;color:#7893a3;font-weight:800;font-size:16px}
+.ts-pending-rank.is-ranked{color:#70e9ff;border-color:#1686a4;background:#073747}
+.ts-pending-singer-info{min-width:0;display:flex;flex-direction:column;gap:3px}
+.ts-pending-singer-name{font-size:clamp(16px,2.1vw,22px);font-weight:800;color:#b5f4ff;line-height:1.15}
+.ts-pending-singer-info small{color:var(--ls-muted);font-size:12px}
+.ts-pending-note{flex:0 1 24%;min-width:0;font-size:clamp(12px,1.7vw,17px);line-height:1.25;color:#d1e5f2;overflow-wrap:anywhere;white-space:pre-wrap}
+.ts-pending-note:not(:empty){border-left:2px solid var(--ls-accent);padding-left:8px}
+#topStatusBar #smartSingerRotation{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 10px!important;margin:5px 0 0!important;min-height:0!important}
+#smartSingerRotation .smart-singer-summary{min-width:0;flex:1}
+#smartSingerRotation .smart-singer-summary>strong{font-size:11px;color:#9bd7e8;letter-spacing:.025em}
+#smartSingerRotation .smart-singer-summary p{margin:2px 0!important;font-size:14px;line-height:1.25}
+#smartSingerRotation .smart-singer-summary p b{color:#b5f4ff}
+#smartSingerRotation .smart-singer-summary small{display:block;font-size:10px;line-height:1.2;color:#9db8c8}
+#topStatusBar #smartSingerRotation button{flex:none;min-height:36px!important;padding:5px 9px!important;font-size:12px!important;white-space:nowrap}
+@media(max-width:650px){
+ #ls26StickyHeader #topStatusBar .ts-pending-request-row,#topStatusBar .ts-pending-request-row,.ls26-mirror .ts-pending-request-row{flex-wrap:wrap}
+ #ls26StickyHeader #topStatusBar .ts-pending-main,#topStatusBar .ts-pending-main,.ls26-mirror .ts-pending-main{flex:1 1 45%!important}
+ .ts-pending-singer{flex:0 1 42%}.ts-pending-note{flex:1 1 35%}
+ #topStatusBar .ts-pending-actions,.ls26-mirror .ts-pending-actions{margin-left:auto}
+ #topStatusBar #smartSingerRotation{flex-wrap:wrap}#topStatusBar #smartSingerRotation button{margin-left:auto}
+}

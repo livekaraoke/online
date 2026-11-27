@@ -61,3 +61,26 @@ test('manual request picker includes two unnamed requester shortcuts above new n
  assert.ok(source.indexOf('class="ls26-unnamed-requester-row"')<source.indexOf('class="is-new" data-manual-new-requester'));
  assert.match(source,/grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
 });
+
+test('pending requests show a dedicated singer column and the actual suggested rotation priority',()=>{
+ const I=require('../shared/performance-intelligence.js');
+ const source=read('admin-new/js/top-statusbar-session-tools.js');
+ const code=source.slice(source.indexOf('  function isPendingRequest('),source.indexOf('  function runOrderPlayingItem('));
+ const nodes=Object.fromEntries(['tsPendingRequestsList','tsPendingCount','tsPendingTabCount'].map(id=>[id,element()]));
+ const requests=[{id:'a',songId:'1',songTitle:'First',singerName:'Alex',createdAt:1000,status:'pending',note:'Birthday'},{id:'b',songId:'2',songTitle:'Second',singerName:'Sam',createdAt:2000,status:'pending'},{id:'c',songId:'3',songTitle:'Third',singerName:'Alex',createdAt:3000,status:'pending'},{id:'d',songId:'4',songTitle:'Cancelled',singerName:'Jamie',createdAt:4000,status:'cancelled'}];
+ const state={sessionId:'s',session:{sessionType:'Live Karaoke'},requests,runOrder:{sessionId:'s',items:[]}};
+ const ctx={state,displayState:()=>state,$:id=>nodes[id],tsDate:x=>new Date(x),ArtistNames:{display:x=>x},esc:x=>String(x??''),window:{LS26Intelligence:I}};
+ vm.createContext(ctx);vm.runInContext(code,ctx);ctx.renderPending();
+ const markup=nodes.tsPendingRequestsList.innerHTML;
+ const {parseHTML}=require(require.resolve('linkedom',{paths:[process.env.LS26_TEST_NODE_MODULES||process.cwd()]}));
+ const {document}=parseHTML('<html><body>'+markup+'</body></html>');
+ const rows=[...document.querySelectorAll('.ts-pending-request-row')];
+ assert.deepEqual(rows.map(r=>r.dataset.lsRequest),['a','b','c','d']);
+ assert.deepEqual(rows.map(r=>r.querySelector('[data-singer-rank]').textContent),['1','2','–','–']);
+ assert.equal(rows[0].querySelector('.ts-pending-singer-name').textContent,'Alex');
+ assert.equal(rows[0].querySelector('.ts-pending-note').textContent,'Birthday');
+ assert.doesNotMatch(rows[0].querySelector('.ts-pending-main').textContent,/Alex/);
+ state.runOrder.items=[{id:'q',songId:'1',singerName:'Alex',status:'queued'}];ctx.renderPending();
+ const updated=parseHTML('<html><body>'+nodes.tsPendingRequestsList.innerHTML+'</body></html>').document;
+ assert.deepEqual([...updated.querySelectorAll('[data-singer-rank]')].map(r=>r.textContent),['–','1','–','–']);
+});

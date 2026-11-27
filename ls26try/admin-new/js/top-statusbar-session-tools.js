@@ -656,17 +656,25 @@
       return;
     }
 
+    const I=window.LS26Intelligence;
+    const candidates=I?.act(view.session||{})==='live karaoke'?I.singers(view.requests,queueItems(view)):[];
+    const ranks=new Map(candidates.map((candidate,index)=>[String(candidate.request.id),index+1]));
     list.innerHTML = pending.map(request => {
+      const rank=ranks.get(String(request.id));
       const status=String(request.status||"").toLowerCase();
       const cancelled=status==="cancelled";
       return `
         <div class="ts-pending-request-row${cancelled?" is-cancelled":""}" data-ls-request="${esc(request.id)}">
           <div class="ts-pending-main">
             <strong>${esc(request.songTitle || request.title || "Untitled Song")}</strong>
-            <small>${esc(ArtistNames.display(request.artist || request.songArtist || ""))} · ${esc(request.singerName || request.name || "Singer")} · ${esc(request.requesterCountry || request.location || "")}${request.source === "signup-kiosk" ? " · SIGN-UP KIOSK" : ""}</small>
+            <small>${esc(ArtistNames.display(request.artist || request.songArtist || ""))}${request.source === "signup-kiosk" ? " · SIGN-UP KIOSK" : ""}</small>
             ${cancelled?`<em class="ts-request-cancelled-label">CANCELLED BY REQUESTER</em>`:""}
           </div>
-          ${request.note?`<div class="ls26-request-note">${esc(request.note)}</div>`:''}
+          <div class="ts-pending-singer">
+            <span class="ts-pending-rank${rank?" is-ranked":""}" data-singer-rank title="${rank?"Suggested singer priority "+rank:"Not currently ranked"}" aria-label="${rank?"Suggested singer priority "+rank:"Not currently ranked"}">${rank||"–"}</span>
+            <div class="ts-pending-singer-info"><strong class="ts-pending-singer-name">${esc(request.singerName||request.requesterName||request.name||"Singer")}</strong>${(request.requesterCountry||request.location)?`<small>${esc(request.requesterCountry||request.location)}</small>`:''}</div>
+          </div>
+          <div class="ts-pending-note">${esc(request.note||"")}</div>
           <div class="ts-pending-actions">
             ${cancelled
               ? `<button type="button" class="dismiss-cancelled" data-ts-dismiss-cancelled="${esc(request.id)}" title="Remove cancelled request from this list" aria-label="Remove cancelled request">✕</button>`
