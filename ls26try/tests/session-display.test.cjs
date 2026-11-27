@@ -8,7 +8,7 @@ function element(){const classes=new Set();return {textContent:'',innerHTML:'',c
 test('sidebar pending badge follows current session and ignores stale snapshots',()=>{
  const nodes=Object.fromEntries(['sidebarRequestBadge','sidebarLiveNowBadge','sidebarRunOrderBadge'].map(id=>[id,element()]));const listeners=[],queries=[];
  function ref(name){return {doc:id=>ref(name+'/'+id),where:(...q)=>{queries.push(q);return ref(name)},onSnapshot(callback){listeners.push({name,callback});return ()=>{};}};}
- const c={document:{getElementById:id=>nodes[id]},console,LK:{db:{collection:ref}}};c.window=c;vm.createContext(c);vm.runInContext(read('admin-new/js/sidebar.js'),c);
+ const c={document:{getElementById:id=>nodes[id]},console,URL,location:{href:'https://livesuite.test/ls26try/admin-new/admin.html'},addEventListener:()=>{},LK:{db:{collection:ref}}};c.window=c;vm.createContext(c);vm.runInContext(read('admin-new/js/sidebar.js'),c);
  c.LK.sidebar.listenSidebarSongRequests();assert.equal(queries.length,0);assert.equal(nodes.sidebarRequestBadge.textContent,'0');
  c.LK.sidebar.listenSidebarLiveSession();const control=listeners.find(l=>l.name==='karaokeControl/currentSession').callback;
  const snapshot=(data)=>({exists:true,data:()=>data});control(snapshot({active:true,sessionId:'current'}));assert.deepEqual(queries[0],['sessionId','==','current']);
@@ -22,7 +22,7 @@ test('active Run Order excludes terminal songs without deleting history',()=>{
  const source=read('admin-new/js/top-statusbar-session-tools.js');const code=source.slice(source.indexOf('  function renderRunOrder()'),source.indexOf('  function renderSongSelect()'));
  const nodes=Object.fromEntries(['tsRunOrderList','tsRunOrderCount','tsRunOrderTabCount'].map(id=>[id,element()]));
  const items=['queued','played','completed','finished','abandoned','declined','playing'].map((status,i)=>({id:String(i),songTitle:status,status}));
- const c={$:id=>nodes[id],state:{sessionId:'s'},queueItems:()=>items,getBreakState:()=>({open:false}),runOrderPlayingItem:rows=>rows.find(x=>x.status==='playing'),requestForRunItem:()=>null,esc:x=>x,window:{matchMedia:()=>({matches:true})}};
+ const c={$:id=>nodes[id],renderBestNextRunOrder:()=>{},ArtistNames:{display:x=>x},state:{sessionId:'s'},queueItems:()=>items,getBreakState:()=>({open:false}),runOrderPlayingItem:rows=>rows.find(x=>x.status==='playing'),requestForRunItem:()=>null,esc:x=>x,window:{matchMedia:()=>({matches:true})}};
  vm.createContext(c);vm.runInContext(code,c);c.renderRunOrder();assert.equal(nodes.tsRunOrderCount.textContent,'(2)');assert.match(nodes.tsRunOrderList.innerHTML,/data-ts-run-details="6"/);assert.doesNotMatch(nodes.tsRunOrderList.innerHTML,/data-ts-run-details="[12345]"/);assert.equal(items.length,7);
  items.splice(0,items.length,{id:'done',status:'played'});c.renderRunOrder();assert.equal(nodes.tsRunOrderCount.textContent,'(0)');assert.match(nodes.tsRunOrderList.innerHTML,/Run Order is empty/);
 });
